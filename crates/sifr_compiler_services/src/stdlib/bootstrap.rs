@@ -1,0 +1,756 @@
+use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
+use crate::export_policy::should_export_callable;
+use crate::stdlib::SourceStdlibCompiled;
+use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
+use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
+use sifr_codegen::{StdlibCode, StdlibRustSource};
+use sifr_diagnostics::DiagnosticCode;
+use sifr_lowering::{
+    ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
+    canonicalize_user_export_type_in_place,
+    lower_module_sysroot_private_declaration_with_externals,
+    lower_module_sysroot_public_stdlib_with_externals,
+};
+use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
+use sifr_syntax::parse_module_raw;
+use sifr_sysroot::ResolvedSysroot;
+use sifr_sysroot::sha256_hex;
+use sifr_type_system::{FunctionType, ParamConvention, Type};
+use std::collections::{HashMap, HashSet};
+use std::path::Path;
+
+pub fn compile_stdlib_sources_with_sysroot(
+    sources: &[LoadedStdlibSource],
+    sysroot: ResolvedSysroot,
+) -> Result<SourceStdlibCompiled, Vec<RenderedDiagnostic>> {
+    let mut stdlib_defs = ExternalDefs::default();
+    let mut stdlib_code = StdlibCode::default();
+    let mut metadata_features = HashMap::new();
+    let mut hir_modules = std::collections::BTreeMap::new();
+    let mut private_interop_modules = Vec::new();
+    let syntax_session = sifr_codegen::StdlibSyntaxSession::default();
+
+    for stdlib_source in sources {
+        let module_name = stdlib_source.module.as_str();
+        let source_name = stdlib_source.path.display().to_string();
+        let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {
+            Ok(parsed) => {
+                if !parsed.has_valid_syntax() {
+                    // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures
+                    // into the precise active parse-code buckets.
+                    let errors: Vec<RenderedDiagnostic> = parsed
+                        .errors()
+                        .iter()
+                        .map(|e| {
+                            crate::diagnostics::diagnostic_with_code(
+                                format!("[stdlib:{module_name}] {e}"),
+                                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                            )
+                        })
+                        .collect();
+                    return Err(errors);
+                }
+                parsed
+            }
+            Err(errors) => {
+                // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures into
+                // the precise active parse-code buckets.
+                return Err(errors
+                    .into_iter()
+                    .map(|error| {
+                        crate::diagnostics::diagnostic_with_code(
+                            format!("[stdlib:{module_name}] {}", error.message),
+                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                        )
+                    })
+                    .collect());
+            }
+        };
+        let mut result = match lower_stdlib_source(stdlib_source, parsed.suite(), &stdlib_defs) {
+            Ok(result) => result,
+            Err(errors) => {
+                let diagnostics: Vec<RenderedDiagnostic> = errors
+                    .into_iter()
+                    .map(|e| {
+                        // Even if `e.code` is `Some(_)`, stdlib lowering
+                        // failures collapse to bootstrap failures from the
+                        // caller's perspective, not user-facing semantic
+                        // diagnostics.
+                        crate::diagnostics::diagnostic_with_code(
+                            format!("[stdlib:{}] {}", module_name, e.message),
+                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                        )
+                    })
+                    .collect();
+                return Err(diagnostics);
+            }
+        };
+        // Lowering has produced owned HIR and diagnostics. The parser's AST,
+        // tokens and auxiliary indexes have no consumers during Rust emission;
+        // release them before allocating the renderer and syntax-validation IR.
+        drop(parsed);
+        let private_declaration = stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration;
+        let local_classes = result
+            .module
+            .classes
+            .iter()
+            .map(|class| (class.name.clone(), format!("{module_name}.{}", class.name)))
+            .collect::<HashMap<_, _>>();
+        canonicalize_stdlib_hir_signatures(&mut result.module, module_name, &local_classes);
+        let module = std::sync::Arc::new(result.module);
+        if let Some(pending) = pending_private_interop_module(stdlib_source, &module) {
+            private_interop_modules.push(pending);
+        }
+        if private_declaration
+            && module.functions.is_empty()
+            && module.constants.is_empty()
+            && module.classes.is_empty()
+        {
+            hir_modules.insert(module_name.to_string(), module);
+            continue;
+        }
+
+        let mut transitive_deps_for_module = HashSet::new();
+
+        let mut fn_exports = HashMap::new();
+        let mut compiler_intrinsic_exports = HashMap::new();
+        let mut class_exports = HashMap::new();
+        let mut error_exports = HashSet::new();
+        let mut class_instance_method_exports = HashMap::new();
+        let mut class_type_param_exports = HashMap::new();
+        let mut default_exports = HashMap::new();
+        let mut vararg_exports = HashMap::new();
+        let mut workload_exports = HashMap::new();
+
+        for func in &module.functions {
+            if private_declaration || should_export_callable(module_name, &func.name) {
+                fn_exports.insert(func.name.clone(), function_type_from_hir(func));
+                if let Some(intrinsic) = func.compiler_intrinsic {
+                    compiler_intrinsic_exports.insert(func.name.clone(), intrinsic);
+                }
+                if let Some(vararg_index) = result.function_varargs.get(&func.name) {
+                    vararg_exports.insert(func.name.clone(), *vararg_index);
+                }
+                if let Some(label) = result.function_workloads.get(&func.name) {
+                    workload_exports.insert(func.name.clone(), label.clone());
+                }
+            }
+        }
+        for (callable_name, label) in &result.function_workloads {
+            let Some((owner_name, _)) = callable_name.split_once('.') else {
+                continue;
+            };
+            if private_declaration || should_export_callable(module_name, owner_name) {
+                workload_exports.insert(callable_name.clone(), label.clone());
+            }
+        }
+
+        for (callable_name, defaults) in &result.function_defaults {
+            if private_declaration || should_export_callable(module_name, callable_name) {
+                default_exports.insert(callable_name.clone(), defaults.clone());
+            }
+        }
+
+        let mut const_exports = HashMap::new();
+        for import in &module.imports {
+            if import.module.starts_with("_sifr.") {
+                transitive_deps_for_module.insert(import.module.clone());
+                let has_compiled_exports = stdlib_defs
+                    .functions
+                    .get(&import.module)
+                    .is_some_and(|exports| !exports.is_empty())
+                    || stdlib_defs
+                        .classes
+                        .get(&import.module)
+                        .is_some_and(|exports| !exports.is_empty())
+                    || stdlib_defs
+                        .constants
+                        .get(&import.module)
+                        .is_some_and(|exports| !exports.is_empty());
+                if has_compiled_exports {
+                    let mut exports = ReExportMaps {
+                        functions: &mut fn_exports,
+                        compiler_intrinsics: &mut compiler_intrinsic_exports,
+                        classes: &mut class_exports,
+                        error_types: &mut error_exports,
+                        class_type_params: &mut class_type_param_exports,
+                        defaults: &mut default_exports,
+                        varargs: &mut vararg_exports,
+                        workloads: &mut workload_exports,
+                        constants: &mut const_exports,
+                    };
+                    re_export_stdlib_imports(
+                        &mut exports,
+                        &stdlib_defs,
+                        module_name,
+                        &import.module,
+                        &import.names,
+                        &import.aliases,
+                    );
+                }
+            } else if import.module.starts_with("sifr.") {
+                transitive_deps_for_module.insert(import.module.clone());
+                if module_name == "sifr.python" && import.module == "sifr.python_core" {
+                    let mut exports = ReExportMaps {
+                        functions: &mut fn_exports,
+                        compiler_intrinsics: &mut compiler_intrinsic_exports,
+                        classes: &mut class_exports,
+                        error_types: &mut error_exports,
+                        class_type_params: &mut class_type_param_exports,
+                        defaults: &mut default_exports,
+                        varargs: &mut vararg_exports,
+                        workloads: &mut workload_exports,
+                        constants: &mut const_exports,
+                    };
+                    re_export_stdlib_imports(
+                        &mut exports,
+                        &stdlib_defs,
+                        module_name,
+                        &import.module,
+                        &import.names,
+                        &import.aliases,
+                    );
+                }
+                if let Some(deps) = stdlib_code.transitive_deps.get(&import.module) {
+                    transitive_deps_for_module.extend(deps.iter().cloned());
+                }
+            }
+        }
+
+        for (name, ty, _expr) in &module.constants {
+            if private_declaration || !name.starts_with('_') {
+                const_exports.insert(name.clone(), ty.clone());
+            }
+        }
+        if !private_declaration {
+            fn_exports.retain(|name, _| should_export_callable(module_name, name));
+            compiler_intrinsic_exports.retain(|name, _| should_export_callable(module_name, name));
+            default_exports.retain(|name, _| should_export_callable(module_name, name));
+            vararg_exports.retain(|name, _| should_export_callable(module_name, name));
+            workload_exports.retain(|name, _| {
+                let owner_name = name
+                    .split_once('.')
+                    .map_or(name.as_str(), |(owner, _)| owner);
+                should_export_callable(module_name, owner_name)
+            });
+            class_exports.retain(|name, _| should_export_callable(module_name, name));
+            error_exports.retain(|name| should_export_callable(module_name, name));
+            class_type_param_exports.retain(|name, _| should_export_callable(module_name, name));
+            const_exports.retain(|name, _| !name.starts_with('_'));
+        }
+        let const_integer_value_exports = collect_public_constant_integer_value_exports(
+            module.constants.iter().filter_map(|(name, _, _)| {
+                (private_declaration || !name.starts_with('_')).then_some(name.as_str())
+            }),
+            &result.constant_integer_values,
+        );
+
+        for class in &module.classes {
+            if private_declaration || !class.name.starts_with('_') {
+                class_instance_method_exports.insert(
+                    class.name.clone(),
+                    class
+                        .methods
+                        .iter()
+                        .filter(|method| {
+                            method.name != "new"
+                                && method.method_kind == sifr_ir::MethodKind::Regular
+                        })
+                        .map(|method| method.name.clone())
+                        .collect(),
+                );
+                let mut methods: Vec<(String, FunctionType)> = class
+                    .methods
+                    .iter()
+                    .map(|method| (method.name.clone(), method_type_from_hir(method)))
+                    .collect();
+                for (dunder_name, op_func) in &class.operator_impls {
+                    methods.push((
+                        dunder_name.clone(),
+                        function_type_from_params(&op_func.params, &op_func.return_type),
+                    ));
+                }
+                let class_ty = canonical_stdlib_type(
+                    &Type::Class {
+                        identity: None,
+                        type_args: class
+                            .type_params
+                            .iter()
+                            .cloned()
+                            .map(Type::TypeVar)
+                            .collect(),
+                        name: class.name.clone(),
+                        fields: class.fields.clone().into(),
+                        methods: methods.into(),
+                        parent_class: class.semantic_parent_chain(),
+                    },
+                    &local_classes,
+                );
+                class_exports.insert(class.name.clone(), class_ty);
+                if !class.type_params.is_empty() {
+                    class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
+                }
+                if class.is_error_type {
+                    error_exports.insert(class.name.clone());
+                }
+            }
+        }
+
+        let has_pure_sifr_code = !module.functions.is_empty()
+            || !module.constants.is_empty()
+            || !module.classes.is_empty();
+        if has_pure_sifr_code {
+            let codegen_result = run_codegen_with_boundary(
+                format!(
+                    "internal compiler panic during stdlib code generation for '{module_name}'"
+                ),
+                || syntax_session.generate_module(&module, &stdlib_code.emission, module_name),
+            )
+            .map_err(|e| {
+                let mut diagnostic = *e;
+                diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
+                vec![diagnostic]
+            })?;
+            metadata_features.insert(
+                module_name.to_owned(),
+                codegen_result.required_features.iter().copied().collect(),
+            );
+            let rust_source = stdlib_rust_source(
+                module_name,
+                stdlib_source,
+                &sysroot,
+                module
+                    .classes
+                    .iter()
+                    .filter(|class| {
+                        !class
+                            .rust_interop
+                            .iter()
+                            .any(|declaration| declaration.abi_requirements.opaque_handle)
+                    })
+                    .map(|class| class.name.clone())
+                    .collect(),
+                codegen_result.rust_source,
+            )?;
+            stdlib_code
+                .module_rust_code
+                .insert(module_name.to_string(), rust_source);
+            if !codegen_result.constant_mappings.is_empty() {
+                stdlib_code
+                    .module_constants
+                    .insert(module_name.to_string(), codegen_result.constant_mappings);
+            }
+            let mut sig_map = HashMap::new();
+            for func in &module.functions {
+                if private_declaration || should_export_callable(module_name, &func.name) {
+                    let param_info = signature_params(&func.params, None);
+                    sig_map.insert(func.name.clone(), (param_info, func.return_type.clone()));
+                }
+            }
+            for class in &module.classes {
+                let mut has_constructor = false;
+                for method in &class.methods {
+                    let param_info = signature_params(
+                        &method.params,
+                        (method.name == "new").then_some(ParamConvention::own()),
+                    );
+                    sig_map.insert(
+                        format!("{}::{}", class.name, method.name),
+                        (param_info, method.return_type.clone()),
+                    );
+                    if method.name == "new" {
+                        has_constructor = true;
+                    }
+                }
+                if !has_constructor {
+                    let ctor_params = class
+                        .fields
+                        .iter()
+                        .map(|(_, ty)| (ty.clone(), ParamConvention::own()))
+                        .collect::<Vec<_>>();
+                    sig_map.insert(
+                        format!("{}::new", class.name),
+                        (
+                            ctor_params,
+                            Type::Class {
+                                identity: None,
+                                type_args: class
+                                    .type_params
+                                    .iter()
+                                    .cloned()
+                                    .map(Type::TypeVar)
+                                    .collect(),
+                                name: class.name.clone(),
+                                fields: class.fields.clone().into(),
+                                methods: Vec::new().into(),
+                                parent_class: class.semantic_parent_chain(),
+                            },
+                        ),
+                    );
+                }
+            }
+            if !sig_map.is_empty() {
+                stdlib_code
+                    .func_signatures
+                    .insert(module_name.to_string(), sig_map);
+            }
+
+            let mut gen_fns = HashSet::new();
+            for func in &module.functions {
+                if (private_declaration || should_export_callable(module_name, &func.name))
+                    && sifr_codegen::body_contains_yield(&func.body)
+                {
+                    gen_fns.insert(func.name.clone());
+                }
+            }
+            if !gen_fns.is_empty() {
+                stdlib_code
+                    .generator_functions
+                    .insert(module_name.to_string(), gen_fns);
+            }
+
+            for class in &module.classes {
+                if !class.type_params.is_empty() {
+                    stdlib_code.generic_classes.insert(class.name.clone());
+                    stdlib_code
+                        .generic_class_params
+                        .insert(class.name.clone(), class.type_params.clone());
+                    stdlib_code
+                        .generic_class_templates
+                        .insert(class.name.clone(), std::sync::Arc::new(class.clone()));
+                }
+            }
+            let class_fields = module
+                .classes
+                .iter()
+                .map(|class| (class.name.clone(), class.fields.clone()))
+                .collect();
+            stdlib_code
+                .module_class_fields
+                .insert(module_name.to_string(), class_fields);
+            let class_templates = module
+                .classes
+                .iter()
+                .map(|class| {
+                    (
+                        class.name.clone(),
+                        stdlib_class_template(module_name, class),
+                    )
+                })
+                .collect();
+            stdlib_code
+                .module_class_templates
+                .insert(module_name.to_string(), class_templates);
+        }
+
+        if !transitive_deps_for_module.is_empty() {
+            stdlib_code
+                .transitive_deps
+                .insert(module_name.to_string(), transitive_deps_for_module);
+        }
+
+        stdlib_defs
+            .functions
+            .insert(module_name.to_string(), fn_exports);
+        if !compiler_intrinsic_exports.is_empty() {
+            stdlib_defs
+                .compiler_intrinsics
+                .insert(module_name.to_string(), compiler_intrinsic_exports);
+        }
+        stdlib_defs
+            .classes
+            .insert(module_name.to_string(), class_exports);
+        if error_exports.is_empty() {
+            stdlib_defs.error_types.remove(module_name);
+        } else {
+            stdlib_defs
+                .error_types
+                .insert(module_name.to_string(), error_exports);
+        }
+        stdlib_defs
+            .class_instance_methods
+            .insert(module_name.to_string(), class_instance_method_exports);
+        if !class_type_param_exports.is_empty() {
+            stdlib_defs
+                .class_type_params
+                .insert(module_name.to_string(), class_type_param_exports);
+        }
+        if !default_exports.is_empty() {
+            stdlib_defs
+                .function_defaults
+                .insert(module_name.to_string(), default_exports);
+        }
+        if !vararg_exports.is_empty() {
+            stdlib_defs
+                .function_varargs
+                .insert(module_name.to_string(), vararg_exports);
+        }
+        if !workload_exports.is_empty() {
+            stdlib_defs
+                .function_workloads
+                .insert(module_name.to_string(), workload_exports);
+        }
+        if !const_exports.is_empty() {
+            stdlib_defs
+                .constants
+                .insert(module_name.to_string(), const_exports);
+        }
+        if !const_integer_value_exports.is_empty() {
+            stdlib_defs
+                .constant_integer_values
+                .insert(module_name.to_string(), const_integer_value_exports);
+        }
+        if !module.generic_functions.is_empty() {
+            stdlib_defs
+                .generic_functions
+                .insert(module_name.to_string(), module.generic_functions.clone());
+        }
+        if !module.type_param_bounds.is_empty() {
+            stdlib_defs
+                .type_param_bounds
+                .insert(module_name.to_string(), module.type_param_bounds.clone());
+        }
+        hir_modules.insert(module_name.to_string(), module);
+    }
+
+    stdlib_code.hir_modules = std::sync::Arc::new(hir_modules);
+    stdlib_defs.freeze_baseline();
+    Ok(SourceStdlibCompiled {
+        defs: stdlib_defs,
+        metadata_features,
+        code: stdlib_code,
+        interop: build_stdlib_rust_interop(Some(sysroot), &private_interop_modules),
+    })
+}
+
+fn stdlib_rust_source(
+    module_name: &str,
+    source: &LoadedStdlibSource,
+    sysroot: &ResolvedSysroot,
+    nominal_types: HashSet<String>,
+    rust: String,
+) -> Result<StdlibRustSource, Vec<RenderedDiagnostic>> {
+    Ok(StdlibRustSource {
+        module: module_name.to_string(),
+        source_path: canonical_stdlib_source_path(source, sysroot)?,
+        source_sha256: source_sha256(&source.source),
+        nominal_types,
+        rust,
+    })
+}
+
+fn canonical_stdlib_source_path(
+    source: &LoadedStdlibSource,
+    sysroot: &ResolvedSysroot,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    let relative = source
+        .path
+        .strip_prefix(&sysroot.paths.stdlib_root)
+        .map_err(|_| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                format!(
+                    "stdlib source path {} is outside resolved stdlib root {}",
+                    source.path.display(),
+                    sysroot.paths.stdlib_root.display()
+                ),
+                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        });
+    relative.map(|path| format!("stdlib/{}", normalized_path_string(path)))
+}
+
+fn source_sha256(source: &str) -> String {
+    sha256_hex(source.as_bytes())
+}
+
+fn normalized_path_string(path: &Path) -> String {
+    path.components()
+        .map(|component| component.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+fn lower_stdlib_source(
+    source: &LoadedStdlibSource,
+    suite: &[sifr_python_ast::Stmt],
+    stdlib_defs: &ExternalDefs,
+) -> Result<sifr_ir::LoweringResult, Vec<sifr_ir::HirDiagnostic>> {
+    match source.kind {
+        LoadedStdlibSourceKind::Public => {
+            lower_module_sysroot_public_stdlib_with_externals(suite, stdlib_defs)
+        }
+        LoadedStdlibSourceKind::PrivateDeclaration => {
+            lower_module_sysroot_private_declaration_with_externals(suite, stdlib_defs)
+        }
+    }
+}
+
+fn canonical_stdlib_type(ty: &Type, local_classes: &HashMap<String, String>) -> Type {
+    canonicalize_user_export_type(ty, local_classes)
+}
+
+fn canonicalize_stdlib_hir_signatures(
+    module: &mut sifr_ir::HirModule,
+    module_name: &str,
+    local_classes: &HashMap<String, String>,
+) {
+    if local_classes.is_empty() {
+        return;
+    }
+    for function in &mut module.functions {
+        canonicalize_stdlib_hir_function(function, local_classes);
+    }
+    for class in &mut module.classes {
+        class.identity = Some(format!("{module_name}.{}", class.name));
+        for (_, field_type) in &mut class.fields {
+            canonicalize_user_export_type_in_place(field_type, local_classes);
+        }
+        for method in &mut class.methods {
+            canonicalize_stdlib_hir_function(method, local_classes);
+        }
+        for (_, operator) in &mut class.operator_impls {
+            canonicalize_stdlib_hir_function(operator, local_classes);
+        }
+        if let Some(inner) = &mut class.newtype_inner {
+            canonicalize_user_export_type_in_place(inner, local_classes);
+        }
+        if let Some(parent) = &mut class.parent_type {
+            canonicalize_user_export_type_in_place(parent, local_classes);
+        }
+    }
+    for (_, constant_type, _) in &mut module.constants {
+        canonicalize_user_export_type_in_place(constant_type, local_classes);
+    }
+}
+
+fn canonicalize_stdlib_hir_function(
+    function: &mut HirFunction,
+    local_classes: &HashMap<String, String>,
+) {
+    sifr_ir::transform_hir_function_types(function, &mut |ty| {
+        canonicalize_user_export_type_in_place(ty, local_classes);
+    });
+}
+
+pub fn function_type_from_params(params: &[HirParam], return_type: &Type) -> FunctionType {
+    FunctionType {
+        receiver: None,
+        params: named_params(params),
+        return_type: Box::new(return_type.clone()),
+    }
+}
+
+pub fn function_type_from_hir(function: &HirFunction) -> FunctionType {
+    let return_type = if function.is_async {
+        coroutine_type_from_surface_return(&function.return_type)
+    } else {
+        function.return_type.clone()
+    };
+    let mut signature = function_type_from_params(&function.params, &return_type);
+    signature.receiver = function.receiver;
+    signature
+}
+
+fn method_type_from_hir(method: &HirFunction) -> FunctionType {
+    let return_type = if method.is_async {
+        coroutine_type_from_surface_return(&method.return_type)
+    } else {
+        method.return_type.clone()
+    };
+    let mut signature = function_type_from_params(&method.params, &return_type);
+    signature.receiver = method.receiver;
+    signature
+}
+
+fn coroutine_type_from_surface_return(surface_return_type: &Type) -> Type {
+    match surface_return_type.resolve_alias() {
+        Type::Result(ok, err) => Type::Coroutine(ok.clone(), err.clone()),
+        other => Type::Coroutine(Box::new(other.clone()), Box::new(Type::Never)),
+    }
+}
+
+fn named_params(params: &[HirParam]) -> Vec<(String, Type, ParamConvention)> {
+    params
+        .iter()
+        .map(|param| (param.name.clone(), param.ty.clone(), param.convention))
+        .collect()
+}
+
+pub fn signature_params(
+    params: &[HirParam],
+    convention_override: Option<ParamConvention>,
+) -> Vec<(Type, ParamConvention)> {
+    params
+        .iter()
+        .map(|param| {
+            (
+                param.ty.clone(),
+                convention_override.unwrap_or(param.convention),
+            )
+        })
+        .collect()
+}
+
+pub fn collect_public_constant_integer_value_exports<'a, T: Clone>(
+    public_constant_names: impl Iterator<Item = &'a str>,
+    constant_integer_values: &HashMap<String, T>,
+) -> HashMap<String, T> {
+    public_constant_names
+        .filter_map(|name| {
+            constant_integer_values
+                .get(name)
+                .map(|value| (name.to_string(), value.clone()))
+        })
+        .collect()
+}
+
+pub fn stdlib_class_template(module_name: &str, class: &sifr_ir::HirClass) -> sifr_ir::HirClass {
+    // Structural emission needs every declaration field but never method
+    // statements. Project directly so bootstrap does not clone and discard
+    // entire bodies or retain their empty allocation in its lifetime cache.
+    sifr_ir::HirClass {
+        name: class.name.clone(),
+        identity: Some(format!("{module_name}.{}", class.name)),
+        fields: class.fields.clone(),
+        field_defaults: class.field_defaults.clone(),
+        field_default_identities: class.field_default_identities.clone(),
+        declaration_metadata: class.declaration_metadata.clone(),
+        methods: class
+            .methods
+            .iter()
+            .map(structural_method_template)
+            .collect(),
+        is_hashable: class.is_hashable,
+        is_error_type: class.is_error_type,
+        kind: class.kind.clone(),
+        operator_impls: class
+            .operator_impls
+            .iter()
+            .map(|(name, method)| (name.clone(), structural_method_template(method)))
+            .collect(),
+        newtype_inner: class.newtype_inner.clone(),
+        implements_protocols: class.implements_protocols.clone(),
+        parent_class: class.parent_class.clone(),
+        parent_type: class.parent_type.clone(),
+        type_params: class.type_params.clone(),
+        enum_variants: class.enum_variants.clone(),
+        rust_interop: class.rust_interop.clone(),
+    }
+}
+
+fn structural_method_template(method: &sifr_ir::HirFunction) -> sifr_ir::HirFunction {
+    sifr_ir::HirFunction {
+        name: method.name.clone(),
+        params: method.params.clone(),
+        return_type: method.return_type.clone(),
+        body: Vec::new(),
+        is_async: method.is_async,
+        method_kind: method.method_kind,
+        receiver: method.receiver,
+        decorators: method.decorators.clone(),
+        rust_interop: method.rust_interop.clone(),
+        python_interop: method.python_interop.clone(),
+        compiler_intrinsic: method.compiler_intrinsic,
+        type_params: method.type_params.clone(),
+    }
+}

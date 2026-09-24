@@ -356,6 +356,8 @@ sifr/
     sifr_ipc/               (shared IPC protocol/frame/schema/request-tracking crate)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
+    sifr_cache_storage/     (private cache entry, lease, bounded wait, and atomic publication primitives)
+    sifr_compiler_services/ (source stdlib bootstrap and metadata producer/transport)
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
     sifr_format/            (Sifr-facing Ruff-backed formatter API, config conversion, diagnostics, and text edits)
     sifr_analysis/          (editor query host; routes formatting through sifr_format)
@@ -571,7 +573,7 @@ remain canonical; an independent eager-schema oracle covers their equivalence.
 driver/package architecture decomposed `sifr_driver` into the following stable internal boundaries:
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
-- `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
+- `stdlib/`: metadata-backed stdlib provider adapter and tooling sysroot queries; source bootstrap executes in `sifr_compiler_services`
 - Stdlib bootstrap publishes one immutable `Arc<StdlibCompiled>` through its
   success/error cache. CLI frontend/build plans and test assembly retain that
   owner; mutable frontend contexts clone only external definitions. Each module's
@@ -585,6 +587,14 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   consume its hints or declare a function; all ordinary assignment and nested
   signature/capture inference remains intact. Unreachable-statement checks use
   the canonical validated CFG without constructing unused rich flow facts.
+- `sifr_compiler_services` owns source stdlib bootstrap, indexed metadata encoding
+  and production, prepared metadata, and project-result transport. Its producer
+  receives cancellation from the driver through an explicit callback and uses
+  `sifr_cache_storage` for private files, leases, Unix bounded waits,
+  Windows cancellable lease polling, and atomic publication. The driver's metadata reader and `CompilerContext` remain the
+  sole provider and metadata-generation owner; the driver still chooses cache
+  roots and owners and handles CLI cache policy and pruning. Dependencies point
+  from driver to the lower services and storage, and from services to storage.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds

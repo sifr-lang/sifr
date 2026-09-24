@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 fn origin(
     module: &str,
     name: &str,
-    compiled: &crate::stdlib::StdlibCompiled,
+    compiled: &crate::stdlib::SourceStdlibCompiled,
     cx: &Encoder,
     seen: &mut BTreeSet<(String, String)>,
 ) -> Result<(String, String)> {
@@ -46,7 +46,7 @@ fn origin(
     )))
 }
 pub(super) fn project(
-    compiled: &crate::stdlib::StdlibCompiled,
+    compiled: &crate::stdlib::SourceStdlibCompiled,
     module: &str,
     declarations: &mut BTreeMap<wire::Ref<wire::Text>, wire::Ref<wire::Declaration>>,
     cx: &mut Encoder,
@@ -91,7 +91,7 @@ pub(super) fn project(
 }
 
 pub(super) fn bind_reference(
-    compiled: &crate::stdlib::StdlibCompiled,
+    compiled: &crate::stdlib::SourceStdlibCompiled,
     module: &str,
     name: &str,
     kind: wire::DeclarationKind,

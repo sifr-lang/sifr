@@ -2,7 +2,7 @@
 """Generate exhaustive typed metadata projections from the owned wire record families.
 
 The generated matches compile against the live IR. Nominal identities, declaration
-binders, source positions and producer orchestration remain explicit driver code.
+binders, source positions and producer orchestration remain explicit service code.
 """
 from pathlib import Path
 import argparse
@@ -13,7 +13,7 @@ root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--check',action='store_true')
 options=parser.parse_args()
-destination=root/'crates/sifr_driver/src/metadata_producer'
+destination=root/'crates/sifr_compiler_services/src/metadata'
 temporary=tempfile.TemporaryDirectory(prefix='sifr-metadata-encoders-')
 out=Path(temporary.name) if options.check else destination
 def clean(s):

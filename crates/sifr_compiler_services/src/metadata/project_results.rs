@@ -221,6 +221,3 @@ pub fn encode_project_results(
         bytes: records.finish()?,
     })
 }
-
-#[cfg(test)]
-mod tests;

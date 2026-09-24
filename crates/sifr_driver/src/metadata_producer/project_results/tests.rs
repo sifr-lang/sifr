@@ -1,6 +1,7 @@
 use super::*;
 use sifr_frontend::persistence::*;
 use sifr_frontend::{DiskSourceProvider, FrontendDiagnosticStyle};
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 fn compatibility() -> wire::Compatibility {

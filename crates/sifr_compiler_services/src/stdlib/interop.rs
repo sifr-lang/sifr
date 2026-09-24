@@ -1,4 +1,4 @@
-use crate::stdlib::types::{StdlibRustInterop, StdlibRustInteropModuleSource};
+use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_ir::{HirClass, HirModule};
 use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 use sifr_sysroot::ResolvedSysroot;
