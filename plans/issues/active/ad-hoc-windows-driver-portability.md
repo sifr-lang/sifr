@@ -1,6 +1,6 @@
 # Windows driver portability blocks native SQL CI qualification
 
-Status: open; coupled W1+W2 draft needs implementation after second review; W3 unqualified
+Status: open; W1+W2 editable-root draft blocked at Windows test-runner executable lookup; formatter prerequisite merged; W3 unqualified
 Owner: driver storage/process execution and Windows platform support
 Related: [DX9-F6](ad-hoc-native-cargo-reuse-followups.md)
 
@@ -223,3 +223,63 @@ implementation; it does not reverse the selected W1/W2 test pass and does not
 qualify SQL clean/reused/locked/offline/reproducible builds. Route it to the SQL
 Item 4/W3 owner using the raw job log above. W3 remains open, and there is no
 merged W1/W2 SHA to coordinate with [SQL PR #3975](https://github.com/sifr-lang/sifr/pull/3975).
+
+## 2026-09-24 Windows formatter prerequisite and W1+W2 handoff
+
+[Draft W1+W2 PR #3993](https://github.com/sifr-lang/sifr/pull/3993)
+implemented the cache-owned editable-root successor on candidate
+`722ddd4543d83871b6dec5e0a36f935acf42cc1b`, based on
+`3a319f4aabff59f669511bc80351e86499087194`. Its
+[Windows run 35955579797, job 107493084457](https://github.com/sifr-lang/sifr/actions/runs/35955579797/job/107493084457)
+passed all 16 compiler-component cases and 14 selected W1/W2 cases, then
+stopped before the nested materialization assertion because the pre-existing
+formatter invocation passed `--config-path NUL`, which Windows rustfmt
+rejected. The raw log remains outside Git at
+`/home/yaser5/projects/sifr/windows-w12-editable-root-evidence/windows-job-107493084457.log`.
+That result did not qualify W1/W2 or SQL W3.
+
+**Separate formatter prerequisite merged.**
+[PR #3994](https://github.com/sifr-lang/sifr/pull/3994) merged candidate
+`bfecbc0aafdc8211f67442c9713d05db78c26cae` into main as
+`3a4e6386b8bd79c61504bf9c9e6f466a3a7630b0`. Windows rustfmt
+now receives a short-lived real empty TOML config file; Unix keeps
+`/dev/null`. Formatting remains fail closed. The architecture handoff
+in `internal_docs/architecture.md` records the platform-specific
+empty-config path. Final scoped Opus review returned **SATISFIED** with
+no blocking findings; the review is preserved outside Git at
+`/tmp/sifr-windows-rustfmt-review4.WwrUVY/response.md`.
+
+[Validation-only PR #3995](https://github.com/sifr-lang/sifr/pull/3995)
+is closed unmerged. It combined W1+W2 head
+`45f425d754c8efd866f1bf02b406de2eca00087f` with the formatter
+patch at integration head `a04a95d670b0f9a458ff951398b15e9e72ab5b26`
+and merge tree `955663a724f1815ed943d6976a2f4c4aa56f54c7`.
+On that exact tree,
+[Windows run 35960662336, job 107508315206](https://github.com/sifr-lang/sifr/actions/runs/35960662336/job/107508315206)
+passed all three exact native formatter/generated `build.rs` assertions
+and all 16 compiler-component cases. The
+[Unix job 107508315248](https://github.com/sifr-lang/sifr/actions/runs/35960662336/job/107508315248)
+passed the affected formatter/materialize selection and its full job.
+Formatting, workflow admission, HIR maintainability, diff and touched
+source file-size checks passed on the standalone formatter candidate.
+The final Windows raw log is preserved outside Git at
+`/home/yaser5/projects/sifr/windows-rustfmt-config-evidence/windows-pr3995-final-job-107508315206.log`;
+earlier failed Windows assertion logs remain in that evidence directory.
+
+**W1+W2 remains blocked after the formatter prerequisite.** In the same
+Windows job, the selected
+`build::materialize::tests::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner`
+case passed its two materializations, private nested-parent check and
+stale-source cleanup, then failed on its first test-runner call at
+`materialize_tests.rs:210` with
+`SIFR-BUILD-0005: selected native executable is unavailable`.
+That message originates from executable resolution in
+`sifr_sysroot/src/native_context.rs`; its precise cause has not been
+established. Later selected W1/W2 cases and SQL W3 did not run. This is
+separate from rustfmt and outside PR #3994. PR #3993 remains draft and
+unmerged, without a new scoped review or accepted W1/W2 SHA. Its owner
+should incorporate formatter merge `3a4e6386b8bd79c61504bf9c9e6f466a3a7630b0`,
+resolve the test-runner blocker within approved scope or rescope it,
+rerun the exact nested case and remaining affected native/Unix cases,
+then obtain a fresh scoped review. The separate W3 PostgreSQL vendored-C
+portability issue and SQL Item 4 qualification remain open.
