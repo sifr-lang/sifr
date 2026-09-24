@@ -5,7 +5,7 @@ pub(crate) use sifr_cache_storage::{
     relative,
 };
 use std::fs::{self, File, OpenOptions};
-use std::io;
+use std::io::{self, Read};
 use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 pub fn root() -> PathBuf {
