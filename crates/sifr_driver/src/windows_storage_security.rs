@@ -34,6 +34,32 @@ pub(crate) fn wide(path: &OsStr) -> Vec<u16> {
     path.encode_wide().chain(std::iter::once(0)).collect()
 }
 
+/// Raw Win32 file APIs need the extended-length form for deep cache keys.
+/// Callers validate components before passing paths to these APIs.
+fn wide_path(path: &Path) -> Vec<u16> {
+    let units: Vec<u16> = path.as_os_str().encode_wide().collect();
+    let mut result: Vec<u16> = if !path.is_absolute() || units.starts_with(&[92, 92, 63, 92]) {
+        Vec::new()
+    } else if units.starts_with(&[92, 92]) {
+        // UNC server/share paths use the extended UNC prefix.
+        r"\\?\UNC\".encode_utf16().collect()
+    } else {
+        r"\\?\".encode_utf16().collect()
+    };
+    result.extend_from_slice(
+        if path.is_absolute()
+            && units.starts_with(&[92, 92])
+            && !units.starts_with(&[92, 92, 63, 92])
+        {
+            &units[2..]
+        } else {
+            &units
+        },
+    );
+    result.push(0);
+    result
+}
+
 struct Owner {
     token: windows_sys::Win32::Foundation::HANDLE,
     bytes: Vec<u8>,
@@ -144,7 +170,7 @@ pub(crate) fn create_directory(path: &Path) -> io::Result<()> {
     )?;
     let descriptor = private_descriptor()?;
     let attrs = attributes(&descriptor);
-    let path = wide(path.as_os_str());
+    let path = wide_path(path);
     // SAFETY: both pointers remain live for the duration of CreateDirectoryW.
     if unsafe { CreateDirectoryW(path.as_ptr(), &raw const attrs) } == 0 {
         return Err(io::Error::last_os_error());
@@ -155,7 +181,7 @@ pub(crate) fn create_file(path: &Path) -> io::Result<File> {
     no_reparse(path.parent().ok_or_else(|| denied("missing file parent"))?)?;
     let descriptor = private_descriptor()?;
     let attrs = attributes(&descriptor);
-    let path = wide(path.as_os_str());
+    let path = wide_path(path);
     // SAFETY: CreateFileW returns a uniquely owned handle or INVALID_HANDLE_VALUE.
     let handle = unsafe {
         CreateFileW(
@@ -211,7 +237,7 @@ pub(crate) fn check(path: &Path) -> io::Result<()> {
         return Err(denied("reparse-point storage entry"));
     }
     let owner = owner()?;
-    let wide = wide(path.as_os_str());
+    let wide = wide_path(path);
     let mut actual_owner: PSID = std::ptr::null_mut();
     let mut dacl: *mut ACL = std::ptr::null_mut();
     let mut descriptor: PSECURITY_DESCRIPTOR = std::ptr::null_mut();
@@ -259,7 +285,7 @@ pub(crate) fn check(path: &Path) -> io::Result<()> {
     Ok(())
 }
 pub(crate) fn available_bytes(path: &Path) -> io::Result<u64> {
-    let wide = wide(path.as_os_str());
+    let wide = wide_path(path);
     let mut free = 0;
     // SAFETY: the path and output pointer are valid.
     if unsafe {
@@ -279,7 +305,7 @@ pub(crate) fn available_bytes(path: &Path) -> io::Result<u64> {
 pub(crate) fn seal(path: &Path) -> io::Result<()> {
     no_reparse(path)?;
     let owner = owner()?;
-    let wide = wide(path.as_os_str());
+    let wide = wide_path(path);
     let mut actual_owner: PSID = std::ptr::null_mut();
     let mut actual_descriptor: PSECURITY_DESCRIPTOR = std::ptr::null_mut();
     // SAFETY: the owner pointer is valid until the returned descriptor is freed.
@@ -411,8 +437,8 @@ pub(crate) fn durable_rename(source: &Path, destination: &Path) -> io::Result<()
         check(destination)?;
     }
     let directory = fs::symlink_metadata(source)?.is_dir();
-    let source = wide(source.as_os_str());
-    let destination_name = wide(destination.as_os_str());
+    let source = wide_path(source);
+    let destination_name = wide_path(destination);
     // Directory winners must never be replaced. A competing complete winner
     // is validated by the caller after this reports AlreadyExists.
     let flags = if directory {
@@ -466,7 +492,7 @@ pub(crate) fn test_grant_world(path: &Path) -> io::Result<()> {
     {
         return Err(io::Error::last_os_error());
     }
-    let path = wide(path.as_os_str());
+    let path = wide_path(path);
     // SAFETY: test deliberately installs an unsafe DACL to verify rejection.
     let result = unsafe {
         SetNamedSecurityInfoW(
@@ -505,7 +531,7 @@ pub(crate) fn file_identity(file: &File) -> io::Result<(u64, u64)> {
 pub(crate) fn path_identity(path: &Path) -> io::Result<(u64, u64)> {
     use windows_sys::Win32::Storage::FileSystem::FILE_FLAG_BACKUP_SEMANTICS;
     no_reparse(path)?;
-    let wide = wide(path.as_os_str());
+    let wide = wide_path(path);
     // SAFETY: the path is terminated and the returned handle is transferred to File.
     let handle = unsafe {
         CreateFileW(
@@ -543,7 +569,7 @@ pub(crate) fn safe_workspace(path: &Path) -> io::Result<()> {
         return Err(denied("workspace is not a directory"));
     }
     let owner = owner()?;
-    let wide = wide(path.as_os_str());
+    let wide = wide_path(path);
     let mut actual_owner: PSID = std::ptr::null_mut();
     let mut dacl: *mut ACL = std::ptr::null_mut();
     let mut descriptor: PSECURITY_DESCRIPTOR = std::ptr::null_mut();

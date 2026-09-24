@@ -407,6 +407,36 @@ pub(crate) fn real_directory(path: &Path) -> bool {
 mod tests {
     use super::*;
     #[test]
+    fn windows_portability_extended_cache_path_publication() {
+        use std::io::{Read, Write};
+        use std::os::windows::ffi::OsStrExt;
+
+        let temp = tempfile::tempdir().unwrap();
+        let deep = temp
+            .path()
+            .join("a".repeat(80))
+            .join("b".repeat(80))
+            .join("c".repeat(80));
+        assert!(deep.join("stage").as_os_str().encode_wide().count() > 260);
+        directory(&deep).unwrap();
+        let stage = deep.join("stage");
+        directory(&stage).unwrap();
+        let mut file = new_private_file(&stage.join("record")).unwrap();
+        file.write_all(b"complete").unwrap();
+        file.sync_all().unwrap();
+        drop(file);
+
+        let winner = deep.join("winner");
+        publish(&stage, &winner).unwrap();
+        let mut bytes = Vec::new();
+        read_private_file(&winner.join("record"))
+            .unwrap()
+            .read_to_end(&mut bytes)
+            .unwrap();
+        assert_eq!(bytes, b"complete");
+    }
+
+    #[test]
     fn windows_portability_private_acl_alias_and_lock_identity() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path().join("private");
