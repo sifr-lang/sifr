@@ -2,6 +2,59 @@
 
 Status: active
 
+## Final integration qualifier blocked by V01 host admission (2026-09-24)
+
+**BLOCKED; no full merge-profile pass or phase closure.** The final merged
+implementation and phase-record candidate is main
+`eafa57e22df22d6d8172adf8c65aa5c42aea8acb`: Item 12R implementation
+[PR #3946](https://github.com/sifr-lang/sifr/pull/3946) merged as
+`9237b2aa76a9c7cfe0789c26030ab36d39184beb`, and its record
+[PR #4020](https://github.com/sifr-lang/sifr/pull/4020) merged as `eafa57e22d`.
+An isolated qualifier worktree ran the canonical
+`scripts/run_all_tests.sh --profile merge` on that exact candidate. Its first
+invocation stopped at `performance_reference_admission` because no
+`SIFR_PERFORMANCE_REFERENCE` was selected (log SHA-256
+`99441fbdd519128d049cf470f585b9fc943ce61699fac1e2e544a181f63e3a1e`).
+The correctly selected immutable
+`linux-i7-4720hq-12gb-dev-v1` reference then stopped at the same admission
+step: the live host reports the `schedutil` CPU governor while the reference
+requires `performance`. Python 3.14.7 and ext4 target/temporary storage were
+matched, leaving only `host.cpu_power_policy` incomparable. The exact failed
+log is
+`/home/yaser5/projects/sifr/emitted-rust-final-integration-evidence-20260924/merge-reference-eafa57e22d.log`
+(SHA-256 `d66a526bb249720a2f8a9d22d357c399acd6212b2f587c383dff715b73ffe1e7`);
+its lane JSON has SHA-256
+`ed5227c0a2cd1d5b134f40995de4bbc98c4dad96b8fe0880dd04b77f295c5d25`.
+Neither invocation reached Cargo, selected areas, or E2E. This is the
+[architecture V01 host prerequisite](ad-hoc-architecture-correctness-current-main.md#v01f05-delivery-receipt-2026-09-23);
+no shared CPU policy or reference was changed.
+
+Independent merge-selected area commands were run separately through
+`sifr_verify areas run`, without relabeling them as a full-gate result. Rust
+interop passed **13/13** (JSON SHA-256
+`ee1d854ed12dbd0d1e500e3e8c25e87e39d08cc362dc1c11c7b01ea261e19c1e`).
+Coverage readiness failed fast because the new `sifr_cache_storage` and
+`sifr_compiler_services` Cargo packages lack coverage classifications (JSON
+SHA-256 `3417f0c1f555b9089a7cadd89cf702f15300a1d4632796dd38cfb360e68f4d3b`);
+the registry owner and C02a0 producer are recorded in
+[the architecture issue](ad-hoc-architecture-correctness-current-main.md).
+The core-language selection is **not a pass**: integer dtype, HIR (3 rows),
+CFG (4 rows), and audit fixtures completed, but the syntax suite was cancelled
+during another cold build under sustained shared-host I/O pressure. Preserve
+its failed/partial JSON (SHA-256
+`c89ceb25f1a7f122f5bb4941c221cd7fadb838d42f6ec9871eba20a2fc2e6d77`)
+and log (SHA-256
+`1de4a8eb5d6f02fc92029925bd4926103e510a3f6ab4d5ab56588e9bc30a2f4f`).
+Other standalone areas, toolchain steps and crate suites were not run by this
+qualifier. No implementation repair, review, or merge is claimed.
+
+Next: the V01 owner needs an approved host window with the captured
+`performance` CPU policy, matching reference/toolchain/storage and a fresh
+reference within its governed lifetime. The coverage registry owner must classify
+the two C02a0 packages. Then rerun the full merge profile on the final candidate
+(or a new exact candidate if implementation inputs change), preserving these
+failed receipts. Whole-phase closure remains separate and unstarted.
+
 ## Item 12R and retained Item 12 implementation merge (2026-09-24)
 
 **Implementation merged; the phase remains active for final integration and whole-phase
