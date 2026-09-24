@@ -3,10 +3,11 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-/// Required bridge and sysroot roots must be readable in full. Links are not
-/// source members: rejecting them prevents escape and traversal cycles.
+/// Required bridge and sysroot roots must be readable in full. A link at
+/// the selected root or inside it is rejected, preventing escapes and cycles.
+/// Ancestor links are part of resolving the selected path (for example /var on
+/// macOS), and the caller revalidates mutable inputs after Cargo.
 pub(super) fn digest_path_checked(path: &Path) -> io::Result<String> {
-    reject_linked_ancestors(path)?;
     let mut identity = IdentityEncoder::new("rust-bridge-source-tree-v3");
     encode_digest_entries(path, path, &mut identity)?;
     Ok(identity.finish())
@@ -15,7 +16,6 @@ pub(super) fn digest_path_checked(path: &Path) -> io::Result<String> {
 /// An optional root is absent only on NotFound. Existing files, empty
 /// directories, links and read failures remain distinct observations.
 pub(super) fn digest_optional_directory_checked(path: &Path) -> io::Result<Option<String>> {
-    reject_linked_ancestors(path)?;
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_dir() => digest_path_checked(path).map(Some),
         Ok(_) => Err(io::Error::new(
@@ -76,29 +76,6 @@ pub(super) fn normalized_path_string(path: &Path) -> String {
         .map(|component| component.as_os_str().to_string_lossy())
         .collect::<Vec<_>>()
         .join("/")
-}
-
-fn reject_linked_ancestors(path: &Path) -> io::Result<()> {
-    for ancestor in path.ancestors().skip(1) {
-        if ancestor.as_os_str().is_empty() {
-            continue;
-        }
-        match fs::symlink_metadata(ancestor) {
-            Ok(metadata) if metadata.file_type().is_symlink() => {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    format!(
-                        "bridge source parent link is unsupported: {}",
-                        ancestor.display()
-                    ),
-                ));
-            }
-            Ok(_) => {}
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error),
-        }
-    }
-    Ok(())
 }
 
 fn encode_digest_entries(
@@ -232,13 +209,20 @@ mod tests {
         let denied = root.path().join("denied.rs");
         fs::write(&denied, b"secret").unwrap();
         fs::set_permissions(&denied, fs::Permissions::from_mode(0o000)).unwrap();
+        let direct_read = fs::read(&denied);
         let result = digest_path_checked(root.path());
         fs::set_permissions(&denied, fs::Permissions::from_mode(0o600)).unwrap();
-        assert!(result.is_err());
+        assert_eq!(result.is_err(), direct_read.is_err());
         symlink(outside.path(), &linked).unwrap();
         assert!(digest_path_checked(&linked).is_err());
-        assert!(digest_path_checked(&linked.join("outside.rs")).is_err());
-        assert!(digest_optional_directory_checked(&linked.join("missing")).is_err());
+        assert_eq!(
+            digest_path_checked(&linked.join("outside.rs")).unwrap(),
+            digest_path_checked(&outside.path().join("outside.rs")).unwrap()
+        );
+        assert_eq!(
+            digest_optional_directory_checked(&linked.join("missing")).unwrap(),
+            None
+        );
     }
 
     #[test]
