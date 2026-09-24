@@ -2,6 +2,87 @@
 
 Status: active
 
+## Item 12R and retained Item 12 implementation merge (2026-09-24)
+
+**Implementation merged; the phase remains active for final integration and whole-phase
+closure.** [PR #3946](https://github.com/sifr-lang/sifr/pull/3946) merged exact
+implementation candidate `c98c187e4e0afbee01c30f2d170ebe2b8dea83ef` as
+`9237b2aa76a9c7cfe0789c26030ab36d39184beb`; the merge commit and reviewed candidate have
+the same tree. Candidate `4d1bc5658` integrated main `ab53fba76` (including W1 taxonomy
+and package-root repairs), `d01ff2fad` integrated `a33947277` (C01/N06), and `c98c187e4`
+integrated `9dcc0c767` (C02a metadata/storage services). The Item 12R borrowed-value
+planner, importing-call rewrite, and two-module regression remained byte-identical
+through the last two integrations. The exact `c98c187e4` read-only Opus 5.5 review is
+**SATISFIED**, with no blocking finding: external
+`/home/yaser5/projects/sifr/emitted-rust-item12r-qualification-20260924/review-response-c98c187e4.md`
+(SHA-256 `860dc5bb599da5faf3b6ec2eacf60667179a0c6d615f398221f4264c784c377c`). The exact
+`4d1bc5658` and `d01ff2fad` integration reviews were also SATISFIED; all review and test
+logs remain in that external evidence directory.
+
+On `4d1bc5658`, full generated-code quality passed **11/11**
+(`target/verification/areas/gcq-full-published-4d1bc5658.json`, SHA-256
+`6e55594a9907a81a0b7b20f025c5a31cdcc84c0b95e1fb4d694a590680d65a50`); source and native
+passed **411/411** each (source `target/verification/areas/source411-4d1bc5658.json`,
+SHA-256 `5f838e716e2b9c1f078646c58c3c7aa094a6832a6e90461044b183ac8998c18f`; native
+external `native-full-1790254964224430113/native-matrix.json`, SHA-256
+`0f28544cfb52a051c625d92cc94961d9e781c6f0fb359b19f5814ecfbe7ef686`), E2E merge profile
+**729/729** (external `e2e-merge-4d1bc5658.log`, SHA-256
+`c32cc396734fe8bd79646c49e1d36d8a30b5c8e1b03b63cfe59294cca8332352`), codegen library
+**1,738/1,738**, coverage readiness **4/4**, project workspace **17/17**, Rust interop
+**13/13**, sysroot metadata-corpus and metadata-structural **1/1** each, legal method
+names **3/3**, and formatting, freshness, runner/profile, HIR and file-size checks
+passed. Preserve the earlier GCQ **8/11** receipt
+(`target/verification/areas/gcq-full-4d1bc5658.json`, SHA-256
+`452f018f80d4c1ccd5eccf38895d637706d27fde3d22b016e710894959a79b84`) as a failed setup
+attempt: its companion/corpus/native selections could not resolve the then-unpublished
+Git revision offline; the published-candidate full **11/11** receipt supersedes it.
+These broad passes are specific to `4d1bc5658`, not asserted as exact-`c98c187e4`
+passes.
+
+The affected checks were repeated after main integrations. On `d01ff2fad`, frontend
+library passed **151/151**, the Item 12R emitted-shape/native two-module project
+regression **1/1**, checked-codegen **2/2**, project graph **19/19**, project workspace
+**17/17** (`target/verification/areas/project-workspace-d01ff2fad.json`, SHA-256
+`07dc79ffefeef8c4edfcf807f6c91260f90427c44737afccb30693000a014fd2`), and Rust interop
+**13/13** (`target/verification/areas/rust-interop-d01ff2fad.json`, SHA-256
+`9c0a05d5321320fc0af6bc436eb6bd57090ac6ddfcfddd52b5b69e9d4a661cfc`). On final
+implementation candidate `c98c187e4`, the Item 12R two-module native regression passed
+**1/1** (external `driver-borrowed-c98c187e4.log`, SHA-256
+`07cd849820653bd2dcfee9ea27c4714e3c05d3407c33d5efb62a50d278298709`), checked-codegen
+**2/2**, extracted compiler-services tests **7/7**, cache-storage tests **3/3**, and the
+exact `full_corpus_exact_emission` metadata assertion **1/1** using the version-matched
+prepared source (external `metadata-corpus-focused-c98c187e4.log`, SHA-256
+`61a8ab70e8c86e02ea375ed79ccfb1c27eb0e59e19c33b8605463aaf2d34add9`). Formatting, HIR
+maintainability, the 4,240-file size guardrail and diff hygiene passed. A broad
+driver-library run on `d01ff2fad` was stopped after concurrent Rust interop/sysroot
+failures; its external `driver-lib-d01ff2fad.log` (SHA-256
+`12df3aebae6a2cf6abc0ef5b2d57d22f50dc01fc35330244f6be3a71564367f8`) is partial, not a
+pass.
+
+The implementation merge used the user's narrow instruction to continue despite
+separately owned failed named selections; none is recorded as passing. On `4d1bc5658`,
+core language was **5/6** (`target/verification/areas/core-language-4d1bc5658.json`,
+SHA-256 `a2a662e73bddd85159086d95a5cd50fd919c2a90275349028274100bd4bff6ee`) because the
+pre-existing `method_receiver_conventions_and_source_ranges` HIR snapshot lacks its
+lowering inventory row (receiver/core-language owner recorded in
+[the owner issue](ad-hoc-pre-v1-compatibility-removal.md)); stdlib parity was **7/8**
+(`target/verification/areas/stdlib-parity-4d1bc5658.json`, SHA-256
+`161687dcee77b05ba348d62f19e1133138484e73b53f6ad29ad18fa978480e12`) because
+`demos/python_raw_api` lacks canonical `math` import context; strict workspace Clippy
+reported two `items_after_statements` diagnostics in `checked_place.rs` (external
+`clippy-workspace-4d1bc5658.log`, SHA-256
+`aec8577a49a1d6f99000ed9d302a7298a6c4dc092efec4f28c21aead69198090`). The DX.5 metadata
+consumer inventory still reports classification drift on `c98c187e4` (external
+`dx-metadata-inventory-c98c187e4.log`, SHA-256
+`cdcfa9a146702b8e1300e4fcbd4a3b12fa59376dcd90e32118416da1b30ff064`). Preserve the failed
+machine receipts and defer their repairs to their owners; no external code was patched
+here.
+
+No create-PR or full merge gate ran under the approved intermediate-item policy. The
+final integration qualifier owns the full merge profile on the final merged candidate,
+including repair and rerun of any in-scope failure. The later whole-phase closer owns
+the documentation-only Opus review and closure records.
+
 ## Item 12R resumed qualification checkpoint (2026-09-24)
 
 **Implementation remains unmerged; retained Item 12 remains open.** Draft
