@@ -63,6 +63,8 @@ impl CachedArtifactEntry {
 }
 
 pub(crate) struct PendingCachedArtifact {
+    #[cfg(unix)]
+    activity: Option<crate::cache_storage::LeaseActivity>,
     lease: std::sync::Arc<std::fs::File>,
     scope: PathBuf,
     native_identity: String,
@@ -71,13 +73,38 @@ pub(crate) struct PendingCachedArtifact {
     report: ArtifactCacheReport,
 }
 
+fn lock_artifact(lease: &std::fs::File, root: &Path, shared: bool) -> std::io::Result<()> {
+    let parent = root
+        .parent()
+        .ok_or_else(|| std::io::Error::other("missing artifact parent"))?;
+    let key = root
+        .file_name()
+        .ok_or_else(|| std::io::Error::other("missing artifact key"))?;
+    #[cfg(unix)]
+    return crate::cache_storage::lock_bounded(
+        lease,
+        &parent.join(".locks").join(key),
+        shared,
+        crate::cache_storage::LEASE_WAIT,
+    );
+    #[cfg(windows)]
+    {
+        let _ = (parent, key);
+        if shared {
+            lease.lock_shared()
+        } else {
+            lease.lock()
+        }
+    }
+}
+
 impl PendingCachedArtifact {
     pub(crate) fn workspace_root(&self) -> &Path {
         &self.staging_root
     }
 
     pub(crate) fn commit(
-        self,
+        mut self,
         required_paths: &[&Path],
     ) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
         crate::cache_storage::seal(&self.staging_root).map_err(storage_error)?;
@@ -120,7 +147,9 @@ impl PendingCachedArtifact {
 
         match crate::cache_storage::publish(&self.staging_root, &self.final_root) {
             Ok(()) => {
-                self.lease.lock_shared().map_err(storage_error)?;
+                #[cfg(unix)]
+                drop(self.activity.take());
+                lock_artifact(&self.lease, &self.final_root, true).map_err(storage_error)?;
                 if !valid_entry(&self.final_root, &metadata, required_paths) {
                     return Err(storage_error(
                         "published cache entry disappeared during lock conversion",
@@ -146,7 +175,9 @@ impl PendingCachedArtifact {
                         "concurrent cache winner is incomplete or incompatible",
                     ));
                 }
-                self.lease.lock_shared().map_err(storage_error)?;
+                #[cfg(unix)]
+                drop(self.activity.take());
+                lock_artifact(&self.lease, &self.final_root, true).map_err(storage_error)?;
                 if !valid_entry(&self.final_root, &metadata, required_paths) {
                     return Err(storage_error(
                         "published cache entry disappeared during lock conversion",
@@ -213,9 +244,10 @@ pub(crate) fn prepare_cached_artifact(
     );
     // Readers lease immutable entries. A miss upgrades to exclusive ownership
     // and revalidates after acquisition before producing a new entry.
-    lease.lock_shared().map_err(storage_error)?;
-
     let final_root = cache_root.join(&cache_key);
+    lock_artifact(&lease, &final_root, true).map_err(storage_error)?;
+    #[cfg(unix)]
+    let mut activity = None;
     let expected = ArtifactCacheMetadata {
         schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
         namespace: namespace.to_owned(),
@@ -226,7 +258,12 @@ pub(crate) fn prepare_cached_artifact(
     };
     if !valid_entry(&final_root, &expected, required_paths) {
         lease.unlock().map_err(storage_error)?;
-        lease.lock().map_err(storage_error)?;
+        lock_artifact(&lease, &final_root, false).map_err(storage_error)?;
+        #[cfg(unix)]
+        {
+            activity =
+                Some(crate::cache_storage::LeaseActivity::start(&lease).map_err(storage_error)?);
+        }
         // Revalidation below sees a winner that completed during lock acquisition.
     }
 
@@ -248,7 +285,9 @@ pub(crate) fn prepare_cached_artifact(
                         crate::cache_storage::payload(&final_root, relative).is_ok()
                     })
                 {
-                    lease.lock_shared().map_err(storage_error)?;
+                    #[cfg(unix)]
+                    drop(activity.take());
+                    lock_artifact(&lease, &final_root, true).map_err(storage_error)?;
                     if !valid_entry(&final_root, &expected, required_paths) {
                         return Err(storage_error(
                             "cache entry disappeared during reader lock conversion",
@@ -296,6 +335,8 @@ pub(crate) fn prepare_cached_artifact(
         },
     )?;
     Ok(PreparedArtifactCache::Miss(PendingCachedArtifact {
+        #[cfg(unix)]
+        activity,
         lease,
         scope: crate::cache_storage::owner_scope().map_err(storage_error)?,
         native_identity: native_identity.to_owned(),
