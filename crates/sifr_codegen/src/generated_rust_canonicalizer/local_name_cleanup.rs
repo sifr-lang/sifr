@@ -369,6 +369,11 @@ impl LocalReferenceRenamer<'_> {
 }
 
 impl VisitMut for LocalReferenceRenamer<'_> {
+    fn visit_item_fn_mut(&mut self, _function: &mut syn::ItemFn) {
+        // A nested fn item has its own parameter scope. Its explicit capture
+        // parameters are renamed when that function is canonicalized.
+    }
+
     fn visit_field_value_mut(&mut self, field: &mut syn::FieldValue) {
         // Shorthand prints the member token, so expand it before changing only
         // the value binding. The field's nominal identity must stay unchanged.

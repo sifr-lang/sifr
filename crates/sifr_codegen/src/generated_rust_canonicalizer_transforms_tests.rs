@@ -625,6 +625,33 @@ fn disambiguates_nested_bindings_against_enclosing_bindings() {
 }
 
 #[test]
+fn outer_parameter_rename_respects_nested_fn_capture_parameters() {
+    let source = r#"
+        fn search(grid1: &[Vec<i64>], grid2: &[Vec<i64>]) -> bool {
+            fn dfs(grid2: &[Vec<i64>], row: usize) -> bool {
+                if row == grid2.len() { return true; }
+                grid2.get(row).is_some() && dfs(grid2, row + 1)
+            }
+            dfs(grid2, 0)
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("nested capture parameters must have their own lexical scope");
+    let nested = canonical
+        .split("fn dfs(")
+        .nth(1)
+        .expect("recursive nested function should remain an item");
+    assert!(nested.contains("grid2.get(row)"), "{canonical}");
+    assert!(nested.contains("dfs(grid2, row + 1)"), "{canonical}");
+    assert!(
+        canonical.contains("fn dfs(grid2: &[Vec<i64>]"),
+        "{canonical}"
+    );
+    assert!(canonical.contains("dfs(grid2_argument_"), "{canonical}");
+}
+
+#[test]
 fn scopes_control_carriers_to_the_closure_that_owns_them() {
     let source = r#"
         pub fn run() -> Result<(), String> {

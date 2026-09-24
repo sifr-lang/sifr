@@ -169,6 +169,40 @@ def main():
 }
 
 #[test]
+fn recursive_nested_checked_reads_use_the_injected_capture_binding() {
+    let source = include_str!(
+        "../../../../verification/areas/algorithmic_compatibility/corpora/leetcode/src/1905_count_sub_islands.sifr"
+    );
+    let generated = crate::canonicalize_generated_rust_source(&generate_rust_from_source(source))
+        .expect("1905 emitted Rust must canonicalize");
+    let nested = generated
+        .split("fn dfs(")
+        .nth(1)
+        .expect("1905 dfs must be emitted as a nested function");
+    let nested = nested
+        .split("let (rows_value_")
+        .next()
+        .expect("outer bindings must follow dfs");
+    let capture_start = nested
+        .find("grid2_argument_")
+        .expect("dfs must receive the explicit grid2 capture");
+    let capture = nested[capture_start..]
+        .split(": &[Vec<SifrInt>]")
+        .next()
+        .expect("dfs capture must be a borrowed nested list");
+    assert!(
+        nested.contains(&format!("{capture}: &[Vec<SifrInt>]")),
+        "{generated}"
+    );
+    assert!(nested.contains(&format!("&{capture};")), "{generated}");
+    assert_eq!(
+        nested.matches(&format!("{capture},")).count(),
+        4,
+        "{generated}"
+    );
+}
+
+#[test]
 fn test_expr_path_handles_call_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
