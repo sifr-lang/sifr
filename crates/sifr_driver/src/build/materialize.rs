@@ -440,7 +440,7 @@ fn materialize_binary_project_files_with_target(
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let src_dir = project_path.join("src");
     let mut current_files = BTreeSet::new();
-    std::fs::create_dir_all(&src_dir).map_err(|error| {
+    super::native_storage::generated_directory(&src_dir).map_err(|error| {
         vec![build_error(format!(
             "failed to create output directory: {error}"
         ))]
@@ -707,7 +707,7 @@ fn write_project_file(
     label: &str,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
+        super::native_storage::generated_directory(parent)
             .map_err(|error| vec![build_error(format!("failed to create {label}: {error}"))])?;
     }
     let contents = contents.as_ref();

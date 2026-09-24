@@ -48,6 +48,7 @@ fn install(context: &crate::CompilerContext, dest: &Path) {
         "compiler_binary_sha256":"0".repeat(64)
     })).unwrap()).unwrap();
 }
+#[cfg(unix)]
 #[test]
 fn installed_relocation_and_generation_switch_pin_all_sources() {
     let context = crate::CompilerContext::for_test();

@@ -2,6 +2,7 @@ use super::*;
 use sifr_frontend::{
     DiskSourceProvider, FrontendContext, FrontendInput, FrontendMode, SourcePath, SourceText,
 };
+#[cfg(unix)]
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::{
     fs,
@@ -129,6 +130,7 @@ fn completed_families() {
         assert_eq!(remapped, record.diagnostics().unwrap());
     }
 }
+#[cfg(unix)]
 #[test]
 fn dx13_c04_unavailable_readonly_and_hintless() {
     let (_root, file, cache) = fixture();
@@ -152,6 +154,7 @@ fn dx13_c04_unavailable_readonly_and_hintless() {
     assert_eq!(report.status, "write-unavailable");
     fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();
 }
+#[cfg(unix)]
 #[test]
 fn dx13_c08_c09_inherited_payloads_reader_gc() {
     let (_root, file, cache) = fixture();
@@ -348,8 +351,25 @@ fn process_death_and_new_process_restore() {
     let fresh: serde_json::Value = serde_json::from_slice(&fs::read(first).unwrap()).unwrap();
     let restored: serde_json::Value = serde_json::from_slice(&fs::read(second).unwrap()).unwrap();
     assert_eq!(fresh["diagnostics"], restored["diagnostics"]);
-    assert_eq!(fresh["report"]["computed_checks"], 1);
-    assert_eq!(restored["report"]["restored_checks"], 1);
+    assert_eq!(fresh["report"]["computed_checks"], 1, "fresh={fresh}");
+    assert_eq!(
+        fresh["report"]["status"], "published",
+        "fresh={fresh}; restored={restored}"
+    );
+    let reopened = storage::Store::open(
+        &cache,
+        file.parent().unwrap(),
+        &context().identity().unwrap(),
+    )
+    .unwrap_or_else(|error| panic!("reopen: {error}; fresh={fresh}; restored={restored}"));
+    assert!(
+        reopened.latest().is_some(),
+        "fresh={fresh}; restored={restored}"
+    );
+    assert_eq!(
+        restored["report"]["restored_checks"], 1,
+        "fresh={fresh}; restored={restored}"
+    );
 }
 
 #[test]
@@ -401,6 +421,7 @@ fn dx13_c09_concurrent_process_reader_and_gc() {
     assert!(!old.exists());
     assert_eq!(run(&cache, &file).1.restored_checks, 1);
 }
+#[cfg(unix)]
 #[test]
 fn dx13_c04_readonly_workspace_publishes_without_hint() {
     let (_root, file, cache) = fixture();
@@ -611,4 +632,104 @@ fn non_utf8_record_serialization_disables_publication() {
     assert_eq!(report.status, "serialization-unavailable");
     assert_eq!(report.payload_bytes, 0);
     assert!(store(&cache, &file).latest().is_none());
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_concurrent_writer_gc_abandoned_stage_and_winner() {
+    let (root, file, cache) = fixture();
+    let marker = root.path().join("before-rename");
+    let mut writer = worker(&file, &cache, "before-rename", &marker);
+    let deadline = Instant::now() + Duration::from_secs(15);
+    while !marker.exists() && Instant::now() < deadline {
+        thread::sleep(Duration::from_millis(10));
+    }
+    assert!(marker.exists(), "writer did not stage a generation");
+    let store = store(&cache, &file);
+    assert!(
+        store.prune(true, false).is_err(),
+        "GC ignored the live writer lease"
+    );
+    writer.kill().unwrap();
+    writer.wait().unwrap();
+    store.prune(true, false).unwrap();
+    assert!(store.latest().is_none());
+    assert!(
+        fs::read_dir(store.root.join("generations"))
+            .unwrap()
+            .all(|entry| !entry
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .contains(".stage-")),
+        "abandoned generation stage survived GC"
+    );
+    assert_eq!(run(&cache, &file).1.status, "published");
+    let winner = store.latest().unwrap();
+    assert!(winner.records().all(|record| record.is_ok()));
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_workspace_identity_alias_and_orphan_prune() {
+    let (root, file, cache) = fixture();
+    assert_eq!(run(&cache, &file).1.status, "published");
+    let store = store(&cache, &file);
+    let context = store.root.clone();
+    let workspace = file.parent().unwrap().to_path_buf();
+    // Orphan pruning requires the original canonical identity after the path
+    // disappears; Windows canonicalization adds the verbatim drive prefix.
+    let canonical_workspace = workspace.canonicalize().unwrap();
+    let outside = root.path().join("outside");
+    fs::create_dir(&outside).unwrap();
+    fs::write(outside.join("keep"), "intact").unwrap();
+
+    let alias = context.join("latest.stage-10-20");
+    let status = Command::new("cmd")
+        .args(["/C", "mklink", "/J"])
+        .arg(&alias)
+        .arg(&outside)
+        .status()
+        .unwrap();
+    assert!(status.success());
+    store.prune(true, false).unwrap();
+    assert_eq!(fs::read_to_string(outside.join("keep")).unwrap(), "intact");
+    fs::remove_dir(&alias).unwrap();
+    drop(store);
+
+    let workspace_alias = root.path().join("workspace-alias");
+    let status = Command::new("cmd")
+        .args(["/C", "mklink", "/J"])
+        .arg(&workspace_alias)
+        .arg(&workspace)
+        .status()
+        .unwrap();
+    assert!(status.success());
+    assert_eq!(
+        housekeeping::prune_workspace(&cache, &workspace_alias, true, false)
+            .unwrap()
+            .deleted_entries,
+        0
+    );
+    fs::remove_dir(&workspace_alias).unwrap();
+
+    let moved = root.path().join("moved-workspace");
+    fs::rename(&workspace, &moved).unwrap();
+    fs::create_dir(&workspace).unwrap();
+    assert_eq!(
+        housekeeping::prune_workspace(&cache, &workspace, true, false)
+            .unwrap()
+            .deleted_entries,
+        0
+    );
+    assert!(context.exists());
+    fs::remove_dir(&workspace).unwrap();
+    assert_eq!(
+        housekeeping::prune_workspace(&cache, &canonical_workspace, true, false)
+            .unwrap()
+            .deleted_entries,
+        1
+    );
+    assert!(!context.exists());
 }
