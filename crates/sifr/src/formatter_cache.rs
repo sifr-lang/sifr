@@ -211,7 +211,7 @@ mod tests {
             crate::compiler_identity().as_str(),
         )
         .unwrap();
-        let marker = config.cache_dir.join(identity);
+        let marker = config.cache_dir.join(&identity);
         for invalid in [
             b"ok".as_slice(),
             b"sifr-formatter-cache\n0\n",
@@ -220,12 +220,66 @@ mod tests {
             fs::write(&marker, invalid).unwrap();
             assert!(!try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
         }
+        let valid = marker_contents(&identity);
+        for index in [0, MARKER_OWNER.len() + 1, valid.len() - 2] {
+            let mut invalid = valid.clone();
+            invalid[index] = if invalid[index] == b'0' { b'1' } else { b'0' };
+            fs::write(&marker, &invalid).unwrap();
+            assert!(!try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
+        }
         fs::remove_file(&marker).unwrap();
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(&file, &marker).unwrap();
             assert!(!try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
         }
+    }
+
+    #[test]
+    fn unchanged_source_with_old_formatter_revision_is_a_miss() {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join("main.sifr");
+        fs::write(&file, "x = 1\n").unwrap();
+        let config = EffectiveFormatConfig {
+            cache_dir: root.path().join("cache"),
+            ..EffectiveFormatConfig::default()
+        };
+        fs::create_dir(&config.cache_dir).unwrap();
+        let options = FormatOptions::default();
+        let old_identity =
+            formatter_cache_identity(&file, "x = 1\n", options, "previous-revision").unwrap();
+        let old_marker = config.cache_dir.join(&old_identity);
+        fs::write(&old_marker, marker_contents(&old_identity)).unwrap();
+        let mut provider = sifr_frontend::DiskSourceProvider::new();
+        assert!(!try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
+    }
+
+    #[test]
+    fn incomplete_staging_file_does_not_authorize_a_hit() {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join("main.sifr");
+        fs::write(&file, "x = 1\n").unwrap();
+        let config = EffectiveFormatConfig {
+            cache_dir: root.path().join("cache"),
+            ..EffectiveFormatConfig::default()
+        };
+        fs::create_dir(&config.cache_dir).unwrap();
+        let options = FormatOptions::default();
+        let identity = formatter_cache_identity(
+            &file,
+            "x = 1\n",
+            options,
+            crate::compiler_identity().as_str(),
+        )
+        .unwrap();
+        fs::write(
+            config.cache_dir.join(".partial-stage"),
+            b"sifr-formatter-cache\n1\n",
+        )
+        .unwrap();
+        let mut provider = sifr_frontend::DiskSourceProvider::new();
+        assert!(!try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
+        assert!(!config.cache_dir.join(identity).exists());
     }
 
     #[test]

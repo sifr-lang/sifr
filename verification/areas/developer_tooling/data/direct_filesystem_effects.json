@@ -683,6 +683,13 @@
     {
       "path": "crates/sifr/src/formatter_cache.rs",
       "symbol": "invalid_markers_do_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(&marker, &invalid).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "invalid_markers_do_not_authorize_a_hit",
       "operation": "remove_file",
       "site": "fs::remove_file(&marker).unwrap();",
       "classification": "output-effect"
@@ -714,6 +721,55 @@
       "operation": "read",
       "site": "assert_eq!(fs::read(&cache).unwrap(), b\"occupied\");",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "unchanged_source_with_old_formatter_revision_is_a_miss",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&config.cache_dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "unchanged_source_with_old_formatter_revision_is_a_miss",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "unchanged_source_with_old_formatter_revision_is_a_miss",
+      "operation": "write",
+      "site": "fs::write(&old_marker, marker_contents(&old_identity)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&config.cache_dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "exists",
+      "site": "assert!(!config.cache_dir.join(identity).exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr/src/formatter_discovery.rs",
