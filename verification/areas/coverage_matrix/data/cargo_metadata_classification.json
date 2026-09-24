@@ -51,9 +51,24 @@
       "features": []
     },
     {
+      "name": "sifr_cache_storage",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_cache_storage", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": [{"name": "test-support", "profile_assignment": "test-fixture", "classification": "test_fixture"}]
+    },
+    {
       "name": "sifr_codegen",
       "classification": "first_party_compiler",
       "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_compiler_services",
+      "classification": "first_party_compiler",
+      "targets": [
+        {"name": "sifr_compiler_services", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}
+      ],
       "features": []
     },
     {
