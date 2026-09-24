@@ -2,6 +2,54 @@
 
 Status: active
 
+## Final integration qualifier blocked by root storage (2026-09-24)
+
+**BLOCKED; no full merge-profile pass or phase closure.** The current remote
+`main` candidate is `382f0b998ae1ce4f56fbd0f0e2d38ae40a73befd`, containing
+Item 12R [PR #3946](https://github.com/sifr-lang/sifr/pull/3946), its
+[phase receipt #4020](https://github.com/sifr-lang/sifr/pull/4020), the
+coverage-classification repair
+[PR #4024](https://github.com/sifr-lang/sifr/pull/4024), and its
+[record #4025](https://github.com/sifr-lang/sifr/pull/4025). The isolated
+qualifier checkout at `/data/sifr-emitted-final-qualifier-retry-20260924`
+ran the canonical `scripts/run_all_tests.sh --profile merge` with the pinned
+`linux-i7-4720hq-12gb-dev-v1` reference, Rust 1.98.1, Python 3.14.7, and
+reference-compatible ext4 Cargo target and temporary paths. The approved
+idle-host governor window switched `schedutil` to `performance` for each
+attempt; admission passed, and the guarded wrapper restored and independently
+verified `schedutil` on every exit. No other heavy Cargo/gate job was active.
+
+All four full-profile invocations stopped before selected assertions, so none
+is a gate pass. Attempt 1 reached the 40-minute `cargo_cache_setup` deadline
+after building the compiler and 13 of 93 generated graphs (log SHA-256
+`89680a765839ccc280ab9edd26e4f0ddc07acc5fb8b51b52a534f7d98f144ded`).
+Warm attempts prepared all 93 graphs. Attempt 2 built the 17-crate offline
+test set and stopped at 9.5 GiB free during separate crate preparation (log
+SHA-256 `0115a63392ab4f97808e5cf885a2c85343f44227602879b762ea405b08ea76cf`).
+Attempt 3 prepared the cache-storage and compiler-services binaries, then
+stopped at 6.5 GiB free (log SHA-256
+`77ea15d534c903efe91a1acbfdd91fadc5eee15adfd38ef8df28d88784f08150`).
+Attempt 4 reused those outputs, prepared compiler-component, SQL-contract, and
+SQL-MySQL binaries, then stopped at 5.7 GiB free on the next SQLite build
+(log SHA-256 `f6dc0b8983a4edb47eefc11f2d9acd3a0076ab41d348bf8ee9ec57748bced8aa`).
+The logs, gate-status, timing, and governor receipts are preserved under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/`; the four logs
+are named `merge-382f0b998ae1ce4f56fbd0f0e2d38ae40a73befd.log` and
+`.attempt2.log` through `.attempt4.log` with the same stem. Only this
+session's inactive incremental Cargo artifacts were reclaimed after checking
+that no Cargo or gate process remained; completed outputs remain in its owned
+target. Root ext4 has 6.7 GiB free after that recovery, with a 26 GiB owned
+target; `/data` has 592 GiB free but is not the reference-approved target
+source. Further crate preparations cannot safely run with the present root
+reserve. No implementation repair, review, or merge is claimed.
+
+Next: the V01 host/storage owner must provide sufficient free space on the
+reference-compatible root filesystem or an approved matching reference
+configuration. Then recheck the exact final candidate and inputs, obtain an
+approved idle-host CPU window, and rerun the full merge profile using the
+retained compatible outputs. Coverage readiness and the remaining selected
+assertions are still unqualified. Whole-phase closure remains separate.
+
 ## Final integration qualifier blocked by V01 host admission (2026-09-24)
 
 **BLOCKED; no full merge-profile pass or phase closure.** The final merged
