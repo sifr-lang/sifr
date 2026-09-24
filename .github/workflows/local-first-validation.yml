@@ -116,6 +116,7 @@ jobs:
         run: |
           $cases = @(
             "build::rust_formatter::tests::windows_generated_build_script_uses_a_real_empty_rustfmt_config",
+            "build::rust_formatter::tests::generated_rust_uses_the_canonical_toolchain_layout",
             "build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project"
           )
           foreach ($case in $cases) {
