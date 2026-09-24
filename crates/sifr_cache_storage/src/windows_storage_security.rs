@@ -124,7 +124,7 @@ fn owner() -> io::Result<Owner> {
         Ok(Owner { token, bytes })
     }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 pub fn token_default_owner_is_administrators() -> io::Result<bool> {
     let owner = owner()?;
     let mut len = 0;
@@ -502,7 +502,7 @@ pub fn durable_rename(source: &Path, destination: &Path) -> io::Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 pub fn test_grant_world(path: &Path) -> io::Result<()> {
     let sddl = wide(OsStr::new("D:P(A;;FA;;;WD)"));
     let mut descriptor = std::ptr::null_mut();

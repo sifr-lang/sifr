@@ -590,8 +590,8 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 - `sifr_compiler_services` owns source stdlib bootstrap, indexed metadata encoding
   and production, prepared metadata, and project-result transport. Its producer
   receives cancellation from the driver through an explicit callback and uses
-  `sifr_cache_storage` for private files, leases, bounded waits, and atomic
-  publication. The driver's metadata reader and `CompilerContext` remain the
+  `sifr_cache_storage` for private files, leases, Unix bounded waits,
+  Windows cancellable lease polling, and atomic publication. The driver's metadata reader and `CompilerContext` remain the
   sole provider and metadata-generation owner; the driver still chooses cache
   roots and owners and handles CLI cache policy and pruning. Dependencies point
   from driver to the lower services and storage, and from services to storage.

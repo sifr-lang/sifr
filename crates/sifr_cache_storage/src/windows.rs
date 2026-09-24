@@ -5,7 +5,7 @@ use std::io;
 use std::os::windows::fs::OpenOptionsExt;
 use std::os::windows::io::AsRawHandle;
 use std::path::{Component, Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 pub fn owner_scope() -> io::Result<PathBuf> {
     let cwd = std::env::current_dir()?.canonicalize()?;
@@ -140,130 +140,21 @@ fn inherit_lease(file: &File) -> io::Result<()> {
     Ok(())
 }
 
-/// A renewing owner has the full hard limit; an idle one has a shorter wait.
-pub const LEASE_IDLE_WAIT: Duration = Duration::from_secs(30);
-pub const LEASE_WAIT: Duration = Duration::from_mins(41);
-
-pub struct LeaseActivity {
-    stop: std::sync::mpsc::Sender<()>,
-    worker: Option<std::thread::JoinHandle<()>>,
-}
-impl LeaseActivity {
-    pub fn start(file: &File) -> io::Result<Self> {
-        Self::start_with_interval(file, Duration::from_secs(5))
-    }
-    pub fn start_with_interval(file: &File, interval: Duration) -> io::Result<Self> {
-        let file = file.try_clone()?;
-        let (stop, stopped) = std::sync::mpsc::channel();
-        let worker = std::thread::Builder::new()
-            .name("sifr-cache-lease".into())
-            .spawn(move || {
-                while stopped.recv_timeout(interval)
-                    == Err(std::sync::mpsc::RecvTimeoutError::Timeout)
-                {
-                    if record_lock_owner(&file).is_err() {
-                        break;
-                    }
-                }
-            })?;
-        Ok(Self {
-            stop,
-            worker: Some(worker),
-        })
-    }
-}
-impl Drop for LeaseActivity {
-    fn drop(&mut self) {
-        let _ = self.stop.send(());
-        if let Some(worker) = self.worker.take() {
-            let _ = worker.join();
-        }
-    }
-}
-fn record_lock_owner(file: &File) -> io::Result<()> {
-    use std::io::{Seek, Write};
-    let note = format!(
-        "last_exclusive_pid={} scope={} renewed_at_ns={}\n",
-        std::process::id(),
-        owner_scope()?.display(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos(),
-    );
-    file.set_len(0)?;
-    let mut handle = file;
-    handle.seek(std::io::SeekFrom::Start(0))?;
-    handle.write_all(note.as_bytes())?;
-    file.sync_data()
-}
-fn lease_timeout(file: &File, path: &Path, limit: Duration) -> io::Error {
-    use std::io::{Read, Seek};
-    let mut note = String::new();
-    let owner = file
-        .try_clone()
-        .and_then(|mut clone| {
-            clone.seek(std::io::SeekFrom::Start(0))?;
-            clone.take(4096).read_to_string(&mut note)?;
-            Ok(note)
-        })
-        .unwrap_or_else(|_| "owner note unavailable".into());
-    io::Error::new(
-        io::ErrorKind::TimedOut,
-        format!(
-            "cache lease wait exceeded {:?}: {}; {} (the recorded parent may have a live child)",
-            limit,
-            path.display(),
-            owner.trim()
-        ),
-    )
-}
-pub fn lock_bounded_with_hooks(
+/// Preserve the Windows metadata wait contract: poll the OS lease until it is
+/// released, and let the caller interrupt each attempt. The Windows file time
+/// is not a reliable renewal signal while another handle remains open.
+pub fn lock_with_hooks(
     file: &File,
-    path: &Path,
-    shared: bool,
-    hard_limit: Duration,
-    idle_limit: Duration,
     mut cancelled: impl FnMut() -> io::Result<()>,
     mut waiting: impl FnMut() -> io::Result<()>,
 ) -> io::Result<()> {
-    let started = Instant::now();
-    let mut idle_since = started;
-    let mut last_change = file.metadata().and_then(|meta| meta.modified()).ok();
     loop {
         cancelled()?;
-        let attempt = if shared {
-            file.try_lock_shared()
-        } else {
-            file.try_lock()
-        };
-        match attempt {
-            Ok(()) => {
-                if !shared {
-                    record_lock_owner(file)?;
-                }
-                return Ok(());
-            }
+        match file.try_lock() {
+            Ok(()) => return Ok(()),
             Err(std::fs::TryLockError::WouldBlock) => {
-                let changed = file.metadata().and_then(|meta| meta.modified()).ok();
-                if changed.is_some() && changed != last_change {
-                    last_change = changed;
-                    idle_since = Instant::now();
-                }
-                let hard_remaining = hard_limit.saturating_sub(started.elapsed());
-                let idle_remaining = idle_limit.saturating_sub(idle_since.elapsed());
-                if hard_remaining.is_zero() {
-                    return Err(lease_timeout(file, path, hard_limit));
-                }
-                if idle_remaining.is_zero() {
-                    return Err(lease_timeout(file, path, idle_limit));
-                }
                 waiting()?;
-                std::thread::sleep(
-                    Duration::from_millis(10)
-                        .min(hard_remaining)
-                        .min(idle_remaining),
-                );
+                std::thread::sleep(Duration::from_millis(10));
             }
             Err(std::fs::TryLockError::Error(error)) => return Err(error),
         }

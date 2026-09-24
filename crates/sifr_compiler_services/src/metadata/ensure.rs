@@ -133,6 +133,7 @@ pub fn ensure_with_hook(
             return remember(prepared);
         }
     }
+    #[cfg(unix)]
     sifr_cache_storage::lock_bounded_with_hooks(
         &lock,
         &root.join(".locks").join(&key),
@@ -143,7 +144,15 @@ pub fn ensure_with_hook(
         || hook(Stage::Waiting).map_err(std::io::Error::other),
     )
     .map_err(fail)?;
+    #[cfg(unix)]
     let activity = sifr_cache_storage::LeaseActivity::start(&lock).map_err(fail)?;
+    #[cfg(windows)]
+    sifr_cache_storage::lock_with_hooks(
+        &lock,
+        || cancelled(cancel).map_err(std::io::Error::other),
+        || hook(Stage::Waiting).map_err(std::io::Error::other),
+    )
+    .map_err(fail)?;
     // Recheck after ownership; a waiter observes the winner's complete output.
     if let Some(prepared) = SUCCESSES
         .get_or_init(Mutex::default)
@@ -161,6 +170,7 @@ pub fn ensure_with_hook(
     if path.is_file() {
         if let Ok(prepared) = validate(&path, inputs.compatibility, lock.try_clone().map_err(fail)?)
         {
+            #[cfg(unix)]
             drop(activity);
             lock.unlock().map_err(fail)?;
             return remember(prepared);
@@ -200,6 +210,7 @@ pub fn ensure_with_hook(
     cancelled(cancel)?;
     sifr_cache_storage::publish(&staging, &path).map_err(fail)?;
     hook(Stage::Published)?;
+    #[cfg(unix)]
     drop(activity);
     lock.unlock().map_err(fail)?;
     let prepared = Arc::new(PreparedMetadata {
