@@ -10,6 +10,31 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## Emitted-Rust final integration external blockers (2026-09-24)
+
+The final Emitted-Rust candidate `eafa57e22df22d6d8172adf8c65aa5c42aea8acb`
+ran the canonical merge profile in its own worktree. With the approved
+`linux-i7-4720hq-12gb-dev-v1` reference explicitly selected, Python 3.14.7
+and ext4 target/temporary storage matched, but V01 admission rejected the
+live `schedutil` CPU governor against the captured `performance` policy.
+The exact failed log is
+`/home/yaser5/projects/sifr/emitted-rust-final-integration-evidence-20260924/merge-reference-eafa57e22d.log`
+(SHA-256 `d66a526bb249720a2f8a9d22d357c399acd6212b2f587c383dff715b73ffe1e7`).
+The gate stopped before Cargo or any selected assertion. V01 retains the
+owner-controlled host-policy prerequisite described in its delivery receipt;
+this qualifier did not change the global governor or approve another reference.
+
+A separate exact merge-selected `coverage_matrix/readiness` area command
+failed on two missing Cargo-package classifications:
+`sifr_cache_storage` and `sifr_compiler_services`. Its failed JSON is
+`/home/yaser5/projects/sifr/worktrees/emitted-rust-final-integration-20260924/target/verification/areas/coverage-final-eafa57e22d.json`
+(SHA-256 `3417f0c1f555b9089a7cadd89cf702f15300a1d4632796dd38cfb360e68f4d3b`).
+The X01 coverage registry owner must classify the packages introduced by
+C02a0; neither the Emitted-Rust qualifier nor the V01 host owner owns that
+repair. Preserve the failure and rerun readiness after the registry update.
+The [emitted-Rust phase record](ad-hoc-emitted-rust-excellence.md#final-integration-qualifier-blocked-by-v01-host-admission-2026-09-24)
+holds the separate passing and partial area receipts.
+
 ## Preparation/F33 crosswalk and bounded delivery
 
 | ID | Owner / findings / status | Required acceptance evidence |
