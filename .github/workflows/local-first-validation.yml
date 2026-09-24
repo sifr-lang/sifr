@@ -110,6 +110,9 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Prepare locked target dependencies
         run: cargo fetch --locked
+      - name: Run Windows native executable selection
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        run: cargo test --locked -p sifr_sysroot --lib --target "${{ matrix.target }}" native_context::windows_tests::windows_path_lookup_resolves_exe_and_keeps_explicit_paths_exact -- --exact
       - name: Run Windows generated Rust formatter and native build script contracts
         if: matrix.target == 'x86_64-pc-windows-msvc'
         shell: pwsh

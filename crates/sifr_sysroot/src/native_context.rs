@@ -65,6 +65,22 @@ impl fmt::Debug for NativeToolchain {
     }
 }
 
+fn path_executable(candidate: PathBuf) -> Option<PathBuf> {
+    if candidate.is_file() {
+        return Some(candidate);
+    }
+    // Windows tools on PATH are selected by a bare name, while their files
+    // have an .exe suffix. Keep the original path for rustup proxy dispatch.
+    #[cfg(windows)]
+    if candidate.extension().is_none() {
+        let executable = candidate.with_extension("exe");
+        if executable.is_file() {
+            return Some(executable);
+        }
+    }
+    None
+}
+
 fn executable(name: &str, cwd: &Path) -> Result<PathBuf, String> {
     let value = Path::new(name);
     let candidate = if value.components().count() > 1 {
@@ -75,8 +91,7 @@ fn executable(name: &str, cwd: &Path) -> Result<PathBuf, String> {
         }
     } else {
         env::split_paths(&env::var_os("PATH").unwrap_or_default())
-            .map(|directory| directory.join(value))
-            .find(|path| path.is_file())
+            .find_map(|directory| path_executable(directory.join(value)))
             .ok_or_else(|| "selected native executable is unavailable".to_string())?
     };
     if !candidate.is_file() {
@@ -550,5 +565,36 @@ impl NativeBuildContext {
                 self.destination.as_os_str().as_encoded_bytes(),
             ),
         ])
+    }
+}
+
+#[cfg(all(test, windows))]
+mod windows_tests {
+    use super::{NativeToolchain, executable, path_executable};
+    use std::{env, fs};
+
+    #[test]
+    fn windows_path_lookup_resolves_exe_and_keeps_explicit_paths_exact() {
+        let root = env::temp_dir().join(format!(
+            "sifr-native-executable-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        fs::create_dir(&root).unwrap();
+        let bare = root.join("fixture-cargo");
+        let executable_path = bare.with_extension("exe");
+        fs::write(&executable_path, b"fixture").unwrap();
+
+        assert_eq!(path_executable(bare.clone()), Some(executable_path));
+        assert!(
+            executable(bare.to_str().unwrap(), &root).is_err(),
+            "an explicit path must not acquire an extension"
+        );
+
+        let cwd = env::current_dir().unwrap();
+        let selected = NativeToolchain::resolve_at(&cwd).unwrap();
+        assert!(selected.cargo_path().is_file());
+        assert!(selected.rustc_path().is_file());
+        fs::remove_dir_all(root).unwrap();
     }
 }
