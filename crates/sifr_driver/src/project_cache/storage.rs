@@ -7,9 +7,8 @@ use serde::{Deserialize, Serialize};
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
     collections::BTreeSet,
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io::{self, Read, Write},
-    os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -60,10 +59,7 @@ pub(super) fn key(value: &str) -> bool {
 }
 pub(super) fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
     storage::payload(root, Path::new(name))?;
-    let file = OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(root.join(name))?;
+    let file = storage::read_private_file(&root.join(name))?;
     if !file.metadata()?.is_file() || file.metadata()?.len() > limit {
         return Err(invalid("project record limit"));
     }
@@ -75,12 +71,7 @@ pub(super) fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 pub(super) fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)?;
+    let mut file = storage::new_private_file(path)?;
     #[cfg(test)]
     if std::env::var_os("SIFR_DX13_STORAGE_FULL").is_some()
         && path
@@ -89,7 +80,7 @@ pub(super) fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
             .is_some_and(key)
     {
         file.write_all(&bytes[..bytes.len().min(8)])?;
-        return Err(io::Error::from_raw_os_error(libc::ENOSPC));
+        return Err(io::Error::other("injected storage full"));
     }
     file.write_all(bytes)?;
     file.sync_all()
@@ -288,14 +279,14 @@ impl Store {
                 &stage.join("manifest.json"),
                 &serde_json::to_vec(&manifest)?,
             )?;
-            File::open(&stage)?.sync_all()?;
+            storage::sync_stage(&stage)?;
             #[cfg(test)]
             super::tests::pause("before-rename");
             cancelled(cancel)?;
-            fs::rename(&stage, &destination)?;
+            storage::publish(&stage, &destination)?;
             #[cfg(test)]
             super::tests::pause("after-rename");
-            File::open(&parent)?.sync_all()?;
+
             let _validated = self.generation(&generation_id)?;
             self.point(&generation_id)?;
             Ok(generation_id.clone())
@@ -316,14 +307,13 @@ impl Store {
         write_new(&scratch, &hint)?;
         #[cfg(test)]
         super::tests::pause("pointer-scratch");
-        fs::rename(&scratch, self.root.join("latest"))?;
-        File::open(&self.root)?.sync_all()?;
+        storage::publish(&scratch, &self.root.join("latest"))?;
         // Hint failures never invalidate the complete user-cache generation.
         let scratch = self
             .workspace_root
             .join(format!(".sifrbuildinfo.stage-{}", token()));
         if write_new(&scratch, &hint).is_ok() {
-            let _ = fs::rename(&scratch, self.workspace_root.join(".sifrbuildinfo"));
+            let _ = storage::publish(&scratch, &self.workspace_root.join(".sifrbuildinfo"));
             let _ = fs::remove_file(&scratch);
         }
         Ok(())

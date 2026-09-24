@@ -2,6 +2,24 @@ use super::{Encode, Encoder, Result, wire};
 use sha2::{Digest, Sha256};
 use sifr_stdlib_manifest::LoadedStdlibSource;
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Component, Path};
+
+fn source_wire_path(relative: &Path) -> Result<String> {
+    let components = relative
+        .components()
+        .map(|component| match component {
+            Component::Normal(name) => name
+                .to_str()
+                .map(str::to_owned)
+                .ok_or_else(|| wire::MetadataError("non-UTF-8 metadata source path".into())),
+            _ => Err(wire::MetadataError("invalid metadata source path".into())),
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if components.is_empty() {
+        return Err(wire::MetadataError("empty metadata source path".into()));
+    }
+    Ok(components.join("/"))
+}
 
 pub(super) fn project(
     compiled: &crate::stdlib::StdlibCompiled,
@@ -37,7 +55,7 @@ pub(super) fn project(
             .strip_prefix(root)
             .map_err(|error| wire::MetadataError(error.to_string()))?;
         let source_file = records.intern(&wire::SourceFile {
-            relative_path: relative.to_string_lossy().into_owned(),
+            relative_path: source_wire_path(relative)?,
             content_digest: Sha256::digest(source.source.as_bytes()).into(),
             byte_length: u32::try_from(source.source.len())
                 .map_err(|_| wire::MetadataError("source exceeds wire range".into()))?,
