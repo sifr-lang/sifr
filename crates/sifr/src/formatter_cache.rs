@@ -40,16 +40,19 @@ pub(super) fn try_formatter_cache_hit(
 
 pub(super) fn write_formatter_cache_entry(
     path: &Path,
+    formatted_source: &str,
     options: FormatOptions,
     config: &EffectiveFormatConfig,
-    provider: &mut impl SourceProvider,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     if config.no_cache {
         return Ok(());
     }
-    let source = read_formatter_source(path, provider)?;
-    let identity =
-        formatter_cache_identity(path, &source, options, crate::compiler_identity().as_str())?;
+    let identity = formatter_cache_identity(
+        path,
+        formatted_source,
+        options,
+        crate::compiler_identity().as_str(),
+    )?;
     fs::create_dir_all(&config.cache_dir)
         .map_err(|error| cache_error("create", &config.cache_dir, error))?;
     let mut staging = tempfile::NamedTempFile::new_in(&config.cache_dir)
@@ -202,7 +205,7 @@ mod tests {
         };
         let mut provider = sifr_frontend::DiskSourceProvider::new();
         let options = FormatOptions::default();
-        write_formatter_cache_entry(&file, options, &config, &mut provider).unwrap();
+        write_formatter_cache_entry(&file, "x = 1\n", options, &config).unwrap();
         assert!(try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
         let identity = formatter_cache_identity(
             &file,
@@ -283,6 +286,24 @@ mod tests {
     }
 
     #[test]
+    fn publication_binds_formatted_bytes_even_after_disk_edit() {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join("main.sifr");
+        let formatted = "def main():\n    pass\n";
+        fs::write(&file, "def main( ):\n    pass\n").unwrap();
+        let config = EffectiveFormatConfig {
+            cache_dir: root.path().join("cache"),
+            ..EffectiveFormatConfig::default()
+        };
+        let options = FormatOptions::default();
+        write_formatter_cache_entry(&file, formatted, options, &config).unwrap();
+        let mut provider = sifr_frontend::DiskSourceProvider::new();
+        assert!(!try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
+        fs::write(&file, formatted).unwrap();
+        assert!(try_formatter_cache_hit(&file, options, &config, &mut provider).unwrap());
+    }
+
+    #[test]
     fn publication_failure_leaves_no_success_marker() {
         let root = tempfile::tempdir().unwrap();
         let file = root.path().join("main.sifr");
@@ -293,9 +314,8 @@ mod tests {
             cache_dir: cache.clone(),
             ..EffectiveFormatConfig::default()
         };
-        let mut provider = sifr_frontend::DiskSourceProvider::new();
         assert!(
-            write_formatter_cache_entry(&file, FormatOptions::default(), &config, &mut provider)
+            write_formatter_cache_entry(&file, "x = 1\n", FormatOptions::default(), &config)
                 .is_err()
         );
         assert_eq!(fs::read(&cache).unwrap(), b"occupied");

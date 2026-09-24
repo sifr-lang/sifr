@@ -67,6 +67,7 @@ pub struct FormatCheck {
 pub struct FormattedPath {
     pub path: PathBuf,
     pub changed: bool,
+    pub formatted: String,
 }
 
 pub fn format_source(
@@ -157,6 +158,7 @@ pub fn format_path_with_options(
         return Ok(FormattedPath {
             path: path.to_path_buf(),
             changed: !check.diagnostics.is_empty(),
+            formatted: check.formatted,
         });
     }
     let result = format_source(&source, Some(path), options)?;
@@ -166,6 +168,7 @@ pub fn format_path_with_options(
     Ok(FormattedPath {
         path: path.to_path_buf(),
         changed: result.changed,
+        formatted: result.formatted,
     })
 }
 

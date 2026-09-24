@@ -641,9 +641,9 @@ pub(super) fn fmt_entrypoint(
                 if try_formatter_cache_hit(&file, options, &config, &mut provider)? {
                     continue;
                 }
-                let _formatted =
+                let formatted =
                     sifr_format::format_path_with_options(&file, false, options, &mut provider)?;
-                write_formatter_cache_entry(&file, options, &config, &mut provider)?;
+                write_formatter_cache_entry(&file, &formatted.formatted, options, &config)?;
             }
         }
     }

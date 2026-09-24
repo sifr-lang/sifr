@@ -703,6 +703,20 @@
     },
     {
       "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_binds_formatted_bytes_even_after_disk_edit",
+      "operation": "write",
+      "site": "fs::write(&file, \"def main( ):\\n pass\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_binds_formatted_bytes_even_after_disk_edit",
+      "operation": "write",
+      "site": "fs::write(&file, formatted).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
       "symbol": "publication_failure_leaves_no_success_marker",
       "operation": "write",
       "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
