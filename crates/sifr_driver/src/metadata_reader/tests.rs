@@ -392,7 +392,7 @@ fn metadata_structural_full_decoded_projection_preserves_canonical_records() {
     let root = context.sysroot().unwrap();
     let modules = provider.modules.keys().cloned().collect::<Vec<_>>();
     let decoded = provider.materialize(&modules, root).unwrap();
-    let bytes = crate::metadata_producer::reencode_qualified(
+    let bytes = sifr_compiler_services::metadata::reencode_qualified(
         &decoded,
         root,
         provider.metadata.compatibility,

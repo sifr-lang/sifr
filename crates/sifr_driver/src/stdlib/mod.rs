@@ -38,7 +38,5 @@ pub(crate) use bootstrap::compile_stdlib_uncached;
 #[cfg(test)]
 pub(crate) use bootstrap::compile_stdlib_sources_with_sysroot;
 
-pub(crate) use bootstrap::{signature_params, stdlib_class_template};
-
 #[cfg(test)]
 pub(crate) use bootstrap::metadata_inventory_for_test;

@@ -69,7 +69,7 @@ impl StdlibNavigation {
     }
 }
 impl Provider {
-    pub(crate) fn navigation(&self, root: &Path) -> Result<Arc<StdlibNavigation>> {
+    pub fn navigation(&self, root: &Path) -> Result<Arc<StdlibNavigation>> {
         let mut cache = self
             .navigation_cache
             .lock()

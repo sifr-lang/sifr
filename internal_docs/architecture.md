@@ -598,7 +598,7 @@ remain canonical; an independent eager-schema oracle covers their equivalence.
 driver/package architecture decomposed `sifr_driver` into the following stable internal boundaries:
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
-- `stdlib/`: metadata-backed stdlib provider adapter and tooling sysroot queries; source bootstrap executes in `sifr_compiler_services`
+- `stdlib/`: driver codegen adapter for metadata-backed stdlib; tooling sysroot queries and source bootstrap execute in `sifr_compiler_services`
 - Stdlib bootstrap publishes one immutable `Arc<StdlibCompiled>` through its
   success/error cache. CLI frontend/build plans and test assembly retain that
   owner; mutable frontend contexts clone only external definitions. Each module's
@@ -616,9 +616,7 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   and production, prepared metadata, and project-result transport. Its producer
   receives cancellation from the driver through an explicit callback and uses
   `sifr_cache_storage` for private files, leases, Unix bounded waits,
-  Windows cancellable lease polling, and atomic publication. The driver's metadata reader and `CompilerContext` remain the
-  sole provider and metadata-generation owner; the driver still chooses cache
-  roots and owners and handles CLI cache policy and pruning. Dependencies point
+  Windows cancellable lease polling, and atomic publication. `sifr_compiler_services` also owns the single metadata reader, provider/navigation cache, tooling sysroot views, `stdlib_external_defs`, and `CompilerContext`. The context pins compiler identity, resolved sysroot, and cache root for its provider generation. The driver reexports those capabilities and retains CLI cache policy and pruning. Dependencies point
   from driver to the lower services and storage, and from services to storage.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
@@ -2065,7 +2063,7 @@ The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the
 source-to-wire field classification and the completed overlay/lifetime migration.
 Normal commands use the metadata consumers activated by DX.7.
 DX.6 adds the linked canonical source producer and shared write-through preparation
-in `sifr_driver::metadata_producer`. The CLI `sysroot build-metadata`, bare driver
+in `sifr_compiler_services::metadata`, with a driver adapter. The CLI `sysroot build-metadata`, bare driver
 tests, verification preparation and native packaging use that same operation.
 Successful owners are keyed by compiled compiler/test identity, semantic target and
 complete captured stdlib inputs; per-key OS locks serialize durable publication.
@@ -2085,7 +2083,7 @@ retryable and installed readers never bootstrap from source.
 `ExternalDefs` combines shared immutable module values with project-owned export
 overlays. Frontend preparation pins the demanded semantic closure before lowering,
 export collection and editor queries. Invalidation removes only project exports.
-Lowering itself performs no provider I/O. The metadata reader retains indexed wire
+Lowering itself performs no provider I/O. The lower metadata reader retains indexed wire
 records through the bounded sysroot store and projects only demanded module
 closures into the existing semantic types. Nominal fields, methods and enum
 variants use shared copy-on-write buffers at the existing type-system owner.

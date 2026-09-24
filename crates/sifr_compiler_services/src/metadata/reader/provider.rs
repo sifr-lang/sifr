@@ -1,15 +1,15 @@
 use super::{Decode, Decoder, Result, wire};
-use crate::metadata_producer::PreparedMetadata;
+use crate::metadata::PreparedMetadata;
 use sifr_lowering::{ExternalDefs, ExternalProvider};
 use std::{
     collections::{BTreeMap, BTreeSet},
     sync::{Arc, Mutex},
 };
 
-pub(crate) struct Provider {
-    pub(crate) metadata: Arc<PreparedMetadata>,
-    pub(crate) modules: BTreeMap<String, wire::Ref<wire::Module>>,
-    pub(super) nominals: super::nominal::Cache,
+pub struct Provider {
+    pub metadata: Arc<PreparedMetadata>,
+    pub modules: BTreeMap<String, wire::Ref<wire::Module>>,
+    pub nominals: super::nominal::Cache,
     semantics: Mutex<BTreeMap<String, Arc<ExternalDefs>>>,
     pub(super) navigation_cache:
         Mutex<BTreeMap<std::path::PathBuf, std::sync::Weak<super::StdlibNavigation>>>,
@@ -22,7 +22,7 @@ impl std::fmt::Debug for Provider {
     }
 }
 impl Provider {
-    pub(crate) fn new(metadata: Arc<PreparedMetadata>) -> Result<Arc<Self>> {
+    pub fn new(metadata: Arc<PreparedMetadata>) -> Result<Arc<Self>> {
         let mut modules = BTreeMap::new();
         let mut cx = Decoder::new(&metadata.store);
         for reference in metadata.store.record_refs::<wire::Module>() {
@@ -40,7 +40,7 @@ impl Provider {
             navigation_cache: Mutex::default(),
         }))
     }
-    pub(crate) fn closure(&self, requested: &[String]) -> Result<BTreeSet<String>> {
+    pub fn closure(&self, requested: &[String]) -> Result<BTreeSet<String>> {
         let mut pending = requested.to_vec();
         let mut found = BTreeSet::new();
         while let Some(name) = pending.pop() {
@@ -58,7 +58,7 @@ impl Provider {
         }
         Ok(found)
     }
-    pub(crate) fn semantic(&self, name: &str) -> Result<Arc<ExternalDefs>> {
+    pub fn semantic(&self, name: &str) -> Result<Arc<ExternalDefs>> {
         let mut cached = self
             .semantics
             .lock()
@@ -88,7 +88,7 @@ impl ExternalProvider for Provider {
     }
 }
 impl Provider {
-    pub(crate) fn loaded_semantic_modules(&self) -> Vec<String> {
+    pub fn loaded_semantic_modules(&self) -> Vec<String> {
         self.semantics
             .lock()
             .map(|modules| modules.keys().cloned().collect())
@@ -96,7 +96,7 @@ impl Provider {
     }
 }
 impl Provider {
-    pub(crate) fn projected_nominal_views(&self) -> Result<usize> {
+    pub fn projected_nominal_views(&self) -> Result<usize> {
         self.nominals
             .lock()
             .map(|values| values.len())
