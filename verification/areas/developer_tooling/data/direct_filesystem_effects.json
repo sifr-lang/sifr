@@ -163,27 +163,6 @@
       "classification": "semantic-input"
     },
     {
-      "path": "crates/sifr/src/check_and_package_commands.rs",
-      "symbol": "try_formatter_cache_hit",
-      "operation": "is_file",
-      "site": "Ok(config.cache_dir.join(key).is_file())",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr/src/check_and_package_commands.rs",
-      "symbol": "write_formatter_cache_entry",
-      "operation": "create_dir_all",
-      "site": "fs::create_dir_all(&config.cache_dir).map_err(|err| {",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/src/check_and_package_commands.rs",
-      "symbol": "write_formatter_cache_entry",
-      "operation": "write",
-      "site": "fs::write(config.cache_dir.join(key), b\"ok\").map_err(|err| {",
-      "classification": "output-effect"
-    },
-    {
       "path": "crates/sifr/src/cli_model_and_entrypoint.rs",
       "symbol": "create",
       "operation": "create_dir",
@@ -629,6 +608,181 @@
       "symbol": "test_frontend_error_messages_match_across_check_build_and_run_paths",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "try_formatter_cache_hit",
+      "operation": "symlink_metadata",
+      "site": "let metadata = match fs::symlink_metadata(&marker) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "try_formatter_cache_hit",
+      "operation": "is_file",
+      "site": "Ok(metadata) if metadata.file_type().is_file() => metadata,",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "try_formatter_cache_hit",
+      "operation": "read",
+      "site": "Ok(fs::read(&marker).is_ok_and(|bytes| bytes == marker_contents(&identity)))",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "write_formatter_cache_entry",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(&config.cache_dir)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "write_formatter_cache_entry",
+      "operation": "sync_all",
+      "site": ".and_then(|()| staging.as_file().sync_all())",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "formatter_cache_identity",
+      "operation": "canonicalize",
+      "site": "let normalized = fs::canonicalize(path).map_err(|error| {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "identity_binds_revision_options_source_and_normalized_path",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "identity_binds_revision_options_source_and_normalized_path",
+      "operation": "write",
+      "site": "fs::write(&other, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "invalid_markers_do_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "invalid_markers_do_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(&marker, invalid).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "invalid_markers_do_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(&marker, &invalid).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "invalid_markers_do_not_authorize_a_hit",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&marker).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "invalid_markers_do_not_authorize_a_hit",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&file, &marker).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_binds_formatted_bytes_even_after_disk_edit",
+      "operation": "write",
+      "site": "fs::write(&file, \"def main( ):\\n pass\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_binds_formatted_bytes_even_after_disk_edit",
+      "operation": "write",
+      "site": "fs::write(&file, formatted).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_failure_leaves_no_success_marker",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_failure_leaves_no_success_marker",
+      "operation": "write",
+      "site": "fs::write(&cache, \"occupied\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "publication_failure_leaves_no_success_marker",
+      "operation": "read",
+      "site": "assert_eq!(fs::read(&cache).unwrap(), b\"occupied\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "unchanged_source_with_old_formatter_revision_is_a_miss",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&config.cache_dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "unchanged_source_with_old_formatter_revision_is_a_miss",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "unchanged_source_with_old_formatter_revision_is_a_miss",
+      "operation": "write",
+      "site": "fs::write(&old_marker, marker_contents(&old_identity)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&config.cache_dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "exists",
+      "site": "assert!(!config.cache_dir.join(identity).exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(&file, \"x = 1\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/formatter_cache.rs",
+      "symbol": "incomplete_staging_file_does_not_authorize_a_hit",
+      "operation": "write",
+      "site": "fs::write(",
       "classification": "output-effect"
     },
     {
