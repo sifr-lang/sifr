@@ -55,6 +55,8 @@ mod character_comparison_codegen_tests;
 #[cfg(test)]
 mod checked_place_read_codegen_tests;
 #[cfg(test)]
+mod class_method_checked_place_codegen_tests;
+#[cfg(test)]
 mod class_trait_codegen_tests;
 #[cfg(test)]
 mod class_trait_contract_codegen_tests;

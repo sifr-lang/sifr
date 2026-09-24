@@ -14,7 +14,7 @@ mod witnesses;
 pub(crate) use witnesses::{CheckedDictReadGuard, CheckedPlaceReadWitness, checked_place_read_key};
 use witnesses::{checked_place_dependencies, checked_place_expr_token};
 
-fn condition_supports_checked_sequence_read(
+pub(crate) fn condition_supports_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
