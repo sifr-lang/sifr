@@ -110,10 +110,10 @@ fn rematerialization_removes_stale_generated_sources_but_preserves_target() {
 /// affect other crate tests. Windows also verifies the native default owner.
 #[test]
 fn cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner() {
-    const CHILD: &str = "SIFR_W12_NESTED_CHILD";
+    const CHILD: &str = "SIFR_PRIVATE_NESTED_CHILD";
     if std::env::var_os(CHILD).is_none() {
         let scope = std::env::temp_dir().join(format!(
-            "sifr-w12-nested-{}-{}",
+            "sifr-private-nested-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

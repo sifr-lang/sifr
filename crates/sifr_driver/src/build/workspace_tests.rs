@@ -314,7 +314,7 @@ fn windows_portability_winner_child() {
     let scope = std::env::current_dir().unwrap();
     let required = [Path::new("payload")];
     let prepared =
-        prepare_cached_artifact("fixture", "w1-winner", &scope, "one", &required).unwrap();
+        prepare_cached_artifact("fixture", "private-winner", &scope, "one", &required).unwrap();
     let PreparedArtifactCache::Miss(pending) = prepared else {
         panic!("fresh candidate expected")
     };
