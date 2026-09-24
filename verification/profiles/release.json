@@ -60,6 +60,34 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_cache_storage",
+        "package": "sifr_cache_storage",
+        "command": [
+          "test",
+          "-p",
+          "sifr_cache_storage"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_compiler_services",
+        "package": "sifr_compiler_services",
+        "command": [
+          "test",
+          "-p",
+          "sifr_compiler_services"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_compiler_component",
         "package": "sifr_compiler_component",
         "command": [
