@@ -345,10 +345,15 @@ fn check(
             Ok(record) if capture.unchanged() => match serde_json::to_vec(&record) {
                 Ok(bytes) => {
                     report.payload_bytes = bytes.len();
-                    if store.publish(&bytes, cancel).is_ok() {
-                        report.status = "published".into();
-                    } else {
-                        report.status = "write-unavailable".into();
+                    match store.publish(&bytes, cancel) {
+                        Ok(_) => report.status = "published".into(),
+                        Err(error) => {
+                            #[cfg(test)]
+                            eprintln!("project cache publish failed: {error:?}");
+                            #[cfg(not(test))]
+                            let _ = error;
+                            report.status = "write-unavailable".into();
+                        }
                     }
                 }
                 Err(_) => report.status = "serialization-unavailable".into(),
