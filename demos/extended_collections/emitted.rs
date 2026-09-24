@@ -306,11 +306,21 @@ fn main() {
     .collect::<std::collections::HashSet<_>>();
     println!(
         "Union [1,2,3] | [3,4,5]: length = {}",
-        SifrInt::from(left.r#union(&right).count())
+        SifrInt::from(
+            left.r#union(&right)
+                .cloned()
+                .collect::<std::collections::HashSet<_>>()
+                .len()
+        )
     );
     println!(
         "Intersection [1,2,3] & [3,4,5]: length = {}",
-        SifrInt::from(left.intersection(&right).count())
+        SifrInt::from(
+            left.intersection(&right)
+                .cloned()
+                .collect::<std::collections::HashSet<_>>()
+                .len()
+        )
     );
     println!("=== Counter ===");
     let fruits: Vec<String> = vec![

@@ -750,7 +750,7 @@ mod sifr_generated_project_nominals {
                             .cloned()
                     };
                     if let Some(item) = item_value_2841a0c596d6f426 {
-                        data.push(item.clone());
+                        data.push(item);
                     }
                     i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }

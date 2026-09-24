@@ -417,7 +417,7 @@ mod sifr_generated_project_nominals {
                             .cloned()
                     };
                     if let Some(item) = item_value_2841a0c596d6f426 {
-                        data.push(item.clone());
+                        data.push(item);
                     }
                     i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
@@ -587,8 +587,20 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
     ]
     .into_iter()
     .collect::<std::collections::HashSet<_>>();
-    actual.push(left.r#union(&right).count() == SifrInt::from_i64(5));
-    actual.push(left.intersection(&right).count() == SifrInt::from_i64(1));
+    actual.push(
+        left.r#union(&right)
+            .cloned()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            == SifrInt::from_i64(5),
+    );
+    actual.push(
+        left.intersection(&right)
+            .cloned()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            == SifrInt::from_i64(1),
+    );
     let counts: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> = from_list(&[
         "x".to_string(),
         "y".to_string(),

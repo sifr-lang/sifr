@@ -34,7 +34,7 @@ mod sifr_generated_project_nominals {
                             .cloned()
                     };
                     if let Some(item) = item_value_2841a0c596d6f426 {
-                        data.push(item.clone());
+                        data.push(item);
                     }
                     i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
@@ -127,9 +127,10 @@ fn main() {
         *sifr_generated_elem = ::std::ops::Add::add(&*sifr_generated_elem, &SifrInt::from_i64(2));
     }
     assert_eq!(
-        &*counts
+        &counts
             .entry("steps".to_string())
-            .or_insert(SifrInt::from_i64(0)),
+            .or_insert(SifrInt::from_i64(0))
+            .clone(),
         &SifrInt::from_i64(3)
     );
     let q: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =

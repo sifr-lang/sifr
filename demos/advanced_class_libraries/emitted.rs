@@ -1237,7 +1237,7 @@ mod sifr_generated_project_nominals {
                             .cloned()
                     };
                     if let Some(item) = item_value_2841a0c596d6f426 {
-                        data.push(item.clone());
+                        data.push(item);
                     }
                     i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
@@ -1929,8 +1929,8 @@ mod sifr_generated_project_nominals {
                     rows_data.push(copied_row);
                 }
             } else {
-                for (index, row) in Box::new(all_rows.iter().cloned().enumerate().map(
-                    |sifr_generated_pair| {
+                for (index, row) in
+                    Box::new(all_rows.into_iter().enumerate().map(|sifr_generated_pair| {
                         (
                             ::std::ops::Add::add(
                                 SifrInt::from(sifr_generated_pair.0),
@@ -1938,8 +1938,8 @@ mod sifr_generated_project_nominals {
                             ),
                             sifr_generated_pair.1,
                         )
-                    },
-                )) {
+                    }))
+                {
                     if index == SifrInt::from_i64(0) {
                         #[expect(
                             clippy::explicit_iter_loop,

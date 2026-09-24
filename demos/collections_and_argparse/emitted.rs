@@ -1416,9 +1416,10 @@ fn main() {
         *sifr_generated_elem = ::std::ops::Add::add(&*sifr_generated_elem, &SifrInt::from_i64(1));
     }
     assert_eq!(
-        &*attempts
+        &attempts
             .entry("collections_and_argparse".to_string())
-            .or_insert(SifrInt::from_i64(0)),
+            .or_insert(SifrInt::from_i64(0))
+            .clone(),
         &SifrInt::from_i64(1)
     );
     let mut parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
