@@ -84,6 +84,27 @@ pub(crate) fn publication_lock(path: &Path) -> std::io::Result<File> {
     Ok(lease)
 }
 
+/// Generated parents under Sifr-owned cache roots must use the same private
+/// creation policy that stale cleanup later validates. Caller-owned output
+/// retains its ambient directory permissions.
+pub(crate) fn generated_directory(path: &Path) -> std::io::Result<()> {
+    if path.starts_with(crate::cache_storage::root()) {
+        return crate::cache_storage::directory(path);
+    }
+    #[cfg(windows)]
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()?.join(path)
+    };
+    #[cfg(windows)]
+    crate::windows_storage_security::no_reparse(&absolute)?;
+    std::fs::create_dir_all(path)?;
+    #[cfg(windows)]
+    crate::windows_storage_security::no_reparse(&absolute)?;
+    Ok(())
+}
+
 /// Generated files in the owned cache need its strict ACL. Caller-owned
 /// output trees retain their ambient directory policy while rejecting aliases.
 fn checked_generated_path(path: &Path) -> std::io::Result<()> {

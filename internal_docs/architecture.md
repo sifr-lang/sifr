@@ -2080,6 +2080,12 @@ requests no longer treat cached output existence as native freshness. Python
 startup verifies the selected shared library, and Python source exports declare
 their external-runtime deployment paths. See
 [Compiler DX sections 8.2–8.6](compiler_dx_architecture.md#82-compatible-native-storage).
+Editable generated Cargo roots beneath `SIFR_CACHE_DIR` use the cache storage
+owner, private permission/ACL and no-alias policy for every nested source
+directory, including materialized modules and test-runner support modules.
+Stale-source traversal validates those entries against the same policy. Caller
+provided output roots retain ambient directory permissions and reject aliases;
+they do not acquire the cache's private directory policy.
 
 The DX.10 application policy selects development for ordinary `sifr build` and
 `sifr run`, development-derived test for `sifr test`, and explicit release via

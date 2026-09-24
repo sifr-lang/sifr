@@ -96,6 +96,133 @@ fn rematerialization_removes_stale_generated_sources_but_preserves_target() {
     let _ = std::fs::remove_dir_all(root);
 }
 
+/// This test runs in a child so SIFR_CACHE_DIR and a permissive umask cannot
+/// affect other crate tests. Windows also verifies the native default owner.
+#[test]
+fn cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner() {
+    const CHILD: &str = "SIFR_W12_NESTED_CHILD";
+    if std::env::var_os(CHILD).is_none() {
+        let scope = std::env::temp_dir().join(format!(
+            "sifr-w12-nested-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&scope).expect("test scope");
+        let status = std::process::Command::new(std::env::current_exe().expect("test executable"))
+            .args([
+                "--exact",
+                "build::materialize::tests::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .env("SIFR_CACHE_DIR", scope.join("cache"))
+            .status()
+            .expect("nested generated child");
+        assert!(status.success(), "nested generated child failed: {status}");
+        std::fs::remove_dir_all(scope).expect("test scope cleanup");
+        return;
+    }
+
+    #[cfg(unix)]
+    #[allow(unsafe_code)]
+    unsafe {
+        libc::umask(0o002);
+    }
+    #[cfg(windows)]
+    assert!(
+        crate::windows_storage_security::token_default_owner_is_administrators()
+            .expect("TokenOwner"),
+        "native Windows case requires Administrators TokenOwner"
+    );
+
+    let cache = crate::cache_storage::root();
+    let scope = cache.join("nested-scope");
+    crate::cache_storage::directory(&scope).expect("private scope");
+    let family = crate::build::native_storage::NativeFamily::acquire(
+        "nested-toolchain",
+        "nested-sources",
+        "",
+        "nested-trust",
+    )
+    .expect("native family");
+    let project_root = family
+        .project(&scope, "nested-materialize")
+        .expect("editable root");
+    let mut first_project = base_project();
+    first_project
+        .support_modules
+        .insert("nested.old".into(), "pub fn value() -> u32 { 41 }".into());
+    materialize_binary_project_files(
+        &project_root,
+        "nested_materialize",
+        first_project,
+        &test_dependency_plan("nested"),
+    )
+    .expect("first cache materialization");
+    let old = project_root.join("src/nested/old.rs");
+    assert!(old.is_file());
+    crate::cache_storage::check_owned(old.parent().expect("nested parent"))
+        .expect("private generated parent");
+    let mut second_project = base_project();
+    second_project
+        .support_modules
+        .insert("nested.new".into(), "pub fn value() -> u32 { 42 }".into());
+    materialize_binary_project_files(
+        &project_root,
+        "nested_materialize",
+        second_project,
+        &test_dependency_plan("nested"),
+    )
+    .expect("second cache materialization and stale cleanup");
+    assert!(!old.exists());
+    assert!(project_root.join("src/nested/new.rs").is_file());
+
+    use crate::test_runner::GeneratedTestRunnerProject;
+    let mut runner = GeneratedTestRunnerProject {
+        application_profile: crate::ApplicationProfile::Test,
+        cargo_resolution: crate::build::CargoResolutionPolicy::normal(),
+        interop: sifr_codegen::InteropBuildPlan::default(),
+        cache_scope: scope,
+        support_module_names: vec!["nested.old".into()],
+        support_rust_files: std::collections::HashMap::from([(
+            "nested.old".into(),
+            "pub fn value() -> u32 { 41 }".into(),
+        )]),
+        bridge_rust_files: Default::default(),
+        all_rust_code: "#[test] fn nested_case() { assert_eq!(nested::old::value(), 41); }".into(),
+        all_stdlib_modules: HashSet::new(),
+        all_required_features: HashSet::new(),
+    };
+    let first =
+        crate::test_runner::execute_test_runner_project(&runner).expect("first nested test runner");
+    assert!(first.success);
+    let runner_old = first.native_project_root.join("src/nested/old.rs");
+    assert!(runner_old.is_file());
+    crate::cache_storage::check_owned(runner_old.parent().expect("runner nested parent"))
+        .expect("private runner parent");
+    runner.support_module_names = vec!["nested.new".into()];
+    runner.support_rust_files = std::collections::HashMap::from([(
+        "nested.new".into(),
+        "pub fn value() -> u32 { 42 }".into(),
+    )]);
+    runner.all_rust_code =
+        "#[test] fn nested_case() { assert_eq!(nested::new::value(), 42); }".into();
+    let second = crate::test_runner::execute_test_runner_project(&runner)
+        .expect("second nested test runner and stale cleanup");
+    assert!(second.success);
+    assert_eq!(first.native_project_root, second.native_project_root);
+    assert!(!runner_old.exists());
+    assert!(
+        second
+            .native_project_root
+            .join("src/nested/new.rs")
+            .is_file()
+    );
+}
+
 #[test]
 fn binary_project_cache_key_includes_package_cache_fragment() {
     let base = base_project();

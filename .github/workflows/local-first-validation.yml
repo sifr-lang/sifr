@@ -128,6 +128,7 @@ jobs:
             "project_cache::tests::windows_portability_concurrent_writer_gc_abandoned_stage_and_winner",
             "project_cache::tests::windows_portability_workspace_identity_alias_and_orphan_prune",
             "build::workspace::tests::windows_portability_intact_concurrent_winner_is_adopted",
+            "build::materialize::tests::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner",
             "project_cache::tests::dx13_c04_full_storage_preserves_source_outcome",
             "project_cache::tests::dx13_c09_concurrent_process_reader_and_gc",
             "project_cache::tests::dx13_c09_corrupt_schema_references_and_winners",

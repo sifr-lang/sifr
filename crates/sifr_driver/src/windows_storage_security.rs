@@ -124,6 +124,39 @@ fn owner() -> io::Result<Owner> {
         Ok(Owner { token, bytes })
     }
 }
+#[cfg(test)]
+pub(crate) fn token_default_owner_is_administrators() -> io::Result<bool> {
+    let owner = owner()?;
+    let mut len = 0;
+    // SAFETY: the first call requests the required buffer size; the second
+    // writes TOKEN_OWNER into the allocated buffer while the token is live.
+    unsafe {
+        GetTokenInformation(
+            owner.token,
+            TokenOwner,
+            std::ptr::null_mut(),
+            0,
+            &raw mut len,
+        );
+        if len < std::mem::size_of::<TOKEN_OWNER>() as u32 {
+            return Err(io::Error::last_os_error());
+        }
+        let mut bytes = vec![0; len as usize];
+        if GetTokenInformation(
+            owner.token,
+            TokenOwner,
+            bytes.as_mut_ptr().cast(),
+            len,
+            &raw mut len,
+        ) == 0
+        {
+            return Err(io::Error::last_os_error());
+        }
+        let sid = bytes.as_ptr().cast::<TOKEN_OWNER>().read_unaligned().Owner;
+        Ok(IsWellKnownSid(sid, WinBuiltinAdministratorsSid) != 0)
+    }
+}
+
 struct Descriptor(PSECURITY_DESCRIPTOR);
 impl Drop for Descriptor {
     fn drop(&mut self) {
