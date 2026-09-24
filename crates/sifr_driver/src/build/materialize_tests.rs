@@ -54,6 +54,15 @@ fn source_materialization_writes_a_complete_uncompiled_cargo_project() {
     .expect("source-only materialization should succeed");
 
     assert!(project_path.join("Cargo.toml").is_file());
+    let build_script = std::fs::read_to_string(project_path.join("build.rs"))
+        .expect("formatted native loader build script should be readable");
+    assert!(
+        build_script
+            .starts_with("fn main() {\n    println!(\"cargo:rerun-if-changed=build.rs\");\n"),
+        "{build_script}"
+    );
+    assert!(build_script.contains("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"));
+    syn::parse_file(&build_script).expect("formatted native loader build script should parse");
     let main_rs = std::fs::read_to_string(project_path.join("src/main.rs"))
         .expect("generated main should be readable");
     assert!(main_rs.contains("fn main()"), "{main_rs}");
