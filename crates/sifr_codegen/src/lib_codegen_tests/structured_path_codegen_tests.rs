@@ -200,6 +200,23 @@ fn recursive_nested_checked_reads_use_the_injected_capture_binding() {
         4,
         "{generated}"
     );
+    assert!(
+        generated
+            .contains(".is_some_and(|sifr_generated_v| sifr_generated_v != SifrInt::from_i64(0))"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn nested_checked_list_truthiness_tests_the_present_numeric_value() {
+    let generated = generate_rust_from_source(
+        "def occupied(rows: list[list[int]], r: int, c: int) -> bool:\n    return rows[r][c] and True\n",
+    );
+    assert!(
+        generated.contains(".is_some_and(|__v| __v != SifrInt::from_i64(0))"),
+        "{generated}"
+    );
+    assert!(!generated.contains("&& {"), "{generated}");
 }
 
 #[test]
