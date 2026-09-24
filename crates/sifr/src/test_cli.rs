@@ -4,6 +4,7 @@ use super::cli_model_and_entrypoint::{
 };
 use super::diagnostic_rendering_and_run::render_diagnostics;
 use super::package_graph_context::load_package_graph_context_for_entrypoint;
+use super::package_session_cli::package_session_for_cwd;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_driver::{PackageEntrypoint, run_tests_with_package};
 use sifr_frontend::DiskSourceProvider;
@@ -15,26 +16,8 @@ pub(super) fn cmd_test(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let canonical_dir = match fs::canonicalize(dir) {
-        Ok(path) => path,
-        Err(error) => {
-            return render_diagnostics(
-                &[diagnostic_with_code(
-                    format!("cannot resolve test directory '{}': {error}", dir.display()),
-                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                )],
-                diagnostic_format,
-            );
-        }
-    };
     let mut provider = DiskSourceProvider::new();
-    let session = match sifr_package::PackageSession::discover(
-        sifr_package::PackageSessionOptions {
-            current_dir: canonical_dir.clone(),
-            lock_mode,
-        },
-        &mut provider,
-    ) {
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => return render_diagnostics(&[package_diagnostic(error)], diagnostic_format),
     };
@@ -59,10 +42,28 @@ pub(super) fn cmd_test(
             Ok(None) => return EXIT_USAGE_OR_CONFIG,
             Err(exit) => return exit,
         };
-        let package_id = context.graph.packages.iter().find_map(|(id, package)| {
-            let root = fs::canonicalize(&package.package_root).ok()?;
-            (root == session.workspace_root && canonical_dir.starts_with(&root)).then(|| id.clone())
-        });
+        let canonical_dir = match fs::canonicalize(dir) {
+            Ok(path) => path,
+            Err(error) => {
+                return render_diagnostics(
+                    &[diagnostic_with_code(
+                        format!("cannot resolve test directory '{}': {error}", dir.display()),
+                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                    )],
+                    diagnostic_format,
+                );
+            }
+        };
+        let package_id = context
+            .graph
+            .packages
+            .iter()
+            .filter_map(|(id, package)| {
+                let root = fs::canonicalize(&package.package_root).ok()?;
+                canonical_dir.starts_with(&root).then_some((id, root))
+            })
+            .max_by_key(|(_, root)| root.components().count())
+            .map(|(id, _)| id.clone());
         if package_id.is_none() && lock_mode != sifr_package::CargoLockMode::Normal {
             return render_diagnostics(
                 &[super::cli_lock_modes::lock_mode_requires_package(
