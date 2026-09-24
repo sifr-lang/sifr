@@ -432,7 +432,7 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_frontend/src/workspace_session_tests.rs:273` `config_registry_pending_reload_and_extra_watch_roots_are_snapshot_visible` | read, enumerate, borrow/retain | test setup/parity | 281 |
 | `crates/sifr_compiler_services/src/export_policy.rs:1` `should_export_callable` | read | layered view + demanded record handles | 2 |
 | `crates/sifr_compiler_services/src/metadata/ensure.rs:84` `ensure_with_hook` | read, borrow/retain | layered view + demanded record handles | 98 |
-| `crates/sifr_compiler_services/src/metadata/ensure.rs:353` `development_metadata_path` | read | layered view + demanded record handles | 364 |
+| `crates/sifr_compiler_services/src/metadata/ensure.rs:364` `development_metadata_path` | read | layered view + demanded record handles | 375 |
 | `crates/sifr_compiler_services/src/metadata/exports.rs:4` `origin` | read, enumerate | layered view + demanded record handles | 7, 21 |
 | `crates/sifr_compiler_services/src/metadata/exports.rs:48` `project` | read, enumerate | layered view + demanded record handles | 49 |
 | `crates/sifr_compiler_services/src/metadata/exports.rs:93` `bind_reference` | read | layered view + demanded record handles | 94 |
