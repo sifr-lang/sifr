@@ -2014,6 +2014,14 @@ qualifies the integrated native SQL build and unchanged compiler-component
 tests; the merged W1-only blocker record #3980 is failed dependency evidence,
 not a Windows pass.
 
+Generated editable subdirectories inside Sifr-owned cache trees must satisfy
+the same private owner, permission and no-reparse contract as their parent,
+independent of the ambient Unix umask or Windows token default owner.
+Caller-owned output roots retain their ambient ACL policy while rejecting
+aliases; generated-directory creation and stale cleanup must honor the same
+boundary. The active issue records the unmerged candidate and nested-directory
+follow-up.
+
 DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
 The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the

@@ -1,6 +1,6 @@
 # Windows driver portability blocks native SQL CI qualification
 
-Status: open; separate platform scope, not implemented by CI admission repair
+Status: open; coupled W1+W2 draft needs implementation after second review; W3 unqualified
 Owner: driver storage/process execution and Windows platform support
 Related: [DX9-F6](ad-hoc-native-cargo-reuse-followups.md)
 
@@ -163,3 +163,63 @@ the actual Windows native SQL clean, incremental, locked, offline and
 reproducible qualification on the exact candidate, records the job, SHA and raw
 outcome, and reruns affected Unix contracts. Neither #3980 nor this docs-only
 rescope supplies a Windows test pass or clears the SQL CI blocker.
+
+## 2026-09-24 coupled W1+W2 native pass and second-review rescope
+
+[Draft PR #3983](https://github.com/sifr-lang/sifr/pull/3983) remains
+**unmerged**. Its exact implementation candidate is
+06afb8bb3e58211a89e9d4263a4e6b596b0bb9f4 on base
+4d5952ff3fda444c1c8f53ad53c4d36197eac94a. Preserve the earlier failed Windows jobs and first Opus review; this pass
+does not erase them.
+
+[Windows run 35951337046, job 107480335847](https://github.com/sifr-lang/sifr/actions/runs/35951337046/job/107480335847)
+passed the unchanged 16 native compiler-component cases and the **coupled
+W1+W2 step** containing 17 exact storage, process, project-cache, workspace and
+metadata cases. Those selected cases include malicious aliases and private ACL,
+long paths, abandoned-stage pruning and live leases, process cancellation,
+timeout, descendants and streaming, project-cache process-death restore,
+concurrent GC and winner adoption, workspace identity, and metadata staged
+failure. On the same candidate, five Unix process cases and 17 exact affected
+Unix storage, workspace, project-cache, metadata, SQLx-marker and test-runner
+cases passed. Formatting, HIR/driver maintainability, local-first workflow and
+diff checks passed. Raw Windows and Unix logs are preserved outside Git at
+/home/yaser5/projects/sifr/windows-w12-evidence/06afb8bb3e58211a89e9d4263a4e6b596b0bb9f4/
+as windows-job-107480335847.log and unix-focused.log.
+
+The second scoped Opus review is preserved in that evidence directory as
+opus-review.md and returned **NOT SATISFIED**. It accepted repairs for the first
+review's seven blocking findings, then found a new mechanism-level regression in
+build/native_storage.rs remove_stale and checked_generated_path.
+NativeFamily::project puts editable generated roots under SIFR_CACHE_DIR,
+but build/materialize.rs write_project_file and test_runner/execution.rs
+create nested generated directories with plain create_dir_all. remove_stale then
+applies strict private-cache owner/permission checks to those directories.
+Under a Unix 0o002 umask they can be 0775; on Windows they can inherit the
+token's Administrators default owner. Both violate the check. Existing selected
+tests do not cover a nested generated module under the cache root with those
+conditions, so the green W1/W2 step is not final acceptance. Under the phase
+closure loop's second-review rule, this item stops for rescope. No implementation
+repair or merge followed that review.
+
+**Bounded successor — W1+W2 cache-owned editable-root policy.** Align nested
+generated-directory creation, validation and stale removal with one private
+ownership/no-reparse policy for Sifr-owned cache trees. Preserve the separate
+ambient-ACL/no-alias contract for caller-owned output roots. Add a Unix child
+process case with umask 0o002 and a native Windows default-owner case where
+TokenOwner is Administrators; each must materialize a nested module twice and
+exercise stale cleanup plus test-runner use. Rerun the affected materialize,
+native-storage and test-runner contracts, the named W1/W2 native cases, and
+their affected Unix cases; obtain a new scoped review before considering
+#3983 for merge. The review's diagnostic test-only eprintln and other
+nonblocking suggestions remain recorded in the review, without silently
+expanding this successor.
+
+**Separate W3 SQL outcome.** The same Windows job then **failed** its later
+native SQL build qualification while compiling the sifr_sql_postgresql
+vendored C sources: MSVC reported missing unistd.h, dirent.h and
+sys/time.h (first failures in pg_query_fingerprint.c and PostgreSQL
+storage/fd.h). That failure is in SQL C portability, outside W1/W2 driver
+implementation; it does not reverse the selected W1/W2 test pass and does not
+qualify SQL clean/reused/locked/offline/reproducible builds. Route it to the SQL
+Item 4/W3 owner using the raw job log above. W3 remains open, and there is no
+merged W1/W2 SHA to coordinate with [SQL PR #3975](https://github.com/sifr-lang/sifr/pull/3975).
