@@ -496,7 +496,8 @@ large-file check and a representative project check.
   validated by that parsed tree, which preserves comments and literals. At
   each public emit boundary and after final project metadata or bridge assembly,
   `sifr_driver` renders every generated `.rs` file through the repository-pinned
-  toolchain's `rustfmt` with an empty configuration. The `RUSTFMT` environment
+  toolchain's `rustfmt` with an empty configuration (`/dev/null` on Unix and
+  a short-lived empty TOML file on Windows). The `RUSTFMT` environment
   variable can select the executable; failure to start or complete formatting
   is a structured build diagnostic, never an unformatted fallback.
   Materialization repeats this fail-closed check for synthetic namespace and
