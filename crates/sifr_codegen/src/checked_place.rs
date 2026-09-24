@@ -210,7 +210,7 @@ fn expr_mentions_name(expr: &crate::HirExpr, target: &str) -> bool {
     found
 }
 
-fn checked_sequence_get_option(
+pub(crate) fn checked_sequence_get_option(
     object: RustExpr,
     object_is_borrowed: bool,
     index: RustExpr,
@@ -765,7 +765,7 @@ impl RustEmitter {
         }))
     }
 
-    fn checked_sequence_read_guard_for_ir(
+    pub(crate) fn checked_sequence_read_guard_for_ir(
         &mut self,
         read: &crate::HirExpr,
     ) -> Result<Option<CheckedDictReadGuard>, crate::CodegenError> {

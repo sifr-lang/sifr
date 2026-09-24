@@ -819,3 +819,33 @@ def first_row_length(rows: list[list[str]]) -> Result[int, Error]:
         "{generated}"
     );
 }
+
+#[test]
+fn guarded_list_tuple_fields_keep_the_optional_read_boundary_in_nested_while() {
+    let generated = generate_rust_from_source(
+        r#"
+def nz(value: int | None) -> int:
+    if value is None:
+        return -1
+    return value
+
+def fields(rows: list[tuple[int, int]], start: int) -> list[int]:
+    result: list[int] = []
+    if len(rows) == 0:
+        return result
+    result.append(nz(rows[start][0]))
+    i = 0
+    while i < len(rows):
+        while i < len(rows) and nz(rows[i][0]) < 4:
+            result.append(nz(rows[i][1]))
+            i += 1
+        i += 1
+    result.append(nz(rows[len(rows)][0]))
+    return result
+"#,
+    );
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert!(generated.contains(".map(|__sifr_tuple|"), "{generated}");
+    assert!(generated.contains(" && "), "{generated}");
+    assert!(!generated.contains(".cloned().0"), "{generated}");
+}

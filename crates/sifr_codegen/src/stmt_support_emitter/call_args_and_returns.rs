@@ -37,30 +37,7 @@ impl RustEmitter {
                 continue;
             }
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
-            let effective_arg_ty = if let HirExpr::Name { name, ty, .. } = hir_arg {
-                if self.option_unwrapped_vars.contains(name)
-                    && let Some(inner) = ty.optional_member_type()
-                {
-                    inner
-                } else if self.none_widened_local_bindings.contains(name) {
-                    self.local_binding_types
-                        .get(name)
-                        .cloned()
-                        .unwrap_or_else(|| ty.clone())
-                } else if matches!(
-                    crate::resolve_alias_type_for_plain_call(ty),
-                    Type::Any | Type::Unknown
-                ) {
-                    self.local_binding_types
-                        .get(name)
-                        .cloned()
-                        .unwrap_or_else(|| ty.clone())
-                } else {
-                    ty.clone()
-                }
-            } else {
-                hir_arg.ty().clone()
-            };
+            let effective_arg_ty = self.effective_registry_expr_ty(hir_arg);
             if let Type::AsyncCallable(params, _, _) = resolved_param {
                 lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
             }
@@ -429,11 +406,90 @@ impl RustEmitter {
             }
             _ => None,
         };
+        let optional_tuple_ty = object
+            .ty()
+            .optional_member_type()
+            .filter(|inner| matches!(inner.resolve_alias(), Type::Tuple(_)));
         let object_ty = crate::resolve_alias_type_for_plain_call(
-            witnessed_object_ty.as_ref().unwrap_or_else(|| object.ty()),
+            witnessed_object_ty
+                .as_ref()
+                .or(optional_tuple_ty.as_ref())
+                .unwrap_or_else(|| object.ty()),
         );
         if !matches!(object_ty, Type::Tuple(_)) {
             return Ok(None);
+        }
+
+        // A list read can remain optional even when the contextual HIR type of
+        // the row is a tuple. Project the tuple field only from a present row;
+        // the missing row remains None for the surrounding checked expression.
+        if let HirExpr::Index {
+            object: collection,
+            index: row_index,
+            ..
+        } = object
+            && matches!(collection.ty().resolve_alias(), Type::List(_))
+            && !matches!(object, HirExpr::Index { object: parent, index: parent_index, .. } if self.has_checked_place_read_witness(parent, parent_index))
+        {
+            let option = if let Some(guard) = self.checked_sequence_read_guard_for_ir(object)? {
+                guard.option
+            } else {
+                // Computed indexes may have no reusable witness key. Keep the
+                // same checked get and normalization for their one-shot read.
+                let lowered_collection =
+                    if let Some(path) = self.emit_shared_receiver_path(collection) {
+                        Some(path)
+                    } else {
+                        self.lower_stmt_expr_for_ir(collection)?
+                    };
+                let Some(lowered_collection) = lowered_collection else {
+                    return Ok(None);
+                };
+                let Some(lowered_index) = self.lower_stmt_expr_for_ir(row_index)? else {
+                    return Ok(None);
+                };
+                crate::checked_place::checked_sequence_get_option(
+                    lowered_collection,
+                    false,
+                    Self::clone_non_copy_name_expr_for_ir(row_index, lowered_index),
+                    "__sifr_checked_read",
+                )
+            };
+            let Type::Tuple(elements) = object_ty else {
+                return Ok(None);
+            };
+            let HirExpr::IntLiteral(raw_idx) = index else {
+                return Ok(None);
+            };
+            let Ok(idx) = usize::try_from(*raw_idx) else {
+                return Ok(None);
+            };
+            let Some(element_ty) = elements.get(idx) else {
+                return Ok(None);
+            };
+            let field = crate::RustExpr::Field {
+                expr: Box::new(crate::RustExpr::Ident("__sifr_tuple".to_string())),
+                field: idx.to_string(),
+            };
+            let field = if crate::helpers::is_copy_type_for_codegen(element_ty)
+                || !element_ty.supports_derived_clone()
+            {
+                field
+            } else {
+                crate::RustExpr::Clone(Box::new(field))
+            };
+            return Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(option),
+                method: "map".to_string(),
+                args: vec![crate::RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__sifr_tuple".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(field),
+                    is_move: false,
+                }],
+            }));
         }
 
         let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
