@@ -678,6 +678,9 @@ fn windows_portability_workspace_identity_alias_and_orphan_prune() {
     let store = store(&cache, &file);
     let context = store.root.clone();
     let workspace = file.parent().unwrap().to_path_buf();
+    // Orphan pruning requires the original canonical identity after the path
+    // disappears; Windows canonicalization adds the verbatim drive prefix.
+    let canonical_workspace = workspace.canonicalize().unwrap();
     let outside = root.path().join("outside");
     fs::create_dir(&outside).unwrap();
     fs::write(outside.join("keep"), "intact").unwrap();
@@ -723,7 +726,7 @@ fn windows_portability_workspace_identity_alias_and_orphan_prune() {
     assert!(context.exists());
     fs::remove_dir(&workspace).unwrap();
     assert_eq!(
-        housekeeping::prune_workspace(&cache, &workspace, true, false)
+        housekeeping::prune_workspace(&cache, &canonical_workspace, true, false)
             .unwrap()
             .deleted_entries,
         1
