@@ -22,7 +22,7 @@ fn source_wire_path(relative: &Path) -> Result<String> {
 }
 
 pub(super) fn project(
-    compiled: &crate::stdlib::StdlibCompiled,
+    compiled: &crate::stdlib::SourceStdlibCompiled,
     sources: &[LoadedStdlibSource],
     compatibility: wire::Compatibility,
     root: &std::path::Path,

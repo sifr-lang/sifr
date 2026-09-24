@@ -34,6 +34,8 @@ members = [
     "crates/sifr_lsp",
     "crates/sifr_package",
     "crates/sifr_codegen",
+    "crates/sifr_cache_storage",
+    "crates/sifr_compiler_services",
     "crates/sifr_driver",
     "crates/sifr",
     "crates/sifr_rust_interop_catalog",
@@ -110,6 +112,8 @@ sifr_analysis = { path = "crates/sifr_analysis" }
 sifr_lsp = { path = "crates/sifr_lsp" }
 sifr_package = { path = "crates/sifr_package" }
 sifr_codegen = { path = "crates/sifr_codegen" }
+sifr_cache_storage = { path = "crates/sifr_cache_storage" }
+sifr_compiler_services = { path = "crates/sifr_compiler_services" }
 sifr_driver = { path = "crates/sifr_driver" }
 
 # External dependencies (latest stable for Sifr; the excluded Ruff fork carries its own pins).

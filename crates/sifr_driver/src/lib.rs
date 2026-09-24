@@ -11,9 +11,9 @@ mod application_profile;
 mod build;
 #[cfg_attr(windows, path = "cache_storage_windows.rs")]
 pub mod cache_storage;
-#[cfg(windows)]
-mod windows_storage_security;
 pub use application_profile::ApplicationProfile;
+#[cfg(windows)]
+pub(crate) use sifr_cache_storage::windows_storage_security;
 mod compiler_context;
 pub mod metadata_producer;
 mod metadata_reader;
@@ -26,7 +26,6 @@ pub use compiler_context::CompilerContext;
 mod diagnostics;
 mod export_policy;
 mod frontend;
-mod private_re_exports;
 mod project;
 mod python_binding;
 mod stdlib;

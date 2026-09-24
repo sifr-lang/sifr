@@ -1,8 +1,8 @@
-pub(crate) struct PrivateReExportRule {
-    pub(crate) public_module: &'static str,
-    pub(crate) private_module: &'static str,
-    pub(crate) names: &'static [&'static str],
-    pub(crate) semantic_evidence: &'static str,
+pub struct PrivateReExportRule {
+    pub public_module: &'static str,
+    pub private_module: &'static str,
+    pub names: &'static [&'static str],
+    pub semantic_evidence: &'static str,
 }
 
 const MATH_EXPORTS: &[&str] = &[
@@ -77,7 +77,7 @@ const OS_FS_EXPORTS: &[&str] = &[
     "disk_usage",
 ];
 
-pub(crate) const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
+pub const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
     PrivateReExportRule {
         public_module: "sifr.http",
         private_module: "_sifr.http",
@@ -176,7 +176,7 @@ pub(crate) const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
     },
 ];
 
-pub(crate) fn approved_private_re_export(
+pub fn approved_private_re_export(
     public_module: &str,
     private_module: &str,
     source_name: &str,
@@ -185,7 +185,7 @@ pub(crate) fn approved_private_re_export(
     private_re_export_evidence(public_module, private_module, source_name, local_name).is_some()
 }
 
-pub(crate) fn private_re_export_evidence(
+pub fn private_re_export_evidence(
     public_module: &str,
     private_module: &str,
     source_name: &str,

@@ -9,7 +9,7 @@ type RustProjection = (
 );
 
 pub(super) fn project(
-    compiled: &crate::stdlib::StdlibCompiled,
+    compiled: &crate::stdlib::SourceStdlibCompiled,
     module_name: &str,
     module: wire::Ref<wire::Module>,
     declarations: &BTreeMap<wire::Ref<wire::Text>, wire::Ref<wire::Declaration>>,

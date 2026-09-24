@@ -3,7 +3,7 @@ use sifr_identity::{CompilerIdentity, IdentityEncoder, TargetSemanticId};
 use sifr_stdlib_manifest::{LoadedStdlibSource, load_stdlib_tooling_sources_from_sysroot};
 use std::path::Path;
 
-pub(super) struct Inputs {
+pub struct Inputs {
     pub sysroot: sifr_sysroot::ResolvedSysroot,
     pub sources: Vec<LoadedStdlibSource>,
     pub compatibility: wire::Compatibility,
@@ -22,11 +22,7 @@ fn digest(text: &str) -> Result<[u8; 32]> {
     Ok(value)
 }
 impl Inputs {
-    pub(super) fn capture(
-        identity: &CompilerIdentity,
-        source_root: &Path,
-        target: &str,
-    ) -> Result<Self> {
+    pub fn capture(identity: &CompilerIdentity, source_root: &Path, target: &str) -> Result<Self> {
         if !matches!(
             target,
             "x86_64-unknown-linux-gnu"
@@ -105,7 +101,7 @@ impl Inputs {
             compatibility,
         })
     }
-    pub(super) fn produce(&self) -> Result<Vec<u8>> {
+    pub fn produce(&self) -> Result<Vec<u8>> {
         let compiled =
             crate::stdlib::compile_stdlib_sources_with_sysroot(&self.sources, self.sysroot.clone())
                 .map_err(|errors| {

@@ -30,7 +30,7 @@ use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken}
 fn denied(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::PermissionDenied, message.into())
 }
-pub(crate) fn wide(path: &OsStr) -> Vec<u16> {
+pub fn wide(path: &OsStr) -> Vec<u16> {
     path.encode_wide().chain(std::iter::once(0)).collect()
 }
 
@@ -125,7 +125,7 @@ fn owner() -> io::Result<Owner> {
     }
 }
 #[cfg(test)]
-pub(crate) fn token_default_owner_is_administrators() -> io::Result<bool> {
+pub fn token_default_owner_is_administrators() -> io::Result<bool> {
     let owner = owner()?;
     let mut len = 0;
     // SAFETY: the first call requests the required buffer size; the second
@@ -207,7 +207,7 @@ fn attributes(descriptor: &Descriptor) -> SECURITY_ATTRIBUTES {
         bInheritHandle: 0,
     }
 }
-pub(crate) fn create_directory(path: &Path) -> io::Result<()> {
+pub fn create_directory(path: &Path) -> io::Result<()> {
     no_reparse(
         path.parent()
             .ok_or_else(|| denied("missing directory parent"))?,
@@ -221,7 +221,7 @@ pub(crate) fn create_directory(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-pub(crate) fn create_file(path: &Path) -> io::Result<File> {
+pub fn create_file(path: &Path) -> io::Result<File> {
     no_reparse(path.parent().ok_or_else(|| denied("missing file parent"))?)?;
     let descriptor = private_descriptor()?;
     let attrs = attributes(&descriptor);
@@ -244,7 +244,7 @@ pub(crate) fn create_file(path: &Path) -> io::Result<File> {
     // SAFETY: this transfers the uniquely owned handle to File.
     Ok(unsafe { File::from_raw_handle(handle) })
 }
-pub(crate) fn no_reparse(path: &Path) -> io::Result<()> {
+pub fn no_reparse(path: &Path) -> io::Result<()> {
     if !path.is_absolute() {
         return Err(denied("storage path must be absolute"));
     }
@@ -273,7 +273,7 @@ pub(crate) fn no_reparse(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-pub(crate) fn check(path: &Path) -> io::Result<()> {
+pub fn check(path: &Path) -> io::Result<()> {
     no_reparse(path)?;
     let meta = fs::symlink_metadata(path)?;
     use std::os::windows::fs::MetadataExt;
@@ -328,7 +328,7 @@ pub(crate) fn check(path: &Path) -> io::Result<()> {
     let _ = descriptor;
     Ok(())
 }
-pub(crate) fn available_bytes(path: &Path) -> io::Result<u64> {
+pub fn available_bytes(path: &Path) -> io::Result<u64> {
     let wide = wide_path(path);
     let mut free = 0;
     // SAFETY: the path and output pointer are valid.
@@ -346,7 +346,7 @@ pub(crate) fn available_bytes(path: &Path) -> io::Result<u64> {
     Ok(free)
 }
 
-pub(crate) fn seal(path: &Path) -> io::Result<()> {
+pub fn seal(path: &Path) -> io::Result<()> {
     no_reparse(path)?;
     let owner = owner()?;
     let wide = wide_path(path);
@@ -453,7 +453,7 @@ pub(crate) fn seal(path: &Path) -> io::Result<()> {
     check(path)
 }
 
-pub(crate) fn open_read(path: &Path) -> io::Result<File> {
+pub fn open_read(path: &Path) -> io::Result<File> {
     use std::fs::OpenOptions;
     use std::os::windows::fs::OpenOptionsExt;
     check(path)?;
@@ -468,7 +468,7 @@ pub(crate) fn open_read(path: &Path) -> io::Result<File> {
     Ok(file)
 }
 
-pub(crate) fn durable_rename(source: &Path, destination: &Path) -> io::Result<()> {
+pub fn durable_rename(source: &Path, destination: &Path) -> io::Result<()> {
     use windows_sys::Win32::Storage::FileSystem::{
         MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW,
     };
@@ -503,7 +503,7 @@ pub(crate) fn durable_rename(source: &Path, destination: &Path) -> io::Result<()
 }
 
 #[cfg(test)]
-pub(crate) fn test_grant_world(path: &Path) -> io::Result<()> {
+pub fn test_grant_world(path: &Path) -> io::Result<()> {
     let sddl = wide(OsStr::new("D:P(A;;FA;;;WD)"));
     let mut descriptor = std::ptr::null_mut();
     // SAFETY: test-only descriptor uses fixed, valid SDDL.
@@ -555,7 +555,7 @@ pub(crate) fn test_grant_world(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-pub(crate) fn file_identity(file: &File) -> io::Result<(u64, u64)> {
+pub fn file_identity(file: &File) -> io::Result<(u64, u64)> {
     use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::Storage::FileSystem::{
         BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle,
@@ -572,7 +572,7 @@ pub(crate) fn file_identity(file: &File) -> io::Result<(u64, u64)> {
     Ok((u64::from(information.dwVolumeSerialNumber), index))
 }
 
-pub(crate) fn path_identity(path: &Path) -> io::Result<(u64, u64)> {
+pub fn path_identity(path: &Path) -> io::Result<(u64, u64)> {
     use windows_sys::Win32::Storage::FileSystem::FILE_FLAG_BACKUP_SEMANTICS;
     no_reparse(path)?;
     let wide = wide_path(path);
@@ -602,7 +602,7 @@ pub(crate) fn path_identity(path: &Path) -> io::Result<(u64, u64)> {
 
 /// Caller-owned workspaces keep ordinary Windows ACLs, including privileged
 /// SYSTEM/Administrators grants. Reject writable grants to other principals.
-pub(crate) fn safe_workspace(path: &Path) -> io::Result<()> {
+pub fn safe_workspace(path: &Path) -> io::Result<()> {
     use windows_sys::Win32::Foundation::{GENERIC_ALL, GENERIC_WRITE};
     use windows_sys::Win32::Storage::FileSystem::{
         DELETE, FILE_ADD_FILE, FILE_APPEND_DATA, FILE_DELETE_CHILD, FILE_WRITE_ATTRIBUTES,

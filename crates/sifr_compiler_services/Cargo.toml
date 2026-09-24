@@ -1,0 +1,33 @@
+[package]
+name = "sifr_compiler_services"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_cache_storage = { workspace = true }
+sifr_identity = { workspace = true }
+sifr_diagnostics = { workspace = true }
+sifr_python_ast = { workspace = true }
+sifr_lowering = { workspace = true }
+sifr_ir = { workspace = true }
+sifr_stdlib_imports = { workspace = true }
+sifr_stdlib_manifest = { workspace = true }
+sifr_frontend = { workspace = true }
+sifr_syntax = { workspace = true }
+sifr_codegen = { workspace = true }
+sifr_sysroot = { workspace = true }
+sifr_type_system = { workspace = true }
+ruff_text_size = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+syn = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[lints]
+workspace = true

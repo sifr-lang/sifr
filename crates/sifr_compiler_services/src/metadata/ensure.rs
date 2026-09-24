@@ -5,10 +5,7 @@ use std::{
     fs::{self, File},
     io::{Read, Write},
     path::{Path, PathBuf},
-    sync::{
-        Arc, Mutex, OnceLock,
-        atomic::{AtomicBool, Ordering},
-    },
+    sync::{Arc, Mutex, OnceLock, atomic::Ordering},
     time::Instant,
 };
 
@@ -38,8 +35,8 @@ fn remember(prepared: Arc<PreparedMetadata>) -> Result<Arc<PreparedMetadata>> {
     successes.insert(prepared.path.clone(), prepared.clone());
     Ok(prepared)
 }
-fn cancelled(cancel: &AtomicBool) -> Result<()> {
-    if cancel.load(Ordering::Relaxed) {
+fn cancelled(cancel: &dyn Fn() -> bool) -> Result<()> {
+    if cancel() {
         Err(fail("metadata preparation cancelled"))
     } else {
         Ok(())
@@ -72,24 +69,24 @@ pub fn ensure_development_metadata(
     source_root: &Path,
     target: &str,
     cache: &Path,
-    cancel: &AtomicBool,
+    cancel: &dyn Fn() -> bool,
 ) -> Result<Arc<PreparedMetadata>> {
     ensure_with_hook(identity, source_root, target, cache, cancel, |_| Ok(()))
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Stage {
+pub enum Stage {
     Captured,
     Owned,
     Waiting,
     Staged,
     Published,
 }
-pub(super) fn ensure_with_hook(
+pub fn ensure_with_hook(
     identity: &CompilerIdentity,
     source_root: &Path,
     target: &str,
     cache: &Path,
-    cancel: &AtomicBool,
+    cancel: &dyn Fn() -> bool,
     hook: impl Fn(Stage) -> Result<()>,
 ) -> Result<Arc<PreparedMetadata>> {
     let inputs = Inputs::capture(identity, source_root, target)?;
@@ -103,12 +100,12 @@ pub(super) fn ensure_with_hook(
         .concat(),
     );
     let root = cache.join("metadata");
-    crate::cache_storage::directory(cache).map_err(fail)?;
-    crate::cache_storage::directory(&root).map_err(fail)?;
+    sifr_cache_storage::directory(cache).map_err(fail)?;
+    sifr_cache_storage::directory(&root).map_err(fail)?;
     let path = root.join(format!("{key}.sifrmeta"));
     cancelled(cancel)?;
     if path.exists() {
-        crate::cache_storage::payload(
+        sifr_cache_storage::payload(
             &root,
             path.file_name()
                 .map(Path::new)
@@ -129,38 +126,24 @@ pub(super) fn ensure_with_hook(
             return Ok(prepared);
         }
     }
-    let lock = crate::cache_storage::entry_lock(&root, &key).map_err(fail)?;
+    let lock = sifr_cache_storage::entry_lock(&root, &key).map_err(fail)?;
     if path.is_file() {
         if let Ok(prepared) = validate(&path, inputs.compatibility, lock.try_clone().map_err(fail)?)
         {
             return remember(prepared);
         }
     }
-    #[cfg(unix)]
-    crate::cache_storage::lock_bounded_with_hooks(
+    sifr_cache_storage::lock_bounded_with_hooks(
         &lock,
         &root.join(".locks").join(&key),
         false,
-        crate::cache_storage::LEASE_WAIT,
-        crate::cache_storage::LEASE_IDLE_WAIT,
+        sifr_cache_storage::LEASE_WAIT,
+        sifr_cache_storage::LEASE_IDLE_WAIT,
         || cancelled(cancel).map_err(std::io::Error::other),
         || hook(Stage::Waiting).map_err(std::io::Error::other),
     )
     .map_err(fail)?;
-    #[cfg(unix)]
-    let activity = crate::cache_storage::LeaseActivity::start(&lock).map_err(fail)?;
-    #[cfg(windows)]
-    loop {
-        cancelled(cancel)?;
-        match lock.try_lock() {
-            Ok(()) => break,
-            Err(std::fs::TryLockError::WouldBlock) => {
-                hook(Stage::Waiting)?;
-                std::thread::sleep(std::time::Duration::from_millis(10));
-            }
-            Err(std::fs::TryLockError::Error(error)) => return Err(fail(error)),
-        }
-    }
+    let activity = sifr_cache_storage::LeaseActivity::start(&lock).map_err(fail)?;
     // Recheck after ownership; a waiter observes the winner's complete output.
     if let Some(prepared) = SUCCESSES
         .get_or_init(Mutex::default)
@@ -178,7 +161,6 @@ pub(super) fn ensure_with_hook(
     if path.is_file() {
         if let Ok(prepared) = validate(&path, inputs.compatibility, lock.try_clone().map_err(fail)?)
         {
-            #[cfg(unix)]
             drop(activity);
             lock.unlock().map_err(fail)?;
             return remember(prepared);
@@ -205,7 +187,7 @@ pub(super) fn ensure_with_hook(
     if staging.exists() {
         fs::remove_file(&staging).map_err(fail)?;
     }
-    let mut file = crate::cache_storage::new_private_file(&staging).map_err(fail)?;
+    let mut file = sifr_cache_storage::new_private_file(&staging).map_err(fail)?;
     file.write_all(&bytes).map_err(fail)?;
     file.sync_all().map_err(fail)?;
     cancelled(cancel)?;
@@ -216,9 +198,8 @@ pub(super) fn ensure_with_hook(
         ));
     }
     cancelled(cancel)?;
-    crate::cache_storage::publish(&staging, &path).map_err(fail)?;
+    sifr_cache_storage::publish(&staging, &path).map_err(fail)?;
     hook(Stage::Published)?;
-    #[cfg(unix)]
     drop(activity);
     lock.unlock().map_err(fail)?;
     let prepared = Arc::new(PreparedMetadata {
@@ -249,7 +230,7 @@ impl PreparedMetadata {
             } else {
                 std::env::current_dir().map_err(fail)?.join(parent)
             };
-            crate::windows_storage_security::no_reparse(&requested).map_err(fail)?;
+            sifr_cache_storage::windows_storage_security::no_reparse(&requested).map_err(fail)?;
             requested
         };
         let parent=parent.canonicalize().map_err(|error|fail(format!("metadata output parent {} is unavailable: {error}; select an existing writable directory",parent.display())))?;
@@ -274,11 +255,11 @@ impl PreparedMetadata {
                     "prepared metadata changed before output publication; retry preparation",
                 ));
             }
-            let mut file=crate::cache_storage::new_private_file(&stage).map_err(|error|fail(format!("cannot create metadata output in {}: {error}; select a writable output directory",parent.display())))?;
+            let mut file=sifr_cache_storage::new_private_file(&stage).map_err(|error|fail(format!("cannot create metadata output in {}: {error}; select a writable output directory",parent.display())))?;
             owns_stage = true;
             file.write_all(&bytes).map_err(fail)?;
             file.sync_all().map_err(fail)?;
-            crate::cache_storage::publish(&stage, &output).map_err(fail)?;
+            sifr_cache_storage::publish(&stage, &output).map_err(fail)?;
             Ok(())
         })();
         if result.is_err() && owns_stage {
@@ -332,7 +313,7 @@ pub(crate) fn read_bounded(path: &Path) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 /// Open a consumer owner without traversal of unrelated payloads.
-pub(crate) fn open_consumer(
+pub fn open_consumer(
     path: &Path,
     compatibility: wire::Compatibility,
     expected_id: Option<&str>,

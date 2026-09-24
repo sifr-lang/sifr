@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = ROOT / "internal_docs/compiler_dx_metadata_consumers.md"
 BEGIN = "<!-- dx5-sites:start -->"
 END = "<!-- dx5-sites:end -->"
-OWNERS = ("sifr_lowering", "sifr_frontend", "sifr_driver", "sifr_codegen", "sifr_analysis", "sifr_lsp", "sifr")
+OWNERS = ("sifr_lowering", "sifr_frontend", "sifr_compiler_services", "sifr_driver", "sifr_codegen", "sifr_analysis", "sifr_lsp", "sifr")
 TERMS = re.compile(r"\b(?:ExternalDefs|StdlibCode|StdlibEmissionCode|StdlibEmissionView|external_defs|externals|stdlib_defs|stdlib_code|hir_modules|module_rust_code|module_constants|func_signatures|transitive_deps|generator_functions|generic_classes|generic_class_params|generic_class_templates|module_class_fields|module_class_templates)\b|\b\w*stdlib\w*\b")
 
 

@@ -1,6 +1,5 @@
 use sifr_codegen::StdlibCode;
 use sifr_lowering::ExternalDefs;
-use sifr_sysroot::ResolvedSysroot;
 use std::collections::HashMap;
 
 /// Completed bootstrap owner, shared immutably by compilation consumers.
@@ -8,24 +7,14 @@ use std::collections::HashMap;
 pub(crate) struct StdlibCompiled {
     pub(crate) provider: Option<std::sync::Arc<crate::metadata_reader::Provider>>,
     pub(crate) defs: ExternalDefs,
+    #[allow(dead_code)] // Retained for test-only source bootstrap until C02a1 moves the reader.
     pub(crate) metadata_features:
         HashMap<String, std::collections::BTreeSet<sifr_stdlib_manifest::StdlibFeature>>,
     pub(crate) code: StdlibCode,
     pub(crate) interop: StdlibRustInterop,
 }
 
-#[derive(Clone, Default)]
-pub(crate) struct StdlibRustInterop {
-    pub(crate) plan: sifr_codegen::InteropBuildPlan,
-    pub(crate) module_sources: HashMap<String, StdlibRustInteropModuleSource>,
-    pub(crate) sysroot: Option<ResolvedSysroot>,
-}
-
-#[derive(Clone)]
-pub(crate) struct StdlibRustInteropModuleSource {
-    pub(crate) source: String,
-    pub(crate) display_path: String,
-}
+pub(crate) use sifr_compiler_services::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
 
 impl StdlibCompiled {
     pub(crate) fn for_codegen<'a>(
