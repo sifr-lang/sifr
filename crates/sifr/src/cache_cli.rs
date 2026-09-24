@@ -43,6 +43,11 @@ pub(crate) fn run(args: CacheArgs) -> i32 {
         CacheCommand::Inspect { json } => match sifr_driver::cache_storage::inspect() {
             Ok(report) if !json => {
                 let _ = writeln!(io::stdout(), "cache: {}", report.root.display());
+                #[cfg(unix)]
+                for owner in report.owners {
+                    let _ = writeln!(io::stdout(), "{} owner={} policy={}",
+                        owner.path.display(), owner.owner, owner.policy);
+                }
                 for root in report.protected_roots {
                     let _ = writeln!(io::stdout(), "{} protected=true (auxiliary owner)", root.display());
                 }

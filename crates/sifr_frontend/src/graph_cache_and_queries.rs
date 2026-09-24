@@ -9,6 +9,7 @@ use super::{
     hir_diagnostic_to_rendered, local_import_dependencies, module_state, reveal_type_diagnostics,
     source_hash, sql_editor_documents, symbols_from_hir, warning_diagnostics,
 };
+use crate::frontend_product::compile_prepared_frontend_product_module;
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{ModuleSignature, module_signature};
 use crate::source_maps::AuxiliarySourceState;
@@ -254,6 +255,7 @@ pub struct FrontendContext {
     package_config_identity: WorkspacePackageConfigIdentity,
     base_external_defs: ExternalDefs,
     external_defs: ExternalDefs,
+    dependency_order: Option<Result<Vec<String>, Vec<RenderedDiagnostic>>>,
     lowering_modules: BTreeSet<ModuleId>,
 }
 
@@ -565,7 +567,48 @@ impl FrontendContext {
         Ok(CacheStatus::Miss)
     }
 
+    fn ensure_dependency_order(&mut self) {
+        if self.dependency_order.is_some() {
+            return;
+        }
+        let module_ids = self
+            .modules
+            .iter()
+            .map(|state| state.id)
+            .collect::<Vec<_>>();
+        for id in module_ids {
+            let _ = self.ensure_parsed(id);
+        }
+        let display_paths = self
+            .modules
+            .iter()
+            .map(|state| state.path.as_path().to_string_lossy().into_owned())
+            .collect::<Vec<_>>();
+        let inputs = self
+            .modules
+            .iter()
+            .enumerate()
+            .filter_map(|(index, state)| {
+                state.parsed.as_ref().map(|parsed| {
+                    (
+                        state.module_name.clone(),
+                        crate::CompileOrderSourceModule {
+                            suite: parsed.suite(),
+                            source: state.source.as_str(),
+                            display_path: display_paths[index].as_str(),
+                        },
+                    )
+                })
+            })
+            .collect();
+        self.dependency_order = Some(crate::compute_module_compile_order_with_sources(&inputs));
+    }
+
     fn ensure_lowered(&mut self, module: ModuleId) -> CacheStatus {
+        self.ensure_dependency_order();
+        if matches!(self.dependency_order, Some(Err(_))) {
+            return CacheStatus::Miss;
+        }
         let index = self.index_for_module(module);
         if self.modules[index].lowered.is_some() {
             return CacheStatus::Hit;
@@ -593,7 +636,9 @@ impl FrontendContext {
             .iter()
             .map(|module| (module.module_name.clone(), module.id))
             .collect();
-        for dependency in local_import_dependencies(&parsed, &module_names) {
+        for dependency in
+            local_import_dependencies(&self.modules[index].module_name, &parsed, &module_names)
+        {
             let _ = self.ensure_lowered(dependency);
         }
         let index = self.index_for_module(module);
@@ -610,19 +655,23 @@ impl FrontendContext {
             self.lowering_modules.remove(&module);
             return CacheStatus::Hit;
         }
-        match compile_module_hir_with_source(
+        let display_path = self.modules[index]
+            .path
+            .as_path()
+            .to_string_lossy()
+            .into_owned();
+        match compile_prepared_frontend_product_module(
             &self.modules[index].module_name,
             &parsed,
-            &self.external_defs,
-            FrontendDiagnosticStyle::Bare,
             Some(FrontendSourceContext {
-                display_path: &self.modules[index].module_name,
+                display_path: &display_path,
                 source: self.modules[index].source.as_str(),
             }),
+            &mut self.external_defs,
+            FrontendDiagnosticStyle::Bare,
+            LoweringOptions::default(),
         ) {
-            Ok(lowered) => {
-                let module_name = self.modules[index].module_name.clone();
-                collect_module_exports(&module_name, &lowered, &mut self.external_defs);
+            Ok((lowered, _diagnostics)) => {
                 self.modules[index].lowered = Some(self.reuse_caches.insert_hir(hir_key, lowered));
             }
             Err(errors) => {
@@ -634,6 +683,10 @@ impl FrontendContext {
     }
 
     fn ensure_diagnostics(&mut self, module: ModuleId) -> CacheStatus {
+        self.ensure_dependency_order();
+        if matches!(self.dependency_order, Some(Err(_))) {
+            return CacheStatus::Miss;
+        }
         let index = self.index_for_module(module);
         if self.modules[index].diagnostics.is_some() {
             return CacheStatus::Hit;
@@ -650,8 +703,13 @@ impl FrontendContext {
                 .lowered
                 .as_ref()
                 .map(|lowered| {
+                    let display_path = self.modules[index]
+                        .path
+                        .as_path()
+                        .to_string_lossy()
+                        .into_owned();
                     let source_context = FrontendSourceContext {
-                        display_path: &self.modules[index].module_name,
+                        display_path: &display_path,
                         source: self.modules[index].source.as_str(),
                     };
                     let mut diagnostics =
@@ -739,7 +797,11 @@ impl FrontendContext {
             );
             if let Ok(parsed) = parsed {
                 self.modules[index].signature = module_signature(parsed.suite());
-                for import in local_import_dependencies(parsed.suite(), &module_names) {
+                for import in local_import_dependencies(
+                    &self.modules[index].module_name,
+                    parsed.suite(),
+                    &module_names,
+                ) {
                     edges.insert((self.modules[index].id, import));
                 }
             }

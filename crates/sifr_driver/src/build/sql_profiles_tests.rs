@@ -84,7 +84,7 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
         crate::stdlib::external_defs(&crate::CompilerContext::for_test())
             .expect("stdlib should compile"),
         sifr_frontend::FrontendDiagnosticStyle::Bare,
-        sifr_lowering::LoweringOptions::default(),
+        &sifr_lowering::LoweringOptions::default(),
     )
     .expect("generated profile annotations must resolve through declared imports");
     let without_uuid_import = generated_source.replace("from sifr.uuid import UUID\n", "");
@@ -101,7 +101,7 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
         crate::stdlib::external_defs(&crate::CompilerContext::for_test())
             .expect("stdlib should compile"),
         sifr_frontend::FrontendDiagnosticStyle::Bare,
-        sifr_lowering::LoweringOptions::default(),
+        &sifr_lowering::LoweringOptions::default(),
     );
     assert!(
         missing_import.is_err(),
@@ -163,7 +163,7 @@ fn package_query_declarations_emit_non_empty_compatibility_artifact() {
         },
         external_defs,
         sifr_frontend::FrontendDiagnosticStyle::Bare,
-        sifr_lowering::LoweringOptions::default(),
+        &sifr_lowering::LoweringOptions::default(),
     )
     .expect("profile query source should lower through the normal frontend");
     let registry = compile_application_queries(&mut project, &prepared)
@@ -228,7 +228,7 @@ def main():
         },
         external_defs,
         sifr_frontend::FrontendDiagnosticStyle::Bare,
-        sifr_lowering::LoweringOptions::default(),
+        &sifr_lowering::LoweringOptions::default(),
     )
     .expect("ordinary names must not be claimed by SQL discovery");
     let registry = compile_application_queries(&mut project, &prepared)
@@ -390,7 +390,7 @@ fn lower_sql_fixture(
         },
         external_defs,
         sifr_frontend::FrontendDiagnosticStyle::Bare,
-        sifr_lowering::LoweringOptions::default(),
+        &sifr_lowering::LoweringOptions::default(),
     )
 }
 
