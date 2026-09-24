@@ -14,6 +14,8 @@ use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 use sifr_sysroot::ResolvedSysroot;
 #[cfg(test)]
 use sifr_type_system::{FunctionType, ParamConvention, Type};
+#[cfg(test)]
+use std::collections::HashMap;
 
 #[cfg(test)]
 use sifr_compiler_services::stdlib::{

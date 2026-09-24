@@ -604,10 +604,10 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/project_cache/interface_reuse.rs:32` `restore` | read, enumerate | layered view + demanded record handles | 38 |
 | `crates/sifr_driver/src/project_cache/mod.rs:63` `check_saved_sources` | read, enumerate | layered view + demanded record handles | 153 |
 | `crates/sifr_driver/src/project_cache/mod.rs:175` `check` | read, enumerate | layered view + demanded record handles | 183 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:29` `compile_stdlib` | read, borrow/retain | layered view + demanded record handles | 29, 33, 37, 38 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:49` `compile_stdlib_uncached` | read | layered view + demanded record handles | 49, 50 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:54` `compile_stdlib_for_context` | read | layered view + demanded record handles | 54, 58, 64 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:68` `compile_stdlib_sources_with_sysroot` | read | canonical source-only producer (retain) | 68, 73 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:31` `compile_stdlib` | read, borrow/retain | layered view + demanded record handles | 31, 35, 39, 40 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:51` `compile_stdlib_uncached` | read | layered view + demanded record handles | 51, 52 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:56` `compile_stdlib_for_context` | read | layered view + demanded record handles | 56, 60, 66 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:70` `compile_stdlib_sources_with_sysroot` | read | canonical source-only producer (retain) | 70, 75 |
 | `crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs:5` `stdlib_interop_startup_bootstrap_preserves_inventory_without_application_plan` | read, enumerate | test setup/parity | 5, 6, 7, 17, 20, 21, 22, 28, 34, 39 |
 | `crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs:50` `fixture_source` | read | test setup/parity | 51, 57 |
 | `crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs:62` `compile_fixture_sources` | read | test setup/parity | 66 |
