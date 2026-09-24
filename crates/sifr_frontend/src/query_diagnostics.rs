@@ -54,6 +54,7 @@ pub(super) fn source_hash(source: &str) -> SourceHash {
 }
 
 pub(super) fn local_import_dependencies(
+    current_module: &str,
     stmts: &[Stmt],
     module_names: &BTreeMap<String, ModuleId>,
 ) -> Vec<ModuleId> {
@@ -76,8 +77,15 @@ pub(super) fn local_import_dependencies(
         {
             continue;
         }
-        if let Some(module_id) = module_names.get(&module_name) {
-            deps.push(*module_id);
+        for candidate in crate::compile_order::dependency_candidates(
+            current_module,
+            &module_name,
+            import_from.level,
+        ) {
+            if let Some(module_id) = module_names.get(&candidate) {
+                deps.push(*module_id);
+                break;
+            }
         }
     }
     deps.sort();

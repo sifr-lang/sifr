@@ -62,6 +62,15 @@ impl FrontendContext {
 
     pub fn diagnostics_for_module(&mut self, module: ModuleId) -> QueryResult<ModuleDiagnostics> {
         let cache_status = self.ensure_diagnostics(module);
+        if let Some(Err(errors)) = &self.dependency_order {
+            return QueryResult::new(
+                ModuleDiagnostics {
+                    module,
+                    diagnostics: errors.clone(),
+                },
+                FrontendContext::metadata(self, QueryKind::ModuleDiagnostics, cache_status),
+            );
+        }
         let index = self.index_for_module(module);
         QueryResult::new(
             ModuleDiagnostics {
@@ -77,10 +86,26 @@ impl FrontendContext {
     }
 
     pub fn diagnostics_for_project(&mut self) -> QueryResult<ProjectDiagnostics> {
+        self.ensure_dependency_order();
+        if let Some(Err(errors)) = &self.dependency_order {
+            return QueryResult::new(
+                ProjectDiagnostics {
+                    diagnostics: errors.clone(),
+                },
+                FrontendContext::metadata(self, QueryKind::ProjectDiagnostics, CacheStatus::Miss),
+            );
+        }
         let module_ids: Vec<ModuleId> = self.modules.iter().map(|module| module.id).collect();
         let mut diagnostics = Vec::new();
         for module in module_ids {
-            diagnostics.extend(self.diagnostics_for_module(module).into_value().diagnostics);
+            for diagnostic in self.diagnostics_for_module(module).into_value().diagnostics {
+                if diagnostic.code == sifr_diagnostics::DiagnosticCode::IMPORT_CYCLE.code()
+                    && diagnostics.contains(&diagnostic)
+                {
+                    continue;
+                }
+                diagnostics.push(diagnostic);
+            }
         }
         QueryResult::new(
             ProjectDiagnostics { diagnostics },

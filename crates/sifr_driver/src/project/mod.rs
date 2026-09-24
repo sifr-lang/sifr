@@ -1,5 +1,5 @@
 mod assembly;
-mod compile_order;
+
 mod discovery;
 mod frontend;
 mod package_discovery;
@@ -26,4 +26,4 @@ pub(crate) use rust_module_layout::{
 };
 
 #[cfg(test)]
-pub(crate) use compile_order::compute_module_compile_order;
+pub(crate) use sifr_frontend::compute_module_compile_order;

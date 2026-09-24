@@ -5,6 +5,16 @@
 //! deterministic invalidation reports.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+mod frontend_product;
+pub use frontend_product::{
+    FrontendProduct, FrontendProductInput, compile_frontend_product,
+    compile_frontend_product_module,
+};
+mod compile_order;
+pub use compile_order::{
+    CompileOrderSourceModule, compute_module_compile_order,
+    compute_module_compile_order_with_sources,
+};
 mod cache_fingerprint;
 mod cache_keys;
 pub use cache_fingerprint::CacheKeyFingerprint;
