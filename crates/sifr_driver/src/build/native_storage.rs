@@ -31,6 +31,14 @@ impl NativeFamily {
         crate::cache_storage::directory(&directory)?;
         let key = id.finish();
         let lease = crate::cache_storage::entry_lock(&directory, &key)?;
+        #[cfg(unix)]
+        crate::cache_storage::lock_bounded(
+            &lease,
+            &directory.join(".locks").join(&key),
+            false,
+            crate::cache_storage::LEASE_WAIT,
+        )?;
+        #[cfg(windows)]
         lease.lock()?;
         let root = directory.join(&key);
         crate::cache_storage::directory(&root)?;
@@ -79,7 +87,16 @@ pub(crate) fn publication_lock(path: &Path) -> std::io::Result<File> {
     id.field("path", path.as_os_str().as_encoded_bytes());
     let directory = crate::cache_storage::root().join("native/publications");
     crate::cache_storage::directory(&directory)?;
-    let lease = crate::cache_storage::entry_lock(&directory, &id.finish())?;
+    let key = id.finish();
+    let lease = crate::cache_storage::entry_lock(&directory, &key)?;
+    #[cfg(unix)]
+    crate::cache_storage::lock_bounded(
+        &lease,
+        &directory.join(".locks").join(key),
+        false,
+        crate::cache_storage::LEASE_WAIT,
+    )?;
+    #[cfg(windows)]
     lease.lock()?;
     Ok(lease)
 }

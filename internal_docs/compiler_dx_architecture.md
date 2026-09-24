@@ -409,6 +409,32 @@ Readers keep a lease while they require an entry, including metadata or executab
 
 The supported persistence contract is for qualified local filesystems with working lock/atomic-publication semantics. Arbitrary shared/network filesystem behavior is not guaranteed. Failure to obtain safe project-cache persistence leaves normal uncached semantic computation available with a clear cache status. Required artifact preparation/materialization failures remain actionable errors. These are explicit supported behaviors, not alternative semantic implementations.
 
+### 7.2.1 Current local cache ownership inventory
+
+On Unix, the generated-storage cache has these distinct lifecycle owners. Cache
+inspection reports them even when their directory does not yet exist. Generic cache pruning
+may reclaim only entries owned by the current canonical worktree scope and
+protected by an uncontended permanent lock inode; pressure never overrides a lease.
+
+| Namespace | Lifecycle and reclamation owner |
+| --- | --- |
+| native/artifacts | Driver generated-artifact owner. Final entries and abandoned stages carry scope metadata and share an entry lease. Preserve the newest valid final entry per namespace. Auxiliary roots without an entry lock namespace remain protected. |
+| native/artifacts/cargo_resolution | Prepared Cargo resolution owner. The cache key includes worktree scope, each root carries an owner marker, and the lease spans prepared-lock reuse through the caller's Cargo work. Reclaim only whole inactive roots under pressure; legacy ownerless roots remain protected. |
+| native/artifacts/rust_bridge_probes | Rust bridge probe receipt owner (DX9-F1). Default-root and externally configured receipts remain protected pending that lifecycle disposition. |
+| native/families | Driver native Cargo family owner. Family metadata binds the current worktree scope; the family lease covers root mutation, Cargo and capture, and is inherited by native descendants. Reclaim a whole inactive owned family under pressure, never individual Cargo internals. |
+| native/publications | Driver output-publication owner. Permanent lock inodes only; no payload cleanup. |
+| metadata | Metadata producer and installed-generation pin owner. Keep protected from generic prune. |
+| projects | Project-generation owner. Only cache prune-project handles a specified workspace and its context leases. |
+| test-fixtures | Rust interop test owner. Test setup resets its own scoped fixture under a lease; generic prune leaves it protected. |
+| Unknown root or auxiliary namespace | Unknown or external owner. Report as protected; require an explicit ownership contract before reclamation. |
+
+Unix generated-storage waits use a 30-second safety deadline and a cancellable
+nonblocking polling primitive. Timeout diagnostics
+include the lock path and the last exclusive acquirer note. A process signal cancels a pending wait. A killed parent may
+leave a live child holding an inherited lease; that note is historical context,
+not authority to break the lock. Cancellation remains explicit in metadata
+production. No timeout permits deletion of a contended entry.
+
 ### 7.3 Pressure-based cleanup
 
 Remove the automatic `target > 20 GiB → cargo clean` rule. Directory size is an observation, not an invalidation event.

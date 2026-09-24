@@ -62,6 +62,7 @@ pub(crate) struct PreparedCargoResolution {
     initial_digest: Option<String>,
     lock_mode: CargoLockMode,
     authority_check: Option<PreparedAuthorityCheck>,
+    _cache_lease: Option<std::fs::File>,
 }
 
 struct PreparedAuthorityCheck {
@@ -116,6 +117,7 @@ pub(crate) fn prepare_cargo_resolution(
             lock_path,
             lock_mode: policy.lock_mode,
             authority_check: None,
+            _cache_lease: None,
         });
     }
     if policy.authoritative_locks.is_empty() {
@@ -125,6 +127,60 @@ pub(crate) fn prepare_cargo_resolution(
     }
 
     let prepared_lock = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
+    let prepared_root = prepared_lock
+        .parent()
+        .ok_or_else(|| vec![cargo_resolution_error("missing prepared lock parent")])?;
+    let cache_root = prepared_root
+        .parent()
+        .ok_or_else(|| vec![cargo_resolution_error("missing prepared cache root")])?;
+    let key = prepared_root
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| vec![cargo_resolution_error("invalid prepared cache key")])?;
+    crate::cache_storage::directory(prepared_root)
+        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    let cache_lease = crate::cache_storage::entry_lock(cache_root, key)
+        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    #[cfg(unix)]
+    crate::cache_storage::lock_bounded(
+        &cache_lease,
+        &cache_root.join(".locks").join(key),
+        false,
+        crate::cache_storage::LEASE_WAIT,
+    )
+    .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    #[cfg(windows)]
+    cache_lease
+        .lock()
+        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    let scope = crate::cache_storage::owner_scope()
+        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    let owner_path = prepared_root.join("resolution_owner.json");
+    let owner = serde_json::json!({"schema":1, "key":key, "owner_scope":scope});
+    match std::fs::symlink_metadata(&owner_path) {
+        Ok(_) => {
+            crate::cache_storage::payload(prepared_root, Path::new("resolution_owner.json"))
+                .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+            let existing = std::fs::read(&owner_path)
+                .ok()
+                .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok());
+            if existing.as_ref() != Some(&owner) {
+                return Err(vec![cargo_resolution_error(
+                    "prepared Cargo cache owner mismatch",
+                )]);
+            }
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            let mut marker = crate::cache_storage::new_private_file(&owner_path)
+                .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+            let bytes = serde_json::to_vec(&owner)
+                .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+            std::io::Write::write_all(&mut marker, &bytes)
+                .and_then(|()| marker.sync_all())
+                .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+        }
+        Err(error) => return Err(vec![cargo_resolution_error(error.to_string())]),
+    }
     let marker_path = project_dir.join(".sifr-cargo-resolution");
     let previous_marker = match std::fs::read_to_string(&marker_path) {
         Ok(marker) => Some(marker),
@@ -189,6 +245,16 @@ pub(crate) fn prepare_cargo_resolution(
     let marker = format!("{}\n{initial_digest}\n", prepared_lock.display());
     super::native_storage::write_changed(&marker_path, marker.as_bytes())
         .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    // The prepared payload is immutable now. Keep it leased while Cargo uses it,
+    // while allowing concurrent readers of the same prepared resolution.
+    #[cfg(unix)]
+    crate::cache_storage::lock_bounded(
+        &cache_lease,
+        &cache_root.join(".locks").join(key),
+        true,
+        crate::cache_storage::LEASE_WAIT,
+    )
+    .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
     Ok(PreparedCargoResolution {
         lock_path,
         initial_digest: Some(initial_digest),
@@ -199,6 +265,7 @@ pub(crate) fn prepare_cargo_resolution(
             cargo_prefix_args: cargo_prefix_args.to_vec(),
             prepared_lock,
         }),
+        _cache_lease: Some(cache_lease),
     })
 }
 

@@ -136,11 +136,24 @@ pub(super) fn ensure_with_hook(
             return remember(prepared);
         }
     }
+    #[cfg(unix)]
+    let waiting_since = Instant::now();
     loop {
         cancelled(cancel)?;
         match lock.try_lock() {
-            Ok(()) => break,
+            Ok(()) => {
+                #[cfg(unix)]
+                crate::cache_storage::record_lock_owner(&lock).map_err(fail)?;
+                break;
+            }
             Err(std::fs::TryLockError::WouldBlock) => {
+                #[cfg(unix)]
+                if waiting_since.elapsed() >= crate::cache_storage::LEASE_WAIT {
+                    return Err(fail(crate::cache_storage::lease_timeout(
+                        &root.join(".locks").join(&key),
+                        crate::cache_storage::LEASE_WAIT,
+                    )));
+                }
                 hook(Stage::Waiting)?;
                 std::thread::sleep(Duration::from_millis(10));
             }

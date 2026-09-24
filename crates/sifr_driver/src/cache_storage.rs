@@ -3,6 +3,7 @@ use std::fs::{self, File, OpenOptions};
 use std::io;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
+use std::time::{Duration, Instant};
 
 pub(crate) fn owner_scope() -> io::Result<PathBuf> {
     let cwd = std::env::current_dir()?.canonicalize()?;
@@ -182,17 +183,106 @@ fn inherit_lease(file: &File) -> io::Result<()> {
     Ok(())
 }
 
+/// A fixed safety deadline applies to every generated-storage lease wait.
+/// The lock file is permanent; its note names the last exclusive acquirer and
+/// may be stale when a killed parent leaves a live child holding the descriptor.
+pub(crate) const LEASE_WAIT: Duration = Duration::from_secs(30);
+
+pub(crate) fn lock_bounded(
+    file: &File,
+    path: &Path,
+    shared: bool,
+    limit: Duration,
+) -> io::Result<()> {
+    lock_bounded_with_cancel(file, path, shared, limit, || {
+        if crate::process_signals::cancelled() != 0 {
+            Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "cache lease wait cancelled by signal",
+            ))
+        } else {
+            Ok(())
+        }
+    })
+}
+
+/// Poll cancellation before each attempt; a timeout never breaks another owner's lease.
+pub(crate) fn lock_bounded_with_cancel(
+    file: &File,
+    path: &Path,
+    shared: bool,
+    limit: Duration,
+    mut cancelled: impl FnMut() -> io::Result<()>,
+) -> io::Result<()> {
+    let started = Instant::now();
+    loop {
+        cancelled()?;
+        let attempt = if shared {
+            file.try_lock_shared()
+        } else {
+            file.try_lock()
+        };
+        match attempt {
+            Ok(()) => {
+                if !shared {
+                    record_lock_owner(file)?;
+                }
+                return Ok(());
+            }
+            Err(std::fs::TryLockError::WouldBlock) if started.elapsed() < limit => {
+                let remaining = limit.saturating_sub(started.elapsed());
+                std::thread::sleep(Duration::from_millis(10).min(remaining));
+            }
+            Err(std::fs::TryLockError::WouldBlock) => return Err(lease_timeout(path, limit)),
+            Err(std::fs::TryLockError::Error(error)) => return Err(error),
+        }
+    }
+}
+
+pub(crate) fn record_lock_owner(file: &File) -> io::Result<()> {
+    let note = format!(
+        "last_exclusive_pid={} scope={}\n",
+        std::process::id(),
+        owner_scope()?.display()
+    );
+    file.set_len(0)?;
+    std::io::Seek::seek(&mut &*file, std::io::SeekFrom::Start(0))?;
+    std::io::Write::write_all(&mut &*file, note.as_bytes())?;
+    file.sync_data()
+}
+
+pub(crate) fn lease_timeout(path: &Path, limit: Duration) -> io::Error {
+    let note = fs::read_to_string(path).unwrap_or_else(|_| "owner note unavailable".into());
+    io::Error::new(
+        io::ErrorKind::TimedOut,
+        format!(
+            "cache lease wait exceeded {:?}: {}; {} (the recorded parent may have a live child)",
+            limit,
+            path.display(),
+            note.trim()
+        ),
+    )
+}
+
 #[derive(serde::Serialize)]
 pub struct CacheInspection {
     pub root: PathBuf,
     pub entries: Vec<CacheEntryInspection>,
     pub protected_roots: Vec<PathBuf>,
+    pub owners: Vec<CacheOwnerInspection>,
 }
 #[derive(serde::Serialize)]
 pub struct CacheEntryInspection {
     pub path: PathBuf,
     pub bytes: u64,
     pub protected: bool,
+    pub owner: &'static str,
+}
+#[derive(serde::Serialize)]
+pub struct CacheOwnerInspection {
+    pub path: PathBuf,
+    pub owner: &'static str,
+    pub policy: &'static str,
 }
 
 fn size(path: &Path) -> io::Result<u64> {
@@ -213,24 +303,146 @@ fn size(path: &Path) -> io::Result<u64> {
     Ok(total)
 }
 
-/// Restrict pruning to completed generated entries and staging in known native
-/// namespaces. Cargo families, toolchains, probes, and other worktrees are excluded.
+/// Inventory known cache namespaces. Only entries with a matching current
+/// worktree owner and an uncontended permanent lease can enter pressure pruning.
 pub fn inspect() -> io::Result<CacheInspection> {
-    let root = root().join("native/artifacts");
+    let root = root();
+    let artifacts = root.join("native/artifacts");
     let mut entries = Vec::new();
     let mut protected_roots = Vec::new();
+    let mut owners = Vec::new();
     let scope = owner_scope()?;
+    for (relative, owner, policy) in [
+        (
+            "native/artifacts",
+            "generated artifacts",
+            "owned finalized entries and abandoned stages under pressure",
+        ),
+        (
+            "native/artifacts/cargo_resolution",
+            "prepared Cargo resolution",
+            "owned auxiliary roots under pressure; whole root lease",
+        ),
+        (
+            "native/artifacts/rust_bridge_probes",
+            "Rust bridge probe receipts",
+            "DX9-F1 lifecycle owner; protected",
+        ),
+        (
+            "native/families",
+            "native Cargo families",
+            "inactive owned families under pressure; Cargo internals remain whole",
+        ),
+        (
+            "native/publications",
+            "native publication leases",
+            "permanent lock inodes; no payload pruning",
+        ),
+        (
+            "metadata",
+            "development metadata",
+            "metadata producer and installed pin owner; protected",
+        ),
+        (
+            "projects",
+            "project generations",
+            "cache prune-project owns exact workspace",
+        ),
+        (
+            "test-fixtures",
+            "native fixture tests",
+            "test owner resets scoped fixtures; protected",
+        ),
+    ] {
+        owners.push(CacheOwnerInspection {
+            path: root.join(relative),
+            owner,
+            policy,
+        });
+    }
     if root.exists() {
         directory(&root)?;
-        for family in fs::read_dir(&root)? {
+        for child in fs::read_dir(&root)? {
+            let child = child?.path();
+            if !matches!(
+                child.file_name().and_then(|v| v.to_str()),
+                Some("native" | "metadata" | "projects" | "test-fixtures")
+            ) {
+                protected_roots.push(child);
+            }
+        }
+    }
+    let native = root.join("native");
+    if native.exists() {
+        directory(&native)?;
+        for child in fs::read_dir(&native)? {
+            let child = child?.path();
+            if !matches!(
+                child.file_name().and_then(|v| v.to_str()),
+                Some("artifacts" | "families" | "publications")
+            ) {
+                protected_roots.push(child);
+            }
+        }
+    }
+    if artifacts.exists() {
+        directory(&artifacts)?;
+        for family in fs::read_dir(&artifacts)? {
             let family = family?.path();
-            // Auxiliary Cargo resolution/probe roots have different owners and
-            // no finalized-entry lock namespace; never inspect or prune them.
+            if family
+                .file_name()
+                .is_some_and(|name| name == "cargo_resolution")
+            {
+                if directory(&family).is_err() {
+                    protected_roots.push(family);
+                    continue;
+                }
+                for auxiliary in fs::read_dir(&family)? {
+                    let path = auxiliary?.path();
+                    let Some(key) = path.file_name().and_then(|name| name.to_str()) else {
+                        protected_roots.push(path);
+                        continue;
+                    };
+                    if key == ".locks" {
+                        continue;
+                    }
+                    if key.len() != 64
+                        || !key.bytes().all(|c| c.is_ascii_hexdigit())
+                        || check_owned(&path).is_err()
+                        || !path.is_dir()
+                    {
+                        protected_roots.push(path);
+                        continue;
+                    }
+                    let protected = !resolution_owned_by(&path, key, &scope)
+                        || existing_lock(&family, key)
+                            .as_ref()
+                            .map_or(true, |file| file.try_lock().is_err());
+                    let bytes = match size(&path) {
+                        Ok(bytes) => bytes,
+                        Err(_) => {
+                            protected_roots.push(path);
+                            continue;
+                        }
+                    };
+                    entries.push(CacheEntryInspection {
+                        path,
+                        bytes,
+                        protected,
+                        owner: "prepared Cargo resolution",
+                    });
+                }
+                continue;
+            }
+            // Probe receipts and unknown auxiliary roots have separate owners.
             if !family.join(".locks").is_dir() {
                 protected_roots.push(family);
                 continue;
             }
-            check_owned(&family)?;
+            if check_owned(&family).is_err() {
+                protected_roots.push(family);
+                continue;
+            }
             if !family.is_dir() {
                 continue;
             }
@@ -254,19 +466,62 @@ pub fn inspect() -> io::Result<CacheInspection> {
                         .custom_flags(libc::O_NOFOLLOW)
                         .open(family.join(lock_path))
                 });
-                let same_scope = fs::read(path.join("artifact_cache.json"))
-                    .ok()
-                    .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-                    .and_then(|value| value["scope"].as_str().map(PathBuf::from))
-                    .is_some_and(|owner| owner == scope);
+                let same_scope = artifact_owned_by(&path, &scope);
                 let protected =
                     !same_scope || lock.as_ref().map_or(true, |file| file.try_lock().is_err());
+                let bytes = match size(&path) {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        protected_roots.push(path);
+                        continue;
+                    }
+                };
                 entries.push(CacheEntryInspection {
-                    bytes: size(&path)?,
+                    bytes,
                     path,
                     protected,
+                    owner: "generated artifacts",
                 });
             }
+        }
+    }
+    let families = root.join("native/families");
+    if families.exists() {
+        directory(&families)?;
+        for child in fs::read_dir(&families)? {
+            let path = child?.path();
+            let Some(key) = path.file_name().and_then(|v| v.to_str()) else {
+                protected_roots.push(path);
+                continue;
+            };
+            if key == ".locks" {
+                continue;
+            }
+            if key.len() != 64
+                || !key.bytes().all(|c| c.is_ascii_hexdigit())
+                || check_owned(&path).is_err()
+                || !path.is_dir()
+            {
+                protected_roots.push(path);
+                continue;
+            }
+            let same_scope = family_owned_by(&path, key, &scope);
+            let lock = existing_lock(&families, key);
+            let protected =
+                !same_scope || lock.as_ref().map_or(true, |file| file.try_lock().is_err());
+            let bytes = match size(&path) {
+                Ok(bytes) => bytes,
+                Err(_) => {
+                    protected_roots.push(path);
+                    continue;
+                }
+            };
+            entries.push(CacheEntryInspection {
+                bytes,
+                path,
+                protected,
+                owner: "native Cargo families",
+            });
         }
     }
     // Preserve the newest completed candidate in each family even when inactive.
@@ -279,11 +534,7 @@ pub fn inspect() -> io::Result<CacheInspection> {
         {
             continue;
         }
-        let same_scope = fs::read(entry.path.join("artifact_cache.json"))
-            .ok()
-            .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-            .and_then(|value| value["scope"].as_str().map(PathBuf::from))
-            .is_some_and(|owner| owner == scope);
+        let same_scope = artifact_owned_by(&entry.path, &scope);
         if !same_scope {
             continue;
         }
@@ -308,7 +559,65 @@ pub fn inspect() -> io::Result<CacheInspection> {
         root,
         entries,
         protected_roots,
+        owners,
     })
+}
+
+fn artifact_owned_by(path: &Path, scope: &Path) -> bool {
+    if payload(path, Path::new("artifact_cache.json")).is_err() {
+        return false;
+    }
+    fs::read(path.join("artifact_cache.json"))
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .and_then(|value| value["scope"].as_str().map(PathBuf::from))
+        .is_some_and(|owner| owner == scope)
+}
+
+fn family_owned_by(path: &Path, key: &str, scope: &Path) -> bool {
+    if payload(path, Path::new("native_family.json")).is_err() {
+        return false;
+    }
+    fs::read(path.join("native_family.json"))
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .is_some_and(|value| {
+            value["schema"] == 1
+                && value["family"] == key
+                && value["owner_scope"]
+                    .as_str()
+                    .is_some_and(|owner| Path::new(owner) == scope)
+        })
+}
+
+fn resolution_owned_by(path: &Path, key: &str, scope: &Path) -> bool {
+    if payload(path, Path::new("resolution_owner.json")).is_err() {
+        return false;
+    }
+    fs::read(path.join("resolution_owner.json"))
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .is_some_and(|value| {
+            value["schema"] == 1
+                && value["key"] == key
+                && value["owner_scope"]
+                    .as_str()
+                    .is_some_and(|owner| Path::new(owner) == scope)
+        })
+}
+
+fn existing_lock(parent: &Path, key: &str) -> io::Result<File> {
+    let path = parent.join(".locks").join(key);
+    check_owned(&path)?;
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)?;
+    if !lock.metadata()?.is_file() {
+        return Err(invalid("unsafe cache ownership lock"));
+    }
+    Ok(lock)
 }
 
 /// Explicit pressure input comes from the resource-policy owner. No target-size
@@ -337,12 +646,29 @@ pub fn prune(
             .and_then(|v| v.to_str())
             .ok_or_else(|| invalid("invalid entry name"))?;
         let key = name.split(".stage-").next().unwrap_or(name);
-        let lock = entry_lock(parent, key)?;
+        let lock = existing_lock(parent, key)?;
         if lock.try_lock().is_err() {
             entry.protected = true;
             continue;
         }
         check_owned(&entry.path)?;
+        let scope = owner_scope()?;
+        if entry.owner == "native Cargo families" {
+            if !family_owned_by(&entry.path, key, &scope) {
+                entry.protected = true;
+                continue;
+            }
+        } else if entry.owner == "prepared Cargo resolution" {
+            if !resolution_owned_by(&entry.path, key, &scope) {
+                entry.protected = true;
+                continue;
+            }
+        } else {
+            if !artifact_owned_by(&entry.path, &scope) {
+                entry.protected = true;
+                continue;
+            }
+        }
         if !dry_run {
             fs::remove_dir_all(&entry.path)?;
         }

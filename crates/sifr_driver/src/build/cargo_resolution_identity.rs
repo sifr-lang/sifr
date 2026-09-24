@@ -80,7 +80,13 @@ pub(super) fn prepared_lock_path(
     policy: &CargoResolutionPolicy,
     cargo_prefix_args: &[String],
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    let mut identity = IdentityEncoder::new("prepared-cargo-resolution-v9");
+    let mut identity = IdentityEncoder::new("prepared-cargo-resolution-v10");
+    let scope = crate::cache_storage::owner_scope().map_err(|error| {
+        vec![cargo_resolution_error(format!(
+            "unavailable prepared Cargo owner scope: {error}"
+        ))]
+    })?;
+    identity.field("owner-scope", scope.as_os_str().as_encoded_bytes());
     let tools = policy
         .native_toolchain
         .as_ref()
@@ -349,6 +355,7 @@ mod tests {
                 cargo_prefix_args: vec![],
                 prepared_lock,
             }),
+            _cache_lease: None,
         };
         prepared.assert_unchanged().unwrap();
         fs::write(&authority, "version = 3\n").unwrap();

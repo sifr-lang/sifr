@@ -9,6 +9,52 @@ fn storage_child() {
     };
     let scope = std::env::current_dir().unwrap();
     let required = [Path::new("payload")];
+    #[cfg(unix)]
+    if mode == "family-test" {
+        family_case();
+        return;
+    }
+    #[cfg(unix)]
+    if mode == "stage-test" {
+        stage_case();
+        return;
+    }
+    #[cfg(unix)]
+    if mode == "aux-test" {
+        auxiliary_case();
+        return;
+    }
+    #[cfg(unix)]
+    if mode == "wedged-lease" {
+        let parent = crate::cache_storage::root().join("native/families");
+        let lease = crate::cache_storage::entry_lock(&parent, "wedged").unwrap();
+        crate::cache_storage::lock_bounded(
+            &lease,
+            &parent.join(".locks/wedged"),
+            false,
+            crate::cache_storage::LEASE_WAIT,
+        )
+        .unwrap();
+        std::fs::write(std::env::var("SIFR_DX3_READY").unwrap(), b"ready").unwrap();
+        std::thread::sleep(Duration::from_secs(60));
+        return;
+    }
+    #[cfg(unix)]
+    if mode == "family-descendant" {
+        let family = super::super::native_storage::NativeFamily::acquire(
+            "test-toolchain",
+            "test-sources",
+            "test-env",
+            "test-trust",
+        )
+        .unwrap();
+        let mut descendant = Command::new("sleep").arg("60").spawn().unwrap();
+        let ready = PathBuf::from(std::env::var("SIFR_DX3_READY").unwrap());
+        std::fs::write(ready.with_extension("pid"), descendant.id().to_string()).unwrap();
+        std::fs::write(&ready, family.root.as_os_str().as_encoded_bytes()).unwrap();
+        descendant.wait().unwrap();
+        return;
+    }
     if mode == "prune" {
         crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
         return;
@@ -332,4 +378,226 @@ fn windows_portability_winner_child() {
     assert_eq!(entry.workspace_root(), winner);
     assert_eq!(std::fs::read(winner.join("payload")).unwrap(), b"winner");
     assert!(!staging.exists());
+}
+
+#[test]
+#[cfg(unix)]
+fn n06_wedged_sibling_wait_is_bounded_and_diagnostic() {
+    let root = std::env::temp_dir().join(format!("sifr-n06-wait-{}", std::process::id()));
+    let ready = root.join("ready");
+    std::fs::create_dir_all(&root).unwrap();
+    let mut owner = child(&root, "wedged-lease", &ready).spawn().unwrap();
+    wait_ready(&ready);
+    let parent = root.join("native/families");
+    let lease = crate::cache_storage::entry_lock(&parent, "wedged").unwrap();
+    let error = crate::cache_storage::lock_bounded(
+        &lease,
+        &parent.join(".locks/wedged"),
+        false,
+        Duration::from_millis(80),
+    )
+    .unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+    let diagnostic = error.to_string();
+    assert!(diagnostic.contains("wedged"));
+    assert!(diagnostic.contains("last_exclusive_pid"));
+    let mut polls = 0;
+    let cancelled = crate::cache_storage::lock_bounded_with_cancel(
+        &lease,
+        &parent.join(".locks/wedged"),
+        false,
+        Duration::from_secs(1),
+        || {
+            polls += 1;
+            if polls > 2 {
+                Err(std::io::Error::from(std::io::ErrorKind::Interrupted))
+            } else {
+                Ok(())
+            }
+        },
+    )
+    .unwrap_err();
+    assert_eq!(cancelled.kind(), std::io::ErrorKind::Interrupted);
+    owner.kill().unwrap();
+    owner.wait().unwrap();
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+#[cfg(unix)]
+fn n06_family_prune_preserves_inherited_live_child_then_reclaims_owner() {
+    let root = std::env::temp_dir().join(format!("sifr-n06-family-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    assert!(
+        child(&root, "family-test", &root.join("ready"))
+            .status()
+            .unwrap()
+            .success()
+    );
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+fn family_case() {
+    let root = crate::cache_storage::root();
+    let ready = root.join("ready");
+    std::fs::create_dir_all(&root).unwrap();
+    let mut owner = child(&root, "family-descendant", &ready).spawn().unwrap();
+    wait_ready(&ready);
+    let family = PathBuf::from(std::fs::read_to_string(&ready).unwrap());
+    owner.kill().unwrap();
+    owner.wait().unwrap();
+    let key = family.file_name().unwrap().to_str().unwrap();
+    let lock = crate::cache_storage::entry_lock(family.parent().unwrap(), key).unwrap();
+    assert!(
+        lock.try_lock().is_err(),
+        "native child lost inherited family lease"
+    );
+    let wait = crate::cache_storage::lock_bounded(
+        &lock,
+        &family.parent().unwrap().join(".locks").join(key),
+        false,
+        Duration::from_millis(80),
+    )
+    .unwrap_err();
+    assert_eq!(wait.kind(), std::io::ErrorKind::TimedOut);
+    assert!(wait.to_string().contains("live child"));
+    let inspected = crate::cache_storage::inspect().unwrap();
+    assert!(
+        inspected
+            .entries
+            .iter()
+            .any(|entry| entry.path == family && entry.protected)
+    );
+    crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
+    assert!(family.exists(), "prune removed live family");
+    let pid = std::fs::read_to_string(ready.with_extension("pid")).unwrap();
+    assert!(
+        Command::new("kill")
+            .args(["-KILL", pid.trim()])
+            .status()
+            .unwrap()
+            .success()
+    );
+    let started = Instant::now();
+    while lock.try_lock().is_err() {
+        assert!(started.elapsed() < Duration::from_secs(5));
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    drop(lock);
+    crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
+    assert!(!family.exists(), "inactive owned family was not reclaimed");
+}
+
+#[test]
+#[cfg(unix)]
+fn n06_abandoned_stage_prunes_only_matching_owner_scope() {
+    let root = std::env::temp_dir().join(format!("sifr-n06-stage-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    assert!(
+        child(&root, "stage-test", &root.join("ready"))
+            .status()
+            .unwrap()
+            .success()
+    );
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+fn stage_case() {
+    let root = crate::cache_storage::root();
+    let artifacts = root.join("native/artifacts/fixture");
+    crate::cache_storage::directory(&artifacts).unwrap();
+    let key = "a".repeat(64);
+    let lock = crate::cache_storage::entry_lock(&artifacts, &key).unwrap();
+    let abandoned = artifacts.join(format!("{key}.stage-abandoned"));
+    crate::cache_storage::directory(&abandoned).unwrap();
+    let scope = crate::cache_storage::owner_scope().unwrap();
+    std::fs::write(
+        abandoned.join("artifact_cache.json"),
+        serde_json::to_vec(&serde_json::json!({"scope":scope})).unwrap(),
+    )
+    .unwrap();
+    let foreign_key = "b".repeat(64);
+    let _foreign_lock = crate::cache_storage::entry_lock(&artifacts, &foreign_key).unwrap();
+    let foreign = artifacts.join(format!("{foreign_key}.stage-foreign"));
+    crate::cache_storage::directory(&foreign).unwrap();
+    std::fs::write(
+        foreign.join("artifact_cache.json"),
+        serde_json::to_vec(&serde_json::json!({"scope":"/another/session"})).unwrap(),
+    )
+    .unwrap();
+    crate::cache_storage::prune(u64::MAX, 0, true).unwrap();
+    assert!(abandoned.exists() && foreign.exists());
+    crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
+    assert!(!abandoned.exists(), "abandoned owned stage remained");
+    assert!(foreign.exists(), "foreign stage was removed");
+    assert!(
+        artifacts.join(".locks").join(key).exists(),
+        "ownership lock inode was unlinked"
+    );
+    drop(lock);
+}
+
+#[test]
+#[cfg(unix)]
+fn n06_orphan_auxiliary_roots_require_owner_and_lease() {
+    let root = std::env::temp_dir().join(format!("sifr-n06-aux-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    assert!(
+        child(&root, "aux-test", &root.join("ready"))
+            .status()
+            .unwrap()
+            .success()
+    );
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+fn auxiliary_case() {
+    let cache = crate::cache_storage::root();
+    let root = cache.join("native/artifacts/cargo_resolution");
+    crate::cache_storage::directory(&root).unwrap();
+    let unknown = cache.join("native/unknown-owner");
+    crate::cache_storage::directory(&unknown).unwrap();
+    let inventory = crate::cache_storage::inspect().unwrap();
+    assert!(inventory.protected_roots.contains(&unknown));
+    assert!(inventory.owners.iter().any(|owner| {
+        owner.path == cache.join("native/families") && owner.owner == "native Cargo families"
+    }));
+    let scope = crate::cache_storage::owner_scope().unwrap();
+    let key = "c".repeat(64);
+    let owned = root.join(&key);
+    crate::cache_storage::directory(&owned).unwrap();
+    std::fs::write(
+        owned.join("resolution_owner.json"),
+        serde_json::to_vec(&serde_json::json!({"schema":1,"key":key,"owner_scope":scope})).unwrap(),
+    )
+    .unwrap();
+    std::fs::write(owned.join("Cargo.lock"), b"orphan").unwrap();
+    let lease = crate::cache_storage::entry_lock(&root, &key).unwrap();
+    lease.lock().unwrap();
+    let foreign_key = "d".repeat(64);
+    let foreign = root.join(&foreign_key);
+    crate::cache_storage::directory(&foreign).unwrap();
+    std::fs::write(
+        foreign.join("resolution_owner.json"),
+        serde_json::to_vec(
+            &serde_json::json!({"schema":1,"key":foreign_key,"owner_scope":"/another/session"}),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let _foreign_lock = crate::cache_storage::entry_lock(&root, &foreign_key).unwrap();
+    crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
+    assert!(owned.exists(), "live auxiliary root was removed");
+    drop(lease);
+    crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
+    assert!(!owned.exists(), "orphan owned auxiliary root remained");
+    assert!(foreign.exists(), "foreign auxiliary root was removed");
+    assert!(unknown.exists(), "unknown auxiliary owner was removed");
+    assert!(
+        root.join(".locks").join(key).exists(),
+        "auxiliary lock inode was unlinked"
+    );
 }

@@ -84,6 +84,15 @@ pub(super) fn reusable_scenario(
     crate::cache_storage::directory(&base).expect("private fixture directory");
     let key = identity.finish();
     let lease = crate::cache_storage::entry_lock(&base, &key).expect("fixture lease");
+    #[cfg(unix)]
+    crate::cache_storage::lock_bounded(
+        &lease,
+        &base.join(".locks").join(&key),
+        false,
+        crate::cache_storage::LEASE_WAIT,
+    )
+    .expect("own fixture mutation and native capture");
+    #[cfg(windows)]
     lease
         .lock()
         .expect("own fixture mutation and native capture");

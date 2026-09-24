@@ -219,6 +219,7 @@ fn constrained_resolution_rejects_changed_missing_and_unreadable_lock_payload() 
         lock_path: lock_path.clone(),
         lock_mode: CargoLockMode::Locked,
         authority_check: None,
+        _cache_lease: None,
     };
     prepared.assert_unchanged().unwrap();
     std::fs::write(&lock_path, "").unwrap();
