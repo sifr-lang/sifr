@@ -1,7 +1,7 @@
 use super::{Decoder, Result, wire};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
-pub(super) trait Decode<W>: Sized {
+pub trait Decode<W>: Sized {
     fn decode(value: &W, cx: &mut Decoder) -> Result<Self>;
 }
 impl<T: Decode<W>, W> Decode<W> for Box<T> {

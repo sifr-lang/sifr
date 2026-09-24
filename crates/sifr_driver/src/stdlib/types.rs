@@ -1,20 +1,18 @@
 use sifr_codegen::StdlibCode;
 use sifr_lowering::ExternalDefs;
-use std::collections::HashMap;
 
 /// Completed bootstrap owner, shared immutably by compilation consumers.
 /// Mutable lowering receives its own definitions projection.
 pub(crate) struct StdlibCompiled {
     pub(crate) provider: Option<std::sync::Arc<crate::metadata_reader::Provider>>,
     pub(crate) defs: ExternalDefs,
-    #[allow(dead_code)] // Retained for test-only source bootstrap until C02a1 moves the reader.
-    pub(crate) metadata_features:
-        HashMap<String, std::collections::BTreeSet<sifr_stdlib_manifest::StdlibFeature>>,
     pub(crate) code: StdlibCode,
     pub(crate) interop: StdlibRustInterop,
 }
 
-pub(crate) use sifr_compiler_services::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
+pub(crate) use sifr_compiler_services::stdlib::StdlibRustInterop;
+#[cfg(test)]
+pub(crate) use sifr_compiler_services::stdlib::StdlibRustInteropModuleSource;
 
 impl StdlibCompiled {
     pub(crate) fn for_codegen<'a>(
@@ -36,12 +34,23 @@ impl StdlibCompiled {
         })?;
         provider
             .materialize(&requested, sysroot)
-            .map(std::sync::Arc::new)
+            .map(|compiled| std::sync::Arc::new(compiled.into()))
             .map_err(|error| {
                 vec![crate::diagnostics::diagnostic_with_code(
                     error.to_string(),
                     sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                 )]
             })
+    }
+}
+
+impl From<sifr_compiler_services::stdlib::SourceStdlibCompiled> for StdlibCompiled {
+    fn from(compiled: sifr_compiler_services::stdlib::SourceStdlibCompiled) -> Self {
+        Self {
+            provider: None,
+            defs: compiled.defs,
+            code: compiled.code,
+            interop: compiled.interop,
+        }
     }
 }

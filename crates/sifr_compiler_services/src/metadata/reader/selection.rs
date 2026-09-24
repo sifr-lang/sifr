@@ -1,11 +1,7 @@
 use super::{Provider, Result, wire};
 use sifr_identity::{CompilerIdentity, TargetSemanticId};
 use sifr_sysroot::{ResolvedSysroot, SysrootMode};
-use std::{
-    io::Read,
-    path::Path,
-    sync::{Arc, atomic::AtomicBool},
-};
+use std::{io::Read, path::Path, sync::Arc};
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Descriptor {
@@ -34,7 +30,7 @@ fn digest(text: &str) -> Result<[u8; 32]> {
     }
     Ok(result)
 }
-pub(crate) fn target() -> &'static str {
+pub fn target() -> &'static str {
     if cfg!(target_os = "macos") {
         if cfg!(target_arch = "aarch64") {
             "aarch64-apple-darwin"
@@ -47,28 +43,29 @@ pub(crate) fn target() -> &'static str {
         "x86_64-unknown-linux-gnu"
     }
 }
-pub(crate) fn select(
+pub fn select(
     identity: &CompilerIdentity,
     root: &ResolvedSysroot,
     override_path: Option<&Path>,
+    cache_root: &Path,
 ) -> Result<Arc<Provider>> {
     let prepared = if root.mode() == SysrootMode::SourceTreeDevelopment {
         let prepared = match override_path {
-            Some(path) => crate::metadata_producer::validate_development_metadata(
+            Some(path) => crate::metadata::validate_development_metadata(
                 identity,
                 &root.root,
                 target(),
                 path,
             )?,
-            None => crate::metadata_producer::ensure_development_metadata(
+            None => crate::metadata::ensure_development_metadata(
                 identity,
                 &root.root,
                 target(),
-                &crate::cache_storage::root(),
-                &AtomicBool::new(false),
+                cache_root,
+                &|| false,
             )?,
         };
-        crate::metadata_producer::open_consumer(
+        crate::metadata::open_consumer(
             &prepared.path,
             prepared.compatibility,
             Some(&prepared.metadata_id),
@@ -113,7 +110,7 @@ pub(crate) fn select(
             stdlib_inputs: digest(&descriptor.stdlib_inputs_id)?,
         };
         let path = root.root.join("lib/sifr/stdlib.sifrmeta");
-        crate::metadata_producer::open_consumer(
+        crate::metadata::open_consumer(
             override_path.unwrap_or(&path),
             expected,
             Some(&descriptor.metadata_id),

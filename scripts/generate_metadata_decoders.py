@@ -11,7 +11,7 @@ exec(source[source.index('def clean('):source.index("groups=['")])
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--check", action="store_true")
 options = parser.parse_args()
-destination = root / 'crates/sifr_driver/src/metadata_reader'
+destination = root / 'crates/sifr_compiler_services/src/metadata/reader'
 temporary = tempfile.TemporaryDirectory(prefix="sifr-metadata-decoders-")
 out = Path(temporary.name)
 groups=['hir_nodes','specialization_metadata','rust_interop','python_interop','template_strings','sql_queries','sql_migrations','type_records']

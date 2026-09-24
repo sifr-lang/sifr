@@ -93,11 +93,11 @@ impl crate::CompilerContext {
         let root = self.sysroot().map_err(errors)?;
         let override_path = if root.mode() == sifr_sysroot::SysrootMode::SourceTreeDevelopment {
             Some(
-                crate::metadata_producer::development_metadata_path(
+                crate::metadata::development_metadata_path(
                     self.identity(),
                     &root.root,
                     super::selection::target(),
-                    &crate::cache_storage::root(),
+                    self.cache_root(),
                 )
                 .map_err(|e| e.to_string())?,
             )
@@ -105,7 +105,7 @@ impl crate::CompilerContext {
             None
         };
         let provider =
-            super::select(self.identity(), root, override_path.as_deref()).map_err(|error| {
+            super::select(self.identity(), root, override_path.as_deref(), self.cache_root()).map_err(|error| {
                 let remedy = if root.mode() == sifr_sysroot::SysrootMode::SourceTreeDevelopment {
                     format!(
                         "run sifr sysroot build-metadata --source-root {} --output <file> to explicitly ensure the selected development cache",
@@ -141,13 +141,9 @@ pub fn qualify_development_metadata(
     metadata: &std::path::Path,
     target: &str,
 ) -> std::result::Result<serde_json::Value, String> {
-    let prepared = crate::metadata_producer::validate_development_metadata(
-        identity,
-        source_root,
-        target,
-        metadata,
-    )
-    .map_err(|e| e.to_string())?;
+    let prepared =
+        crate::metadata::validate_development_metadata(identity, source_root, target, metadata)
+            .map_err(|e| e.to_string())?;
     let root = sifr_sysroot::resolve_sysroot(Some(source_root.to_owned()))
         .map_err(|e| e.boundary_message())?;
     Provider::new(prepared)

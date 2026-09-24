@@ -58,3 +58,45 @@ fn stale_or_corrupt_override_retries() {
         prepared.metadata_id
     );
 }
+
+#[test]
+fn incompatible_identity_rejects_provider() {
+    let scratch = tempfile::tempdir().unwrap();
+    let first =
+        crate::CompilerContext::for_test_tokens(vec![("metadata-reader", "c02a1")], "identity-a")
+            .with_cache_root(scratch.path().join("cache-a"));
+    let selected = first.metadata_provider().unwrap();
+    let override_path = scratch.path().join("selected.sifrmeta");
+    std::fs::copy(&selected.metadata.path, &override_path).unwrap();
+    let incompatible =
+        crate::CompilerContext::for_test_tokens(vec![("metadata-reader", "c02a1")], "identity-b")
+            .with_cache_root(scratch.path().join("cache-b"))
+            .with_metadata_override(override_path);
+    assert!(incompatible.metadata_provider().is_err());
+    assert!(!first.shares_metadata_generation(&incompatible));
+    assert_eq!(
+        first.metadata_provider().unwrap().metadata.metadata_id,
+        selected.metadata.metadata_id,
+    );
+}
+
+#[test]
+fn replaced_cache_owner_does_not_reuse_generation() {
+    let scratch = tempfile::tempdir().unwrap();
+    let original =
+        crate::CompilerContext::for_test_tokens(vec![("metadata-reader", "c02a1")], "cache-owner")
+            .with_cache_root(scratch.path().join("first"));
+    let first = original.metadata_provider().unwrap();
+    let replacement = original
+        .clone()
+        .with_cache_root(scratch.path().join("second"));
+    assert!(!original.shares_metadata_generation(&replacement));
+    let second = replacement.metadata_provider().unwrap();
+    assert!(!std::sync::Arc::ptr_eq(&first, &second));
+    assert_ne!(first.metadata.path, second.metadata.path);
+    assert_eq!(first.metadata.metadata_id, second.metadata.metadata_id);
+    assert!(std::sync::Arc::ptr_eq(
+        &first,
+        &original.metadata_provider().unwrap(),
+    ));
+}

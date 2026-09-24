@@ -7,8 +7,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-pub(super) type Cache = Mutex<BTreeMap<wire::RecordId, Arc<Projection>>>;
-pub(super) struct Projection {
+pub type Cache = Mutex<BTreeMap<wire::RecordId, Arc<Projection>>>;
+pub struct Projection {
     pub name: String,
     pub identity: Option<String>,
     pub fields: SharedVec<(String, Type)>,

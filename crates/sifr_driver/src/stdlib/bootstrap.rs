@@ -14,6 +14,7 @@ use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 use sifr_sysroot::ResolvedSysroot;
 #[cfg(test)]
 use sifr_type_system::{FunctionType, ParamConvention, Type};
+#[cfg(test)]
 use std::collections::HashMap;
 
 #[cfg(test)]
@@ -21,6 +22,7 @@ use sifr_compiler_services::stdlib::{
     collect_public_constant_integer_value_exports, function_type_from_hir,
     function_type_from_params,
 };
+#[cfg(test)]
 pub(crate) use sifr_compiler_services::stdlib::{signature_params, stdlib_class_template};
 #[cfg(test)]
 use sifr_stdlib_manifest::load_stdlib_tooling_sources_from_sysroot;
@@ -35,7 +37,6 @@ pub(crate) fn compile_stdlib(
     Ok(std::sync::Arc::new(StdlibCompiled {
         defs,
         code: StdlibCode::default(),
-        metadata_features: HashMap::new(),
         interop: crate::stdlib::StdlibRustInterop {
             sysroot: Some(compiler.sysroot()?.clone()),
             ..Default::default()
@@ -44,11 +45,7 @@ pub(crate) fn compile_stdlib(
     }))
 }
 
-pub fn external_defs(
-    compiler: &crate::CompilerContext,
-) -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
-    Ok(compile_stdlib(compiler)?.defs.clone())
-}
+pub use sifr_compiler_services::stdlib::external_defs;
 
 #[cfg(test)]
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
@@ -79,7 +76,6 @@ pub(crate) fn compile_stdlib_sources_with_sysroot(
     Ok(StdlibCompiled {
         provider: None,
         defs: compiled.defs,
-        metadata_features: compiled.metadata_features,
         code: compiled.code,
         interop: compiled.interop,
     })
@@ -100,7 +96,7 @@ pub(crate) fn metadata_inventory_for_test(
     let names = provider.modules.keys().cloned().collect::<Vec<_>>();
     provider
         .materialize(&names, compiler.sysroot()?)
-        .map(std::sync::Arc::new)
+        .map(|compiled| std::sync::Arc::new(compiled.into()))
         .map_err(|e| {
             vec![crate::diagnostics::diagnostic_with_code(
                 e.to_string(),

@@ -9,7 +9,7 @@ use sifr_codegen::StdlibCode;
 use sifr_lowering::ExternalDefs;
 use sifr_sysroot::ResolvedSysroot;
 use std::collections::HashMap;
-/// Source bootstrap result. Provider selection remains owned by the driver.
+/// Source bootstrap result. Provider selection is owned by the metadata reader.
 pub struct SourceStdlibCompiled {
     pub defs: ExternalDefs,
     pub metadata_features:
@@ -27,4 +27,15 @@ pub struct StdlibRustInterop {
 pub struct StdlibRustInteropModuleSource {
     pub source: String,
     pub display_path: String,
+}
+
+pub mod tooling;
+
+pub fn external_defs(
+    compiler: &crate::CompilerContext,
+) -> Result<ExternalDefs, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+    let provider = compiler.metadata_provider()?;
+    let mut defs = ExternalDefs::default();
+    defs.provider = Some(provider);
+    Ok(defs)
 }

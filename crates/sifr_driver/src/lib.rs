@@ -24,7 +24,6 @@ pub mod process_execution;
 mod process_signals;
 pub use compiler_context::CompilerContext;
 mod diagnostics;
-mod export_policy;
 mod frontend;
 mod project;
 mod python_binding;

@@ -1,5 +1,4 @@
 //! Driver compatibility exports for the lower metadata producer.
-pub(crate) use sifr_compiler_services::metadata::open_consumer;
 pub use sifr_compiler_services::metadata::{
     PreparedMetadata, ProjectInterfacePayload, ProjectModuleInput, ProjectModuleReferences,
     ProjectTypedArtifact, development_metadata_path, encode_project_results,
@@ -28,20 +27,6 @@ pub fn ensure_development_metadata(
         cache,
         &cancelled,
     )
-}
-#[cfg(test)]
-pub(crate) fn reencode_qualified(
-    compiled: &crate::stdlib::StdlibCompiled,
-    root: &sifr_sysroot::ResolvedSysroot,
-    compatibility: sifr_sysroot::metadata::Compatibility,
-) -> sifr_sysroot::metadata::Result<Vec<u8>> {
-    let source = sifr_compiler_services::stdlib::SourceStdlibCompiled {
-        defs: compiled.defs.clone(),
-        metadata_features: compiled.metadata_features.clone(),
-        code: compiled.code.clone(),
-        interop: compiled.interop.clone(),
-    };
-    sifr_compiler_services::metadata::reencode_qualified(&source, root, compatibility)
 }
 #[cfg(test)]
 pub(crate) mod ensure {

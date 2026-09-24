@@ -1,5 +1,5 @@
 use super::{Decode, Decoder, Provider, Result, wire};
-use crate::stdlib::{StdlibCompiled, StdlibRustInterop};
+use crate::stdlib::{SourceStdlibCompiled, StdlibRustInterop};
 use sha2::{Digest, Sha256};
 use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_sysroot::ResolvedSysroot;
@@ -9,11 +9,11 @@ use std::{
     sync::Arc,
 };
 impl Provider {
-    pub(crate) fn materialize(
+    pub fn materialize(
         &self,
         requested: &[String],
         sysroot: &ResolvedSysroot,
-    ) -> Result<StdlibCompiled> {
+    ) -> Result<SourceStdlibCompiled> {
         let mut code = StdlibCode::default();
         let mut defs = sifr_lowering::ExternalDefs::default();
         let mut metadata_features = HashMap::new();
@@ -181,7 +181,7 @@ impl Provider {
                     String::from_utf8(bytes).map_err(|e| wire::MetadataError(e.to_string()))?;
                 module_sources.insert(
                     name.clone(),
-                    crate::stdlib::types::StdlibRustInteropModuleSource {
+                    crate::stdlib::StdlibRustInteropModuleSource {
                         source,
                         display_path: path.display().to_string(),
                     },
@@ -196,7 +196,7 @@ impl Provider {
                 .map(|(name, hir)| (Some(name.as_str()), hir.as_ref())),
         );
         code.hir_modules = Arc::new(hir_modules);
-        Ok(StdlibCompiled {
+        Ok(SourceStdlibCompiled {
             defs,
             code,
             metadata_features,
@@ -205,7 +205,6 @@ impl Provider {
                 module_sources,
                 sysroot: Some(sysroot.clone()),
             },
-            provider: None,
         })
     }
 }
