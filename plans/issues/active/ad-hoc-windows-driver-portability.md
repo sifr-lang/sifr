@@ -1,6 +1,6 @@
 # Windows driver portability blocks native SQL CI qualification
 
-Status: open; W1+W2 editable-root draft blocked at Windows test-runner executable lookup; formatter prerequisite merged; W3 unqualified
+Status: open; Windows native tool prerequisite merged; W1+W2 draft needs final candidate validation and review; W3 unqualified
 Owner: driver storage/process execution and Windows platform support
 Related: [DX9-F6](ad-hoc-native-cargo-reuse-followups.md)
 
@@ -283,3 +283,70 @@ resolve the test-runner blocker within approved scope or rescope it,
 rerun the exact nested case and remaining affected native/Unix cases,
 then obtain a fresh scoped review. The separate W3 PostgreSQL vendored-C
 portability issue and SQL Item 4 qualification remain open.
+
+## 2026-09-24 Windows native executable resolution prerequisite merged
+
+The SIFR-BUILD-0005 failure in the prior nested Windows case came from
+sifr_sysroot::NativeToolchain searching PATH for literal bare tool names.
+The Windows runner's Rust executables have .exe suffixes, so
+Path::is_file rejected the unsuffixed candidates before Cargo could run.
+[PR #3998](https://github.com/sifr-lang/sifr/pull/3998) resolved bare
+PATH names to their existing .exe files while retaining exact explicit
+path selection, rustup proxy path identity, fail-closed selection, and
+Unix behavior. The implementation candidate
+ec6e93d0c4c41baa67e006ea4f8e81a2a8311a1c on base
+78d8c97be6b901fb10e99c03373e7a6d1a2f32a6 merged as
+6dd509e475f4341be518c5414ccfcf9ce0c2747e.
+internal_docs/architecture.md carries the tool-selection handoff.
+
+On the exact standalone candidate, eight Unix sifr_sysroot
+native_context tests passed. [Windows run 35965269492, job
+107522340680](https://github.com/sifr-lang/sifr/actions/runs/35965269492/job/107522340680)
+passed the new exact native executable selection case, then stopped
+compiling the still-unmerged W1/W2 sifr_driver Windows code in the
+later formatter step (83 Unix-API compile errors). This is a historical
+dependency result, not a passing standalone driver job. The automatic
+create-PR profile also stopped at its separately owned unset
+SIFR_PERFORMANCE_REFERENCE admission; the approved intermediate-item
+policy uses named acceptance rather than that broad gate.
+
+[Validation-only PR #3999](https://github.com/sifr-lang/sifr/pull/3999)
+is closed unmerged. It combined unchanged W1/W2 draft head
+45f425d754c8efd866f1bf02b406de2eca00087f with the standalone
+resolver candidate at integration head
+1ef30fb2b472e3fa63e843d7f6a2eb368b8f37dc.
+[Windows run 35965407657, job
+107522772437](https://github.com/sifr-lang/sifr/actions/runs/35965407657/job/107522772437)
+checked out merge ref 37b3589fab792b3ca3338ec4520c7806479e8277;
+its tree 5094223ee513ad9058641cd86987d44d5a919745 matches
+the integration head. The exact native executable test passed, all
+three formatter/generated-build-script cases passed, all 16 compiler
+component cases passed, and the full 18-case coupled W1/W2 selection
+passed, including
+build::materialize::tests::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner
+with both nested test-runner executions. The exact Unix nested case
+and two affected materialize cases passed on the integration head.
+Formatting, workflow admission, HIR/driver maintainability, diff and
+touched source file-size checks passed. Raw Windows logs are preserved
+outside Git at
+/home/yaser5/projects/sifr/windows-native-tool-resolution-evidence/windows-pr3998-job-107522340680.log
+and
+/home/yaser5/projects/sifr/windows-native-tool-resolution-evidence/windows-pr3999-job-107522772437.log.
+
+The scoped Opus review of exact standalone candidate
+ec6e93d0c4c41baa67e006ea4f8e81a2a8311a1c returned
+**SATISFIED**, with no blocking findings. Its final prompt and response
+are preserved under
+/home/yaser5/projects/sifr/windows-native-tool-resolution-evidence/reviews/ec6e93d0c4c41baa67e006ea4f8e81a2a8311a1c/.
+The reviewer noted a separate pre-existing Windows sys.which bare-name
+lookup in crates/sifr_stdlib/src/sys.rs; route that user-facing stdlib
+behavior to its owner, outside native compiler tool selection.
+
+**W1+W2 remains a separate draft.** PR #3993 must incorporate merged
+resolver SHA 6dd509e475f4341be518c5414ccfcf9ce0c2747e, rerun its
+remaining named native and affected Unix selection on the final
+candidate, and obtain a fresh scoped review before merge. The
+validation-only pass does not approve that draft. The same integrated
+job then failed SQL W3 at the known PostgreSQL vendored C/MSVC headers
+(unistd.h, dirent.h, sys/time.h); SQL Item 4/W3 retains that
+separate qualification blocker. No SQL Windows qualification is claimed.
