@@ -849,3 +849,19 @@ def fields(rows: list[tuple[int, int]], start: int) -> list[int]:
     assert!(generated.contains(" && "), "{generated}");
     assert!(!generated.contains(".cloned().0"), "{generated}");
 }
+
+#[test]
+fn optional_tuple_field_flattens_the_missing_row_and_missing_field() {
+    let generated = generate_rust_from_source(
+        r#"
+def read(rows: list[tuple[int | None, int]], i: int) -> int | None:
+    return rows[i][0]
+"#,
+    );
+    assert!(
+        generated.contains(".as_ref().and_then(|__v|"),
+        "{generated}"
+    );
+    assert!(!generated.contains(".as_ref().map(|__v|"), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
