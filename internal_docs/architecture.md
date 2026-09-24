@@ -509,7 +509,8 @@ large-file check and a representative project check.
   validated by that parsed tree, which preserves comments and literals. At
   each public emit boundary and after final project metadata or bridge assembly,
   `sifr_driver` renders every generated `.rs` file through the repository-pinned
-  toolchain's `rustfmt` with an empty configuration. The `RUSTFMT` environment
+  toolchain's `rustfmt` with an empty configuration (`/dev/null` on Unix and
+  a short-lived empty TOML file on Windows). The `RUSTFMT` environment
   variable can select the executable; failure to start or complete formatting
   is a structured build diagnostic, never an unformatted fallback.
   Materialization repeats this fail-closed check for synthetic namespace and
@@ -620,8 +621,10 @@ sifr_driver::CompilerContext through driver, frontend and analysis/LSP
 constructors. Bare library tests compose compiled dependency-local tokens;
 common libraries do not embed the application-wide volatile identity.
 sifr_sysroot::NativeToolchain resolves explicit tools and effective Cargo
-configuration before temporary project creation. Native preparation, probes
-and builds retain this selection and expose its digest in build reports.
+configuration before temporary project creation. On Windows, bare tool names
+on `PATH` select their `.exe` file; explicit paths remain exact, and rustup
+proxy paths retain their dispatch names. Native preparation, probes and
+builds retain this selection and expose its digest in build reports.
 See compiler_dx_architecture.md sections 4.2.2 and 8.1 for the constructor
 inventory and override contract.
 
@@ -2030,22 +2033,20 @@ ownership is scoped to live operations, and staged payload permissions are
 sealed before publication independently of the user's umask.
 These DX.3 primitives do not implement semantic project generations.
 
-Windows driver portability is tracked in the
-[active W1/W2/W3 issue](../plans/issues/active/ad-hoc-windows-driver-portability.md).
-The real `sifr_driver` crate includes its storage and process modules
-unconditionally, so native Windows acceptance requires one coupled W1+W2
-implementation candidate preserving both safety contracts. W3 separately
-qualifies the integrated native SQL build and unchanged compiler-component
-tests; the merged W1-only blocker record #3980 is failed dependency evidence,
-not a Windows pass.
+On Windows, the driver storage owner uses private current-user ACLs, owner
+stamping, handle-based file identity and reparse checks, inherited leases, and
+atomic staged publication. The process owner uses scoped console-signal
+registration and job objects to terminate owned descendants on cancellation
+or deadline while preserving bounded capture and normal program streaming.
+These storage and process modules compile together in the real `sifr_driver`
+crate. Native compiler-component and driver-contract acceptance remains
+separate from integrated native SQL build qualification.
 
-Generated editable subdirectories inside Sifr-owned cache trees must satisfy
-the same private owner, permission and no-reparse contract as their parent,
-independent of the ambient Unix umask or Windows token default owner.
-Caller-owned output roots retain their ambient ACL policy while rejecting
-aliases; generated-directory creation and stale cleanup must honor the same
-boundary. The active issue records the unmerged candidate and nested-directory
-follow-up.
+Generated editable subdirectories inside Sifr-owned cache trees use the same
+private owner, permission and no-reparse contract as their parent, independent
+of the ambient Unix umask or Windows token default owner. Caller-owned output
+roots retain their ambient ACL policy while rejecting aliases;
+generated-directory creation and stale cleanup honor the same boundary.
 
 DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.

@@ -492,6 +492,7 @@ fn complete_metadata_directory_participates_in_cache_identity() {
     assert_ne!(before, after);
 }
 
+#[cfg(unix)]
 #[test]
 fn metadata_identity_distinguishes_absent_empty_and_unreadable_tree() {
     let fixture = SqlxFixture::new();

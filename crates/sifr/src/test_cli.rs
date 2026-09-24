@@ -64,16 +64,15 @@ pub(super) fn cmd_test(
             })
             .max_by_key(|(_, root)| root.components().count())
             .map(|(id, _)| id.clone());
-        let Some(package_id) = package_id else {
+        if package_id.is_none() && lock_mode != sifr_package::CargoLockMode::Normal {
             return render_diagnostics(
-                &[diagnostic_with_code(
-                    "sifr test directory must be inside one Sifr package",
-                    DiagnosticCode::RUST_CARGO_METADATA,
+                &[super::cli_lock_modes::lock_mode_requires_package(
+                    "test", lock_mode,
                 )],
                 diagnostic_format,
             );
-        };
-        Some(PackageEntrypoint {
+        }
+        package_id.map(|package_id| PackageEntrypoint {
             main_file: canonical_dir,
             package_id,
             graph: context.graph,

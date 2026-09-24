@@ -96,7 +96,7 @@ pub(crate) fn execute_test_runner_project(
     {
         let src_dir = project_dir.join("src");
         let mut current_files = BTreeSet::new();
-        std::fs::create_dir_all(&src_dir).map_err(|error| {
+        crate::build::native_storage::generated_directory(&src_dir).map_err(|error| {
             vec![crate::diagnostics::diagnostic_with_code(
                 format!("failed to create test directory: {error}"),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
@@ -131,7 +131,7 @@ pub(crate) fn execute_test_runner_project(
             let output_path = src_dir.join(&module_path);
             current_files.insert(output_path.clone());
             if let Some(parent) = output_path.parent() {
-                std::fs::create_dir_all(parent).map_err(|error| {
+                crate::build::native_storage::generated_directory(parent).map_err(|error| {
                     vec![crate::diagnostics::diagnostic_with_code(
                         format!(
                             "failed to create test support module directory '{}': {error}",
@@ -158,7 +158,7 @@ pub(crate) fn execute_test_runner_project(
             let output_path = src_dir.join(&namespace_file.path);
             current_files.insert(output_path.clone());
             if let Some(parent) = output_path.parent() {
-                std::fs::create_dir_all(parent).map_err(|error| {
+                crate::build::native_storage::generated_directory(parent).map_err(|error| {
                     vec![crate::diagnostics::diagnostic_with_code(
                         format!(
                             "failed to create test support namespace directory '{}': {error}",

@@ -974,6 +974,34 @@ remediation review. These findings do not reopen the completed platform phase.
   merge evidence.
 
 
+## Emitted-Rust Item 12R qualification: external HIR inventory blocker (2026-09-24)
+
+Item 12R qualification on candidate `e5d0bd250` stopped at
+`core_language:lowering_layer_inventory`: the tracked
+`method_receiver_conventions_and_source_ranges` HIR snapshot, introduced by
+`08e864bf6`, has no row in
+`verification/areas/core_language/data/lowering_layer_inventory.json`.
+Four of six selected suites and 186 emitted-Rust audit fixtures passed before
+the stop. The original receipt is
+`target/verification/areas/core-language-e5d0bd250.json` in source session
+`01a0c64e-75f1-7e63-9fe1-9cf750fa88cd`'s worktree. This is partial
+qualification evidence, not a full gate pass.
+
+This is the same receiver-semantics defect recorded as unrelated in
+[the archived SQL platform phase](../archive/ad-hoc-schema-first-sql-platform.md)
+and assigned to receiver semantics / compiler core-language in
+[the pre-v1 compatibility phase](ad-hoc-pre-v1-compatibility-removal.md).
+It is separate from the SQL Item 4 DX.10 self-test blocker; neither failure
+discharges the other.
+
+The receiver-semantics / compiler core-language owner must add the active
+snapshot to the lowering inventory with its permanent owner, normalizers, and
+profile assignment. Then rerun the lowering-inventory check and affected HIR
+guardrail, followed by `core_language:lowering_layer_inventory` on the
+Item 12R qualification candidate. Complete any remaining selected suites and
+the applicable full gate before claiming qualification. The SQL follow-up
+does not own this repair.
+
 ## Coverage registry blocker observed during naming cleanup (2026-09-05)
 
 ### SQL registry delivery registration (2026-09-07)

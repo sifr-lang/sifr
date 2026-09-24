@@ -29,6 +29,7 @@ mod diagnostic_test_sink;
 #[cfg(test)]
 mod eager_cli_contract_tests;
 mod explain_cli;
+mod formatter_cache;
 mod formatter_cli;
 mod formatter_discovery;
 mod host_tool_cli;

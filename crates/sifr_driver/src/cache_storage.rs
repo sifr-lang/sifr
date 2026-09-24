@@ -372,3 +372,41 @@ pub fn available_bytes() -> io::Result<u64> {
     let stats = unsafe { stats.assume_init() };
     Ok(u64::from(stats.f_bavail) * stats.f_frsize)
 }
+
+pub(crate) fn new_private_file(path: &Path) -> io::Result<File> {
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+}
+pub(crate) fn read_private_file(path: &Path) -> io::Result<File> {
+    OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+}
+pub(crate) fn read_write_private_file(path: &Path) -> io::Result<File> {
+    check_owned(path)?;
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+}
+pub(crate) fn publish(source: &Path, destination: &Path) -> io::Result<()> {
+    fs::rename(source, destination)?;
+    let parent = destination
+        .parent()
+        .ok_or_else(|| invalid("missing publication parent"))?;
+    File::open(parent)?.sync_all()
+}
+pub(crate) fn sync_stage(path: &Path) -> io::Result<()> {
+    File::open(path)?.sync_all()
+}
+
+pub(crate) fn real_directory(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
+}
