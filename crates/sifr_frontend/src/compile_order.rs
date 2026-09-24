@@ -423,24 +423,6 @@ fn cycle_diagnostic_parts(cycle_path: &[String]) -> (String, String, Vec<String>
     (cycle_path.join(" -> "), notes.join("; "), notes)
 }
 
-fn cycle_without_source(cycle_path: &[String]) -> RenderedDiagnostic {
-    let (cycle, cycle_edges, notes) = cycle_diagnostic_parts(cycle_path);
-    let args = [
-        ("cycle", sifr_diagnostics::DiagnosticArg::String(cycle)),
-        (
-            "cycle_edges",
-            sifr_diagnostics::DiagnosticArg::String(cycle_edges),
-        ),
-    ];
-    diagnostic_without_source(
-        DiagnosticCode::IMPORT_CYCLE,
-        "circular import detected: {cycle}",
-        &args,
-        &notes,
-        Some("break the cycle by moving shared declarations into a separate module".to_string()),
-    )
-}
-
 fn canonicalize_cycle_path(cycle_path: Vec<String>) -> Vec<String> {
     if cycle_path.len() <= 2 {
         return cycle_path;
