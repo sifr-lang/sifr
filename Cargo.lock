@@ -7482,6 +7482,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_cache_storage"
+version = "0.0.0"
+dependencies = [
+ "libc",
+ "tempfile",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "sifr_codegen"
 version = "0.0.0"
 dependencies = [
@@ -7521,6 +7530,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_compiler_services"
+version = "0.0.0"
+dependencies = [
+ "ruff_python_ast",
+ "ruff_text_size",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_cache_storage",
+ "sifr_codegen",
+ "sifr_diagnostics",
+ "sifr_frontend",
+ "sifr_identity",
+ "sifr_ir",
+ "sifr_lowering",
+ "sifr_stdlib_imports",
+ "sifr_stdlib_manifest",
+ "sifr_syntax",
+ "sifr_sysroot",
+ "sifr_type_system",
+ "syn 3.0.5",
+ "tempfile",
+]
+
+[[package]]
 name = "sifr_diagnostics"
 version = "0.0.0"
 dependencies = [
@@ -7545,8 +7579,10 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "sifr_cache_storage",
  "sifr_codegen",
  "sifr_compiler_component",
+ "sifr_compiler_services",
  "sifr_diagnostics",
  "sifr_frontend",
  "sifr_identity",

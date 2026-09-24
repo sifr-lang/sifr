@@ -10,6 +10,8 @@ license = { workspace = true }
 [dependencies]
 num-bigint.workspace = true
 sifr_identity.workspace = true
+sifr_cache_storage.workspace = true
+sifr_compiler_services.workspace = true
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 sifr_diagnostics = { workspace = true }
 sifr_python_ast = { workspace = true }
@@ -40,6 +42,7 @@ toml = { workspace = true }
 tempfile = "3.27.0"
 
 [dev-dependencies]
+sifr_cache_storage = { workspace = true, features = ["test-support"] }
 memchr = { workspace = true }
 tempfile = "3.27.0"
 wat = { workspace = true }
