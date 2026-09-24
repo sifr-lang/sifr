@@ -584,6 +584,28 @@ impl RootedEntrypointPlan {
                     DiscoveryDiagnosticStyle::ModuleName,
                     provider,
                 )?;
+                let configured_profiles = sql_profiles
+                    .registry()
+                    .entries()
+                    .map(|(name, _)| name.to_string())
+                    .collect();
+                let mut parsed_names = package_project.parsed_modules.keys().collect::<Vec<_>>();
+                parsed_names.sort();
+                let import_diagnostics = parsed_names
+                    .into_iter()
+                    .flat_map(|name| {
+                        let parsed = &package_project.parsed_modules[name];
+                        super::sql_profiles::sql_profile_import_diagnostics_for_suite(
+                            &parsed.suite,
+                            &parsed.source,
+                            &parsed.display_path,
+                            &configured_profiles,
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                if !import_diagnostics.is_empty() {
+                    return Err(import_diagnostics);
+                }
                 let entry_module_name = package_project.entry_module_name.clone();
                 if entry_module_name != "main" {
                     if let Some(entry_module) =

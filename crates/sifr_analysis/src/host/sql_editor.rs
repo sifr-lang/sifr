@@ -337,8 +337,15 @@ impl AnalysisHost {
         &mut self,
         file: FileId,
     ) -> Result<Vec<sifr_diagnostics::RenderedDiagnostic>, AnalysisError> {
-        let _ = self.sql_documents_for_file(file)?;
+        let source = self.source_text(file)?;
         let source_document = sql_source_document(self.context_mut()?, file);
+        let profile_imports = self
+            .sql_editor_runtime
+            .profile_import_diagnostics(&source, &source_document);
+        if !profile_imports.is_empty() {
+            return Ok(profile_imports);
+        }
+        let _ = self.sql_documents_for_file(file)?;
         Ok(self
             .sql_editor_runtime
             .diagnostics_for_source(&source_document))

@@ -147,3 +147,40 @@ passing. Raw log: `/home/yaser5/projects/sifr/architecture-v01-evidence/runner-s
 (SHA-256 `afb3334bfbfd6b38f695b1feac51c61ca78cc0c961d181bf6f74dd5b0f6d9ab5`).
 The verification-runner owner should reconcile the fixture inventory and
 rerun that exact self-test.
+
+### Reconciliation (2026-09-24)
+
+The verification-runner DX.10/B11 inventory reconciliation merged in
+[PR #3986](https://github.com/sifr-lang/sifr/pull/3986) from candidate
+9e8740fc815c321c92b8cdf48d114c8e5a09e0a4 (base
+60613299fccc317d1bed059dec7940739a456a36) as merge
+53664cbab52055b9bf8aa5df01b79743d57927d8. The sole delta adds
+integer_field_augassign.sifr to the lexical e2e-run-pass list. Actual
+tracked run-pass fixtures and the declared selection now agree at 728 names
+with no missing, stale or duplicate entry. The release and development
+application-profile policy and native-run assertion remain unchanged.
+
+On the reviewed candidate, the exact SQL Item 4 prerequisite
+uv run --project verification --locked python -m sifr_verify --self-test
+passed (raw log SHA-256 19cd85131669babfbed46caa0a3b67ef19ba646beb3ac1ab0ca06b24783798c3).
+All five DX.10 profile tests passed (d0ee918b4dda9077081b3809573a8ee3bded0e7b6fb12693bce19cddf67fd60e);
+the exact B11 test and the unrelated DX.3 cancellation case passed focused
+(bfaa1cd8da593028115e79720c8cc36a4fdb6da11cb1aa9722007d2c2332c0d8).
+JSON parsing, diff check and the 900-line guardrail passed (guardrail log
+f602fdaaa50641ee96dbc83cb0f1ebf82f2fbe3598b2c835c18220cb26873dec).
+The first worktree self-test failed because its target/ directory was not
+prepared; a prepared attempt exposed a transient DX.3 process assertion.
+Both failures remain in the evidence directory and are not counted as passes.
+The final exact complete self-test passed. Raw evidence and the candidate-keyed
+review are under /home/yaser5/projects/sifr/dx10-b11-inventory-evidence/.
+
+The read-only scoped [Opus review](https://github.com/sifr-lang/sifr/pull/3986#issuecomment-5804943374)
+returned SATISFIED with no blocking findings (response SHA-256
+fb1e3d0e1aa6155710b961322a492af745383c4b082c7fef7aefca819dbff420).
+The approved Phase DX intermediate-item policy deferred the full create-PR and
+merge gates. The separate generated-code-quality surface inventory still
+declares 727 paths and an old path digest; that pre-existing drift is recorded
+with [its owner](https://github.com/sifr-lang/sifr/issues/3744#issuecomment-5804948475).
+F3 positional selection remains separately open. SQL Item 4 must run its own
+final-candidate qualification; this receipt resolves only its inherited B11
+self-test blocker.

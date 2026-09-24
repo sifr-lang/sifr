@@ -403,12 +403,12 @@ pub(super) fn diagnostic_with_source_range(
     )
 }
 
-pub(super) struct SourceDiagnosticExtras<'a> {
-    pub(super) notes: &'a [String],
-    pub(super) help: Option<String>,
+pub(crate) struct SourceDiagnosticExtras<'a> {
+    pub(crate) notes: &'a [String],
+    pub(crate) help: Option<String>,
 }
 
-pub(super) fn diagnostic_with_source_range_help(
+pub(crate) fn diagnostic_with_source_range_help(
     code: DiagnosticCode,
     display_path: &str,
     source: &str,

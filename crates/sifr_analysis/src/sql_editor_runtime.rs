@@ -12,12 +12,13 @@ use sifr_frontend::{
 use sifr_sql_contract::{
     ProviderAnalysis, provider_analysis_from_response, schema_object_fingerprint,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub(super) struct SqlEditorRuntime {
     profiles: PreparedSqlProfiles,
+    profile_names: BTreeSet<String>,
     host: Option<ComponentHost>,
     cache: SqlIncrementalAnalysisCache<ProviderAnalysis>,
     cancellation: Option<Arc<AtomicBool>>,
@@ -51,8 +52,14 @@ impl SqlEditorRuntime {
         let mut host = None;
         crate::sql_editor_host::update_host(&mut host, &profiles)?;
         let initialization_diagnostics = profiles.initialization_diagnostics().to_vec();
+        let profile_names = profiles
+            .registry()
+            .entries()
+            .map(|(name, _)| name.to_string())
+            .collect();
         Ok(Self {
             profiles,
+            profile_names,
             host,
             cache: SqlIncrementalAnalysisCache::open_default(),
             cancellation: None,
@@ -72,8 +79,30 @@ impl SqlEditorRuntime {
     ) -> Result<(), ComponentError> {
         crate::sql_editor_host::update_host(&mut self.host, &profiles)?;
         self.initialization_diagnostics = profiles.initialization_diagnostics().to_vec();
+        self.profile_names = profiles
+            .registry()
+            .entries()
+            .map(|(name, _)| name.to_string())
+            .collect();
         self.profiles = profiles;
         Ok(())
+    }
+
+    #[cfg(test)]
+    pub(super) fn configure_profile_for_test(&mut self, name: &str) {
+        self.profile_names.insert(name.to_string());
+    }
+
+    pub(super) fn profile_import_diagnostics(
+        &self,
+        source: &str,
+        display_path: &str,
+    ) -> Vec<RenderedDiagnostic> {
+        sifr_driver::sql_profile_import_diagnostics_for_names(
+            source,
+            display_path,
+            &self.profile_names,
+        )
     }
 
     pub(super) fn diagnostics_for_source(&self, source: &str) -> Vec<RenderedDiagnostic> {
