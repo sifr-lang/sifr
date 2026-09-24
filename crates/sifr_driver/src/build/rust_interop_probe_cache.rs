@@ -61,18 +61,8 @@ pub(super) fn probe_cache_key(
     probe_source: &str,
 ) -> Result<String, String> {
     let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v4");
-    let backend_tree = digest_path_checked(backend_root).map_err(|error| {
-        format!(
-            "unreadable Rust probe backend tree '{}': {error}",
-            backend_root.display()
-        )
-    })?;
-    let runtime_tree = digest_path_checked(&probe.sysroot_runtime_crate).map_err(|error| {
-        format!(
-            "unreadable Rust probe runtime tree '{}': {error}",
-            probe.sysroot_runtime_crate.display()
-        )
-    })?;
+    let (backend_tree, runtime_tree) =
+        probe_tree_input_digests(backend_root, &probe.sysroot_runtime_crate)?;
     let nearest_lock = nearest_lock_digest(backend_root)?;
     let vendor_identity = optional_vendor_identity(
         probe
@@ -159,6 +149,25 @@ pub(super) fn probe_cache_key(
     Ok(input.finish())
 }
 
+fn probe_tree_input_digests(
+    backend_root: &Path,
+    runtime_root: &Path,
+) -> Result<(String, String), String> {
+    let backend_tree = digest_path_checked(backend_root).map_err(|error| {
+        format!(
+            "unreadable Rust probe backend tree '{}': {error}",
+            backend_root.display()
+        )
+    })?;
+    let runtime_tree = digest_path_checked(runtime_root).map_err(|error| {
+        format!(
+            "unreadable Rust probe runtime tree '{}': {error}",
+            runtime_root.display()
+        )
+    })?;
+    Ok((backend_tree, runtime_tree))
+}
+
 fn optional_vendor_identity(vendor_dir: Option<&Path>) -> Result<String, String> {
     let Some(vendor_dir) = vendor_dir else {
         return Ok("<no-sysroot-vendor>".to_string());
@@ -188,10 +197,31 @@ fn nearest_lock_digest(path: &Path) -> Result<String, String> {
 mod tests {
     use super::{
         RUST_BRIDGE_PROBE_CACHE_DIR, artifact_cache_root, probe_cache_file_with_env,
-        probe_cache_root,
+        probe_cache_root, probe_tree_input_digests,
     };
     use std::ffi::OsString;
+    use std::fs;
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn probe_tree_digests_refresh_after_edits_in_one_process() {
+        let root = tempfile::tempdir().unwrap();
+        let backend = root.path().join("backend");
+        let runtime = root.path().join("runtime");
+        fs::create_dir(&backend).unwrap();
+        fs::create_dir(&runtime).unwrap();
+        fs::write(backend.join("Cargo.toml"), b"first").unwrap();
+        fs::write(runtime.join("lib.rs"), b"first").unwrap();
+        let first = probe_tree_input_digests(&backend, &runtime).unwrap();
+        fs::write(backend.join("Cargo.toml"), b"second").unwrap();
+        let second = probe_tree_input_digests(&backend, &runtime).unwrap();
+        assert_ne!(first.0, second.0);
+        assert_eq!(first.1, second.1);
+        fs::write(runtime.join("lib.rs"), b"second").unwrap();
+        let third = probe_tree_input_digests(&backend, &runtime).unwrap();
+        assert_eq!(second.0, third.0);
+        assert_ne!(second.1, third.1);
+    }
 
     #[test]
     fn probe_cache_defaults_to_stable_artifact_cache_subdir() {

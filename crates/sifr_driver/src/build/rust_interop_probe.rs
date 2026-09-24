@@ -56,17 +56,17 @@ pub(super) fn execute_direct_cargo_probe(
     probe: &PendingRustBridgeProbe,
 ) -> Result<(), ProbeExecutionFailure> {
     if !probe.backend.cargo_manifest_path.is_file() {
-        if probe.cargo_resolution.lock_mode != sifr_package::CargoLockMode::Normal {
-            return Err(probe_cargo_resolution_failure(format!(
-                "Rust probe Cargo manifest '{}' is missing in {} mode",
-                probe.backend.cargo_manifest_path.display(),
-                probe.cargo_resolution.lock_mode.as_str()
-            )));
-        }
-        return Ok(());
+        return Err(probe_cargo_resolution_failure(format!(
+            "Rust probe Cargo manifest '{}' is missing or unreadable in {} mode",
+            probe.backend.cargo_manifest_path.display(),
+            probe.cargo_resolution.lock_mode.as_str()
+        )));
     }
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
-        return Ok(());
+        return Err(probe_io_failure(format!(
+            "Rust probe Cargo manifest '{}' has no parent directory",
+            probe.backend.cargo_manifest_path.display()
+        )));
     };
     let dependency_features =
         dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);

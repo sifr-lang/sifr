@@ -87,7 +87,10 @@ fn reject_linked_ancestors(path: &Path) -> io::Result<()> {
             Ok(metadata) if metadata.file_type().is_symlink() => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    format!("bridge source parent link is unsupported: {}", ancestor.display()),
+                    format!(
+                        "bridge source parent link is unsupported: {}",
+                        ancestor.display()
+                    ),
                 ));
             }
             Ok(_) => {}
@@ -186,10 +189,7 @@ mod tests {
         fs::remove_dir_all(&path).unwrap();
         assert_eq!(digest_optional_directory_checked(&path).unwrap(), None);
         fs::write(&path, b"replacement").unwrap();
-        assert_ne!(
-            empty,
-            digest_optional_directory_checked(&path).unwrap().unwrap()
-        );
+        assert!(digest_optional_directory_checked(&path).is_err());
     }
 
     #[test]

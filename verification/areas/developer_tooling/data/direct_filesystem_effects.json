@@ -6472,8 +6472,57 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
       "symbol": "mark_probe_cache_hit",
-      "operation": "open-write",
-      "site": ".open(path)",
+      "operation": "sync_all",
+      "site": "file.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "mark_probe_cache_hit",
+      "operation": "remove_file",
+      "site": "let _ = fs::remove_file(stage);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "probe_tree_digests_refresh_after_edits_in_one_process",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&backend).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "probe_tree_digests_refresh_after_edits_in_one_process",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&runtime).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "probe_tree_digests_refresh_after_edits_in_one_process",
+      "operation": "write",
+      "site": "fs::write(backend.join(\"Cargo.toml\"), b\"first\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "probe_tree_digests_refresh_after_edits_in_one_process",
+      "operation": "write",
+      "site": "fs::write(runtime.join(\"lib.rs\"), b\"first\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "probe_tree_digests_refresh_after_edits_in_one_process",
+      "operation": "write",
+      "site": "fs::write(backend.join(\"Cargo.toml\"), b\"second\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
+      "symbol": "probe_tree_digests_refresh_after_edits_in_one_process",
+      "operation": "write",
+      "site": "fs::write(runtime.join(\"lib.rs\"), b\"second\").unwrap();",
       "classification": "output-effect"
     },
     {
