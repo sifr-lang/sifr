@@ -27,9 +27,8 @@ fn root() -> PathBuf {
 fn identity(configuration: &str) -> CompilerIdentity {
     CompilerIdentity::for_test(crate::compiled_input_tokens(), configuration)
 }
-const TARGET: &str = if cfg!(windows) {
-    "x86_64-pc-windows-msvc"
-} else if cfg!(target_os = "macos") {
+// Storage contracts run on Windows using a supported portable semantic target.
+const TARGET: &str = if cfg!(target_os = "macos") {
     if cfg!(target_arch = "aarch64") {
         "aarch64-apple-darwin"
     } else {
@@ -504,7 +503,12 @@ fn windows_portability_metadata_staged_failure_and_output_acl() {
             Ok(())
         }
     });
-    assert!(failure.err().unwrap().0.contains("injected staged failure"));
+    let error = failure.err().expect("staged failure was not injected");
+    assert!(
+        error.0.contains("injected staged failure"),
+        "unexpected metadata preparation error: {}",
+        error.0
+    );
     let staging = fs::read_dir(cache.join("metadata"))
         .unwrap()
         .filter_map(|entry| entry.ok())
