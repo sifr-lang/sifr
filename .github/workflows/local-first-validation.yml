@@ -110,6 +110,28 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Prepare locked target dependencies
         run: cargo fetch --locked
+      - name: Run Windows native executable selection
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        run: cargo test --locked -p sifr_sysroot --lib --target "${{ matrix.target }}" native_context::windows_tests::windows_path_lookup_resolves_exe_and_keeps_explicit_paths_exact -- --exact
+      - name: Run Windows generated Rust formatter and native build script contracts
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          $cases = @(
+            "build::rust_formatter::tests::windows_generated_build_script_uses_a_real_empty_rustfmt_config",
+            "build::rust_formatter::tests::generated_rust_uses_the_canonical_toolchain_layout",
+            "build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project"
+          )
+          foreach ($case in $cases) {
+            cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" "$case" -- --exact
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Run Unix generated Rust formatter and native build script contracts
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::rust_formatter::tests::generated_rust_uses_the_canonical_toolchain_layout -- --exact
+          cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::python_native_loader_materialization_preserves_selection_and_removes_stale_path -- --exact
+          cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project -- --exact
       - name: Run native compiler component qualification
         run: cargo test --locked -p sifr_compiler_component --target "${{ matrix.target }}"
       - name: Run coupled Windows driver storage and process contracts
