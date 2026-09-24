@@ -3,27 +3,31 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-/// A bridge authority must be readable in full before it can identify reusable output.
+/// Required bridge and sysroot roots must be readable in full. Links are not
+/// source members: rejecting them prevents escape and traversal cycles.
 pub(super) fn digest_path_checked(path: &Path) -> io::Result<String> {
-    let mut entries = Vec::new();
-    collect_digest_entries(path, path, &mut entries)?;
-    entries.sort_by(|left, right| left.0.cmp(&right.0));
-    let mut identity = IdentityEncoder::new("rust-bridge-source-tree-v2");
-    for (relative, file_bytes) in entries {
-        identity.field("path", relative.as_bytes());
-        identity.field("contents", &file_bytes);
-    }
+    reject_linked_ancestors(path)?;
+    let mut identity = IdentityEncoder::new("rust-bridge-source-tree-v3");
+    encode_digest_entries(path, path, &mut identity)?;
     Ok(identity.finish())
 }
 
-/// Probe-only snapshots still run Cargo before accepting a successful probe.
-pub(super) fn digest_path(path: &Path) -> String {
-    digest_path_checked(path).unwrap_or_else(|error| {
-        let mut identity = IdentityEncoder::new("rust-bridge-source-unreadable-v2");
-        identity.field("path", normalized_path_string(path).as_bytes());
-        identity.field("error", error.kind().to_string().as_bytes());
-        identity.finish()
-    })
+/// An optional root is absent only on NotFound. Existing files, empty
+/// directories, links and read failures remain distinct observations.
+pub(super) fn digest_optional_directory_checked(path: &Path) -> io::Result<Option<String>> {
+    reject_linked_ancestors(path)?;
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.is_dir() => digest_path_checked(path).map(Some),
+        Ok(_) => Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!(
+                "optional source root is not a directory: {}",
+                path.display()
+            ),
+        )),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    }
 }
 
 /// A missing file is distinct from an empty file. An existing unreadable path
@@ -74,14 +78,43 @@ pub(super) fn normalized_path_string(path: &Path) -> String {
         .join("/")
 }
 
-fn collect_digest_entries(
+fn reject_linked_ancestors(path: &Path) -> io::Result<()> {
+    for ancestor in path.ancestors().skip(1) {
+        if ancestor.as_os_str().is_empty() {
+            continue;
+        }
+        match fs::symlink_metadata(ancestor) {
+            Ok(metadata) if metadata.file_type().is_symlink() => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("bridge source parent link is unsupported: {}", ancestor.display()),
+                ));
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(())
+}
+
+fn encode_digest_entries(
     root: &Path,
     path: &Path,
-    entries: &mut Vec<(String, Vec<u8>)>,
+    identity: &mut IdentityEncoder,
 ) -> io::Result<()> {
-    let metadata = fs::metadata(path)?;
+    let metadata = fs::symlink_metadata(path)?;
+    if metadata.file_type().is_symlink() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("bridge source link is unsupported: {}", path.display()),
+        ));
+    }
+    let relative = path.strip_prefix(root).unwrap_or(path);
     if metadata.is_file() {
-        entries.push((relative_path_string(root, path), fs::read(path)?));
+        identity.field("kind", b"file");
+        identity.field("path", relative.as_os_str().as_encoded_bytes());
+        identity.field("contents", &fs::read(path)?);
         return Ok(());
     }
     if !metadata.is_dir() {
@@ -90,8 +123,12 @@ fn collect_digest_entries(
             "unsupported bridge source",
         ));
     }
-    for entry in fs::read_dir(path)? {
-        collect_digest_entries(root, &entry?.path(), entries)?;
+    identity.field("kind", b"dir");
+    identity.field("path", relative.as_os_str().as_encoded_bytes());
+    let mut children = fs::read_dir(path)?.collect::<io::Result<Vec<_>>>()?;
+    children.sort_by_key(std::fs::DirEntry::file_name);
+    for entry in children {
+        encode_digest_entries(root, &entry.path(), identity)?;
     }
     Ok(())
 }
@@ -103,7 +140,10 @@ pub(super) fn push_cache_bytes(out: &mut Vec<u8>, value: &str) {
 
 #[cfg(test)]
 mod tests {
-    use super::{digest_file_checked, digest_path_checked, nearest_lock_digest_checked};
+    use super::{
+        digest_file_checked, digest_optional_directory_checked, digest_path_checked,
+        nearest_lock_digest_checked,
+    };
     use std::fs;
 
     #[test]
@@ -126,6 +166,79 @@ mod tests {
             assert!(digest_file_checked(&lock).is_err());
             assert!(nearest_lock_digest_checked(root.path()).is_err());
         }
+    }
+
+    #[test]
+    fn optional_tree_identity_distinguishes_absent_empty_and_replacement() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("optional");
+        assert_eq!(digest_optional_directory_checked(&path).unwrap(), None);
+        fs::create_dir(&path).unwrap();
+        let empty = digest_optional_directory_checked(&path).unwrap().unwrap();
+        fs::write(path.join("source.rs"), b"one").unwrap();
+        let first = digest_optional_directory_checked(&path).unwrap().unwrap();
+        assert_ne!(empty, first);
+        fs::write(path.join("source.rs"), b"two").unwrap();
+        assert_ne!(
+            first,
+            digest_optional_directory_checked(&path).unwrap().unwrap()
+        );
+        fs::remove_dir_all(&path).unwrap();
+        assert_eq!(digest_optional_directory_checked(&path).unwrap(), None);
+        fs::write(&path, b"replacement").unwrap();
+        assert_ne!(
+            empty,
+            digest_optional_directory_checked(&path).unwrap().unwrap()
+        );
+    }
+
+    #[test]
+    fn bridge_tree_identity_orders_membership_and_empty_directories() {
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        for (root, names) in [
+            (first.path(), ["a.rs", "z.rs"]),
+            (second.path(), ["z.rs", "a.rs"]),
+        ] {
+            for name in names {
+                fs::write(root.join(name), name).unwrap();
+            }
+        }
+        assert_eq!(
+            digest_path_checked(first.path()).unwrap(),
+            digest_path_checked(second.path()).unwrap()
+        );
+        fs::create_dir(first.path().join("empty")).unwrap();
+        assert_ne!(
+            digest_path_checked(first.path()).unwrap(),
+            digest_path_checked(second.path()).unwrap()
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn bridge_tree_rejects_links_and_denied_members() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        fs::write(outside.path().join("outside.rs"), b"outside").unwrap();
+        let linked = root.path().join("linked.rs");
+        symlink(outside.path().join("outside.rs"), &linked).unwrap();
+        assert!(digest_path_checked(root.path()).is_err());
+        fs::remove_file(&linked).unwrap();
+        symlink(root.path(), &linked).unwrap();
+        assert!(digest_path_checked(root.path()).is_err());
+        fs::remove_file(&linked).unwrap();
+        let denied = root.path().join("denied.rs");
+        fs::write(&denied, b"secret").unwrap();
+        fs::set_permissions(&denied, fs::Permissions::from_mode(0o000)).unwrap();
+        let result = digest_path_checked(root.path());
+        fs::set_permissions(&denied, fs::Permissions::from_mode(0o600)).unwrap();
+        assert!(result.is_err());
+        symlink(outside.path(), &linked).unwrap();
+        assert!(digest_path_checked(&linked).is_err());
+        assert!(digest_path_checked(&linked.join("outside.rs")).is_err());
+        assert!(digest_optional_directory_checked(&linked.join("missing")).is_err());
     }
 
     #[test]

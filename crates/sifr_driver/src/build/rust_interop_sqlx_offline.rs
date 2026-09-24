@@ -1,5 +1,5 @@
 use self::cfg_filter::{has_cfg_attribute, item_has_cfg_attribute};
-use super::rust_interop_digest::digest_path_checked;
+use super::rust_interop_digest::digest_optional_directory_checked;
 use super::rust_interop_probe::{PendingRustBridgeProbe, ProbeExecutionFailure};
 use super::rust_interop_sqlx_modules::reachable_rust_modules;
 use sifr_diagnostics::DiagnosticCode;
@@ -69,16 +69,17 @@ pub(super) fn combined_sqlx_offline_metadata_digest<'a>(
             continue;
         };
         for metadata_root in metadata_roots {
-            if metadata_root.is_dir() {
-                if let std::collections::btree_map::Entry::Vacant(entry) =
-                    identities.entry(metadata_root)
-                {
-                    let digest = digest_path_checked(entry.key()).map_err(|error| {
+            if let std::collections::btree_map::Entry::Vacant(entry) =
+                identities.entry(metadata_root)
+            {
+                if let Some(digest) =
+                    digest_optional_directory_checked(entry.key()).map_err(|error| {
                         format!(
                             "unreadable SQLx offline metadata tree '{}': {error}",
                             entry.key().display()
                         )
-                    })?;
+                    })?
+                {
                     entry.insert(digest);
                 }
             }
