@@ -211,7 +211,7 @@ mod tests {
         .expect("Windows rustfmt must accept the empty config file");
 
         assert_eq!(
-            formatted,
+            formatted.replace("\r\n", "\n"),
             "fn main() {\n    println!(\"native loader\");\n}\n"
         );
     }

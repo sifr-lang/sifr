@@ -58,6 +58,7 @@ fn source_materialization_writes_a_complete_uncompiled_cargo_project() {
         .expect("formatted native loader build script should be readable");
     assert!(
         build_script
+            .replace("\r\n", "\n")
             .starts_with("fn main() {\n    println!(\"cargo:rerun-if-changed=build.rs\");\n"),
         "{build_script}"
     );
