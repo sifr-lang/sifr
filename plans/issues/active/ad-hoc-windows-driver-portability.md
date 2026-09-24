@@ -247,7 +247,7 @@ now receives a short-lived real empty TOML config file; Unix keeps
 in `internal_docs/architecture.md` records the platform-specific
 empty-config path. Final scoped Opus review returned **SATISFIED** with
 no blocking findings; the review is preserved outside Git at
-`/tmp/sifr-windows-rustfmt-review4.WwrUVY/response.md`.
+`/home/yaser5/projects/sifr/windows-rustfmt-config-evidence/reviews/bfecbc0aafdc8211f67442c9713d05db78c26cae/opus-review.md`.
 
 [Validation-only PR #3995](https://github.com/sifr-lang/sifr/pull/3995)
 is closed unmerged. It combined W1+W2 head
