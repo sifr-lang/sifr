@@ -20275,13 +20275,6 @@
     },
     {
       "path": "crates/sifr_driver/src/cache_storage.rs",
-      "symbol": "lease_timeout",
-      "operation": "read_to_string",
-      "site": "let note = fs::read_to_string(path).unwrap_or_else(|_| \"owner note unavailable\".into());",
-      "classification": "tooling-input"
-    },
-    {
-      "path": "crates/sifr_driver/src/cache_storage.rs",
       "symbol": "inspect",
       "operation": "read_dir",
       "site": "for child in fs::read_dir(&root)? {",
@@ -20398,6 +20391,48 @@
       "operation": "exists",
       "site": "assert!(unknown.exists(), \"unknown auxiliary owner was removed\");",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution.rs",
+      "symbol": "prepare_cargo_resolution",
+      "operation": "read",
+      "site": "&& std::fs::read(&owner_path)",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "storage_child",
+      "operation": "write",
+      "site": "std::fs::write(std::env::var(\"SIFR_DX3_READY\").unwrap(), b\"ready\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "n06_live_holder_outlasts_idle_window_then_waiter_acquires",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&root).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "n06_live_holder_outlasts_idle_window_then_waiter_acquires",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(root).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "lock_bounded_with_hooks",
+      "operation": "metadata",
+      "site": "let mut last_change = file.metadata().and_then(|meta| meta.modified()).ok();",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "lock_bounded_with_hooks",
+      "operation": "metadata",
+      "site": "let changed = file.metadata().and_then(|meta| meta.modified()).ok();",
+      "classification": "build-identity"
     }
   ]
 }

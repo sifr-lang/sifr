@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct NativeFamily {
     _lease: File,
+    #[cfg(unix)]
+    _activity: crate::cache_storage::LeaseActivity,
     pub(crate) root: PathBuf,
 }
 
@@ -40,6 +42,8 @@ impl NativeFamily {
         )?;
         #[cfg(windows)]
         lease.lock()?;
+        #[cfg(unix)]
+        let activity = crate::cache_storage::LeaseActivity::start(&lease)?;
         let root = directory.join(&key);
         crate::cache_storage::directory(&root)?;
         let metadata = serde_json::to_vec(&serde_json::json!({
@@ -50,6 +54,8 @@ impl NativeFamily {
         write_changed(&root.join("native_family.json"), &metadata)?;
         Ok(Self {
             _lease: lease,
+            #[cfg(unix)]
+            _activity: activity,
             root,
         })
     }
@@ -70,7 +76,13 @@ impl NativeFamily {
 
 /// Caller-owned output roots can be shared by otherwise incompatible families.
 /// Serialize their mutation and publication independently of Cargo context.
-pub(crate) fn publication_lock(path: &Path) -> std::io::Result<File> {
+pub(crate) struct PublicationLease {
+    _lease: File,
+    #[cfg(unix)]
+    _activity: crate::cache_storage::LeaseActivity,
+}
+
+pub(crate) fn publication_lock(path: &Path) -> std::io::Result<PublicationLease> {
     #[cfg(windows)]
     let path = if path.is_absolute() {
         path.to_path_buf()
@@ -98,7 +110,13 @@ pub(crate) fn publication_lock(path: &Path) -> std::io::Result<File> {
     )?;
     #[cfg(windows)]
     lease.lock()?;
-    Ok(lease)
+    #[cfg(unix)]
+    let activity = crate::cache_storage::LeaseActivity::start(&lease)?;
+    Ok(PublicationLease {
+        _lease: lease,
+        #[cfg(unix)]
+        _activity: activity,
+    })
 }
 
 /// Generated parents under Sifr-owned cache roots must use the same private

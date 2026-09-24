@@ -428,12 +428,15 @@ protected by an uncontended permanent lock inode; pressure never overrides a lea
 | test-fixtures | Rust interop test owner. Test setup resets its own scoped fixture under a lease; generic prune leaves it protected. |
 | Unknown root or auxiliary namespace | Unknown or external owner. Report as protected; require an explicit ownership contract before reclamation. |
 
-Unix generated-storage waits use a 30-second safety deadline and a cancellable
-nonblocking polling primitive. Timeout diagnostics
-include the lock path and the last exclusive acquirer note. A process signal cancels a pending wait. A killed parent may
-leave a live child holding an inherited lease; that note is historical context,
-not authority to break the lock. Cancellation remains explicit in metadata
-production. No timeout permits deletion of a contended entry.
+Unix generated-storage waits use a 30-second idle deadline and a 41-minute
+hard safety deadline, one minute beyond the 40-minute Cargo subprocess deadline.
+Exclusive owners renew their note while their operation holds the lease; a
+waiter resets only the idle deadline when that note changes. A process signal or
+explicit metadata cancellation interrupts a wait. Timeout diagnostics include
+the lock path and the last exclusive acquirer note. A killed parent may leave a
+live child holding an inherited lease; that note is historical context, not
+authority to break the lock. A live but stalled renewal worker still reaches
+the hard deadline. No timeout permits deletion of a contended entry.
 
 ### 7.3 Pressure-based cleanup
 

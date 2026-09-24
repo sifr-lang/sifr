@@ -9,7 +9,7 @@ use std::{
         Arc, Mutex, OnceLock,
         atomic::{AtomicBool, Ordering},
     },
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 pub struct PreparedMetadata {
@@ -137,25 +137,26 @@ pub(super) fn ensure_with_hook(
         }
     }
     #[cfg(unix)]
-    let waiting_since = Instant::now();
+    crate::cache_storage::lock_bounded_with_hooks(
+        &lock,
+        &root.join(".locks").join(&key),
+        false,
+        crate::cache_storage::LEASE_WAIT,
+        crate::cache_storage::LEASE_IDLE_WAIT,
+        || cancelled(cancel).map_err(std::io::Error::other),
+        || hook(Stage::Waiting).map_err(std::io::Error::other),
+    )
+    .map_err(fail)?;
+    #[cfg(unix)]
+    let activity = crate::cache_storage::LeaseActivity::start(&lock).map_err(fail)?;
+    #[cfg(windows)]
     loop {
         cancelled(cancel)?;
         match lock.try_lock() {
-            Ok(()) => {
-                #[cfg(unix)]
-                crate::cache_storage::record_lock_owner(&lock).map_err(fail)?;
-                break;
-            }
+            Ok(()) => break,
             Err(std::fs::TryLockError::WouldBlock) => {
-                #[cfg(unix)]
-                if waiting_since.elapsed() >= crate::cache_storage::LEASE_WAIT {
-                    return Err(fail(crate::cache_storage::lease_timeout(
-                        &root.join(".locks").join(&key),
-                        crate::cache_storage::LEASE_WAIT,
-                    )));
-                }
                 hook(Stage::Waiting)?;
-                std::thread::sleep(Duration::from_millis(10));
+                std::thread::sleep(std::time::Duration::from_millis(10));
             }
             Err(std::fs::TryLockError::Error(error)) => return Err(fail(error)),
         }
@@ -177,6 +178,8 @@ pub(super) fn ensure_with_hook(
     if path.is_file() {
         if let Ok(prepared) = validate(&path, inputs.compatibility, lock.try_clone().map_err(fail)?)
         {
+            #[cfg(unix)]
+            drop(activity);
             lock.unlock().map_err(fail)?;
             return remember(prepared);
         }
@@ -215,6 +218,8 @@ pub(super) fn ensure_with_hook(
     cancelled(cancel)?;
     crate::cache_storage::publish(&staging, &path).map_err(fail)?;
     hook(Stage::Published)?;
+    #[cfg(unix)]
+    drop(activity);
     lock.unlock().map_err(fail)?;
     let prepared = Arc::new(PreparedMetadata {
         path: path.clone(),

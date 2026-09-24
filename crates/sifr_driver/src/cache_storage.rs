@@ -1,7 +1,7 @@
 //! Owned generated-entry storage. Locks are never unlinked: their inode is the lease.
 use std::fs::{self, File, OpenOptions};
 use std::io;
-use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{FileExt, MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -183,10 +183,52 @@ fn inherit_lease(file: &File) -> io::Result<()> {
     Ok(())
 }
 
-/// A fixed safety deadline applies to every generated-storage lease wait.
-/// The lock file is permanent; its note names the last exclusive acquirer and
-/// may be stale when a killed parent leaves a live child holding the descriptor.
-pub(crate) const LEASE_WAIT: Duration = Duration::from_secs(30);
+/// A short idle deadline detects an owner that stops renewing its note. A
+/// separate hard deadline remains bounded even if a live owner cannot finish.
+/// Cargo subprocesses have a 40-minute safety deadline, so their waiters get
+/// one additional minute to observe release and capture.
+pub(crate) const LEASE_IDLE_WAIT: Duration = Duration::from_secs(30);
+pub(crate) const LEASE_WAIT: Duration = Duration::from_mins(41);
+
+pub(crate) struct LeaseActivity {
+    stop: std::sync::mpsc::Sender<()>,
+    worker: Option<std::thread::JoinHandle<()>>,
+}
+
+impl LeaseActivity {
+    pub(crate) fn start(file: &File) -> io::Result<Self> {
+        Self::start_with_interval(file, Duration::from_secs(5))
+    }
+
+    pub(crate) fn start_with_interval(file: &File, interval: Duration) -> io::Result<Self> {
+        let file = file.try_clone()?;
+        let (stop, stopped) = std::sync::mpsc::channel();
+        let worker = std::thread::Builder::new()
+            .name("sifr-cache-lease".into())
+            .spawn(move || {
+                while stopped.recv_timeout(interval)
+                    == Err(std::sync::mpsc::RecvTimeoutError::Timeout)
+                {
+                    if record_lock_owner(&file).is_err() {
+                        break;
+                    }
+                }
+            })?;
+        Ok(Self {
+            stop,
+            worker: Some(worker),
+        })
+    }
+}
+
+impl Drop for LeaseActivity {
+    fn drop(&mut self) {
+        let _ = self.stop.send(());
+        if let Some(worker) = self.worker.take() {
+            let _ = worker.join();
+        }
+    }
+}
 
 pub(crate) fn lock_bounded(
     file: &File,
@@ -212,9 +254,31 @@ pub(crate) fn lock_bounded_with_cancel(
     path: &Path,
     shared: bool,
     limit: Duration,
+    cancelled: impl FnMut() -> io::Result<()>,
+) -> io::Result<()> {
+    lock_bounded_with_hooks(
+        file,
+        path,
+        shared,
+        limit,
+        LEASE_IDLE_WAIT.min(limit),
+        cancelled,
+        || Ok(()),
+    )
+}
+
+pub(crate) fn lock_bounded_with_hooks(
+    file: &File,
+    path: &Path,
+    shared: bool,
+    hard_limit: Duration,
+    idle_limit: Duration,
     mut cancelled: impl FnMut() -> io::Result<()>,
+    mut waiting: impl FnMut() -> io::Result<()>,
 ) -> io::Result<()> {
     let started = Instant::now();
+    let mut idle_since = started;
+    let mut last_change = file.metadata().and_then(|meta| meta.modified()).ok();
     loop {
         cancelled()?;
         let attempt = if shared {
@@ -229,11 +293,27 @@ pub(crate) fn lock_bounded_with_cancel(
                 }
                 return Ok(());
             }
-            Err(std::fs::TryLockError::WouldBlock) if started.elapsed() < limit => {
-                let remaining = limit.saturating_sub(started.elapsed());
-                std::thread::sleep(Duration::from_millis(10).min(remaining));
+            Err(std::fs::TryLockError::WouldBlock) => {
+                let changed = file.metadata().and_then(|meta| meta.modified()).ok();
+                if changed.is_some() && changed != last_change {
+                    last_change = changed;
+                    idle_since = Instant::now();
+                }
+                let hard_remaining = hard_limit.saturating_sub(started.elapsed());
+                let idle_remaining = idle_limit.saturating_sub(idle_since.elapsed());
+                if hard_remaining.is_zero() {
+                    return Err(lease_timeout(file, path, hard_limit));
+                }
+                if idle_remaining.is_zero() {
+                    return Err(lease_timeout(file, path, idle_limit));
+                }
+                waiting()?;
+                std::thread::sleep(
+                    Duration::from_millis(10)
+                        .min(hard_remaining)
+                        .min(idle_remaining),
+                );
             }
-            Err(std::fs::TryLockError::WouldBlock) => return Err(lease_timeout(path, limit)),
             Err(std::fs::TryLockError::Error(error)) => return Err(error),
         }
     }
@@ -241,9 +321,13 @@ pub(crate) fn lock_bounded_with_cancel(
 
 pub(crate) fn record_lock_owner(file: &File) -> io::Result<()> {
     let note = format!(
-        "last_exclusive_pid={} scope={}\n",
+        "last_exclusive_pid={} scope={} renewed_at_ns={}\n",
         std::process::id(),
-        owner_scope()?.display()
+        owner_scope()?.display(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos(),
     );
     file.set_len(0)?;
     std::io::Seek::seek(&mut &*file, std::io::SeekFrom::Start(0))?;
@@ -251,8 +335,13 @@ pub(crate) fn record_lock_owner(file: &File) -> io::Result<()> {
     file.sync_data()
 }
 
-pub(crate) fn lease_timeout(path: &Path, limit: Duration) -> io::Error {
-    let note = fs::read_to_string(path).unwrap_or_else(|_| "owner note unavailable".into());
+pub(crate) fn lease_timeout(file: &File, path: &Path, limit: Duration) -> io::Error {
+    let mut bytes = [0_u8; 4096];
+    let note = file
+        .read_at(&mut bytes, 0)
+        .ok()
+        .and_then(|count| std::str::from_utf8(&bytes[..count]).ok().map(str::to_owned))
+        .unwrap_or_else(|| "owner note unavailable".into());
     io::Error::new(
         io::ErrorKind::TimedOut,
         format!(

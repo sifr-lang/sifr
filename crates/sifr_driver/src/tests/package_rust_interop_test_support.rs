@@ -46,6 +46,8 @@ pub(super) fn copied_scenario(fixture_id: &str, scenario_id: &str, test_name: &s
 /// result or authorization is restored from the previous invocation.
 pub(super) struct ReusableScenario {
     root: PathBuf,
+    #[cfg(unix)]
+    _activity: crate::cache_storage::LeaseActivity,
     _lease: std::fs::File,
 }
 
@@ -96,6 +98,9 @@ pub(super) fn reusable_scenario(
     lease
         .lock()
         .expect("own fixture mutation and native capture");
+    #[cfg(unix)]
+    let activity =
+        crate::cache_storage::LeaseActivity::start(&lease).expect("renew active fixture lease");
     let root = base.join(key);
     if root.exists() {
         // Validate private ownership and reject symlinks before resetting.
@@ -106,6 +111,8 @@ pub(super) fn reusable_scenario(
     copy_fixture_tree(&fixture_scenario_root(fixture_id, scenario_id), &root);
     ReusableScenario {
         root,
+        #[cfg(unix)]
+        _activity: activity,
         _lease: lease,
     }
 }

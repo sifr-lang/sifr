@@ -25,6 +25,26 @@ fn storage_child() {
         return;
     }
     #[cfg(unix)]
+    if mode == "renewing-lease" {
+        let parent = crate::cache_storage::root().join("native/families");
+        let lease = crate::cache_storage::entry_lock(&parent, "renewing").unwrap();
+        crate::cache_storage::lock_bounded(
+            &lease,
+            &parent.join(".locks/renewing"),
+            false,
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        let _activity = crate::cache_storage::LeaseActivity::start_with_interval(
+            &lease,
+            Duration::from_millis(10),
+        )
+        .unwrap();
+        std::fs::write(std::env::var("SIFR_DX3_READY").unwrap(), b"ready").unwrap();
+        std::thread::sleep(Duration::from_secs(3));
+        return;
+    }
+    #[cfg(unix)]
     if mode == "wedged-lease" {
         let parent = crate::cache_storage::root().join("native/families");
         let lease = crate::cache_storage::entry_lock(&parent, "wedged").unwrap();
@@ -292,6 +312,8 @@ fn dx3_rejects_traversal_symlinks_and_invalid_winner() {
     let lease = std::sync::Arc::new(crate::cache_storage::entry_lock(&root, "test").unwrap());
     lease.lock().unwrap();
     let pending = PendingCachedArtifact {
+        #[cfg(unix)]
+        activity: None,
         lease,
         scope: std::env::current_dir().unwrap(),
         native_identity: "fixture".into(),
@@ -419,6 +441,32 @@ fn n06_wedged_sibling_wait_is_bounded_and_diagnostic() {
     .unwrap_err();
     assert_eq!(cancelled.kind(), std::io::ErrorKind::Interrupted);
     owner.kill().unwrap();
+    owner.wait().unwrap();
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+#[cfg(unix)]
+fn n06_live_holder_outlasts_idle_window_then_waiter_acquires() {
+    let root = std::env::temp_dir().join(format!("sifr-n06-renewing-{}", std::process::id()));
+    let ready = root.join("ready");
+    std::fs::create_dir_all(&root).unwrap();
+    let mut owner = child(&root, "renewing-lease", &ready).spawn().unwrap();
+    wait_ready(&ready);
+    let parent = root.join("native/families");
+    let lease = crate::cache_storage::entry_lock(&parent, "renewing").unwrap();
+    let started = Instant::now();
+    crate::cache_storage::lock_bounded_with_hooks(
+        &lease,
+        &parent.join(".locks/renewing"),
+        false,
+        Duration::from_secs(8),
+        Duration::from_secs(1),
+        || Ok(()),
+        || Ok(()),
+    )
+    .unwrap();
+    assert!(started.elapsed() >= Duration::from_secs(2));
     owner.wait().unwrap();
     std::fs::remove_dir_all(root).unwrap();
 }

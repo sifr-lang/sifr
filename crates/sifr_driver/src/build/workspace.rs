@@ -63,6 +63,8 @@ impl CachedArtifactEntry {
 }
 
 pub(crate) struct PendingCachedArtifact {
+    #[cfg(unix)]
+    activity: Option<crate::cache_storage::LeaseActivity>,
     lease: std::sync::Arc<std::fs::File>,
     scope: PathBuf,
     native_identity: String,
@@ -102,7 +104,7 @@ impl PendingCachedArtifact {
     }
 
     pub(crate) fn commit(
-        self,
+        mut self,
         required_paths: &[&Path],
     ) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
         crate::cache_storage::seal(&self.staging_root).map_err(storage_error)?;
@@ -145,6 +147,8 @@ impl PendingCachedArtifact {
 
         match crate::cache_storage::publish(&self.staging_root, &self.final_root) {
             Ok(()) => {
+                #[cfg(unix)]
+                drop(self.activity.take());
                 lock_artifact(&self.lease, &self.final_root, true).map_err(storage_error)?;
                 if !valid_entry(&self.final_root, &metadata, required_paths) {
                     return Err(storage_error(
@@ -171,6 +175,8 @@ impl PendingCachedArtifact {
                         "concurrent cache winner is incomplete or incompatible",
                     ));
                 }
+                #[cfg(unix)]
+                drop(self.activity.take());
                 lock_artifact(&self.lease, &self.final_root, true).map_err(storage_error)?;
                 if !valid_entry(&self.final_root, &metadata, required_paths) {
                     return Err(storage_error(
@@ -240,6 +246,8 @@ pub(crate) fn prepare_cached_artifact(
     // and revalidates after acquisition before producing a new entry.
     let final_root = cache_root.join(&cache_key);
     lock_artifact(&lease, &final_root, true).map_err(storage_error)?;
+    #[cfg(unix)]
+    let mut activity = None;
     let expected = ArtifactCacheMetadata {
         schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
         namespace: namespace.to_owned(),
@@ -251,6 +259,11 @@ pub(crate) fn prepare_cached_artifact(
     if !valid_entry(&final_root, &expected, required_paths) {
         lease.unlock().map_err(storage_error)?;
         lock_artifact(&lease, &final_root, false).map_err(storage_error)?;
+        #[cfg(unix)]
+        {
+            activity =
+                Some(crate::cache_storage::LeaseActivity::start(&lease).map_err(storage_error)?);
+        }
         // Revalidation below sees a winner that completed during lock acquisition.
     }
 
@@ -272,6 +285,8 @@ pub(crate) fn prepare_cached_artifact(
                         crate::cache_storage::payload(&final_root, relative).is_ok()
                     })
                 {
+                    #[cfg(unix)]
+                    drop(activity.take());
                     lock_artifact(&lease, &final_root, true).map_err(storage_error)?;
                     if !valid_entry(&final_root, &expected, required_paths) {
                         return Err(storage_error(
@@ -320,6 +335,8 @@ pub(crate) fn prepare_cached_artifact(
         },
     )?;
     Ok(PreparedArtifactCache::Miss(PendingCachedArtifact {
+        #[cfg(unix)]
+        activity,
         lease,
         scope: crate::cache_storage::owner_scope().map_err(storage_error)?,
         native_identity: native_identity.to_owned(),
