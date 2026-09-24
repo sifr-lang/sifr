@@ -2,6 +2,39 @@
 
 Status: active
 
+## Item 12R resumed qualification checkpoint (2026-09-24)
+
+**Implementation remains unmerged; retained Item 12 remains open.** Draft
+[PR #3946](https://github.com/sifr-lang/sifr/pull/3946) has local implementation
+candidate `cd49dcf6f2092ad57d7afdf5fd8e6745b4919c90`. The only change since
+`e5d0bd250` regenerates eight compiler-owned demo companions. Exact-candidate
+Opus 5.5 review is **SATISFIED** with no blocker (external
+`/home/yaser5/projects/sifr/emitted-rust-item12r-qualification-20260924/review-response-cd49dcf6f.md`,
+SHA-256 `f736a6dcf621d1c374ad9a473f15cbef8e8f9517230a7810bb06f27b82a353a6`). Full generated-code quality passes **11/11**;
+codegen library **1,738/1,738**; Rust interop static/matrix/contract,
+legal failure method names **3/3**, runner self-test, freshness, sysroot path
+leakage and prepared-source metadata structural **1/1**, formatting, HIR,
+file-size and diff hygiene pass. The full source/native **411/411** and E2E
+**729/729** passes on `e5d0bd250` remain reusable because the only later inputs
+changed are eight generated demo companions; their complete original receipts
+are preserved. All current receipts are under
+`/home/yaser5/projects/sifr/emitted-rust-item12r-qualification-20260924/`.
+
+Named area qualification remains blocked by separately owned failures: W1
+verification taxonomy gives coverage readiness **3/4**; core language is
+**4/6** (package-root command and missing lowering inventory row); stdlib parity
+is **7/8** (`python_raw_api` import requirement context); project workspace is
+**16/17** (package-root command); and strict workspace Clippy reports two
+`items_after_statements` diagnostics in `checked_place.rs`. These failed
+receipts are retained, not accepted as passes. Sysroot metadata-corpus was
+unreached because its version-matched corpus source was not prepared; the
+independent metadata-structural selection passed after one canonical source
+compiler preparation. No create-PR or full merge gate ran under the approved
+intermediate policy. Keep #3946 draft until the owning fixes integrate, rerun
+affected selections on the resulting candidate, then merge and update this
+record. Final integration owns the full merge gate; Item 12A owns the later
+whole-phase review.
+
 ## Item 12AF focused repair and Item 12R resource blocker (2026-09-24)
 
 **Item 12AF is focused-complete and reviewed; Item 12R and retained Item 12 remain unmerged.** Draft [PR #3946](https://github.com/sifr-lang/sifr/pull/3946) now preserves exact candidate `fc77da878945406cc6365fefda969bb97c17d723` on `codex/emitted-rust-item12r-20260923`. A direct checked nested-list element in a condition now flows through the canonical optional-value truthiness conversion. Unchanged `1905_count_sub_islands.sifr` executes both original assertions natively and emits `is_some_and` for the checked element; the ordinary reduced control covers zero, nonzero, absent row and element, and `and`/`or` short-circuit effects. No corpus fixture or fallback changed.
