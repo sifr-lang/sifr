@@ -103,13 +103,15 @@ impl PendingCachedArtifact {
             required_paths: required_paths.iter().map(|p| p.to_path_buf()).collect(),
         };
         write_cache_metadata(&self.staging_root, &metadata)?;
-        std::fs::File::open(self.staging_root.join(ARTIFACT_CACHE_METADATA_FILE))
-            .and_then(|file| file.sync_all())
-            .map_err(storage_error)?;
+        crate::cache_storage::read_write_private_file(
+            &self.staging_root.join(ARTIFACT_CACHE_METADATA_FILE),
+        )
+        .and_then(|file| file.sync_all())
+        .map_err(storage_error)?;
         for path in required_paths {
             let absolute = self.staging_root.join(path);
             if absolute.is_file() {
-                std::fs::File::open(absolute)
+                crate::cache_storage::read_write_private_file(&absolute)
                     .and_then(|file| file.sync_all())
                     .map_err(storage_error)?;
             }
