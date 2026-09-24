@@ -1,9 +1,7 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
 use super::cargo_resolution::{CargoResolutionPolicy, prepare_cargo_resolution};
 use super::rust_interop_panic_probe::panic_mapper_probe;
-use super::rust_interop_probe_cache::{
-    ProbeCacheKeyCache, mark_probe_cache_hit, probe_cache_file, probe_cache_key,
-};
+use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
 use super::rust_interop_probe_diagnostics::{
     classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
 };
@@ -56,20 +54,19 @@ pub(super) struct ProbeExecutionFailure {
 
 pub(super) fn execute_direct_cargo_probe(
     probe: &PendingRustBridgeProbe,
-    cache: &mut ProbeCacheKeyCache,
 ) -> Result<(), ProbeExecutionFailure> {
     if !probe.backend.cargo_manifest_path.is_file() {
-        if probe.cargo_resolution.lock_mode != sifr_package::CargoLockMode::Normal {
-            return Err(probe_cargo_resolution_failure(format!(
-                "Rust probe Cargo manifest '{}' is missing in {} mode",
-                probe.backend.cargo_manifest_path.display(),
-                probe.cargo_resolution.lock_mode.as_str()
-            )));
-        }
-        return Ok(());
+        return Err(probe_cargo_resolution_failure(format!(
+            "Rust probe Cargo manifest '{}' is missing or unreadable in {} mode",
+            probe.backend.cargo_manifest_path.display(),
+            probe.cargo_resolution.lock_mode.as_str()
+        )));
     }
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
-        return Ok(());
+        return Err(probe_io_failure(format!(
+            "Rust probe Cargo manifest '{}' has no parent directory",
+            probe.backend.cargo_manifest_path.display()
+        )));
     };
     let dependency_features =
         dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
@@ -98,7 +95,7 @@ pub(super) fn execute_direct_cargo_probe(
         .native_toolchain
         .as_ref()
         .map_err(|error| probe_io_failure(error.clone()))?;
-    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache)
+    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source)
         .map_err(probe_io_failure)?;
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
     validate_probe_sqlx_offline_metadata(probe, backend_root)?;
@@ -187,6 +184,13 @@ pub(super) fn execute_direct_cargo_probe(
         .assert_unchanged()
         .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics));
     unchanged?;
+    let current_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source)
+        .map_err(probe_io_failure)?;
+    if current_key != cache_key {
+        return Err(probe_io_failure(
+            "Rust probe inputs changed while Cargo was running".to_string(),
+        ));
+    }
     if output.status.success() {
         mark_probe_cache_hit(&cache_file);
         return Ok(());

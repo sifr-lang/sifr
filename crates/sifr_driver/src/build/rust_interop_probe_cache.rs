@@ -1,40 +1,16 @@
 use super::rust_interop_digest::{
-    digest_lock_file_checked, digest_path, nearest_lock_digest_checked,
+    digest_lock_file_checked, digest_path_checked, nearest_lock_digest_checked,
 };
 use super::rust_interop_probe::PendingRustBridgeProbe;
 use super::rust_interop_probe_paths::normalize_cargo_target_dir;
 use super::rust_interop_sqlx_offline::sqlx_offline_metadata_digest;
 use super::workspace::artifact_cache_root;
 use sifr_identity::IdentityEncoder;
-use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
 use std::{env, fs};
 
 const RUST_BRIDGE_PROBE_CACHE_DIR: &str = "rust_bridge_probes";
-
-#[derive(Default)]
-pub(super) struct ProbeCacheKeyCache {
-    sqlx_metadata_by_backend_root: BTreeMap<PathBuf, Result<Option<String>, String>>,
-}
-
-impl ProbeCacheKeyCache {
-    fn sqlx_metadata_digest(&mut self, backend_root: &Path) -> Result<Option<String>, String> {
-        self.sqlx_metadata_digest_with(backend_root, sqlx_offline_metadata_digest)
-    }
-
-    fn sqlx_metadata_digest_with(
-        &mut self,
-        backend_root: &Path,
-        inspect: impl FnOnce(&Path) -> Result<Option<String>, String>,
-    ) -> Result<Option<String>, String> {
-        self.sqlx_metadata_by_backend_root
-            .entry(backend_root.to_path_buf())
-            .or_insert_with(|| inspect(backend_root))
-            .clone()
-    }
-}
 
 pub(super) fn probe_cache_file(cache_key: &str, invocation_cwd: &Path) -> PathBuf {
     probe_cache_file_with_env(
@@ -83,9 +59,10 @@ pub(super) fn probe_cache_key(
     backend_root: &Path,
     probe_manifest: &str,
     probe_source: &str,
-    cache: &mut ProbeCacheKeyCache,
 ) -> Result<String, String> {
-    let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v3");
+    let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v4");
+    let (backend_tree, runtime_tree) =
+        probe_tree_input_digests(backend_root, &probe.sysroot_runtime_crate)?;
     let nearest_lock = nearest_lock_digest(backend_root)?;
     let vendor_identity = optional_vendor_identity(
         probe
@@ -106,12 +83,9 @@ pub(super) fn probe_cache_key(
         ("target-path", &probe.path.dotted()),
         ("manifest", probe_manifest),
         ("source", probe_source),
-        ("backend-tree", &cached_digest_path(backend_root)),
+        ("backend-tree", &backend_tree),
         ("nearest-lock", &nearest_lock),
-        (
-            "sysroot-runtime-tree",
-            &cached_digest_path(&probe.sysroot_runtime_crate),
-        ),
+        ("sysroot-runtime-tree", &runtime_tree),
         ("vendor", &vendor_identity),
     ] {
         input.field(name, value.as_bytes());
@@ -167,7 +141,7 @@ pub(super) fn probe_cache_key(
     if let Some(seed) = seed {
         input.field("seed", seed.as_bytes());
     }
-    let metadata = cache.sqlx_metadata_digest(backend_root)?;
+    let metadata = sqlx_offline_metadata_digest(backend_root)?;
     input.field("sqlx-present", &[u8::from(metadata.is_some())]);
     if let Some(metadata) = metadata {
         input.field("sqlx", metadata.as_bytes());
@@ -175,18 +149,23 @@ pub(super) fn probe_cache_key(
     Ok(input.finish())
 }
 
-fn cached_digest_path(path: &Path) -> String {
-    static DIGESTS: OnceLock<Mutex<BTreeMap<PathBuf, String>>> = OnceLock::new();
-    let cache = DIGESTS.get_or_init(|| Mutex::new(BTreeMap::new()));
-    if let Ok(mut digests) = cache.lock() {
-        if let Some(digest) = digests.get(path) {
-            return digest.clone();
-        }
-        let digest = digest_path(path);
-        digests.insert(path.to_path_buf(), digest.clone());
-        return digest;
-    }
-    digest_path(path)
+fn probe_tree_input_digests(
+    backend_root: &Path,
+    runtime_root: &Path,
+) -> Result<(String, String), String> {
+    let backend_tree = digest_path_checked(backend_root).map_err(|error| {
+        format!(
+            "unreadable Rust probe backend tree '{}': {error}",
+            backend_root.display()
+        )
+    })?;
+    let runtime_tree = digest_path_checked(runtime_root).map_err(|error| {
+        format!(
+            "unreadable Rust probe runtime tree '{}': {error}",
+            runtime_root.display()
+        )
+    })?;
+    Ok((backend_tree, runtime_tree))
 }
 
 fn optional_vendor_identity(vendor_dir: Option<&Path>) -> Result<String, String> {
@@ -217,50 +196,31 @@ fn nearest_lock_digest(path: &Path) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        ProbeCacheKeyCache, RUST_BRIDGE_PROBE_CACHE_DIR, artifact_cache_root,
-        probe_cache_file_with_env, probe_cache_root,
+        RUST_BRIDGE_PROBE_CACHE_DIR, artifact_cache_root, probe_cache_file_with_env,
+        probe_cache_root, probe_tree_input_digests,
     };
     use std::ffi::OsString;
+    use std::fs;
     use std::path::{Path, PathBuf};
 
     #[test]
-    fn probe_cache_key_cache_inspects_each_backend_sqlx_identity_once() {
-        let mut cache = ProbeCacheKeyCache::default();
-        let clean_root = Path::new("/backend/clean");
-        let sqlx_root = Path::new("/backend/sqlx");
-        let mut clean_inspections = 0;
-        let mut sqlx_inspections = 0;
-
-        assert_eq!(
-            cache.sqlx_metadata_digest_with(clean_root, |_| {
-                clean_inspections += 1;
-                Ok(None)
-            }),
-            Ok(None)
-        );
-        assert_eq!(
-            cache.sqlx_metadata_digest_with(clean_root, |_| {
-                clean_inspections += 1;
-                Ok(Some("changed".to_string()))
-            }),
-            Ok(None)
-        );
-        assert_eq!(
-            cache.sqlx_metadata_digest_with(sqlx_root, |_| {
-                sqlx_inspections += 1;
-                Ok(Some("sqlx-digest".to_string()))
-            }),
-            Ok(Some("sqlx-digest".to_string()))
-        );
-        assert_eq!(
-            cache.sqlx_metadata_digest_with(sqlx_root, |_| {
-                sqlx_inspections += 1;
-                Ok(None)
-            }),
-            Ok(Some("sqlx-digest".to_string()))
-        );
-        assert_eq!(clean_inspections, 1);
-        assert_eq!(sqlx_inspections, 1);
+    fn probe_tree_digests_refresh_after_edits_in_one_process() {
+        let root = tempfile::tempdir().unwrap();
+        let backend = root.path().join("backend");
+        let runtime = root.path().join("runtime");
+        fs::create_dir(&backend).unwrap();
+        fs::create_dir(&runtime).unwrap();
+        fs::write(backend.join("Cargo.toml"), b"first").unwrap();
+        fs::write(runtime.join("lib.rs"), b"first").unwrap();
+        let first = probe_tree_input_digests(&backend, &runtime).unwrap();
+        fs::write(backend.join("Cargo.toml"), b"second").unwrap();
+        let second = probe_tree_input_digests(&backend, &runtime).unwrap();
+        assert_ne!(first.0, second.0);
+        assert_eq!(first.1, second.1);
+        fs::write(runtime.join("lib.rs"), b"second").unwrap();
+        let third = probe_tree_input_digests(&backend, &runtime).unwrap();
+        assert_eq!(second.0, third.0);
+        assert_ne!(second.1, third.1);
     }
 
     #[test]
