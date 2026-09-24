@@ -134,6 +134,34 @@ jobs:
           cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project -- --exact
       - name: Run native compiler component qualification
         run: cargo test --locked -p sifr_compiler_component --target "${{ matrix.target }}"
+      - name: Run coupled Windows driver storage and process contracts
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          $cases = @(
+            "cache_storage::tests::windows_portability_private_acl_alias_and_lock_identity",
+            "cache_storage::tests::windows_portability_extended_cache_path_publication",
+            "cache_storage::tests::windows_portability_pressure_prune_protects_leases_and_winners",
+            "process_execution::tests::windows_portability_timeout_partial_output_and_descendant_cleanup",
+            "process_execution::tests::windows_portability_direct_exit_descendant_pipe_cleanup",
+            "process_execution::tests::windows_portability_cancellation_and_scoped_concurrency",
+            "process_execution::tests::windows_portability_bounded_capture_and_normal_streaming",
+            "project_cache::tests::process_death_and_new_process_restore",
+            "project_cache::tests::windows_portability_concurrent_writer_gc_abandoned_stage_and_winner",
+            "project_cache::tests::windows_portability_workspace_identity_alias_and_orphan_prune",
+            "build::workspace::tests::windows_portability_intact_concurrent_winner_is_adopted",
+            "build::materialize::tests::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner",
+            "project_cache::tests::dx13_c04_full_storage_preserves_source_outcome",
+            "project_cache::tests::dx13_c09_concurrent_process_reader_and_gc",
+            "project_cache::tests::dx13_c09_corrupt_schema_references_and_winners",
+            "metadata_producer::tests::windows_portability_metadata_staged_failure_and_output_acl",
+            "metadata_producer::tests::failure_recovery_stale_override_and_missing_entry",
+            "metadata_producer::tests::threads_share_one_success_and_execute_independent_assertions"
+          )
+          foreach ($case in $cases) {
+            cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" "$case" -- --exact
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - name: Run native SQL build qualification
         run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target "${{ matrix.target }}"
 

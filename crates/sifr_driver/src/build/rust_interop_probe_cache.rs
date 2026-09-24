@@ -55,20 +55,26 @@ fn probe_cache_file_with_env(
 
 pub(super) fn mark_probe_cache_hit(path: &Path) {
     use std::io::Write;
-    use std::os::unix::fs::OpenOptionsExt;
     let Some(parent) = path.parent() else { return };
     if crate::cache_storage::directory(parent).is_err() {
         return;
     }
-    if let Ok(mut file) = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .mode(0o600)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)
-    {
-        let _ = file.write_all(b"ok\n");
+    let stage = parent.join(format!(
+        ".probe-stage-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    ));
+    let result = (|| -> std::io::Result<()> {
+        let mut file = crate::cache_storage::new_private_file(&stage)?;
+        file.write_all(b"ok\n")?;
+        file.sync_all()?;
+        crate::cache_storage::publish(&stage, path)
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(stage);
     }
 }
 

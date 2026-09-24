@@ -442,6 +442,7 @@ fn dx14_reconfiguration_deletion_and_unknown_effect_scope() {
     }
 }
 
+#[cfg(unix)]
 #[test]
 fn dx14_restored_interface_reports_unavailable_publication() {
     use std::os::unix::fs::PermissionsExt;
