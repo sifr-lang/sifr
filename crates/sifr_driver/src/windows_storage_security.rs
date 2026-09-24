@@ -37,7 +37,18 @@ pub(crate) fn wide(path: &OsStr) -> Vec<u16> {
 /// Raw Win32 file APIs need the extended-length form for deep cache keys.
 /// Callers validate components before passing paths to these APIs.
 fn wide_path(path: &Path) -> Vec<u16> {
-    let units: Vec<u16> = path.as_os_str().encode_wide().collect();
+    // Verbatim Win32 paths do not translate forward slashes to separators.
+    let units: Vec<u16> = path
+        .as_os_str()
+        .encode_wide()
+        .map(|unit| {
+            if unit == u16::from(b'/') {
+                u16::from(b'\\')
+            } else {
+                unit
+            }
+        })
+        .collect();
     let mut result: Vec<u16> = if !path.is_absolute() || units.starts_with(&[92, 92, 63, 92]) {
         Vec::new()
     } else if units.starts_with(&[92, 92]) {
