@@ -1,6 +1,6 @@
 # Windows driver portability blocks native SQL CI qualification
 
-Status: open; Windows native tool prerequisite merged; W1+W2 draft needs final candidate validation and review; W3 unqualified
+Status: open; coupled W1+W2 and editable-root policy merged; W3 native SQL qualification blocked by vendored PostgreSQL C/MSVC headers
 Owner: driver storage/process execution and Windows platform support
 Related: [DX9-F6](ad-hoc-native-cargo-reuse-followups.md)
 
@@ -366,3 +366,90 @@ readiness passed all four cases, including `verification_taxonomy`;
 `check_file_size_guardrails.py` and `git diff --check` also passed. This
 supplies no W1/W2 native acceptance or W3 SQL qualification. Draft PR #3993
 and its owner remain responsible for those separate outcomes.
+
+## 2026-09-24 coupled W1+W2 and editable-root policy merged
+
+[PR #3993](https://github.com/sifr-lang/sifr/pull/3993) merged the coupled
+Windows driver storage/process implementation and bounded cache-owned
+editable-root successor. Its final implementation candidate was
+`3b2a9e9b1c79d443294990be6d757b672e999859` on base
+`14f45d7671adf3cc613b41224aeef9720d9a9d81`; main merge SHA is
+`1bf02cfe7c9128f4d89b79e98d3f9d017744d5e8`. The
+[final Windows job 107539790805](https://github.com/sifr-lang/sifr/actions/runs/35970790045/job/107539790805)
+checked out merge ref `7fd08c8960ed8dd50cbdf6282af78537207437cf`,
+whose tree `7170288e2dab2cb24376ed0935e4e594c0ca1f2b` equals the
+candidate tree. The later main change before merge was unrelated SQL issue
+documentation and did not change the validated implementation or inputs.
+
+That exact Windows tree passed the native executable resolver case (1/1),
+generated formatter/build-script cases (3/3), unchanged compiler-component
+cases (16/16), and all 18 fail-fast coupled W1/W2 storage/process cases.
+The latter include malicious aliases, private ACL and owner checks, long paths,
+lease and abandoned-stage pruning, concurrent writer/reader/GC and winner
+adoption, metadata staged failure, process timeout/cancellation/descendant
+cleanup/streaming, and the nested editable-root acceptance case. The nested
+case asserts Administrators `TokenOwner`, materializes a nested module twice,
+removes stale source, and runs the test runner twice. On the same implementation
+candidate, 26 exact affected Unix driver process, storage, workspace,
+project-cache, metadata, SQLx-marker, materialize and test-runner cases passed,
+including the nested child-process case with umask `0o002`; eight Unix
+`sifr_sysroot` native-context cases passed. Formatting, workflow admission,
+diff, file-size, HIR and driver maintainability checks passed. The raw Windows
+log, Unix selection receipt and native-context log are preserved outside Git
+under
+`/home/yaser5/projects/sifr/windows-w12-editable-root-evidence/3b2a9e9b1c79d443294990be6d757b672e999859/`.
+
+Fresh scoped Opus review of the exact candidate returned **SATISFIED** with
+no blocking findings. Its response is preserved outside Git at
+`/home/yaser5/projects/sifr/windows-w12-editable-root-evidence/3b2a9e9b1c79d443294990be6d757b672e999859/reviews/opus-review.md`.
+It explicitly verified that nested generated directories use the private cache
+creator on both platforms, that stale cleanup checks the same policy, and that
+caller-owned output retains ambient permissions and alias rejection. The
+review's nonblocking older-cache compatibility and prior diagnostic/durability
+suggestions remain deferred; no backward-compatibility path was added.
+
+The same Windows job then **failed** the separately owned W3 native SQL build
+while compiling vendored PostgreSQL C under MSVC: `unistd.h`, `dirent.h` and
+`sys/time.h` were unavailable. This is the same previously recorded SQL Item 4
+blocker. W3 clean/incremental/locked/offline/reproducible qualification remains
+open; merging W1+W2 does not claim it. The automatic create-PR
+performance-reference setup remains outside this intermediate item's approved
+named-test gate. Earlier failed and validation-only Windows jobs and prior
+NOT SATISFIED review remain historical evidence.
+
+## 2026-09-24 post-merge fixture taxonomy repair
+
+The first post-merge `coverage_matrix:readiness` run on main
+`1bf02cfe7c9128f4d89b79e98d3f9d017744d5e8` passed three cases
+but failed `verification_taxonomy` on three delivery-label strings in the
+new W1/W2 tests: `w1-winner`, `SIFR_W12_NESTED_CHILD` and
+`sifr-w12-nested`. That failure is preserved; it was an in-scope fixture
+naming issue, not a storage or process behavior failure.
+
+[Repair PR #4004](https://github.com/sifr-lang/sifr/pull/4004) changed only
+those three fixture identifiers to feature names. Candidate
+`6df76df2ca4d23680ba6c3b13f51e7d94356e8e1` on base
+`1bf02cfe7c9128f4d89b79e98d3f9d017744d5e8` merged as
+`6f734a7b0609247d64c2d879933f111b876116e2`.
+Canonical pinned-uv `coverage_matrix:readiness` then passed all four
+cases, including taxonomy. The exact repair checkout passed the Unix
+nested materialization/stale-cleanup/two-runner case. Its
+[Windows job 107556172459](https://github.com/sifr-lang/sifr/actions/runs/35975897080/job/107556172459)
+checked out merge ref `71327134ac4af050f2e707ef4f774e0a1364d3d2`,
+whose tree `d1f810b789a773b337cb2022d63afe3cfb359ecd` equals the
+candidate tree. Native executable selection, formatter/build-script cases,
+all 16 compiler-component cases and the complete 18-case W1/W2 selection
+passed again, including the renamed concurrent winner and nested fixtures.
+Formatting, diff, file-size and HIR/driver maintainability checks passed.
+Fresh scoped Opus review of the exact repair returned **SATISFIED** with no
+blocking or follow-up findings. Raw Unix and readiness logs and the review
+response are preserved outside Git at
+`/home/yaser5/projects/sifr/windows-w12-editable-root-evidence/record-repair/`.
+An initial exact-checkout Unix attempt stopped before compilation because
+submodules had not been initialized; its failed log remains alongside the
+passing rerun. This repair changes no product behavior.
+
+The same Windows job then failed its separately owned W3 SQL build in the vendored PostgreSQL C/MSVC sources
+with missing `unistd.h`, `dirent.h` and `sys/time.h`. The raw log is preserved
+as `windows-job-107556172459.log` in the repair evidence directory. W3
+qualification remains open.

@@ -2008,21 +2008,20 @@ ownership is scoped to live operations, and staged payload permissions are
 sealed before publication independently of the user's umask.
 These DX.3 primitives do not implement semantic project generations.
 
-The active Windows driver portability issue tracks native acceptance.
-The real `sifr_driver` crate includes its storage and process modules
-unconditionally, so native Windows acceptance requires one coupled storage
-and process implementation candidate preserving both safety contracts.
-Integrated qualification then runs the native SQL build and unchanged
-compiler-component tests. Merged PR #3980 records a failed storage-only
-dependency, not a Windows pass.
+On Windows, the driver storage owner uses private current-user ACLs, owner
+stamping, handle-based file identity and reparse checks, inherited leases, and
+atomic staged publication. The process owner uses scoped console-signal
+registration and job objects to terminate owned descendants on cancellation
+or deadline while preserving bounded capture and normal program streaming.
+These storage and process modules compile together in the real `sifr_driver`
+crate. Native compiler-component and driver-contract acceptance remains
+separate from integrated native SQL build qualification.
 
-Generated editable subdirectories inside Sifr-owned cache trees must satisfy
-the same private owner, permission and no-reparse contract as their parent,
-independent of the ambient Unix umask or Windows token default owner.
-Caller-owned output roots retain their ambient ACL policy while rejecting
-aliases; generated-directory creation and stale cleanup must honor the same
-boundary. The active issue records the unmerged candidate and nested-directory
-repair.
+Generated editable subdirectories inside Sifr-owned cache trees use the same
+private owner, permission and no-reparse contract as their parent, independent
+of the ambient Unix umask or Windows token default owner. Caller-owned output
+roots retain their ambient ACL policy while rejecting aliases;
+generated-directory creation and stale cleanup honor the same boundary.
 
 DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
@@ -2082,6 +2081,7 @@ requests no longer treat cached output existence as native freshness. Python
 startup verifies the selected shared library, and Python source exports declare
 their external-runtime deployment paths. See
 [Compiler DX sections 8.2–8.6](compiler_dx_architecture.md#82-compatible-native-storage).
+
 The DX.10 application policy selects development for ordinary `sifr build` and
 `sifr run`, development-derived test for `sifr test`, and explicit release via
 `--release`. Compiler optimization is independent. Generated Cargo roots carry
