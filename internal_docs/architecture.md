@@ -2008,14 +2008,13 @@ ownership is scoped to live operations, and staged payload permissions are
 sealed before publication independently of the user's umask.
 These DX.3 primitives do not implement semantic project generations.
 
-Windows driver portability is tracked in the
-[active W1/W2/W3 issue](../plans/issues/active/ad-hoc-windows-driver-portability.md).
+The active Windows driver portability issue tracks native acceptance.
 The real `sifr_driver` crate includes its storage and process modules
-unconditionally, so native Windows acceptance requires one coupled W1+W2
-implementation candidate preserving both safety contracts. W3 separately
-qualifies the integrated native SQL build and unchanged compiler-component
-tests; the merged W1-only blocker record #3980 is failed dependency evidence,
-not a Windows pass.
+unconditionally, so native Windows acceptance requires one coupled storage
+and process implementation candidate preserving both safety contracts.
+Integrated qualification then runs the native SQL build and unchanged
+compiler-component tests. Merged PR #3980 records a failed storage-only
+dependency, not a Windows pass.
 
 Generated editable subdirectories inside Sifr-owned cache trees must satisfy
 the same private owner, permission and no-reparse contract as their parent,
@@ -2023,7 +2022,7 @@ independent of the ambient Unix umask or Windows token default owner.
 Caller-owned output roots retain their ambient ACL policy while rejecting
 aliases; generated-directory creation and stale cleanup must honor the same
 boundary. The active issue records the unmerged candidate and nested-directory
-follow-up.
+repair.
 
 DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
