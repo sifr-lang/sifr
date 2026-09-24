@@ -118,6 +118,7 @@ jobs:
         run: |
           $cases = @(
             "cache_storage::tests::windows_portability_private_acl_alias_and_lock_identity",
+            "cache_storage::tests::windows_portability_extended_cache_path_publication",
             "cache_storage::tests::windows_portability_pressure_prune_protects_leases_and_winners",
             "process_execution::tests::windows_portability_timeout_partial_output_and_descendant_cleanup",
             "process_execution::tests::windows_portability_direct_exit_descendant_pipe_cleanup",
