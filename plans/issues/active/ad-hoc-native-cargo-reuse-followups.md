@@ -13,7 +13,7 @@ No implementation belongs to the phase-record update.
 | DX9-F2 | Driver native capture | Remove the redundant caller-style mirror from the cached build flow, or key it by root identity. The existing family lease prevents concurrent aliasing and finalized capture uses the Cargo artifact directly. |
 | DX9-F3 | Test orchestration | Canonicalize test cache scopes and reconcile native family inputs with the test runner's actual environment/resolution contract. Current non-Python test behavior is not an omission requiring new Python test support. |
 | DX9-F4 | Native capture / Python runtime | Measure whole-file identity/copy and interpreter-library hashing cost; investigate streaming or mapped reads while preserving byte-content validation. Metadata-only freshness must not replace that guarantee. |
-| DX9-F5 | DX.3 storage owner | Define a bounded lease wait and useful ownership diagnostic for wedged sibling processes, consistently across existing storage primitives. |
+| DX9-F5 | DX.3 storage owner; closed in [PR #4012](https://github.com/sifr-lang/sifr/pull/4012) with [N06/F13-F14](ad-hoc-architecture-correctness-current-main.md#n06f13-f14-and-dx9-f5-generated-storage-delivery-receipt-2026-09-24). | Cancellable bounded waits, renewing owner diagnostics and wedged sibling/live-child tests are delivered. |
 | DX9-F6 | Platform support | Handle Windows storage, DLL capture and Python loader qualification together if Windows support is explicitly scoped; the current driver storage is already Unix-only. |
 
 Existing metadata and feature-enabled Python Clippy errors remain owned by
