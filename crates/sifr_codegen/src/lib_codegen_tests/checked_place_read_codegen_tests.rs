@@ -278,10 +278,12 @@ def dict_value(mut mapping: dict[str, int], key: str) -> int:
         generated
             .matches(".unwrap_or(__sifr_checked_value_")
             .count()
-            >= 2,
+            == 1,
         "{generated}"
     );
-    assert!(generated.matches("mapping.get(key)").count() >= 2);
+    assert_eq!(generated.matches("mapping.get(key)").count(), 1);
+    assert_eq!(generated.matches(".insert_entry(").count(), 1);
+    assert_eq!(generated.matches(".into_mut()").count(), 1);
     assert!(
         generated
             .matches("__sifr_checked_read_collection.get(")
@@ -321,9 +323,11 @@ def dict_value(mut mapping: dict[str, int], key: str) -> int:
         generated
             .matches(".unwrap_or(__sifr_checked_value_")
             .count()
-            >= 2
+            == 1
     );
-    assert!(generated.matches("mapping.get(key)").count() >= 2);
+    assert_eq!(generated.matches("mapping.get(key)").count(), 1);
+    assert_eq!(generated.matches(".insert_entry(").count(), 1);
+    assert_eq!(generated.matches(".into_mut()").count(), 1);
     assert!(!generated.contains("mapping["), "{generated}");
     assert!(!generated.contains("values["), "{generated}");
     assert!(!generated.contains("compile_error!"), "{generated}");
@@ -612,4 +616,252 @@ def revisit_pairs(mut values: list[tuple[int, int]]):
                 .contains("let Some(__sifr_checked_value_"),
         "optional reads must not produce unused loop refresh bindings: {generated}"
     );
+}
+
+#[test]
+fn dictionary_insertion_produces_a_checked_read_witness() {
+    let generated = generate_rust_from_source(
+        r#"
+def inserted(mut values: dict[int, bool], index: int) -> bool:
+    values[index] = True
+    return values[index]
+"#,
+    );
+    assert!(generated.contains(".insert_entry("), "{generated}");
+    assert!(generated.contains(".into_mut()"), "{generated}");
+    assert!(!generated.contains("return values.get("), "{generated}");
+    assert!(!generated.contains(".unwrap()"), "{generated}");
+}
+
+#[test]
+fn range_guards_do_not_hoist_conditionally_bounded_offsets() {
+    let generated = generate_rust_from_source(
+        r#"
+def adjacent(text: str) -> int:
+    values = {"I": 1}
+    total = 0
+    for index in range(len(text)):
+        current = values.get(text[index], default=0)
+        following = values.get(text[index + 1], default=0) if index + 1 < len(text) else 0
+        total += current + following
+    return total
+"#,
+    );
+    assert_eq!(
+        generated.matches("else {\n            continue;").count(),
+        1,
+        "{generated}"
+    );
+    assert!(generated.contains(".map_or_else("), "{generated}");
+}
+
+#[test]
+fn repeated_string_loop_targets_have_separate_cache_initializers() {
+    let generated = generate_rust_from_source(
+        r#"
+def sizes(values: list[str]) -> int:
+    total = 0
+    for text in values:
+        total += len(text) + len(text)
+    for text in values:
+        total += len(text) + len(text)
+    return total
+"#,
+    );
+    assert_eq!(
+        generated.matches("let __sifr_chars_text:").count(),
+        2,
+        "{generated}"
+    );
+}
+
+#[test]
+fn insertion_with_prior_witnesses_parenthesizes_owned_entry_projection() {
+    let generated = generate_rust_from_source(
+        r#"
+def inserted(mut values: dict[str, int]) -> int:
+    if "old" not in values:
+        return 0
+    values["new"] = 2
+    return values["old"] + values["new"]
+"#,
+    );
+    assert!(generated.contains(".into_mut()).clone()"), "{generated}");
+    assert!(!generated.contains(".into_mut().clone()"), "{generated}");
+}
+
+#[test]
+fn display_bodies_build_their_own_checked_read_analysis() {
+    let generated = generate_rust_from_source(
+        r#"
+class Label:
+    marker: int
+    def __init__(self):
+        self.marker = 1
+    def __str__(self) -> str:
+        values = {"old": "prior"}
+        values["new"] = "new"
+        assert len(values) == 2
+        return values["new"]
+
+def main():
+    assert str(Label()) == "new"
+"#,
+    );
+    assert!(generated.contains(".insert_entry("), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert!(generated.contains("write!(f"), "{generated}");
+}
+
+#[test]
+fn copy_insertion_witness_is_materialized_without_clone() {
+    let generated = generate_rust_from_source(
+        r#"
+def inserted(mut values: dict[int, bool], index: int) -> bool:
+    values[index] = True
+    assert len(values) == 1
+    return values[index]
+"#,
+    );
+    assert!(generated.contains(".insert_entry("), "{generated}");
+    assert!(!generated.contains(").clone()"), "{generated}");
+}
+
+#[test]
+fn constant_none_comparison_discards_only_local_place_reads() {
+    let generated = generate_rust_from_source(
+        r#"
+def pure(value: str) -> bool:
+    return value is None
+
+def effect() -> str:
+    print("called")
+    return "value"
+
+def computed() -> bool:
+    return effect() is None
+"#,
+    );
+    assert!(!generated.contains("let _ = &value"), "{generated}");
+    assert!(generated.contains("effect()"), "{generated}");
+    assert!(generated.contains("let _ = &effect()"), "{generated}");
+}
+
+#[test]
+fn nonempty_exit_guard_preserves_declared_endpoint_aliases() {
+    let generated = generate_rust_from_source(
+        r#"
+def endpoints(values: list[int]) -> int:
+    if not values:
+        return 0
+    left, right = 0, len(values) - 1
+    first, last = values[left], values[right]
+    return first + last
+"#,
+    );
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert_eq!(generated.matches("let Some(").count(), 2, "{generated}");
+    assert!(!generated.contains(".unwrap()"), "{generated}");
+}
+
+#[test]
+fn narrowed_integer_assignments_preserve_reused_payload_ownership() {
+    let generated = generate_rust_from_source(
+        r#"
+def copies(values: list[int]) -> int:
+    left = 0
+    right = 0
+    first: int | None = values[0]
+    if first is not None:
+        left = first
+        right = first
+    return left + right
+"#,
+    );
+    assert!(generated.contains("left = first.clone()"), "{generated}");
+    assert!(generated.contains("right = first;"), "{generated}");
+}
+
+#[test]
+fn indexed_list_length_keeps_the_optional_read_boundary() {
+    let generated = generate_rust_from_source(
+        r#"
+def first_row_length(rows: list[list[int]]) -> int:
+    row_count: int = len(rows)
+    if row_count == 0:
+        return 0
+    return len(rows[0])
+"#,
+    );
+    assert!(
+        generated.contains(".as_ref().map_or(0_usize, ::std::vec::Vec::len)"),
+        "{generated}"
+    );
+    assert!(!generated.contains(".cloned().len()"), "{generated}");
+}
+
+#[test]
+fn checked_indexed_list_length_uses_the_unwrapped_row() {
+    let generated = generate_rust_from_source(
+        r#"
+def first_row_length(rows: list[list[str]]) -> Result[int, Error]:
+    try:
+        if len(rows) == 0 or len(rows[0]) == 0:
+            return 0
+        return len(rows[0])
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(generated.contains("__sifr_checked_value_"), "{generated}");
+    assert!(
+        !generated.contains(".as_ref().map_or(0_usize, ::std::vec::Vec::len)"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn guarded_list_tuple_fields_keep_the_optional_read_boundary_in_nested_while() {
+    let generated = generate_rust_from_source(
+        r#"
+def nz(value: int | None) -> int:
+    if value is None:
+        return -1
+    return value
+
+def fields(rows: list[tuple[int, int]], start: int) -> list[int]:
+    result: list[int] = []
+    if len(rows) == 0:
+        return result
+    result.append(nz(rows[start][0]))
+    i = 0
+    while i < len(rows):
+        while i < len(rows) and nz(rows[i][0]) < 4:
+            result.append(nz(rows[i][1]))
+            i += 1
+        i += 1
+    result.append(nz(rows[len(rows)][0]))
+    return result
+"#,
+    );
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert!(generated.contains(".map(|__sifr_tuple|"), "{generated}");
+    assert!(generated.contains(" && "), "{generated}");
+    assert!(!generated.contains(".cloned().0"), "{generated}");
+}
+
+#[test]
+fn optional_tuple_field_flattens_the_missing_row_and_missing_field() {
+    let generated = generate_rust_from_source(
+        r#"
+def read(rows: list[tuple[int | None, int]], i: int) -> int | None:
+    return rows[i][0]
+"#,
+    );
+    assert!(
+        generated.contains(".as_ref().and_then(|__v|"),
+        "{generated}"
+    );
+    assert!(!generated.contains(".as_ref().map(|__v|"), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
 }

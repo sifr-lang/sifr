@@ -20,7 +20,7 @@ pub(super) fn prune_item_members(
                     })
                     .collect();
             }
-            syn::Item::Trait(trait_) => {
+            syn::Item::Trait(trait_) if trait_methods.contains_key(&trait_.ident.to_string()) => {
                 let methods = trait_.items.iter().filter_map(|item| match item {
                     syn::TraitItem::Fn(method) => Some(method.sig.ident.to_string()),
                     _ => None,

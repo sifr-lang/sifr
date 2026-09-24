@@ -12,6 +12,7 @@ pub(super) fn prune(file: &mut syn::File) {
     }
     let mut demand = Demand {
         definitions: &definitions.methods,
+        standard_operator_shadowed: definitions.standard_operator_shadowed,
         methods: HashSet::new(),
     };
     loop {
@@ -31,14 +32,38 @@ pub(super) fn prune(file: &mut syn::File) {
 #[derive(Default)]
 struct Definitions {
     methods: HashMap<String, HashSet<String>>,
+    standard_operator_shadowed: bool,
+}
+
+pub(super) fn is_opaque_extension_trait(name: &str) -> bool {
+    (name.starts_with("__SifrOpaque") || name.starts_with("SifrGeneratedOpaque"))
+        && name.ends_with("Methods")
 }
 
 impl<'ast> Visit<'ast> for Definitions {
+    fn visit_item_extern_crate(&mut self, item: &'ast syn::ItemExternCrate) {
+        let name = item.rename.as_ref().map_or(&item.ident, |(_, name)| name);
+        self.standard_operator_shadowed |= matches!(name.to_string().as_str(), "std" | "core");
+    }
+    fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
+        fn shadows(tree: &syn::UseTree) -> bool {
+            match tree {
+                syn::UseTree::Path(path) => shadows(&path.tree),
+                syn::UseTree::Name(name) => {
+                    matches!(name.ident.to_string().as_str(), "std" | "core")
+                }
+                syn::UseTree::Rename(name) => {
+                    matches!(name.rename.to_string().as_str(), "std" | "core")
+                }
+                syn::UseTree::Group(group) => group.items.iter().any(shadows),
+                syn::UseTree::Glob(_) => true,
+            }
+        }
+        self.standard_operator_shadowed |= shadows(&item.tree);
+    }
     fn visit_item_trait(&mut self, item: &'ast syn::ItemTrait) {
         let name = item.ident.to_string();
-        if (name.starts_with("__SifrOpaque") || name.starts_with("SifrGeneratedOpaque"))
-            && name.ends_with("Methods")
-        {
+        if is_opaque_extension_trait(&name) {
             self.methods.insert(
                 name,
                 item.items
@@ -55,6 +80,7 @@ impl<'ast> Visit<'ast> for Definitions {
 
 struct Demand<'a> {
     definitions: &'a HashMap<String, HashSet<String>>,
+    standard_operator_shadowed: bool,
     methods: HashSet<String>,
 }
 
@@ -139,8 +165,41 @@ impl<'ast> Visit<'ast> for Demand<'_> {
             .iter()
             .map(|segment| segment.ident.to_string())
             .collect::<Vec<_>>();
+        // An exact standard operator trait is not a receiver-type UFCS call
+        // into one of the generated opaque extension traits.
+        let standard_operator = !self.standard_operator_shadowed
+            && expression.path.leading_colon.is_some()
+            && parts.len() == 4
+            && matches!(parts[0].as_str(), "std" | "core")
+            && parts[1] == "ops"
+            && matches!(
+                parts[2].as_str(),
+                "Add"
+                    | "Sub"
+                    | "Mul"
+                    | "Div"
+                    | "Rem"
+                    | "Neg"
+                    | "Not"
+                    | "BitAnd"
+                    | "BitOr"
+                    | "BitXor"
+                    | "Shl"
+                    | "Shr"
+                    | "AddAssign"
+                    | "SubAssign"
+                    | "MulAssign"
+                    | "DivAssign"
+                    | "RemAssign"
+                    | "BitAndAssign"
+                    | "BitOrAssign"
+                    | "BitXorAssign"
+                    | "ShlAssign"
+                    | "ShrAssign"
+            );
         // UFCS may name the receiver type rather than the extension trait.
-        if (parts.len() >= 2 || expression.qself.is_some())
+        if !standard_operator
+            && (parts.len() >= 2 || expression.qself.is_some())
             && let Some(method) = parts.last()
             && self
                 .definitions
@@ -187,4 +246,21 @@ fn implementation_owner(item: &syn::ItemImpl) -> Option<String> {
         .segments
         .last()
         .map(|segment| segment.ident.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn shadowed_standard_namespace_keeps_opaque_ufcs_demand() {
+        let mut file = syn::parse_file(
+            r#"
+            extern crate unknown as std;
+            trait SifrGeneratedOpaqueExampleMethods { fn sub(&self); }
+            fn run() { ::std::ops::Sub::sub(); }
+        "#,
+        )
+        .expect("test syntax");
+        super::prune(&mut file);
+        assert!(quote::quote!(#file).to_string().contains("fn sub"));
+    }
 }

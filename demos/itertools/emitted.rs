@@ -100,7 +100,7 @@ mod sifr_generated_generated_support {
     }
     impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {
         fn sifr_generated_add(self, rhs: Self) -> Self {
-            self + rhs
+            ::std::ops::Add::add(self, rhs)
         }
     }
     #[must_use]
@@ -108,8 +108,16 @@ mod sifr_generated_generated_support {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-                for iterable in iterables.iter().cloned() {
-                    for item in iterable.iter().cloned() {
+                #[expect(
+                    clippy::explicit_iter_loop,
+                    reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                )]
+                for iterable in iterables.iter() {
+                    #[expect(
+                        clippy::explicit_iter_loop,
+                        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                    )]
+                    for item in iterable.iter() {
                         sifr_generated_yielder.suspend(item.clone()).await;
                     }
                 }
@@ -121,7 +129,7 @@ mod sifr_generated_generated_support {
         let mut result: Vec<Vec<T>> = Vec::new();
         let mut prev_values: Vec<T> = Vec::new();
         for value in data.iter().cloned() {
-            if &SifrInt::from(prev_values.len()) > &SifrInt::from_i64(0) {
+            if prev_values.len() > SifrInt::from_i64(0) {
                 let mut pair: Vec<T> = Vec::new();
                 let prev: Option<T> = {
                     let sifr_generated_checked_read_collection = &prev_values;
@@ -138,7 +146,7 @@ mod sifr_generated_generated_support {
                 pair.push(value.clone());
                 result.push(pair);
                 {
-                    let sifr_generated_assign_value = value.clone();
+                    let sifr_generated_assign_value = value;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =
@@ -158,20 +166,20 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
-    pub fn batched<T: Clone + 'static>(data: &[T], n: SifrInt) -> Result<Vec<Vec<T>>, ValueError> {
-        if &n <= &SifrInt::from_i64(0) {
+    pub fn batched<T: Clone + 'static>(data: &[T], n: &SifrInt) -> Result<Vec<Vec<T>>, ValueError> {
+        if n <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("batched: n must be > 0".to_string()));
         }
         let mut result: Vec<Vec<T>> = Vec::new();
         let mut current_batch: Vec<T> = Vec::new();
         for value in data.iter().cloned() {
             current_batch.push(value);
-            if &SifrInt::from(current_batch.len()) == &n {
-                result.push(current_batch.to_vec());
+            if &SifrInt::from(current_batch.len()) == n {
+                result.push(current_batch.clone());
                 current_batch = Vec::new();
             }
         }
-        if &SifrInt::from(current_batch.len()) > &SifrInt::from_i64(0) {
+        if current_batch.len() > SifrInt::from_i64(0) {
             result.push(current_batch);
         }
         Ok(result)
@@ -202,7 +210,7 @@ mod sifr_generated_generated_support {
                     }
                 }
                 for item in data {
-                    if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
+                    if state.len() == SifrInt::from_i64(0) {
                         state.push(item);
                     } else {
                         let prev: Option<T> = {
@@ -220,7 +228,7 @@ mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =
@@ -240,8 +248,7 @@ mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err.clone();
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                         }
@@ -273,22 +280,26 @@ mod sifr_generated_generated_support {
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
                 let mut saved: Vec<T> = Vec::new();
                 let mut emitted: SifrInt = SifrInt::from_i64(0);
-                if &n <= &SifrInt::from_i64(0) {
+                if n <= SifrInt::from_i64(0) {
                     return;
                 }
                 for value in data {
                     saved.push(value.clone());
                     sifr_generated_yielder.suspend(value.clone()).await;
-                    emitted = &emitted + &SifrInt::from_i64(1);
-                    if &emitted >= &n {
+                    emitted = ::std::ops::Add::add(&emitted, &SifrInt::from_i64(1));
+                    if emitted >= n {
                         return;
                     }
                 }
-                while &emitted < &n && &SifrInt::from(saved.len()) > &SifrInt::from_i64(0) {
-                    for repeated in saved.iter().cloned() {
+                while emitted < n && saved.len() > SifrInt::from_i64(0) {
+                    #[expect(
+                        clippy::explicit_iter_loop,
+                        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                    )]
+                    for repeated in saved.iter() {
                         sifr_generated_yielder.suspend(repeated.clone()).await;
-                        emitted = &emitted + &SifrInt::from_i64(1);
-                        if &emitted >= &n {
+                        emitted = ::std::ops::Add::add(&emitted, &SifrInt::from_i64(1));
+                        if emitted >= n {
                             return;
                         }
                     }
@@ -299,7 +310,7 @@ mod sifr_generated_generated_support {
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -320,7 +331,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
 }
@@ -368,7 +379,7 @@ fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![
         format!(
             "{:?}",
-            chain(&vec![
+            chain(&[
                 vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
                 vec![SifrInt::from_i64(3)]
             ])
@@ -378,16 +389,12 @@ fn collect_core_actual() -> Vec<bool> {
             == "[1, 2, 3]".to_string().as_str(),
         format!(
             "{:?}",
-            pairwise(
-                &vec![
-                    SifrInt::from_i64(1),
-                    SifrInt::from_i64(2),
-                    SifrInt::from_i64(3),
-                    SifrInt::from_i64(4)
-                ]
-                .into_iter()
-                .collect::<Vec<_>>()
-            )
+            pairwise(&[
+                SifrInt::from_i64(1),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(3),
+                SifrInt::from_i64(4)
+            ])
         )
         .as_str()
             == "[[1, 2], [2, 3], [3, 4]]".to_string().as_str(),
@@ -395,24 +402,19 @@ fn collect_core_actual() -> Vec<bool> {
     let mut batched_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let bat: Vec<Vec<SifrInt>> = batched(
-            &vec![
+            &[
                 SifrInt::from_i64(1),
                 SifrInt::from_i64(2),
                 SifrInt::from_i64(3),
                 SifrInt::from_i64(4),
                 SifrInt::from_i64(5),
-            ]
-            .into_iter()
-            .collect::<Vec<_>>(),
-            SifrInt::from_i64(2),
+            ],
+            &SifrInt::from_i64(2),
         )?;
         batched_ok = format!("{bat:?}") == "[[1, 2], [3, 4], [5]]";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     actual.push(batched_ok);
     actual.push(
         format!(
@@ -451,16 +453,14 @@ fn collect_negative_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut invalid_batch_rejected: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let sifr_generated_bad: Vec<Vec<SifrInt>> = batched(
-            &vec![SifrInt::from_i64(1)].into_iter().collect::<Vec<_>>(),
-            SifrInt::from_i64(0),
-        )?;
+        let sifr_generated_bad: Vec<Vec<SifrInt>> =
+            batched(&[SifrInt::from_i64(1)], &SifrInt::from_i64(0))?;
         let _ = sifr_generated_bad;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        invalid_batch_rejected = &SifrInt::from(e.message.chars().count()) > &SifrInt::from_i64(0);
+        let e: ValueError = sifr_generated_try_err;
+        invalid_batch_rejected = e.message.chars().count() > SifrInt::from_i64(0);
     }
     actual.push(invalid_batch_rejected);
     actual

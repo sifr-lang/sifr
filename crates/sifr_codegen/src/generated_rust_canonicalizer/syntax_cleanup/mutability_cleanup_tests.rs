@@ -94,3 +94,45 @@ fn text_replace_stays_shared_without_confusing_same_name_mutable_methods() {
     );
     assert!(shadow.contains("mut value"), "{shadow}");
 }
+
+#[test]
+fn project_imported_mutable_method_survives_local_cleanup() {
+    use std::collections::BTreeMap;
+
+    let mut main = r#"
+        use crate::helpers::dsu::{Shared, UnionFind};
+        pub fn run() {
+            let mut dsu: UnionFind = UnionFind::new();
+            dsu.r#union();
+            let mut shared: Shared = Shared::new();
+            shared.read();
+        }
+    "#
+    .to_string();
+    let mut dsu = r#"
+        pub struct UnionFind;
+        impl UnionFind {
+            pub fn new() -> Self { Self }
+            pub fn r#union(&mut self) {}
+        }
+        pub struct Shared;
+        impl Shared {
+            pub fn new() -> Self { Self }
+            pub fn read(&self) {}
+        }
+    "#
+    .to_string();
+    crate::generated_rust_canonicalizer::rewrite_named_project_borrows(&mut [
+        ("", &mut main),
+        ("helpers.dsu", &mut dsu),
+    ])
+    .expect("project method facts");
+    let canonical = crate::canonicalize_generated_rust_project(&BTreeMap::from([
+        (String::new(), main),
+        ("helpers::dsu".to_string(), dsu),
+    ]))
+    .expect("canonical project");
+    let main = &canonical[""];
+    assert!(main.contains("let mut dsu"), "{main}");
+    assert!(!main.contains("let mut shared"), "{main}");
+}

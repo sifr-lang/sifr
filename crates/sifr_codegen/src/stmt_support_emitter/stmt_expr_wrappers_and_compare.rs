@@ -174,7 +174,7 @@ macro_rules! stmt_expr_wrappers_range_index {
                     Type::Str => $emitter.lower_string_index_option_with_cache(
                         object,
                         crate::RustExpr::Ident("__v".to_string()),
-                        lowered_index,
+                        crate::RustEmitter::clone_non_copy_name_expr_for_ir(index, lowered_index),
                     ),
                     _ => return Ok(None),
                 };
@@ -427,6 +427,18 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         method: "contains_key".to_string(),
                         args: vec![key_arg],
                     }
+                }
+                Type::List(element_ty)
+                    if matches!(element_ty.resolve_alias(), Type::Str | Type::LiteralStr(_))
+                        && matches!(
+                            crate::resolve_alias_type_for_plain_call(element.ty()),
+                            Type::Str | Type::LiteralStr(_)
+                        ) =>
+                {
+                    crate::methods::lower_string_contains(
+                        &crate::RustExpr::Paren(Box::new(lowered_collection)),
+                        &lowered_element,
+                    )
                 }
                 Type::List(_) | Type::Set(_) | Type::Range => {
                     let element_arg = if matches!(element.as_ref(), HirExpr::Name { name, .. }

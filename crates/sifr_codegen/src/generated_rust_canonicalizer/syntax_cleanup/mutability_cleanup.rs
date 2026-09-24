@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
+use syn::visit_mut::VisitMut;
 
 #[cfg(test)]
 #[path = "mutability_cleanup_tests.rs"]
@@ -17,12 +18,55 @@ pub(super) struct LocalMethodFacts {
     mutable: HashSet<(String, String)>,
     shared: HashSet<(String, String)>,
     declared_types: HashSet<String>,
+    project_imported_types: HashSet<String>,
 }
 
 pub(super) fn collect_local_method_facts(file: &syn::File) -> LocalMethodFacts {
     let mut collector = LocalMethodFactCollector::default();
     collector.visit_file(file);
     collector.facts
+}
+
+pub(crate) struct ProjectMutabilityFacts {
+    mutating_methods: HashSet<String>,
+    local_method_facts: LocalMethodFacts,
+}
+
+pub(super) fn collect_project_mutability_facts(files: &[syn::File]) -> ProjectMutabilityFacts {
+    let mut method_collector = MutatingMethodCollector::default();
+    let mut fact_collector = LocalMethodFactCollector::default();
+    for file in files {
+        method_collector.visit_file(file);
+        fact_collector.visit_file(file);
+    }
+    ProjectMutabilityFacts {
+        mutating_methods: method_collector.names,
+        local_method_facts: fact_collector.facts,
+    }
+}
+
+pub(super) fn apply_project_mutability_facts(file: &mut syn::File, facts: &ProjectMutabilityFacts) {
+    FileMutabilityRewriter {
+        mutating_methods: &facts.mutating_methods,
+        local_method_facts: &facts.local_method_facts,
+    }
+    .visit_file_mut(file);
+}
+
+struct FileMutabilityRewriter<'facts> {
+    mutating_methods: &'facts HashSet<String>,
+    local_method_facts: &'facts LocalMethodFacts,
+}
+
+impl syn::visit_mut::VisitMut for FileMutabilityRewriter<'_> {
+    fn visit_block_mut(&mut self, block: &mut syn::Block) {
+        syn::visit_mut::visit_block_mut(self, block);
+        remove_unneeded_mutability(
+            &mut block.stmts,
+            self.mutating_methods,
+            self.local_method_facts,
+        );
+    }
 }
 
 #[derive(Default)]
@@ -32,18 +76,36 @@ struct LocalMethodFactCollector {
 
 impl<'ast> Visit<'ast> for LocalMethodFactCollector {
     fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
-        fn collect(tree: &syn::UseTree, names: &mut HashSet<String>) {
+        fn collect(
+            tree: &syn::UseTree,
+            names: &mut HashSet<String>,
+            project_imports: &mut HashSet<String>,
+            in_project: bool,
+        ) {
             match tree {
-                syn::UseTree::Path(path) => collect(&path.tree, names),
+                syn::UseTree::Path(path) => collect(
+                    &path.tree,
+                    names,
+                    project_imports,
+                    in_project || path.ident == "crate",
+                ),
                 syn::UseTree::Name(name) => {
-                    names.insert(name.ident.to_string());
+                    let name = name.ident.to_string();
+                    names.insert(name.clone());
+                    if in_project {
+                        project_imports.insert(name);
+                    }
                 }
                 syn::UseTree::Rename(rename) => {
-                    names.insert(rename.rename.to_string());
+                    let name = rename.rename.to_string();
+                    names.insert(name.clone());
+                    if in_project {
+                        project_imports.insert(name);
+                    }
                 }
                 syn::UseTree::Group(group) => {
                     for tree in &group.items {
-                        collect(tree, names);
+                        collect(tree, names, project_imports, in_project);
                     }
                 }
                 // An unresolved external glob can shadow the prelude type.
@@ -52,7 +114,12 @@ impl<'ast> Visit<'ast> for LocalMethodFactCollector {
                 }
             }
         }
-        collect(&item.tree, &mut self.facts.declared_types);
+        collect(
+            &item.tree,
+            &mut self.facts.declared_types,
+            &mut self.facts.project_imported_types,
+            false,
+        );
         visit::visit_item_use(self, item);
     }
 
@@ -87,8 +154,11 @@ impl<'ast> Visit<'ast> for LocalMethodFactCollector {
                 self.facts.shared.insert(key);
             }
             if let syn::ReturnType::Type(_, ty) = &method.sig.output
-                && let Some(returned) = type_owner_name(ty)
+                && let Some(mut returned) = type_owner_name(ty)
             {
+                if returned == "Self" {
+                    returned.clone_from(&owner);
+                }
                 self.facts
                     .returns_by_method
                     .entry(method.sig.ident.to_string())
@@ -327,7 +397,25 @@ impl<'facts> MutatingUseCollector<'facts> {
             return false;
         }
         let method = &call.method;
-        self.mutating_methods.contains(&method.to_string())
+        let unresolved_project_method = match call.receiver.as_ref() {
+            syn::Expr::Path(path) => path
+                .path
+                .get_ident()
+                .and_then(|name| self.binding_owners.get(&name.to_string()))
+                .is_some_and(|owners| {
+                    owners.iter().any(|owner| {
+                        self.local_method_facts
+                            .project_imported_types
+                            .contains(owner)
+                    })
+                }),
+            _ => false,
+        };
+        // A generated project module can define this method in another file.
+        // Preserve the emitter's mutable binding until the project-wide pass
+        // has enough method facts to remove it safely.
+        unresolved_project_method
+            || self.mutating_methods.contains(&method.to_string())
             || matches!(
                 method.to_string().as_str(),
                 "append"

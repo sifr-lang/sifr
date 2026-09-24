@@ -16,7 +16,7 @@ mod record_variant_tests;
 use generic_cleanup::{
     prune_item_members, prune_unconstrained_impl_generics, prune_unused_aggregate_type_parameters,
 };
-use macro_arguments::MacroArguments;
+pub(super) use macro_arguments::MacroArguments;
 use private_field_effects::retain_effectful_initializers;
 pub(super) use private_field_effects::type_has_trivial_drop;
 use wildcards::rewrite_exhaustive_enum_wildcards;
@@ -201,7 +201,10 @@ fn collect_enum_variants(items: &[syn::Item]) -> HashMap<String, HashSet<String>
 fn collect_trait_methods(items: &[syn::Item]) -> HashMap<String, HashSet<String>> {
     let mut traits = HashMap::<String, HashSet<String>>::new();
     for item in items {
-        if let syn::Item::Trait(trait_) = item {
+        if let syn::Item::Trait(trait_) = item
+            && !opaque_methods::is_opaque_extension_trait(&trait_.ident.to_string())
+        {
+            // Generated opaque methods have one project-wide demand owner.
             traits.entry(trait_.ident.to_string()).or_default().extend(
                 trait_.items.iter().filter_map(|item| match item {
                     syn::TraitItem::Fn(method) => Some(method.sig.ident.to_string()),

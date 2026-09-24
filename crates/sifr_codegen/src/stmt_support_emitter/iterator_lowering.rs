@@ -43,15 +43,12 @@ impl RustEmitter {
         let Some(lowered_iterable) = self.lower_stmt_expr_for_ir(iterable)? else {
             return Ok(None);
         };
-        let Some(iter) =
+        let iter =
             crate::intrinsic_method_emitters::registry_iterable_to_owned_iter_expr_from_lowered(
                 iterable,
                 None,
                 lowered_iterable,
-            )
-        else {
-            return Ok(None);
-        };
+            );
         let filtered = crate::RustExpr::MethodCall {
             receiver: Box::new(iter),
             method: "filter".to_string(),
@@ -303,12 +300,19 @@ impl RustEmitter {
     ) -> crate::RustExpr {
         let tuple_binding = "__sifr_tuple_iter_src".to_string();
         let bound_value = match source_access_mode {
-            crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source))),
-                method: "clone".to_string(),
-                args: vec![],
+            crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(lowered_source),
             },
             crate::helpers::SourceAccessMode::Consume => lowered_source,
+        };
+        let yield_mode = if matches!(
+            source_access_mode,
+            crate::helpers::SourceAccessMode::Consume
+        ) {
+            crate::helpers::YieldMode::Move
+        } else {
+            yield_mode
         };
         let tuple_items = (0..tuple_len)
             .map(|index| {
@@ -406,13 +410,19 @@ impl RustEmitter {
         if matches!(source_ty, Type::Iterator(_))
             || matches!(source, HirExpr::GeneratorExpr { .. })
             || self.is_generator_call(source)
-            || Self::is_iterator_like_expr_for_ir(&lowered_source)
         {
             return Ok(Some(lowered_source));
         }
 
         if let Type::Class { name, methods, .. } = source_ty {
+            let shared_iter = Self::class_method_signature_for_iter_for_ir(methods, "__iter__")
+                .is_some_and(|signature| {
+                    signature.params.is_empty()
+                        && signature.receiver
+                            == Some(sifr_type_system::ReceiverConvention::SharedBorrow)
+                });
             let class_source = match plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve if shared_iter => lowered_source.clone(),
                 crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source.clone()))),
                     method: "clone".to_string(),
@@ -482,48 +492,9 @@ impl RustEmitter {
                     )
                 }
             },
-            Type::Bytes => match plan.source_access_mode {
-                crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_source),
-                        method: "into_iter".to_string(),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__byte".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Ident("__byte".to_string())),
-                            ty: crate::RustType::Named("u8".to_string()),
-                        }),
-                        is_move: false,
-                    }],
-                },
-                crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_source),
-                        method: "iter".to_string(),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__byte".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Deref(Box::new(
-                                crate::RustExpr::Ident("__byte".to_string()),
-                            ))),
-                            ty: crate::RustType::Named("u8".to_string()),
-                        }),
-                        is_move: false,
-                    }],
-                },
-            },
+            Type::Bytes => {
+                crate::helpers::bytes_iterator_expr(lowered_source, plan.source_access_mode)
+            }
             Type::Dict(_, _) => match plan.source_access_mode {
                 crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_source),
@@ -641,38 +612,6 @@ impl RustEmitter {
             };
         }
         expr
-    }
-
-    pub(crate) fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
-        match expr {
-            crate::RustExpr::MethodCall {
-                receiver, method, ..
-            } => {
-                matches!(
-                    method.as_str(),
-                    "into_iter"
-                        | "into_keys"
-                        | "map"
-                        | "filter"
-                        | "filter_map"
-                        | "zip"
-                        | "chain"
-                        | "enumerate"
-                        | "copied"
-                        | "cloned"
-                ) || Self::is_iterator_like_expr_for_ir(receiver)
-            }
-            crate::RustExpr::FnCall { func, args } => {
-                Self::is_iterator_like_expr_for_ir(func)
-                    || args.iter().any(Self::is_iterator_like_expr_for_ir)
-            }
-            crate::RustExpr::Paren(inner)
-            | crate::RustExpr::Try(inner)
-            | crate::RustExpr::Await(inner)
-            | crate::RustExpr::Deref(inner)
-            | crate::RustExpr::Clone(inner) => Self::is_iterator_like_expr_for_ir(inner),
-            _ => false,
-        }
     }
 
     pub(crate) fn rust_stmts_contain_await(stmts: &[RustStmt]) -> bool {

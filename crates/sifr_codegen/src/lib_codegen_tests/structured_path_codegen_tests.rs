@@ -162,7 +162,61 @@ def main():
         "fn dfs(i: SifrInt, res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>, values: &[SifrInt])"
     ));
     assert!(generated.contains("dfs(SifrInt::from_i64(0), &mut res, &mut subset, &values);"));
-    assert!(generated.contains("dfs(&i + &SifrInt::from_i64(1), res, subset, values);"));
+    assert!(
+        generated
+            .contains("dfs(::std::ops::Add::add(&i, &SifrInt::from_i64(1)), res, subset, values);")
+    );
+}
+
+#[test]
+fn recursive_nested_checked_reads_use_the_injected_capture_binding() {
+    let source = include_str!(
+        "../../../../verification/areas/algorithmic_compatibility/corpora/leetcode/src/1905_count_sub_islands.sifr"
+    );
+    let generated = crate::canonicalize_generated_rust_source(&generate_rust_from_source(source))
+        .expect("1905 emitted Rust must canonicalize");
+    let nested = generated
+        .split("fn dfs(")
+        .nth(1)
+        .expect("1905 dfs must be emitted as a nested function");
+    let nested = nested
+        .split("let (rows_value_")
+        .next()
+        .expect("outer bindings must follow dfs");
+    let capture_start = nested
+        .find("grid2_argument_")
+        .expect("dfs must receive the explicit grid2 capture");
+    let capture = nested[capture_start..]
+        .split(": &[Vec<SifrInt>]")
+        .next()
+        .expect("dfs capture must be a borrowed nested list");
+    assert!(
+        nested.contains(&format!("{capture}: &[Vec<SifrInt>]")),
+        "{generated}"
+    );
+    assert!(nested.contains(&format!("&{capture};")), "{generated}");
+    assert_eq!(
+        nested.matches(&format!("{capture},")).count(),
+        4,
+        "{generated}"
+    );
+    assert!(
+        generated
+            .contains(".is_some_and(|sifr_generated_v| sifr_generated_v != SifrInt::from_i64(0))"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn nested_checked_list_truthiness_tests_the_present_numeric_value() {
+    let generated = generate_rust_from_source(
+        "def occupied(rows: list[list[int]], r: int, c: int) -> bool:\n    return rows[r][c] and True\n",
+    );
+    assert!(
+        generated.contains(".is_some_and(|__v| __v != SifrInt::from_i64(0))"),
+        "{generated}"
+    );
+    assert!(!generated.contains("&& {"), "{generated}");
 }
 
 #[test]

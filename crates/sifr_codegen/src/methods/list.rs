@@ -223,15 +223,82 @@ pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     })
 }
 
-pub(super) fn lower_contains(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_contains(
+    object: &RustExpr,
+    element_ty: &Type,
+    args: &[RustExpr],
+) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
+    }
+    if matches!(element_ty.resolve_alias(), Type::Str | Type::LiteralStr(_)) {
+        return Some(lower_string_contains(object, &args[0]));
     }
     Some(RustExpr::MethodCall {
         receiver: Box::new(object.clone()),
         method: "contains".to_string(),
         args: vec![render_borrowed_arg_expr(&args[0])],
     })
+}
+
+/// Compare string views so a list of owned strings accepts both owned and
+/// borrowed probes after generated signatures are tightened to slices/&str.
+pub(crate) fn lower_string_contains(object: &RustExpr, argument: &RustExpr) -> RustExpr {
+    let holder_name = "__sifr_list_contains_holder".to_string();
+    let needle_name = "__sifr_list_contains_needle".to_string();
+    let item_name = "__sifr_list_contains_item".to_string();
+    RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: holder_name.clone(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(argument.clone()),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: needle_name.clone(),
+                ty: Some(RustType::Ref {
+                    mutable: false,
+                    inner: Box::new(RustType::Named("str".to_string())),
+                }),
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "AsRef::<str>".to_string(),
+                        "as_ref".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ident(holder_name)],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(object.clone()),
+                method: "iter".to_string(),
+                args: vec![],
+            }),
+            method: "any".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: item_name.clone(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(item_name)),
+                        method: "as_str".to_string(),
+                        args: vec![],
+                    }),
+                    op: "==".to_string(),
+                    right: Box::new(RustExpr::Ident(needle_name)),
+                }),
+                is_move: false,
+            }],
+        })),
+    }
 }
 
 pub(super) fn lower_pop(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {

@@ -1,5 +1,13 @@
 #[path = "body_analysis/call_conventions.rs"]
 mod call_conventions;
+#[path = "body_analysis/discarded_bindings.rs"]
+mod discarded_bindings;
+#[path = "body_analysis/last_use.rs"]
+mod last_use;
+#[path = "body_analysis/length_aliases.rs"]
+mod length_aliases;
+#[path = "body_analysis/read_regions.rs"]
+mod read_regions;
 
 use crate::hir_analysis::traversal;
 use crate::{HirExpr, HirFunction, HirStmt, ModuleFuncSignatures, Type};
@@ -12,14 +20,21 @@ use std::collections::{HashMap, HashSet};
 pub(crate) struct BodySummary {
     pub(crate) mutated: HashSet<String>,
     pub(crate) proven_reads: Vec<HirExpr>,
+    atomic_proven_reads: Vec<HirExpr>,
     pub(crate) checked_read_keys: HashSet<String>,
     referenced: HashMap<String, usize>,
 }
 
 impl BodySummary {
+    pub(crate) fn uses_binding(&self, name: &str) -> bool {
+        self.referenced.contains_key(name) || self.mutated.contains(name)
+    }
+
     fn merge(&mut self, other: &Self) {
         self.mutated.extend(other.mutated.iter().cloned());
         self.proven_reads.extend(other.proven_reads.iter().cloned());
+        self.atomic_proven_reads
+            .extend(other.atomic_proven_reads.iter().cloned());
         self.checked_read_keys
             .extend(other.checked_read_keys.iter().cloned());
         for (name, count) in &other.referenced {
@@ -34,6 +49,8 @@ pub(crate) struct BodyAnalysis {
     statements: HashMap<usize, BodySummary>,
     nested_captures: HashMap<usize, HashSet<String>>,
     last_use_statements: HashSet<usize>,
+    unused_projection_statements: HashMap<usize, discarded_bindings::UnusedProjection>,
+    stable_length_aliases: HashMap<usize, HashMap<String, String>>,
 }
 
 impl BodyAnalysis {
@@ -41,20 +58,34 @@ impl BodyAnalysis {
         func: &HirFunction,
         func_signatures: &ModuleFuncSignatures,
     ) -> (Self, HashSet<usize>) {
+        Self::build_with_borrowed(func, func_signatures, &HashSet::new())
+    }
+
+    pub(crate) fn build_with_borrowed(
+        func: &HirFunction,
+        func_signatures: &ModuleFuncSignatures,
+        extra_borrowed: &HashSet<String>,
+    ) -> (Self, HashSet<usize>) {
         let mut analysis = Self::default();
         let call_param_conventions = collect_call_param_conventions(&func.body, func_signatures);
         analysis.analyze_block(&func.body, &call_param_conventions);
+        analysis.collect_stable_length_aliases(
+            &func.body,
+            &HashMap::new(),
+            &call_param_conventions,
+        );
         let mut defined = func
             .params
             .iter()
             .map(|param| param.name.clone())
             .collect::<HashSet<_>>();
-        let borrowed = func
+        let mut borrowed = func
             .params
             .iter()
             .filter(|param| param.convention.is_borrowed())
             .map(|param| param.name.clone())
             .collect::<HashSet<_>>();
+        borrowed.extend(extra_borrowed.iter().cloned());
         let mut moves = HashSet::new();
         analysis.mark_last_uses(
             &func.body,
@@ -70,7 +101,7 @@ impl BodyAnalysis {
         self.blocks.get(&block_key(stmts))
     }
 
-    pub(crate) fn aggregate_statement_has_last_use(&self, stmt: &HirStmt) -> bool {
+    pub(crate) fn owned_value_statement_has_last_use(&self, stmt: &HirStmt) -> bool {
         if !self.last_use_statements.contains(&stmt_key(stmt)) {
             return false;
         }
@@ -83,7 +114,8 @@ impl BodyAnalysis {
         };
         matches!(
             value,
-            HirExpr::ListLiteral { .. }
+            HirExpr::Name { .. }
+                | HirExpr::ListLiteral { .. }
                 | HirExpr::TupleLiteral { .. }
                 | HirExpr::DictLiteral { .. }
                 | HirExpr::SetLiteral { .. }
@@ -117,6 +149,40 @@ impl BodyAnalysis {
         reads
     }
 
+    pub(crate) fn references_outside_checked_read(
+        &self,
+        stmt: &HirStmt,
+        owner: &str,
+        key: &str,
+    ) -> bool {
+        let Some(summary) = self.statements.get(&stmt_key(stmt)) else {
+            return true;
+        };
+        let mut witnessed_references = 0;
+        for read in &summary.proven_reads {
+            let HirExpr::Index { object, index, .. } = read else {
+                continue;
+            };
+            if crate::checked_place::checked_place_read_key(object, index).as_deref() != Some(key) {
+                continue;
+            }
+            traversal::walk_expr(read, &mut |expr| {
+                if matches!(expr, HirExpr::Name { name, .. } if name == owner) {
+                    witnessed_references += 1;
+                }
+            });
+        }
+        summary.mutated.contains(owner)
+            || summary.referenced.get(owner).copied().unwrap_or_default() > witnessed_references
+    }
+
+    pub(crate) fn atomic_proven_reads_in(&self, stmt: &HirStmt) -> Vec<HirExpr> {
+        self.statements
+            .get(&stmt_key(stmt))
+            .map(|summary| summary.atomic_proven_reads.clone())
+            .unwrap_or_default()
+    }
+
     pub(crate) fn checked_read_is_used(&self, stmts: &[HirStmt], key: &str) -> bool {
         if let Some(summary) = self.summary(stmts) {
             return summary.checked_read_keys.contains(key);
@@ -142,10 +208,13 @@ impl BodyAnalysis {
                 self.nested_captures.insert(stmt_key(stmt), nested_captures);
             }
             summary.proven_reads.sort_by_key(index_depth);
+            summary.atomic_proven_reads.sort_by_key(index_depth);
             block.merge(&summary);
             self.statements.insert(stmt_key(stmt), summary);
         }
+        block = self.remove_unused_projection_summaries(stmts, block);
         block.proven_reads.sort_by_key(index_depth);
+        block.atomic_proven_reads.sort_by_key(index_depth);
         self.blocks.insert(block_key(stmts), block.clone());
         block
     }
@@ -239,6 +308,30 @@ impl BodyAnalysis {
             .get(&stmt_key(stmt))
             .cloned()
             .unwrap_or_default();
+        // A stored lazy iterator can borrow its input until the iterator is
+        // consumed or dropped, even after its final explicit next() call.
+        let stored_value = match stmt {
+            HirStmt::Let { value, .. }
+            | HirStmt::Assign { value, .. }
+            | HirStmt::FieldAssign { value, .. }
+            | HirStmt::NestedFieldAssign { value, .. }
+            | HirStmt::SubscriptAssign { value, .. } => Some(value),
+            _ => None,
+        };
+        if let Some(value) = stored_value
+            && matches!(
+                value.ty().resolve_alias(),
+                sifr_type_system::Type::Iterator(_)
+                    | sifr_type_system::Type::AsyncIterator(_, _)
+                    | sifr_type_system::Type::AsyncGenerator(_, _)
+            )
+        {
+            traversal::walk_expr(value, &mut |expr| {
+                if let HirExpr::Name { name, .. } = expr {
+                    captures.insert(name.clone());
+                }
+            });
+        }
         let mut extend_from = |body: &[HirStmt]| {
             for child in body {
                 if let Some(child_captures) = self.nested_captures.get(&stmt_key(child)) {
@@ -295,175 +388,6 @@ impl BodyAnalysis {
         }
         captures
     }
-
-    fn mark_last_uses(
-        &mut self,
-        stmts: &[HirStmt],
-        defined: &mut HashSet<String>,
-        outer_live: &HashSet<String>,
-        borrowed: &HashSet<String>,
-        moves: &mut HashSet<usize>,
-    ) {
-        let mut remaining = self
-            .summary(stmts)
-            .map(|summary| summary.referenced.clone())
-            .unwrap_or_default();
-        let mut live_nested_captures = HashSet::new();
-        for stmt in stmts {
-            let Some(stmt_summary) = self.statements.get(&stmt_key(stmt)).cloned() else {
-                continue;
-            };
-            let stmt_referenced = stmt_summary.referenced;
-            subtract_counts(&mut remaining, &stmt_referenced);
-            if let Some(captures) = self.nested_captures.get(&stmt_key(stmt)) {
-                live_nested_captures.extend(captures.iter().cloned());
-            }
-            let mut occurrences = HashMap::<String, Vec<(usize, bool, bool)>>::new();
-            walk_direct_stmt_exprs(stmt, &mut |expr| {
-                traversal::walk_expr(expr, &mut |candidate| {
-                    if let HirExpr::Name { name, .. } = candidate {
-                        occurrences.entry(name.clone()).or_default().push((
-                            expr_key(candidate),
-                            candidate.ty().contains_affine_resource(),
-                            crate::helpers::is_copy_type_for_codegen(candidate.ty()),
-                        ));
-                    }
-                });
-            });
-            let mut statement_has_last_use = false;
-            for (name, expressions) in occurrences {
-                let [(expr, contains_affine_resource, is_copy)] = expressions.as_slice() else {
-                    continue;
-                };
-                if defined.contains(&name)
-                    && stmt_referenced.get(&name).copied() == Some(expressions.len())
-                    && !matches!(stmt, HirStmt::While { .. })
-                    && !borrowed.contains(&name)
-                    && remaining.get(&name).copied().unwrap_or(0) == 0
-                    && !outer_live.contains(&name)
-                    && !live_nested_captures.contains(&name)
-                    && !contains_affine_resource
-                    && !is_copy
-                {
-                    moves.insert(*expr);
-                    statement_has_last_use = true;
-                }
-            }
-            if statement_has_last_use {
-                self.last_use_statements.insert(stmt_key(stmt));
-            }
-            let mut child_outer_live = outer_live.clone();
-            child_outer_live.extend(live_nested_captures.iter().cloned());
-            self.mark_child_last_uses(
-                stmt,
-                defined,
-                &child_outer_live,
-                &remaining,
-                borrowed,
-                moves,
-            );
-            register_stmt_definitions(stmt, defined);
-        }
-    }
-
-    fn mark_child_last_uses(
-        &mut self,
-        stmt: &HirStmt,
-        defined: &HashSet<String>,
-        outer_live: &HashSet<String>,
-        remaining: &HashMap<String, usize>,
-        borrowed: &HashSet<String>,
-        moves: &mut HashSet<usize>,
-    ) {
-        let mut live_after = outer_live.clone();
-        live_after.extend(remaining.keys().cloned());
-        let scan = |analysis: &mut Self,
-                    body: &[HirStmt],
-                    seed: &HashSet<String>,
-                    live: &HashSet<String>,
-                    moves: &mut HashSet<usize>| {
-            let mut body_defined = seed.clone();
-            analysis.mark_last_uses(body, &mut body_defined, live, borrowed, moves);
-        };
-        match stmt {
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                scan(self, then_body, defined, &live_after, moves);
-                for (_, body) in elif_clauses {
-                    scan(self, body, defined, &live_after, moves);
-                }
-                if let Some(body) = else_body {
-                    scan(self, body, defined, &live_after, moves);
-                }
-            }
-            HirStmt::While {
-                body, else_body, ..
-            }
-            | HirStmt::For {
-                body, else_body, ..
-            }
-            | HirStmt::AsyncFor {
-                body, else_body, ..
-            } => {
-                let mut loop_live = live_after.clone();
-                loop_live.extend(defined.iter().cloned());
-                let mut body_defined = defined.clone();
-                if let HirStmt::For { target, .. } | HirStmt::AsyncFor { target, .. } = stmt {
-                    body_defined.insert(target.clone());
-                }
-                scan(self, body, &body_defined, &loop_live, moves);
-                if let Some(body) = else_body {
-                    scan(self, body, defined, &live_after, moves);
-                }
-            }
-            HirStmt::TryExcept { body, handlers, .. } => {
-                let mut body_live = live_after.clone();
-                for handler in handlers {
-                    if let Some(summary) = self.summary(&handler.body) {
-                        body_live.extend(summary.referenced.keys().cloned());
-                    }
-                }
-                scan(self, body, defined, &body_live, moves);
-                for handler in handlers {
-                    let mut handler_defined = defined.clone();
-                    if let Some(name) = &handler.name {
-                        handler_defined.insert(name.clone());
-                    }
-                    scan(self, &handler.body, &handler_defined, &live_after, moves);
-                }
-            }
-            HirStmt::TryFinally { body, finalbody } => {
-                let mut body_live = live_after.clone();
-                if let Some(summary) = self.summary(finalbody) {
-                    body_live.extend(summary.referenced.keys().cloned());
-                }
-                scan(self, body, defined, &body_live, moves);
-                scan(self, finalbody, defined, &live_after, moves);
-            }
-            HirStmt::With { items, body } => {
-                let mut body_defined = defined.clone();
-                body_defined.extend(items.iter().map(|item| item.target.clone()));
-                scan(self, body, &body_defined, &live_after, moves);
-            }
-            HirStmt::AsyncWith { target, body, .. } => {
-                let mut body_defined = defined.clone();
-                body_defined.extend(target.iter().cloned());
-                scan(self, body, &body_defined, &live_after, moves);
-            }
-            HirStmt::Match { arms, .. } => {
-                for arm in arms {
-                    let mut arm_defined = defined.clone();
-                    register_pattern_definitions(&arm.pattern, &mut arm_defined);
-                    scan(self, &arm.body, &arm_defined, &live_after, moves);
-                }
-            }
-            _ => {}
-        }
-    }
 }
 
 fn direct_stmt_summary(
@@ -483,6 +407,7 @@ fn direct_stmt_summary(
         }
         _ => None,
     };
+    let conditional_reads = read_regions::conditional_reads(stmt);
     walk_direct_stmt_exprs(stmt, &mut |expr| {
         traversal::walk_expr(expr, &mut |candidate| {
             if let HirExpr::Name { name, .. } = candidate {
@@ -505,6 +430,9 @@ fn direct_stmt_summary(
                 return;
             }
             summary.proven_reads.push(candidate.clone());
+            if !conditional_reads.contains(&expr_key(candidate)) {
+                summary.atomic_proven_reads.push(candidate.clone());
+            }
         });
     });
     summary
@@ -555,6 +483,13 @@ fn collect_expr_mutation(
                 .or_else(|| call_param_conventions.get(canonical));
             if let Some(conventions) = conventions {
                 collect_signature_mutable_args(args, conventions, true, mutated);
+            }
+            // Match the same builtin identity and arity as async-call emission.
+            if func == "anext"
+                && args.len() == 1
+                && let Some(name) = args.first().and_then(expression_root_name)
+            {
+                mutated.insert(name.to_string());
             }
             if matches!(
                 canonical.rsplit('.').next(),
@@ -873,3 +808,7 @@ fn stmt_key(stmt: &HirStmt) -> usize {
 pub(crate) fn expr_key(expr: &HirExpr) -> usize {
     std::ptr::from_ref(expr) as usize
 }
+
+#[cfg(test)]
+#[path = "body_analysis/async_advance_tests.rs"]
+mod async_advance_tests;

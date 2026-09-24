@@ -39,6 +39,7 @@ fn stdlib_interop_startup_project_selection_is_once_per_complete_application() {
     ] {
         let (project, count) = observe_stdlib_interop_selection(|| {
             sifr_codegen::generate_rust_multi_with_metadata(&modules, &stdlib.code)
+                .expect("project generation should succeed")
         });
         assert_eq!(count, 1);
         assert_eq!(owners(&project.interop.stdlib_demand), expected);
@@ -161,7 +162,8 @@ fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
         names: vec!["exposed".into()],
         aliases: vec![],
     });
-    let output = sifr_codegen::generate_rust_multi_with_metadata(&[("main", &app)], &stdlib.code);
+    let output = sifr_codegen::generate_rust_multi_with_metadata(&[("main", &app)], &stdlib.code)
+        .expect("project generation should succeed");
     let selected = owners(&output.interop.stdlib_demand);
     for name in [
         "_sifr.startup_a.Hidden",

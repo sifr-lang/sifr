@@ -6,7 +6,8 @@ use syn::visit::{self, Visit};
 
 #[derive(Clone, Default)]
 pub(super) enum Value {
-    Option,
+    Option(Box<Value>),
+    Scalar,
     Map,
     Sequence,
     Nominal(String),
@@ -28,7 +29,7 @@ enum Definition {
     Struct(syn::Fields),
     Alias(syn::Type),
     Other,
-    Trait,
+    Trait { closed: bool },
     Module,
 }
 
@@ -40,8 +41,9 @@ pub(super) struct Types {
     generic_names: HashSet<String>,
     ambiguous_bindings: HashSet<String>,
     external_shadows: HashSet<String>,
-    opaque_definitions: bool,
+    opaque_definitions: HashSet<String>,
     pub(super) ambiguous_methods: HashSet<String>,
+    ambiguous_import_scopes: HashSet<String>,
 }
 
 pub(super) fn qualify(scope: &str, name: &str) -> String {
@@ -51,8 +53,6 @@ pub(super) fn qualify(scope: &str, name: &str) -> String {
         format!("{scope}::{name}")
     }
 }
-
-const METHODS: &[&str] = &["as_ref", "as_mut", "clone", "get", "get_mut"];
 
 fn standard_value(name: &str, path: &syn::Path) -> Value {
     let Some(last) = path.segments.last() else {
@@ -71,17 +71,20 @@ fn standard_value(name: &str, path: &syn::Path) -> Value {
         _ => return Value::Unknown,
     };
     match (name, arguments) {
-        ("Option" | "::std::option::Option" | "::core::option::Option", 1) => Value::Option,
+        ("Option" | "::std::option::Option" | "::core::option::Option", 1) => {
+            Value::Option(Box::new(Value::Unknown))
+        }
         ("::std::collections::HashMap" | "::std::collections::BTreeMap", 2 | 3) => Value::Map,
         ("Vec" | "::std::vec::Vec", 1 | 2) => Value::Sequence,
         ("String" | "str" | "::std::string::String", 0) => Value::Sequence,
+        ("::sifr_runtime::SifrInt", 0) => Value::Scalar,
         _ => Value::Unknown,
     }
 }
 
 impl Types {
     pub(super) fn collect(file: &syn::File) -> Self {
-        struct Boundaries<'a>(&'a mut Types);
+        struct Boundaries<'a>(&'a mut Types, Vec<String>);
         impl<'ast> Visit<'ast> for Boundaries<'_> {
             fn visit_type_param(&mut self, parameter: &'ast syn::TypeParam) {
                 self.0.generic_names.insert(parameter.ident.to_string());
@@ -105,38 +108,86 @@ impl Types {
                 }
                 visit::visit_item_trait(self, item);
             }
-            fn visit_item_macro(&mut self, _: &'ast syn::ItemMacro) {
-                self.0.opaque_definitions = true;
-                self.0
-                    .ambiguous_methods
-                    .extend(METHODS.iter().map(|s| (*s).to_owned()));
+            fn visit_item_mod(&mut self, item: &'ast syn::ItemMod) {
+                self.1.push(item.ident.to_string());
+                visit::visit_item_mod(self, item);
+                self.1.pop();
+            }
+            fn visit_block(&mut self, block: &'ast syn::Block) {
+                if block
+                    .stmts
+                    .iter()
+                    .any(|stmt| matches!(stmt, syn::Stmt::Item(syn::Item::Use(_))))
+                {
+                    self.0.ambiguous_import_scopes.insert(self.1.join("::"));
+                }
+                visit::visit_block(self, block);
+            }
+            fn visit_item_macro(&mut self, item: &'ast syn::ItemMacro) {
+                let scope = self.1.join("::");
+                if let Some(names) = crate::generated_rust_canonicalizer::syntax_cleanup::standard_macros::task_local_static_names(&item.mac) {
+                    for name in names {
+                        let name = qualify(&scope, &name.to_string());
+                        if self.0.definitions.insert(name.clone(), Definition::Other).is_some() {
+                            self.0.ambiguous_bindings.insert(name);
+                        }
+                    }
+                    return;
+                }
+                self.0.opaque_definitions.insert(scope.clone());
+                self.0.ambiguous_import_scopes.insert(scope);
             }
         }
         let mut types = Self::default();
         types.items("", &file.items);
-        Boundaries(&mut types).visit_file(file);
-        let imports_closed = types.imports.values().all(|(scope, path, absolute)| {
-            types
+        Boundaries(&mut types, Vec::new()).visit_file(file);
+        for (scope, path, absolute) in types.imports.values() {
+            if !types
                 .resolve(scope, path, *absolute, 0)
                 .is_some_and(|name| types.closed_import(&name))
-        });
-        let globs_closed = types.globs.iter().all(|(scope, imports)| {
-            imports.iter().all(|(path, absolute)| {
-                types
+            {
+                types.ambiguous_import_scopes.insert(scope.clone());
+            }
+        }
+        for (scope, imports) in &types.globs {
+            for (path, absolute) in imports {
+                if !types
                     .resolve(scope, path, *absolute, 0)
                     .is_some_and(|name| {
                         matches!(types.definitions.get(&name), Some(Definition::Module))
                             || name.starts_with("::std::")
                             || name.starts_with("::core::")
                     })
-            })
-        });
-        if !imports_closed || !globs_closed {
-            types
-                .ambiguous_methods
-                .extend(METHODS.iter().map(|s| (*s).to_owned()));
+                {
+                    types.ambiguous_import_scopes.insert(scope.clone());
+                }
+            }
         }
         types
+    }
+
+    pub(super) fn method_ambiguous(&self, scope: &str, method: &str) -> bool {
+        self.ambiguous_methods.contains(method) || self.ambiguous_import_scopes.contains(scope)
+    }
+
+    pub(super) fn ambiguous_clone_scopes(&self) -> HashSet<String> {
+        self.ambiguous_method_scopes(&["clone"])
+    }
+
+    pub(super) fn ambiguous_method_scopes(&self, methods: &[&str]) -> HashSet<String> {
+        let mut scopes = self.ambiguous_import_scopes.clone();
+        scopes.insert(String::new());
+        scopes.extend(
+            self.definitions
+                .keys()
+                .map(|key| key.rsplit_once("::").map_or("", |pair| pair.0).to_owned()),
+        );
+        scopes.retain(|scope| {
+            methods
+                .iter()
+                .any(|method| self.method_ambiguous(scope, method))
+        });
+        scopes
     }
 
     fn items(&mut self, scope: &str, items: &[syn::Item]) {
@@ -155,7 +206,18 @@ impl Types {
                     item.ident.to_string(),
                     Definition::Alias((*item.ty).clone()),
                 )),
-                syn::Item::Trait(item) => Some((item.ident.to_string(), Definition::Trait)),
+                syn::Item::Trait(item) => Some((
+                    item.ident.to_string(),
+                    Definition::Trait {
+                        closed: item.supertraits.is_empty()
+                            && item.generics.params.is_empty()
+                            && item.generics.where_clause.is_none()
+                            && !item
+                                .items
+                                .iter()
+                                .any(|member| matches!(member, syn::TraitItem::Macro(_))),
+                    },
+                )),
                 syn::Item::Mod(item) => {
                     let child = qualify(scope, &item.ident.to_string());
                     if let Some((_, items)) = &item.content {
@@ -321,11 +383,13 @@ impl Types {
     }
 
     fn closed_import(&self, name: &str) -> bool {
-        matches!(self.definitions.get(name), Some(Definition::Struct(_) | Definition::Other | Definition::Alias(_) | Definition::Module))
+        matches!(self.definitions.get(name), Some(Definition::Struct(_) | Definition::Other | Definition::Alias(_) | Definition::Module | Definition::Trait { closed: true }))
             || name.starts_with("::std::") || name.starts_with("::core::")
             // This is the compiler-owned exact runtime nominal, not a basename
             // heuristic or authorization for arbitrary external extension traits.
-            || name == "::sifr_runtime::SifrInt"
+            || matches!(name, "::sifr_runtime::SifrInt" | "::sifr_runtime::SifrRange"
+                | "::bigdecimal::BigDecimal" | "::rust_decimal::Decimal"
+                | "::num_bigint::BigInt" | "::num_bigint::BigUint")
     }
 
     pub(super) fn ty(&self, scope: &str, ty: &syn::Type, owner: Option<&str>) -> Value {
@@ -347,7 +411,7 @@ impl Types {
             syn::Type::Group(group) => self.ty_at(scope, &group.elem, owner, depth + 1),
             syn::Type::Slice(_) | syn::Type::Array(_) => Value::Sequence,
             syn::Type::Path(path) if path.qself.is_none() => {
-                if self.opaque_definitions {
+                if self.opaque_definitions.contains(scope) {
                     return Value::Unknown;
                 }
                 let parts: Vec<_> = path
@@ -376,7 +440,7 @@ impl Types {
                             depth + 1,
                         ),
                         Some(_) => Value::Unknown,
-                        None => standard_value(&name, &path.path),
+                        None => self.standard_kind(&name, &path.path, scope, owner, depth),
                     };
                 }
                 // Only actual prelude types have unqualified standard identity.
@@ -391,12 +455,31 @@ impl Types {
                     return Value::Unknown;
                 }
                 match parts.as_slice() {
-                    [name] => standard_value(name, &path.path),
+                    [name] => self.standard_kind(name, &path.path, scope, owner, depth),
                     _ => Value::Unknown,
                 }
             }
             _ => Value::Unknown,
         }
+    }
+
+    fn standard_kind(
+        &self,
+        name: &str,
+        path: &syn::Path,
+        scope: &str,
+        owner: Option<&str>,
+        depth: usize,
+    ) -> Value {
+        let kind = standard_value(name, path);
+        if matches!(kind, Value::Option(_))
+            && let Some(segment) = path.segments.last()
+            && let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments
+            && let Some(syn::GenericArgument::Type(inner)) = arguments.args.first()
+        {
+            return Value::Option(Box::new(self.ty_at(scope, inner, owner, depth + 1)));
+        }
+        kind
     }
 
     pub(super) fn field(&self, receiver: &Value, member: &syn::Member) -> Value {

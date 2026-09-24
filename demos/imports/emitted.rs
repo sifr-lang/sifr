@@ -30,7 +30,7 @@ impl User {
 impl User {
     #[must_use]
     pub fn display(&self) -> String {
-        format!("{} <{}>", self.name.clone(), self.email.clone())
+        format!("{} <{}>", self.name, self.email)
     }
 }
 impl ::std::fmt::Display for User {
@@ -57,7 +57,7 @@ impl Product {
 impl Product {
     #[must_use]
     pub fn label(&self) -> String {
-        format!("{}: ${}", self.name.clone(), self.price)
+        format!("{}: ${}", self.name, self.price)
     }
 }
 impl ::std::fmt::Display for Product {

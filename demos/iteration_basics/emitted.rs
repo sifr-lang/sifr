@@ -20,7 +20,11 @@ fn main() {
         output.push(k);
     }
     println!("Iteration demo output:");
-    for item in output.iter().cloned() {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in output.iter() {
         println!("{item}");
     }
     assert_eq!(

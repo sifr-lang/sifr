@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 fn inc(x: SifrInt) -> SifrInt {
-    &x + &SifrInt::from_i64(1)
+    ::std::ops::Add::add(x, &SifrInt::from_i64(1))
 }
 fn main() {
     let nums: Vec<SifrInt> = vec![
@@ -26,5 +26,5 @@ fn main() {
         sifr_generated_list_comp
     };
     println!("{list_comp:?}");
-    println!("{:?}", nums.iter().cloned().collect::<Vec<_>>());
+    println!("{nums:?}");
 }

@@ -29,10 +29,10 @@ mod sifr_generated_generated_support {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
     fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
-        while &pi < &SifrInt::from(pattern.chars().count()) {
+        while pi < pattern.chars().count() {
             let pc: Option<String> = {
                 let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
-                let sifr_generated_string_index = pi.clone();
+                let sifr_generated_string_index = &pi;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_string_chars.len());
                 sifr_generated_string_chars
@@ -42,26 +42,26 @@ mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             if let Some(pc) = pc {
                 if pc == "*" {
-                    pi = &pi + &SifrInt::from_i64(1);
-                    if &pi == &SifrInt::from(pattern.chars().count()) {
+                    pi = ::std::ops::Add::add(&pi, &SifrInt::from_i64(1));
+                    if pi == pattern.chars().count() {
                         return true;
                     }
-                    let mut j: SifrInt = ni.clone();
-                    while &j <= &SifrInt::from(name.chars().count()) {
+                    let mut j: SifrInt = ni;
+                    while j <= name.chars().count() {
                         if sifr_generated_match(name, j.clone(), pattern, pi.clone()) {
                             return true;
                         }
-                        j = &j + &SifrInt::from_i64(1);
+                        j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                     }
                     return false;
                 }
-                if &ni >= &SifrInt::from(name.chars().count()) {
+                if ni >= name.chars().count() {
                     return false;
                 }
                 if pc != "?" {
                     let nc: Option<String> = {
                         let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
-                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index = &ni;
                         let sifr_generated_string_index_normalized = sifr_generated_string_index
                             .normalize_index_or_len(sifr_generated_string_chars.len());
                         sifr_generated_string_chars
@@ -77,19 +77,28 @@ mod sifr_generated_generated_support {
                         return false;
                     }
                 }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
+                ni = ::std::ops::Add::add(&ni, &SifrInt::from_i64(1));
+                pi = ::std::ops::Add::add(&pi, &SifrInt::from_i64(1));
             } else {
                 return false;
             }
         }
-        &ni == &SifrInt::from(name.chars().count())
+        ni == name.chars().count()
     }
     #[must_use]
     pub fn glob(directory: &str, pattern: &str) -> Vec<String> {
         let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
-        let include_hidden: bool =
-            &SifrInt::from(sifr_generated_chars_pattern.len()) > &SifrInt::from_i64(0) && {
+        let include_hidden: bool = sifr_generated_chars_pattern.len() > SifrInt::from_i64(0) && {
+            let sifr_generated_string_index = SifrInt::from_i64(0);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_pattern.len());
+            sifr_generated_chars_pattern
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string())
+        .is_some_and(|_checked_value_0| {
+            {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_pattern.len());
@@ -97,25 +106,15 @@ mod sifr_generated_generated_support {
                     .get(sifr_generated_string_index_normalized)
                     .copied()
             }
-            .map(|character| character.to_string())
-            .is_some_and(|_checked_value_0| {
-                {
-                    let sifr_generated_string_index = SifrInt::from_i64(0);
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_chars_pattern.len());
-                    sifr_generated_chars_pattern
-                        .get(sifr_generated_string_index_normalized)
-                        .copied()
-                }
-                .map(Some)
-                    == Some(Some('.'))
-            });
+            .map(Some)
+                == Some(Some('.'))
+        });
         let mut matches: Vec<String> = Vec::new();
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let entries: Vec<String> = listdir(directory)?;
             for entry in entries.iter().cloned() {
                 let sifr_generated_chars_entry: Vec<char> = entry.chars().collect::<Vec<char>>();
-                if &SifrInt::from(sifr_generated_chars_entry.len()) == &SifrInt::from_i64(0) {
+                if sifr_generated_chars_entry.len() == SifrInt::from_i64(0) {
                     continue;
                 }
                 if !include_hidden && {
@@ -147,16 +146,14 @@ mod sifr_generated_generated_support {
             }
             Ok(())
         })();
-        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err.clone();
-            let _ = e.message.clone().to_string();
+        if let Err(_try_err) = sifr_generated_try_res {
             return Vec::new();
         }
         {
-            let mut sifr_generated_sorted_values = matches.iter().cloned().collect::<Vec<_>>();
+            let mut sifr_generated_sorted_values = matches;
             sifr_generated_sorted_values.sort_by(
                 |sifr_generated_sorted_left, sifr_generated_sorted_right| {
-                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                    sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
                 },
             );
             sifr_generated_sorted_values
@@ -202,71 +199,73 @@ mod sifr_generated_generated_support {
         elapsed
     }
     #[must_use]
-    pub fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
+    pub fn timeit(stmt: impl Fn(), number: &SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &number {
+        while &i < number {
             stmt();
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
         let end: f64 = perf_counter();
         sifr_generated_elapsed_non_negative(start, end)
     }
     #[must_use]
-    pub fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
+    pub fn repeat(stmt: impl Fn(), count: &SifrInt, number: &SifrInt) -> Vec<f64> {
         let mut results: Vec<f64> = Vec::new();
         let mut r: SifrInt = SifrInt::from_i64(0);
-        while &r < &count {
+        while &r < count {
             let start: f64 = perf_counter();
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &number {
+            while &i < number {
                 stmt();
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
             let end: f64 = perf_counter();
             let elapsed: f64 = sifr_generated_elapsed_non_negative(start, end);
             results.push(elapsed);
-            r = &r + &SifrInt::from_i64(1);
+            r = ::std::ops::Add::add(&r, &SifrInt::from_i64(1));
         }
         results
     }
     fn toml_parse_tokens(text: &str) -> Result<Vec<String>, ParseError> {
         ::sifr_stdlib::toml::toml_parse_tokens(text).map_err(|sifr_generated_bridge_error| {
             ParseError {
-                message: sifr_generated_bridge_error.to_string(),
+                message: sifr_generated_bridge_error,
             }
         })
     }
     #[derive(Debug, Clone)]
-    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
-        SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(TOMLDecodeError),
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(ParseError),
+        SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
+            TOMLDecodeError,
+        ),
     }
     impl From<ParseError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0 {
         fn from(value: ParseError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                 value,
             )
         }
     }
     impl From<TOMLDecodeError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0 {
         fn from(value: TOMLDecodeError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
@@ -274,11 +273,11 @@ mod sifr_generated_generated_support {
     }
     fn sifr_generated_token_at(
         tokens: &[String],
-        index: SifrInt,
+        index: &SifrInt,
     ) -> Result<String, TOMLDecodeError> {
         let value: Option<String> = {
             let sifr_generated_checked_read_collection = &tokens;
-            let sifr_generated_checked_read_index = index.clone();
+            let sifr_generated_checked_read_index = (*index).clone();
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -290,28 +289,22 @@ mod sifr_generated_generated_support {
                 "TOML bridge payload ended unexpectedly".to_string(),
             ));
         };
-        Ok({
-            let mut sifr_generated_concat: String =
-                String::with_capacity(value_value_7ce4fd9430e80cea.len());
-            sifr_generated_concat.push_str(value_value_7ce4fd9430e80cea.as_str());
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        })
+        Ok(value_value_7ce4fd9430e80cea)
     }
     fn sifr_generated_token_int(
         tokens: &[String],
-        index: SifrInt,
+        index: &SifrInt,
     ) -> Result<SifrInt, TOMLDecodeError> {
         let sifr_generated_try_res: Result<
             Result<SifrInt, TOMLDecodeError>,
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0,
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0,
         > = (|| {
             let token_value_26c4b17d50b3c152: String = sifr_generated_token_at(
                     tokens,
-                    index.clone(),
+                    index,
                 )
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0,
                 )?;
             let parsed: SifrInt = SifrInt::parse_decimal(
                     &token_value_26c4b17d50b3c152,
@@ -321,16 +314,15 @@ mod sifr_generated_generated_support {
                     message: e.to_string(),
                 })
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
                 )?;
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error.clone();
                     Err(
                         TOMLDecodeError::new(
                             "TOML bridge payload has invalid integer metadata"
@@ -338,28 +330,28 @@ mod sifr_generated_generated_support {
                         ),
                     )
                 }
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let e = sifr_generated_try_variant_error.clone();
-                    Err(TOMLDecodeError::new(e.message.clone()))
+                    let e: TOMLDecodeError = sifr_generated_try_variant_error;
+                    Err(TOMLDecodeError::new(e.message))
                 }
             })
     }
     fn sifr_generated_token_float(
         tokens: &[String],
-        index: SifrInt,
+        index: &SifrInt,
     ) -> Result<f64, TOMLDecodeError> {
         let sifr_generated_try_res: Result<
             Result<f64, TOMLDecodeError>,
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0,
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0,
         > = (|| {
             let token_value_26c4b17d50b3c152: String = sifr_generated_token_at(
                     tokens,
-                    index.clone(),
+                    index,
                 )
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0,
                 )?;
             let parsed: f64 = token_value_26c4b17d50b3c152
                 .parse::<f64>()
@@ -367,27 +359,26 @@ mod sifr_generated_generated_support {
                     message: e.to_string(),
                 })
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
                 )?;
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error.clone();
                     Err(
                         TOMLDecodeError::new(
                             "TOML bridge payload has invalid float metadata".to_string(),
                         ),
                     )
                 }
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let e = sifr_generated_try_variant_error.clone();
-                    Err(TOMLDecodeError::new(e.message.clone()))
+                    let e: TOMLDecodeError = sifr_generated_try_variant_error;
+                    Err(TOMLDecodeError::new(e.message))
                 }
             })
     }
@@ -408,16 +399,16 @@ mod sifr_generated_generated_support {
     )]
     fn sifr_generated_decode_toml_value_at(
         tokens: &[String],
-        index: SifrInt,
+        index: &SifrInt,
     ) -> Result<(SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt), TOMLDecodeError> {
         let sifr_generated_try_res: Result<
             Result<(SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt), TOMLDecodeError>,
             TOMLDecodeError,
         > = (|| {
-            let tag: String = sifr_generated_token_at(tokens, index.clone())?;
-            let payload_index: SifrInt = &index + &SifrInt::from_i64(1);
+            let tag: String = sifr_generated_token_at(tokens, index)?;
+            let payload_index: SifrInt = ::std::ops::Add::add(index, &SifrInt::from_i64(1));
             if tag == "bool" {
-                let bool_token: String = sifr_generated_token_at(tokens, payload_index.clone())?;
+                let bool_token: String = sifr_generated_token_at(tokens, &payload_index)?;
                 let bool_value: bool = sifr_generated_decode_bool_token(&bool_token)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2etomllibX2eTomlValue::new(
@@ -428,25 +419,25 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "int" {
-                let int_value: SifrInt = sifr_generated_token_int(tokens, payload_index.clone())?;
+                let int_value: SifrInt = sifr_generated_token_int(tokens, &payload_index)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2etomllibX2eTomlValue::new(
                         "int".to_string(),
                         None,
-                        Some(int_value),
+                        Some(&int_value),
                         None,
                         None,
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "float" {
-                let float_value: f64 = sifr_generated_token_float(tokens, payload_index.clone())?;
+                let float_value: f64 = sifr_generated_token_float(tokens, &payload_index)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2etomllibX2eTomlValue::new(
                         "float".to_string(),
@@ -456,11 +447,11 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "str" {
-                let str_value: String = sifr_generated_token_at(tokens, payload_index.clone())?;
+                let str_value: String = sifr_generated_token_at(tokens, &payload_index)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2etomllibX2eTomlValue::new(
                         "str".to_string(),
@@ -470,12 +461,11 @@ mod sifr_generated_generated_support {
                         Some(str_value),
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "datetime" {
-                let datetime_value: String =
-                    sifr_generated_token_at(tokens, payload_index.clone())?;
+                let datetime_value: String = sifr_generated_token_at(tokens, &payload_index)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2etomllibX2eTomlValue::new(
                         "datetime".to_string(),
@@ -485,12 +475,12 @@ mod sifr_generated_generated_support {
                         None,
                         Some(datetime_value),
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "array" {
-                let array_count: SifrInt = sifr_generated_token_int(tokens, payload_index.clone())?;
-                if &array_count < &SifrInt::from_i64(0) {
+                let array_count: SifrInt = sifr_generated_token_int(tokens, &payload_index)?;
+                if array_count < SifrInt::from_i64(0) {
                     return Err(TOMLDecodeError::new(
                         "TOML bridge payload has invalid array length".to_string(),
                     ));
@@ -504,20 +494,21 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     );
-                let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
+                let mut next_index: SifrInt =
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1));
                 let mut consumed: SifrInt = SifrInt::from_i64(0);
-                while &consumed < &array_count {
+                while consumed < array_count {
                     let item_result: (SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt) =
-                        sifr_generated_decode_toml_value_at(tokens, next_index.clone())?;
+                        sifr_generated_decode_toml_value_at(tokens, &next_index)?;
                     array_value.array_items.push(item_result.0.clone());
-                    next_index = item_result.1.clone();
-                    consumed = &consumed + &SifrInt::from_i64(1);
+                    next_index.clone_from(&item_result.1);
+                    consumed = ::std::ops::Add::add(&consumed, &SifrInt::from_i64(1));
                 }
-                return Ok(Ok((array_value, next_index.clone())));
+                return Ok(Ok((array_value, next_index)));
             }
             if tag == "table" {
-                let table_count: SifrInt = sifr_generated_token_int(tokens, payload_index.clone())?;
-                if &table_count < &SifrInt::from_i64(0) {
+                let table_count: SifrInt = sifr_generated_token_int(tokens, &payload_index)?;
+                if table_count < SifrInt::from_i64(0) {
                     return Err(TOMLDecodeError::new(
                         "TOML bridge payload has invalid table length".to_string(),
                     ));
@@ -531,31 +522,33 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     );
-                let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
+                let mut next_index: SifrInt =
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1));
                 let mut consumed: SifrInt = SifrInt::from_i64(0);
-                while &consumed < &table_count {
-                    let key: String = sifr_generated_token_at(tokens, next_index.clone())?;
+                while consumed < table_count {
+                    let key: String = sifr_generated_token_at(tokens, &next_index)?;
                     let item_result: (SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt) =
                         sifr_generated_decode_toml_value_at(
                             tokens,
-                            &next_index + &SifrInt::from_i64(1),
+                            &::std::ops::Add::add(&next_index, &SifrInt::from_i64(1)),
                         )?;
                     table_value.table_items.push((key, item_result.0.clone()));
-                    next_index = item_result.1.clone();
-                    consumed = &consumed + &SifrInt::from_i64(1);
+                    next_index.clone_from(&item_result.1);
+                    consumed = ::std::ops::Add::add(&consumed, &SifrInt::from_i64(1));
                 }
                 return Ok(Ok((table_value, next_index)));
             }
             Err(TOMLDecodeError::new({
-                let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(43usize.saturating_add(tag.len()));
                 sifr_generated_concat.push_str("TOML bridge payload has unknown value tag: ");
                 sifr_generated_concat.push_str(tag.as_str());
                 sifr_generated_concat
             }))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
-            Err(TOMLDecodeError::new(e.message.clone()))
+            let e: TOMLDecodeError = sifr_generated_try_err;
+            Err(TOMLDecodeError::new(e.message))
         })
     }
     fn sifr_generated_decode_toml_tokens(
@@ -566,17 +559,17 @@ mod sifr_generated_generated_support {
             TOMLDecodeError,
         > = (|| {
             let decoded: (SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt) =
-                sifr_generated_decode_toml_value_at(tokens, SifrInt::from_i64(0))?;
-            if &decoded.1.clone() != &SifrInt::from(tokens.len()) {
+                sifr_generated_decode_toml_value_at(tokens, &SifrInt::from_i64(0))?;
+            if decoded.1 != tokens.len() {
                 return Err(TOMLDecodeError::new(
                     "TOML bridge payload has trailing data".to_string(),
                 ));
             }
-            Ok(Ok(decoded.0.clone()))
+            Ok(Ok(decoded.0))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
-            Err(TOMLDecodeError::new(e.message.clone()))
+            let e: TOMLDecodeError = sifr_generated_try_err;
+            Err(TOMLDecodeError::new(e.message))
         })
     }
     ///# Errors
@@ -592,8 +585,8 @@ mod sifr_generated_generated_support {
             Ok(sifr_generated_decode_toml_tokens(&tokens))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
-            Err(TOMLDecodeError::new(e.message.clone()))
+            let e: ParseError = sifr_generated_try_err;
+            Err(TOMLDecodeError::new(e.message))
         })
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -625,24 +618,25 @@ mod sifr_generated_project_nominals {
         pub float_value: Option<f64>,
         pub str_value: Option<String>,
         pub datetime_value: Option<String>,
-        pub array_items: Box<Vec<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue>>,
-        pub table_items: Box<Vec<(String, SifrGeneratedStdlibSifrX2etomllibX2eTomlValue)>>,
+        pub array_items: Box<Vec<Self>>,
+        pub table_items: Box<Vec<(String, Self)>>,
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
         #[must_use]
         pub fn new(
             kind: String,
             bool_value: Option<bool>,
-            int_value: Option<SifrInt>,
+            int_value: Option<&SifrInt>,
             float_value: Option<f64>,
             str_value: Option<String>,
             datetime_value: Option<String>,
         ) -> Self {
+            let int_value: Option<SifrInt> = int_value.cloned();
             let sifr_generated_field_value_ef9c96d721673243_6b696e64: String = kind;
             let sifr_generated_field_value_49c3632d5fc42247_626f6f6c5f76616c7565: Option<bool> =
                 bool_value;
             let sifr_generated_field_value_3e267a8f73b9f8b0_696e745f76616c7565: Option<SifrInt> =
-                int_value.clone();
+                int_value;
             let sifr_generated_field_value_08384ece94446e4f_666c6f61745f76616c7565: Option<f64> =
                 float_value;
             let sifr_generated_field_value_100b36b139835e22_7374725f76616c7565: Option<String> =
@@ -650,11 +644,10 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_4fa57db663ec4ee2_6461746574696d655f76616c7565: Option<
                 String,
             > = datetime_value;
-            let sifr_generated_field_value_45232d46c202975d_61727261795f6974656d73: Box<
-                Vec<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue>,
-            > = Box::default();
+            let sifr_generated_field_value_45232d46c202975d_61727261795f6974656d73: Box<Vec<Self>> =
+                Box::default();
             let sifr_generated_field_value_cd3902008971ddd4_7461626c655f6974656d73: Box<
-                Vec<(String, SifrGeneratedStdlibSifrX2etomllibX2eTomlValue)>,
+                Vec<(String, Self)>,
             > = Box::default();
             Self {
                 kind: sifr_generated_field_value_ef9c96d721673243_6b696e64,
@@ -672,7 +665,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
         #[must_use]
         pub fn is_table(&self) -> bool {
-            self.kind.clone() == "table"
+            self.kind == "table"
         }
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
@@ -683,7 +676,7 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
         #[must_use]
-        pub fn get(&self, key: &str) -> Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> {
+        pub fn get(&self, key: &str) -> Option<Self> {
             if !self.is_table() {
                 return None;
             }
@@ -751,15 +744,11 @@ pub use sifr_generated_project_nominals::TOMLDecodeError;
 fn do_work() {
     let mut total: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(1000) {
-        total = &total + &i;
-        i = &i + &SifrInt::from_i64(1);
+    while i < SifrInt::from_i64(1000) {
+        total = ::std::ops::Add::add(&total, &i);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
 }
-#[expect(
-    clippy::too_many_lines,
-    reason = "one generated Rust function preserves one typed Sifr function"
-)]
 fn main() {
     println!("=== Monotonic Clocks ===");
     let t1: f64 = perf_counter();
@@ -771,102 +760,79 @@ fn main() {
     println!("=== timeit (Callable API) ===");
     let dt: f64 = default_timer();
     println!("{}", dt >= 0.0_f64);
-    let elapsed: f64 = timeit(do_work, SifrInt::from_i64(100));
+    let elapsed: f64 = timeit(do_work, &SifrInt::from_i64(100));
     println!("{}", elapsed >= 0.0_f64);
-    let results: Vec<f64> = repeat(do_work, SifrInt::from_i64(3), SifrInt::from_i64(50));
+    let results: Vec<f64> = repeat(do_work, &SifrInt::from_i64(3), &SifrInt::from_i64(50));
     println!("{}", SifrInt::from(results.len()));
     println!("=== glob ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _r1: String = run_command(&"mkdir -p /tmp/sifr_polish_demo".to_string())?;
-        write_text(
-            &"/tmp/sifr_polish_demo/a.txt".to_string(),
-            &"aaa".to_string(),
-        )?;
-        write_text(
-            &"/tmp/sifr_polish_demo/b.txt".to_string(),
-            &"bbb".to_string(),
-        )?;
-        write_text(
-            &"/tmp/sifr_polish_demo/c.csv".to_string(),
-            &"1,2".to_string(),
-        )?;
+        let _r1: String = run_command("mkdir -p /tmp/sifr_polish_demo")?;
+        write_text("/tmp/sifr_polish_demo/a.txt", "aaa")?;
+        write_text("/tmp/sifr_polish_demo/b.txt", "bbb")?;
+        write_text("/tmp/sifr_polish_demo/c.csv", "1,2")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("setup error: {}", err.message.clone());
+        let err: IOError = sifr_generated_try_err;
+        println!("setup error: {}", err.message);
     }
-    let matches: Vec<String> = glob(&"/tmp/sifr_polish_demo".to_string(), &"*.txt".to_string());
+    let matches: Vec<String> = glob("/tmp/sifr_polish_demo", "*.txt");
     println!("{}", SifrInt::from(matches.len()));
     println!("=== shutil ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         copy(
-            &"/tmp/sifr_polish_demo/a.txt".to_string(),
-            &"/tmp/sifr_polish_demo/a_copy.txt".to_string(),
+            "/tmp/sifr_polish_demo/a.txt",
+            "/tmp/sifr_polish_demo/a_copy.txt",
         )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("copy error: {}", err.message.clone());
+        let err: IOError = sifr_generated_try_err;
+        println!("copy error: {}", err.message);
     }
-    println!(
-        "{}",
-        exists(&"/tmp/sifr_polish_demo/a_copy.txt".to_string())
-    );
+    println!("{}", exists("/tmp/sifr_polish_demo/a_copy.txt"));
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         move_file(
-            &"/tmp/sifr_polish_demo/a_copy.txt".to_string(),
-            &"/tmp/sifr_polish_demo/a_moved.txt".to_string(),
+            "/tmp/sifr_polish_demo/a_copy.txt",
+            "/tmp/sifr_polish_demo/a_moved.txt",
         )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("move error: {}", err.message.clone());
+        let err: IOError = sifr_generated_try_err;
+        println!("move error: {}", err.message);
     }
-    println!(
-        "{}",
-        exists(&"/tmp/sifr_polish_demo/a_moved.txt".to_string())
-    );
-    println!(
-        "{}",
-        exists(&"/tmp/sifr_polish_demo/a_copy.txt".to_string())
-    );
+    println!("{}", exists("/tmp/sifr_polish_demo/a_moved.txt"));
+    println!("{}", exists("/tmp/sifr_polish_demo/a_copy.txt"));
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _r2: String = run_command(&"mkdir -p /tmp/sifr_polish_demo/sub".to_string())?;
-        write_text(
-            &"/tmp/sifr_polish_demo/sub/nested.txt".to_string(),
-            &"nested".to_string(),
-        )?;
-        rmtree(&"/tmp/sifr_polish_demo/sub".to_string())?;
+        let _r2: String = run_command("mkdir -p /tmp/sifr_polish_demo/sub")?;
+        write_text("/tmp/sifr_polish_demo/sub/nested.txt", "nested")?;
+        rmtree("/tmp/sifr_polish_demo/sub")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("rmtree error: {}", err.message.clone());
+        let err: IOError = sifr_generated_try_err;
+        println!("rmtree error: {}", err.message);
     }
-    println!("{}", exists(&"/tmp/sifr_polish_demo/sub".to_string()));
+    println!("{}", exists("/tmp/sifr_polish_demo/sub"));
     println!("=== tomllib ===");
     let sifr_generated_try_res: Result<(), TOMLDecodeError> = (|| {
-        let inline: SifrGeneratedStdlibSifrX2etomllibX2eTomlValue =
-            loads(&"key = \"value\"".to_string())?;
-        let key_value: Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> =
-            inline.get(&"key".to_string());
+        let inline: SifrGeneratedStdlibSifrX2etomllibX2eTomlValue = loads("key = \"value\"")?;
+        let key_value: Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> = inline.get("key");
         println!("{}", key_value.is_some());
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("toml loads error: {}", err.message.clone());
+        let err: TOMLDecodeError = sifr_generated_try_err;
+        println!("toml loads error: {}", err.message);
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _cleanup: String = run_command(&"rm -rf /tmp/sifr_polish_demo".to_string())?;
+        let _cleanup: String = run_command("rm -rf /tmp/sifr_polish_demo")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("cleanup error: {}", err.message.clone());
+        let err: IOError = sifr_generated_try_err;
+        println!("cleanup error: {}", err.message);
     }
     println!("=== Done ===");
 }

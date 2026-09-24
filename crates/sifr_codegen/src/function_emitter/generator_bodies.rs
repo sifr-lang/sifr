@@ -188,6 +188,7 @@ impl RustEmitter {
                     "function body statement lowering",
                 ));
             }
+            lowered.extend(Self::owned_assertion_drop(func));
             lowered
         };
 

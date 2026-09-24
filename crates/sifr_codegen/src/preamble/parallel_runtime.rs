@@ -59,7 +59,8 @@ struct Pool {
 
 impl Pool {
     fn new(config: PoolConfig) -> Self {
-        let workers = __sifr_parallel_worker_count(config.workers);
+        let PoolConfig { workers } = config;
+        let workers = __sifr_parallel_worker_count(workers);
         match __sifr_build_parallel_pool(workers) {
             Ok(pool) => {
                 return Self {
@@ -97,10 +98,7 @@ fn __sifr_parallel_worker_count(workers: SifrInt) -> usize {
     if workers <= SifrInt::from_i64(0) {
         return 1usize;
     }
-    match workers.try_to_usize() {
-        Ok(requested) => requested,
-        Err(_) => usize::MAX,
-    }
+    workers.try_to_usize().unwrap_or(usize::MAX)
 }
 
 fn __sifr_default_parallel_worker_count() -> usize {

@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-fn add(x: SifrInt, y: SifrInt) -> SifrInt {
-    &x + &y
+fn add(x: &SifrInt, y: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(x, y)
 }
 fn main() {
     let mut rev_it: Box<dyn Iterator<Item = SifrInt>> = Box::new(
@@ -21,7 +21,10 @@ fn main() {
             .enumerate()
             .map(|sifr_generated_pair| {
                 (
-                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(3),
+                    ::std::ops::Add::add(
+                        SifrInt::from(sifr_generated_pair.0),
+                        SifrInt::from_i64(3),
+                    ),
                     sifr_generated_pair.1,
                 )
             }),
@@ -55,7 +58,7 @@ fn main() {
         .map(|sifr_generated_map_item| {
             let sifr_generated_map_arg_0 = sifr_generated_map_item.0;
             let sifr_generated_map_arg_1 = sifr_generated_map_item.1;
-            add(sifr_generated_map_arg_0, sifr_generated_map_arg_1)
+            add(&sifr_generated_map_arg_0, &sifr_generated_map_arg_1)
         }),
     );
     assert_eq!(mapped_it.next(), Some(SifrInt::from_i64(5)));

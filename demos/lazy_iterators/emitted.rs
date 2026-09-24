@@ -104,12 +104,12 @@ fn fibonacci(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
             let mut a: SifrInt = SifrInt::from_i64(0);
             let mut b: SifrInt = SifrInt::from_i64(1);
             let mut count: SifrInt = SifrInt::from_i64(0);
-            while &count < &n {
+            while count < n {
                 sifr_generated_yielder.suspend(a.clone()).await;
-                let temp: SifrInt = &a + &b;
-                a = b.clone();
-                b = temp.clone();
-                count = &count + &SifrInt::from_i64(1);
+                let temp: SifrInt = ::std::ops::Add::add(&a, &b);
+                a.clone_from(&b);
+                b = temp;
+                count = ::std::ops::Add::add(&count, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -118,9 +118,11 @@ fn squares(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &n {
-                sifr_generated_yielder.suspend(&i * &i).await;
-                i = &i + &SifrInt::from_i64(1);
+            while i < n {
+                sifr_generated_yielder
+                    .suspend(::std::ops::Mul::mul(&i, &i))
+                    .await;
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -129,11 +131,11 @@ fn evens(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &limit {
-                if &i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
+            while i < limit {
+                if i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0) {
                     sifr_generated_yielder.suspend(i.clone()).await;
                 }
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -142,23 +144,23 @@ fn count_up(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &n {
+            while i < n {
                 sifr_generated_yielder.suspend(i.clone()).await;
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
 }
 fn format_int_list(values: &[SifrInt]) -> String {
-    if &SifrInt::from(values.len()) == &SifrInt::from_i64(0) {
+    if values.len() == SifrInt::from_i64(0) {
         return "[]".to_string();
     }
     let mut formatted: String = "[".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(values.len()) {
+    while i < values.len() {
         let Some(sifr_generated_checked_value_0) = ({
             let sifr_generated_checked_read_collection = &values;
-            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_index = &i;
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -167,11 +169,11 @@ fn format_int_list(values: &[SifrInt]) -> String {
         }) else {
             break;
         };
-        formatted.push_str(sifr_generated_checked_value_0.clone().to_string().as_str());
-        if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(values.len()) {
+        formatted.push_str(sifr_generated_checked_value_0.to_string().as_str());
+        if ::std::ops::Add::add(&i, &SifrInt::from_i64(1)) < values.len() {
             formatted.push_str(", ");
         }
-        i = &i + &SifrInt::from_i64(1);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     formatted.push(']');
     formatted
@@ -224,7 +226,11 @@ fn main() {
         ]
     );
     println!("Lazy iterator demo output:");
-    for item in output.iter().cloned() {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in output.iter() {
         println!("{item}");
     }
 }

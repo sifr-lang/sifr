@@ -42,8 +42,9 @@ mod sifr_generated_generated_support {
     }
     fn sifr_generated_file_read_bytes(
         handle: &str,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
+        let size: Option<SifrInt> = size.cloned();
         ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -59,18 +60,19 @@ mod sifr_generated_generated_support {
             Ok(Ok(SifrGeneratedIoNativeFileHandle::new(handle_id)))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
+            let e: IOError = sifr_generated_try_err;
             Err(e)
         })
     }
     fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
+        sifr_generated_file_close(handle.id.as_str());
     }
     fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
-        sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
+        let size: Option<SifrInt> = size.cloned();
+        sifr_generated_file_read_bytes(handle.id.as_str(), size.as_ref())
     }
     fn sifr_generated_build_hash(
         algorithm: &str,
@@ -82,79 +84,79 @@ mod sifr_generated_generated_support {
                 alg,
                 data.to_vec(),
                 "md5".to_string(),
-                SifrInt::from_i64(16),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(16),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha1" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha1".to_string(),
-                SifrInt::from_i64(20),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(20),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha224" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha224".to_string(),
-                SifrInt::from_i64(28),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(28),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha256" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha256".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha384" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha384".to_string(),
-                SifrInt::from_i64(48),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(48),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "sha512" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha512".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2b" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2b".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2s" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2s".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         }
         SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
             alg,
             data.to_vec(),
             "unknown".to_string(),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )
     }
     #[must_use]
     pub fn copy_hash(
         h: &SifrGeneratedStdlibSifrX2ehashlibX2eHashObject,
     ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-        sifr_generated_build_hash(&h.algorithm.clone(), &h.data.clone())
+        sifr_generated_build_hash(h.algorithm.as_str(), &h.data.clone())
     }
     fn sifr_generated_is_supported_algorithm(name: &str) -> bool {
         let n: String = name.to_lowercase();
@@ -186,7 +188,7 @@ mod sifr_generated_generated_support {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        Vec::new()
+        Vec::<u8>::new()
     }
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
@@ -211,7 +213,8 @@ mod sifr_generated_generated_support {
     ) -> Result<SifrGeneratedStdlibSifrX2ehashlibX2eHashObject, ValueError> {
         if !sifr_generated_is_supported_algorithm(name) {
             return Err(ValueError::new({
-                let mut sifr_generated_concat: String = String::with_capacity(28usize + name.len());
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(28usize.saturating_add(name.len()));
                 sifr_generated_concat.push_str("unsupported hash algorithm: ");
                 sifr_generated_concat.push_str(name);
                 sifr_generated_concat
@@ -239,16 +242,16 @@ mod sifr_generated_generated_support {
         name: &str,
     ) -> Result<String, SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError> {
         let sifr_generated_try_res: Result<(SifrGeneratedIoNativeFileHandle,), IOError> = (|| {
-            let handle: SifrGeneratedIoNativeFileHandle = open_file(path, &"rb".to_string())?;
+            let handle: SifrGeneratedIoNativeFileHandle = open_file(path, "rb")?;
             Ok((handle,))
         })(
         );
         let (handle,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let e = sifr_generated_try_err.clone();
+                let e: IOError = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
-                    e.message.clone(),
+                    e.message,
                 ));
             }
         };
@@ -259,10 +262,10 @@ mod sifr_generated_generated_support {
         let (data,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let e = sifr_generated_try_err.clone();
+                let e: IOError = sifr_generated_try_err;
                 file_close(&handle);
                 return Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
-                    e.message.clone(),
+                    e.message,
                 ));
             }
         };
@@ -275,24 +278,24 @@ mod sifr_generated_generated_support {
             Ok(Ok(h.hexdigest()))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
+            let e: ValueError = sifr_generated_try_err;
             Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
-                e.message.clone(),
+                e.message,
             ))
         })
     }
     #[must_use]
     pub fn md5(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-        sifr_generated_build_hash(&"md5".to_string(), data)
+        sifr_generated_build_hash("md5", data)
     }
     #[must_use]
     pub fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-        sifr_generated_build_hash(&"sha256".to_string(), data)
+        sifr_generated_build_hash("sha256", data)
     }
     pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -313,13 +316,13 @@ mod sifr_generated_generated_support {
                         .cloned()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -340,7 +343,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -422,17 +425,17 @@ mod sifr_generated_project_nominals {
             algorithm: String,
             data: Vec<u8>,
             name: String,
-            digest_size: SifrInt,
-            block_size: SifrInt,
+            digest_size: &SifrInt,
+            block_size: &SifrInt,
         ) -> Self {
             let sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d: String =
                 algorithm;
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
             let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-                digest_size.clone();
+                (*digest_size).clone();
             let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-                block_size.clone();
+                (*block_size).clone();
             Self {
                 algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
                 data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
@@ -445,8 +448,8 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         pub fn update(&mut self, data: &[u8]) {
             self.data = {
-                let mut sifr_generated_v = self.data.clone().to_vec();
-                sifr_generated_v.extend(data.iter().cloned());
+                let mut sifr_generated_v = self.data.clone();
+                sifr_generated_v.extend(data.iter().copied());
                 sifr_generated_v
             };
         }
@@ -501,8 +504,12 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHas
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError;
 pub use sifr_generated_project_nominals::ValueError;
 fn contains(values: &[String], needle: &str) -> bool {
-    for v in values.iter().cloned() {
-        if v == *needle {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for v in values.iter() {
+        if v == needle {
             return true;
         }
     }
@@ -510,42 +517,37 @@ fn contains(values: &[String], needle: &str) -> bool {
 }
 fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
     let mut actual: Vec<String> = Vec::new();
-    let mut h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = sha256(&Vec::new());
-    (&mut h).update(&vec![97_u8]);
-    (&mut h).update(&vec![98_u8, 99_u8]);
+    let mut h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = sha256(&Vec::<u8>::new());
+    h.update(&[97_u8]);
+    h.update(&[98_u8, 99_u8]);
     actual.push(
-        (h.hexdigest().as_str() == sha256(&vec![97_u8, 98_u8, 99_u8]).hexdigest().as_str())
+        (h.hexdigest().as_str() == sha256(&[97_u8, 98_u8, 99_u8]).hexdigest().as_str()).to_string(),
+    );
+    actual.push((h.digest().len() == SifrInt::from_i64(32)).to_string());
+    let mut c: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = copy_hash(&h);
+    c.update(&[120_u8]);
+    actual.push(
+        (c.hexdigest().as_str() == sha256(&[97_u8, 98_u8, 99_u8, 120_u8]).hexdigest().as_str())
             .to_string(),
     );
-    actual.push((&SifrInt::from(h.digest().len()) == &SifrInt::from_i64(32)).to_string());
-    let mut c: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = copy_hash(&h);
-    (&mut c).update(&vec![120_u8]);
-    actual.push(
-        (c.hexdigest().as_str()
-            == sha256(&vec![97_u8, 98_u8, 99_u8, 120_u8])
-                .hexdigest()
-                .as_str())
-        .to_string(),
-    );
     let m: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject =
-        md5(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8]);
+        md5(&[104_u8, 101_u8, 108_u8, 108_u8, 111_u8]);
     actual.push(
         (m.hexdigest().as_str()
-            == md5(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8])
+            == md5(&[104_u8, 101_u8, 108_u8, 108_u8, 111_u8])
                 .hexdigest()
                 .as_str())
         .to_string(),
     );
-    actual.push(contains(&algorithms_guaranteed(), &"sha256".to_string()).to_string());
+    actual.push(contains(&algorithms_guaranteed(), "sha256").to_string());
     actual.push(m.hexdigest());
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError> =
         (|| {
-            let out: String = file_digest(tmp_path, &"sha256".to_string())?;
+            let out: String = file_digest(tmp_path, "sha256")?;
             actual.push(out);
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+    if let Err(_try_err) = sifr_generated_try_res {
         actual.push("ERR".to_string());
     }
     actual
@@ -553,14 +555,12 @@ fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
 fn collect_negative_actual_ok() -> Vec<bool> {
     let mut actual_ok: Vec<bool> = Vec::new();
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let bad: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject =
-            new(&"sha3_256".to_string(), &Vec::new())?;
-        let _ = bad.name.clone().to_string();
+        let _bad: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject =
+            new("sha3_256", &Vec::<u8>::new())?;
         actual_ok.push(true);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+    if let Err(_try_err) = sifr_generated_try_res {
         actual_ok.push(false);
     }
     actual_ok
@@ -576,7 +576,7 @@ fn main() {
         "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57".to_string(),
     ];
     let tmp_path: String = "tmp_hashlib_hashlib_demo.txt".to_string();
-    let _: Result<(), IOError> = write_text(&tmp_path, &"file-data".to_string());
+    let _: Result<(), IOError> = write_text(&tmp_path, "file-data");
     let actual: Vec<String> = collect_positive_actual(&tmp_path);
     assert_vector_eq(&actual, &expected);
     let expected_ok: Vec<bool> = vec![false];

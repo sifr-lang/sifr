@@ -107,6 +107,46 @@ def walk(own root: TreeNode | None) -> list[int]:
 }
 
 #[test]
+fn test_optional_list_pop_class_fields_project_through_present_value() {
+    let rust_code = generate_rust_from_source(
+        r#"class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(self, val: int, left: TreeNode | None = None, right: TreeNode | None = None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def children(own mut nodes: list[TreeNode]) -> int:
+    node = nodes.pop(0)
+    left: TreeNode | None = node.left
+    right: TreeNode | None = node.right
+    if left is not None:
+        return left.val
+    if right is not None:
+        return right.val
+    return 0
+"#,
+    );
+
+    assert!(
+        rust_code.contains(".as_ref().and_then(|sifr_generated_optional_field_value|"),
+        "optional class field reads must project through a present value:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(".left.as_deref().cloned()")
+            && rust_code.contains(".right.as_deref().cloned()"),
+        "recursive children must preserve their optional value shape:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains(".clone().left.take()") && !rust_code.contains(".clone().right.take()"),
+        "an optional receiver must not be used as a class value:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_mutually_recursive_local_binding_is_mutable_for_child_moves() {
     let rust_code = generate_rust_from_source(
         r#"class Branch:
@@ -433,6 +473,16 @@ def mergeChildren(own first: TreeNode | None, own second: TreeNode | None) -> Tr
 "#,
     );
 
+    let canonical = crate::canonicalize_generated_rust_source(&rust_code)
+        .expect("narrowed optional tree code should canonicalize");
+    assert!(
+        !canonical.contains("Add::add(&&"),
+        "borrowed constructor arithmetic must keep the borrow around the sum: {canonical}"
+    );
+    assert!(
+        canonical.contains("&::std::ops::Add::add(&first.val, &second.val)"),
+        "narrowed integer fields should be borrowed once and evaluated in order: {canonical}"
+    );
     assert!(
         rust_code.contains("let Some(mut first) = first else"),
         "simple let-else lowering must make an owned recursive class mutable before taking child fields:\n{rust_code}"
@@ -531,8 +581,8 @@ def nextNode(node: LinkedNode | None) -> LinkedNode | None:
     );
 
     assert!(
-        rust_code.contains("let Some(node) = node.as_ref() else"),
-        "shared recursive options must narrow through an immutable borrowed binding:\n{rust_code}"
+        rust_code.contains("let Some(node) = node else"),
+        "shared recursive Option<&Node> must narrow without an extra reference:\n{rust_code}"
     );
     assert!(
         !rust_code.contains("let Some(mut node) = node else"),
@@ -708,4 +758,88 @@ fn test_nested_copy_parameter_is_not_registered_as_borrowed() {
         !rust_code.contains("|copy_value: &SifrInt|"),
         "default borrow syntax must not classify Copy nested parameters as borrowed storage:\n{rust_code}"
     );
+}
+
+#[test]
+fn test_recursive_option_method_argument_uses_borrowed_view() {
+    let rust_code = generate_rust_from_source(
+        r#"class Node:
+    value: int
+    next: Node | None
+
+    def __init__(self, value: int, next: Node | None = None):
+        self.value = value
+        self.next = next
+
+class Reader:
+    def value(self, node: Node | None) -> int:
+        if node is None:
+            return 0
+        return node.value
+
+def main():
+    reader = Reader()
+    root: Node | None = Node(7)
+    assert reader.value(root) == 7
+    root = None
+    assert reader.value(root) == 0
+"#,
+    );
+
+    assert!(
+        rust_code.contains("node: Option<&Node>"),
+        "recursive optional method parameter must use its borrowed ABI:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("reader.value(root.as_ref())"),
+        "owned optional arguments in nested assertions must use borrowed views:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("reader.value(&root)"),
+        "the method must not borrow the outer Option container:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_recursive_optional_map_callback_uses_borrowed_option_view() {
+    let rust_code = generate_rust_from_source(
+        r#"class Node:
+    value: int
+    next: Node | None
+
+    def __init__(self, value: int, next: Node | None = None):
+        self.value = value
+        self.next = next
+
+def show(node: Node | None) -> str:
+    if node is None:
+        return "None"
+    return str(node.value) + show(node.next)
+
+def render_present(nodes: list[Node]) -> list[str]:
+    return sorted(map(show, nodes))
+
+def render_optional(nodes: list[Node | None]) -> list[str]:
+    return sorted(map(show, nodes))
+
+def main():
+    assert render_present([Node(2), Node(1)]) == ["1None", "2None"]
+    optional_nodes: list[Node | None] = []
+    optional_nodes.append(None)
+    assert render_optional(optional_nodes) == ["None"]
+    assert show(Node(3)) == "3None"
+    assert show(None) == "None"
+"#,
+    );
+
+    assert!(
+        rust_code.contains("fn show(node: Option<&Node>)"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains("show(Some(&__map_item))"), "{rust_code}");
+    assert!(
+        rust_code.contains("show(__map_item.as_ref())"),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("show(&Some("), "{rust_code}");
 }

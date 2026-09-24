@@ -571,7 +571,7 @@ fn does_not_lower_option_let_non_leaf_none_typed_rhs_to_none() {
 }
 
 #[test]
-fn lowers_simple_assign_name_rhs() {
+fn logically_copied_name_assign_needs_scoped_ownership() {
     let assign_stmt = HirStmt::Assign {
         name: "x".to_string(),
         value: HirExpr::Name {
@@ -580,16 +580,7 @@ fn lowers_simple_assign_name_rhs() {
             ty: Type::Int,
         },
     };
-    let lowered = try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("name assign lowered");
-    assert_eq!(lowered.len(), 1);
-    assert!(matches!(
-        lowered[0],
-        RustStmt::Assign {
-            target: RustExpr::Ident(ref lhs),
-            value: RustExpr::Ident(ref rhs),
-        } if lhs == "x" && rhs == "y"
-    ));
+    assert!(try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new()).is_none());
 }
 
 #[test]

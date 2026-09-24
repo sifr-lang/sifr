@@ -75,7 +75,8 @@ mod tests {
         let generated = crate::generate_rust_multi_with_metadata(
             &[("second", &second), ("main", &first)],
             &StdlibCode::default(),
-        );
+        )
+        .expect("project generation should succeed");
 
         assert_eq!(
             generated
@@ -98,7 +99,8 @@ mod tests {
     fn crate_root_body_does_not_import_its_local_structural_layout() {
         let main = record_module("main_record", vec![("value", Type::Int)]);
         let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &main)], &StdlibCode::default());
+            crate::generate_rust_multi_with_metadata(&[("main", &main)], &StdlibCode::default())
+                .expect("project generation should succeed");
         let main_rust = &generated.rust_files["main"];
 
         assert!(
@@ -119,7 +121,8 @@ mod tests {
         let generated = crate::generate_rust_multi_with_metadata(
             &[("main", &main), ("support", &support)],
             &StdlibCode::default(),
-        );
+        )
+        .expect("project generation should succeed");
         let support_rust = &generated.rust_files["support"];
 
         assert!(

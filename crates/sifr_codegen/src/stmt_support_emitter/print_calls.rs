@@ -30,29 +30,7 @@ impl RustEmitter {
             } else {
                 "{}"
             };
-            let formatted = crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                method: "map_or".to_string(),
-                args: vec![
-                    crate::RustExpr::MethodCall {
-                        receiver: Box::new(none_display_expr()),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    },
-                    crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__v".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::FormatMacro {
-                            name: "format".to_string(),
-                            format_str: inner_format.to_string(),
-                            args: vec![crate::RustExpr::Ident("__v".to_string())],
-                        }),
-                        is_move: false,
-                    },
-                ],
-            };
+            let formatted = crate::optional_display::lower(lowered, inner_format, "__v");
             return Ok(Some(("{}".to_string(), formatted)));
         }
         let placeholder = if Self::uses_debug_display_format_for_ir(value.ty()) {
@@ -255,31 +233,11 @@ impl RustEmitter {
                 return Ok(Some(crate::RustExpr::FormatMacro {
                     name: "println".to_string(),
                     format_str: "{}".to_string(),
-                    args: vec![crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                        method: "map_or".to_string(),
-                        args: vec![
-                            crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Literal(
-                                    crate::RustLiteral::Str("None".to_string()),
-                                )),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            },
-                            crate::RustExpr::Closure {
-                                params: vec![crate::RustParam::Named {
-                                    name: "__v".to_string(),
-                                    ty: crate::RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(crate::RustExpr::FormatMacro {
-                                    name: "format".to_string(),
-                                    format_str: option_format_str,
-                                    args: vec![crate::RustExpr::Ident("__v".to_string())],
-                                }),
-                                is_move: false,
-                            },
-                        ],
-                    }],
+                    args: vec![crate::optional_display::lower(
+                        lowered_arg,
+                        option_format_str,
+                        "__v",
+                    )],
                 }));
             }
             let format_str = if Self::uses_debug_display_format_for_ir(arg.ty()) {
@@ -330,31 +288,11 @@ impl RustEmitter {
                 } else {
                     "{}".to_string()
                 };
-                lowered_args.push(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                    method: "map_or".to_string(),
-                    args: vec![
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
-                                "None".to_string(),
-                            ))),
-                            method: "to_string".to_string(),
-                            args: vec![],
-                        },
-                        crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__v".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::FormatMacro {
-                                name: "format".to_string(),
-                                format_str: option_format_str,
-                                args: vec![crate::RustExpr::Ident("__v".to_string())],
-                            }),
-                            is_move: false,
-                        },
-                    ],
-                });
+                lowered_args.push(crate::optional_display::lower(
+                    lowered_arg,
+                    option_format_str,
+                    "__v",
+                ));
                 format_parts.push("{}");
             } else {
                 lowered_args.push(lowered_arg);

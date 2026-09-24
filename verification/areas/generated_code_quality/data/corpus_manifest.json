@@ -614,6 +614,13 @@
       "evidence_category": "determinism-negative"
     },
     {
+      "id": "retained12-native-boundaries",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/emitted_semantic_boundaries.sifr",
+      "expected_command": "build",
+      "evidence_category": "retained12-native-corpus-regressions"
+    },
+    {
       "id": "stdlib-001-json",
       "group": "stdlib-flows",
       "source_path": "crates/sifr/tests/e2e/pass/stdlib_json_consolidated.sifr",

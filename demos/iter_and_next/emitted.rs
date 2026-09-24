@@ -18,7 +18,7 @@ fn main() {
     );
     let mut remaining_total: SifrInt = SifrInt::from_i64(0);
     for item in it {
-        remaining_total = &remaining_total + &item;
+        remaining_total = ::std::ops::Add::add(&remaining_total, &item);
     }
     println!("{remaining_total}");
     let mut pair_total: SifrInt = SifrInt::from_i64(0);
@@ -29,12 +29,15 @@ fn main() {
             .enumerate()
             .map(|sifr_generated_pair| {
                 (
-                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(0),
+                    ::std::ops::Add::add(
+                        SifrInt::from(sifr_generated_pair.0),
+                        SifrInt::from_i64(0),
+                    ),
                     sifr_generated_pair.1,
                 )
             }),
     ) {
-        pair_total = &(&pair_total + &i) + &value;
+        pair_total = ::std::ops::Add::add(&::std::ops::Add::add(&pair_total, &i), &value);
     }
     println!("{pair_total}");
 }

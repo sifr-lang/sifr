@@ -312,7 +312,7 @@
       "semantic_anchor": {"kind": "metric", "key": "demo_emitted_rs_files"},
       "sources": ["external"],
       "rejection_reason": "Golden-like output exists; the real defects were incomplete freshness, coverage, formatting, and semantic governance, owned by corpus governance and canonicalization.",
-      "resolution": "The current surface intentionally contains 261 authoritative emitted.rs companions. Test-project idiomatic.rs references without a single-file emitted.rs producer remain explicitly non-authoritative, and the stale protocol_bounds idiomatic.rs reference was retired during canonicalization cleanup."
+      "resolution": "The current surface intentionally contains 264 authoritative emitted.rs companions. Test-project idiomatic.rs references without a single-file emitted.rs producer remain explicitly non-authoritative, and the stale protocol_bounds idiomatic.rs reference was retired during canonicalization cleanup."
     },
     {
       "id": "ERQ-026",

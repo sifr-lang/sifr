@@ -50,6 +50,7 @@ from .schemas import (
     validate_schema_requirement,
 )
 from .step_budgets import run_self_test as step_budget_self_test
+from .qualification_profile_checks import policy_checks as qualification_profile_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
@@ -65,6 +66,7 @@ def run_all() -> list[str]:
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
         ("cache-aware step budget self-test", step_budget_self_test),
+        ("emitted-Rust qualification profile checks", qualification_profile_checks),
         ("crate membership self-test", _crate_membership_self_test),
         ("Rust interop profile execution self-test", _rust_interop_profile_self_test),
         ("documentation profile execution self-test", _documentation_profile_self_test),
@@ -219,7 +221,10 @@ def _profile_schema_self_test() -> None:
         raise AssertionError(f"create-pr step budgets missing: {missing_step_budgets}")
     for step in sorted(required_blocking_steps):
         budget = create_pr_step_budgets[step]
-        if budget.get("enforcement") != "blocking" or int(budget.get("budget_ms", 0)) <= 0:
+        limits = [budget["budget_ms"]] if "budget_ms" in budget else [
+            budget.get("warm_budget_ms", 0), budget.get("cold_budget_ms", 0)
+        ]
+        if budget.get("enforcement") != "blocking" or any(int(limit) <= 0 for limit in limits):
             raise AssertionError(f"create-pr step budget is not blocking/positive: {step}={budget}")
     _profile_coverage_self_test(profiles)
 

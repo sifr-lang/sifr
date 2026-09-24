@@ -4,9 +4,9 @@ use ::sifr_runtime::SifrRange;
 fn reversed_values(values: &[SifrInt]) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = Vec::new();
     for i in SifrRange::new_known_nonzero(
-        &SifrInt::from(values.len()) - &SifrInt::from_i64(1),
-        -SifrInt::from_i64(1),
-        -SifrInt::from_i64(1),
+        ::std::ops::Sub::sub(&SifrInt::from(values.len()), &SifrInt::from_i64(1)),
+        SifrInt::from_i64(-1),
+        SifrInt::from_i64(-1),
     ) {
         let Some(sifr_generated_checked_value_0) = ({
             let sifr_generated_checked_read_collection = &values;
@@ -19,7 +19,7 @@ fn reversed_values(values: &[SifrInt]) -> Vec<SifrInt> {
         }) else {
             break;
         };
-        out.push(sifr_generated_checked_value_0.clone());
+        out.push(sifr_generated_checked_value_0);
     }
     out
 }
@@ -27,7 +27,7 @@ fn main() {
     assert_eq!(
         format!(
             "{:?}",
-            reversed_values(&vec![
+            reversed_values(&[
                 SifrInt::from_i64(4),
                 SifrInt::from_i64(5),
                 SifrInt::from_i64(6)
@@ -35,6 +35,6 @@ fn main() {
         ),
         "[6, 5, 4]"
     );
-    assert_eq!(format!("{:?}", reversed_values(&Vec::new())), "[]");
+    assert_eq!(format!("{:?}", reversed_values(&[])), "[]");
     println!("reverse_indices: ok");
 }

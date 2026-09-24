@@ -331,7 +331,7 @@ impl RustEmitter {
                 if let Some(lowered) = self.try_lower_dict_indexed_list_element_expr(expr) {
                     return Some(lowered);
                 }
-                if let Some((alias_name, key_ty, value_ty)) =
+                if let Some((alias_name, key_ty, _value_ty)) =
                     registry_defaultdict_alias_parts(object.ty())
                 {
                     let lowered_object = self.try_lower_registry_expr_strict(object)?;
@@ -345,13 +345,10 @@ impl RustEmitter {
                         method: "or_insert".to_string(),
                         args: vec![registry_defaultdict_default_expr(alias_name)],
                     };
-                    let value_expr = match crate::resolve_alias_type_for_plain_call(value_ty) {
-                        Type::Int => crate::RustExpr::Deref(Box::new(entry_expr)),
-                        _ => crate::RustExpr::MethodCall {
-                            receiver: Box::new(entry_expr),
-                            method: "clone".to_string(),
-                            args: vec![],
-                        },
+                    let value_expr = crate::RustExpr::MethodCall {
+                        receiver: Box::new(entry_expr),
+                        method: "clone".to_string(),
+                        args: vec![],
                     };
                     if crate::helpers::is_option_type(ty) {
                         return Some(value_expr);
@@ -443,7 +440,7 @@ impl RustEmitter {
                             Type::Str => self.lower_string_index_option_with_cache(
                                 object,
                                 crate::RustExpr::Ident("__v".to_string()),
-                                lowered_index,
+                                Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
                             ),
                             _ => return None,
                         };
@@ -590,35 +587,11 @@ impl RustEmitter {
                                     } else {
                                         "{}".to_string()
                                     };
-                                lowered_args.push(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                        lowered_expr,
-                                    ))),
-                                    method: "map_or".to_string(),
-                                    args: vec![
-                                        crate::RustExpr::MethodCall {
-                                            receiver: Box::new(crate::RustExpr::Literal(
-                                                crate::RustLiteral::Str("None".to_string()),
-                                            )),
-                                            method: "to_string".to_string(),
-                                            args: vec![],
-                                        },
-                                        crate::RustExpr::Closure {
-                                            params: vec![crate::RustParam::Named {
-                                                name: "__v".to_string(),
-                                                ty: crate::RustType::Named("_".to_string()),
-                                            }],
-                                            body: Box::new(crate::RustExpr::FormatMacro {
-                                                name: "format".to_string(),
-                                                format_str: inner_format_str,
-                                                args: vec![crate::RustExpr::Ident(
-                                                    "__v".to_string(),
-                                                )],
-                                            }),
-                                            is_move: false,
-                                        },
-                                    ],
-                                });
+                                lowered_args.push(crate::optional_display::lower(
+                                    lowered_expr,
+                                    inner_format_str,
+                                    "__v",
+                                ));
                             } else if registry_uses_debug_display_format(expr.ty()) {
                                 lowered_args.push(crate::RustExpr::FormatMacro {
                                     name: "format".to_string(),

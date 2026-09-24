@@ -6,11 +6,11 @@ const fn inferred(flag: bool) -> SifrInt {
     }
     SifrInt::from_i64(2)
 }
-fn consume(n: SifrInt) -> SifrInt {
-    &n + &SifrInt::from_i64(1)
+fn consume(n: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(n, &SifrInt::from_i64(1))
 }
 fn main() {
     println!("unreachable_returns diagnostics and consumer integration demo:");
-    println!("{}", consume(inferred(true)));
-    println!("{}", consume(inferred(false)));
+    println!("{}", consume(&inferred(true)));
+    println!("{}", consume(&inferred(false)));
 }

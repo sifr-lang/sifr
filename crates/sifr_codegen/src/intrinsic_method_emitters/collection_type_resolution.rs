@@ -10,6 +10,21 @@ impl RustEmitter {
     }
 
     fn effective_collection_expr_ty(&self, expr: &HirExpr) -> Type {
+        // The tuple field of a checked list read is optional when the row is
+        // absent, even if contextual HIR typing records the field as a non-optional type.
+        if let HirExpr::Index { object, ty, .. } = expr
+            && !crate::helpers::is_option_type(ty)
+            && let HirExpr::Index {
+                object: collection,
+                index: row_index,
+                ..
+            } = object.as_ref()
+            && matches!(collection.ty().resolve_alias(), Type::List(row)
+                if matches!(row.resolve_alias(), Type::Tuple(_)))
+            && !self.has_checked_place_read_witness(collection, row_index)
+        {
+            return Type::Union(vec![ty.clone(), Type::None]);
+        }
         if let HirExpr::Index {
             object, index, ty, ..
         } = expr

@@ -78,13 +78,29 @@ impl RustEmitter {
 
         let reassigned_vars = collect_reassigned_vars(&func.body);
         let mut lowered_body = self.prepare_string_char_cache_stmts(func, &reassigned_vars);
-        for stmt in &func.body {
+        for (stmt_index, stmt) in func.body.iter().enumerate() {
+            let Some(normalized) = self.body_analysis.statement_for_lowering(stmt) else {
+                continue;
+            };
+            let stmt = normalized.as_ref();
+            if let Some(lowered) = self
+                .try_lower_dict_assignment_witness_for_ir(stmt, Some(&func.body[stmt_index + 1..]))
+                .unwrap_or_else(|error| panic!("{failed_panic_message}: {error}"))
+            {
+                lowered_body.extend(lowered);
+                continue;
+            }
+            lowered_body.extend(self.prepare_checked_place_witnesses_for_mutation(
+                stmt,
+                Some(&func.body[stmt_index + 1..]),
+            ));
             self.lowering_stats.stmt_total += 1;
             if is_simple_stmt_candidate(stmt) {
                 self.lowering_stats.stmt_candidate_total += 1;
             }
             let simple_lowered = if stmt_needs_performance_lowering(stmt)
-                || self.body_analysis.aggregate_statement_has_last_use(stmt)
+                || self.stmt_uses_checked_place_read_witness(stmt)
+                || self.body_analysis.owned_value_statement_has_last_use(stmt)
                 || Self::stmt_defines_nonempty_list(stmt)
                 || matches!(stmt, HirStmt::Let { name, .. } if self.string_char_cache_loop_local_names.contains(name))
             {
@@ -139,7 +155,16 @@ impl RustEmitter {
                     panic!("{failed_panic_message}: {stmt:?}");
                 }
             }
+            lowered_body.extend(
+                self.refresh_checked_place_witnesses_after_emitted_stmt(
+                    stmt,
+                    Some(&func.body[stmt_index + 1..]),
+                )
+                .unwrap_or_else(|error| panic!("{failed_panic_message}: {error}")),
+            );
         }
+
+        lowered_body.extend(Self::owned_assertion_drop(func));
 
         self.current_return_type = saved_return_type;
         self.mutated_vars = saved_mutated_vars;

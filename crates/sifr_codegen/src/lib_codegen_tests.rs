@@ -55,6 +55,8 @@ mod character_comparison_codegen_tests;
 #[cfg(test)]
 mod checked_place_read_codegen_tests;
 #[cfg(test)]
+mod class_method_checked_place_codegen_tests;
+#[cfg(test)]
 mod class_trait_codegen_tests;
 #[cfg(test)]
 mod class_trait_contract_codegen_tests;
@@ -86,6 +88,8 @@ mod generic_inheritance_codegen_tests;
 mod integer_field_augassign_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;
+#[cfg(test)]
+mod length_alias_codegen_tests;
 #[cfg(test)]
 mod multi_module_stdlib_feature_tests;
 #[cfg(test)]
@@ -146,3 +150,6 @@ mod task_spawn_ownership_codegen_tests;
 mod template_string_codegen_tests;
 #[cfg(test)]
 mod union_representation_codegen_tests;
+
+#[cfg(test)]
+mod retained_semantics_codegen_tests;

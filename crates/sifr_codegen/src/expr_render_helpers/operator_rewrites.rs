@@ -355,9 +355,11 @@ impl RustEmitter {
                 else {
                     return Ok(None);
                 };
+                let mut tuple_field_is_optional = false;
                 if let (Type::Tuple(elements), HirExpr::IntLiteral(raw_idx)) = (inner_ty, index) {
                     if let Ok(idx) = usize::try_from(*raw_idx) {
                         if let Some(element_ty) = elements.get(idx) {
+                            tuple_field_is_optional = crate::helpers::is_option_type(element_ty);
                             if !crate::helpers::is_copy_type_for_codegen(element_ty) {
                                 inner_expr = crate::RustExpr::MethodCall {
                                     receiver: Box::new(inner_expr),
@@ -368,11 +370,12 @@ impl RustEmitter {
                         }
                     }
                 }
-                let projection_method = if matches!(inner_ty, Type::Tuple(_)) {
-                    "map"
-                } else {
-                    "and_then"
-                };
+                let projection_method =
+                    if matches!(inner_ty, Type::Tuple(_)) && !tuple_field_is_optional {
+                        "map"
+                    } else {
+                        "and_then"
+                    };
                 let option_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),

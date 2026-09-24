@@ -527,6 +527,18 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 return None;
             }
             let collection_ty = resolve_alias_type(collection.ty());
+            if let Type::List(element_ty) = collection_ty
+                && matches!(element_ty.resolve_alias(), Type::Str | Type::LiteralStr(_))
+                && matches!(
+                    resolve_alias_type(element.ty()),
+                    Type::Str | Type::LiteralStr(_)
+                )
+            {
+                return Some(crate::methods::lower_string_contains(
+                    &try_lower_leaf_or_name_expr(collection)?,
+                    &try_lower_leaf_or_name_expr(element)?,
+                ));
+            }
             let method = match collection_ty {
                 Type::Dict(_, _) => "contains_key",
                 Type::List(_) | Type::Set(_) | Type::Range | Type::Str => "contains",

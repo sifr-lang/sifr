@@ -197,18 +197,23 @@ fn rewrites_large_int_module_const_arithmetic_to_sifr_int_operands() {
         }),
     });
 
-    let RustExpr::BinOp { left, op, right } = rewritten else {
-        panic!("expected SifrInt binary expression");
+    let RustExpr::FnCall { func, args } = rewritten else {
+        panic!("expected exact SifrInt Add operation");
     };
-    assert_eq!(op, "+");
+    assert!(
+        matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["std", "ops", "Add", "add"])
+    );
+    let [left, right] = args.as_slice() else {
+        panic!("expected two operands")
+    };
     assert!(matches!(
-        left.as_ref(),
+        left,
         RustExpr::FnCall { func, args }
             if args.is_empty()
                 && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
     ));
     assert!(matches!(
-        right.as_ref(),
+        right,
         RustExpr::FnCall { func, args }
             if args.len() == 1
                 && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
@@ -344,17 +349,22 @@ fn rewrites_registered_sifr_int_local_arithmetic_to_sifr_int_operands() {
         }),
     });
 
-    let RustExpr::BinOp { left, op, right } = rewritten else {
-        panic!("expected SifrInt local binary expression");
+    let RustExpr::FnCall { func, args } = rewritten else {
+        panic!("expected exact SifrInt Add operation");
     };
-    assert_eq!(op, "+");
+    assert!(
+        matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["std", "ops", "Add", "add"])
+    );
+    let [left, right] = args.as_slice() else {
+        panic!("expected two operands")
+    };
     assert!(matches!(
-        left.as_ref(),
+        left,
         RustExpr::Ref { mutable: false, expr }
             if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "oversized_local")
     ));
     assert!(matches!(
-        right.as_ref(),
+        right,
         RustExpr::FnCall { func, args }
             if args.len() == 1
                 && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
@@ -379,28 +389,20 @@ fn rewrites_large_int_module_const_comparison_to_sifr_int_operands() {
     assert_eq!(op, ">");
     assert!(matches!(
         left.as_ref(),
-        RustExpr::Ref { mutable: false, expr }
-            if matches!(
-                expr.as_ref(),
-                RustExpr::FnCall { func, args }
+        RustExpr::FnCall { func, args }
                     if args.is_empty()
                         && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
-            )
     ));
     assert!(matches!(
         right.as_ref(),
-        RustExpr::Ref { mutable: false, expr }
-            if matches!(
-                expr.as_ref(),
-                RustExpr::FnCall { func, args }
+        RustExpr::FnCall { func, args }
                     if args.len() == 1
                         && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
-            )
     ));
 }
 
 #[test]
-fn rewrites_registered_sifr_int_local_comparison_to_borrowed_operands() {
+fn rewrites_registered_sifr_int_local_comparison_uses_rust_implicit_borrows() {
     let emitter = emitter_with_large_int_const();
     let _ = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
         mutable: false,
@@ -421,18 +423,13 @@ fn rewrites_registered_sifr_int_local_comparison_to_borrowed_operands() {
     assert_eq!(op, "<");
     assert!(matches!(
         left.as_ref(),
-        RustExpr::Ref { mutable: false, expr }
-            if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "oversized_local")
+        RustExpr::Ident(name) if name == "oversized_local"
     ));
     assert!(matches!(
         right.as_ref(),
-        RustExpr::Ref { mutable: false, expr }
-            if matches!(
-                expr.as_ref(),
-                RustExpr::FnCall { func, args }
+        RustExpr::FnCall { func, args }
                     if args.is_empty()
                         && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
-        )
     ));
 }
 

@@ -11,8 +11,9 @@ mod sifr_generated_generated_support {
     }
     fn sifr_generated_file_read_bytes(
         handle: &str,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
+        let size: Option<SifrInt> = size.cloned();
         ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -23,15 +24,16 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
     }
     pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
+        sifr_generated_file_close(handle.id.as_str());
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
     pub fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
-        sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
+        let size: Option<SifrInt> = size.cloned();
+        sifr_generated_file_read_bytes(handle.id.as_str(), size.as_ref())
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -39,7 +41,7 @@ mod sifr_generated_generated_support {
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.id.clone(), data)
+        sifr_generated_file_write_bytes(handle.id.as_str(), data)
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -143,7 +145,7 @@ mod sifr_generated_project_nominals {
             if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
-            file_read_bytes(&self.handle, size.clone())
+            file_read_bytes(&self.handle, (*size).as_ref())
         }
     }
     impl SifrGeneratedIoFileHandle {
@@ -212,7 +214,7 @@ fn main() {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut writer: SifrGeneratedIoFileHandle = (|| {
-            let sifr_generated_path = path.to_string();
+            let sifr_generated_path = path.clone();
             let sifr_generated_mode = "wb".to_string();
             let sifr_generated_handle_id = ::sifr_stdlib::fs::open_file(
                 sifr_generated_path.as_str(),
@@ -221,16 +223,16 @@ fn main() {
             .map_err(sifr_generated_io_err)?;
             Ok::<SifrGeneratedIoFileHandle, IOError>(SifrGeneratedIoFileHandle::new(
                 SifrGeneratedIoNativeFileHandle::new(sifr_generated_handle_id),
-                sifr_generated_mode.to_string(),
+                sifr_generated_mode,
             ))
         })()?;
-        writer.write_bytes(&vec![
+        writer.write_bytes(&[
             114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 98_u8, 105_u8, 110_u8,
             97_u8, 114_u8, 121_u8, 95_u8, 102_u8, 105_u8, 108_u8, 101_u8, 115_u8,
         ])?;
-        (&mut writer).close();
+        writer.close();
         let mut reader: SifrGeneratedIoFileHandle = (|| {
-            let sifr_generated_path = path.to_string();
+            let sifr_generated_path = path.clone();
             let sifr_generated_mode = "rb".to_string();
             let sifr_generated_handle_id = ::sifr_stdlib::fs::open_file(
                 sifr_generated_path.as_str(),
@@ -239,11 +241,11 @@ fn main() {
             .map_err(sifr_generated_io_err)?;
             Ok::<SifrGeneratedIoFileHandle, IOError>(SifrGeneratedIoFileHandle::new(
                 SifrGeneratedIoNativeFileHandle::new(sifr_generated_handle_id),
-                sifr_generated_mode.to_string(),
+                sifr_generated_mode,
             ))
         })()?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
-        (&mut reader).close();
+        reader.close();
         payload_ok = loaded
             == vec![
                 114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 98_u8, 105_u8,
@@ -258,10 +260,7 @@ fn main() {
         ) == "[114, 117, 110, 116, 105, 109, 101, 45, 98, 105, 110, 97, 114, 121, 95, 102, 105, 108, 101, 115]";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         if exists(&path) {
             remove_file(&path)?;
@@ -269,10 +268,7 @@ fn main() {
         cleanup_ok = !exists(&path);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     assert!(payload_ok);
     assert!(ints_ok);
     assert!(cleanup_ok);

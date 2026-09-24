@@ -58,3 +58,21 @@ fn late_nested_shadow_does_not_clear_enclosing_defaultdict_annotation() {
     assert!(rust_code.contains("let mut counts: HashMap<String, SifrInt> = HashMap::new();"));
     assert!(rust_code.contains("let mut counts: HashMap<SifrInt, SifrInt> = HashMap::new();"));
 }
+
+#[test]
+fn owned_integer_defaultdict_read_clones_inserted_value_for_call() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef take(value: int) -> int:\n    return value\n\ndef solve() -> int:\n    counts = defaultdict(int)\n    counts[1] = 4\n    return take(counts[1]) + take(counts[2])\n",
+    );
+
+    assert!(
+        rust_code
+            .contains("counts.entry(SifrInt::from_i64(2)).or_insert(SifrInt::from_i64(0)).clone()"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("(*__sifr_checked_value_0).clone()"),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("take(*counts.entry("), "{rust_code}");
+}

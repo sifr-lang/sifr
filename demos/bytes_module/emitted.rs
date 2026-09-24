@@ -4,7 +4,7 @@ mod sifr_generated_generated_support {
     pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -25,13 +25,13 @@ mod sifr_generated_generated_support {
                         .cloned()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -52,7 +52,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
 }
@@ -71,16 +71,17 @@ mod sifr_generated_project_nominals {
 use crate::sifr_generated_generated_support::{assert_bool_vector_eq, assert_vector_eq};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
-fn render_opt_int(value: Option<SifrInt>) -> String {
-    let Some(value) = value.clone() else {
+fn render_opt_int(value: Option<&SifrInt>) -> String {
+    let value: Option<SifrInt> = value.cloned();
+    let Some(value_value_7ce4fd9430e80cea) = value else {
         return "None".to_string();
     };
-    value.to_string()
+    value_value_7ce4fd9430e80cea.to_string()
 }
 fn collect_primary_actual(payload: &[u8]) -> Vec<String> {
     vec![
         {
-            let sifr_generated_bytes_receiver: &[u8] = &payload;
+            let sifr_generated_bytes_receiver: &[u8] = payload;
             {
                 let sifr_generated_needle = SifrInt::from_i64(115);
                 sifr_generated_needle.try_to_u8().map_or_else(
@@ -95,44 +96,47 @@ fn collect_primary_actual(payload: &[u8]) -> Vec<String> {
             }
         }
         .to_string(),
-        render_opt_int({
-            let sifr_generated_bytes_receiver: &[u8] = &payload;
+        render_opt_int(
             {
-                let sifr_generated_needle = SifrInt::from_i64(45);
-                sifr_generated_needle.try_to_u8().map_or_else(
-                    |_| None,
-                    |sifr_generated_needle_u8| {
-                        let sifr_generated_len = sifr_generated_bytes_receiver.len();
-                        let sifr_generated_start = 0_usize;
-                        let sifr_generated_stop = sifr_generated_len;
-                        let mut sifr_generated_i = sifr_generated_start;
-                        let mut sifr_generated_result = None;
-                        while sifr_generated_i < sifr_generated_stop
-                            && sifr_generated_result.is_none()
-                        {
-                            if let Some(sifr_generated_x) =
-                                sifr_generated_bytes_receiver.get(sifr_generated_i)
-                                && *sifr_generated_x == sifr_generated_needle_u8
+                let sifr_generated_bytes_receiver: &[u8] = payload;
+                {
+                    let sifr_generated_needle = SifrInt::from_i64(45);
+                    sifr_generated_needle.try_to_u8().map_or_else(
+                        |_| None,
+                        |sifr_generated_needle_u8| {
+                            let sifr_generated_len = sifr_generated_bytes_receiver.len();
+                            let sifr_generated_start = 0_usize;
+                            let sifr_generated_stop = sifr_generated_len;
+                            let mut sifr_generated_i = sifr_generated_start;
+                            let mut sifr_generated_result = None;
+                            while sifr_generated_i < sifr_generated_stop
+                                && sifr_generated_result.is_none()
                             {
-                                sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
+                                if let Some(sifr_generated_x) =
+                                    sifr_generated_bytes_receiver.get(sifr_generated_i)
+                                    && *sifr_generated_x == sifr_generated_needle_u8
+                                {
+                                    sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
+                                }
+                                sifr_generated_i = sifr_generated_i.saturating_add(1usize);
                             }
-                            sifr_generated_i += 1_usize;
-                        }
-                        sifr_generated_result
-                    },
-                )
+                            sifr_generated_result
+                        },
+                    )
+                }
             }
-        }),
+            .as_ref(),
+        ),
         payload
-            .starts_with(&vec![98_u8, 121_u8, 116_u8, 101_u8, 115_u8])
+            .starts_with(&[98_u8, 121_u8, 116_u8, 101_u8, 115_u8])
             .to_string(),
-        payload.ends_with(&vec![101_u8, 51_u8, 48_u8]).to_string(),
+        payload.ends_with(&[101_u8, 51_u8, 48_u8]).to_string(),
     ]
 }
 fn bytes_to_hex_or_empty(payload: &[u8]) -> String {
     let sifr_generated_try_res: Result<String, ParseError> = {
         let hx: String = {
-            let sifr_generated_bytes_receiver: &[u8] = &payload;
+            let sifr_generated_bytes_receiver: &[u8] = payload;
             let mut sifr_generated_hex =
                 String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
             for sifr_generated_byte in sifr_generated_bytes_receiver {
@@ -145,11 +149,7 @@ fn bytes_to_hex_or_empty(payload: &[u8]) -> String {
         };
         Ok(hx)
     };
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-        String::new()
-    })
+    sifr_generated_try_res.unwrap_or_else(|_try_err| String::new())
 }
 fn bytes_from_hex_to_text_or_empty(payload: &str) -> String {
     let sifr_generated_try_res: Result<String, ParseError> = (|| {
@@ -167,7 +167,7 @@ fn bytes_from_hex_to_text_or_empty(payload: &str) -> String {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -184,21 +184,13 @@ fn bytes_from_hex_to_text_or_empty(payload: &str) -> String {
             }
             Ok::<Vec<u8>, ParseError>(result)
         }?;
-        let txt: String = ::sifr_runtime::encoding::decode_text(
-            &parsed,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let txt: String = ::sifr_runtime::encoding::decode_text(&parsed, "utf-8", "strict")
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            })?;
         Ok(txt)
     })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-        String::new()
-    })
+    sifr_generated_try_res.unwrap_or_else(|_try_err| String::new())
 }
 fn collect_invalid_actual_ok() -> Vec<bool> {
     let mut invalid_actual_ok: Vec<bool> = Vec::new();
@@ -217,7 +209,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -238,25 +230,19 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
         invalid_actual_ok.push(true);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+    if let Err(_try_err) = sifr_generated_try_res {
         invalid_actual_ok.push(false);
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let bad_utf8: String = ::sifr_runtime::encoding::decode_text(
-            &vec![255_u8],
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
-        let _ = bad_utf8.to_string();
+        let bad_utf8: String = ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict")
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            })?;
+        let _ = bad_utf8;
         invalid_actual_ok.push(true);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+    if let Err(_try_err) = sifr_generated_try_res {
         invalid_actual_ok.push(false);
     }
     invalid_actual_ok
@@ -274,20 +260,18 @@ fn main() {
     ];
     let actual: Vec<String> = collect_primary_actual(&payload);
     assert_vector_eq(&actual, &expected);
-    let hex_text: String = bytes_to_hex_or_empty(&vec![72_u8, 105_u8]);
-    let _chars_hex_text: Vec<char> = hex_text.chars().collect::<Vec<char>>();
+    let hex_text: String = bytes_to_hex_or_empty(&[72_u8, 105_u8]);
     assert_eq!(
-        (&SifrInt::from(hex_text.chars().count()) > &SifrInt::from_i64(0)).to_string(),
+        (hex_text.chars().count() > SifrInt::from_i64(0)).to_string(),
         "true"
     );
-    assert_eq!(hex_text.to_string(), "4869");
-    let roundtrip_text: String = bytes_from_hex_to_text_or_empty(&"48 69".to_string());
-    let _chars_roundtrip_text: Vec<char> = roundtrip_text.chars().collect::<Vec<char>>();
+    assert_eq!(hex_text, "4869");
+    let roundtrip_text: String = bytes_from_hex_to_text_or_empty("48 69");
     assert_eq!(
-        (&SifrInt::from(roundtrip_text.chars().count()) > &SifrInt::from_i64(0)).to_string(),
+        (roundtrip_text.chars().count() > SifrInt::from_i64(0)).to_string(),
         "true"
     );
-    assert_eq!(roundtrip_text.to_string(), "Hi");
+    assert_eq!(roundtrip_text, "Hi");
     let invalid_expected_ok: Vec<bool> = vec![false, false];
     let invalid_actual_ok: Vec<bool> = collect_invalid_actual_ok();
     assert_bool_vector_eq(&invalid_actual_ok, &invalid_expected_ok);

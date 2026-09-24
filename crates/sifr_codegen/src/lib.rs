@@ -117,6 +117,7 @@ mod nested_list_element;
 mod operator_protocol_emitters;
 mod operator_type_rendering;
 mod option_binding_mutability;
+mod optional_display;
 mod output_helpers;
 mod ownership_plan;
 mod place_emitter;
@@ -231,3 +232,9 @@ mod generated_support_regression_tests;
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+#[cfg(test)]
+mod generated_rust_canonicalizer_ownership_tests;
+
+#[cfg(test)]
+mod generated_rust_canonicalizer_control_flow_tests;

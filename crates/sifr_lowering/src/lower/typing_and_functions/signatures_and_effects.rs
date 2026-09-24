@@ -68,7 +68,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("kind".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("IOError"),
             type_args: Vec::new(),
             name: "IOError".to_string(),
             fields: fields.clone().into(),
@@ -103,15 +103,14 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
-            identity: (error_name == "TimeoutError")
-                .then(|| "sifr.builtin.TimeoutError".to_string()),
+            identity: sifr_type_system::builtin_error_identity(error_name),
             type_args: Vec::new(),
             name: error_name.to_string(),
             fields: fields.clone().into(),
             methods: vec![].into(),
             parent_class: Some(
                 if matches!(error_name, "FloatOverflowError" | "FloatPrecisionLossError") {
-                    "OverflowError"
+                    "sifr.builtin.OverflowError|Error"
                 } else {
                     "Error"
                 }
@@ -132,12 +131,12 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("limit".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("ArithmeticLimitError"),
             type_args: Vec::new(),
             name: "ArithmeticLimitError".to_string(),
             fields: fields.clone().into(),
             methods: vec![].into(),
-            parent_class: Some("OverflowError".to_string()),
+            parent_class: Some("sifr.builtin.OverflowError|Error".to_string()),
         };
         ctx.class_types
             .insert("ArithmeticLimitError".to_string(), class_ty.clone());
@@ -184,7 +183,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("profile".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("JsonIntegerRangeError"),
             type_args: Vec::new(),
             name: "JsonIntegerRangeError".to_string(),
             fields: fields.clone().into(),
@@ -205,7 +204,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("limit".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("JsonLimitError"),
             type_args: Vec::new(),
             name: "JsonLimitError".to_string(),
             fields: fields.clone().into(),
@@ -225,12 +224,12 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &(error_name, _) in &sifr_type_system::IO_ERROR_KIND_CASES {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity(error_name),
             type_args: Vec::new(),
             name: error_name.to_string(),
             fields: fields.clone().into(),
             methods: vec![].into(),
-            parent_class: Some("IOError".to_string()),
+            parent_class: Some("sifr.builtin.IOError|Error".to_string()),
         };
         ctx.class_types
             .insert(error_name.to_string(), class_ty.clone());
@@ -250,7 +249,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("column".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("JSONDecodeError"),
             type_args: Vec::new(),
             name: "JSONDecodeError".to_string(),
             fields: fields.clone().into(),
@@ -275,7 +274,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("column".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("TOMLDecodeError"),
             type_args: Vec::new(),
             name: "TOMLDecodeError".to_string(),
             fields: fields.clone().into(),
@@ -298,7 +297,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("detail".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("RegexError"),
             type_args: Vec::new(),
             name: "RegexError".to_string(),
             fields: fields.clone().into(),
@@ -795,4 +794,48 @@ pub(super) fn reserved_integer_width_name(
         format!("reserved integer width name '{name}' is not supported yet"),
         range,
     );
+}
+
+#[cfg(test)]
+mod builtin_nominal_tests {
+    use super::*;
+    #[test]
+    fn registered_error_classes_and_constructors_share_canonical_identity() {
+        let mut context = LowerCtx::new();
+        register_builtins(&mut context);
+        let mut checked = 0;
+        for (name, ty) in &context.class_types {
+            if name == "Error" {
+                continue;
+            }
+            let Some(canonical) = sifr_type_system::builtin_error_identity(name) else {
+                continue;
+            };
+            let Type::Class { identity, .. } = ty else {
+                panic!("builtin error class")
+            };
+            assert_eq!(identity.as_deref(), Some(canonical.as_str()), "{name}");
+            let constructor = &context.functions[name];
+            assert_eq!(constructor.return_type.as_ref(), ty, "{name}");
+            checked += 1;
+        }
+        assert!(checked > 20);
+        assert!(context.class_types["Error"].is_builtin_error_base());
+        for (child, parent) in [
+            ("FileNotFoundError", "IOError"),
+            ("PermissionError", "IOError"),
+            ("FloatOverflowError", "OverflowError"),
+            ("FloatPrecisionLossError", "OverflowError"),
+            ("ArithmeticLimitError", "OverflowError"),
+        ] {
+            assert!(
+                context.class_types[child].is_assignable_to(&context.class_types[parent]),
+                "{child} -> {parent}"
+            );
+            assert!(
+                context.class_types[child].is_assignable_to(&context.class_types["Error"]),
+                "{child} -> Error"
+            );
+        }
+    }
 }

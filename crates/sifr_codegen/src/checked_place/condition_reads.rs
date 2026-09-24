@@ -8,6 +8,23 @@ impl RustEmitter {
         &mut self,
         condition: &crate::HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        // A nested list element with an optional result already lowers both
+        // indexes through checked `get` calls. Let condition lowering convert
+        // that Option value to truthiness; guarding only the outer row here
+        // would leave the inner Option in a Rust boolean expression.
+        if let crate::HirExpr::Index { object, ty, .. } = condition
+            && crate::helpers::is_option_type(ty)
+            && let crate::HirExpr::Index { object: rows, .. } = object.as_ref()
+            && matches!(
+                crate::resolve_alias_type_for_plain_call(rows.ty()),
+                Type::List(row) if matches!(
+                    crate::resolve_alias_type_for_plain_call(row.as_ref()),
+                    Type::List(_)
+                )
+            )
+        {
+            return Ok(None);
+        }
         let reads = crate::hir_analysis::queries::collection_reads_in_condition(condition);
         if !reads.is_empty()
             && reads.iter().all(|read| {
@@ -114,9 +131,9 @@ impl RustEmitter {
             // lookup, so neither form needs an outer checked-read witness.
             return Ok(None);
         }
-        if !matches!(object.ty().resolve_alias(), Type::Dict(_, _)) {
+        let Type::Dict(_, value_ty) = object.ty().resolve_alias() else {
             return self.checked_sequence_read_guard_for_ir(read);
-        }
+        };
         let Some(key) = checked_place_read_key(object, index) else {
             return Ok(None);
         };
@@ -153,6 +170,7 @@ impl RustEmitter {
             },
             negated: true,
             borrowed: true,
+            copy_value: crate::helpers::is_copy_type_for_codegen(value_ty),
             dependencies,
             order,
         }))

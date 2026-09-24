@@ -1,14 +1,29 @@
+mod receiver_contracts;
 use quote::{ToTokens, quote};
+use receiver_contracts::{
+    borrowed_parameter_names, derived_copy_owners, expression_is_rooted_in_borrowed_parameter,
+    expression_is_rooted_in_self, input_is_mutable_reference, simple_pattern_name,
+};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
+use syn::visit_mut::VisitMut;
 
 mod const_drop;
 mod const_tuple_parameters;
 pub(super) mod const_types;
+mod exported_apis;
 
 use super::source_expectations::{
     refresh_const_expectations, refresh_function_expectations, refresh_struct_expectations,
 };
+
+mod slice_parameter_cleanup;
+mod visibility_cleanup;
+pub(super) use slice_parameter_cleanup::{
+    collect_project_shared_slice_params, rewrite_project_shared_slice_calls,
+    rewrite_slice_only_vec_parameters, rewrite_slice_parameter_apis,
+};
+use visibility_cleanup::publicize_public_enum_field_owners;
 
 pub(super) fn improve_generated_api_items(items: &mut [syn::Item], source: &str) {
     improve_generated_api_items_with_project_consts(items, source, &HashSet::new());
@@ -40,6 +55,7 @@ pub fn finalize_formatted_generated_rust_source_with_project_consts(
         source,
         project_const_functions,
     );
+    super::syntax_cleanup::apply_lexical_type_cleanup(&mut file);
     Ok(prettyplease::unparse(&file))
 }
 
@@ -71,11 +87,22 @@ fn improve_generated_api_items_with_project_consts(
     project_const_functions: &HashSet<String>,
 ) {
     let drop_types = const_types::DropTypes::for_items(items);
+    publicize_public_enum_field_owners(items);
+    let exports = exported_apis::Exports::collect(items);
     loop {
         let mut before_const = const_callable_paths(items);
         before_const.extend(project_const_functions.iter().cloned());
         let before_eq = derived_eq_owners(items);
-        improve_generated_api_items_once(items, &before_const, &before_eq, source, &drop_types);
+        improve_generated_api_items_once(
+            items,
+            &before_const,
+            &before_eq,
+            source,
+            &drop_types,
+            &exports,
+            &[],
+        );
+        slice_parameter_cleanup::rewrite_shared_slice_calls(items);
         let mut after_const = const_callable_paths(items);
         after_const.extend(project_const_functions.iter().cloned());
         if after_const == before_const && derived_eq_owners(items) == before_eq {
@@ -90,32 +117,45 @@ fn improve_generated_api_items_once(
     eq_owners: &HashSet<String>,
     source: &str,
     drop_types: &const_types::DropTypes,
+    exports: &exported_apis::Exports,
+    scope: &[String],
 ) {
     let display_owners = display_implementation_owners(items);
+    let copy_owners = derived_copy_owners(items);
     for item in items {
         match item {
-            syn::Item::Fn(function) => improve_function_api(
-                &mut function.attrs,
-                &function.vis,
-                &mut function.sig,
-                &function.block,
-                ApiContext {
-                    allow_const: true,
-                    owner: None,
-                    owner_has_display: false,
-                    const_callables,
-                    source,
-                    drop_types,
-                },
-            ),
+            syn::Item::Fn(function) => {
+                let exported_api = exports.function(scope, &function.sig.ident);
+                improve_function_api(
+                    &mut function.attrs,
+                    &function.vis,
+                    &mut function.sig,
+                    &function.block,
+                    ApiContext {
+                        allow_const: true,
+                        exported_api,
+                        owner: None,
+                        owner_has_display: false,
+                        copy_receiver_lint: false,
+                        const_callables,
+                        source,
+                        drop_types,
+                    },
+                );
+            }
             syn::Item::Impl(item_impl) => {
                 let allow_const = item_impl.trait_.is_none();
+                let exported_owner = exports.owner(scope, &item_impl.self_ty);
                 let owner = impl_self_type_name(item_impl.self_ty.as_ref());
                 let owner_has_display = owner
                     .as_ref()
                     .is_some_and(|owner| display_owners.contains(owner));
                 for impl_item in &mut item_impl.items {
                     if let syn::ImplItem::Fn(method) = impl_item {
+                        if let Some(owner) = owner.as_deref() {
+                            UseSelfRewriter { owner }.visit_signature_mut(&mut method.sig);
+                            UseSelfRewriter { owner }.visit_block_mut(&mut method.block);
+                        }
                         improve_function_api(
                             &mut method.attrs,
                             &method.vis,
@@ -123,8 +163,14 @@ fn improve_generated_api_items_once(
                             &method.block,
                             ApiContext {
                                 allow_const,
+                                exported_api: exported_owner
+                                    && matches!(method.vis, syn::Visibility::Public(_)),
                                 owner: owner.as_deref(),
                                 owner_has_display,
+                                copy_receiver_lint: allow_const
+                                    && owner
+                                        .as_ref()
+                                        .is_some_and(|owner| copy_owners.contains(owner)),
                                 const_callables,
                                 source,
                                 drop_types,
@@ -135,16 +181,22 @@ fn improve_generated_api_items_once(
             }
             syn::Item::Mod(module) => {
                 if let Some((_, nested)) = &mut module.content {
+                    let mut child_scope = scope.to_vec();
+                    child_scope.push(module.ident.to_string());
                     improve_generated_api_items_once(
                         nested,
                         const_callables,
                         eq_owners,
                         source,
                         drop_types,
+                        exports,
+                        &child_scope,
                     );
                 }
             }
             syn::Item::Struct(item_struct) => {
+                let owner = item_struct.ident.to_string();
+                UseSelfRewriter { owner: &owner }.visit_fields_mut(&mut item_struct.fields);
                 refresh_struct_expectations(&mut item_struct.attrs, &item_struct.fields);
                 let generic_types = generic_type_names(&item_struct.generics);
                 add_eq_to_eligible_derives(
@@ -172,6 +224,39 @@ fn improve_generated_api_items_once(
             }
             _ => {}
         }
+    }
+}
+
+struct UseSelfRewriter<'owner> {
+    owner: &'owner str,
+}
+
+impl syn::visit_mut::VisitMut for UseSelfRewriter<'_> {
+    fn visit_path_mut(&mut self, path: &mut syn::Path) {
+        syn::visit_mut::visit_path_mut(self, path);
+        replace_owner_path_with_self(path, self.owner);
+    }
+
+    fn visit_expr_path_mut(&mut self, path: &mut syn::ExprPath) {
+        syn::visit_mut::visit_expr_path_mut(self, path);
+        replace_owner_path_with_self(&mut path.path, self.owner);
+    }
+
+    fn visit_type_path_mut(&mut self, path: &mut syn::TypePath) {
+        syn::visit_mut::visit_type_path_mut(self, path);
+        replace_owner_path_with_self(&mut path.path, self.owner);
+    }
+
+    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
+}
+
+fn replace_owner_path_with_self(path: &mut syn::Path, owner: &str) {
+    if path.leading_colon.is_none()
+        && let Some(first) = path.segments.first_mut()
+        && first.ident == owner
+    {
+        first.ident = syn::Ident::new("Self", first.ident.span());
+        first.arguments = syn::PathArguments::None;
     }
 }
 
@@ -207,8 +292,10 @@ fn const_callable_paths(items: &[syn::Item]) -> HashSet<String> {
 #[derive(Clone, Copy)]
 struct ApiContext<'context> {
     allow_const: bool,
+    exported_api: bool,
     owner: Option<&'context str>,
     owner_has_display: bool,
+    copy_receiver_lint: bool,
     const_callables: &'context HashSet<String>,
     source: &'context str,
     drop_types: &'context const_types::DropTypes,
@@ -222,9 +309,21 @@ fn improve_function_api(
     context: ApiContext<'_>,
 ) {
     replace_unused_parameters(signature, body);
+    rewrite_slice_only_vec_parameters(signature, body);
     let rendered_body_lines = rendered_function_body_lines(body, context.source);
     add_source_shape_expectations(attrs, signature, rendered_body_lines);
-    refresh_function_expectations(attrs, signature, body, context.owner_has_display);
+    refresh_function_expectations(
+        attrs,
+        signature,
+        body,
+        super::source_expectations::FunctionExpectationContext {
+            owner_has_display: context.owner_has_display,
+            copy_receiver_lint: context.copy_receiver_lint,
+            trait_impl: !context.allow_const,
+            restricted_api: !matches!(visibility, syn::Visibility::Public(_)),
+            ref_option_lint: !context.exported_api,
+        },
+    );
     if matches!(visibility, syn::Visibility::Public(_)) {
         if !matches!(signature.output, syn::ReturnType::Default)
             && !returns_result(signature)
@@ -244,6 +343,7 @@ fn improve_function_api(
     if context.allow_const
         && signature.constness.is_none()
         && signature.asyncness.is_none()
+        && !const_drop::has_unproved_string_slice_return_coercion(signature, body)
         && const_drop::function_has_no_implicit_drop(signature, body, context.drop_types)
         && block_is_const_compatible(
             body,
@@ -253,6 +353,7 @@ fn improve_function_api(
                 |argument| matches!(argument, syn::FnArg::Receiver(receiver) if matches!(receiver.kind, syn::ReceiverKind::Reference(..))),
             ),
             &borrowed_tuples,
+            &borrowed_parameter_names(signature),
         )
     {
         signature.constness = Some(syn::token::Const::default());
@@ -476,23 +577,13 @@ fn returns_result(signature: &syn::Signature) -> bool {
     matches!(ty.as_ref(), syn::Type::Path(path) if path.path.segments.last().is_some_and(|segment| segment.ident == "Result"))
 }
 
-fn input_is_mutable_reference(argument: &syn::FnArg) -> bool {
-    match argument {
-        syn::FnArg::Receiver(receiver) => {
-            matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, Some(_)))
-        }
-        syn::FnArg::Typed(argument) => {
-            matches!(argument.ty.as_ref(), syn::Type::Reference(reference) if reference.mutability.is_some())
-        }
-    }
-}
-
 fn block_is_const_compatible(
     block: &syn::Block,
     owner: Option<&str>,
     const_callables: &HashSet<String>,
     has_borrowed_self: bool,
     borrowed_tuples: &HashMap<String, syn::Type>,
+    borrowed_parameters: &HashSet<String>,
 ) -> bool {
     let mut checker = ConstCompatibilityChecker {
         compatible: true,
@@ -500,6 +591,7 @@ fn block_is_const_compatible(
         const_callables,
         has_borrowed_self,
         borrowed_tuples,
+        borrowed_parameters,
     };
     checker.visit_block(block);
     checker.compatible
@@ -511,6 +603,7 @@ struct ConstCompatibilityChecker<'scope> {
     const_callables: &'scope HashSet<String>,
     has_borrowed_self: bool,
     borrowed_tuples: &'scope HashMap<String, syn::Type>,
+    borrowed_parameters: &'scope HashSet<String>,
 }
 
 impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
@@ -528,8 +621,10 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
 
     fn visit_expr_unary(&mut self, expression: &'ast syn::ExprUnary) {
         if matches!(expression.op, syn::UnOp::Deref(_))
-            && self.has_borrowed_self
-            && expression_is_rooted_in_self(&expression.expr)
+            && expression_is_rooted_in_borrowed_parameter(
+                &expression.expr,
+                self.borrowed_parameters,
+            )
         {
             visit::visit_expr_unary(self, expression);
         } else {
@@ -590,15 +685,6 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
             self.compatible = false;
         }
         visit::visit_expr_call(self, call);
-    }
-}
-
-fn expression_is_rooted_in_self(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Path(path) => path.qself.is_none() && path.path.is_ident("self"),
-        syn::Expr::Field(field) => expression_is_rooted_in_self(&field.base),
-        syn::Expr::Paren(paren) => expression_is_rooted_in_self(&paren.expr),
-        _ => false,
     }
 }
 
@@ -739,6 +825,10 @@ fn derived_eq_owners(items: &[syn::Item]) -> HashSet<String> {
 }
 
 fn attributes_derive_eq(attrs: &[syn::Attribute]) -> bool {
+    attributes_derive(attrs, "Eq")
+}
+
+fn attributes_derive(attrs: &[syn::Attribute], target: &str) -> bool {
     attrs.iter().any(|attribute| {
         let syn::Meta::List(meta) = &attribute.meta else {
             return false;
@@ -748,7 +838,7 @@ fn attributes_derive_eq(attrs: &[syn::Attribute]) -> bool {
                 .tokens
                 .to_string()
                 .split(|character: char| !character.is_alphanumeric() && character != '_')
-                .any(|name| name == "Eq")
+                .any(|name| name == target)
     })
 }
 

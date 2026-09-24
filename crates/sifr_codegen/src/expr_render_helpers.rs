@@ -4,6 +4,7 @@ use sifr_type_system::Type;
 
 mod field_and_stdlib_rewrites;
 mod operator_rewrites;
+mod optional_class_field;
 mod sifr_int_parse_helpers;
 use sifr_int_parse_helpers::{
     is_plain_i64_storage_type, is_proven_nonzero_integer_expr, is_result_plain_i64_storage_type,

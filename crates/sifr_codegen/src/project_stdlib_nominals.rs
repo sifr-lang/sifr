@@ -642,7 +642,8 @@ mod tests {
         };
 
         let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default())
+                .expect("project generation should succeed");
         assert_eq!(
             generated
                 .project_union_prelude
@@ -825,7 +826,8 @@ mod tests {
         };
 
         let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default())
+                .expect("project generation should succeed");
 
         assert!(
             !generated

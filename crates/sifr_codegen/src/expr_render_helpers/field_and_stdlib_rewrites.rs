@@ -62,6 +62,15 @@ impl RustEmitter {
         let effective_base_object_ty = option_inner_object_ty
             .clone()
             .unwrap_or_else(|| effective_object_ty.clone());
+        if option_inner_object_ty.is_some()
+            && let Some(projected) = self.try_lower_optional_class_field_access(
+                &effective_base_object_ty,
+                field,
+                &lowered_object,
+            )
+        {
+            return projected;
+        }
         let mut lowered_object = lowered_object;
         if option_inner_object_ty.is_some() {
             let option_expr = if matches!(object, HirExpr::Name { .. })
@@ -341,10 +350,13 @@ impl RustEmitter {
                 if is_sifr_int_operand_coercion_op(&op)
                     && (self.is_sifr_int_expr(&left) || self.is_sifr_int_expr(&right))
                 {
+                    if is_sifr_int_arithmetic_op(&op) {
+                        return self.sifr_int_exact_arithmetic_expr(op.as_str(), left, right);
+                    }
                     let (left, right) = if is_sifr_int_comparison_op(&op) {
                         (
-                            self.coerce_expr_to_sifr_int_comparison_operand(left),
-                            self.coerce_expr_to_sifr_int_comparison_operand(right),
+                            self.coerce_expr_to_sifr_int_method_receiver(left),
+                            self.coerce_expr_to_sifr_int_method_receiver(right),
                         )
                     } else {
                         (
@@ -366,11 +378,17 @@ impl RustEmitter {
             }
             crate::RustExpr::UnaryOp { op, operand } => {
                 let operand = self.rewrite_stdlib_constant_idents_in_expr(*operand);
-                let operand = if op == "-" && self.is_sifr_int_expr(&operand) {
-                    self.coerce_expr_to_sifr_int(operand)
-                } else {
-                    operand
-                };
+                if op == "-" && self.is_sifr_int_expr(&operand) {
+                    return crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "std".to_string(),
+                            "ops".to_string(),
+                            "Neg".to_string(),
+                            "neg".to_string(),
+                        ])),
+                        args: vec![self.coerce_expr_to_sifr_int(operand)],
+                    };
+                }
                 crate::RustExpr::UnaryOp {
                     op,
                     operand: Box::new(operand),

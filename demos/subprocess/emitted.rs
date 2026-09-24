@@ -43,14 +43,11 @@ pub use sifr_generated_project_nominals::IOError;
 fn main() {
     let mut demo_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let out: String = run_command(&"echo runtime_subprocess".to_string())?;
+        let out: String = run_command("echo runtime_subprocess")?;
         demo_ok = out == "runtime_subprocess";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone();
-    }
+    let _ = sifr_generated_try_res;
     assert!(demo_ok);
     println!("runtime_subprocess_subprocess_removed_demo: ok");
 }

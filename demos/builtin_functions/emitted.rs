@@ -42,7 +42,7 @@ fn main() {
         SifrInt::from_i64(10),
         SifrInt::from_i64(2),
     ) {
-        if &SifrInt::from(sifr_generated_chars_result.len()) > &SifrInt::from_i64(0) {
+        if sifr_generated_chars_result.len() > SifrInt::from_i64(0) {
             result.push(' ');
             sifr_generated_chars_result.push(' ');
         }
@@ -51,5 +51,5 @@ fn main() {
         sifr_generated_chars_result.extend(sifr_generated_string_concat_result_0.as_str().chars());
     }
     println!("{result}");
-    assert_eq!(result.to_string(), "0 2 4 6 8");
+    assert_eq!(result, "0 2 4 6 8");
 }

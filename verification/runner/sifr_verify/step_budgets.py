@@ -56,6 +56,7 @@ def prepare_step_budget(
     area_id = selected_area_id(name)
     suites = selected_suites(profile, area_id)
     binary = Path(env.get("SIFR_GCQ_BIN", repo_root / "target" / "debug" / "sifr"))
+    required_paths = required_cache_paths(repo_root, area_id, binary, env)
     fingerprint, eligible, ineligible_reason = input_fingerprint(
         repo_root=repo_root,
         profile_name=profile_name,
@@ -63,6 +64,8 @@ def prepare_step_budget(
         area_id=area_id,
         suites=suites,
         sifr_binary=binary,
+        cache_paths=required_paths,
+        environment=env,
     )
     receipt_path = (
         repo_root
@@ -72,7 +75,6 @@ def prepare_step_budget(
         / profile_name
         / f"{area_id or name}.json"
     )
-    required_paths = required_cache_paths(repo_root, area_id, binary)
     if not eligible:
         state, reason = "cold", ineligible_reason
     else:
@@ -128,7 +130,7 @@ def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> i
     return 0
 
 
-def record_step_success(context: StepBudgetContext | None) -> None:
+def record_step_success(context: StepBudgetContext | None, elapsed_ms: int) -> None:
     if (
         context is None
         or context.receipt_path is None
@@ -137,12 +139,23 @@ def record_step_success(context: StepBudgetContext | None) -> None:
         or any(not cache_path_available(path) for path in context.required_cache_paths)
     ):
         return
+    observations: list[dict[str, Any]] = []
+    try:
+        previous = json.loads(context.receipt_path.read_text(encoding="utf-8"))
+        if isinstance(previous, dict) and previous.get("input_fingerprint") == context.cache_fingerprint:
+            saved = previous.get("observations")
+            if isinstance(saved, list):
+                observations = saved[-3:]
+    except (OSError, json.JSONDecodeError):
+        pass
+    observations.append({"cache_state": context.cache_state, "elapsed_ms": elapsed_ms})
     payload = {
         "schema_version": RECEIPT_SCHEMA_VERSION,
         "classifier": CACHE_CLASSIFIER,
         "step": context.name,
         "area": context.area_id,
         "input_fingerprint": context.cache_fingerprint,
+        "observations": observations,
     }
     atomic_write_json(context.receipt_path, payload)
 
@@ -179,6 +192,8 @@ def input_fingerprint(
     area_id: str | None,
     suites: list[str],
     sifr_binary: Path,
+    cache_paths: tuple[Path, ...],
+    environment: dict[str, str],
 ) -> tuple[str, bool, str]:
     tracked_state = command_output(
         ["git", "status", "--porcelain", "--untracked-files=no"], repo_root
@@ -206,6 +221,12 @@ def input_fingerprint(
         "rustc": rustc_version,
         "python": sys.version,
         "sifr_binary_sha256": binary_digest,
+        "cache_paths": [str(path.resolve()) for path in cache_paths],
+        "build_environment": {
+            key: environment.get(key)
+            for key in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTUP_TOOLCHAIN",
+                        "RUSTC", "CARGO_BUILD_TARGET", "SIFR_CACHE_DIR")
+        },
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return (
@@ -237,8 +258,14 @@ def selected_suites(profile: dict[str, Any], area_id: str | None) -> list[str]:
 
 
 def required_cache_paths(
-    repo_root: Path, area_id: str | None, binary: Path
+    repo_root: Path, area_id: str | None, binary: Path, environment: dict[str, str]
 ) -> tuple[Path, ...]:
+    if area_id == "runtime_platform":
+        target = Path(environment.get("CARGO_TARGET_DIR",
+                                      repo_root / "target" / "runtime_platform" / "cargo-target"))
+        if not target.is_absolute():
+            target = repo_root / target
+        return (binary, target / "debug")
     if area_id == "python_interop":
         return (binary, repo_root / "target" / "python" / "debug")
     return (binary,)
@@ -311,7 +338,7 @@ def run_self_test() -> None:
             receipt_eligible=True,
             required_cache_paths=(required,),
         )
-        record_step_success(context)
+        record_step_success(context, 300_000)
         if classify_receipt(
             receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
         ) != (
@@ -336,7 +363,7 @@ def run_self_test() -> None:
             "receipt-invalid",
         ):
             raise AssertionError("invalid cache receipt was not classified cold")
-        record_step_success(context)
+        record_step_success(context, 300_000)
         (required / "artifact").unlink()
         if classify_receipt(
             receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
@@ -390,7 +417,7 @@ def run_self_test() -> None:
                 raise AssertionError("Python interop cache paths were not selected")
             if (first.cache_state, env.get("SIFR_PYTHON_INTEROP_CACHE_STATE")) != ("cold", "cold"):
                 raise AssertionError("cold Python interop state was not exported")
-            record_step_success(first)
+            record_step_success(first, 900_000)
             warm = prepare_step_budget(
                 repo_root=root, profile=profile, profile_name="create-pr",
                 name="area_python_interop", env=env,

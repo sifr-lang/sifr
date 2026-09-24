@@ -593,6 +593,8 @@ impl RustEmitter {
         module_public: bool,
         uses_python_error_bridge: bool,
     ) -> RustItem {
+        let saved_body_analysis = std::mem::take(&mut self.body_analysis);
+        let saved_last_use_move_exprs = std::mem::take(&mut self.last_use_move_exprs);
         let saved_return_type = self.current_return_type.clone();
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
@@ -672,6 +674,51 @@ impl RustEmitter {
             }
         }
         self.register_local_body_binding_types(&method.body);
+        let (method_analysis, method_moves) =
+            crate::body_analysis::BodyAnalysis::build(method, &self.func_signatures);
+        // Guarded reads of mutable list fields need the same structural read
+        // facts as functions. Other class methods retain their specialized
+        // field and indexed-dictionary lowering paths.
+        let guarded_list_field_read = method.body.iter().any(|stmt| {
+            let HirStmt::If {
+                condition,
+                then_body,
+                ..
+            } = stmt
+            else {
+                return false;
+            };
+            let length_aliases = method_analysis.stable_length_aliases(condition);
+            method_analysis
+                .proven_reads_in(then_body)
+                .iter()
+                .any(|read| {
+                    let HirExpr::Index { object, index, .. } = read else {
+                        return false;
+                    };
+                    let HirExpr::FieldAccess {
+                        object: receiver,
+                        ty: Type::List(_),
+                        ..
+                    } = object.as_ref()
+                    else {
+                        return false;
+                    };
+                    matches!(receiver.as_ref(), HirExpr::Name { name, .. } if name == "self")
+                        && crate::checked_place::condition_supports_checked_sequence_read(
+                            condition,
+                            object,
+                            index,
+                            length_aliases,
+                        )
+                })
+        });
+        if method.method_kind == MethodKind::Regular
+            && (method.name == "new" || guarded_list_field_read)
+        {
+            self.body_analysis = method_analysis;
+            self.last_use_move_exprs = method_moves;
+        }
 
         let visibility = if module_public {
             Visibility::Pub
@@ -755,6 +802,8 @@ impl RustEmitter {
             }
         }
 
+        self.body_analysis = saved_body_analysis;
+        self.last_use_move_exprs = saved_last_use_move_exprs;
         self.current_return_type = saved_return_type;
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;

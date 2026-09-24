@@ -415,10 +415,18 @@ macro_rules! stmt_expr_binop {
                 lowered_left = $emitter.clone_borrowed_generic_operand(left, resolved_left_ty, lowered_left);
                 lowered_right = $emitter.clone_borrowed_generic_operand(right, resolved_right_ty, lowered_right);
                 if matches!(resolved_left_ty, Type::BigDecimal) {
-                    lowered_left = crate::RustExpr::Clone(Box::new(lowered_left));
+                    lowered_left = if matches!(left.as_ref(), HirExpr::Name { .. }) {
+                        $emitter.materialize_reusable_value_for_ir(left, lowered_left)
+                    } else {
+                        crate::RustExpr::Clone(Box::new(lowered_left))
+                    };
                 }
                 if matches!(resolved_right_ty, Type::BigDecimal) {
-                    lowered_right = crate::RustExpr::Clone(Box::new(lowered_right));
+                    lowered_right = if matches!(right.as_ref(), HirExpr::Name { .. }) {
+                        $emitter.materialize_reusable_value_for_ir(right, lowered_right)
+                    } else {
+                        crate::RustExpr::Clone(Box::new(lowered_right))
+                    };
                 }
             }
             let exact_integer_operand = |value: crate::RustExpr, operand_ty: &Type| {

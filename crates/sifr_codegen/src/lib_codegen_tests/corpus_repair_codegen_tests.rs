@@ -537,3 +537,179 @@ fn corpus_repair_structured_exception_proven_nested_read_uses_typed_carrier() {
             .is_none()
     );
 }
+
+#[test]
+fn integer_string_conversion_survives_list_append_and_sort() {
+    let source = r#"
+def repeatKey(value: str) -> str:
+    return value + value
+
+def largestNumber(mut nums: list[int]) -> str:
+    values = []
+    for n in nums:
+        values.append(str(n))
+    values = sorted(values, key=repeatKey)
+    return "".join(values)
+"#;
+    let raw = generate_rust_from_source(source);
+    assert!(
+        !raw.contains("values.push(n.clone())"),
+        "the producer discarded the int-to-str conversion: {raw}"
+    );
+    let rust = canonical(source);
+    assert!(
+        !rust.contains("values.push(n.clone())"),
+        "canonicalization discarded the int-to-str conversion: {rust}"
+    );
+    assert!(
+        rust.contains("values.push(n.to_string())") || rust.contains("values.push(format!("),
+        "the list element must be a converted string: {rust}"
+    );
+}
+
+#[test]
+fn tuple_string_key_iteration_keeps_owned_clone_shape() {
+    let source = r#"
+def collectKeys(entries: list[tuple[str, int]]) -> list[str]:
+    tokens: list[str] = []
+    for key, value in entries:
+        tokens.append(key)
+    return tokens
+"#;
+    let rust = canonical(source);
+    assert!(rust.contains("tokens.push(key.clone())"), "{rust}");
+    assert!(!rust.contains("tokens.push(key.to_owned())"), "{rust}");
+}
+
+#[test]
+fn sequential_length_exits_prove_second_element_read() {
+    let source = r#"
+def firstTwo(nums: list[int]) -> int:
+    if len(nums) == 0:
+        return 0
+    if len(nums) == 1:
+        return nums[0]
+    first: int = nums[0]
+    second: int = nums[1]
+    return first + second
+"#;
+    let rust = canonical(source);
+    assert!(
+        !rust.contains("structured statement emission missing"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("let Some(sifr_generated_checked_value_"),
+        "{rust}"
+    );
+}
+
+#[test]
+fn corpus_repair_borrowed_recursive_option_binding_materializes_owned_node() {
+    let rust = generate_rust_from_source(
+        r#"
+class TreeNode:
+    def __init__(self, value: int, left: TreeNode | None, right: TreeNode | None):
+        self.value = value
+        self.left = left
+        self.right = right
+
+def invertTree(root: TreeNode | None) -> TreeNode | None:
+    if root is None:
+        return None
+    node = root
+    return node
+"#,
+    );
+    assert!(
+        rust.contains("fn invertTree(root: Option<&TreeNode>)"),
+        "{rust}"
+    );
+    assert!(rust.contains("let Some(root) = root else"), "{rust}");
+    assert!(!rust.contains("root.as_ref()"), "{rust}");
+    assert!(
+        rust.contains("let node: TreeNode = root.clone();"),
+        "{rust}"
+    );
+}
+
+#[test]
+fn constructor_general_if_and_for_cross_self_materialization() {
+    let rust = generate_rust_from_source(
+        r#"
+class Counter:
+    total: int
+
+    def __init__(self, values: list[int]):
+        running = 0
+        if len(values) > 0:
+            first = values[0]
+            if first is not None:
+                running = first
+        for i in range(len(values)):
+            value = values[i]
+            if value is not None:
+                running += value
+        self.total = running
+        if self.total > 0:
+            self.total += 1
+        for i in range(2):
+            self.total += i
+"#,
+    );
+    assert!(!rust.contains("compile_error!"), "{rust}");
+    let materialization = rust.find("let mut __sifr_self").expect("self materializes");
+    let before = &rust[..materialization];
+    let after = &rust[materialization..];
+    assert!(before.contains("if "), "{rust}");
+    assert!(before.contains("for "), "{rust}");
+    assert!(after.contains("if "), "{rust}");
+    assert!(after.contains("for "), "{rust}");
+    assert!(after.contains("__sifr_self.total"), "{rust}");
+    syn::parse_file(&rust).expect("emitted Rust parses");
+}
+
+#[test]
+fn optional_string_index_loop_retains_non_copy_index() {
+    let rust = generate_rust_from_source(
+        r#"
+def scan(text: str | None) -> str:
+    result = ""
+    j = 0
+    while j < 3:
+        first = text[j]
+        second = text[j]
+        if first is not None:
+            result += first
+        if second is not None:
+            result += second
+        j += 1
+    return result
+"#,
+    );
+    assert!(!rust.contains("compile_error!"), "{rust}");
+    assert!(rust.contains(".as_ref().and_then("), "{rust}");
+    assert!(
+        rust.matches("let __sifr_string_index = j.clone();").count() >= 2,
+        "{rust}"
+    );
+    assert!(!rust.contains("let __sifr_string_index = j;"), "{rust}");
+}
+
+#[test]
+fn generated_set_of_string_windows_counts_distinct_values() {
+    let rust = canonical(
+        r#"
+def unique_windows(text: str, width: int) -> int:
+    return len(set(text[i:i + width] for i in range(len(text) - width + 1)))
+"#,
+    );
+    assert!(
+        rust.contains("collect::<std::collections::HashSet<_>>().len()"),
+        "{rust}"
+    );
+    assert!(
+        !rust.contains(".filter_map(") || !rust.contains(".count()"),
+        "{rust}"
+    );
+}

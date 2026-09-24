@@ -166,7 +166,8 @@ fn task_local_support_binary_project_preserves_cancellation_owner_and_consumers(
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &main), ("worker", &worker)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     assert_cancellation_owner(&project.project_union_prelude);
     let main = &project.rust_files["main"];
     assert!(
@@ -190,7 +191,8 @@ fn task_local_support_test_project_preserves_cancellation_owner_and_consumers() 
         &[("support", &support)],
         &[("test_async", &test)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     assert_cancellation_owner(&project.project_union_prelude);
     let support = &project.support_rust_files["support"];
     assert!(
@@ -219,12 +221,14 @@ fn task_local_support_sync_projects_emit_no_cancellation_owner() {
     let normal = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let tests = crate::generate_rust_test_project_with_metadata(
         &[],
         &[("test_sync", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     assert!(!normal.project_union_prelude.contains("task_local"));
     assert!(!tests.project_union_prelude.contains("task_local"));
 }

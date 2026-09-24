@@ -218,7 +218,7 @@ class ProfileRunner:
         if budget_status != 0:
             self.performance_exit_status = budget_status
         if budget_status == 0:
-            record_step_success(budget)
+            record_step_success(budget, result.elapsed_ms)
         return budget_status
 
     def admit_performance_reference(self) -> None:

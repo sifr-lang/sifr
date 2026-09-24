@@ -481,7 +481,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                     .get("ParseError")
                     .cloned()
                     .unwrap_or(Type::Class {
-                        identity: None,
+                        identity: sifr_type_system::builtin_error_identity("ParseError"),
                         type_args: Vec::new(),
                         name: "ParseError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)].into(),
@@ -551,7 +551,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                     .get("ParseError")
                     .cloned()
                     .unwrap_or(Type::Class {
-                        identity: None,
+                        identity: sifr_type_system::builtin_error_identity("ParseError"),
                         type_args: Vec::new(),
                         name: "ParseError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)].into(),
@@ -562,12 +562,12 @@ pub(super) fn lower_unshadowed_builtin_call(
         } else if exact_integer_conversion && !integer_conversion_is_proven {
             let error = |name: &str| {
                 ctx.class_types.get(name).cloned().unwrap_or(Type::Class {
-                    identity: None,
+                    identity: sifr_type_system::builtin_error_identity(name),
                     type_args: Vec::new(),
                     name: name.to_string(),
                     fields: vec![("message".to_string(), Type::Str)].into(),
                     methods: vec![].into(),
-                    parent_class: Some("OverflowError".to_string()),
+                    parent_class: Some("sifr.builtin.OverflowError|Error".to_string()),
                 })
             };
             Type::Result(

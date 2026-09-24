@@ -38,72 +38,72 @@ mod sifr_generated_generated_support {
                 alg,
                 data.to_vec(),
                 "md5".to_string(),
-                SifrInt::from_i64(16),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(16),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha1" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha1".to_string(),
-                SifrInt::from_i64(20),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(20),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha224" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha224".to_string(),
-                SifrInt::from_i64(28),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(28),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha256" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha256".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha384" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha384".to_string(),
-                SifrInt::from_i64(48),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(48),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "sha512" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha512".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2b" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2b".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2s" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2s".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         }
         SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
             alg,
             data.to_vec(),
             "unknown".to_string(),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )
     }
     fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
@@ -124,7 +124,7 @@ mod sifr_generated_generated_support {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        Vec::new()
+        Vec::<u8>::new()
     }
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
@@ -143,7 +143,7 @@ mod sifr_generated_generated_support {
     }
     #[must_use]
     pub fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-        sifr_generated_build_hash(&"sha224".to_string(), data)
+        sifr_generated_build_hash("sha224", data)
     }
     ::tokio::task_local! {
         static SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL : String;
@@ -174,17 +174,17 @@ mod sifr_generated_project_nominals {
             algorithm: String,
             data: Vec<u8>,
             name: String,
-            digest_size: SifrInt,
-            block_size: SifrInt,
+            digest_size: &SifrInt,
+            block_size: &SifrInt,
         ) -> Self {
             let sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d: String =
                 algorithm;
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
             let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-                digest_size.clone();
+                (*digest_size).clone();
             let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-                block_size.clone();
+                (*block_size).clone();
             Self {
                 algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
                 data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
@@ -215,7 +215,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2etaskX2eContext {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            write!(f, "{}", self.name.clone())
+            write!(f, "{}", self.name)
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -234,16 +234,16 @@ use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashObject;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etaskX2eContext;
-fn assert_eq(left: SifrInt, right: SifrInt) -> SifrInt {
-    &left + &right
+fn assert_eq(left: &SifrInt, right: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(left, right)
 }
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     assert_eq!(
-        assert_eq(SifrInt::from_i64(20), SifrInt::from_i64(22)),
+        assert_eq(&SifrInt::from_i64(20), &SifrInt::from_i64(22)),
         SifrInt::from_i64(42)
     );
     assert_eq!(sifr_generated_task_current_context().to_string(), "Context");
@@ -262,7 +262,7 @@ fn main() {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -279,24 +279,19 @@ fn main() {
             }
             Ok::<Vec<u8>, ParseError>(result)
         }?;
-        let text: String = ::sifr_runtime::encoding::decode_text(
-            &payload,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let text: String = ::sifr_runtime::encoding::decode_text(&payload, "utf-8", "strict")
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            })?;
         assert_eq!(text, "Sifr");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+    if let Err(_try_err) = sifr_generated_try_res {
         assert!(false);
     }
     assert_eq!(
         SifrInt::from(
-            sha224(&vec![
+            sha224(&[
                 116_u8, 121_u8, 112_u8, 101_u8, 100_u8, 32_u8, 98_u8, 111_u8, 117_u8, 110_u8,
                 100_u8, 97_u8, 114_u8, 121_u8
             ])

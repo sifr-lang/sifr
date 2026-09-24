@@ -96,6 +96,7 @@ def main():
 
     events.append("=== Callable Struct Field ===")
     c: Config = Config(21, double)
+    # Exercise the callable field even though this example discards its result.
     c.callback(c.value)
     events.append(str(c.value))
 

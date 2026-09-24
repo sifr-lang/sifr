@@ -16,6 +16,54 @@ fn replacement_or_split_limit(object: &RustExpr) -> RustExpr {
     }
 }
 
+fn bind_nontrivial_string_receiver_once(
+    object: &RustExpr,
+    args: &[RustExpr],
+    expected_arg_count: usize,
+    lower: fn(&RustExpr, &[RustExpr]) -> Option<RustExpr>,
+) -> Option<RustExpr> {
+    if args.len() != expected_arg_count || matches!(object, RustExpr::Ident(_)) {
+        return None;
+    }
+    // Evaluate user expressions before synthetic bindings enter scope. This
+    // preserves argument effects and cannot capture same-named source locals.
+    let binding = "__sifr_string_receiver".to_string();
+    let mut names = vec![binding.clone()];
+    let mut values = vec![RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(object.clone()),
+    }];
+    let lowered_args = args
+        .iter()
+        .enumerate()
+        .map(|(index, argument)| {
+            if matches!(argument, RustExpr::Literal(_)) || is_none_expr(argument) {
+                return argument.clone();
+            }
+            let name = format!("__sifr_string_argument_{index}");
+            names.push(name.clone());
+            if index + 1 == expected_arg_count {
+                values.push(RustExpr::Clone(Box::new(argument.clone())));
+                return RustExpr::Ident(name);
+            }
+            values.push(render_borrowed_arg_expr(argument));
+            if matches!(argument, RustExpr::Ref { .. }) {
+                RustExpr::Ident(name)
+            } else {
+                RustExpr::Deref(Box::new(RustExpr::Ident(name)))
+            }
+        })
+        .collect::<Vec<_>>();
+    let lowered = lower(&RustExpr::Ident(binding), &lowered_args)?;
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::LetPattern {
+            pattern: format!("({},)", names.join(", ")),
+            value: RustExpr::Tuple(values),
+        }],
+        expr: Some(Box::new(lowered)),
+    })
+}
+
 fn lower_zero_arg_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
@@ -217,6 +265,9 @@ pub(super) fn lower_endswith(object: &RustExpr, args: &[RustExpr]) -> Option<Rus
 }
 
 pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    if let Some(lowered) = bind_nontrivial_string_receiver_once(object, args, 2, lower_split) {
+        return Some(lowered);
+    }
     match args.len() {
         0 => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -379,6 +430,9 @@ fn to_string_method_path() -> RustExpr {
 }
 
 pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    if let Some(lowered) = bind_nontrivial_string_receiver_once(object, args, 3, lower_replace) {
+        return Some(lowered);
+    }
     match args {
         [old, new] => Some(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
@@ -542,10 +596,7 @@ pub(super) fn lower_title(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
             args: vec![],
         }),
         method: "join".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::Literal(RustLiteral::Str(" ".to_string()))),
-        }],
+        args: vec![RustExpr::Literal(RustLiteral::StaticStr(" ".to_string()))],
     })
 }
 

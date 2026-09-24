@@ -3,9 +3,9 @@ use ::sifr_runtime::SifrInt;
 fn main() {
     let s: String = "hello".to_string();
     println!("{s}");
-    assert_eq!(s.to_string(), "hello");
+    assert_eq!(s, "hello");
     println!("{s}");
-    assert_eq!(s.to_string(), "hello");
+    assert_eq!(s, "hello");
     let nums: Vec<SifrInt> = vec![
         SifrInt::from_i64(1),
         SifrInt::from_i64(2),
@@ -20,7 +20,7 @@ fn main() {
     );
     println!("sum: {}", nums.iter().cloned().sum::<SifrInt>());
     assert_eq!(
-        format!("sum: {}", nums.iter().cloned().sum::<SifrInt>()),
+        format!("sum: {}", nums.into_iter().sum::<SifrInt>()),
         "sum: 15"
     );
 }

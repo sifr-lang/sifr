@@ -11,7 +11,7 @@ fn main() {
             SifrInt::from_i64(6),
             SifrInt::from_i64(1),
         ) {
-            sifr_generated_list_comp.push(&x * &x);
+            sifr_generated_list_comp.push(::std::ops::Mul::mul(&x, &x));
         }
         sifr_generated_list_comp
     };
@@ -23,7 +23,7 @@ fn main() {
             SifrInt::from_i64(4),
             SifrInt::from_i64(1),
         ) {
-            sifr_generated_dict_comp.insert(x.clone(), &x * &x);
+            sifr_generated_dict_comp.insert(x.clone(), ::std::ops::Mul::mul(&x, &x));
         }
         sifr_generated_dict_comp
     };
@@ -44,7 +44,11 @@ fn main() {
         ("alice".to_string(), SifrInt::from_i64(95)),
         ("bob".to_string(), SifrInt::from_i64(87)),
     ];
-    for (name, _score) in pairs.iter().cloned() {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for (name, _score) in pairs.iter() {
         println!("{name}");
     }
 }

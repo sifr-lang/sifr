@@ -677,3 +677,177 @@ fn option_question_mark_rejects_competing_clone_and_opaque_imports() {
     count.visit_file(&syn::parse_file(&opaque).expect("opaque syntax"));
     assert_eq!(count.0, 0, "{opaque}");
 }
+
+#[test]
+fn borrowed_display_payload_keeps_string_conversion() {
+    let canonical = canonical_and_compile(
+        r#"
+        #[derive(Clone)]
+        pub struct TimeZone;
+        impl std::fmt::Display for TimeZone {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("UTC")
+            }
+        }
+        pub fn label(tz: &Option<TimeZone>) -> String {
+            if let Some(tz) = tz.as_ref() {
+                let text: String = tz.to_string();
+                text
+            } else { String::new() }
+        }
+    "#,
+    );
+    assert!(canonical.contains("to_string"), "{canonical}");
+}
+
+#[test]
+fn borrowed_loop_return_preserves_owned_string_clone() {
+    canonical_and_compile(
+        r#"
+        pub fn first(values: &[String]) -> String {
+            for value in values { return value.clone(); }
+            String::new()
+        }
+    "#,
+    );
+}
+
+#[test]
+fn display_field_named_kind_keeps_string_conversion() {
+    canonical_and_compile(
+        r#"
+        pub struct Record { pub kind: i64 }
+        pub fn describe(value: &Record) -> String { value.kind.to_string() }
+    "#,
+    );
+}
+
+#[test]
+fn owned_clone_cleanup_preserves_enclosing_loop_and_branch_uses() {
+    canonical_and_compile(
+        r#"
+        pub fn collect_twice(value: String, take: bool) -> Vec<String> {
+            let mut values = Vec::new();
+            if take { values.push(value.clone()); }
+            for _ in 0..2 { values.push(value.clone()); }
+            values.push(value);
+            values
+        }
+    "#,
+    );
+}
+
+#[test]
+fn owned_optional_payload_cleanup_preserves_borrowed_shadow() {
+    canonical_and_compile(
+        r#"
+        pub fn pick(input: &Option<String>, owned: Option<String>) -> String {
+            let mut out = String::new();
+            if let Some(value) = owned { out = value.clone(); }
+            if let Some(out) = input { return out.clone(); }
+            out
+        }
+    "#,
+    );
+}
+
+#[test]
+fn terminal_field_cleanup_preserves_drop_owners_and_later_borrows() {
+    canonical_and_compile(
+        r#"
+        pub struct Owner { pub text: String }
+        impl Drop for Owner { fn drop(&mut self) { std::hint::black_box(&self.text); } }
+        pub fn read(owner: Owner) -> String {
+            let local: Owner = owner;
+            local.text.clone()
+        }
+        pub struct Plain { pub text: String }
+        pub fn twice(local: Plain) -> (String, String) {
+            (local.text.clone(), local.text.clone())
+        }
+    "#,
+    );
+}
+
+#[test]
+fn terminal_field_cleanup_does_not_guess_a_shadowed_string_contract() {
+    canonical_and_compile(
+        r#"
+        pub struct String;
+        impl String { pub fn clone(&self) -> &Self { self } }
+        pub struct Owner { pub text: String }
+        pub fn read(owner: &Owner) -> &String { owner.text.clone() }
+        pub fn observe(owner: Owner) {
+            let local: Owner = owner;
+            let _value = local.text.clone();
+            std::hint::black_box(&local);
+        }
+    "#,
+    );
+}
+
+#[test]
+fn conversion_cleanup_preserves_user_method_return_contracts() {
+    canonical_and_compile(
+        r#"
+        pub struct Source;
+        pub struct Intermediate;
+        impl Source {
+            pub fn to_owned(&self) -> Intermediate { Intermediate }
+            pub fn clone(&self) -> Intermediate { Intermediate }
+        }
+        impl Intermediate {
+            pub fn clone(&self) -> String { String::from("cloned") }
+            pub fn to_string(&self) -> String { String::from("rendered") }
+            pub fn as_str(&self) -> &'static str { "view" }
+        }
+        pub fn owned(source: &Source) -> String { source.to_owned().clone() }
+        pub fn rendered(source: &Source) -> String { source.clone().to_string() }
+        pub fn view(source: &Source) -> &'static str { source.clone().as_str() }
+    "#,
+    );
+}
+
+#[test]
+fn opaque_sibling_macro_does_not_hide_known_string_field_ownership() {
+    let canonical = canonical_and_compile(
+        r#"
+        mod support { std::thread_local! { static COUNT: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; } }
+        mod records {
+            #[derive(Clone)]
+            pub struct Error { pub message: String }
+        }
+        pub use records::Error;
+        pub fn run(value: Result<(), Error>) {
+            if let Err(error) = value { let _message: String = error.message; }
+        }
+    "#,
+    );
+    assert!(!canonical.contains("_message"), "{canonical}");
+}
+
+#[test]
+fn opaque_local_macro_keeps_custom_string_conversion_contract() {
+    let canonical = canonical_and_compile(
+        r#"
+        macro_rules! declare { () => {
+            struct String;
+            impl String {
+                fn clone(&self) -> Intermediate { Intermediate }
+            }
+            struct Intermediate;
+            impl Intermediate { fn to_string(&self) -> u64 { 7 } }
+        }; }
+        declare!();
+        fn run(value: String) -> u64 { value.clone().to_string() }
+    "#,
+    );
+    assert!(
+        canonical.contains("value.clone().to_string()"),
+        "{canonical}"
+    );
+}
+
+include!("standard_contract_tests.rs");
+
+include!("floating_contract_tests.rs");

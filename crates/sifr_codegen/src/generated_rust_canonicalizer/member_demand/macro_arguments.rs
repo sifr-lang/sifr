@@ -2,13 +2,13 @@ use quote::{ToTokens, quote};
 use syn::visit::Visit;
 use syn::visit_mut::VisitMut;
 
-pub(super) enum MacroArguments {
+pub(in super::super) enum MacroArguments {
     List(syn::punctuated::Punctuated<syn::Expr, syn::Token![,]>),
     Repeat(syn::ExprRepeat),
 }
 
 impl MacroArguments {
-    pub(super) fn parse(rust_macro: &syn::Macro) -> Option<Self> {
+    pub(in super::super) fn parse(rust_macro: &syn::Macro) -> Option<Self> {
         if let Ok(arguments) = rust_macro.parse_body_with(
             syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
         ) {
@@ -26,7 +26,7 @@ impl MacroArguments {
         None
     }
 
-    pub(super) fn visit<'ast>(&'ast self, visitor: &mut impl Visit<'ast>) {
+    pub(in super::super) fn visit<'ast>(&'ast self, visitor: &mut impl Visit<'ast>) {
         match self {
             Self::List(arguments) => {
                 for argument in arguments {
@@ -37,7 +37,7 @@ impl MacroArguments {
         }
     }
 
-    pub(super) fn visit_mut(&mut self, visitor: &mut impl VisitMut) {
+    pub(in super::super) fn visit_mut(&mut self, visitor: &mut impl VisitMut) {
         match self {
             Self::List(arguments) => {
                 for argument in arguments {
@@ -48,7 +48,7 @@ impl MacroArguments {
         }
     }
 
-    pub(super) fn tokens(&self) -> proc_macro2::TokenStream {
+    pub(in super::super) fn tokens(&self) -> proc_macro2::TokenStream {
         match self {
             Self::List(arguments) => arguments.to_token_stream(),
             Self::Repeat(repeat) => {

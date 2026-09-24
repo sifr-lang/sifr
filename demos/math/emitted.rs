@@ -58,6 +58,10 @@ mod sifr_generated_generated_support {
         log(x) / log(base)
     }
     #[must_use]
+    #[expect(
+        clippy::float_cmp,
+        reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
         if rel_tol < 0.0_f64 {
             return false;
@@ -124,7 +128,7 @@ mod sifr_generated_generated_support {
     pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -145,13 +149,13 @@ mod sifr_generated_generated_support {
                         .cloned()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -172,7 +176,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
 }
@@ -180,6 +184,10 @@ use crate::sifr_generated_generated_support::{
     INF, assert_bool_vector_eq, assert_vector_eq, cbrt, dist, exp2, fma, fsum, isclose, isnan,
     isnormal, issubnormal, log_base, nextafter, remainder, sumprod, ulp,
 };
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+)]
 fn collect_positive_actual() -> Vec<String> {
     let mut actual: Vec<String> = vec![
         (cbrt(27.0_f64) == 3.0_f64).to_string(),
@@ -196,14 +204,14 @@ fn collect_positive_actual() -> Vec<String> {
     actual.push(isnormal(1.0_f64).to_string());
     actual.push(issubnormal(tiny_subnormal).to_string());
     actual.push((remainder(5.5_f64, 2.0_f64) < 0.0_f64).to_string());
-    actual.push(isnan(dist(&vec![1.0_f64, 2.0_f64], &vec![1.0_f64])).to_string());
+    actual.push(isnan(dist(&[1.0_f64, 2.0_f64], &[1.0_f64])).to_string());
     actual
         .push(
             (fsum(
-                &vec![
+                &[
                     10_000_000_000_000_000_159_028_911_097_599_180_468_360_808_563_945_281_389_781_327_557_747_838_772_170_381_060_813_469_985_856_815_104.0_f64,
-                    1.0_f64, -
-                    10_000_000_000_000_000_159_028_911_097_599_180_468_360_808_563_945_281_389_781_327_557_747_838_772_170_381_060_813_469_985_856_815_104.0_f64
+                    1.0_f64,
+                    -10_000_000_000_000_000_159_028_911_097_599_180_468_360_808_563_945_281_389_781_327_557_747_838_772_170_381_060_813_469_985_856_815_104.0_f64,
                 ],
             ) == 1.0_f64)
                 .to_string(),

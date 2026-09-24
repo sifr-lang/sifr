@@ -2,13 +2,24 @@ use quote::ToTokens;
 use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
-const EXPECTATION_REASON: &str = "generated Rust preserves this exact typed Sifr source contract";
+const EXPECTATION_REASON_MARKER: &str =
+    "generated Rust preserves this exact typed Sifr source contract";
+const EXPECTATION_REASON: &str = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics";
+
+#[derive(Clone, Copy)]
+pub(super) struct FunctionExpectationContext {
+    pub owner_has_display: bool,
+    pub copy_receiver_lint: bool,
+    pub trait_impl: bool,
+    pub restricted_api: bool,
+    pub ref_option_lint: bool,
+}
 
 pub(super) fn refresh_function_expectations(
     attrs: &mut Vec<syn::Attribute>,
     signature: &syn::Signature,
     body: &syn::Block,
-    owner_has_display: bool,
+    context: FunctionExpectationContext,
 ) {
     remove_generated_expectations(attrs);
     let mut shape = FunctionShape::default();
@@ -23,7 +34,7 @@ pub(super) fn refresh_function_expectations(
     if shape.has_approximate_constant {
         add_expectation(attrs, "approx_constant");
     }
-    if signature.ident == "to_string" && owner_has_display {
+    if signature.ident == "to_string" && context.owner_has_display {
         add_expectation(attrs, "inherent_to_string_shadow_display");
     }
     if !is_snake_case(&signature.ident.to_string()) {
@@ -31,6 +42,39 @@ pub(super) fn refresh_function_expectations(
     }
     if returns_option(signature) && body_is_single_some(body) {
         add_expectation(attrs, "unnecessary_wraps");
+    }
+    if context.copy_receiver_lint
+        && signature.receiver().is_some_and(|receiver| {
+            matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, None))
+        })
+    {
+        // Source shared receivers retain their callable ABI even for Copy enums.
+        add_expectation(attrs, "trivially_copy_pass_by_ref");
+    }
+    if context.ref_option_lint && !context.trait_impl && signature.inputs.iter().any(|argument| matches!(argument,
+        syn::FnArg::Typed(argument) if matches!(argument.ty.as_ref(),
+            syn::Type::Reference(reference) if matches!(reference.elem.as_ref(),
+                syn::Type::Path(path) if path.path.segments.last().is_some_and(|segment| segment.ident == "Option"))))) {
+        add_expectation(attrs, "ref_option");
+    }
+    if signature.asyncness.is_some() && !shape.has_await {
+        // Eagerly evaluating an async body changes when its source effects occur.
+        add_expectation(attrs, "unused_async");
+        if context.trait_impl
+            || signature.receiver().is_some_and(|receiver| {
+                matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, Some(_)))
+            })
+        {
+            add_expectation(attrs, "unused_async_trait_impl");
+        }
+    }
+    if context.restricted_api
+        && !context.trait_impl
+        && signature.asyncness.is_none()
+        && signature.receiver().is_some()
+        && !shape.uses_self
+    {
+        add_expectation(attrs, "unused_self");
     }
     if single_character_binding_count(signature, body) > 4 {
         add_expectation(attrs, "many_single_char_names");
@@ -61,7 +105,7 @@ fn remove_generated_expectations(attrs: &mut Vec<syn::Attribute>) {
                 .meta
                 .to_token_stream()
                 .to_string()
-                .contains(EXPECTATION_REASON)
+                .contains(EXPECTATION_REASON_MARKER)
     });
 }
 
@@ -221,9 +265,22 @@ fn is_snake_case(name: &str) -> bool {
 struct FunctionShape {
     asserts_constant: bool,
     has_approximate_constant: bool,
+    has_await: bool,
+    uses_self: bool,
 }
 
 impl<'ast> Visit<'ast> for FunctionShape {
+    fn visit_expr_await(&mut self, expression: &'ast syn::ExprAwait) {
+        self.has_await = true;
+        visit::visit_expr_await(self, expression);
+    }
+    fn visit_expr_path(&mut self, expression: &'ast syn::ExprPath) {
+        if expression.path.is_ident("self") {
+            self.uses_self = true;
+        }
+        visit::visit_expr_path(self, expression);
+    }
+
     fn visit_lit_float(&mut self, literal: &'ast syn::LitFloat) {
         if let Ok(value) = literal.base10_parse::<f64>()
             && [
@@ -239,6 +296,16 @@ impl<'ast> Visit<'ast> for FunctionShape {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.uses_self |= super::format_capture::names(rust_macro).contains("self");
+        // Opaque macros such as select! can contain or generate awaits.
+        if rust_macro
+            .parse_body_with(
+                syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+            )
+            .is_err()
+        {
+            self.has_await = true;
+        }
         let first_argument_is_constant = rust_macro
             .parse_body_with(
                 syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
@@ -278,5 +345,83 @@ fn expression_is_syntactic_constant(expression: &syn::Expr) -> bool {
                 && expression_is_syntactic_constant(&binary.right)
         }
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod receiver_tests {
+    #[test]
+    fn mutable_copy_receiver_does_not_get_shared_receiver_expectation() {
+        let signature = syn::parse_quote!(fn change(&mut self));
+        let body = syn::parse_quote!({});
+        let mut attrs = Vec::new();
+        super::refresh_function_expectations(
+            &mut attrs,
+            &signature,
+            &body,
+            super::FunctionExpectationContext {
+                owner_has_display: false,
+                copy_receiver_lint: true,
+                trait_impl: false,
+                restricted_api: true,
+                ref_option_lint: true,
+            },
+        );
+        assert!(
+            !quote::quote!(#(#attrs)*)
+                .to_string()
+                .contains("trivially_copy_pass_by_ref")
+        );
+    }
+}
+
+const EXACT_FLOAT_REASON: &str = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes";
+
+pub(super) fn refresh_exact_float_expectation(attrs: &mut Vec<syn::Attribute>, required: bool) {
+    attrs.retain(|attribute| {
+        !attribute.path().is_ident("expect")
+            || !attribute
+                .meta
+                .to_token_stream()
+                .to_string()
+                .contains(EXACT_FLOAT_REASON)
+    });
+    if required {
+        let reason = syn::LitStr::new(EXACT_FLOAT_REASON, proc_macro2::Span::call_site());
+        attrs.push(syn::parse_quote!(#[expect(clippy::float_cmp, reason = #reason)]));
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub(super) struct FloatExpectations {
+    pub comparison: bool,
+    pub arithmetic: bool,
+    pub midpoint: bool,
+}
+
+pub(super) fn refresh_float_expectations(
+    attrs: &mut Vec<syn::Attribute>,
+    name: &syn::Ident,
+    required: FloatExpectations,
+) {
+    const ROUNDING: &str = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes";
+    // Clippy 1.98 already recognizes these names as exact equality APIs.
+    let name = name.to_string();
+    let equality_api = name == "eq" || name.starts_with("eq_") || name.ends_with("_eq");
+    refresh_exact_float_expectation(attrs, required.comparison && !equality_api);
+    attrs.retain(|attribute| {
+        !attribute.path().is_ident("expect")
+            || !attribute
+                .meta
+                .to_token_stream()
+                .to_string()
+                .contains(ROUNDING)
+    });
+    let reason = syn::LitStr::new(ROUNDING, proc_macro2::Span::call_site());
+    if required.arithmetic {
+        attrs.push(syn::parse_quote!(#[expect(clippy::suboptimal_flops, reason = #reason)]));
+    }
+    if required.midpoint {
+        attrs.push(syn::parse_quote!(#[expect(clippy::manual_midpoint, reason = #reason)]));
     }
 }

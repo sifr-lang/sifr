@@ -480,6 +480,16 @@ large-file check and a representative project check.
   visibility, symbol discovery, and dependency pruning. Each declaration is a
   separate demand owner; project relocation grants crate visibility while
   preserving its name, type, attributes, and Tokio cancellation behavior.
+- Project and test-project code generation return checked CodegenError results
+  for support-layout, canonicalization and project-assembly failures. The driver
+  converts those results to contextual compiler diagnostics at one boundary;
+  its separate unwind catcher remains protection for unexpected compiler bugs.
+  Checked assembly errors do not manufacture a panic to cross that boundary.
+  The type-system builtin-error catalog supplies canonical nominal identities
+  to lowering, constructor signatures and codegen. Builtin subtype ancestry uses
+  those identities too; the root Error marker retains its explicit base contract.
+  IO subtype handlers narrow the discriminator while retaining IOError as the
+  emitted Rust payload type.
 - Stdlib bootstrap owns one short-lived syntax-validation session for its source
   inventory. Successful complete-file parsing can establish exact support text
   as complete Rust items. Later inline assemblies reuse only that syntax identity
@@ -494,6 +504,9 @@ large-file check and a representative project check.
   project metadata, inline stdlib, and bridge fragments have been assembled,
   the complete file is parsed as a `syn` Rust syntax tree for demand pruning,
   identifier canonicalization, and syntax/API cleanup before its final render.
+  Project assembly resolves borrow-only value signatures and importing calls
+  across all modules to a fixed point. Later per-file cleanup does not newly
+  borrow exported project signatures.
   No regex or unchecked text-pattern rewrite decides Rust semantics; the only
   source-range substitutions are identifiers whose spans and spellings were
   validated by that parsed tree, which preserves comments and literals. At
@@ -505,6 +518,18 @@ large-file check and a representative project check.
   is a structured build diagnostic, never an unformatted fallback.
   Materialization repeats this fail-closed check for synthetic namespace and
   bridge files that do not exist at the earlier emit boundary.
+- Borrowed string, scalar and slice API cleanup uses declared callable facts
+  across the assembled project, with lexical module/import and callback ABI
+  boundaries. Clone removal requires proven owned bindings and terminal use;
+  unknown values, reference aliases and shadowed bindings do not authorize
+  ownership transfer. Initializer deletion uses the shared conservative
+  discardability contract instead of constructor or method name guesses.
+  Lexical standard-library proofs can establish inert empty values and character
+  collections; opaque or user-defined operations retain their effects. Initializer
+  motion and dead assignments use the shared format-capture parser, with unknown
+  macro expansions blocking motion. Common branch prefixes are factored as one
+  complete safe prefix, preserving condition evaluation and lexical drop order
+  without consuming one fixed-point iteration per statement.
 - Both shapes materialize through the same generated-binary-project path. Native
   build state uses local sysroot and package paths only while Cargo resolves and
   builds it. The source-only materialization boundary then replaces that local

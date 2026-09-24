@@ -1,3 +1,4 @@
+use quote::ToTokens;
 use std::collections::HashSet;
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
@@ -25,14 +26,19 @@ pub(super) fn disambiguate_similar_parameter_names(
     let mut body_bindings = PatternBindingCollector { names: Vec::new() };
     body_bindings.visit_block(body);
     occupied.extend(body_bindings.names);
+    let mut case_scope = CaseRenameScope::new();
+    case_scope.visit_block(body);
+    occupied.extend(case_scope.identifiers.iter().cloned());
 
-    for right in 1..names.len() {
+    for right in 0..names.len() {
         let (argument_index, name) = &names[right];
-        if name.starts_with("sifr_generated_")
-            || is_disambiguated_name(name)
-            || !names[..right]
-                .iter()
-                .any(|(_, other)| source_names_are_too_similar(other, name))
+        let normalize_case = name.chars().any(char::is_uppercase) && case_scope.safe_macros;
+        if !normalize_case
+            && (name.starts_with("sifr_generated_")
+                || is_disambiguated_name(name)
+                || !names[..right]
+                    .iter()
+                    .any(|(_, other)| source_names_are_too_similar(other, name)))
         {
             continue;
         }
@@ -69,13 +75,20 @@ pub(super) fn disambiguate_similar_local_names(statements: &mut [syn::Stmt]) {
         .iter()
         .map(|(_, name)| name.clone())
         .collect::<HashSet<_>>();
-    for right in 1..names.len() {
+    let mut case_scope = CaseRenameScope::new();
+    for statement in statements.iter() {
+        case_scope.visit_stmt(statement);
+    }
+    occupied.extend(case_scope.identifiers.iter().cloned());
+    for right in 0..names.len() {
         let (statement_index, name) = &names[right];
-        if name.starts_with("sifr_generated_")
-            || is_disambiguated_name(name)
-            || !names[..right]
-                .iter()
-                .any(|(_, other)| source_names_are_too_similar(other, name))
+        let normalize_case = name.chars().any(char::is_uppercase) && case_scope.safe_macros;
+        if !normalize_case
+            && (name.starts_with("sifr_generated_")
+                || is_disambiguated_name(name)
+                || !names[..right]
+                    .iter()
+                    .any(|(_, other)| source_names_are_too_similar(other, name)))
         {
             continue;
         }
@@ -175,7 +188,7 @@ impl VisitMut for FunctionWideNameDisambiguator<'_> {
 
 fn unoccupied_value_name(name: &str, occupied: &mut HashSet<String>) -> String {
     let fingerprint = stable_name_fingerprint(name);
-    let mut replacement = format!("{name}_value_{fingerprint:016x}");
+    let mut replacement = format!("{}_value_{fingerprint:016x}", name.to_lowercase());
     while occupied.contains(&replacement) {
         replacement.push_str("_binding");
     }
@@ -185,7 +198,7 @@ fn unoccupied_value_name(name: &str, occupied: &mut HashSet<String>) -> String {
 
 fn unoccupied_parameter_name(name: &str, occupied: &mut HashSet<String>) -> String {
     let fingerprint = stable_name_fingerprint(name);
-    let mut replacement = format!("{name}_argument_{fingerprint:016x}");
+    let mut replacement = format!("{}_argument_{fingerprint:016x}", name.to_lowercase());
     while occupied.contains(&replacement) {
         replacement.push_str("_binding");
     }
@@ -356,6 +369,11 @@ impl LocalReferenceRenamer<'_> {
 }
 
 impl VisitMut for LocalReferenceRenamer<'_> {
+    fn visit_item_fn_mut(&mut self, _function: &mut syn::ItemFn) {
+        // A nested fn item has its own parameter scope. Its explicit capture
+        // parameters are renamed when that function is canonicalized.
+    }
+
     fn visit_field_value_mut(&mut self, field: &mut syn::FieldValue) {
         // Shorthand prints the member token, so expand it before changing only
         // the value binding. The field's nominal identity must stay unchanged.
@@ -455,7 +473,40 @@ impl VisitMut for LocalReferenceRenamer<'_> {
     }
 
     fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
-        rust_macro.tokens = self.rename_tokens(rust_macro.tokens.clone());
+        if let Ok(mut arguments) = rust_macro.parse_body_with(
+            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+        ) {
+            let format_index = super::format_capture::format_argument_index(rust_macro);
+            for (index, argument) in arguments.iter_mut().enumerate() {
+                if format_index.is_some_and(|format| index > format)
+                    && let syn::Expr::Assign(named) = argument
+                {
+                    // A format slot label is not a lexical variable reference.
+                    self.visit_expr_mut(&mut named.right);
+                } else {
+                    self.visit_expr_mut(argument);
+                }
+            }
+            rust_macro.tokens = arguments.into_token_stream();
+        } else if rust_macro.path.is_ident("vec")
+            && let Ok(mut expression) = syn::parse2::<syn::Expr>({
+                let tokens = &rust_macro.tokens;
+                quote::quote!([#tokens])
+            })
+        {
+            self.visit_expr_mut(&mut expression);
+            rust_macro.tokens = match expression {
+                syn::Expr::Repeat(repeat) => {
+                    let value = repeat.expr;
+                    let length = repeat.len;
+                    quote::quote!(#value; #length)
+                }
+                syn::Expr::Array(array) => array.elems.into_token_stream(),
+                _ => rust_macro.tokens.clone(),
+            };
+        } else {
+            rust_macro.tokens = self.rename_tokens(rust_macro.tokens.clone());
+        }
         self.rename_format_capture(rust_macro);
         visit_mut::visit_macro_mut(self, rust_macro);
     }
@@ -492,5 +543,55 @@ fn condition_binds_name(condition: &syn::Expr, name: &str) -> bool {
             condition_binds_name(&binary.left, name) || condition_binds_name(&binary.right, name)
         }
         _ => false,
+    }
+}
+
+// Case normalization reserves every referenced identifier, including macro
+// captures, so a fresh local cannot capture an existing item or outer binding.
+struct CaseRenameScope {
+    identifiers: HashSet<String>,
+    safe_macros: bool,
+}
+
+impl CaseRenameScope {
+    fn new() -> Self {
+        Self {
+            identifiers: HashSet::new(),
+            safe_macros: true,
+        }
+    }
+    fn tokens(&mut self, tokens: proc_macro2::TokenStream) {
+        for token in tokens {
+            match token {
+                proc_macro2::TokenTree::Ident(identifier) => {
+                    self.identifiers.insert(identifier.to_string());
+                }
+                proc_macro2::TokenTree::Group(group) => self.tokens(group.stream()),
+                _ => {}
+            }
+        }
+    }
+}
+
+impl<'ast> Visit<'ast> for CaseRenameScope {
+    fn visit_ident(&mut self, identifier: &'ast proc_macro2::Ident) {
+        self.identifiers.insert(identifier.to_string());
+    }
+    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.tokens(rust_macro.tokens.clone());
+        self.identifiers
+            .extend(super::format_capture::names(rust_macro));
+        let expression_arguments = rust_macro
+            .parse_body_with(
+                syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+            )
+            .is_ok();
+        let vector = rust_macro.path.is_ident("vec") && {
+            let tokens = &rust_macro.tokens;
+            syn::parse2::<syn::Expr>(quote::quote!([#tokens])).is_ok()
+        };
+        self.safe_macros &=
+            (super::format_capture::is_format_macro(rust_macro) && expression_arguments) || vector;
+        visit::visit_macro(self, rust_macro);
     }
 }

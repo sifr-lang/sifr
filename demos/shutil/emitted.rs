@@ -80,12 +80,14 @@ mod sifr_generated_generated_support {
         let suffix: String = sifr_generated_random_suffix();
         let mut root: String = gettempdir();
         let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
-        if &SifrInt::from(sifr_generated_chars_root.len()) == &SifrInt::from_i64(0) {
+        if sifr_generated_chars_root.len() == SifrInt::from_i64(0) {
             root = "/tmp".to_string();
         } else {
             let last: Option<String> = {
-                let sifr_generated_string_index =
-                    &SifrInt::from(root.chars().count()) - &SifrInt::from_i64(1);
+                let sifr_generated_string_index = ::std::ops::Sub::sub(
+                    &SifrInt::from(root.chars().count()),
+                    &SifrInt::from_i64(1),
+                );
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_root.len());
                 sifr_generated_chars_root
@@ -97,8 +99,11 @@ mod sifr_generated_generated_support {
                 && last == "/"
             {
                 return {
-                    let mut sifr_generated_concat: String =
-                        String::with_capacity(root.len() + prefix.len() + suffix.len());
+                    let mut sifr_generated_concat: String = String::with_capacity(
+                        root.len()
+                            .saturating_add(prefix.len())
+                            .saturating_add(suffix.len()),
+                    );
                     sifr_generated_concat.push_str(root.as_str());
                     sifr_generated_concat.push_str(prefix);
                     sifr_generated_concat.push_str(suffix.as_str());
@@ -107,8 +112,12 @@ mod sifr_generated_generated_support {
             }
         }
         {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(root.len() + 1usize + prefix.len() + suffix.len());
+            let mut sifr_generated_concat: String = String::with_capacity(
+                root.len()
+                    .saturating_add(1usize)
+                    .saturating_add(prefix.len())
+                    .saturating_add(suffix.len()),
+            );
             sifr_generated_concat.push_str(root.as_str());
             sifr_generated_concat.push('/');
             sifr_generated_concat.push_str(prefix);
@@ -119,7 +128,7 @@ mod sifr_generated_generated_support {
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -140,7 +149,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -183,33 +192,38 @@ use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 fn collect_copy_move_tree_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
-    let base: String = mktemp_path(&"sifr_shutil_shutil_demo_".to_string());
+    let base: String = mktemp_path("sifr_shutil_shutil_demo_");
     let src: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(base.len() + 8usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(base.len().saturating_add(8usize));
         sifr_generated_concat.push_str(base.as_str());
         sifr_generated_concat.push_str("/src.txt");
         sifr_generated_concat
     };
     let copied: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(base.len() + 11usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(base.len().saturating_add(11usize));
         sifr_generated_concat.push_str(base.as_str());
         sifr_generated_concat.push_str("/copied.txt");
         sifr_generated_concat
     };
     let moved: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(base.len() + 10usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(base.len().saturating_add(10usize));
         sifr_generated_concat.push_str(base.as_str());
         sifr_generated_concat.push_str("/moved.txt");
         sifr_generated_concat
     };
     let tree: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(base.len() + 5usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(base.len().saturating_add(5usize));
         sifr_generated_concat.push_str(base.as_str());
         sifr_generated_concat.push_str("/tree");
         sifr_generated_concat
     };
     let nested: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(tree.len() + 11usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(tree.len().saturating_add(11usize));
         sifr_generated_concat.push_str(tree.as_str());
         sifr_generated_concat.push_str("/nested.txt");
         sifr_generated_concat
@@ -219,7 +233,7 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
     let mut rmtree_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         mkdir(&base)?;
-        write_text(&src, &"demo".to_string())?;
+        write_text(&src, "demo")?;
         copy(&src, &copied)?;
         let mut copied_content_ok: bool = false;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -227,23 +241,17 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
             copied_content_ok = copied_content == "demo";
             Ok(())
         })();
-        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err.clone();
-            let _ = e.message.clone().to_string();
-        }
+        let _ = sifr_generated_try_res;
         copy_ok = exists(&src) && exists(&copied) && copied_content_ok;
         move_file(&copied, &moved)?;
         move_ok_value_16a723bbd15dd243 = exists(&moved) && !exists(&copied);
         mkdir(&tree)?;
-        write_text(&nested, &"nested".to_string())?;
+        write_text(&nested, "nested")?;
         rmtree(&tree)?;
         rmtree_ok = !exists(&tree);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     actual.push(copy_ok);
     actual.push(move_ok_value_16a723bbd15dd243);
     actual.push(rmtree_ok);
@@ -251,26 +259,23 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
 }
 fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
-    let base: String = mktemp_path(&"sifr_shutil_shutil_demo_cleanup_".to_string());
+    let base: String = mktemp_path("sifr_shutil_shutil_demo_cleanup_");
     let mut base_ready: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         mkdir(&base)?;
         base_ready = exists(&base);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     let mut which_ok: bool = false;
-    let tool: Option<String> = which(&"sh".to_string());
+    let tool: Option<String> = which("sh");
     if let Some(tool) = tool {
-        which_ok = &SifrInt::from(tool.chars().count()) > &SifrInt::from_i64(0);
+        which_ok = tool.chars().count() > SifrInt::from_i64(0);
     }
     actual.push(which_ok);
-    let usage: Vec<SifrInt> = disk_usage(&base.to_string());
+    let usage: Vec<SifrInt> = disk_usage(base.as_str());
     let mut usage_ok: bool = false;
-    if &SifrInt::from(usage.len()) == &SifrInt::from_i64(3) {
+    if usage.len() == SifrInt::from_i64(3) {
         let total: Option<SifrInt> = {
             let sifr_generated_checked_read_collection = &usage;
             let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -280,8 +285,8 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         };
-        if let Some(total) = total.clone() {
-            usage_ok = &total > &SifrInt::from_i64(0);
+        if let Some(total) = total {
+            usage_ok = total > SifrInt::from_i64(0);
         }
     }
     usage_ok = usage_ok && base_ready;
@@ -294,9 +299,7 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
         )?;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+    if let Err(_try_err) = sifr_generated_try_res {
         missing_copy_rejected = true;
     }
     actual.push(missing_copy_rejected);
@@ -306,9 +309,7 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
         cleanup_ok = !exists(&base);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+    if let Err(_try_err) = sifr_generated_try_res {
         cleanup_ok = !exists(&base);
     }
     actual.push(cleanup_ok);

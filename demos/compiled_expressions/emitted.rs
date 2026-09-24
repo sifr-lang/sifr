@@ -8,12 +8,12 @@ mod sifr_generated_generated_support {
 }
 use crate::sifr_generated_generated_support::floor;
 use ::sifr_runtime::SifrInt;
-fn add(a: SifrInt, b: SifrInt) -> SifrInt {
-    &a + &b
+fn add(a: &SifrInt, b: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(a, b)
 }
 fn main() {
-    let total: SifrInt = add(SifrInt::from_i64(10), SifrInt::from_i64(11));
-    if &total > &SifrInt::from_i64(20) {
+    let total: SifrInt = add(&SifrInt::from_i64(10), &SifrInt::from_i64(11));
+    if total > SifrInt::from_i64(20) {
         println!("compiled_expressions lower decomposition demo:");
     }
     println!("{total}");

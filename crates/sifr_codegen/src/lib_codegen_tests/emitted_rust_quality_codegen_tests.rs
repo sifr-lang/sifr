@@ -375,10 +375,13 @@ def read_limit() -> int:
     );
 
     assert!(
-        generated.contains("&__sifr_const_4249475f4c494d4954() +"),
+        generated.contains("std::ops::Add::add(&__sifr_const_4249475f4c494d4954(),"),
         "{generated}"
     );
-    assert!(!generated.contains("&BIG_LIMIT +"), "{generated}");
+    assert!(
+        !generated.contains("std::ops::Add::add(&BIG_LIMIT,"),
+        "{generated}"
+    );
 }
 
 #[test]
@@ -503,4 +506,267 @@ fn unproven_exact_integer_cannot_enter_byte_storage_codegen() {
         )
         .is_none()
     );
+}
+
+#[test]
+fn checked_assignment_moves_only_proven_last_use_values() {
+    let generated = generate_rust_from_source(
+        r#"
+def single(mut values: list[str], own value: str) -> None:
+    try:
+        values[0] = value
+    except IndexError:
+        pass
+
+def nested(mut values: list[list[str]], own value: str) -> None:
+    try:
+        values[0][0] = value
+    except IndexError:
+        pass
+
+def reused(mut values: list[str], own value: str) -> None:
+    try:
+        values[0] = value
+    except IndexError:
+        pass
+    print(value)
+
+def borrowed(mut values: list[str], value: str) -> None:
+    try:
+        values[0] = value
+    except IndexError:
+        pass
+
+def repeated(mut values: list[str], own value: str) -> None:
+    for index in range(2):
+        try:
+            values[index] = value
+        except IndexError:
+            pass
+"#,
+    );
+    let ast = syn::parse_file(&generated).expect("generated Rust parses");
+    for item in ast.items {
+        let syn::Item::Fn(function) = item else {
+            continue;
+        };
+        let name = function.sig.ident.to_string();
+        let body = quote::ToTokens::to_token_stream(&function.block).to_string();
+        let copies = body.contains("value . clone")
+            || body.contains("value . to_owned")
+            || body.contains("(value) . clone");
+        if matches!(name.as_str(), "single" | "nested") {
+            assert!(!copies, "{name}: {body}");
+        } else if matches!(name.as_str(), "reused" | "borrowed" | "repeated") {
+            assert!(copies, "{name}: {body}");
+        }
+    }
+}
+
+#[test]
+fn fresh_loop_string_length_does_not_allocate_a_character_cache() {
+    let generated = generate_rust_from_source(
+        r#"
+def widths(count: int) -> int:
+    total: int = 0
+    for index in range(count):
+        text: str = "a🦀"
+        text = text + "z"
+        total += len(text)
+    return total
+"#,
+    );
+    assert!(!generated.contains("__sifr_chars_text"), "{generated}");
+    assert!(generated.contains("text.chars().count()"), "{generated}");
+}
+
+#[test]
+fn inner_loop_lengths_keep_a_cache_for_the_enclosing_fresh_string() {
+    let generated = generate_rust_from_source(
+        r#"
+def widths(count: int) -> int:
+    total: int = 0
+    for index in range(count):
+        text: str = "a🦀z"
+        cursor: int = 0
+        while cursor < len(text):
+            cursor += 1
+        total += cursor
+    return total
+"#,
+    );
+    assert!(generated.contains("__sifr_chars_text"), "{generated}");
+    assert!(!generated.contains("text.chars().count()"), "{generated}");
+}
+
+#[test]
+fn bigdecimal_owned_boundary_moves_only_the_last_use() {
+    let generated = generate_rust_from_source(
+        r#"
+def value() -> bigdecimal:
+    number: bigdecimal = BigDecimal("2.5")
+    first: bigdecimal = number + BigDecimal("1")
+    return first + number
+
+def borrowed(number: bigdecimal) -> bigdecimal:
+    return number + BigDecimal("1")
+"#,
+    );
+    assert!(generated.contains("number.clone()"), "{generated}");
+    assert!(!generated.contains("first.clone()"), "{generated}");
+}
+
+#[test]
+fn shared_custom_iterator_borrows_a_reused_receiver() {
+    let generated = generate_rust_from_source(
+        r#"
+class Values:
+    start: int
+    def __init__(self, start: int):
+        self.start = start
+    def __iter__(self) -> Iterator[int]:
+        return iter([self.start])
+
+def total() -> int:
+    values: Values = Values(7)
+    copied: list[int] = list(values)
+    total: int = len(copied)
+    for item in values:
+        total += item
+    return total + values.start
+"#,
+    );
+    assert!(!generated.contains("values.clone()"), "{generated}");
+    assert!(generated.contains("values.__iter__()"), "{generated}");
+}
+
+#[test]
+fn nested_function_terminal_local_moves_after_a_loop() {
+    let generated = generate_rust_from_source(
+        r#"
+def outer(start: int) -> int:
+    def advance(seed: int) -> int:
+        position: int = seed
+        while position < 4:
+            position += 1
+        return position
+    return advance(start)
+"#,
+    );
+    assert!(!generated.contains("position.clone()"), "{generated}");
+}
+
+#[test]
+fn tuple_iteration_preserves_reused_storage_and_moves_consumed_fields() {
+    let generated = generate_rust_from_source(
+        r#"
+def total() -> int:
+    values: tuple[int, int] = (3, 5)
+    total: int = 0
+    for item in values:
+        total += item
+    for item in reversed(values):
+        total += item
+    return total
+"#,
+    );
+    assert!(!generated.contains("values.clone()"), "{generated}");
+    assert!(generated.contains("= &values"), "{generated}");
+    assert_eq!(
+        generated.matches("__sifr_tuple_iter_src.1.clone()").count(),
+        1,
+        "{generated}"
+    );
+    assert!(generated.contains("= values;"), "{generated}");
+}
+
+#[test]
+fn generic_owned_optional_assertions_keep_explicit_consumption() {
+    let generated = generate_rust_from_source(
+        r#"
+def consume[T](own value: T | None) -> None:
+    assert value is not None
+
+def observe[T](value: T | None) -> None:
+    assert value is not None
+"#,
+    );
+    assert_eq!(
+        generated.matches("std::mem::drop(value)").count(),
+        1,
+        "{generated}"
+    );
+}
+
+#[test]
+fn stored_iterator_borrows_survive_later_source_uses() {
+    for construction in ["iter(values)", "filter(lambda n: n > 0, values)"] {
+        let generated = generate_rust_from_source(&format!(
+            r#"
+def retained() -> list[int]:
+    values: list[int] = [1, 2, 3]
+    pending: Iterator[int] = {construction}
+    assert next(pending) == 1
+    return list(reversed(values))
+"#
+        ));
+        assert!(!generated.contains("(values).into_iter()"), "{generated}");
+        assert!(!generated.contains("values.into_iter()"), "{generated}");
+    }
+}
+
+#[test]
+fn iterator_construction_can_consume_a_final_source_use() {
+    let generated = generate_rust_from_source(
+        r#"
+def final_source() -> list[int]:
+    values: list[int] = [1, 2, 3]
+    pending: Iterator[int] = iter(values)
+    return list(pending)
+"#,
+    );
+    assert!(
+        generated.contains("(values).into_iter()") || generated.contains("values.into_iter()"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn iterable_storage_avoids_owned_vec_round_trips() {
+    let generated = generate_rust_from_source(
+        r#"
+def adapt(own values: Iterator[int]) -> Iterable[int]:
+    return values
+
+def materialize(own values: Iterator[int]) -> list[int]:
+    stored: Iterable[int] = adapt(values)
+    return list(stored)
+"#,
+    );
+    assert!(
+        !generated.contains("into_iter().collect::<Vec<_>>()"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("values.collect::<Vec<_>>()"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn typed_bytes_iterators_preserve_reuse_without_identity_casts() {
+    let generated = generate_rust_from_source(
+        r#"
+def reused(payload: bytes) -> list[uint8]:
+    values: list[uint8] = list(iter(payload))
+    assert len(payload) > 0
+    return values
+
+def consumed(own payload: bytes) -> list[uint8]:
+    return list(iter(payload))
+"#,
+    );
+    assert!(!generated.contains(" as u8"), "{generated}");
+    assert!(generated.contains(".copied()"), "{generated}");
+    assert!(generated.contains(".into_iter()"), "{generated}");
 }

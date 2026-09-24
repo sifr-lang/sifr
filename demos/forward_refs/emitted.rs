@@ -48,17 +48,17 @@ fn get_node_val(node: &Node) -> SifrInt {
     node.value.clone()
 }
 fn describe_person(p: Person) -> String {
-    p.name.clone()
+    p.name
 }
 fn process(item: &Item) -> SifrInt {
     item.priority.clone()
 }
 fn main() {
     let n: Node = Node::new(SifrInt::from_i64(42));
-    assert_eq!(&get_node_val(&n), &SifrInt::from_i64(42));
+    assert_eq!(get_node_val(&n), SifrInt::from_i64(42));
     let p: Person = Person::new("Alice".to_string(), SifrInt::from_i64(30));
     assert_eq!(describe_person(p), "Alice");
     let it: Item = Item::new(SifrInt::from_i64(5), "urgent".to_string());
-    assert_eq!(&process(&it), &SifrInt::from_i64(5));
+    assert_eq!(process(&it), SifrInt::from_i64(5));
     println!("forward_refs: ok");
 }

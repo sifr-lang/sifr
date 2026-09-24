@@ -114,48 +114,10 @@ pub(super) fn try_lower_simple_iter_source_expr(iter_expr: &HirExpr) -> Option<R
                 plan.yield_mode,
             ),
         }),
-        Type::Bytes => Some(match plan.source_access_mode {
-            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_source),
-                    method: "into_iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
-                        ty: RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_source),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__byte".to_string(),
-                        )))),
-                        ty: RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-        }),
+        Type::Bytes => Some(crate::helpers::bytes_iterator_expr(
+            lowered_source,
+            plan.source_access_mode,
+        )),
         Type::Str => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_source),
@@ -208,6 +170,15 @@ pub(super) fn lower_simple_map_callable_expr(
     };
     if param_types.len() != 1 || conventions.len() != 1 {
         return Some(lowered_callable);
+    }
+    // The signature-aware lowering must decide whether a recursive optional
+    // class parameter expects Option<&T> or &Option<T>.
+    if conventions[0].is_shared_borrow()
+        && param_types[0]
+            .optional_member_type()
+            .is_some_and(|inner| matches!(inner.resolve_alias(), Type::Class { .. }))
+    {
+        return None;
     }
     let iter_elem_ty =
         resolve_alias_type(unwrap_simple_iter_source_expr(iter).ty()).iterable_element_type()?;
@@ -498,7 +469,7 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
     if !alias_name.starts_with("__sifr_defaultdict_") {
         return None;
     }
-    let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
+    let Type::Dict(key_ty, _value_ty) = body.resolve_alias() else {
         return None;
     };
     let lowered_object = try_lower_leaf_or_name_expr(object)?;
@@ -539,12 +510,9 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
         method: "or_insert".to_string(),
         args: vec![default_expr],
     };
-    Some(match resolve_alias_type(value_ty.as_ref()) {
-        Type::Int => RustExpr::Deref(Box::new(entry_expr)),
-        _ => RustExpr::MethodCall {
-            receiver: Box::new(entry_expr),
-            method: "clone".to_string(),
-            args: vec![],
-        },
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(entry_expr),
+        method: "clone".to_string(),
+        args: vec![],
     })
 }

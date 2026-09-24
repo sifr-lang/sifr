@@ -111,11 +111,15 @@ impl Timer {
     }
 }
 impl Timer {
-    fn sifr_generated_enter__(&self) -> Timer {
+    fn sifr_generated_enter__(&self) -> Self {
         self.clone()
     }
 }
 impl Timer {
+    #[expect(
+        clippy::unused_self,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn sifr_generated_exit__(&self) {}
 }
 impl ::std::fmt::Display for Timer {
@@ -129,12 +133,12 @@ fn fibonacci(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
             let mut a: SifrInt = SifrInt::from_i64(0);
             let mut b: SifrInt = SifrInt::from_i64(1);
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &n {
+            while i < n {
                 sifr_generated_yielder.suspend(a.clone()).await;
-                let temp: SifrInt = &a + &b;
-                a = b.clone();
-                b = temp.clone();
-                i = &i + &SifrInt::from_i64(1);
+                let temp: SifrInt = ::std::ops::Add::add(&a, &b);
+                a.clone_from(&b);
+                b = temp;
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -143,11 +147,11 @@ fn evens(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &limit {
-                if &i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
+            while i < limit {
+                if i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0) {
                     sifr_generated_yielder.suspend(i.clone()).await;
                 }
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -164,8 +168,12 @@ fn main() {
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),
     ];
-    for x in nums.iter().cloned() {
-        println!("{}", &x * &x);
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for x in nums.iter() {
+        println!("{}", ::std::ops::Mul::mul(x, x));
     }
     {
         struct SifrGeneratedWithGuard0 {

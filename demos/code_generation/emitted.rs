@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 fn main() {
     let pair: (SifrInt, SifrInt) = (SifrInt::from_i64(10), SifrInt::from_i64(20));
     let a: SifrInt = pair.0.clone();
-    let b: SifrInt = pair.1.clone();
+    let b: SifrInt = pair.1;
     println!("Tuple index: {a}, {b}");
     assert_eq!(format!("Tuple index: {a}, {b}"), "Tuple index: 10, 20");
     let _x: SifrInt = SifrInt::from_i64(10);
@@ -14,7 +14,7 @@ fn main() {
     let val: Option<SifrInt> = None;
     if val.is_none() {
         println!("None value: None");
-    } else if let Some(val) = val.clone() {
+    } else if let Some(val) = val {
         println!("None value: {val}");
     }
     let nums: Vec<SifrInt> = vec![
@@ -44,5 +44,5 @@ fn main() {
     assert_eq!(format!("10 + 3.5 = {mixed}"), "10 + 3.5 = 13.5");
     let msg: String = "She said \"hello\"".to_string();
     println!("{msg}");
-    assert_eq!(msg.to_string(), "She said \"hello\"");
+    assert_eq!(msg, "She said \"hello\"");
 }

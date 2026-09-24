@@ -11,7 +11,7 @@ mod sifr_generated_generated_support {
     pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -32,7 +32,7 @@ mod sifr_generated_generated_support {
                         .cloned()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
 }
@@ -52,21 +52,16 @@ use crate::sifr_generated_generated_support::{assert_vector_eq, b64encode};
 pub use sifr_generated_project_nominals::ParseError;
 fn main() {
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _bad: String = ::sifr_runtime::encoding::decode_text(
-            &vec![255_u8],
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
-        println!("{}", false);
+        let _bad: String = ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict")
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            })?;
+        println!("false");
         assert_eq!(false.to_string(), "true");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
-        println!("{}", true);
+    if let Err(_try_err) = sifr_generated_try_res {
+        println!("true");
         assert_eq!(true.to_string(), "true");
     }
     let inputs: Vec<String> = vec![
@@ -82,9 +77,13 @@ fn main() {
         "Zm9v".to_string(),
     ];
     let mut actual: Vec<String> = Vec::new();
-    for s in inputs.iter().cloned() {
-        actual.push(b64encode(&s));
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for s in inputs.iter() {
+        actual.push(b64encode(s));
     }
     assert_vector_eq(&actual, &expected);
-    println!("{}", true);
+    println!("true");
 }

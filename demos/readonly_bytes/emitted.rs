@@ -11,8 +11,9 @@ mod sifr_generated_generated_support {
     }
     fn sifr_generated_file_read_bytes(
         handle: &str,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
+        let size: Option<SifrInt> = size.cloned();
         ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -23,15 +24,16 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
     }
     pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
+        sifr_generated_file_close(handle.id.as_str());
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
     pub fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
-        sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
+        let size: Option<SifrInt> = size.cloned();
+        sifr_generated_file_read_bytes(handle.id.as_str(), size.as_ref())
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -39,7 +41,7 @@ mod sifr_generated_generated_support {
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.id.clone(), data)
+        sifr_generated_file_write_bytes(handle.id.as_str(), data)
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -143,7 +145,7 @@ mod sifr_generated_project_nominals {
             if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
-            file_read_bytes(&self.handle, size.clone())
+            file_read_bytes(&self.handle, (*size).as_ref())
         }
     }
     impl SifrGeneratedIoFileHandle {
@@ -211,10 +213,14 @@ fn sum_bytes(data: &[u8]) -> SifrInt {
         .iter()
         .map(|sifr_generated_byte| SifrInt::from(*sifr_generated_byte))
         .collect::<Vec<SifrInt>>();
-    for value in values.iter().cloned() {
-        total = &total + &value;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for value in values.iter() {
+        total = ::std::ops::Add::add(&total, value);
     }
-    total.clone()
+    total
 }
 #[expect(
     clippy::too_many_lines,
@@ -229,13 +235,13 @@ fn main() {
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
             .get(sifr_generated_checked_read_normalized)
-            .cloned()
+            .copied()
     };
     let second_ok: bool = second.is_some_and(|second| {
         let expected_second: u8 = 102u8;
-        &SifrInt::from(second) == &SifrInt::from(expected_second)
+        second == expected_second
     });
-    let iter_ok: bool = &sum_bytes(&payload) > &SifrInt::from_i64(0);
+    let iter_ok: bool = sum_bytes(&payload) > SifrInt::from_i64(0);
     let contains_ok: bool = {
         let sifr_generated_bytes_receiver: &[u8] = &payload;
         {
@@ -271,7 +277,7 @@ fn main() {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut writer: SifrGeneratedIoFileHandle = (|| {
-            let sifr_generated_path = path.to_string();
+            let sifr_generated_path = path.clone();
             let sifr_generated_mode = "wb".to_string();
             let sifr_generated_handle_id = ::sifr_stdlib::fs::open_file(
                 sifr_generated_path.as_str(),
@@ -280,13 +286,13 @@ fn main() {
             .map_err(sifr_generated_io_err)?;
             Ok::<SifrGeneratedIoFileHandle, IOError>(SifrGeneratedIoFileHandle::new(
                 SifrGeneratedIoNativeFileHandle::new(sifr_generated_handle_id),
-                sifr_generated_mode.to_string(),
+                sifr_generated_mode,
             ))
         })()?;
         writer.write_bytes(&payload)?;
-        (&mut writer).close();
+        writer.close();
         let mut reader: SifrGeneratedIoFileHandle = (|| {
-            let sifr_generated_path = path.to_string();
+            let sifr_generated_path = path.clone();
             let sifr_generated_mode = "rb".to_string();
             let sifr_generated_handle_id = ::sifr_stdlib::fs::open_file(
                 sifr_generated_path.as_str(),
@@ -295,11 +301,11 @@ fn main() {
             .map_err(sifr_generated_io_err)?;
             Ok::<SifrGeneratedIoFileHandle, IOError>(SifrGeneratedIoFileHandle::new(
                 SifrGeneratedIoNativeFileHandle::new(sifr_generated_handle_id),
-                sifr_generated_mode.to_string(),
+                sifr_generated_mode,
             ))
         })()?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
-        (&mut reader).close();
+        reader.close();
         io_ok = loaded == payload
             && format!(
                 "{:?}",
@@ -310,10 +316,7 @@ fn main() {
             ) == "[102, 102, 105, 45, 114, 101, 97, 100, 121]";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         if exists(&path) {
             remove_file(&path)?;
@@ -321,10 +324,7 @@ fn main() {
         cleanup_ok = !exists(&path);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     assert!(second_ok);
     assert!(iter_ok);
     assert!(contains_ok);

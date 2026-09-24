@@ -13,7 +13,7 @@ mod sifr_generated_generated_support {
     ) -> Result<(), SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError> {
         ::sifr_stdlib::runtime_observability::emit_diagnostic(level, target, name, message).map_err(
             |sifr_generated_bridge_error| SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError {
-                message: sifr_generated_bridge_error.to_string(),
+                message: sifr_generated_bridge_error,
             },
         )
     }
@@ -41,10 +41,10 @@ mod sifr_generated_generated_support {
         event: &SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent,
     ) -> Result<(), SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError> {
         runtime_emit_diagnostic(
-            &event.level.clone().name.clone(),
-            &event.target.clone(),
-            &event.name.clone(),
-            &event.message.clone(),
+            event.level.name.as_str(),
+            event.target.as_str(),
+            event.name.as_str(),
+            event.message.as_str(),
         )
     }
 }
@@ -81,7 +81,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            write!(f, "{}", self.name.clone())
+            write!(f, "{}", self.name)
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -129,29 +129,28 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eruntimeX2eDia
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel;
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let event: SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent = diagnostic_event(
         &sifr_generated_const_494e464f(),
-        &"sifr.demo".to_string(),
-        &"accepted".to_string(),
-        &"stdlib boundary".to_string(),
+        "sifr.demo",
+        "accepted",
+        "stdlib boundary",
     );
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError> =
         (|| {
             emit_diagnostic(&event)?;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+    if let Err(_try_err) = sifr_generated_try_res {
         assert!(false);
     }
     let invalid: SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent = diagnostic_event(
         &SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel::new("verbose".to_string()),
-        &"sifr.demo".to_string(),
-        &"rejected".to_string(),
-        &"stdlib boundary".to_string(),
+        "sifr.demo",
+        "rejected",
+        "stdlib boundary",
     );
     let mut rejected: bool = false;
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError> =
@@ -160,8 +159,8 @@ fn main() {
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let error = sifr_generated_try_err.clone();
-        rejected = error.message.clone() == "unsupported diagnostic level: verbose";
+        let error: SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError = sifr_generated_try_err;
+        rejected = error.message == "unsupported diagnostic level: verbose";
     }
     assert!(rejected);
 }

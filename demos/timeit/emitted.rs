@@ -4,7 +4,7 @@ mod sifr_generated_generated_support {
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -25,7 +25,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     fn perf_counter() -> f64 {
@@ -46,31 +46,31 @@ mod sifr_generated_generated_support {
         elapsed
     }
     #[must_use]
-    pub fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
+    pub fn timeit(stmt: impl Fn(), number: &SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &number {
+        while &i < number {
             stmt();
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
         let end: f64 = perf_counter();
         sifr_generated_elapsed_non_negative(start, end)
     }
     #[must_use]
-    pub fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
+    pub fn repeat(stmt: impl Fn(), count: &SifrInt, number: &SifrInt) -> Vec<f64> {
         let mut results: Vec<f64> = Vec::new();
         let mut r: SifrInt = SifrInt::from_i64(0);
-        while &r < &count {
+        while &r < count {
             let start: f64 = perf_counter();
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &number {
+            while &i < number {
                 stmt();
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
             let end: f64 = perf_counter();
             let elapsed: f64 = sifr_generated_elapsed_non_negative(start, end);
             results.push(elapsed);
-            r = &r + &SifrInt::from_i64(1);
+            r = ::std::ops::Add::add(&r, &SifrInt::from_i64(1));
         }
         results
     }
@@ -82,22 +82,22 @@ use ::sifr_runtime::SifrInt;
 fn workload() {
     let mut total: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(100) {
-        total = &total + &i;
-        i = &i + &SifrInt::from_i64(1);
+    while i < SifrInt::from_i64(100) {
+        total = ::std::ops::Add::add(&total, &i);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
 }
 fn all_non_negative(values: &[f64]) -> bool {
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(values.len()) {
+    while i < values.len() {
         let current: Option<f64> = {
             let sifr_generated_checked_read_collection = &values;
-            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_index = &i;
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
                 .get(sifr_generated_checked_read_normalized)
-                .cloned()
+                .copied()
         };
         let Some(current_value_2a2e8a5afcc8d89a) = current else {
             return false;
@@ -105,7 +105,7 @@ fn all_non_negative(values: &[f64]) -> bool {
         if current_value_2a2e8a5afcc8d89a < 0.0_f64 {
             return false;
         }
-        i = &i + &SifrInt::from_i64(1);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     true
 }
@@ -119,20 +119,20 @@ fn collect_timer_actual() -> Vec<bool> {
 }
 fn collect_repeat_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
-    let elapsed: f64 = timeit(workload, SifrInt::from_i64(10));
+    let elapsed: f64 = timeit(workload, &SifrInt::from_i64(10));
     actual.push(elapsed >= 0.0_f64);
-    let repeated: Vec<f64> = repeat(workload, SifrInt::from_i64(3), SifrInt::from_i64(10));
-    actual.push(&SifrInt::from(repeated.len()) == &SifrInt::from_i64(3));
+    let repeated: Vec<f64> = repeat(workload, &SifrInt::from_i64(3), &SifrInt::from_i64(10));
+    actual.push(repeated.len() == SifrInt::from_i64(3));
     actual.push(all_non_negative(&repeated));
     actual
 }
 fn collect_edge_actual() -> Vec<bool> {
     vec![
-        &SifrInt::from(repeat(workload, SifrInt::from_i64(0), SifrInt::from_i64(5)).len())
-            == &SifrInt::from_i64(0),
-        timeit(workload, SifrInt::from_i64(0)) >= 0.0_f64,
-        &SifrInt::from(repeat(workload, SifrInt::from_i64(2), SifrInt::from_i64(0)).len())
-            == &SifrInt::from_i64(2),
+        repeat(workload, &SifrInt::from_i64(0), &SifrInt::from_i64(5)).len()
+            == SifrInt::from_i64(0),
+        timeit(workload, &SifrInt::from_i64(0)) >= 0.0_f64,
+        repeat(workload, &SifrInt::from_i64(2), &SifrInt::from_i64(0)).len()
+            == SifrInt::from_i64(2),
     ]
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

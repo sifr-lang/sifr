@@ -2,6 +2,39 @@
 
 Status: active
 
+## Item 12R resumed qualification checkpoint (2026-09-24)
+
+**Implementation remains unmerged; retained Item 12 remains open.** Draft
+[PR #3946](https://github.com/sifr-lang/sifr/pull/3946) has local implementation
+candidate `cd49dcf6f2092ad57d7afdf5fd8e6745b4919c90`. The only change since
+`e5d0bd250` regenerates eight compiler-owned demo companions. Exact-candidate
+Opus 5.5 review is **SATISFIED** with no blocker (external
+`/home/yaser5/projects/sifr/emitted-rust-item12r-qualification-20260924/review-response-cd49dcf6f.md`,
+SHA-256 `f736a6dcf621d1c374ad9a473f15cbef8e8f9517230a7810bb06f27b82a353a6`). Full generated-code quality passes **11/11**;
+codegen library **1,738/1,738**; Rust interop static/matrix/contract,
+legal failure method names **3/3**, runner self-test, freshness, sysroot path
+leakage and prepared-source metadata structural **1/1**, formatting, HIR,
+file-size and diff hygiene pass. The full source/native **411/411** and E2E
+**729/729** passes on `e5d0bd250` remain reusable because the only later inputs
+changed are eight generated demo companions; their complete original receipts
+are preserved. All current receipts are under
+`/home/yaser5/projects/sifr/emitted-rust-item12r-qualification-20260924/`.
+
+Named area qualification remains blocked by separately owned failures: W1
+verification taxonomy gives coverage readiness **3/4**; core language is
+**4/6** (package-root command and missing lowering inventory row); stdlib parity
+is **7/8** (`python_raw_api` import requirement context); project workspace is
+**16/17** (package-root command); and strict workspace Clippy reports two
+`items_after_statements` diagnostics in `checked_place.rs`. These failed
+receipts are retained, not accepted as passes. Sysroot metadata-corpus was
+unreached because its version-matched corpus source was not prepared; the
+independent metadata-structural selection passed after one canonical source
+compiler preparation. No create-PR or full merge gate ran under the approved
+intermediate policy. Keep #3946 draft until the owning fixes integrate, rerun
+affected selections on the resulting candidate, then merge and update this
+record. Final integration owns the full merge gate; Item 12A owns the later
+whole-phase review.
+
 ## Item 12AF focused repair and Item 12R resource blocker (2026-09-24)
 
 **Item 12AF is focused-complete and reviewed; Item 12R and retained Item 12 remain unmerged.** Draft [PR #3946](https://github.com/sifr-lang/sifr/pull/3946) now preserves exact candidate `fc77da878945406cc6365fefda969bb97c17d723` on `codex/emitted-rust-item12r-20260923`. A direct checked nested-list element in a condition now flows through the canonical optional-value truthiness conversion. Unchanged `1905_count_sub_islands.sifr` executes both original assertions natively and emits `is_some_and` for the checked element; the ordinary reduced control covers zero, nonzero, absent row and element, and `and`/`or` short-circuit effects. No corpus fixture or fallback changed.
@@ -366,9 +399,9 @@ the ignored corpus `.sifrbuildinfo` cache.
 
 ## Retained Item 12R: project-wide borrowed-value calls (2026-09-23)
 
-**Needs implementation; retained Item 12 is not merged or closed.** This
-bounded sub-item is the explicit rescope required by the second Item 12
-implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
+**Implementation candidate blocked by architecture-owned strict Clippy diagnostics;
+retained Item 12 is not merged or closed.** This bounded sub-item was the
+explicit rescope required by the second Item 12 implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
 remains at candidate `e9aed40593c86fd02a2b68853ea4bf2025a20135` on
 `codex/emitted-rust-retained12-20260922`. Its compiler SHA-256 is
 `e803baedda8fbaa646355b702f78ae79841002de7b7be37f0f8f2b042a979490`.
@@ -415,6 +448,59 @@ Item 12R scope and acceptance:
   merge and validation here; final integration qualification and the
   documentation-only whole-phase closer remain separate assignments.
 
+### Item 12R resumed validation blocker (2026-09-23)
+
+The preserved [PR #3946](https://github.com/sifr-lang/sifr/pull/3946) candidate
+`a998e53ac6ad5cee96a0fae452f25e5077193bde` merged current main
+`ca093afb2c745633b18f5b0b503bf8b73121d08f`, including the
+[DX.10-F12 repair](ad-hoc-dx10-profile-review-followups.md#f12-project-workspace-test-command-package-root--2026-09-23).
+The exact `project_workspace/frontend_mode_parity` area selection passed both
+rows (2/2), and the companion `core_language/hir_analysis_behaviors`
+selection passed three rows (3/3). Their candidate-keyed machine receipts
+are `project-frontend_mode_parity-a998e53ac.json` and
+`core-hir-a998e53ac.json` under
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/`. The
+`claude-opus-5-5` read-only scoped integration review returned **SATISFIED**
+with no blockers on this exact candidate:
+`review-response-a998e53ac.md`, SHA-256
+`4457e1bbfef684de278e811887f39db64f5f1523827b17b1583f3331c75dd0c6`.
+It confirmed the borrowed-value implementation had not changed after the
+previous satisfied review and that the F12 merge preserved the acceptance
+behavior.
+
+The focused strict check
+`cargo clippy --locked -p sifr_driver --lib -- -D warnings` exited 101 with
+two diagnostics already present on merged main: unused import
+`normalized_manifest_cache_input` at
+`crates/sifr_driver/src/build/cargo_resolution.rs:15`, introduced by
+architecture N02b2/F07 [PR #3954](https://github.com/sifr-lang/sifr/pull/3954),
+and `clippy::map_entry` at
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:73`, introduced
+by architecture N02b/F07 [PR #3951](https://github.com/sifr-lang/sifr/pull/3951).
+The raw `clippy-driver-a998e53ac.log` SHA-256 is
+`c87b6999a55a8ff9c7ac2faaa3e5d509b8105d891a7772294e8ca5a18586f642`.
+Both are outside Item 12R borrowed-value scope and are recorded in the
+[architecture owner issue](ad-hoc-architecture-correctness-current-main.md).
+No generated-quality, 411-case source/native, remaining area selection,
+create-PR gate, full merge gate, or implementation merge was claimed on this
+candidate. The `leetcode` corpus has an ignored `.sifrbuildinfo` cache;
+preserve it until ownership is reconciled.
+
+Next: the architecture owner repairs both strict-Clippy diagnostics and merges
+that bounded fix; then resume Item 12R on an integrated candidate, rerun
+affected and still-required named validation, obtain a fresh scoped review if
+implementation, fixtures, workflows or schemas changed, and merge PR #3946.
+The earlier DX.10-F12 blocker below remains historical evidence, not the
+current blocker.
+
+### Item 12R validation blocker (2026-09-23)
+
+**Blocked by [DX.10-F12](ad-hoc-dx10-profile-review-followups.md#f12-project-workspace-test-command-package-root--2026-09-23); Item 12R and retained Item 12 remain unmerged.** The preserved implementation is draft [PR #3946](https://github.com/sifr-lang/sifr/pull/3946), branch `codex/emitted-rust-item12r-20260923`, candidate `d9e79b869d2071433c8a01a980754e3977628b2d`. It carries project-wide borrowed signature/call planning, the native two-module protocol/optional/transitive regression, and the run-pass inventory update. The exact-candidate read-only Opus 5.5 review is **SATISFIED** at `/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/review-response-d9e79b869.md` (SHA-256 `8d8b0a80184771343656feb901d248e5fd5166db6b86619574304536a14a5c4b`).
+
+At that candidate, codegen 1,717/1,717, driver native 1/1, checked-codegen 2/2, driver project 10 passed with 7 preexisting ignored, legal failure names 3/3, E2E 729/729, demo freshness, coverage readiness 4/4, strict Clippy, formatting, HIR, file-size, profile inventory and self-test passed. Receipts keyed by `d9e79b869` are under `/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/`. The blocking named `project_workspace/frontend_mode_parity` selection failed: its `positive_test` row runs `cargo run -q -p sifr -- test demos/mode_consistency` from the repository root; the CLI selects the root `sifr.toml` package and rejects the nested demo with SIFR-RUST-CARGO-0001, “sifr test directory must be inside one Sifr package.” Exact machine receipt: `project-frontend_mode_parity-d9e79b869.json`, selection digest `22811269c4511bf5d6ac8359589fe3782217d3d269a7c6b0779ed144709ca2b3`, input digest `6c2acd10d66e2e31229930b2a53e5a9dbe6bc5a6f6cf73788b61b33852c3ed96`. The manifest command and `crates/sifr/src/test_cli.rs` are unchanged from this item's base. This command/package-root contract belongs to project-workspace verification, outside borrowed-value codegen.
+
+After the failure, the in-flight full generated-quality and 411-case source selections were terminated with exit 143; their partial cases are not acceptance passes. Native 411 and remaining named area selections did not run. No create-PR gate, full merge gate, implementation merge or whole-phase review occurred. Next: repair DX.10-F12 in its owning scope, then resume Item 12R on a fresh exact candidate with affected and still-required named validation before merging. Preserve the prior rejected Item 12 reviews and receipts below as historical evidence.
+
 On the rejected `e9aed405` candidate, codegen passed 1,716/1,716,
 focused native passed 10/10, `legal_failure_method_names` passed 3/3,
 E2E passed 729/729, demo freshness, strict workspace Clippy, formatting,
@@ -433,8 +519,8 @@ and must be fixed by that owner before global readiness can pass. The
 reviewer's protocol-method and callable probes were already ill-typed before
 this pass; they are follow-up findings, not Item 12R acceptance.
 
-Next: assign one Item 12R implementer with exclusive custody of the preserved
-candidate worktree and a new branch/evidence identity. Do not start final
+Next: repair DX.10-F12 in its owning scope, then resume Item 12R with
+exclusive custody of the preserved candidate worktree. Do not start final
 integration or whole-phase closure until Item 12R is merged. The historical
 integration blocker record below remains an accurate receipt for its date,
 not the current status.
@@ -2546,7 +2632,7 @@ It does not broaden the active item.
 | 10A | merged | Module-scoped builtin error shadow identities | Project support demand preserves user-defined and builtin error identities per module, without crate-wide suppression or dangling generated paths. |
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
-| 12 | blocked: external algorithmic corpus | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
+| 12 | qualification in progress | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
 | 12B | blocked: Python qualification dependencies | Bounded algorithmic dependency repair | Both reviews passed. Preserve the approved candidate and both failed gates until Items 12G–12J and integration Item 12K resolve qualification. |
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | merged | Native corpus emission dependencies | Reconciled every diagnostic category against merged producers and current named/native evidence in PR3897; see the 2026-09-22 closure receipt. |

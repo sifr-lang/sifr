@@ -57,7 +57,7 @@ mod sifr_generated_generated_support {
     pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -78,7 +78,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -123,27 +123,26 @@ fn collect_runtime_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut shell_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let output: String = run_command(&"echo sifr_os_demo".to_string())?;
+        let output: String = run_command("echo sifr_os_demo")?;
         shell_ok = output == "sifr_os_demo";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     actual.push(shell_ok);
     actual
 }
 fn collect_filesystem_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let base: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(21usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(21usize.saturating_add(0usize));
         sifr_generated_concat.push_str("/tmp/sifr_os_os_demo_");
         sifr_generated_concat.push_str(getpid().to_string().as_str());
         sifr_generated_concat
     };
     let file_path: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(base.len() + 9usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(base.len().saturating_add(9usize));
         sifr_generated_concat.push_str(base.as_str());
         sifr_generated_concat.push_str("/demo.txt");
         sifr_generated_concat
@@ -154,21 +153,18 @@ fn collect_filesystem_actual() -> Vec<bool> {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         mkdir(&base)?;
-        write_text(&file_path, &"demo".to_string())?;
+        write_text(&file_path, "demo")?;
         os_flow_ok = is_dir(&base) && is_file(&file_path);
         let entries: Vec<String> = listdir(&base)?;
-        list_ok = &SifrInt::from(entries.len()) >= &SifrInt::from_i64(1);
+        list_ok = entries.len() >= SifrInt::from_i64(1);
         let size: SifrInt = stat(&file_path)?;
-        stat_ok = &size > &SifrInt::from_i64(0);
+        stat_ok = size > SifrInt::from_i64(0);
         remove_file(&file_path)?;
         rmdir(&base)?;
         cleanup_ok = !is_dir(&base);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     actual.push(os_flow_ok);
     actual.push(list_ok);
     actual.push(stat_ok);
@@ -179,12 +175,10 @@ fn collect_missing_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        rmdir(&"/tmp/sifr_os_os_demo_missing".to_string())?;
+        rmdir("/tmp/sifr_os_os_demo_missing")?;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+    if let Err(_try_err) = sifr_generated_try_res {
         missing_rejected = true;
     }
     actual.push(missing_rejected);

@@ -75,7 +75,8 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
     let result = generate_rust_multi_with_metadata(
         &[("main", &main_module), ("helper", &helper_module)],
         &stdlib_code,
-    );
+    )
+    .expect("project generation should succeed");
 
     let helper_rs = result
         .rust_files

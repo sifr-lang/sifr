@@ -18,6 +18,7 @@ mod generator_bodies;
 mod generic_bounds;
 mod local_binding_registry;
 mod nested_function_block;
+mod owned_assertion_boundary;
 mod python_callback_bounds;
 mod resumable_generator_bodies;
 mod scope_and_function_types;

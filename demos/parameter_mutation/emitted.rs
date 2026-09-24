@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 fn mutate_and_return(mut items: Vec<SifrInt>) -> Vec<SifrInt> {
-    if &SifrInt::from(items.len()) > &SifrInt::from_i64(1) {
+    if items.len() > SifrInt::from_i64(1) {
         {
             let sifr_generated_assign_value = SifrInt::from_i64(9);
             {
@@ -27,8 +27,8 @@ fn mutate_and_return(mut items: Vec<SifrInt>) -> Vec<SifrInt> {
     }
     items
 }
-fn mutate_borrowed(items: &mut Vec<SifrInt>) -> SifrInt {
-    if &SifrInt::from(items.len()) > &SifrInt::from_i64(0) {
+fn mutate_borrowed(items: &mut [SifrInt]) -> SifrInt {
+    if items.len() > SifrInt::from_i64(0) {
         {
             let sifr_generated_assign_value = SifrInt::from_i64(14);
             {

@@ -159,8 +159,10 @@ def rust_code_lines(source: str) -> list[str]:
 
 def pattern_matches(policy: PatternPolicy, code: str) -> bool:
     for match in policy.pattern.finditer(code):
-        if policy.id == "direct-index" and re.fullmatch(r"let\s*\[[^\n]+", match.group(0)):
-            continue
+        if policy.id == "direct-index":
+            head = match.group(0).split("[", 1)[0].strip()
+            if head in {"let", "mut", "in"}:
+                continue
         return True
     return False
 
@@ -516,6 +518,11 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     slice_pattern = "let [head, middle @ .., tail] = values.as_slice() else { return; };"
     if pattern_matches(PATTERN_BY_ID["direct-index"], slice_pattern):
         raise AssertionError("direct-index scanner rejected a refutable slice pattern")
+    for non_index in ("fn f(data: &mut [T]) {}", "for item in [SifrInt::from_i64(1)] {}"):
+        if pattern_matches(PATTERN_BY_ID["direct-index"], non_index):
+            raise AssertionError("direct-index scanner rejected a slice type or array literal")
+    if not pattern_matches(PATTERN_BY_ID["direct-index"], "values [index]"):
+        raise AssertionError("direct-index scanner missed spaced indexing")
 
     invalid_completion = copy.deepcopy(debt)
     invalid_completion["completion_requirement"] = "allow-debt"
@@ -550,6 +557,7 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     _expect_invalid(malformed_entry, "signature_sha256 must be a lowercase SHA-256")
 
     malformed_clippy = copy.deepcopy(debt)
+    malformed_clippy["clippy"]["lint_owners"]["clippy::arithmetic_side_effects"] = "arithmetic"
     malformed_clippy["clippy"]["entries"]["self-test"] = {
         "clippy::arithmetic_side_effects": {
             "count": 1,

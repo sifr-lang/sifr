@@ -66,19 +66,19 @@ pub(crate) fn lower_assert_almost_eq(args: &[RustExpr]) -> Option<RustExpr> {
             RustStmt::Let {
                 mutable: false,
                 name: "__lhs".to_string(),
-                ty: None,
+                ty: Some(crate::RustType::F64),
                 value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__rhs".to_string(),
-                ty: None,
+                ty: Some(crate::RustType::F64),
                 value: arg_expr(args, 1),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__tol".to_string(),
-                ty: None,
+                ty: Some(crate::RustType::F64),
                 value: arg_expr(args, 2),
             },
         ],

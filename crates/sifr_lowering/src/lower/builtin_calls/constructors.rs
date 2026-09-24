@@ -505,7 +505,7 @@ pub(in crate::lower) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                     .get("ValueError")
                     .cloned()
                     .unwrap_or(Type::Class {
-                        identity: None,
+                        identity: sifr_type_system::builtin_error_identity("ValueError"),
                         type_args: Vec::new(),
                         name: "ValueError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)].into(),
@@ -593,7 +593,7 @@ pub(in crate::lower) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                     .get("ValueError")
                     .cloned()
                     .unwrap_or(Type::Class {
-                        identity: None,
+                        identity: sifr_type_system::builtin_error_identity("ValueError"),
                         type_args: Vec::new(),
                         name: "ValueError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)].into(),
@@ -860,7 +860,7 @@ pub(super) fn parse_error_type(ctx: &LowerCtx) -> Type {
         .get("ParseError")
         .cloned()
         .unwrap_or(Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("ParseError"),
             type_args: Vec::new(),
             name: "ParseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),
@@ -874,7 +874,7 @@ pub(in crate::lower) fn value_error_type(ctx: &LowerCtx) -> Type {
         .get("ValueError")
         .cloned()
         .unwrap_or(Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("ValueError"),
             type_args: Vec::new(),
             name: "ValueError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),

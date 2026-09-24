@@ -98,8 +98,16 @@ mod sifr_generated_generated_support {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-                for iterable in iterables.iter().cloned() {
-                    for item in iterable.iter().cloned() {
+                #[expect(
+                    clippy::explicit_iter_loop,
+                    reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                )]
+                for iterable in iterables.iter() {
+                    #[expect(
+                        clippy::explicit_iter_loop,
+                        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                    )]
+                    for item in iterable.iter() {
                         sifr_generated_yielder.suspend(item.clone()).await;
                     }
                 }
@@ -113,7 +121,7 @@ mod sifr_generated_generated_support {
                 let mut current: SifrInt = start.clone();
                 loop {
                     sifr_generated_yielder.suspend(current.clone()).await;
-                    current = &current + &step;
+                    current = ::std::ops::Add::add(&current, &step);
                 }
             },
         ))
@@ -122,7 +130,7 @@ mod sifr_generated_generated_support {
 use crate::sifr_generated_generated_support::{chain, count};
 use ::sifr_runtime::SifrInt;
 fn square(n: SifrInt) -> SifrInt {
-    &n * &n
+    ::std::ops::Mul::mul(n.clone(), n)
 }
 fn main() {
     let nums: Vec<SifrInt> = vec![
@@ -146,11 +154,11 @@ fn main() {
             "{:?}",
             Box::new(
                 nums.iter()
-                    .cloned()
-                    .filter(move |sifr_generated_filter_item| {
+                    .filter(move |&sifr_generated_filter_item| {
                         let x = sifr_generated_filter_item.clone();
-                        &x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)
+                        x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0)
                     })
+                    .cloned()
             )
             .collect::<Vec<_>>()
         ),
@@ -185,7 +193,10 @@ fn main() {
                     .into_iter()
                     .enumerate()
                     .map(|sifr_generated_pair| (
-                        SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(10),
+                        ::std::ops::Add::add(
+                            SifrInt::from(sifr_generated_pair.0),
+                            SifrInt::from_i64(10)
+                        ),
                         sifr_generated_pair.1
                     ))
             )
@@ -203,7 +214,7 @@ fn main() {
     assert_eq!(
         format!(
             "{:?}",
-            chain(&vec![
+            chain(&[
                 vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
                 vec![SifrInt::from_i64(3)]
             ])

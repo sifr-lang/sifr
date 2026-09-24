@@ -498,7 +498,7 @@ fn removes_only_mutability_that_the_rendered_rust_body_does_not_require() {
     let canonical = canonicalize_generated_rust_source(source)
         .expect("rendered mutability should follow actual mutable Rust uses");
 
-    assert!(canonical.contains("text: String"), "{canonical}");
+    assert!(canonical.contains("text: &str"), "{canonical}");
     assert!(!canonical.contains("mut text"), "{canonical}");
     assert!(!canonical.contains("mut error"), "{canonical}");
     assert!(canonical.contains("mut buffer: Buffer"), "{canonical}");
@@ -622,6 +622,33 @@ fn disambiguates_nested_bindings_against_enclosing_bindings() {
         canonical.contains("cancellation: cancellation_value_"),
         "{canonical}"
     );
+}
+
+#[test]
+fn outer_parameter_rename_respects_nested_fn_capture_parameters() {
+    let source = r#"
+        fn search(grid1: &[Vec<i64>], grid2: &[Vec<i64>]) -> bool {
+            fn dfs(grid2: &[Vec<i64>], row: usize) -> bool {
+                if row == grid2.len() { return true; }
+                grid2.get(row).is_some() && dfs(grid2, row + 1)
+            }
+            dfs(grid2, 0)
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("nested capture parameters must have their own lexical scope");
+    let nested = canonical
+        .split("fn dfs(")
+        .nth(1)
+        .expect("recursive nested function should remain an item");
+    assert!(nested.contains("grid2.get(row)"), "{canonical}");
+    assert!(nested.contains("dfs(grid2, row + 1)"), "{canonical}");
+    assert!(
+        canonical.contains("fn dfs(grid2: &[Vec<i64>]"),
+        "{canonical}"
+    );
+    assert!(canonical.contains("dfs(grid2_argument_"), "{canonical}");
 }
 
 #[test]
@@ -831,4 +858,27 @@ fn retains_only_concretely_instantiated_generated_trait_impls() {
         !canonical.contains("impl GeneratedAdd for f64"),
         "{canonical}"
     );
+}
+
+#[test]
+fn preserves_self_clone_assignment_without_aliasing_clone_from() {
+    let source = r#"
+        fn assign(mut skip: String, self_source: bool) -> String {
+            let take = String::from("fresh");
+            if self_source {
+                skip = skip.clone();
+            } else {
+                skip = take.clone();
+                println!("{take}");
+            }
+            skip
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("self-clone assignment must remain valid Rust");
+
+    assert!(canonical.contains("skip = skip.clone();"), "{canonical}");
+    assert!(!canonical.contains("skip.clone_from(&skip)"), "{canonical}");
+    assert!(canonical.contains("skip.clone_from(&take)"), "{canonical}");
 }

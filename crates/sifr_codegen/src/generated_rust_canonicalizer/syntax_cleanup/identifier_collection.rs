@@ -127,3 +127,90 @@ impl<'ast> Visit<'ast> for ControlCarrierCollector {
         self.found = true;
     }
 }
+
+/// A targeted motion guard must also account for macros whose expansion is
+/// unknown. Shared format parsing resolves captures for the supported families.
+pub(super) fn expression_may_reference_name(expression: &syn::Expr, name: &str) -> bool {
+    let mut collector = NamedReference {
+        name,
+        found: false,
+        standard_vec: false,
+    };
+    collector.visit_expr(expression);
+    collector.found
+}
+
+pub(super) fn statement_may_reference_name(statement: &syn::Stmt, name: &str) -> bool {
+    let mut collector = NamedReference {
+        name,
+        found: false,
+        standard_vec: false,
+    };
+    collector.visit_stmt(statement);
+    collector.found
+}
+
+struct NamedReference<'name> {
+    name: &'name str,
+    found: bool,
+    standard_vec: bool,
+}
+
+impl<'ast> Visit<'ast> for NamedReference<'_> {
+    fn visit_expr_path(&mut self, path: &'ast syn::ExprPath) {
+        self.found |= path.qself.is_none() && path.path.is_ident(self.name);
+        syn::visit::visit_expr_path(self, path);
+    }
+
+    fn visit_pat_ident(&mut self, binding: &'ast syn::PatIdent) {
+        self.found |= binding.ident == self.name;
+        syn::visit::visit_pat_ident(self, binding);
+    }
+
+    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        if !(crate::generated_rust_canonicalizer::is_generated_format_macro(rust_macro)
+            || (self.standard_vec && rust_macro.path.is_ident("vec")))
+        {
+            self.found = true;
+            return;
+        }
+        self.found |= crate::generated_rust_canonicalizer::format_capture::names(rust_macro)
+            .contains(self.name);
+        if let Ok(arguments) = rust_macro.parse_body_with(
+            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+        ) {
+            for argument in &arguments {
+                self.visit_expr(argument);
+            }
+        } else {
+            // Unparsed macro syntax may contain nested implicit captures.
+            self.found = true;
+        }
+    }
+}
+
+/// Lexical facts supplied by the typed initializer pass.
+pub(super) struct InitializerReferences {
+    pub(super) standard_vec: bool,
+}
+
+impl InitializerReferences {
+    pub(super) fn expression(&self, expression: &syn::Expr, name: &str) -> bool {
+        let mut visitor = NamedReference {
+            name,
+            found: false,
+            standard_vec: self.standard_vec,
+        };
+        visitor.visit_expr(expression);
+        visitor.found
+    }
+    pub(super) fn statement(&self, statement: &syn::Stmt, name: &str) -> bool {
+        let mut visitor = NamedReference {
+            name,
+            found: false,
+            standard_vec: self.standard_vec,
+        };
+        visitor.visit_stmt(statement);
+        visitor.found
+    }
+}

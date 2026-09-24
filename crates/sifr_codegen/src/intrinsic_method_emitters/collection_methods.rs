@@ -243,6 +243,16 @@ impl RustEmitter {
         )?;
         if method == "len"
             && args.is_empty()
+            && !indexed_list_receiver_is_checked_value(&object_expr)
+            && matches!(object, HirExpr::Index { object: indexed, .. }
+                if matches!(self.effective_registry_expr_ty(indexed).resolve_alias(), Type::List(_)))
+        {
+            let optional_ty = Type::Union(vec![object_ty.clone(), Type::None]);
+            return methods::lower_method(&optional_ty, method, &object_expr, &[])
+                .map(|lowered| lowered.expr);
+        }
+        if method == "len"
+            && args.is_empty()
             && matches!(object_ty, Type::Str | Type::LiteralStr(_))
         {
             return Some(self.lower_string_len_with_cache(object, object_expr));
@@ -393,6 +403,8 @@ impl RustEmitter {
 
         if matches!(object_ty, Type::List(_) | Type::Set(_))
             && method == "contains"
+            && !matches!(object_ty, Type::List(element_ty)
+                if matches!(element_ty.resolve_alias(), Type::Str | Type::LiteralStr(_)))
             && let ([argument], [lowered_argument]) = (args, arg_exprs.as_slice())
             && matches!(argument, HirExpr::Name { name, .. }
                 if self.borrowed_params.contains(name)
@@ -698,5 +710,25 @@ impl RustEmitter {
                 None
             }
         }
+    }
+}
+
+fn indexed_list_receiver_is_checked_value(expr: &RustExpr) -> bool {
+    match expr {
+        RustExpr::Paren(inner) => indexed_list_receiver_is_checked_value(inner),
+        RustExpr::Block {
+            stmts,
+            expr: Some(value),
+        } => {
+            let RustExpr::Ident(name) = value.as_ref() else {
+                return false;
+            };
+            stmts.iter().any(|stmt| {
+                matches!(stmt, crate::RustStmt::LetElse { pattern, .. }
+                    if pattern.strip_prefix("Some(").and_then(|part| part.strip_suffix(')'))
+                        == Some(name.as_str()))
+            })
+        }
+        _ => false,
     }
 }

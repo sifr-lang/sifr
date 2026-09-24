@@ -165,7 +165,7 @@ impl RustEmitter {
             Type::List(target) | Type::Dict(_, target) => target.as_ref(),
             _ => return Ok(None),
         };
-        let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
+        let lowered_value = self.materialize_reusable_value_for_ir(value, lowered_value);
         let (action, lowered_value) = self.checked_place_action(
             target_ty,
             value,
@@ -272,7 +272,7 @@ impl RustEmitter {
             _ => return Ok(None),
         };
 
-        let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
+        let lowered_value = self.materialize_reusable_value_for_ir(value, lowered_value);
         let (action, lowered_value) = self.checked_place_action(
             target_ty,
             value,

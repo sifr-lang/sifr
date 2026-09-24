@@ -10,6 +10,10 @@ impl RustEmitter {
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let mut lowered_block = Vec::new();
         for (stmt_index, stmt) in stmts.iter().enumerate() {
+            let Some(normalized) = self.body_analysis.statement_for_lowering(stmt) else {
+                continue;
+            };
+            let stmt = normalized.as_ref();
             if let Some(lowered) =
                 self.try_lower_checked_place_mutation_tail_for_ir(stmt, &stmts[stmt_index + 1..])?
             {
@@ -120,7 +124,7 @@ impl RustEmitter {
                             return Ok(None);
                         };
                         lowered
-                    } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                    } else if !self.body_analysis.owned_value_statement_has_last_use(stmt)
                         && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
                     {
                         lowered
@@ -203,7 +207,7 @@ impl RustEmitter {
                     let value_is_target_typed = checked_option_value.is_some();
                     let lowered_value = if let Some(lowered) = checked_option_value {
                         lowered
-                    } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                    } else if !self.body_analysis.owned_value_statement_has_last_use(stmt)
                         && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
                     {
                         lowered
@@ -216,15 +220,19 @@ impl RustEmitter {
                     let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
                     let lowered_value = if value_is_target_typed {
                         lowered_value
-                    } else if let Some(target_ty) = target_ty {
-                        Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
-                        self.coerce_local_value_for_target_type_for_ir(
-                            &target_ty,
-                            value,
-                            lowered_value,
-                        )?
                     } else {
-                        lowered_value
+                        let lowered_value =
+                            self.materialize_reusable_value_for_ir(value, lowered_value);
+                        if let Some(target_ty) = target_ty {
+                            Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                            self.coerce_local_value_for_target_type_for_ir(
+                                &target_ty,
+                                value,
+                                lowered_value,
+                            )?
+                        } else {
+                            lowered_value
+                        }
                     };
                     let mut lowered = vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),
@@ -755,11 +763,8 @@ impl RustEmitter {
                 }) else {
                     return Ok(None);
                 };
-                let target_cache_init = if char_set_loop || target.contains(',') {
-                    None
-                } else {
-                    self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
-                };
+                let (outer_string_caches, target_cache_init) =
+                    self.begin_loop_target_string_cache(target, target_ty, !char_set_loop);
                 let checked_read_guards = if char_set_loop {
                     Vec::new()
                 } else {
@@ -774,6 +779,7 @@ impl RustEmitter {
                 );
                 let popped = self.loop_else_stack.pop();
                 debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+                self.string_char_cache_vars = outer_string_caches;
                 let lowered_body_result = lowered_body_result?;
                 let Some(mut lowered_body) = lowered_body_result else {
                     return Ok(None);

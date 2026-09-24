@@ -1,6 +1,6 @@
 use quote::ToTokens;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use syn::visit::{self, Visit};
+use syn::visit::Visit;
 use syn::visit_mut::{self, VisitMut};
 
 mod api_cleanup;
@@ -19,6 +19,11 @@ mod item_dependencies;
 mod local_name_cleanup;
 mod member_demand;
 mod method_demand;
+mod module_demand;
+mod project_borrow_cleanup;
+pub(crate) use project_borrow_cleanup::rewrite_named_project_borrows;
+#[cfg(test)]
+pub(crate) use project_borrow_cleanup::rewrite_project_borrowed_string_literals;
 mod project_support_pruning;
 pub(crate) use project_support_pruning::{
     import_generated_support_in_project_nominals, import_project_prelude_bindings,
@@ -41,6 +46,7 @@ use item_dependencies::{
 };
 use member_demand::prune_unused_members;
 use method_demand::{demanded_inherent_method_names, prune_inherent_methods};
+use module_demand::{module_roots_from_parent_scope, parent_items_demanded_by_modules};
 use syntax_cleanup::canonicalize_syntax;
 
 type CanonicalProjectWithNames = (BTreeMap<String, String>, BTreeMap<String, String>);
@@ -77,16 +83,18 @@ pub fn canonicalize_generated_rust_project(
 pub fn canonicalize_generated_rust_project_with_names(
     sources: &BTreeMap<String, String>,
 ) -> Result<CanonicalProjectWithNames, String> {
+    let preserve_exported = sources.len() > 1;
     let fields = field_name_cleanup::canonicalize_fields(sources)?;
     let names = identifier_canonicalizer::project_name_map(&fields)?;
     let canonical = fields
         .into_iter()
         .map(|(module, source)| {
-            canonicalize_source_with_names(&source, &names).map(|source| (module, source))
+            canonicalize_source_with_names(&source, &names, preserve_exported)
+                .map(|source| (module, source))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     Ok((
-        support_import_cleanup::refresh_support_imports(canonical)?,
+        support_import_cleanup::refresh_support_imports(canonical, preserve_exported)?,
         names,
     ))
 }
@@ -94,16 +102,20 @@ pub fn canonicalize_generated_rust_project_with_names(
 fn canonicalize_source_with_names(
     source: &str,
     names: &BTreeMap<String, String>,
+    preserve_exported: bool,
 ) -> Result<String, String> {
     let structurally_pruned = prune_closed_generated_binary(source)?;
     let source = structurally_pruned.as_deref().unwrap_or(source);
     let canonical = identifier_canonicalizer::canonicalize_identifiers(source, names)?;
-    canonicalize_named_source(canonical)
+    canonicalize_named_source(canonical, preserve_exported)
 }
 
-fn canonicalize_named_source(mut canonical: String) -> Result<String, String> {
+fn canonicalize_named_source(
+    mut canonical: String,
+    preserve_exported: bool,
+) -> Result<String, String> {
     for _ in 0..16 {
-        let rewritten = rewrite_format_captures(&canonical)?;
+        let rewritten = rewrite_format_captures(&canonical, preserve_exported)?;
         let structurally_pruned = prune_closed_generated_binary(&rewritten)?;
         let next = structurally_pruned.unwrap_or(rewritten);
         if next == canonical {
@@ -210,16 +222,17 @@ impl<'ast> Visit<'ast> for FallibleControlUse {
     }
 }
 
-fn rewrite_format_captures(source: &str) -> Result<String, String> {
+fn rewrite_format_captures(source: &str, preserve_exported: bool) -> Result<String, String> {
     let mut file = syn::parse_file(source)
         .map_err(|error| format!("failed to parse canonical generated Rust: {error}"))?;
     let shorthand_changed = field_name_cleanup::compact_shorthand(&mut file);
-    let syntax_changed = canonicalize_syntax_to_fixed_point(&mut file)?;
+    let syntax_changed = canonicalize_syntax_to_fixed_point(&mut file, preserve_exported)?;
     let final_syntax = prettyplease::unparse(&file);
     let mut api_file = syn::parse_file(&final_syntax)
         .map_err(|error| format!("failed to reparse final generated Rust: {error}"))?;
     let before_api = api_file.to_token_stream().to_string();
     improve_generated_api_items(&mut api_file.items, &final_syntax);
+    syntax_cleanup::apply_lexical_type_cleanup(&mut api_file);
     let api_changed = api_file.to_token_stream().to_string() != before_api;
     if !shorthand_changed && !syntax_changed && !api_changed {
         return Ok(source.to_string());
@@ -228,11 +241,14 @@ fn rewrite_format_captures(source: &str) -> Result<String, String> {
     improve_final_api_source(first_api_source)
 }
 
-fn canonicalize_syntax_to_fixed_point(file: &mut syn::File) -> Result<bool, String> {
+fn canonicalize_syntax_to_fixed_point(
+    file: &mut syn::File,
+    preserve_exported: bool,
+) -> Result<bool, String> {
     let mut changed = false;
     for _ in 0..4 {
         let before = file.to_token_stream().to_string();
-        canonicalize_syntax(file);
+        canonicalize_syntax(file, preserve_exported);
         if file.to_token_stream().to_string() == before {
             let mut format_rewriter = FormatCaptureRewriter { changed: false };
             format_rewriter.visit_file_mut(file);
@@ -248,6 +264,7 @@ fn improve_final_api_source(mut source: String) -> Result<String, String> {
         let mut file = syn::parse_file(&source)
             .map_err(|error| format!("failed to reparse final generated Rust: {error}"))?;
         improve_generated_api_items(&mut file.items, &source);
+        syntax_cleanup::apply_lexical_type_cleanup(&mut file);
         let improved = prettyplease::unparse(&file);
         if improved == source {
             return Ok(source);
@@ -533,268 +550,6 @@ fn prune_item_scope(
         collect_use_bindings(&item_use.tree, &mut bindings)
             || bindings.iter().any(|binding| used_names.contains(binding))
     });
-}
-
-fn parent_items_demanded_by_modules(
-    items: &[syn::Item],
-    definitions: &HashSet<String>,
-    is_crate_root: bool,
-) -> HashSet<String> {
-    let mut roots = HashSet::new();
-    for item in items {
-        let syn::Item::Mod(module) = item else {
-            continue;
-        };
-        let Some((_, nested)) = &module.content else {
-            continue;
-        };
-        let mut collector = ParentScopeReferenceCollector {
-            definitions,
-            roots: &mut roots,
-            is_crate_root,
-            nested_module_depth: 0,
-        };
-        for nested_item in nested {
-            collector.visit_item(nested_item);
-        }
-    }
-    roots
-}
-
-struct ParentScopeReferenceCollector<'scope> {
-    definitions: &'scope HashSet<String>,
-    roots: &'scope mut HashSet<String>,
-    is_crate_root: bool,
-    nested_module_depth: usize,
-}
-
-impl ParentScopeReferenceCollector<'_> {
-    fn collect_segments(&mut self, segments: &[String]) {
-        let candidate = match segments {
-            [qualifier, candidate, ..] if qualifier == "crate" && self.is_crate_root => {
-                Some(candidate)
-            }
-            [qualifier, candidate, ..] if qualifier == "super" && self.nested_module_depth == 0 => {
-                Some(candidate)
-            }
-            _ => None,
-        };
-        if let Some(candidate) = candidate
-            && self.definitions.contains(candidate)
-        {
-            self.roots.insert(candidate.clone());
-        }
-    }
-
-    fn collect_use_tree(&mut self, tree: &syn::UseTree, prefix: &mut Vec<String>) {
-        match tree {
-            syn::UseTree::Path(path) => {
-                prefix.push(path.ident.to_string());
-                self.collect_use_tree(&path.tree, prefix);
-                prefix.pop();
-            }
-            syn::UseTree::Name(name) => {
-                prefix.push(name.ident.to_string());
-                self.collect_segments(prefix);
-                prefix.pop();
-            }
-            syn::UseTree::Rename(rename) => {
-                prefix.push(rename.ident.to_string());
-                self.collect_segments(prefix);
-                prefix.pop();
-            }
-            syn::UseTree::Group(group) => {
-                for tree in &group.items {
-                    self.collect_use_tree(tree, prefix);
-                }
-            }
-            syn::UseTree::Glob(_) => {
-                let imports_parent = matches!(prefix.as_slice(), [qualifier]
-                    if qualifier == "super" && self.nested_module_depth == 0)
-                    || matches!(prefix.as_slice(), [qualifier]
-                        if qualifier == "crate" && self.is_crate_root);
-                if imports_parent {
-                    self.roots.extend(self.definitions.iter().cloned());
-                }
-            }
-        }
-    }
-}
-
-impl<'ast> Visit<'ast> for ParentScopeReferenceCollector<'_> {
-    fn visit_path(&mut self, path: &'ast syn::Path) {
-        let segments = path
-            .segments
-            .iter()
-            .map(|segment| segment.ident.to_string())
-            .collect::<Vec<_>>();
-        self.collect_segments(&segments);
-        visit::visit_path(self, path);
-    }
-
-    fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
-        self.collect_use_tree(&item.tree, &mut Vec::new());
-    }
-
-    fn visit_item_mod(&mut self, module: &'ast syn::ItemMod) {
-        self.nested_module_depth += 1;
-        visit::visit_item_mod(self, module);
-        self.nested_module_depth -= 1;
-    }
-}
-
-fn module_roots_from_parent_scope(
-    items: &[syn::Item],
-    module_index: usize,
-    module_name: &str,
-    definitions: &HashSet<String>,
-    used_names: &HashSet<String>,
-) -> HashSet<String> {
-    let mut roots = HashSet::new();
-    for (index, item) in items.iter().enumerate() {
-        if index == module_index {
-            continue;
-        }
-        if let syn::Item::Use(item_use) = item {
-            collect_module_use_roots(
-                &item_use.tree,
-                module_name,
-                false,
-                definitions,
-                used_names,
-                &mut roots,
-            );
-            continue;
-        }
-        if let syn::Item::Mod(module) = item {
-            if let Some((_, nested)) = &module.content {
-                let candidates = all_item_identifier_names(item);
-                let referenced_names = item_dependency_names(item, &candidates);
-                collect_nested_module_use_roots(
-                    nested,
-                    module_name,
-                    definitions,
-                    &referenced_names,
-                    &mut roots,
-                );
-            }
-            let mut collector = QualifiedModuleReferenceCollector {
-                module_name,
-                definitions,
-                roots: &mut roots,
-            };
-            collector.visit_item(item);
-            continue;
-        }
-        let mut collector = QualifiedModuleReferenceCollector {
-            module_name,
-            definitions,
-            roots: &mut roots,
-        };
-        collector.visit_item(item);
-    }
-    roots.retain(|name| definitions.contains(name));
-    roots
-}
-
-fn collect_nested_module_use_roots(
-    items: &[syn::Item],
-    module_name: &str,
-    definitions: &HashSet<String>,
-    referenced_names: &HashSet<String>,
-    roots: &mut HashSet<String>,
-) {
-    for item in items {
-        match item {
-            syn::Item::Use(item_use) => collect_module_use_roots(
-                &item_use.tree,
-                module_name,
-                false,
-                definitions,
-                referenced_names,
-                roots,
-            ),
-            syn::Item::Mod(module) => {
-                if let Some((_, nested)) = &module.content {
-                    collect_nested_module_use_roots(
-                        nested,
-                        module_name,
-                        definitions,
-                        referenced_names,
-                        roots,
-                    );
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
-fn collect_module_use_roots(
-    tree: &syn::UseTree,
-    module_name: &str,
-    inside_module: bool,
-    definitions: &HashSet<String>,
-    used_names: &HashSet<String>,
-    roots: &mut HashSet<String>,
-) {
-    match tree {
-        syn::UseTree::Path(path) => collect_module_use_roots(
-            &path.tree,
-            module_name,
-            inside_module || path.ident == module_name,
-            definitions,
-            used_names,
-            roots,
-        ),
-        syn::UseTree::Name(name)
-            if inside_module && used_names.contains(&name.ident.to_string()) =>
-        {
-            roots.insert(name.ident.to_string());
-        }
-        syn::UseTree::Rename(rename)
-            if inside_module && used_names.contains(&rename.rename.to_string()) =>
-        {
-            roots.insert(rename.ident.to_string());
-        }
-        syn::UseTree::Group(group) => {
-            for item in &group.items {
-                collect_module_use_roots(
-                    item,
-                    module_name,
-                    inside_module,
-                    definitions,
-                    used_names,
-                    roots,
-                );
-            }
-        }
-        syn::UseTree::Glob(_) if inside_module => {
-            roots.extend(definitions.intersection(used_names).cloned());
-        }
-        syn::UseTree::Name(_) | syn::UseTree::Rename(_) | syn::UseTree::Glob(_) => {}
-    }
-}
-
-struct QualifiedModuleReferenceCollector<'scope> {
-    module_name: &'scope str,
-    definitions: &'scope HashSet<String>,
-    roots: &'scope mut HashSet<String>,
-}
-
-impl<'ast> Visit<'ast> for QualifiedModuleReferenceCollector<'_> {
-    fn visit_path(&mut self, path: &'ast syn::Path) {
-        let segments = path.segments.iter().collect::<Vec<_>>();
-        for pair in segments.windows(2) {
-            if pair[0].ident == self.module_name {
-                let candidate = pair[1].ident.to_string();
-                if self.definitions.contains(&candidate) {
-                    self.roots.insert(candidate);
-                }
-            }
-        }
-        visit::visit_path(self, path);
-    }
 }
 
 fn collect_use_bindings(tree: &syn::UseTree, bindings: &mut BTreeSet<String>) -> bool {

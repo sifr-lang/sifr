@@ -1,31 +1,41 @@
 use crate::{RustEmitter, RustExpr, RustLiteral, RustStmt, Type};
 
+mod assignment_reads;
 mod condition_reads;
 mod control_flow;
+mod exit_guard_aliases;
+mod exit_guards;
 mod fallible_reads;
 mod nonempty_lists;
 mod option_reads;
+mod witness_preparation;
 mod witnesses;
 
 pub(crate) use witnesses::{CheckedDictReadGuard, CheckedPlaceReadWitness, checked_place_read_key};
 use witnesses::{checked_place_dependencies, checked_place_expr_token};
 
-fn condition_supports_checked_sequence_read(
+pub(crate) fn condition_supports_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
+    length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
     if let crate::HirExpr::BoolOp { op, values, .. } = condition {
         return match op.as_str() {
             "or" => {
                 !values.is_empty()
-                    && values
-                        .iter()
-                        .all(|value| condition_supports_checked_sequence_read(value, object, index))
+                    && values.iter().all(|value| {
+                        condition_supports_checked_sequence_read(
+                            value,
+                            object,
+                            index,
+                            length_aliases,
+                        )
+                    })
             }
-            "and" => values
-                .iter()
-                .any(|value| condition_supports_checked_sequence_read(value, object, index)),
+            "and" => values.iter().any(|value| {
+                condition_supports_checked_sequence_read(value, object, index, length_aliases)
+            }),
             _ => false,
         };
     }
@@ -66,6 +76,11 @@ fn condition_supports_checked_sequence_read(
             {
                 mentions_length = true;
             }
+            crate::HirExpr::Name { name, .. }
+                if length_aliases.get(name) == Some(&object_token) =>
+            {
+                mentions_length = true;
+            }
             _ => {}
         }
     });
@@ -76,8 +91,9 @@ fn condition_excludes_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
+    length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
-    fn is_len_of(candidate: &crate::HirExpr, object_token: &str) -> bool {
+    let is_len_of = |candidate: &crate::HirExpr, object_token: &str| {
         matches!(
             candidate,
             crate::HirExpr::MethodCall {
@@ -88,8 +104,9 @@ fn condition_excludes_checked_sequence_read(
             } if method == "len"
                 && args.is_empty()
                 && checked_place_expr_token(object).as_deref() == Some(object_token)
-        )
-    }
+        ) || matches!(candidate, crate::HirExpr::Name { name, .. }
+            if length_aliases.get(name).is_some_and(|collection| collection == object_token))
+    };
 
     fn is_zero(candidate: &crate::HirExpr) -> bool {
         matches!(candidate, crate::HirExpr::IntLiteral(0))
@@ -111,12 +128,12 @@ fn condition_excludes_checked_sequence_read(
         return false;
     };
     match condition {
-        crate::HirExpr::BoolOp { op, values, .. } if op == "or" => values
-            .iter()
-            .any(|value| condition_excludes_checked_sequence_read(value, object, index)),
+        crate::HirExpr::BoolOp { op, values, .. } if op == "or" => values.iter().any(|value| {
+            condition_excludes_checked_sequence_read(value, object, index, length_aliases)
+        }),
         crate::HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
             if checked_place_expr_token(operand).as_deref() == Some(object_token.as_str()) {
-                return is_zero(index);
+                return matches!(integer_literal(index), Some(0 | -1));
             }
             let crate::HirExpr::Compare {
                 left,
@@ -158,7 +175,7 @@ fn condition_excludes_checked_sequence_read(
                     && literal_index.zip(left_bound).is_some_and(|(index, bound)| {
                         (ops[0] == ">" && index < bound) || (ops[0] == ">=" && index <= bound)
                     }))
-                || (is_zero(index)
+                || (matches!(integer_literal(index), Some(0 | -1))
                     && is_len_of(left, &object_token)
                     && ops[0] == "=="
                     && is_zero(right))
@@ -171,12 +188,15 @@ fn condition_only_excludes_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
+    length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
     match condition {
-        crate::HirExpr::BoolOp { op, values, .. } if op == "or" && !values.is_empty() => values
-            .iter()
-            .all(|value| condition_only_excludes_checked_sequence_read(value, object, index)),
-        _ => condition_excludes_checked_sequence_read(condition, object, index),
+        crate::HirExpr::BoolOp { op, values, .. } if op == "or" && !values.is_empty() => {
+            values.iter().all(|value| {
+                condition_only_excludes_checked_sequence_read(value, object, index, length_aliases)
+            })
+        }
+        _ => condition_excludes_checked_sequence_read(condition, object, index, length_aliases),
     }
 }
 
@@ -190,7 +210,7 @@ fn expr_mentions_name(expr: &crate::HirExpr, target: &str) -> bool {
     found
 }
 
-fn checked_sequence_get_option(
+pub(crate) fn checked_sequence_get_option(
     object: RustExpr,
     object_is_borrowed: bool,
     index: RustExpr,
@@ -361,6 +381,7 @@ impl RustEmitter {
         else_expr: &crate::HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let mut guards = Vec::new();
+        let length_aliases = self.body_analysis.stable_length_aliases(condition).clone();
         let mut previous_witnesses = Vec::new();
         for read in crate::hir_analysis::queries::collection_reads_in_condition(then_expr) {
             let crate::HirExpr::Index {
@@ -370,7 +391,12 @@ impl RustEmitter {
                 continue;
             };
             if crate::helpers::is_option_type(ty)
-                || !condition_supports_checked_sequence_read(condition, object, index)
+                || !condition_supports_checked_sequence_read(
+                    condition,
+                    object,
+                    index,
+                    &length_aliases,
+                )
             {
                 continue;
             }
@@ -468,9 +494,7 @@ impl RustEmitter {
             return Ok(None);
         }
 
-        let reads = self
-            .body_analysis
-            .proven_reads_in(std::slice::from_ref(stmt));
+        let reads = self.body_analysis.atomic_proven_reads_in(stmt);
         let mut guards = Vec::new();
         let mut previous_witnesses = Vec::new();
         for read in reads {
@@ -705,7 +729,7 @@ impl RustEmitter {
             }
             collection => collection,
         };
-        let Type::Dict(_, _) = dictionary.ty().resolve_alias() else {
+        let Type::Dict(_, value_ty) = dictionary.ty().resolve_alias() else {
             return Ok(None);
         };
         let Some(key) = checked_place_read_key(dictionary, element) else {
@@ -735,12 +759,13 @@ impl RustEmitter {
             option,
             negated,
             borrowed: true,
+            copy_value: crate::helpers::is_copy_type_for_codegen(value_ty),
             dependencies,
             order,
         }))
     }
 
-    fn checked_sequence_read_guard_for_ir(
+    pub(crate) fn checked_sequence_read_guard_for_ir(
         &mut self,
         read: &crate::HirExpr,
     ) -> Result<Option<CheckedDictReadGuard>, crate::CodegenError> {
@@ -793,6 +818,7 @@ impl RustEmitter {
             option,
             negated: true,
             borrowed: false,
+            copy_value: crate::helpers::is_copy_type_for_codegen(read.ty()),
             dependencies,
             order,
         }))
