@@ -197,7 +197,10 @@ mod tests {
         let formatted = format_generated_rust("fn value()->i64{let x=1;x}\n", "test.rs")
             .unwrap_or_else(|errors| panic!("formatting must succeed: {errors:?}"));
 
-        assert_eq!(formatted, "const fn value() -> i64 {\n    1\n}\n");
+        assert_eq!(
+            formatted.replace("\r\n", "\n"),
+            "const fn value() -> i64 {\n    1\n}\n"
+        );
     }
 
     #[cfg(windows)]
