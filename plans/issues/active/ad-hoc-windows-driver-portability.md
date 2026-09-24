@@ -350,3 +350,19 @@ validation-only pass does not approve that draft. The same integrated
 job then failed SQL W3 at the known PostgreSQL vendored C/MSVC headers
 (unistd.h, dirent.h, sys/time.h); SQL Item 4/W3 retains that
 separate qualification blocker. No SQL Windows qualification is claimed.
+
+## 2026-09-24 architecture taxonomy repair
+
+[Merged PR #4001](https://github.com/sifr-lang/sifr/pull/4001) changed only
+`internal_docs/architecture.md`, from candidate
+`d3d23d537084e1c9788a9bf17b88df2695d100a9` to merged main SHA
+`f97ce18771e486298519bd689e7801b852f5c950`. The architecture handoff
+now describes the coupled storage/process dependency and separate integrated
+SQL qualification without numbered delivery labels or the active issue path.
+This repairs the three taxonomy violations reported during Emitted Rust Item
+12R readiness on its unchanged `e5d0` candidate; that historical failed
+receipt remains failed. On the exact docs candidate, `coverage_matrix`
+readiness passed all four cases, including `verification_taxonomy`;
+`check_file_size_guardrails.py` and `git diff --check` also passed. This
+supplies no W1/W2 native acceptance or W3 SQL qualification. Draft PR #3993
+and its owner remain responsible for those separate outcomes.
