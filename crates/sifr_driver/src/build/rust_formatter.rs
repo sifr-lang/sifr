@@ -5,11 +5,6 @@ use std::ffi::OsString;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-#[cfg(windows)]
-const EMPTY_RUSTFMT_CONFIG: &str = "NUL";
-#[cfg(not(windows))]
-const EMPTY_RUSTFMT_CONFIG: &str = "/dev/null";
-
 pub(crate) fn canonicalize_project_fields<'a>(
     root: &mut String,
     modules: impl IntoIterator<Item = (&'a String, &'a mut String)>,
@@ -117,15 +112,23 @@ fn format_generated_rust_with(
     source: &str,
     label: &str,
 ) -> Result<String, String> {
+    #[cfg(windows)]
+    let empty_config = tempfile::Builder::new()
+        .prefix("sifr-rustfmt-")
+        .suffix(".toml")
+        .tempfile()
+        .map_err(|error| format!("failed to create rustfmt config for generated {label}: {error}"))?
+        .into_temp_path();
+    #[cfg(windows)]
+    let config_path: &std::path::Path = empty_config.as_ref();
+    #[cfg(windows)]
+    let config_path = config_path.as_os_str();
+    #[cfg(not(windows))]
+    let config_path = std::ffi::OsStr::new("/dev/null");
+
     let mut child = Command::new(executable)
-        .args([
-            "--edition",
-            "2024",
-            "--emit",
-            "stdout",
-            "--config-path",
-            EMPTY_RUSTFMT_CONFIG,
-        ])
+        .args(["--edition", "2024", "--emit", "stdout", "--config-path"])
+        .arg(config_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -195,6 +198,22 @@ mod tests {
             .unwrap_or_else(|errors| panic!("formatting must succeed: {errors:?}"));
 
         assert_eq!(formatted, "const fn value() -> i64 {\n    1\n}\n");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_generated_build_script_uses_a_real_empty_rustfmt_config() {
+        let formatted = format_generated_rust_with(
+            std::ffi::OsStr::new("rustfmt"),
+            "fn main(){println!(\"native loader\");}",
+            "native loader build script",
+        )
+        .expect("Windows rustfmt must accept the empty config file");
+
+        assert_eq!(
+            formatted,
+            "fn main() {\n    println!(\"native loader\");\n}\n"
+        );
     }
 
     #[test]
