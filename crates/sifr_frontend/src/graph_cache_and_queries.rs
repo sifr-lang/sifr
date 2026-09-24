@@ -5,11 +5,11 @@ use super::{
     SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceAuxiliarySource,
     WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport,
     WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
-    collect_module_exports, compile_frontend_product_module, diagnostic_with_code,
-    editor_semantics_from_module, hir_diagnostic_to_rendered, local_import_dependencies,
-    module_state, reveal_type_diagnostics, source_hash, sql_editor_documents, symbols_from_hir,
-    warning_diagnostics,
+    collect_module_exports, diagnostic_with_code, editor_semantics_from_module,
+    hir_diagnostic_to_rendered, local_import_dependencies, module_state, reveal_type_diagnostics,
+    source_hash, sql_editor_documents, symbols_from_hir, warning_diagnostics,
 };
+use crate::frontend_product::compile_prepared_frontend_product_module;
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{ModuleSignature, module_signature};
 use crate::source_maps::AuxiliarySourceState;
@@ -567,47 +567,51 @@ impl FrontendContext {
         Ok(CacheStatus::Miss)
     }
 
+    fn ensure_dependency_order(&mut self) {
+        if self.dependency_order.is_some() {
+            return;
+        }
+        let module_ids = self
+            .modules
+            .iter()
+            .map(|state| state.id)
+            .collect::<Vec<_>>();
+        for id in module_ids {
+            let _ = self.ensure_parsed(id);
+        }
+        let display_paths = self
+            .modules
+            .iter()
+            .map(|state| state.path.as_path().to_string_lossy().into_owned())
+            .collect::<Vec<_>>();
+        let inputs = self
+            .modules
+            .iter()
+            .enumerate()
+            .filter_map(|(index, state)| {
+                state.parsed.as_ref().map(|parsed| {
+                    (
+                        state.module_name.clone(),
+                        crate::CompileOrderSourceModule {
+                            suite: parsed.suite(),
+                            source: state.source.as_str(),
+                            display_path: display_paths[index].as_str(),
+                        },
+                    )
+                })
+            })
+            .collect();
+        self.dependency_order = Some(crate::compute_module_compile_order_with_sources(&inputs));
+    }
+
     fn ensure_lowered(&mut self, module: ModuleId) -> CacheStatus {
+        self.ensure_dependency_order();
+        if matches!(self.dependency_order, Some(Err(_))) {
+            return CacheStatus::Miss;
+        }
         let index = self.index_for_module(module);
         if self.modules[index].lowered.is_some() {
             return CacheStatus::Hit;
-        }
-        if self.dependency_order.is_none() {
-            let module_ids = self
-                .modules
-                .iter()
-                .map(|state| state.id)
-                .collect::<Vec<_>>();
-            for id in module_ids {
-                let _ = self.ensure_parsed(id);
-            }
-            let display_paths = self
-                .modules
-                .iter()
-                .map(|state| state.path.as_path().to_string_lossy().into_owned())
-                .collect::<Vec<_>>();
-            let inputs = self
-                .modules
-                .iter()
-                .enumerate()
-                .filter_map(|(index, state)| {
-                    state.parsed.as_ref().map(|parsed| {
-                        (
-                            state.module_name.clone(),
-                            crate::CompileOrderSourceModule {
-                                suite: parsed.suite(),
-                                source: state.source.as_str(),
-                                display_path: display_paths[index].as_str(),
-                            },
-                        )
-                    })
-                })
-                .collect();
-            self.dependency_order = Some(crate::compute_module_compile_order_with_sources(&inputs));
-        }
-        if let Some(Err(errors)) = &self.dependency_order {
-            self.modules[index].diagnostics = Some(Arc::new(errors.clone()));
-            return CacheStatus::Miss;
         }
         if !self.lowering_modules.insert(module) {
             return CacheStatus::Miss;
@@ -638,6 +642,11 @@ impl FrontendContext {
             let _ = self.ensure_lowered(dependency);
         }
         let index = self.index_for_module(module);
+        if let Err(errors) = prepare_external_defs(&parsed, &mut self.external_defs) {
+            self.modules[index].diagnostics = Some(Arc::new(errors));
+            self.lowering_modules.remove(&module);
+            return CacheStatus::Miss;
+        }
         let hir_key = self.hir_key_fingerprint(index);
         if let Some(lowered) = self.reuse_caches.hir(&hir_key) {
             let module_name = self.modules[index].module_name.clone();
@@ -651,7 +660,7 @@ impl FrontendContext {
             .as_path()
             .to_string_lossy()
             .into_owned();
-        match compile_frontend_product_module(
+        match compile_prepared_frontend_product_module(
             &self.modules[index].module_name,
             &parsed,
             Some(FrontendSourceContext {
@@ -674,6 +683,10 @@ impl FrontendContext {
     }
 
     fn ensure_diagnostics(&mut self, module: ModuleId) -> CacheStatus {
+        self.ensure_dependency_order();
+        if matches!(self.dependency_order, Some(Err(_))) {
+            return CacheStatus::Miss;
+        }
         let index = self.index_for_module(module);
         if self.modules[index].diagnostics.is_some() {
             return CacheStatus::Hit;

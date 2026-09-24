@@ -617,9 +617,7 @@ mod tests {
                     )
                 })
                 .collect::<HashMap<_, _>>();
-            compute_module_compile_order_with_sources(&inputs)
-                .err()
-                .expect("both SCCs are cyclic")
+            compute_module_compile_order_with_sources(&inputs).expect_err("both SCCs are cyclic")
         };
         let first = diagnostics(&["main", "z", "y", "a", "b"]);
         let reversed = diagnostics(&["b", "a", "y", "z", "main"]);

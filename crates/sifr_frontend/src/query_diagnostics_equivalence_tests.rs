@@ -475,3 +475,28 @@ fn successful_product_preserves_exports_flow_and_analysis_diagnostics() {
     let mut context = load_project(&dir);
     assert_eq!(project_diagnostics(&mut context), product_diagnostics);
 }
+
+#[test]
+fn unrelated_module_drops_global_cycle_diagnostic_after_repair() {
+    let mut sources = BTreeMap::from([
+        ("main.sifr", "from a import value\n".to_string()),
+        ("a.sifr", "from b import value\n".to_string()),
+        ("b.sifr", "from a import value\n".to_string()),
+        ("util.sifr", "utility: int = 1\n".to_string()),
+    ]);
+    let dir = temp_project_dir("unrelated_cycle_repair");
+    write_project(&dir, &sources);
+    let mut context = load_project(&dir);
+    let util = module_by_stem(&context, "util");
+    assert_eq!(project_diagnostics(&mut context).len(), 1);
+    assert_eq!(diagnostics_for_module(&mut context, util).len(), 1);
+
+    let b = module_by_stem(&context, "b");
+    sources.insert("b.sifr", "value: int = 1\n".to_string());
+    update_module(&mut context, b, &sources["b.sifr"], 2);
+    assert!(diagnostics_for_module(&mut context, util).is_empty());
+    assert_eq!(
+        project_diagnostics(&mut context),
+        clean_project_diagnostics(&sources, &dir),
+    );
+}

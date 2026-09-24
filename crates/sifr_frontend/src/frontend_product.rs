@@ -95,6 +95,24 @@ pub fn compile_frontend_product_module(
     lowering_options: LoweringOptions,
 ) -> Result<(LoweringResult, FrontendModuleDiagnostics), Vec<RenderedDiagnostic>> {
     prepare_external_defs(stmts, external_defs)?;
+    compile_prepared_frontend_product_module(
+        module_name,
+        stmts,
+        source_context,
+        external_defs,
+        diagnostic_style,
+        lowering_options,
+    )
+}
+
+pub(crate) fn compile_prepared_frontend_product_module(
+    module_name: &str,
+    stmts: &[Stmt],
+    source_context: Option<FrontendSourceContext<'_>>,
+    external_defs: &mut ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
+    lowering_options: LoweringOptions,
+) -> Result<(LoweringResult, FrontendModuleDiagnostics), Vec<RenderedDiagnostic>> {
     let result = compile_module_hir_with_source_and_options(
         module_name,
         stmts,
