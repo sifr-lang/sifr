@@ -492,7 +492,7 @@ impl RootedEntrypointPlan {
                         },
                         stdlib.defs.clone(),
                         FrontendDiagnosticStyle::Bare,
-                        lowering_options.clone(),
+                        &lowering_options,
                     )
                 })?;
                 (

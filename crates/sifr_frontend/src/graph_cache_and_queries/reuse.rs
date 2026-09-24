@@ -80,7 +80,14 @@ impl FrontendContext {
         let module_ids: Vec<ModuleId> = self.modules.iter().map(|module| module.id).collect();
         let mut diagnostics = Vec::new();
         for module in module_ids {
-            diagnostics.extend(self.diagnostics_for_module(module).into_value().diagnostics);
+            for diagnostic in self.diagnostics_for_module(module).into_value().diagnostics {
+                if diagnostic.code == sifr_diagnostics::DiagnosticCode::IMPORT_CYCLE.code()
+                    && diagnostics.contains(&diagnostic)
+                {
+                    continue;
+                }
+                diagnostics.push(diagnostic);
+            }
         }
         QueryResult::new(
             ProjectDiagnostics { diagnostics },

@@ -97,6 +97,7 @@ impl FrontendContext {
             package_config_identity: WorkspacePackageConfigIdentity::default(),
             base_external_defs: external_defs.clone(),
             external_defs,
+            dependency_order: None,
             lowering_modules: BTreeSet::new(),
         };
         context.rebuild_edges();
@@ -232,6 +233,7 @@ impl FrontendContext {
             package_config_identity,
             base_external_defs: external_defs.clone(),
             external_defs,
+            dependency_order: None,
             lowering_modules: BTreeSet::new(),
         };
         context.rebuild_edges();

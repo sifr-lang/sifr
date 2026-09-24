@@ -1,11 +1,10 @@
-use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{Ranged as _, TextRange};
 use sifr_diagnostics::{
     ChildSeverity, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RelatedKind, Severity,
     SourceMap, SourceSpan,
 };
+use sifr_diagnostics::{DiagnosticArg, RenderedDiagnostic};
 use sifr_python_ast::Stmt;
-#[cfg(test)]
 use sifr_python_ast::Suite;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -86,7 +85,11 @@ fn collect_local_module_dependency_ranges(
     deps
 }
 
-fn dependency_candidates(current_module: &str, module_name: &str, level: u32) -> Vec<String> {
+pub(crate) fn dependency_candidates(
+    current_module: &str,
+    module_name: &str,
+    level: u32,
+) -> Vec<String> {
     if level != 1 {
         return vec![module_name.to_string()];
     }
@@ -211,8 +214,7 @@ fn find_dependency_cycle_path(
     None
 }
 
-#[cfg(test)]
-pub(crate) fn compute_module_compile_order(
+pub fn compute_module_compile_order(
     parsed_modules: &HashMap<String, Suite>,
 ) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
     let graph = build_module_dependency_graph(
@@ -251,10 +253,8 @@ pub(crate) fn compute_module_compile_order(
         return Ok(compile_order);
     }
 
-    let cycle_path = canonicalize_cycle_path(
-        find_dependency_cycle_path(&graph.dependencies)
-            .unwrap_or_else(|| vec!["<cycle>".to_string()]),
-    );
+    let cycle_path = find_canonical_cycle_in_first_scc(&graph.dependencies)
+        .unwrap_or_else(|| vec!["<cycle>".to_string()]);
     let (cycle_render, edge_render, notes) = cycle_diagnostic_parts(&cycle_path);
     let args = [
         (
@@ -266,7 +266,7 @@ pub(crate) fn compute_module_compile_order(
             sifr_diagnostics::DiagnosticArg::String(edge_render),
         ),
     ];
-    Err(vec![crate::diagnostics::diagnostic_without_source(
+    Err(vec![diagnostic_without_source(
         DiagnosticCode::IMPORT_CYCLE,
         "circular import detected: {cycle}",
         &args,
@@ -275,13 +275,13 @@ pub(crate) fn compute_module_compile_order(
     )])
 }
 
-pub(crate) struct CompileOrderSourceModule<'a> {
-    pub(crate) suite: &'a [Stmt],
-    pub(crate) source: &'a str,
-    pub(crate) display_path: &'a str,
+pub struct CompileOrderSourceModule<'a> {
+    pub suite: &'a [Stmt],
+    pub source: &'a str,
+    pub display_path: &'a str,
 }
 
-pub(crate) fn compute_module_compile_order_with_sources(
+pub fn compute_module_compile_order_with_sources(
     parsed_modules: &HashMap<String, CompileOrderSourceModule<'_>>,
 ) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
     let graph = build_module_dependency_graph(
@@ -320,10 +320,8 @@ pub(crate) fn compute_module_compile_order_with_sources(
         return Ok(compile_order);
     }
 
-    let cycle_path = canonicalize_cycle_path(
-        find_dependency_cycle_path(&graph.dependencies)
-            .unwrap_or_else(|| vec!["<cycle>".to_string()]),
-    );
+    let cycle_path = find_canonical_cycle_in_first_scc(&graph.dependencies)
+        .unwrap_or_else(|| vec!["<cycle>".to_string()]);
     Err(vec![cycle_source_diagnostic(parsed_modules, &cycle_path)])
 }
 
@@ -346,8 +344,17 @@ fn cycle_source_diagnostic(
             edge_spans.push((from.clone(), to.clone(), module, *range));
         }
     }
+    if edge_spans.len() != cycle_path.len().saturating_sub(1) {
+        return crate::diagnostic_with_code(
+            "internal compiler error: import cycle is missing a source edge",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        );
+    }
     let Some((from, to, first_module, first_range)) = edge_spans.first() else {
-        return cycle_without_source(cycle_path);
+        return crate::diagnostic_with_code(
+            "internal compiler error: import cycle has no source edge",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        );
     };
     let mut source_map = SourceMap::new();
     let first_source_id =
@@ -355,7 +362,7 @@ fn cycle_source_diagnostic(
     let primary = match SourceSpan::new_validated(&source_map, first_source_id, *first_range) {
         Ok(span) => span,
         Err(error) => {
-            return crate::diagnostics::diagnostic_with_code(
+            return crate::diagnostic_with_code(
                 format!("internal compiler error: invalid import cycle span: {error:?}"),
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             );
@@ -377,24 +384,31 @@ fn cycle_source_diagnostic(
             );
     for (from, to, module, range) in edge_spans.iter().skip(1) {
         let source_id = source_map.register_source(module.display_path, module.source);
-        if let Ok(span) = SourceSpan::new_validated(&source_map, source_id, *range) {
-            builder = builder.related(
-                span,
-                RelatedKind::Note,
-                Some(format!("{from} imports {to}")),
-            );
-        }
+        let span = match SourceSpan::new_validated(&source_map, source_id, *range) {
+            Ok(span) => span,
+            Err(error) => {
+                return crate::diagnostic_with_code(
+                    format!("internal compiler error: invalid import cycle span: {error:?}"),
+                    DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                );
+            }
+        };
+        builder = builder.related(
+            span,
+            RelatedKind::Note,
+            Some(format!("{from} imports {to}")),
+        );
     }
     let diagnostic = builder.build();
     let mut sink = DiagnosticSink::new();
     let _ = sink.emit_error(diagnostic);
     match sifr_diagnostics::render::render_sink(&sink, &source_map) {
         Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
-        Ok(_) => crate::diagnostics::diagnostic_with_code(
+        Ok(_) => crate::diagnostic_with_code(
             "internal compiler error: import cycle renderer emitted an unexpected diagnostic count",
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         ),
-        Err(error) => crate::diagnostics::diagnostic_with_code(
+        Err(error) => crate::diagnostic_with_code(
             format!("internal compiler error: invalid import cycle span: {error:?}"),
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         ),
@@ -418,7 +432,7 @@ fn cycle_without_source(cycle_path: &[String]) -> RenderedDiagnostic {
             sifr_diagnostics::DiagnosticArg::String(cycle_edges),
         ),
     ];
-    crate::diagnostics::diagnostic_without_source(
+    diagnostic_without_source(
         DiagnosticCode::IMPORT_CYCLE,
         "circular import detected: {cycle}",
         &args,
@@ -454,4 +468,188 @@ fn canonicalize_cycle_path(cycle_path: Vec<String>) -> Vec<String> {
 
     best_rotation.push(best_rotation[0].clone());
     best_rotation
+}
+
+fn diagnostic_without_source(
+    code: DiagnosticCode,
+    message_template: &'static str,
+    args: &[(&'static str, DiagnosticArg)],
+    notes: &[String],
+    help: Option<String>,
+) -> RenderedDiagnostic {
+    let mut builder = DiagnosticBuilder::internal(code, code.declared_severity())
+        .message_template(message_template);
+    for (name, value) in args {
+        builder = builder.arg(name, value.clone());
+    }
+    for note in notes {
+        builder = builder.child(ChildSeverity::Note, note.clone());
+    }
+    if let Some(help) = help {
+        builder = builder.help(help);
+    }
+    let mut sink = DiagnosticSink::new();
+    let _ = sink.emit_error(builder.build());
+    match sifr_diagnostics::render::render_sink(&sink, &SourceMap::new()) {
+        Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
+        _ => crate::diagnostic_with_code(
+            "internal compiler error: failed to render import cycle",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+    }
+}
+
+/// Select the lexically first cyclic SCC before choosing a representative
+/// source edge path. Other acyclic branches cannot change the reported cycle.
+fn find_canonical_cycle_in_first_scc(
+    dependencies: &BTreeMap<String, BTreeSet<String>>,
+) -> Option<Vec<String>> {
+    let component = strongly_connected_components(dependencies)
+        .into_iter()
+        .find(|component| {
+            component.len() > 1
+                || component.first().is_some_and(|node| {
+                    dependencies
+                        .get(node)
+                        .is_some_and(|deps| deps.contains(node))
+                })
+        })?;
+    let names = component.into_iter().collect::<BTreeSet<_>>();
+    let contained = dependencies
+        .iter()
+        .filter(|(name, _)| names.contains(*name))
+        .map(|(name, deps)| {
+            (
+                name.clone(),
+                deps.iter()
+                    .filter(|dependency| names.contains(*dependency))
+                    .cloned()
+                    .collect(),
+            )
+        })
+        .collect();
+    find_dependency_cycle_path(&contained).map(canonicalize_cycle_path)
+}
+
+fn strongly_connected_components(
+    dependencies: &BTreeMap<String, BTreeSet<String>>,
+) -> Vec<Vec<String>> {
+    fn visit(
+        node: &str,
+        graph: &BTreeMap<String, BTreeSet<String>>,
+        seen: &mut BTreeSet<String>,
+        finish: &mut Vec<String>,
+    ) {
+        if !seen.insert(node.to_string()) {
+            return;
+        }
+        if let Some(neighbors) = graph.get(node) {
+            for neighbor in neighbors {
+                visit(neighbor, graph, seen, finish);
+            }
+        }
+        finish.push(node.to_string());
+    }
+
+    let mut seen = BTreeSet::new();
+    let mut finish = Vec::new();
+    for node in dependencies.keys() {
+        visit(node, dependencies, &mut seen, &mut finish);
+    }
+
+    let mut reverse = dependencies
+        .keys()
+        .map(|name| (name.clone(), BTreeSet::new()))
+        .collect::<BTreeMap<_, _>>();
+    for (name, deps) in dependencies {
+        for dep in deps {
+            if let Some(importers) = reverse.get_mut(dep) {
+                importers.insert(name.clone());
+            }
+        }
+    }
+
+    seen.clear();
+    let mut components = Vec::new();
+    for node in finish.into_iter().rev() {
+        if seen.contains(&node) {
+            continue;
+        }
+        let mut component = Vec::new();
+        let mut stack = vec![node];
+        while let Some(current) = stack.pop() {
+            if !seen.insert(current.clone()) {
+                continue;
+            }
+            component.push(current.clone());
+            if let Some(importers) = reverse.get(&current) {
+                stack.extend(importers.iter().rev().cloned());
+            }
+        }
+        component.sort();
+        components.push(component);
+    }
+    components.sort();
+    components
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CompileOrderSourceModule, compute_module_compile_order_with_sources};
+    use std::collections::HashMap;
+
+    #[test]
+    fn first_cyclic_scc_is_stable_across_module_construction_order() {
+        let sources = [
+            ("main", "from z import value\n"),
+            ("z", "from y import value\n"),
+            ("y", "from z import value\n"),
+            ("a", "from b import value\n"),
+            ("b", "from a import value\n"),
+        ];
+        let parsed = sources
+            .iter()
+            .map(|(name, source)| {
+                (
+                    *name,
+                    sifr_syntax::parse_module_suite(source, Some(name)).expect("fixture parses"),
+                )
+            })
+            .collect::<HashMap<_, _>>();
+        let diagnostics = |names: &[&str]| {
+            let inputs = names
+                .iter()
+                .map(|name| {
+                    let source = sources
+                        .iter()
+                        .find(|(candidate, _)| candidate == name)
+                        .expect("fixture source")
+                        .1;
+                    (
+                        (*name).to_string(),
+                        CompileOrderSourceModule {
+                            suite: &parsed[name],
+                            source,
+                            display_path: name,
+                        },
+                    )
+                })
+                .collect::<HashMap<_, _>>();
+            compute_module_compile_order_with_sources(&inputs)
+                .err()
+                .expect("both SCCs are cyclic")
+        };
+        let first = diagnostics(&["main", "z", "y", "a", "b"]);
+        let reversed = diagnostics(&["b", "a", "y", "z", "main"]);
+        assert_eq!(first, reversed);
+        assert_eq!(first[0].message, "circular import detected: a -> b -> a");
+        assert_eq!(
+            first[0]
+                .spans
+                .iter()
+                .filter(|span| !span.is_primary)
+                .count(),
+            2
+        );
+    }
 }

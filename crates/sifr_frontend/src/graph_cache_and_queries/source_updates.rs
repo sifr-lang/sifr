@@ -39,6 +39,7 @@ impl FrontendContext {
         self.modules[index].document_version = document_version;
         self.modules[index].signature = new_signature.clone();
         if text_changed {
+            self.dependency_order = None;
             self.modules[index].source_file_view = None;
             self.source_revision.0 += 1;
             self.source_map_cache = None;
