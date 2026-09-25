@@ -90,6 +90,7 @@ exact_intrinsics = [
   "string_encode",
   "string_encode_with_encoding",
 ]
+direct_runtime_roots = ["sifr_runtime::encoding"]
 
 [[surface]]
 id = "first-class-bytes::primitive-construction"
@@ -227,6 +228,7 @@ direct_runtime_roots = [
   "sifr_runtime::IntegerDivisionError",
   "sifr_runtime::IntegerFloatConversionError",
   "sifr_runtime::SifrInt",
+  "sifr_runtime::SifrRange",
   "sifr_runtime::interop",
   "sifr_runtime::to_usize_proven",
 ]
