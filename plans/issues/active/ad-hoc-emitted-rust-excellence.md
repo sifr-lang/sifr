@@ -2,6 +2,54 @@
 
 Status: active
 
+## Final integration qualifier awaiting failed-lane inspection (2026-09-25)
+
+**No full merge-profile pass or phase closure is claimed.** The qualifier's
+exact `8ad61962c006fe848530e9e348641c14a274fead` merge-profile attempt
+passed cache setup (93/93 generated graphs, 271/271 maintained idiomatic demo
+compiles), demo freshness, and sysroot resource certification, then stopped at
+`guardrail_stdlib_native_intrinsic_allowlist`: `sifr_runtime::SifrRange` and
+`sifr_runtime::encoding` were missing from `direct_runtime_roots`. Its log is
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-8ad61962/attempt7/merge-8ad61962c006fe848530e9e348641c14a274fead.log`
+(SHA-256 `e42554762d870e791597912991c4fb4d86449570498ea79a9965979f5182b1d3`);
+the lane JSON beside it has SHA-256
+`293eec067eaba4f7484198c107676f9d61e4892993f632d08031fe797007dbb2`.
+The approved guarded CPU window restored `schedutil` on exit.
+
+Both direct references came from the Item 12 codegen implementation. The
+two-line retained-glue inventory repair in [PR #4027](https://github.com/sifr-lang/sifr/pull/4027)
+classifies each under its existing encoding or shared-language surface. Its
+exact candidate `54f9be4ab137ddc21d819e75e95940ff90254db7` passed the
+native intrinsic allowlist guard (16 roots), its mutation self-test, the
+retained manifest schema check (15 surfaces, schema version 2), and diff
+hygiene. Read-only Opus 5.5 review was **SATISFIED** without blocking findings
+(`review-response-54f9be4ab.md` under the same external attempt directory,
+SHA-256 `6e316a905154800b125dde95efb17d8a446c390d9934f1ae56e8c236c6c2e0b8`).
+PR #4027 merged as `faf0b9c86d55ef1423a17b1f5691bab6ed2598d2`; the merge
+tree matches the reviewed candidate.
+
+The required full merge profile was rerun on exact merged `faf0b9c86d55ef1423a17b1f5691bab6ed2598d2`
+with the pinned `linux-i7-4720hq-12gb-dev-v1` reference, Rust 1.98.1,
+verification Python 3.14.7, reference-compatible ext4 target and temporary
+paths, and an approved idle-host `performance` governor window. Cache setup
+passed in 4,143,626 ms with all 93 generated graphs and 271 demos prepared;
+the over-budget 300,000 ms timing was advisory. The wrapper reported gate
+exit 1 at 2026-09-25 13:19:38 UTC and restored `schedutil`. Its exact log is
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-faf0b9c8/attempt8/merge-faf0b9c86d55ef1423a17b1f5691bab6ed2598d2.log`
+(SHA-256 `18568bf34de52bfc46007faa18f7fa6ccbdeaedda8da0456c825db76321f1df3`).
+Immediately after the wrapper exited, the yaser host became unreachable over
+Tailscale; three SSH attempts and a Tailscale ping timed out. Thus the first
+failed selected step, the lane JSON, and an independent governor/disk check
+remain unavailable. The last observed root reserve during the gate was about
+60 GiB free. The attempt is a **failure with cause pending inspection**, not
+passing qualification. No further gate, code repair, or whole-phase closure
+ran after the host outage.
+
+Next: restore access to the V01 host, read the exact attempt-8 log and lane
+report, independently verify `schedutil` and free space, then classify the
+first failure. Repair and rerun focused checks/full gate only if that failure
+is in this phase's scope; record an external owner blocker otherwise.
+
 ## Final integration qualifier blocked by root storage (2026-09-24)
 
 **BLOCKED; no full merge-profile pass or phase closure.** The current remote
