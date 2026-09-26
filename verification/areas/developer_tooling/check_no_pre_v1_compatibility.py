@@ -91,7 +91,8 @@ def words_pattern(words: tuple[str, ...]) -> re.Pattern[str]:
 
 
 # These are external SQL contracts, not public Sifr scalar registrations.
-# Recognize the complete database mapping, then exempt only its literal span.
+# Recognize the complete database mapping or sequence dialect expression,
+# then exempt only its literal span.
 # A path alone, a nearby SQL name, or another match on the same line grants
 # no exemption. Unrecognized/changed expressions fail closed for owner review.
 SQL_INTEGER_SPELLINGS = {
@@ -109,6 +110,14 @@ SQL_INTEGER_SPELLINGS = {
         r'\bDatabaseType::Integer\s*\{\s*'
         r'width:\s*sifr_sql_contract::IntegerWidth::Bits64\s*,\s*'
         r'\.\.\s*\}\s*=>\s*(?P<spelling>"bigint")\s*,'
+    ),
+    "crates/sifr_sql_postgresql/src/raw_sequences.rs": re.compile(
+        r'Some\(\s*"int8"\s*\|\s*(?P<spelling>"bigint")\s*\)'
+        r'\s*=>\s*Ok\(\s*SequenceDataType::BigInt\s*\)\s*,'
+    ),
+    "crates/sifr_sql_postgresql/src/catalog_sequences.rs": re.compile(
+        r'SequenceDataType::BigInt\s*=>\s*\(\s*'
+        r'(?P<spelling>"bigint")\s*,\s*i64::MIN\s*,\s*i64::MAX\s*\)\s*,'
     ),
 }
 

@@ -89,8 +89,8 @@
       "id": "retained-sql-integer-spellings",
       "kind": "external-format",
       "owner": "contract:sql-dialect-integer-types",
-      "contract": "PostgreSQL bigint/int8/pg_catalog.int8 spellings denote signed 64-bit DatabaseType integers; MySQL bigint retains signed or unsigned 64-bit DatabaseType integers; PostgreSQL regression output names 64-bit database integers bigint. These external SQL mappings do not restore a public Sifr scalar.",
-      "evidence": ["crates/sifr_sql_postgresql/src/types.rs", "crates/sifr_sql_mysql/src/types.rs", "crates/sifr_sql_postgresql/tests/postgresql_regressions.rs", "verification/areas/developer_tooling/test_no_pre_v1_compatibility.py"]
+      "contract": "PostgreSQL bigint/int8/pg_catalog.int8 spellings denote signed 64-bit DatabaseType integers; MySQL bigint retains signed or unsigned 64-bit DatabaseType integers; PostgreSQL regression output names 64-bit database integers bigint, and PostgreSQL sequence parsing and catalog semantics retain bigint as a signed 64-bit sequence type. These external SQL mappings do not restore a public Sifr scalar.",
+      "evidence": ["crates/sifr_sql_postgresql/src/types.rs", "crates/sifr_sql_mysql/src/types.rs", "crates/sifr_sql_postgresql/tests/postgresql_regressions.rs", "crates/sifr_sql_postgresql/src/raw_sequences.rs", "crates/sifr_sql_postgresql/src/catalog_sequences.rs", "verification/areas/developer_tooling/test_no_pre_v1_compatibility.py"]
     },
     {
       "id": "retained-lint-deprecated-status",
