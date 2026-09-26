@@ -6,6 +6,7 @@ from collections.abc import Callable
 import json
 from pathlib import Path
 
+from .areas import area_by_name
 from .paths import REPO_ROOT
 from .profile_results import AreaResultError, validate_area_result
 
@@ -42,10 +43,13 @@ def run_segmented_python_interop(
     command_runner: Callable[[list[str]], None],
 ) -> Path:
     """Bound each suite process and certify the complete selection afterward."""
-    manifest_path = REPO_ROOT / "verification" / "areas" / "python_interop" / "manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    canonical_suites = [suite["name"] for suite in manifest["suites"]
-                        if suite["name"] in suites]
+    try:
+        manifest_path = area_by_name("python_interop").manifest_path
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        canonical_suites = [suite["name"] for suite in manifest["suites"]
+                            if suite["name"] in suites]
+    except (OSError, ValueError, TypeError, KeyError) as error:
+        raise AreaResultError("invalid python_interop area manifest") from error
     if len(canonical_suites) != len(suites) or set(canonical_suites) != set(suites):
         raise AreaResultError("python_interop selection differs from its manifest")
     result_root = REPO_ROOT / "target" / "verification" / "areas"

@@ -7,6 +7,7 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from verification.areas.python_interop import runner as interop
@@ -74,9 +75,6 @@ class PythonInteropSegmentationTests(unittest.TestCase):
     def test_profile_gives_each_suite_its_own_process_then_combines(self) -> None:
         with TemporaryDirectory(prefix="sifr-python-interop-profile-") as directory:
             root = Path(directory)
-            manifest_path = root / "verification/areas/python_interop/manifest.json"
-            manifest_path.parent.mkdir(parents=True)
-            manifest_path.write_text(json.dumps({"suites": self.suites}))
             calls = []
 
             def command_runner(command: list[str]) -> None:
@@ -119,6 +117,21 @@ class PythonInteropSegmentationTests(unittest.TestCase):
                 [command[command.index("--suite") + 1] for command in calls[:-1]],
                 [suite["name"] for suite in self.suites],
             )
+
+    def test_invalid_manifest_is_a_step_failure_before_child_spawn(self) -> None:
+        with TemporaryDirectory(prefix="sifr-python-interop-invalid-") as directory:
+            manifest_path = Path(directory) / "manifest.json"
+            manifest_path.write_text("{")
+            calls = []
+            with patch.object(profile_area_steps, "area_by_name",
+                              return_value=SimpleNamespace(manifest_path=manifest_path)):
+                with self.assertRaisesRegex(profile_area_steps.AreaResultError,
+                                            "invalid python_interop area manifest"):
+                    profile_area_steps.run_segmented_python_interop(
+                        suites=["self-test"], profile_name="merge",
+                        command_runner=lambda command: calls.append(command),
+                    )
+            self.assertEqual(calls, [])
 
 
 def policy_checks() -> None:
