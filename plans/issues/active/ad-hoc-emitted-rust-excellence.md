@@ -2,6 +2,65 @@
 
 Status: active
 
+## Final integration qualifier blocked by Python interop process deadline (2026-09-26)
+
+**BLOCKED; no full merge-profile pass or phase closure.** After the V04/F27
+self-test repair, the canonical `scripts/run_all_tests.sh --profile merge`
+ran on exact merged candidate `dec8ec7a2f5346bb839fa7489280bf64021e2804`
+with the pinned `linux-i7-4720hq-12gb-dev-v1` reference, Rust/Cargo 1.98.1,
+locked verification Python 3.14.7, root-ext4 Cargo target and temporary
+paths, and the approved idle-host `performance` governor window. Reference
+admission, early guardrails, cache setup (93 generated graphs and 271 demos),
+demo freshness, the retained native intrinsic allowlist, the repaired
+verification runner foundation guard, and selected Rust interop, coverage,
+core-language and CPython-differential areas passed. The first functional
+failure was `area_python_interop`: its single outer verification command
+hit the inherited 2,400-second process safety deadline after 2,400,558 ms
+(exit 124, `safety_deadline`). The gate stopped fail-fast; later areas,
+crate selections and E2E did not run.
+
+The Python-interop manifest executes selected suites in manifest order.
+Twenty-four cases through `ml/ml-examples` passed and consumed 2,164,187 ms
+of reported case time (36.07 minutes). The next case was
+`libraries/library-examples`; no result for it was published before the
+outer deadline. A focused run of that exact one-case suite on the same
+candidate and warm owned target passed **1/1** in 296,945 ms, with zero
+assertion failures. Its filtered certification was explicitly
+non-promotable (`not-selected`). This identifies the first unfinished case
+and shows the observed full-area duration exceeded the 40-minute outer
+process envelope; it is not evidence of a library assertion failure or a
+missing compiler preparation. The remaining selected async and runtime
+suites remain unqualified. The [verification runner/profile and process
+owners](ad-hoc-architecture-correctness-current-main.md#v02v04-python-interop-merge-gate-safety-envelope-blocker-2026-09-26)
+must reconcile this selection with an evidence-based bounded safety
+contract; this qualifier did not change their code or simply extend the
+deadline.
+
+The attempt-9 gate log is
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-dec8ec7a/attempt9/merge-dec8ec7a2f5346bb839fa7489280bf64021e2804.log`
+(SHA-256 `014cdcd67a753b888d579328ddfdcb6a082a4fc6ab32a78cd9f2564fef4349e5`);
+the copied `merge.lane.json` beside it has SHA-256
+`9b3f636d9c7dedb2b9d2ae5a284a978d7d001a972daa050ca6c37a1580511097`.
+The focused `focused-library/library.log` has SHA-256
+`4dbfd11109591e303ccf64b135efae9bb672376accf1063dcddf2df1fff02210`;
+its `target/verification/areas/python_interop/library-focused-dec8ec7a.json`
+has SHA-256 `321e71d23843b2858f76e0bfc747011281af9df59a99d9030f903cf418119516`.
+The attempt-9 wrapper recorded gate result 124, then its remote
+transport was interrupted during the post-gate hash/exit receipt: the
+wrapper `log.sha256` is empty and `gate-status.txt` absent. Preserve those
+incomplete files rather than claim a completed wrapper receipt. An
+independent 2026-09-26 14:02 UTC host check found `schedutil` restored,
+no active Sifr Cargo/gate process, 51,898,339,328 bytes free on root and
+418,727,038,976 bytes free on `/data`; its receipt and independent hashes
+are beside the gate log. After the focused case, `schedutil` remained
+active and root had 48,916,123,648 bytes free.
+
+Next: the verification owners need a bounded, reviewed repair and
+focused acceptance for the merge-selected Python-interop area. Then the
+Emitted-Rust qualifier should rerun the full merge profile on the final
+candidate using its warm owned target and guarded governor restoration.
+No unchanged full-gate rerun or whole-phase closure is claimed.
+
 ## Final integration qualifier blocked by V04/F27 runner self-test (2026-09-26)
 
 **BLOCKED; no full merge-profile pass or phase closure.** Host access returned,
