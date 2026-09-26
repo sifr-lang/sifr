@@ -14,6 +14,12 @@ BIGINT = guard.joined("big", "int")
 PG_PATH = "crates/sifr_sql_postgresql/src/types.rs"
 MYSQL_PATH = "crates/sifr_sql_mysql/src/types.rs"
 PG_TEST_PATH = "crates/sifr_sql_postgresql/tests/postgresql_regressions.rs"
+PG_RAW_SEQUENCES_PATH = "crates/sifr_sql_postgresql/src/raw_sequences.rs"
+PG_CATALOG_SEQUENCES_PATH = "crates/sifr_sql_postgresql/src/catalog_sequences.rs"
+SEQUENCE_EXPRESSIONS = {
+    PG_RAW_SEQUENCES_PATH: 'Some("int8" | "BIGINT") => Ok(SequenceDataType::BigInt),'.replace("BIGINT", BIGINT),
+    PG_CATALOG_SEQUENCES_PATH: 'SequenceDataType::BigInt => ("BIGINT", i64::MIN, i64::MAX),'.replace("BIGINT", BIGINT),
+}
 SQL_EXPRESSIONS = {
     PG_PATH: '''(
         &["int8", "BIGINT", "pg_catalog.int8"],
@@ -31,6 +37,7 @@ SQL_EXPRESSIONS = {
         ..
     } => "BIGINT",'''.replace("BIGINT", BIGINT),
 }
+ALL_SQL_EXPRESSIONS = {**SQL_EXPRESSIONS, **SEQUENCE_EXPRESSIONS}
 REMOVED_SURFACES = (
     f'let public_name = "{BIGINT}";',
     f"let public_name = '{BIGINT}';",
@@ -62,7 +69,7 @@ class SqlIntegerSpellingTests(unittest.TestCase):
                 self.assertEqual(self.scan_source(relative, source), [])
 
     def test_real_repository_sites_match_exactly_one_literal_each(self) -> None:
-        for relative in SQL_EXPRESSIONS:
+        for relative in ALL_SQL_EXPRESSIONS:
             with self.subTest(path=relative):
                 source = (guard.REPO_ROOT / relative).read_text(encoding="utf-8")
                 spans = guard.sql_integer_spelling_spans(source, relative)
@@ -70,8 +77,30 @@ class SqlIntegerSpellingTests(unittest.TestCase):
                 self.assertEqual({source[start:end] for start, end in spans}, {f'"{BIGINT}"'})
                 self.assertEqual(self.scan_source(relative, source), [])
 
+    def test_sequence_dialect_expressions_are_accepted(self) -> None:
+        for relative, source in SEQUENCE_EXPRESSIONS.items():
+            with self.subTest(path=relative):
+                self.assertEqual(self.scan_source(relative, source), [])
+
+    def test_sequence_dialect_shape_is_required(self) -> None:
+        mutations = {
+            PG_RAW_SEQUENCES_PATH: (
+                ("int8", "int4"),
+                ("SequenceDataType::BigInt", "SequenceDataType::Integer"),
+            ),
+            PG_CATALOG_SEQUENCES_PATH: (
+                ("SequenceDataType::BigInt", "SequenceDataType::Integer"),
+                ("i64::MIN", "i32::MIN"),
+                ("i64::MAX", "i32::MAX"),
+            ),
+        }
+        for relative, source in SEQUENCE_EXPRESSIONS.items():
+            for old, new in mutations[relative]:
+                with self.subTest(path=relative, mutation=(old, new)):
+                    self.assert_public_failure(relative, source.replace(old, new))
+
     def test_whitespace_line_endings_and_unicode_offsets(self) -> None:
-        for relative, original in SQL_EXPRESSIONS.items():
+        for relative, original in ALL_SQL_EXPRESSIONS.items():
             for separator in (" ", "\n", "\r\n", "\t"):
                 source = "// π database spelling\n\n" + separator.join(original.split())
                 with self.subTest(path=relative, separator=repr(separator)):
@@ -104,7 +133,7 @@ class SqlIntegerSpellingTests(unittest.TestCase):
                 self.assert_public_failure(MYSQL_PATH, source.replace("sign,", f"sign: {sign},"))
 
     def test_sql_paths_are_not_blanket_exemptions(self) -> None:
-        for relative in SQL_EXPRESSIONS:
+        for relative in ALL_SQL_EXPRESSIONS:
             for surface in REMOVED_SURFACES:
                 with self.subTest(path=relative, surface=surface):
                     self.assert_public_failure(relative, surface)
@@ -119,17 +148,17 @@ class SqlIntegerSpellingTests(unittest.TestCase):
                     self.assert_public_failure(relative, surface)
 
     def test_sql_shapes_in_other_paths_are_not_exempt(self) -> None:
-        for owner, source in SQL_EXPRESSIONS.items():
+        for owner, source in ALL_SQL_EXPRESSIONS.items():
             for relative in (
                 "crates/compiler/src/types.rs", owner + ".rs",
                 "stdlib/sifr/sql.sifr", "verification/sql.py",
-                *[path for path in SQL_EXPRESSIONS if path != owner],
+                *[path for path in ALL_SQL_EXPRESSIONS if path != owner],
             ):
                 with self.subTest(owner=owner, path=relative):
                     self.assert_public_failure(relative, source)
 
     def test_multiple_matches_on_same_line_remain_rejected(self) -> None:
-        for relative, expression in SQL_EXPRESSIONS.items():
+        for relative, expression in ALL_SQL_EXPRESSIONS.items():
             compact = " ".join(expression.split())
             for surface in REMOVED_SURFACES:
                 for source in (surface + " " + compact, compact + " " + surface):
@@ -138,7 +167,7 @@ class SqlIntegerSpellingTests(unittest.TestCase):
                         self.assertEqual([(f.rule_id, f.line) for f in failures], [("public-bigint", 1)])
 
     def test_nearby_lines_remain_rejected_with_exact_locations(self) -> None:
-        for relative, expression in SQL_EXPRESSIONS.items():
+        for relative, expression in ALL_SQL_EXPRESSIONS.items():
             source = REMOVED_SURFACES[0] + "\n" + expression + "\n" + REMOVED_SURFACES[1]
             with self.subTest(path=relative):
                 failures = self.scan_source(relative, source)
@@ -154,9 +183,14 @@ class SqlIntegerSpellingTests(unittest.TestCase):
                     relative, expression.replace("Bits64", f'Bits64 /* "{BIGINT}" */')
                 )
 
+    def test_extra_literal_beside_sequence_expression_is_not_exempt(self) -> None:
+        for relative, expression in SEQUENCE_EXPRESSIONS.items():
+            with self.subTest(path=relative):
+                self.assert_public_failure(relative, expression + f' /* "{BIGINT}" */')
+
     def test_other_rules_apply_beside_sql_mapping(self) -> None:
         hidden = guard.joined("__compat_", "sifr_scalar")
-        for relative, expression in SQL_EXPRESSIONS.items():
+        for relative, expression in ALL_SQL_EXPRESSIONS.items():
             with self.subTest(path=relative):
                 source = " ".join(expression.split()) + " " + hidden
                 failures = self.scan_source(relative, source)
