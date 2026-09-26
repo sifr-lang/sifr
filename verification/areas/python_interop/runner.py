@@ -188,6 +188,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Allow a filtered suite run to emit non-promotable partial certification.",
     )
+    parser.add_argument("--defer-certification", action="store_true")
+    parser.add_argument("--combine-suite-result", action="append", default=[])
     parser.add_argument(
         "--result-json",
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
@@ -207,17 +209,21 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  manifest={MANIFEST_PATH.relative_to(REPO_ROOT)}", flush=True)
     print("  bless=no", flush=True)
 
-    suite_results = [run_suite(suite) for suite in selected]
-    capability_matrix = load_and_validate_capabilities(AREA_ROOT, REPO_ROOT)
-    compiled_certification = build_compiled_certification(
-        capability_matrix,
-        REPO_ROOT,
-        suite_results,
-    )
+    if args.combine_suite_result:
+        suite_results = combine_suite_results(selected, args.combine_suite_result)
+    else:
+        suite_results = [run_suite(suite) for suite in selected]
+    compiled_certification = None
+    if not args.defer_certification:
+        capability_matrix = load_and_validate_capabilities(AREA_ROOT, REPO_ROOT)
+        compiled_certification = build_compiled_certification(
+            capability_matrix, REPO_ROOT, suite_results,
+        )
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     partial_certification_rejected = (
-        compiled_certification["status"] == "partial"
+        compiled_certification is not None
+        and compiled_certification["status"] == "partial"
         and not args.allow_partial_certification
     )
     if partial_certification_rejected:
@@ -228,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
         "bless": False,
         "manifest": str(MANIFEST_PATH.relative_to(REPO_ROOT)),
         "suites": suite_results,
-        "compiled_certification": compiled_certification,
+        **({"compiled_certification": compiled_certification} if compiled_certification is not None else {}),
         "summary": {
             "total_variants": total_variants,
             "total_failures": total_failures,
@@ -265,6 +271,63 @@ def main(argv: list[str] | None = None) -> int:
         flush=True,
     )
     return 0
+
+
+def combine_suite_results(selected: list[dict[str, Any]], paths: list[str]) -> list[dict[str, Any]]:
+    """Require one complete passing child result for every selected suite."""
+    if len(paths) != len(selected):
+        raise SystemExit("python_interop combined result count differs from selection")
+    results = []
+    for suite, raw_path in zip(selected, paths, strict=True):
+        path = Path(raw_path)
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise SystemExit(f"missing or invalid python_interop suite result: {path}") from error
+        entries = payload.get("suites") if isinstance(payload, dict) else None
+        expected_cases = [case["id"] for case in suite["cases"]]
+        if (
+            not isinstance(payload, dict)
+            or payload.get("schema_version") != 1
+            or payload.get("area") != "python_interop"
+            or payload.get("bless") is not False
+            or payload.get("manifest") != str(MANIFEST_PATH.relative_to(REPO_ROOT))
+            or "compiled_certification" in payload
+            or not isinstance(entries, list)
+            or len(entries) != 1
+            or not isinstance(entries[0], dict)
+            or entries[0].get("name") != suite["name"]
+        ):
+            raise SystemExit(f"python_interop suite result identity drift: {path}")
+        result = entries[0]
+        cases = result.get("cases")
+        if (
+            not isinstance(cases, list)
+            or any(not isinstance(case, dict) for case in cases)
+            or [case.get("id") for case in cases] != expected_cases
+            or any(case.get("entry") != expected["entry"] or
+                   case.get("command") != expected["command"]
+                   for case, expected in zip(cases, suite["cases"], strict=True))
+            or any(
+                not isinstance(case.get("variants"), list)
+                or len(case["variants"]) != 1
+                or not isinstance(case["variants"][0], dict)
+                or case["variants"][0].get("status") != "pass"
+                or case["variants"][0].get("actual_exit_code") != expected["expect_exit_code"]
+                or case["variants"][0].get("expected_exit_code") != expected["expect_exit_code"]
+                for case, expected in zip(cases, suite["cases"], strict=True)
+            )
+            or result.get("total_variants") != len(expected_cases)
+            or result.get("total_failures") != 0
+            or result.get("failed_cases") != 0
+            or not isinstance(payload.get("summary"), dict)
+            or payload["summary"].get("total_variants") != len(expected_cases)
+            or payload["summary"].get("blocking_failures") != 0
+            or payload["summary"].get("total_failures") != 0
+        ):
+            raise SystemExit(f"python_interop suite result incomplete or failed: {path}")
+        results.append(result)
+    return results
 
 
 def select_suites(

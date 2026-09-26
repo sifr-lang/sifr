@@ -15,7 +15,7 @@ from .cargo_setup import (
 )
 from .errors import VerificationError
 from .paths import REPO_ROOT
-from .profile_area_steps import AreaResultError, run_selected_area
+from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
 from .process_execution import SAFETY_DEADLINE_ENV, deadline_environment
 from .profile_commands import CommandFailed, cargo_command, run_command, uv_area_command
 from .profile_reporting import run_profile_with_report
@@ -326,6 +326,12 @@ class ProfileRunner:
         self.run_python(path, "--self-test")
 
     def run_area(self, area: str, suites: list[str]) -> None:
+        if area == "python_interop":
+            run_segmented_python_interop(
+                suites=suites, profile_name=self.profile_name,
+                command_runner=lambda command: run_command(command, env=self.env),
+            )
+            return
         result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
         run_selected_area(
             area=area,

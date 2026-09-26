@@ -22,6 +22,7 @@ from .dx10_profile_checks import policy_checks as dx10_profile_checks
 from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
 from .dx3_process_checks import policy_checks as dx3_process_checks
 from .profile_area_steps import run_selected_area
+from .python_interop_segmentation_checks import policy_checks as python_interop_segmentation_checks
 from .profile_results import AreaResultError, validate_area_result
 from .profile_runner import timed_step
 from .reference_admission_checks import policy_checks as reference_admission_policy_checks
@@ -60,6 +61,7 @@ def run_all() -> list[str]:
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),
+        ("Python interop segmented profile checks", python_interop_segmentation_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
