@@ -23,9 +23,10 @@ step. The nested runner copies the outer gate's inherited absolute deadline
 into `ProfileRunner.env`, then correctly restores that value after the
 step. These tests assume a clean parent environment and fail when selected
 inside a real deadline-bounded gate. The [V04/F27 owner row](#preparationf33-crosswalk-and-bounded-delivery)
-and [delivery receipt](#v04f27-delivery-receipt-2026-09-23) own the
-test-isolation repair and nested acceptance; the standalone 48-case pass
-in the receipt does not qualify this integrated selection.
+and [delivery receipt](#v04f27-delivery-receipt-2026-09-23) own this
+failure. The standalone 48-case pass in that receipt did not qualify the
+integrated selection; the [repair receipt](#v04f27-merged-self-test-integration-repair-2026-09-26)
+records its later nested acceptance.
 
 The raw gate log is
 `/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-faf0b9c8/attempt8/merge-faf0b9c86d55ef1423a17b1f5691bab6ed2598d2.log`
@@ -35,8 +36,55 @@ its preserved `merge.lane.json` has SHA-256
 Reference admission, cache setup, demo freshness, and the repaired native
 intrinsic allowlist passed before this failure. The outer gate restored
 `schedutil` on exit. The Emitted-Rust qualifier did not change V04 code,
-and its full merge gate remains unqualified until the owner repairs these
-tests and the qualifier reruns on the final candidate.
+and its full merge gate remains unqualified. The V04/F27 tests were repaired
+in [PR #4030](https://github.com/sifr-lang/sifr/pull/4030); the qualifier
+must rerun the full gate on its final candidate.
+
+## V04/F27 merged self-test integration repair (2026-09-26)
+
+[PR #4030](https://github.com/sifr-lang/sifr/pull/4030) merged as
+`8fe8a5f45cb22b6bfc3de7c3a8bc635561acea9e` from exact tested and
+reviewed candidate `5ba207e03ff3fee143abc4e667adb116406d0dd9` (base
+`87711adf5c14756fb8a237bb74f9f67e2b4bf8c6`). The two F27 tests
+now compare the post-step deadline with the value inherited before the
+nested `ProfileRunner` was constructed. A clean parent still expects no
+value; a deadline-bounded parent expects its original absolute value to
+be restored. Production deadline handling is unchanged.
+
+On Linux x86_64 with Python 3.14.7, the exact two affected cases passed
+2/2 without an inherited deadline (raw log SHA-256
+`046beeeecd88cd8edf01651d10c0552ab64c665bef56d327058c7e7606920575`).
+The named F27 selection of `ProcessTests`, `MetadataSetupTests`,
+`NativeExecutionTests`, and `SysrootSetupPolicyTests` passed 48/48 with
+`SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC=999999999999` (raw log SHA-256
+`0aef50b55d4e853975d58548a042c61741036c7d1ec9d096dd3305524bb987a8`).
+The guardrail's own `uv lock --project verification --check` passed (raw
+SHA-256 `96377c696066a113e088108953d2074604421d823a8009f91723d71bb3c637c8`),
+and `uv run --project verification --locked python -m sifr_verify --self-test`
+passed under the same inherited deadline (raw SHA-256
+`0e41eda47e461d121353c1d52c9ce431dab7703f4464eedf25bf850fcc60d66c`).
+The first full self-test attempt failed in unrelated DX.4 fixture setup
+because this new worktree had no `target/` directory (raw SHA-256
+`1c644de3cd66dc147d474dfb6c70ee6c3b4b43885e0c1297fe727d4ba77be34a`);
+creating that worktree-owned directory enabled the passing rerun. Python
+compilation, the 900-line file-size guardrail (4,244 files), and diff
+check passed. Raw logs and final read-only review are outside the Git
+tree under `/home/yaser5/projects/sifr/architecture-v04-f27-gate-selftest-evidence-20260926/`.
+
+The scoped Opus review on the exact candidate returned **SATISFIED** with
+no blocking findings (response SHA-256
+`19d3c4e86eb94ee7c595edfed60bbc4599010040f044447b1e6d75b42e1676f8`).
+It noted nonblocking suggestions about strict absence checking and a
+near-expiry inherited deadline, plus the unrelated initial fixture setup
+failure. This intermediate repair does not qualify the Emitted-Rust full
+merge gate; that owner must rerun on its final candidate. This
+record-only update passed documentation structure and diff checks (raw
+documentation log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`).
+The first documentation attempt failed because the pinned editor
+integration submodules were not initialized; that setup failure is retained
+(raw SHA-256
+`2763f3d9cd4c14634ef98b55fdb11299909953df09d1c1002e3d5b87a53f391a`).
 
 ## Emitted-Rust final integration external blockers (2026-09-24)
 
