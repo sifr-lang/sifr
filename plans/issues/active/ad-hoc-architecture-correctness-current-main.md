@@ -44,6 +44,56 @@ The CPU governor was independently observed at `schedutil` after the
 failed gate. The Emitted-Rust qualifier changed no verification code;
 its full merge gate remains blocked pending the owning repair and rerun.
 
+## V02/V04 Python interop safety-envelope repair delivery (2026-09-26)
+
+The bounded area-process repair merged in [PR #4033](https://github.com/sifr-lang/sifr/pull/4033) as
+`3f1e50f3b21fe4a6be190233dc5bbabd958c9b67` from exact tested and
+reviewed candidate `5c396a23842562a4e10ce1a72cc67ff5a5f4b0ee`
+(base `4be06aa137865c98004938dad8219d7b71f6fdb2`, tree
+`fa459439e87e3916b13949b2c6be635567392995`). The merged tree matches
+the candidate. The canonical profile now runs each selected Python-interop
+suite in its own `run_command` process under the existing 2,400-second
+per-process safety deadline, in manifest order. The runner removes stale
+part results, requires each selected suite's exact cases and passing variants,
+then checks one combined result and the existing full-selection compiled
+certification. An explicitly configured step-wide absolute deadline still
+narrows all children; the cache-aware step budget remains one aggregate
+performance contract. Area manifest schema/name validation also remains
+active for the live-only profile, and malformed manifest input fails as a
+runner-owned step error.
+
+On Linux x86_64 with Python 3.14.7, the full verification-runner foundation
+self-test passed, including the three focused segmentation cases (raw log
+SHA-256 `52feb22822ab4f7a5000708c5607c391a6ef8868ecb6c88e306da609b8fc2f84`).
+The real `dependency-versions` suite passed through a bounded child and the
+combined-result path, **1/1** (raw log SHA-256
+`40d8688ad35c8e9399ddf789f75f7f75a39b0e4bccb784f06b78be5df47e971b`).
+Python compilation, diff check, and the 900-line file-size guardrail passed
+(guard raw SHA-256 `2e10821206a8db09bbb2a00e21e9618f4f9f216f73b5c56afcd7ce13f9e819d2`).
+The first scoped Opus review on `c848ad804917c9eff58d91720d2cd0dbc1d064eb`
+returned **SATISFIED** but identified live-profile manifest validation and
+malformed-input classification regressions in follow-ups; both were repaired.
+The final scoped [Opus review](https://github.com/sifr-lang/sifr/pull/4033#issuecomment-5847084150)
+returned **SATISFIED**, no blocking findings (raw response SHA-256
+`de4ed8464dab69349db751ff085385c95a50bb8280bb684989ae8b5fc0c430d5`).
+Raw logs and both read-only responses are under
+`/data/sifr-architecture-v02-v04-python-interop-envelope-evidence-20260926/`,
+keyed by candidate SHA. The record-only documentation structure check passed
+(raw SHA-256 `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`)
+after initializing the pinned nested editor submodule; the initial
+missing-submodule failures remain preserved.
+
+The automatic [create-PR job](https://github.com/sifr-lang/sifr/actions/runs/36248605010/job/108422307234)
+stopped at the already recorded V01 `performance_reference_admission`
+prerequisite because its runner did not select `SIFR_PERFORMANCE_REFERENCE`;
+it reached no Python-interop assertion. The 30-suite merge-profile selection
+and later areas, crate suites, and E2E remain unqualified. The final
+integration qualifier must run the full merge profile on its final merged
+candidate; this intermediate item supplies the process-contract repair and
+focused evidence only. Nonblocking review suggestions for unrelated-manifest
+error attribution, a future test-import dependency, and create-PR budget
+headroom remain with the verification runner owner.
+
 ## V04/F27 merged self-test integration blocker (2026-09-26)
 
 The Emitted-Rust qualifier's exact merged `faf0b9c86d55ef1423a17b1f5691bab6ed2598d2`
