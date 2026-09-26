@@ -10,6 +10,34 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## V04/F27 merged self-test integration blocker (2026-09-26)
+
+The Emitted-Rust qualifier's exact merged `faf0b9c86d55ef1423a17b1f5691bab6ed2598d2`
+candidate ran the canonical merge profile after the approved V01 reference
+and idle-host CPU policy were admitted. Its first functional failure was
+`guardrail_verification_runner_foundation`: the F27
+`ProcessTests.test_f27_per_process_default_does_not_limit_whole_step` and
+`test_f27_step_deadline_covers_successive_commands` assert that
+`SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC` is absent after a simulated
+step. The nested runner copies the outer gate's inherited absolute deadline
+into `ProfileRunner.env`, then correctly restores that value after the
+step. These tests assume a clean parent environment and fail when selected
+inside a real deadline-bounded gate. The [V04/F27 owner row](#preparationf33-crosswalk-and-bounded-delivery)
+and [delivery receipt](#v04f27-delivery-receipt-2026-09-23) own the
+test-isolation repair and nested acceptance; the standalone 48-case pass
+in the receipt does not qualify this integrated selection.
+
+The raw gate log is
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-faf0b9c8/attempt8/merge-faf0b9c86d55ef1423a17b1f5691bab6ed2598d2.log`
+(SHA-256 `18568bf34de52bfc46007faa18f7fa6ccbdeaedda8da0456c825db76321f1df3`);
+its preserved `merge.lane.json` has SHA-256
+`83cf2d19d4d910f2598396ac4b653abe691a3c53c30155eb52bf9b0007fd45c0`.
+Reference admission, cache setup, demo freshness, and the repaired native
+intrinsic allowlist passed before this failure. The outer gate restored
+`schedutil` on exit. The Emitted-Rust qualifier did not change V04 code,
+and its full merge gate remains unqualified until the owner repairs these
+tests and the qualifier reruns on the final candidate.
+
 ## Emitted-Rust final integration external blockers (2026-09-24)
 
 The final Emitted-Rust candidate `eafa57e22df22d6d8172adf8c65aa5c42aea8acb`
