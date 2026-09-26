@@ -25,6 +25,41 @@ The failed gate log and developer-tooling JSON are under
 and `875055dbd01b6be8c2659495e133698f28aa2781dba0536eca33ddb598ef2733`).
 This is a blocker for that qualifier, not a SQL phase validation pass.
 
+### Public-`bigint` guard repair delivery (2026-09-27)
+
+Status: the two SQL-owned guard findings above are closed by
+[PR #4039](https://github.com/sifr-lang/sifr/pull/4039), merged as
+`11a214f2d062ef8ef32d0bd18d104552d7463049`. The exact reviewed
+implementation candidate was `dbf8582cad6b3d35fd9249c0f5256f908d844da6`
+on base `00f0a3241b44b2efc63faa6fe5ec38a08cb89682`; the base did not
+change before merge. The compatibility guard now exempts only the literal
+spans in the complete PostgreSQL raw-sequence and catalog-sequence dialect
+expressions. Its existing public Sifr scalar rejection remains active.
+The retained SQL integer-spelling contract names both sequence sites.
+
+On that exact candidate, the selected `no-pre-v1-compatibility` guard and
+its `--self-test` passed; all 17 focused guard unit tests passed, including
+new sequence-shape mutations, cross-path rejection, and same-line and
+nearby-line removed-scalar regressions. The 900-line file-size guard passed
+for 4245 files; `git diff --check` and contract JSON parsing passed.
+Logs are under `/data/sifr-sql-public-bigint-guard-evidence-20260927/`
+(`guard.log` SHA-256 `f438f0a84fa6f2503f1334c9463b80a7fed7a579484c44acca53667480601855`,
+`self-test.log` `c8958d04a19b8570b63034f133ba175e71708d02a944a53a95995dd911d418b1`,
+`unit.log` `1ad62c1c44596d39df2c44cc21d031995127d2b4d7d61a5f5eef515ba76c33a3`,
+`file-size.log` `2e10821206a8db09bbb2a00e21e9618f4f9f216f73b5c56afcd7ce13f9e819d2`).
+
+The [exact-candidate scoped Opus review](https://github.com/sifr-lang/sifr/pull/4039#issuecomment-5850818739)
+returned `SATISFIED` with no blockers. Its response is
+`/data/sifr-sql-public-bigint-review.YbfwnS/response.md`, SHA-256
+`e3666effaaaf9abcb41f08586ff11ce4a9cc3eb156cde4898eacbabd1dbbbf9e`.
+The reviewer suggested in-script sequence-shape self-test coverage as a
+non-blocking follow-up; the focused unit suite already asserts those cases.
+The `local-first-create-pr` CI job failed on this PR and is not claimed
+as a gate pass. Under the approved phase-end gate policy, this intermediate
+repair ran no create-PR or full merge gate; the Emitted-Rust final qualifier
+must rerun its full merge profile on the resulting main. SQL Item 4 remains
+separately blocked by the DX.10 self-test.
+
 ## P0 execution and custody reconciliation (2026-09-23)
 
 P0 delivery: [PR #3909](https://github.com/sifr-lang/sifr/pull/3909) merged as
