@@ -10,6 +10,40 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## V02/V04 Python interop merge-gate safety-envelope blocker (2026-09-26)
+
+The Emitted-Rust final qualifier reran the canonical merge profile on
+`dec8ec7a2f5346bb839fa7489280bf64021e2804` after the V04/F27
+self-test repair. The repaired guard passed. The first functional failure
+was `area_python_interop`, whose one outer `run_command` process reached
+the inherited 2,400-second safety deadline after 2,400,558 ms (exit 124,
+`safety_deadline`). The selected area manifest had passed 24 cases through
+`ml/ml-examples`, totaling 2,164,187 ms of case time; its next
+`libraries/library-examples` case had no result at the deadline. The
+focused exact `libraries` suite passed **1/1** in 296,945 ms on the same
+candidate and warm target, with zero failures and explicitly
+non-promotable filtered certification. Under the observed conditions,
+the full selection cannot complete within the current 40-minute process
+envelope; no missing preparation or library assertion failure was found.
+Later async/runtime cases, other areas, crate suites and E2E remain
+unqualified.
+
+The verification runner/profile and V04 process owners should reconcile
+the canonical Python-interop selection with a measured, bounded safety
+contract while preserving actual selected assertions. Do not treat an
+unchanged rerun or a bare timeout increase as qualification. The gate log
+is `/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-dec8ec7a/attempt9/merge-dec8ec7a2f5346bb839fa7489280bf64021e2804.log`
+(SHA-256 `014cdcd67a753b888d579328ddfdcb6a082a4fc6ab32a78cd9f2564fef4349e5`);
+the copied lane JSON has SHA-256
+`9b3f636d9c7dedb2b9d2ae5a284a978d7d001a972daa050ca6c37a1580511097`.
+Focused log and JSON SHA-256 values are
+`4dbfd11109591e303ccf64b135efae9bb672376accf1063dcddf2df1fff02210`
+and `321e71d23843b2858f76e0bfc747011281af9df59a99d9030f903cf418119516`,
+respectively, under the same attempt evidence and owned target.
+The CPU governor was independently observed at `schedutil` after the
+failed gate. The Emitted-Rust qualifier changed no verification code;
+its full merge gate remains blocked pending the owning repair and rerun.
+
 ## V04/F27 merged self-test integration blocker (2026-09-26)
 
 The Emitted-Rust qualifier's exact merged `faf0b9c86d55ef1423a17b1f5691bab6ed2598d2`
