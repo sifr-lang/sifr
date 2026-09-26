@@ -2,6 +2,52 @@
 
 Status: active
 
+## Final integration qualifier blocked by V04/F27 runner self-test (2026-09-26)
+
+**BLOCKED; no full merge-profile pass or phase closure.** Host access returned,
+and the exact attempt-8 log for implementation candidate
+`faf0b9c86d55ef1423a17b1f5691bab6ed2598d2` was inspected. The canonical
+`scripts/run_all_tests.sh --profile merge` passed reference admission, the
+early guardrails, Cargo cache setup, demo freshness, sysroot certification,
+the repaired stdlib native intrinsic allowlist, and subsequent guardrails
+through verification hardening. The first functional failure was
+`guardrail_verification_runner_foundation`. Its
+`sifr_verify.dx3_process_checks.ProcessTests` cases
+`test_f27_per_process_default_does_not_limit_whole_step` and
+`test_f27_step_deadline_covers_successive_commands` each expected
+`SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC` to be absent from a newly constructed
+`ProfileRunner.env`. The outer gate legitimately passes that absolute
+deadline to the nested self-test; `ProfileRunner` copies the inherited
+environment and restores the preexisting value after each simulated step.
+The assertions therefore fail under the full gate even though those F27
+cases passed in the owner's standalone selection without an inherited
+deadline. This is a V04/F27 self-test isolation defect owned by the
+[Verification process owner](ad-hoc-architecture-correctness-current-main.md#v04f27-merged-self-test-integration-blocker-2026-09-26),
+not an emitted-Rust implementation regression.
+
+The attempt-8 log remains at
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-faf0b9c8/attempt8/merge-faf0b9c86d55ef1423a17b1f5691bab6ed2598d2.log`
+(SHA-256 `18568bf34de52bfc46007faa18f7fa6ccbdeaedda8da0456c825db76321f1df3`).
+The copied exact lane JSON beside it is `merge.lane.json` (SHA-256
+`83cf2d19d4d910f2598396ac4b653abe691a3c53c30155eb52bf9b0007fd45c0`);
+it reports functional failure, performance pass, and the first failed
+selected step above. The 4,143,626 ms cache-setup overrun was advisory,
+not the gate's exit cause. The guarded wrapper restored `schedutil` at
+exit. On 2026-09-26 the independent host check found `schedutil`, no
+active Sifr Cargo/gate process, 63,815,553,024 bytes free on root ext4
+and 420,050,751,488 bytes free on `/data`. Rust/Cargo were 1.98.1 and
+the locked verification Python was 3.14.7. The current main head
+`d237e5f269c706e0c1a0f641485f84028724f5c6` adds only this phase's
+previous docs receipt beyond `faf0b9c8`; it does not change
+implementation or validation inputs.
+
+Next: V04/F27 owner should make its self-tests valid under an inherited
+outer deadline and prove the exact `ProcessTests` cases both standalone
+and nested under the canonical runner foundation guard. Then the
+Emitted-Rust qualifier must rerun the full merge profile on the resulting
+final candidate with the pinned reference and guarded approved CPU window.
+No V04 code was patched by this qualifier.
+
 ## Final integration qualifier awaiting failed-lane inspection (2026-09-25)
 
 **No full merge-profile pass or phase closure is claimed.** The qualifier's
