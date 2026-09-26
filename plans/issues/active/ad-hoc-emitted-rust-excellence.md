@@ -2,6 +2,64 @@
 
 Status: active
 
+## Final integration qualifier blocked by external developer-tooling guards (2026-09-27)
+
+**BLOCKED; no full merge-profile pass or whole-phase closure.** The canonical
+`scripts/run_all_tests.sh --profile merge` ran on exact merged main
+`a04cd9c49aaabdac93addb2c8e6a0a964aeae759` with Rust/Cargo 1.98.1,
+locked Python 3.14.7, the pinned `linux-i7-4720hq-12gb-dev-v1` reference
+(SHA-256 `f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb`),
+the root-ext4 warm Cargo target, and the approved idle-host performance-governor
+window. Attempt 11 passed setup, guardrails, Rust interop, coverage, core
+language, CPython differential, Python interop **30/30**, and diagnostics
+`rules/docs_sync`. Its sole diagnostics failure was `rules/examples`: the
+compiler binary lived outside the source tree in the warm target and each
+example ran from a temporary directory, so development sysroot discovery
+returned `SIFR-STDLIB-0003`. The exact `--area diagnostics --case rules/examples`
+selection passed 1/1, including all five check-fail/check-pass/explain pairs,
+with the supported `SIFR_SYSROOT` pointing to this checkout. No code repair
+was warranted for that qualifier-owned setup error.
+
+Attempt 12 kept the same SHA and warm target, supplied that explicit sysroot,
+and reran the full merge profile. Cargo setup passed with 93 generated-artifact
+cache hits and 271/271 maintained demos; its warm-time budget miss was advisory.
+Reference admission, all reached guardrails, Rust interop, coverage, core
+language, CPython differential, Python interop **30/30**, diagnostics (including
+`rules/docs_sync` and `rules/examples`), runtime platform, and algorithmic
+compatibility passed. The first later failing area was `developer_tooling`:
+`typescript-go-transfer/typescript-go-transfer` reports **32 missing
+hand-maintained direct-read/probe inventory sites** across five CLI/driver
+files and a persistent LSP `Session` ownership guard failure. Two independent
+selected checks in that area also failed: `static/direct-filesystem-effects`
+reports 165 unclassified and 72 stale site observations in the architecture
+filesystem inventory, and `static/no-pre-v1-compatibility` flags two SQL
+public-`bigint` declarations. Their negative self-tests pass. These are
+[Architecture V03/E01](ad-hoc-architecture-correctness-current-main.md#v03e01-developer-tooling-integration-blocker-2026-09-27)
+and [SQL](ad-hoc-schema-first-sql-platform-review-follow-ups.md#public-bigint-compatibility-guard-integration-blocker-2026-09-27)
+owner work, not Emitted-Rust codegen changes. The qualifier stops without
+altering those implementations or inventories. The owners must repair and
+qualify their exact selections before a full gate rerun on the resulting main.
+Later areas, crate selections, E2E, and performance were not reached.
+
+Attempt-12 evidence is under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-a04cd9c4/attempt12/`:
+`merge-a04cd9c49aaabdac93addb2c8e6a0a964aeae759.log` SHA-256
+`c22ee68d59c8cc0109abc261ef0f519dc76721732d88dd4b88c2093439970be1`,
+`merge.lane.json` SHA-256
+`35091b86b7e0e934be64ac05d97fe8b0f7fb00df160c2b50851d2988af8796f5`,
+and `developer-tooling-merge-results.json` SHA-256
+`875055dbd01b6be8c2659495e133698f28aa2781dba0536eca33ddb598ef2733`.
+The wrapper exited 1 at 2026-09-26 23:01:15 UTC, restored the original
+`schedutil` governor, and independent checks found no active Cargo/gate job,
+41,041,408,000 bytes free on root and 415,229,771,776 on `/data`. Attempt-11
+log/lane and focused-example JSON remain beside their receipts. The selected
+algorithmic-compatibility corpus check generated only the untracked submodule
+`src/.sifrbuildinfo` (SHA-256
+`ccb0f2d17820d23c9e50da6be188ef9eaeefd0d4a4fe8fedd8c261f7c3720e70`)
+at 2026-09-26 22:39 UTC; the worktree's tracked content is unchanged. It was
+preserved as evidence, neither cleaned nor staged; this record uses a separate
+clean worktree.
+
 ## Final integration qualifier blocked by C01 diagnostic documentation drift (2026-09-26)
 
 **BLOCKED; no full merge-profile pass or phase closure.** The canonical

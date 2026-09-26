@@ -4,6 +4,27 @@ Status: active, non-blocking
 
 Owner: SQL compiler, schema tools, and verification
 
+## Public-`bigint` compatibility guard integration blocker (2026-09-27)
+
+The Emitted-Rust qualifier's full merge profile on exact merged main
+`a04cd9c49aaabdac93addb2c8e6a0a964aeae759` reached
+`developer_tooling/static/no-pre-v1-compatibility` after diagnostics,
+runtime platform, and algorithmic compatibility passed. The selected guard
+failed on `crates/sifr_sql_postgresql/src/raw_sequences.rs:106` and
+`catalog_sequences.rs:96`, both described as public `bigint` type support.
+Its self-test passed. This is SQL-owned source or guard-contract work: preserve
+supported SQL dialect spellings while retaining the removed Sifr scalar
+compatibility rejection established by [#3723](https://github.com/sifr-lang/sifr/issues/3723).
+The qualifier did not edit SQL or suppress the observation. The SQL owner
+should repair and rerun the exact guard and its self-test before the
+Emitted-Rust full gate resumes on the resulting main.
+
+The failed gate log and developer-tooling JSON are under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-a04cd9c4/attempt12/`
+(SHA-256 `c22ee68d59c8cc0109abc261ef0f519dc76721732d88dd4b88c2093439970be1`
+and `875055dbd01b6be8c2659495e133698f28aa2781dba0536eca33ddb598ef2733`).
+This is a blocker for that qualifier, not a SQL phase validation pass.
+
 ## P0 execution and custody reconciliation (2026-09-23)
 
 P0 delivery: [PR #3909](https://github.com/sifr-lang/sifr/pull/3909) merged as

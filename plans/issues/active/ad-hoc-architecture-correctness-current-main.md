@@ -10,6 +10,36 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## V03/E01 developer-tooling integration blocker (2026-09-27)
+
+The Emitted-Rust qualifier's exact-main `a04cd9c49aaabdac93addb2c8e6a0a964aeae759`
+merge profile passed diagnostics, runtime platform, and algorithmic
+compatibility, then stopped in `area_developer_tooling`. Its first selected
+failure, `typescript-go-transfer/typescript-go-transfer`, found 32 new
+unlisted direct-read/probe sites in `crates/sifr/src/formatter_cache.rs` and
+four `sifr_driver` files (`build/cargo_resolution_identity.rs`,
+`cache_storage_windows.rs`, `project_cache/housekeeping.rs`, and
+`test_runner/execution.rs`). The same guard still requires `Session` to own
+the persistent LSP analysis workspace. The separate
+`static/direct-filesystem-effects` check reports 165 unclassified and 72
+stale site observations, including cache storage, test-runner and sysroot
+paths. Both guard self-tests passed, so this is current source/inventory drift,
+not a disabled scanner. V03 owns effect classification; the current CLI/driver
+transfer-inventory owner must reconcile those source sites. E01/LSP ownership
+must address the persistent-session guard. Do not mark either global guard
+qualified from an item-scoped pass. The
+Emitted-Rust qualifier did not edit these files and must resume its full gate
+only after owner-scoped repairs and focused checks merge. A separate SQL
+public-`bigint` guard failure is recorded in the
+[SQL issue](ad-hoc-schema-first-sql-platform-review-follow-ups.md#public-bigint-compatibility-guard-integration-blocker-2026-09-27).
+
+The exact failed gate log, lane and developer-tooling JSON are preserved under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-a04cd9c4/attempt12/`
+with SHA-256 `c22ee68d59c8cc0109abc261ef0f519dc76721732d88dd4b88c2093439970be1`,
+`35091b86b7e0e934be64ac05d97fe8b0f7fb00df160c2b50851d2988af8796f5`,
+and `875055dbd01b6be8c2659495e133698f28aa2781dba0536eca33ddb598ef2733`,
+respectively. The approved governor window restored `schedutil`.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
