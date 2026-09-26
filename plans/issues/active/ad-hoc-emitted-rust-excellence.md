@@ -2,6 +2,60 @@
 
 Status: active
 
+## Final integration qualifier blocked by C01 diagnostic documentation drift (2026-09-26)
+
+**BLOCKED; no full merge-profile pass or phase closure.** The canonical
+`scripts/run_all_tests.sh --profile merge` ran on exact merged main
+`bbdfd6cb5f2b61f35ecb6d12d5885dc8707bd96b` after the bounded Python
+interop runner repair ([PR #4033](https://github.com/sifr-lang/sifr/pull/4033))
+and its record ([#4034](https://github.com/sifr-lang/sifr/pull/4034)).
+The pinned `linux-i7-4720hq-12gb-dev-v1` reference (file SHA-256
+`f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb`),
+Rust/Cargo 1.98.1, locked verification Python 3.14.7, root-ext4 Cargo
+target and temporary path, and approved idle-host `performance` governor
+were verified. The wrapper exited 1 at 2026-09-26 17:05:26 UTC and restored
+the original `schedutil` governor; an independent post-gate check confirmed
+`schedutil`, no active Cargo/gate process, 44,298,162,176 bytes free on root
+and 416,579,133,440 bytes on `/data`.
+
+Cargo setup passed with 93 generated graphs and 271/271 maintained demos;
+its 5,611,437 ms over-budget timing was advisory. Demo freshness, sysroot,
+native intrinsic inventory, verification guardrails, Rust interop, coverage,
+core language (5/5), and CPython differential (4/4) passed. The repaired
+Python-interop selection then passed **30/30** variants in 1,505,279 ms with
+zero failures and complete combined compiled certification. In particular,
+`libraries/library-examples`, the first case unfinished in attempt 9,
+passed as bounded part 24 in 489,790 ms; the later async and runtime suites
+also passed. The next area, diagnostics, failed after 417,372 ms. Its first
+selected failure was `rules/docs_sync`: generated
+`internal_docs/diagnostic_codes.md` and
+`docs/errors/SIFR-IMPORT-0007.mdx` are stale. Four subsequent diagnostics
+rules were fail-fast blocked; later areas, crate selections and E2E were
+unreached. The lane's five reported diagnostics failures therefore comprise
+one executed failure and four blocked selections.
+
+The root cause is [Architecture C01](ad-hoc-architecture-correctness-current-main.md#c01-diagnostic-docs-sync-integration-blocker-2026-09-26):
+commit `c24f37c00302273d2388b4f9469b4da4e105cf25` moved the
+`SIFR-IMPORT-0007` registry owner from
+`sifr_driver::project::compile_order` to
+`sifr_frontend::compile_order` without regenerating those two checked-in
+diagnostic documents. This qualifier did not change the externally owned
+registry or docs. The Architecture C01 owner must synchronize the generated
+docs and prove the exact `rules/docs_sync` check. The Emitted-Rust qualifier
+then needs the full merge profile on that final merged candidate; no
+unchanged rerun or whole-phase closure is claimed.
+
+The attempt-10 log is
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-bbdfd6cb/attempt10/merge-bbdfd6cb5f2b61f35ecb6d12d5885dc8707bd96b.log`
+(SHA-256 `ba2a7113289158022aaa1e72331176aacfe95d0661605fc9b72780ac624454f7`).
+The copied `merge.lane.json` and `diagnostics.result.json` beside it
+have SHA-256 `3da6e728c3621a8ac21ae404b2d22e63466407827170ed44c5328c705a2dbab5`
+and `c0db2029e8cce232f70c30a2370a645cfae57600c02bb5df26cb9d0b4ee28b25`,
+respectively. The complete Python-interop result in the owned target has
+SHA-256 `0e0be66911a84bf4efb1b30b271a39458e50f663b055e105b73ce2f3d14bc12f`.
+The wrapper's `preflight.txt`, `gate-status.txt`, `governor.txt`, and
+`log.sha256` preserve the configuration, exit, restoration, and log digest.
+
 ## Final integration qualifier blocked by Python interop process deadline (2026-09-26)
 
 **BLOCKED; no full merge-profile pass or phase closure.** After the V04/F27

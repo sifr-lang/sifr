@@ -10,6 +10,36 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## C01 diagnostic docs sync integration blocker (2026-09-26)
+
+The Emitted-Rust final qualifier's full merge profile on exact merged main
+`bbdfd6cb5f2b61f35ecb6d12d5885dc8707bd96b` passed the repaired
+Python-interop selection with complete combined certification, **30/30**
+variants. Its first later failure was `area_diagnostics` ->
+`rules/docs_sync`: `internal_docs/diagnostic_codes.md` and
+`docs/errors/SIFR-IMPORT-0007.mdx` are out of sync with the diagnostic
+registry. Four later diagnostics rules were blocked by fail-fast; later
+areas and crate/E2E selections were not reached. The generated documents
+still name `sifr_driver::project::compile_order`, whereas C01 commit
+`c24f37c00302273d2388b4f9469b4da4e105cf25` changed the
+`SIFR-IMPORT-0007` registry owner to
+`sifr_frontend::compile_order`. This is C01-owned generated documentation
+drift, not an Emitted-Rust codegen failure. The C01 owner should regenerate
+the checked-in diagnostic documents, prove the exact
+`python3 verification/areas/diagnostics/checks/docs_sync.py` selection
+and relevant documentation checks, and merge the narrow repair. The
+Emitted-Rust qualifier must then rerun its full merge profile on the new
+merged candidate.
+
+The gate log and copied lane/diagnostics JSON are under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-bbdfd6cb/attempt10/`;
+their SHA-256 values are
+`ba2a7113289158022aaa1e72331176aacfe95d0661605fc9b72780ac624454f7`,
+`3da6e728c3621a8ac21ae404b2d22e63466407827170ed44c5328c705a2dbab5`,
+and `c0db2029e8cce232f70c30a2370a645cfae57600c02bb5df26cb9d0b4ee28b25`,
+respectively. Gate exit was 1; the approved governor window restored
+`schedutil`. No C01 code or generated docs were changed by this qualifier.
+
 ## V02/V04 Python interop merge-gate safety-envelope blocker (2026-09-26)
 
 The Emitted-Rust final qualifier reran the canonical merge profile on
