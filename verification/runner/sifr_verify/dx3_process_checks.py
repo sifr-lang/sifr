@@ -335,6 +335,7 @@ class ProcessTests(unittest.TestCase):
     def test_f27_per_process_default_does_not_limit_whole_step(self):
         from .profile_runner import ProfileRunner
         from .step_budgets import StepBudgetContext
+        inherited_deadline = os.environ.get(SAFETY_DEADLINE_ENV)
         runner = ProfileRunner("create-pr", [])
         runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".2"
         runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
@@ -345,11 +346,12 @@ class ProcessTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             status = runner.execute_step("fixture", step)
         self.assertEqual(status, 0)
-        self.assertNotIn(SAFETY_DEADLINE_ENV, runner.env)
+        self.assertEqual(runner.env.get(SAFETY_DEADLINE_ENV), inherited_deadline)
 
     def test_f27_step_deadline_covers_successive_commands(self):
         from .profile_runner import ProfileRunner
         from .step_budgets import StepBudgetContext
+        inherited_deadline = os.environ.get(SAFETY_DEADLINE_ENV)
         runner = ProfileRunner("create-pr", [])
         runner.env["SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS"] = ".3"
         runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
@@ -362,8 +364,8 @@ class ProcessTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             status = runner.execute_step("fixture", step)
         self.assertEqual(status, 124)
-        self.assertNotIn(SAFETY_DEADLINE_ENV, runner.env)
-        self.assertNotIn(SAFETY_DEADLINE_ENV, os.environ)
+        self.assertEqual(runner.env.get(SAFETY_DEADLINE_ENV), inherited_deadline)
+        self.assertEqual(os.environ.get(SAFETY_DEADLINE_ENV), inherited_deadline)
 
     def test_f27_escaped_pipe_holder_cannot_extend_deadline(self):
         with tempfile.TemporaryDirectory() as temporary:
