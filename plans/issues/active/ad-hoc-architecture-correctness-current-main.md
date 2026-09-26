@@ -40,6 +40,42 @@ and `c0db2029e8cce232f70c30a2370a645cfae57600c02bb5df26cb9d0b4ee28b25`,
 respectively. Gate exit was 1; the approved governor window restored
 `schedutil`. No C01 code or generated docs were changed by this qualifier.
 
+## C01 diagnostic docs sync repair delivery (2026-09-26)
+
+The narrow generated-doc repair merged in [PR #4036](https://github.com/sifr-lang/sifr/pull/4036)
+as `b2127c5f1143e6c7636bfbe897ce9d8ea1bc9cd6` from exact tested and
+reviewed candidate `24c5248529756a0f717eb58bb7d266a5e8cbebb2` (base
+`ac326a096250418c20e2cf511314e6c96f3eb7d8`, tree
+`2a6c9dbd40e81e708acb78fab5104b5ba16b550e`). The merged tree matches
+the candidate. Regeneration changed only the owner field for
+`SIFR-IMPORT-0007` in `internal_docs/diagnostic_codes.md` and
+`docs/errors/SIFR-IMPORT-0007.mdx` to `sifr_frontend::compile_order`.
+
+On Linux x86_64, the exact
+`python3 verification/areas/diagnostics/checks/docs_sync.py` selection
+passed; its raw log SHA-256 is
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Documentation structure passed (raw log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+the 900-line file-size guardrail passed for 4,245 files (raw log SHA-256
+`2e10821206a8db09bbb2a00e21e9618f4f9f216f73b5c56afcd7ce13f9e819d2`),
+and diff check passed. The initial generator attempt failed because the new
+worktree had no initialized Ruff submodule; after initializing the pinned
+Ruff and nested editor submodules, generation and checks passed. Raw logs
+and the read-only response are under
+`/data/sifr-architecture-c01-diagnostic-docs-evidence-20260926/`, keyed by
+candidate SHA. The scoped [Opus review](https://github.com/sifr-lang/sifr/pull/4036#issuecomment-5848656738)
+returned **SATISFIED** with no blocking findings (response SHA-256
+`4e7d667feb4d8f15af01ceb5a6bc2d0ed8eae2d4373a802ec49239e281429e5b`).
+
+The generated-doc sync blocker is repaired. The Emitted-Rust qualifier must
+rerun its full merge profile on a final merged candidate; this focused pass
+does not qualify the later diagnostics rules, areas, crate suites, or E2E
+selections blocked in the previous gate. A separate hand-maintained
+`internal_docs/diagnostic_emission_inventory.md:91` reference still names
+the former driver path for `SIFR-IMPORT-0007`; D01b documentation-map work
+owns that current-path follow-up. It did not affect the generated-doc check.
+
 ## V02/V04 Python interop merge-gate safety-envelope blocker (2026-09-26)
 
 The Emitted-Rust final qualifier reran the canonical merge profile on
