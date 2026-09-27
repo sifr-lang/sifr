@@ -112,6 +112,47 @@ No Cargo target or shared worktree was cleaned. The approved intermediate-item
 policy defers the full merge profile to Q01; this inventory pass does not
 qualify E01's persistent LSP Session condition or the final integration gate.
 
+## E01/F20-F21 persistent LSP Session guard prerequisite delivery (2026-09-27)
+
+The current-main TypeScript-Go transfer guard's persistent Session condition
+merged in [PR #4045](https://github.com/sifr-lang/sifr/pull/4045) as
+`9a41c2402d54ddf24f379845562eefdfabdd46b7` from exact tested and
+reviewed candidate `a05ab04899bfa902c954e7fb61ec15fab5494191` (base
+`8391ec8ee2634ebbbc015432fbf24a762f32e26c`, tree
+`a710b912f19ae046ca654977fca0bc06167e2888`). `Session` already
+owned a persistent `LspAnalysisWorkspace` constructed with the explicit
+compiler context; the guard incorrectly required its obsolete `default()`
+constructor. The repaired assertion checks the owned field, compiler-bound
+construction inside `with_compiler`, and document-query routing through
+`self.analysis`. Negative self-tests reject a missing field, default
+construction, and missing query routing. No LSP runtime code changed.
+
+On the exact candidate, the selected
+`developer_tooling/typescript-go-transfer` suite passed both the guard and
+self-test (2/2). Three exact `sifr_lsp` regressions for unsaved overlay
+analysis, changed overlay analysis, and project save ownership passed 1/1
+each. The 900-line file-size guardrail passed for 4,245 files and the
+committed diff check passed. Scoped read-only Claude Opus 5.5 review returned
+**SATISFIED** with no blocking findings (response SHA-256
+`355ecdbe07174ea477a3840e58c39e30e4bbf5e960e9f244f3b8b561c8a50d1f`).
+Raw candidate-keyed evidence is outside the Git tree at
+`/data/sifr-e01-persistent-session-evidence/a05ab04899bfa902c954e7fb61ec15fab5494191/`;
+the validation manifest SHA-256 is
+`d0e2203dd4c490a3872e8bc722139d631feb965ac834882d129fad43fe5ae415`.
+The original single-condition guard failure is retained under the evidence
+root; the initial test setup failures are described in the manifest. The
+isolated Cargo target was kept warm; no shared target was cleaned.
+The record-only documentation structure check passed after initializing
+the pinned nested editor submodule; its first missing-submodule setup
+attempt failed.
+
+This closes only the persistent Session guard prerequisite from the
+developer-tooling blocker. E01 still owns watcher registration or explicit
+unsupported-client revalidation, external input generations, fast-hit
+ordering, and their named lifecycle tests. The item-scoped pass does not
+qualify the full developer-tooling area or the phase-end merge profile; Q01
+retains final integration qualification.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -396,7 +437,7 @@ holds the separate passing and partial area receipts.
 | C02c | SQL editor service owner; F19 after C02b; open. | Move editor profile discovery/preparation and profile import diagnostics below driver while retaining component and schema behavior. Named tests and boundaries below. |
 | C02d | Preview and editor-check service owner; F19 after C02c; open. | Move generated Rust preview and editor check restore below driver using the C01 frontend product and explicit metadata/semantic identity. Named tests and boundaries below. |
 | C02e | Dependency-direction guard owner; F19 after C02d; open. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
-| E01 | LSP/package input owner; F20-F21; open before fast-hit reorder. | Registered watcher or explicit unsupported-client revalidation, external generations across manifest/lock/config/bridge/certification/environment, and create/delete/rename/reconnect/storm/multi-root/stale-publication tests. |
+| E01 | LSP/package input owner; F20-F21; persistent Session guard prerequisite merged in [PR #4045](https://github.com/sifr-lang/sifr/pull/4045); broader item open before fast-hit reorder. | Registered watcher or explicit unsupported-client revalidation, external generations across manifest/lock/config/bridge/certification/environment, and create/delete/rename/reconnect/storm/multi-root/stale-publication tests. |
 | E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; open after E01-E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
 | E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
