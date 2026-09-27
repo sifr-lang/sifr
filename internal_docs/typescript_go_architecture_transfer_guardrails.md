@@ -52,7 +52,7 @@ the self-update runner fixtures below. Their non-semantic classification is not
 an exclusion for production code in the same file. A future production read in
 such a file still needs its own ownership adjudication.
 
-The current-main V03/E01 CLI/driver follow-up below records 32 additional
+The CLI and driver transfer inventory below records 32 additional
 scanner-matched lines across five paths at base
 `88b992ffbda63f5680fa761d6e6b0febda32d9b1`: 26 production lines
 and six inline-test lines. These line counts identify inventory observations,
