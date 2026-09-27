@@ -29,6 +29,24 @@ ARCHIVE_SOURCE_EXCLUSIONS = {
     AREA_ROOT / "governance" / "archive_store.py",
     AREA_ROOT / "governance" / "archive_offline_selftest.py",
 }
+# These exact lines own independent v1 formats: the stdlib metadata descriptor,
+# the private DX trace, and the native package qualification report. Continue
+# scanning every other line in these sources for release-governance v1 paths.
+NON_RELEASE_V1_LINES = {
+    REPO_ROOT / "scripts" / "distribution" / "metadata_artifact.py": {
+        '    if not isinstance(descriptor,dict) or set(descriptor) != FIELDS or type(descriptor.get("schema_version")) is not int or descriptor["schema_version"] != 1:',
+        '    descriptor = {"schema_version": 1, "compiler_identity": identity, "semantic_target": target,',
+    },
+    REPO_ROOT / "scripts" / "distribution" / "native_dxf_contracts.py": {
+        '    require(len(data) <= 32768 and trace["schema_version"] == 1',
+    },
+    REPO_ROOT / "scripts" / "distribution" / "qualify_native_package.py": {
+        '        self.report = {"schema_version": 1, "source_commit": source, "target": target,',
+    },
+    AREA_ROOT / "governance" / "qualification_fixture_support.py": {
+        '    descriptor = {"schema_version": 1, "compiler_identity": compiler, "semantic_target": target,',
+    },
+}
 V1_PATTERNS = (
     re.compile(r'"schema_version"\s*:\s*1(?:\D|$)'),
     re.compile(r"(?<![A-Za-z0-9_])schema_version\s+must\s+be\s+1\b"),
@@ -85,8 +103,12 @@ def governed_sources() -> list[Path]:
 
 
 def check_source_text(path: Path, text: str) -> None:
+    independent_lines = NON_RELEASE_V1_LINES.get(path, set())
+    scanned_text = "\n".join(
+        "" if line in independent_lines else line for line in text.splitlines()
+    )
     for pattern in V1_PATTERNS:
-        if pattern.search(text):
+        if pattern.search(scanned_text):
             raise ValueError(f"{path}: retained a release-governance schema-v1 code path")
 
 
@@ -95,6 +117,7 @@ def run_self_test() -> None:
         '{"schema_version": 1}',
         "schema_version must be 1",
         "if schema_version == 1:",
+        '"schema_version"\n: 1',
     )
     for index, text in enumerate(invalid):
         try:
@@ -102,6 +125,16 @@ def run_self_test() -> None:
         except ValueError:
             continue
         raise ValueError(f"schema epoch mutation {index} unexpectedly passed")
+    for path, independent_lines in NON_RELEASE_V1_LINES.items():
+        if path not in governed_sources():
+            raise ValueError(f"{path}: independent schema exception escaped the governed scan")
+        for line in independent_lines:
+            check_source_text(path, line)
+            try:
+                check_source_text(path, line + '\n{"schema_version": 1}')
+            except ValueError:
+                continue
+            raise ValueError(f"{path}: release schema-v1 mutation escaped the governed scan")
 
 
 def main() -> int:
