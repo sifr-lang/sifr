@@ -53,10 +53,10 @@ ALLOWED_SITES: dict[Path, dict[str, str]] = {
     Path("crates/sifr_package/src/python/bridge_inventory/mod.rs"): {
         "let suite = sifr_syntax::parse_module_suite(&source, Some(&source_path.display().to_string()))": "Python bridge import inventory",
     },
-    Path("crates/sifr_driver/src/metadata_producer/locations.rs"): {
+    Path("crates/sifr_compiler_services/src/metadata/locations.rs"): {
         "let parsed = sifr_syntax::parse_module_raw(source, None).map_err(|_| {": "checked declaration source ranges",
     },
-    Path("crates/sifr_driver/src/stdlib/bootstrap.rs"): {
+    Path("crates/sifr_compiler_services/src/stdlib/bootstrap.rs"): {
         "let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {": "canonical stdlib compile input",
         "lower_module_sysroot_public_stdlib_with_externals(suite, stdlib_defs)": "canonical public stdlib lowering",
         "lower_module_sysroot_private_declaration_with_externals(suite, stdlib_defs)": "canonical private stdlib declaration lowering",
@@ -330,6 +330,16 @@ def run_self_test() -> None:
         assert not violations([cli])
         extra = cli.read_text() + '\nfn duplicate() { sifr_syntax::parse_module(src, None); }\n'
         assert violations_text(cli, extra), "same-file duplicate escaped"
+    for rel in (
+        Path("crates/sifr_compiler_services/src/metadata/locations.rs"),
+        Path("crates/sifr_compiler_services/src/stdlib/bootstrap.rs"),
+    ):
+        current = (REPO_ROOT / rel).read_text(encoding="utf-8")
+        assert not violations_text(REPO_ROOT / rel, current), f"{rel} rejected"
+        for line in ALLOWED_SITES[rel]:
+            assert current.count(line) == 1, f"{rel} missing or duplicated approved call"
+            duplicate = current + "\n" + line + "\n"
+            assert violations_text(REPO_ROOT / rel, duplicate), f"{rel} duplicate escaped"
     print('split-brain guardrail self-test: PASS')
 
 
