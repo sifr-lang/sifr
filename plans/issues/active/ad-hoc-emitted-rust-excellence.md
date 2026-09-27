@@ -2,6 +2,62 @@
 
 Status: active
 
+## Final integration qualifier blocked by release schema-epoch guard (2026-09-27)
+
+**BLOCKED; no full merge-profile pass or whole-phase closure.** Attempt 15 ran
+`scripts/run_all_tests.sh --profile merge` on exact merged main
+`b9758f9d8af63bf475ff76fefb9aa2c3094c0a24`, including the Architecture
+split-brain repair [PR #4051](https://github.com/sifr-lang/sifr/pull/4051)
+and record [PR #4052](https://github.com/sifr-lang/sifr/pull/4052).
+The pinned V01 reference (SHA-256
+`f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb`),
+Rust/Cargo 1.98.1, locked Python 3.14.7, root-ext4 warm target, explicit
+`SIFR_SYSROOT`, clean producer, and approved idle-host `performance` governor
+were checked. Setup, all functional areas through generated-code quality, and
+performance, including the repaired split-brain guard and benchmark, passed.
+The Cargo setup time-budget miss was advisory.
+
+The first selected failure in `distribution_release` was
+`node_toolchain_contract`: the extension pins Node 26.8.2/npm 12.0.2, while
+host PATH exposed Node 24.19.0/npm 11.17.0. The exact Node 26.8.2 archive
+was verified against the official SHASUMS and installed in this qualifier's
+private evidence directory; npm 12.0.2 was provisioned with the repository
+helper. The exact Node contract passed with that PATH. The distribution area
+then reached its 2,400-second safety deadline while running
+`stable_publish_selftest`, after `self_update_json_surface_parity` passed but
+spent 2,276 seconds on a separate cold target. The wrapper exited 124 at
+17:37:03 UTC and restored `schedutil`, independently verified. The preserved
+warm parity case passed again in 4.87 seconds.
+
+A bounded focused `distribution_release --suite full` run with the selected
+Node/npm and warm target completed 70/71 variants. Its sole failure was
+`schema-epoch` (exit 2): `scripts/distribution/metadata_artifact.py` retains
+`schema_version: 1` at line 130 and a `schema_version == 1` validator at line
+86. The release schema-epoch guard scans that script and reports a retained
+release-governance v1 path. This script packages the stdlib metadata descriptor;
+the [Phase 40 release/distribution owner](phase-40-stable-channel-ga-execution.md#external-schema-epoch-blocker-from-emitted-rust-integration-2026-09-27)
+must adjudicate the boundary and repair the guard or producer while preserving
+the canonical release schema-v2 contract. This qualifier does not alter
+release source or rerun the broad gate until that external failure is resolved.
+Later merge-profile areas, crate selections and E2E remain unqualified.
+
+Attempt-15 evidence is under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-b9758f9d/attempt15/`:
+`merge-b9758f9d8af63bf475ff76fefb9aa2c3094c0a24.log` SHA-256
+`a135c043d6f48a767493bbfe1e6c16283236fee270f6dec966b29dc949e5766a`,
+`merge.lane.json` SHA-256
+`afa89ce9bd39ac400536195c5aafad0123293bb8ef192b325bd5e1bc3c54ea42`,
+`distribution-focused-full.log` SHA-256
+`fde0c31812b8fec778000e77a0cf1fe7da509cf5040bb51c813ebd0a18cba251`,
+and `distribution-focused-full-results.json` SHA-256
+`e421274fc819732f42bc1a53cffe48e46bb1981d53517142964c18b24ceb984f`.
+The selected Node contract log SHA-256 is
+`5a1af196eed064b821f7cd1869f492e7792cd70266ad0885826600a0d5372ee1`;
+the warm parity log SHA-256 is
+`78de7a9c360caab205a8c3f2b48d9b422354dab620a16674b6abbe531d63d7bc`.
+No Cargo/gate process remains. Final checks found 33,747,087,360 bytes free
+on root and 386,643,599,360 on `/data`; the producer is clean.
+
 ## Final integration qualifier blocked by Architecture split-brain inventory (2026-09-27)
 
 **BLOCKED; no full merge-profile pass or whole-phase closure.** Attempt 14 ran

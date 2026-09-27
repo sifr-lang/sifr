@@ -1,5 +1,36 @@
 # Phase 40 Stable Channel GA Execution
 
+## External schema-epoch blocker from Emitted-Rust integration (2026-09-27)
+
+Release/distribution owns this blocker; the Emitted-Rust final qualifier does
+not change release code. On merged main
+`b9758f9d8af63bf475ff76fefb9aa2c3094c0a24`, its full merge-profile
+attempt 15 first failed the Node toolchain contract on host Node 24.19.0,
+then timed out the distribution area after a 2,276-second cold
+`self_update_json_surface_parity` pass. The qualifier privately selected the
+pinned Node 26.8.2/npm 12.0.2, verified the Node archive checksum, and passed
+the exact Node contract and warm parity case. A focused
+`distribution_release --suite full` run then finished 70/71 variants; its
+sole failure, `schema-epoch` (exit 2), reports
+`scripts/distribution/metadata_artifact.py: retained a release-governance
+schema-v1 code path`. That script writes the stdlib metadata descriptor with
+`schema_version: 1` at line 130 and validates version 1 at line 86, while
+`verification/areas/distribution_release/governance/schema_epoch.py` scans all
+`scripts/distribution/*.py` for v1 forms. Determine whether the independent
+metadata descriptor belongs in that release-governance scan, then make the
+smallest owner-reviewed correction without weakening the canonical release
+schema-v2 check. Rerun the exact guard/self-test and full selected distribution
+suite before returning a merged candidate to the Emitted-Rust qualifier.
+
+Evidence: `/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-b9758f9d/attempt15/`;
+`distribution-focused-full.log` SHA-256
+`fde0c31812b8fec778000e77a0cf1fe7da509cf5040bb51c813ebd0a18cba251`,
+`distribution-focused-full-results.json` SHA-256
+`e421274fc819732f42bc1a53cffe48e46bb1981d53517142964c18b24ceb984f`.
+The [Emitted-Rust qualifier receipt](ad-hoc-emitted-rust-excellence.md#final-integration-qualifier-blocked-by-release-schema-epoch-guard-2026-09-27)
+retains the full-gate log/lane digests and governor restoration. No release
+publication is attempted or authorized by this record.
+
 ## Current evidence disposition — 2026-09-08
 
 Historical qualification evidence is INCOMPLETE/UNRECOVERED under the
