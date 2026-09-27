@@ -31,6 +31,37 @@ The [Emitted-Rust qualifier receipt](ad-hoc-emitted-rust-excellence.md#final-int
 retains the full-gate log/lane digests and governor restoration. No release
 publication is attempted or authorized by this record.
 
+Delivery receipt (2026-09-27): release/distribution determined that the stdlib
+metadata descriptor has its own schema history and does not belong to the
+canonical release-governance schema-v2 epoch. The same scan also encountered
+independent v1 forms for the private DX trace, the native package qualification
+report, and the synthetic metadata fixture. [PR #4054](https://github.com/sifr-lang/sifr/pull/4054)
+exempted only their five exact source lines while continuing to scan all
+remaining lines in those files. The release schema declarations, required
+surfaces, and canonical schema-v2 check remain enforced. Reviewed candidate
+`8264281d40f79725952fb5b864de380113856266` merged as
+`d2af8e7b555c5f1b9655c58c63f7afb86b00a21b`.
+
+The exact schema-epoch guard and its built-in mutation self-test passed with
+`python3 -m verification.areas.distribution_release.governance.schema_epoch`;
+the archive boundary contract passed with
+`python3 -m unittest verification.areas.distribution_release.governance.archive_offline_selftest.ArchiveOfflineTests.test_complete_all_class_roundtrip`.
+The selected
+`uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full`
+passed 71/71 variants with zero failures after the worktree submodules and
+pinned Node 26.8.2/npm 12.0.2 were prepared. The full-suite log and results
+under `/data/sifr-phase40-schema-epoch-guard-evidence-20260927/` have
+SHA-256 `0acf608a758f3186d5bfa619555f5a252361c57f795e99367eced9d63259d9d1`
+(`distribution-full-prepared.log`) and
+`b462708ccb18695478b0054a73065971f502a1e0e879f1351ca8e5135aacf92e`
+(`distribution-full-prepared-results.json`). The scoped Opus 5.5 review
+returned SATISFIED with no blocking findings; its candidate-keyed
+`review-8264281d40f79725952fb5b864de380113856266/response.md` has
+SHA-256 `3012a4070342fccc3f49e2fdd81025f13fa26c947d2ab68e00ec6fbcfc68f9e0`.
+The 70/71 focused run and merge-profile attempt 15 above remain historical
+failures. This delivery resolves only the release-owned schema-epoch dependency;
+the Emitted-Rust final qualifier remains separate.
+
 ## Current evidence disposition — 2026-09-08
 
 Historical qualification evidence is INCOMPLETE/UNRECOVERED under the
