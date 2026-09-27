@@ -10,6 +10,32 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
+
+The Emitted-Rust final qualifier's exact-main
+`b5fb4b010ad485f521505382edcd6d9f50d045bb` full merge profile first
+failed at `area_coverage_matrix` / `readiness/verification_taxonomy`.
+The current `internal_docs/typescript_go_architecture_transfer_guardrails.md:55`
+begins `The current-main V03/E01 CLI/driver follow-up`; the active-surface
+taxonomy rule rejects that delivery label. The line was added in the
+Architecture-owned TypeScript-Go inventory [PR #4041](https://github.com/sifr-lang/sifr/pull/4041)
+(candidate `d36610a6694d3f23c5d71782b306801f88977755`). This is a
+documentation wording defect in this issue's owned guardrail document.
+Its owner should replace the delivery label with descriptive ownership text,
+then run the exact `readiness/verification_taxonomy` selection and the
+coverage-matrix readiness suite. No compiler, inventory or taxonomy-rule
+relaxation is indicated. The Emitted-Rust qualifier did not change this
+document; its full merge gate remains unqualified until the repair merges and
+the gate is rerun on the resulting exact main.
+
+The failed gate log, lane and coverage result are under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-b5fb4b01/attempt13/`
+with SHA-256 `c44e08960221342bfe2370939d74a0445eb418f1d3701dad11d070a5402a289e`,
+`2a6541f5c7a8901437df81b779a9024676f7ac5fb363a50f9dc0073448aa43df`
+and `ee64dd71f684a8c03474c9b683c3db46d2b8c70a1dadb205000976f78259dbdf`,
+respectively. V01 reference admission, generated setup and preceding
+guardrails passed; the approved governor window restored `schedutil`.
+
 ## V03/E01 developer-tooling integration blocker (2026-09-27)
 
 The Emitted-Rust qualifier's exact-main `a04cd9c49aaabdac93addb2c8e6a0a964aeae759`

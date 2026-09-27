@@ -2,6 +2,47 @@
 
 Status: active
 
+## Final integration qualifier blocked by Architecture taxonomy text (2026-09-27)
+
+**BLOCKED; no full merge-profile pass or whole-phase closure.** Attempt 13 ran
+the canonical `scripts/run_all_tests.sh --profile merge` on exact merged main
+`b5fb4b010ad485f521505382edcd6d9f50d045bb`, after the Architecture and
+SQL developer-tooling repairs. The repaired TypeScript-Go transfer,
+direct-filesystem-effects and no-pre-v1-compatibility checks passed a focused
+preflight. The gate admitted the pinned V01 performance reference under the
+approved idle-host performance-governor window, completed its Cargo setup
+(93 generated artifacts and 271/271 maintained demos), and passed demo
+freshness, sysroot, native-intrinsic and adapter guardrails and the verification
+runner foundation. The setup time-budget miss was advisory.
+
+The first functional failure was `area_coverage_matrix`, exact
+`readiness/verification_taxonomy`: line 55 of
+`internal_docs/typescript_go_architecture_transfer_guardrails.md` begins
+`The current-main V03/E01 CLI/driver follow-up`. The active-surface taxonomy
+guard rejects that delivery label. The line was introduced by the
+Architecture-owned [PR #4041](https://github.com/sifr-lang/sifr/pull/4041)
+inventory document, not by Emitted-Rust codegen. The
+[Architecture issue](ad-hoc-architecture-correctness-current-main.md#typescript-go-guardrail-taxonomy-blocker-2026-09-27)
+owns a narrow wording repair and the exact taxonomy/readiness checks. This
+qualifier did not edit the source document or weaken the guard. Later full-gate
+areas, crate selections, E2E and performance were not reached; the resulting
+main still needs a full merge-profile rerun.
+
+Attempt-13 evidence is under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-b5fb4b01/attempt13/`:
+`merge-b5fb4b010ad485f521505382edcd6d9f50d045bb.log` SHA-256
+`c44e08960221342bfe2370939d74a0445eb418f1d3701dad11d070a5402a289e`,
+`merge.lane.json` SHA-256
+`2a6541f5c7a8901437df81b779a9024676f7ac5fb363a50f9dc0073448aa43df`,
+and `coverage-matrix-merge-results.json` SHA-256
+`ee64dd71f684a8c03474c9b683c3db46d2b8c70a1dadb205000976f78259dbdf`.
+The wrapper exited 1 at 2026-09-27 09:21:12 UTC and restored the original
+`schedutil` governor; an independent check confirmed it, no active Cargo job,
+38,096,068,608 bytes free on root and 401,234,767,872 on `/data`.
+The only dirty status in the qualifier worktree remains the previously
+identified gate-generated LeetCode submodule `src/.sifrbuildinfo`, preserved
+without staging or cleanup. This record uses a separate clean worktree.
+
 ## Final integration qualifier blocked by external developer-tooling guards (2026-09-27)
 
 **BLOCKED; no full merge-profile pass or whole-phase closure.** The canonical
