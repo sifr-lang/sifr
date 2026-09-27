@@ -40,6 +40,46 @@ with SHA-256 `c22ee68d59c8cc0109abc261ef0f519dc76721732d88dd4b88c2093439970be1`,
 and `875055dbd01b6be8c2659495e133698f28aa2781dba0536eca33ddb598ef2733`,
 respectively. The approved governor window restored `schedutil`.
 
+## V03/E01 CLI and driver transfer-inventory repair delivery (2026-09-27)
+
+The current-main TypeScript-Go M1 CLI/driver direct-read/probe inventory
+follow-up merged in [PR #4041](https://github.com/sifr-lang/sifr/pull/4041)
+as 23802aa1492ea68b235bb9faf556846a88a3e323 from exact tested and
+reviewed candidate d36610a6694d3f23c5d71782b306801f88977755
+(base 88b992ffbda63f5680fa761d6e6b0febda32d9b1). The transfer
+guardrail document now classifies all 32 newly observed scanner lines in the
+assigned five CLI/driver paths: 26 production observations and six inline-test
+observations. Cargo vendor/generated-manifest reads remain package/build
+identity inputs; formatter markers and Windows/project cache probes remain
+cache trust or output-storage observations; the test-runner probes are
+generated-output assertions. Formatter source still passes through
+SourceProvider. This inventory change does not claim source-provider migration
+or classify the separate V03 static/direct-filesystem-effects guard.
+
+The exact candidate passed the 32/32 path-and-line inventory comparison,
+TypeScript-Go transfer guard self-test, documentation structure, 900-line
+file-size guardrail for 4,245 files, and committed diff check. The full
+transfer guard now fails only on the separately owned E01 persistent LSP
+Session condition, with no direct-read/probe inventory omissions; it is not
+recorded as a global pass. Scoped Claude Opus 5.5 review returned SATISFIED
+with no blocking findings (response SHA-256
+8ad0bc9b2c11dce937c11c084aeae2e4812558dfa04925ede77536a7e5c54508).
+Candidate-keyed raw logs and the review response are outside the Git tree at
+/data/sifr-typescript-go-direct-probe-inventory-evidence-20260927/d36610a6694d3f23c5d71782b306801f88977755/;
+validation manifest SHA-256
+4360f49a5104710f8be1b905150111f5c6899c1d9820b960382190db6097e9b5.
+The initial documentation check failed because the pinned editor submodule
+was absent; initialization followed by a passing check is recorded separately.
+The automatic PR create-PR CI job failed and is not used as validation.
+The phase-end full merge profile remains deferred under the approved
+intermediate-item policy. E01 still owns persistent Session repair and V03
+still owns the independent static filesystem-effect inventory.
+
+The read-only review suggested clearer wording for two accurate classifications
+and noted a pre-existing missing header on the following older table. These are
+nonblocking documentation follow-ups for the transfer guardrail owner, not
+additional acceptance for this batch.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
