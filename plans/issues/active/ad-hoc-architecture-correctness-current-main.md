@@ -36,6 +36,38 @@ and `ee64dd71f684a8c03474c9b683c3db46d2b8c70a1dadb205000976f78259dbdf`,
 respectively. V01 reference admission, generated setup and preceding
 guardrails passed; the approved governor window restored `schedutil`.
 
+## TypeScript-Go guardrail taxonomy repair delivery (2026-09-27)
+
+The Architecture-owned guardrail wording repair merged in [PR #4048](https://github.com/sifr-lang/sifr/pull/4048)
+as `f8ba9c5728b5e3f1a877c70c4147b1ce771371d8` from exact tested and
+reviewed candidate `836be73c03f3957842e27e1e1b644c9e1e49a4f7` (base
+`b5cfa062924e3b52faebbf6a3d1026759566b505`). Guardrail line 55 now
+names the CLI and driver transfer inventory by ownership instead of the
+V03/E01 delivery label. The 32 scanner observations, their five paths,
+pinned base and production/test split are unchanged. Only the Architecture-owned
+source document changed; no taxonomy rule, inventory row or compiler code did.
+
+On the exact candidate, `coverage_matrix`'s selected
+`readiness/verification_taxonomy` case passed 1/1 (raw log SHA-256
+`b37331b98c12c12e78533e0333d661214a1bafc0640bb76a6b72928854081aba`),
+and its readiness suite passed 4/4 (raw log SHA-256
+`dd3ba3f4f4b48aac84e13b0356b8480f348a6fa228c2a418be824694d229034a`).
+Documentation structure passed after initializing the pinned nested editor
+submodule (raw log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`);
+the two earlier missing-submodule setup failures remain preserved. The
+900-line file-size guardrail passed for 4,245 files (raw log SHA-256
+`2e10821206a8db09bbb2a00e21e9618f4f9f216f73b5c56afcd7ce13f9e819d2`),
+and the committed diff check passed. Scoped read-only Claude Opus 5.5 review
+returned **SATISFIED** with no blocking findings (response SHA-256
+`9cc74432d7faa0f71210a9666b8fefaedfbbce09bb68daa1034044f37215fbec`).
+Candidate-keyed raw logs and the review response are outside the Git tree at
+`/data/sifr-architecture-tsgo-taxonomy-wording-evidence-20260927/836be73c03f3957842e27e1e1b644c9e1e49a4f7/`.
+The reviewer noted the pre-existing accepted delivery label at guardrail
+line 66 as a nonblocking documentation follow-up for this guardrail owner.
+The Emitted-Rust qualifier still owns the final full merge-profile rerun on
+merged main; this focused pass does not qualify the remaining gate.
+
 ## V03/E01 developer-tooling integration blocker (2026-09-27)
 
 The Emitted-Rust qualifier's exact-main `a04cd9c49aaabdac93addb2c8e6a0a964aeae759`
