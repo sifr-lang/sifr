@@ -2,6 +2,62 @@
 
 Status: active
 
+## Final integration qualifier blocked by Architecture split-brain inventory (2026-09-27)
+
+**BLOCKED; no full merge-profile pass or whole-phase closure.** Attempt 14 ran
+`scripts/run_all_tests.sh --profile merge` on exact merged main
+`f6544d44e166aad52881426d0277ec82921a1ce1`, including the Architecture
+taxonomy wording repair [PR #4048](https://github.com/sifr-lang/sifr/pull/4048)
+and its phase receipt [PR #4049](https://github.com/sifr-lang/sifr/pull/4049).
+The pinned `linux-i7-4720hq-12gb-dev-v1` reference (file SHA-256
+`f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb`),
+Rust/Cargo 1.98.1, locked Python 3.14.7, root-ext4 warm Cargo target,
+explicit `SIFR_SYSROOT`, and approved idle-host `performance` governor were
+verified. Reference admission, guardrails, Cargo setup, Rust interop, coverage
+(including `readiness/verification_taxonomy` 4/4), core language, CPython
+differential, Python interop, diagnostics, runtime platform, algorithmic
+compatibility, developer tooling 45/45, and generated-code quality passed.
+Cargo setup's warm-time budget miss was advisory.
+
+The first selected failure was performance
+`frontend-syntax-guardrails/split-brain-guardrail`. It reports four
+unadjudicated production calls:
+`crates/sifr_compiler_services/src/metadata/locations.rs:78` (`sifr_syntax::parse_module_raw`)
+and `crates/sifr_compiler_services/src/stdlib/bootstrap.rs:36,580,583`
+(`parse_module_raw` and both public/private stdlib lowering calls).
+`verification/areas/performance/check_split_brain_guardrail.py` still
+adjudicates the corresponding old `sifr_driver` paths. The sites moved into
+`compiler_services` through Architecture changes; their semantic ownership
+must be checked before updating the exact allowlist. This qualifier does not
+change Architecture source or weaken the guard. The Architecture owner must
+adjudicate these four sites, run the exact guard and self-test, and return a
+merged candidate for another full qualification.
+
+Performance `representative/benchmark-subset` also rejected the producer as
+dirty before measurement; its dependent budget case was blocked. The sole dirt
+was the previously identified gate-generated LeetCode submodule
+`src/.sifrbuildinfo` (SHA-256
+`ccb0f2d17820d23c9e50da6be188ef9eaeefd0d4a4fe8fedd8c261f7c3720e70`).
+With no active process, the artifact was moved intact into attempt-14 evidence;
+the producer and submodule are now clean. The exact algorithmic representative
+suite passed 12/12 afterward without recreating it. The benchmark was not
+rerun because the earlier external guard failure stops this qualifier. Later
+performance cases, subsequent areas, crate selections, and E2E were not reached.
+
+Attempt-14 evidence is under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-f6544d44/attempt14/`:
+`merge-f6544d44e166aad52881426d0277ec82921a1ce1.log` SHA-256
+`c189c5a0edf92b780b82fcaf4e8d85a472449b997a16a42fd6a186233ac9bcb8`,
+`merge.lane.json` SHA-256
+`fba3433436d02eb304098138b6297a959028c56623aa4480ef44b3b24b19e97f`,
+and `performance-merge-results.json` SHA-256
+`4440f5309d27409fd7184194d4317f5b9155505d291b826b310ce13bf9115cf3`.
+The wrapper exited 1 at 2026-09-27 12:11:38 UTC, restored the original
+`schedutil` governor, and an independent check confirmed `schedutil`, no active
+Cargo/gate job, 36,077,223,936 bytes free on root and 399,850,217,472 on
+`/data`. The post-preservation algorithmic suite log SHA-256 is
+`b62041653409854e806a3889f07bc38f0fa068f509d63ee4e548b7f399d733bc`.
+
 ## Final integration qualifier blocked by Architecture taxonomy text (2026-09-27)
 
 **BLOCKED; no full merge-profile pass or whole-phase closure.** Attempt 13 ran
