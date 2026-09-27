@@ -40,6 +40,13 @@ must adjudicate the boundary and repair the guard or producer while preserving
 the canonical release schema-v2 contract. This qualifier does not alter
 release source or rerun the broad gate until that external failure is resolved.
 Later merge-profile areas, crate selections and E2E remain unqualified.
+The release/distribution owner resolved this external schema-epoch dependency
+through [PR #4054](https://github.com/sifr-lang/sifr/pull/4054), merged as
+`d2af8e7b555c5f1b9655c58c63f7afb86b00a21b`; the
+[Phase 40 delivery receipt](phase-40-stable-channel-ga-execution.md#external-schema-epoch-blocker-from-emitted-rust-integration-2026-09-27)
+records its scope, selected 71/71 distribution pass, and review evidence.
+Attempt 15 remains failed; a new final qualifier must establish its own
+merge-profile result on the merged candidate.
 
 Attempt-15 evidence is under
 `/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-b9758f9d/attempt15/`:
