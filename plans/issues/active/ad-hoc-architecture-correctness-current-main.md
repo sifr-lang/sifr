@@ -80,6 +80,38 @@ and noted a pre-existing missing header on the following older table. These are
 nonblocking documentation follow-ups for the transfer guardrail owner, not
 additional acceptance for this batch.
 
+## V03/F24 current-main filesystem-effect inventory repair delivery (2026-09-27)
+
+The V03/F24 inventory drift in the developer-tooling blocker above merged in
+[PR #4043](https://github.com/sifr-lang/sifr/pull/4043) as
+`bd4ceb50931d646ffd47761b469f214903a461be` from exact tested and reviewed
+candidate `a0baf01ed904dc6449426218d3dfba187864646a` (base
+`e3f993019a57d6d2214567b9f09f4bff541b640c`, tree
+`985026bce2fd1fdac797da37bc548bd1b67bf891`). The repair classifies
+current site/symbol effects, preserves unchanged and moved classifications,
+and removes stale source observations. Cache trust and provenance reads are
+build identity, test-only reads are tooling input, metadata/source and
+selected toolchain reads retain semantic-input classifications, and
+filesystem mutations are output effects. Only the checked-in inventory
+changed; no Rust implementation or other owner's guard changed. The blocker
+counted 165 distinct unclassified and 72 distinct stale keys; the candidate
+diff adds 168 and removes 74 rows because repeated keys have multiplicity.
+
+On Linux x86_64, the exact full direct-filesystem-effects check passed for
+3,013 sites, its negative self-test passed, the 900-line file-size guardrail
+passed for 4,245 files, documentation structure passed after the pinned
+editor submodule was initialized, and `git diff --check` passed. The initial
+documentation setup failure is preserved separately. Scoped read-only Claude
+Opus 5.5 review returned **SATISFIED** with no blocking findings (response
+SHA-256 `5c0c23fe4e4d4169196c2bc86696896e54c4199773829877dce4aabecc556ecf`).
+Candidate-keyed raw logs and the review response are outside the Git tree at
+`/data/sifr-architecture-v03-f24-fs-inventory-evidence-20260927/`; validation
+manifest SHA-256 is
+`611e53db8e97406bf22c09bc02cc686e250288160b6c18e050fb7570345db03e`.
+No Cargo target or shared worktree was cleaned. The approved intermediate-item
+policy defers the full merge profile to Q01; this inventory pass does not
+qualify E01's persistent LSP Session condition or the final integration gate.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -341,7 +373,7 @@ holds the separate passing and partial area receipts.
 | X02 | Existing Emitted Rust owner, including retained Item 12; F02-F04 and codegen part of F32; open after X01. | Contextual Result failures at every public emission boundary, no partial output, origin-aware exhaustive IR/final-source validation, trusted macro/bridge policy, diagnostic and fixture checks. |
 | V01 | Compiler/performance qualification owner; F05; fail-closed admission merged, live qualification blocked by shared-host CPU policy. | Compatible reference selected before long work, controlled-clock freshness boundary tests, host/toolchain admission and actual selected reference check. Old Mac capture is expired; Linux reference is host-specific. |
 | V02 | Verification runner owner; F06; merged in [PR #3921](https://github.com/sifr-lang/sifr/pull/3921), receipt below. | One Python-interop area ID across selection, receipt, export and required cache paths; mutated suite/cache inputs alter identity and cold classification. |
-| V03 | Verification guard owner; F24; merged in [PR #3926](https://github.com/sifr-lang/sifr/pull/3926), receipt below. Current-main inventory drift is recorded in the N04 receipt for this owner. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
+| V03 | Verification guard owner; F24; merged in [PR #3926](https://github.com/sifr-lang/sifr/pull/3926), receipt below. Current-main inventory drift was repaired in [PR #4043](https://github.com/sifr-lang/sifr/pull/4043), receipt below. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
 | V03b | Semantic parser guard owner; F25; merged in [PR #3929](https://github.com/sifr-lang/sifr/pull/3929), receipt below. | Detect aliased parse, parse_module_raw and parse_module_suite calls, and adjudicate existing parse-and-lower sites. Separate production from test-only code, including mixed files and cross-file module gating; negative tests cover aliased parse in mixed test/production source. |
 | V04/F26 | Verification process owner; F26; merged in [PR #3931](https://github.com/sifr-lang/sifr/pull/3931), receipt below. | Validate thread and signal lifecycle constraints before spawn or establish guaranteed cleanup ownership immediately. Worker-thread signal setup, selector and callback failures leave no live child or descendants. Preserve current useful descendant/terminal behavior. Named acceptance: `sifr_verify.dx3_process_checks.ProcessTests` F26 negative cases and focused existing process cases. |
 | V04/F27 | Verification process owner; F27; merged in [PR #3933](https://github.com/sifr-lang/sifr/pull/3933), receipt below. | Absolute deadlines cover nested work and lock waits; distinguish native exit 124, timeout and cancellation. Preserve useful descendant/terminal behavior. F26 setup cleanup evidence does not qualify F27. |
