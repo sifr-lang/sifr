@@ -276,6 +276,17 @@ def validate_source_maps(text: str, failures: list[str]) -> None:
     )
 
 
+def validate_persistent_lsp_session(session: str, failures: list[str]) -> None:
+    constructor = session.partition("pub(crate) fn with_compiler(")[2].partition("pub(crate) fn store(")[0]
+    require(
+        re.search(r"(?m)^\s*analysis:\s*LspAnalysisWorkspace,", session) is not None
+        and "analysis: LspAnalysisWorkspace::new(compiler)," in constructor
+        and re.search(r"self\.analysis\s*\.with_document\(", session) is not None,
+        "persistent session guard requires Session to own the persistent LSP analysis workspace",
+        failures,
+    )
+
+
 def validate_lsp_current_state(failures: list[str]) -> None:
     document_store = DOCUMENT_STORE.read_text(encoding="utf-8")
     analysis_workspace = LSP_ANALYSIS_WORKSPACE.read_text(encoding="utf-8")
@@ -292,13 +303,7 @@ def validate_lsp_current_state(failures: list[str]) -> None:
         "persistent session guard requires DocumentStore to keep protocol text/version state without per-document hosts",
         failures,
     )
-    require(
-        "analysis: LspAnalysisWorkspace" in session
-        and "with_document_analysis" in session
-        and "LspAnalysisWorkspace::default()" in session,
-        "persistent session guard requires Session to own the persistent LSP analysis workspace",
-        failures,
-    )
+    validate_persistent_lsp_session(session, failures)
     require(
         "open_single_file_overlay" in analysis_workspace
         and "upsert_overlay_document" in analysis_workspace
@@ -600,6 +605,20 @@ def validate_source_dep_guard(failures: list[str]) -> None:
 
 
 def run_self_test() -> None:
+    session = LSP_SESSION.read_text(encoding="utf-8")
+    failures: list[str] = []
+    validate_persistent_lsp_session(session, failures)
+    if failures:
+        raise SystemExit("transfer guardrail self-test failed: current persistent session rejected")
+    for broken_session in [
+        session.replace("analysis: LspAnalysisWorkspace,", "analysis: (),", 1),
+        session.replace("analysis: LspAnalysisWorkspace::new(compiler),", "analysis: LspAnalysisWorkspace::default(),", 1),
+        session.replace(".with_document(document,", ".without_document(document,", 1),
+    ]:
+        failures = []
+        validate_persistent_lsp_session(broken_session, failures)
+        if not failures:
+            raise SystemExit("transfer guardrail self-test failed: broken persistent session passed")
     with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
         incomplete_doc = Path(tmp) / "incomplete_guardrail.md"
         incomplete_doc.write_text("WorkspaceSession only\n", encoding="utf-8")
