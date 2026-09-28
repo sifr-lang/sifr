@@ -1,0 +1,6 @@
+def main():
+    label: str = "sifr-seed"
+    retries: int = 3
+    total: int = retries * 10 + 2
+    print(label)
+    print(str(total))

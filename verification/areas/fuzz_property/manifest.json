@@ -5,9 +5,11 @@
   "description": "Deterministic property and smoke-fuzz verification.",
   "parallel_safe": false,
   "resource_classes": [
-    "default-local"
+    "default-local",
+    "long-running",
+    "large-memory"
   ],
-  "timeout_seconds": 900,
+  "timeout_seconds": 3300,
   "suites": [
     {
       "name": "cargo-smoke",
@@ -50,6 +52,24 @@
           "id": "fuzz-smoke",
           "entry": "verification/areas/fuzz_property/fuzz_smoke_manifest.json",
           "command": "fuzz-smoke-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "sustained-fuzz",
+      "kind": "adapter",
+      "resource_classes": [
+        "long-running",
+        "large-memory"
+      ],
+      "timeout_seconds": 3300,
+      "cases": [
+        {
+          "id": "parser-guided",
+          "entry": "verification/areas/fuzz_property/coverage_fuzz_manifest.json",
+          "command": "coverage-fuzz-index",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

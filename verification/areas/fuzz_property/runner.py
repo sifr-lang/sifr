@@ -16,6 +16,7 @@ from sifr_verify.hardening.property_and_fuzz import (  # noqa: E402
     run_fuzz_smoke_suite,
     run_property_suite,
 )
+from sifr_verify.hardening.coverage_fuzz import run as run_coverage_fuzz  # noqa: E402
 
 MANIFEST_PATH = Path(__file__).resolve().with_name("manifest.json")
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "fuzz-property-results.json"
@@ -87,7 +88,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[str, Any]]:
     suites = manifest.get("suites", [])
-    selected = [suite for suite in suites if not requested or str(suite.get("name")) in requested]
+    selected = [
+        suite for suite in suites
+        if (str(suite.get("name")) in requested if requested else str(suite.get("name")) != "sustained-fuzz")
+    ]
     if requested:
         present = {str(suite.get("name")) for suite in selected}
         missing = sorted(requested.difference(present))
@@ -105,6 +109,8 @@ def hardening_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
         raise SystemExit(f"fuzz_property suite '{name}' must contain exactly one index case")
     case = cases[0]
     command = str(case.get("command"))
+    if name == "sustained-fuzz" and command != "coverage-fuzz-index":
+        raise SystemExit("sustained-fuzz suite must use coverage-fuzz-index command")
     if name == "property" and command != "property-index":
         raise SystemExit("property suite must use property-index command")
     if name == "fuzz-smoke" and command != "fuzz-smoke-index":
@@ -122,6 +128,19 @@ def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
     if str(area_suite["name"]) == "cargo-smoke":
         return run_cargo_smoke_suite(area_suite)
     suite = hardening_suite(area_suite)
+    if suite["runner"] == "sustained-fuzz":
+        receipt = run_coverage_fuzz(
+            profile=os.environ.get("SIFR_VALIDATION_PROFILE", "nightly"),
+            corpus=REPO_ROOT / "verification/fuzz/corpus/parser",
+        )
+        case = {"id": "parser-guided", "variants": receipt["variants"], "receipt": receipt}
+        failed = int(receipt["status"] != "pass")
+        return {
+            "name": "sustained-fuzz", "owner": "compiler/hardening",
+            "blocking": True, "runner": "sustained-fuzz", "cases": [case],
+            "failed_cases": failed, "total_variants": len(receipt["variants"]),
+            "total_failures": failed,
+        }
     if suite["runner"] == "property":
         return run_property_suite(suite=suite, repo_root=REPO_ROOT)
     return run_fuzz_smoke_suite(suite=suite, repo_root=REPO_ROOT)

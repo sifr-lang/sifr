@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "H01A-PARSER-GUIDED-0001",
+  "target": "parser",
+  "cargo_manifest": "verification/fuzz/Cargo.toml",
+  "corpus": "verification/fuzz/corpus/parser",
+  "toolchain": "nightly",
+  "cargo_fuzz_version": "0.13.2",
+  "budgets_seconds": {
+    "nightly": 600,
+    "release": 1800
+  },
+  "build_timeout_seconds": 1200,
+  "target_grace_seconds": 120
+}

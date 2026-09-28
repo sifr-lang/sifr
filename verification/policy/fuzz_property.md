@@ -79,3 +79,28 @@ Long-running fuzzing is separate from local blocking smoke gates:
 - definition: `verification/areas/fuzz_property/sustained_lane.md`
 - status is signal-only and signal-queue-generating, not merge-blocking.
 - nightly/release sustained lanes use the same target ids and promotion workflow as local smoke; broad coverage never bypasses minimization before becoming a merge-blocking regression.
+
+### H01a parser guided target
+
+The Sifr parser target lives in `verification/fuzz`. It requires the nightly Rust
+toolchain, `cargo-fuzz` 0.13.2, the Ruff submodule, and downloaded dependencies
+before the offline sustained runner starts. The named live check is:
+
+```sh
+cargo +nightly fuzz run --fuzz-dir verification/fuzz parser <corpus> -- -max_total_time=10 -print_final_stats=1
+```
+
+The runner is `PYTHONPATH=verification/runner python3 -m
+sifr_verify.hardening.coverage_fuzz --profile nightly --result-json
+target/verification/fuzz/parser-receipt.json`. Its nightly and release target
+budgets are 10 and 30 minutes. A separate 20-minute instrumented build preflight
+precedes the target budget. The area manifest reserves 55 minutes and long-running,
+large-memory resources for the explicit `sustained-fuzz` suite. That suite remains
+outside default area selection until H01i wires all guided targets into the
+nightly and release profiles.
+
+Receipts identify the tool, config, pinned corpus hashes, working corpus, execution
+count, and coverage edges. They distinguish unavailable tooling, offline
+dependencies, build failure, target timeout, and compiler findings. For a finding,
+the runner retains the raw artifact, invokes LibFuzzer testcase minimization, and
+requires two failing replays of the saved minimized seed before calling it stable.
