@@ -2,7 +2,7 @@
 use crate::windows_storage_security as security;
 use std::fs::{self, File, OpenOptions};
 use std::io;
-use std::os::windows::fs::OpenOptionsExt;
+use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
 use std::os::windows::io::AsRawHandle;
 use std::path::{Component, Path, PathBuf};
 use std::time::Duration;
