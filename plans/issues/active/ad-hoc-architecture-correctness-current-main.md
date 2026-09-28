@@ -533,7 +533,7 @@ holds the separate passing and partial area receipts.
 | X02 | Existing Emitted Rust owner, including retained Item 12; F02-F04 and codegen part of F32; open after X01. | Contextual Result failures at every public emission boundary, no partial output, origin-aware exhaustive IR/final-source validation, trusted macro/bridge policy, diagnostic and fixture checks. |
 | V01 | Compiler/performance qualification owner; F05; fail-closed admission merged and live selected-reference representative qualification passed on main `8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b`. | Compatible reference selected before long work, controlled-clock freshness boundary tests, host/toolchain admission and actual selected reference check. Old Mac capture is expired; Linux reference is host-specific. |
 | V02 | Verification runner owner; F06; merged in [PR #3921](https://github.com/sifr-lang/sifr/pull/3921), receipt below. | One Python-interop area ID across selection, receipt, export and required cache paths; mutated suite/cache inputs alter identity and cold classification. |
-| V03 | Verification guard owner; F24; merged in [PR #3926](https://github.com/sifr-lang/sifr/pull/3926), receipt below. Current-main inventory drift was repaired in [PR #4043](https://github.com/sifr-lang/sifr/pull/4043), receipt below. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
+| V03 | Verification guard owner; F24; merged in [PR #3926](https://github.com/sifr-lang/sifr/pull/3926), receipt below. Current-main inventory drift was repaired in [PR #4043](https://github.com/sifr-lang/sifr/pull/4043), with C02b and C02c handoffs reconciled in [PR #4061](https://github.com/sifr-lang/sifr/pull/4061) and [PR #4065](https://github.com/sifr-lang/sifr/pull/4065); receipts below. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
 | V03b | Semantic parser guard owner; F25; merged in [PR #3929](https://github.com/sifr-lang/sifr/pull/3929), receipt below. | Detect aliased parse, parse_module_raw and parse_module_suite calls, and adjudicate existing parse-and-lower sites. Separate production from test-only code, including mixed files and cross-file module gating; negative tests cover aliased parse in mixed test/production source. |
 | V04/F26 | Verification process owner; F26; merged in [PR #3931](https://github.com/sifr-lang/sifr/pull/3931), receipt below. | Validate thread and signal lifecycle constraints before spawn or establish guaranteed cleanup ownership immediately. Worker-thread signal setup, selector and callback failures leave no live child or descendants. Preserve current useful descendant/terminal behavior. Named acceptance: `sifr_verify.dx3_process_checks.ProcessTests` F26 negative cases and focused existing process cases. |
 | V04/F27 | Verification process owner; F27; merged in [PR #3933](https://github.com/sifr-lang/sifr/pull/3933), receipt below. | Absolute deadlines cover nested work and lock waits; distinguish native exit 124, timeout and cancellation. Preserve useful descendant/terminal behavior. F26 setup cleanup evidence does not qualify F27. |
@@ -718,6 +718,37 @@ The approved intermediate-item policy defers the full merge profile to Q01.
 On Linux x86_64 with rustc/Cargo 1.98.1, the three reserved lower-service exact negative cases and the three named analysis exact cases passed 1/1 each. Focused analysis initialization-isolation and component-host-residency cases plus driver offline preparation, import span, import alias/shadowing, and ambient component-capability cases each passed 1/1. Locked compiler-services/driver/analysis/LSP compilation passed. Production strict Clippy passed for compiler services and analysis; driver Clippy passed with only four warning categories from untouched native/cache/rust-interop files allowed. Strict driver Clippy still reports six such pre-existing warnings, and an optional strict lower-service `--tests` Clippy run reports 39 pre-existing metadata/stdlib/context test warnings under those owners. Rustfmt, the 900-line file-size guard, HIR maintainability, compiler and analysis split-brain guards, documentation structure, and committed diff checks passed. Candidate-keyed commands, inputs, setup history, raw logs, and hashes are at `/data/sifr-architecture-c02c-evidence-20260928/c88fdeaf5bb7ec38652f5be81d7d6f4cf8f779bf/c88fdeaf5bb7ec38652f5be81d7d6f4cf8f779bf-validation.md` (SHA-256 `5d945ad7ebb5148a02541d8fbf27d85932aa99ba9de0df66dd757febec4d3657`). Scoped read-only Opus 5.5 review returned **SATISFIED** with no blocking findings (response SHA-256 `15b1e70b9f4a30cad9b9a889df60556149cfab25502980912867c1b630018050`). Its nonblocking suggestions for a shared source-range diagnostic helper, explicit future compiler-version input, and a narrower build-cache accessor remain deferred follow-ups.
 
 **V03/F24 owner handoff:** the direct filesystem-effect inventory reports two production `is_file` sites relocated from driver to the lower SQL editor service, five new lower test fixture/read sites, and the two stale driver rows (raw log SHA-256 `36b6e5ba8cb6c3a1e3e06fea13ac27c843014831ea4f1f52340c4f60c66dfb2c`). V03 owns classification and retirement of these rows; C02c did not change scanner or inventory semantics. The automatic PR create-profile CI job stopped before Cargo at the already recorded V01 `performance_reference_admission` prerequisite because `SIFR_PERFORMANCE_REFERENCE` was not selected (raw job log SHA-256 `7529369028c9edba8ff578ef2af91568adcdd4d0fd0b5c1c390d43ee9b833f75`). Neither failure is C02c acceptance evidence. The approved intermediate-item policy defers the full merge profile to Q01; no C02d or whole-phase qualification is claimed here.
+
+## V03/F24 C02c filesystem-effect inventory handoff delivery (2026-09-28)
+
+The C02c/F19 handoff merged in [PR #4065](https://github.com/sifr-lang/sifr/pull/4065)
+as `dee1201676e29c7482cca90dbf0a9980346f76bf` from exact tested and
+reviewed candidate `a46dd00bd2d3e47461e225820931e64892a3d41a` (base
+`290c0d2775d6cfc1e022942bdb04dcb2c3627630`, tree
+`1c11b74977ff9740e994c1994dfe9e38d6763c7b`). The inventory now follows
+the two production `is_file` source sites (three scanner observations) from
+driver into `sifr_compiler_services::sql_editor`, retaining `build-identity`
+classifications and their site/symbol keys. Four new lower-service test fixture
+mutations are `output-effect`; the missing-lock assertion is `tooling-input`.
+The stale driver rows were retired. Only the checked-in inventory changed; Rust
+source, scanner behavior, SQL semantics and C02d scope did not change.
+
+On Linux x86_64, the exact direct-filesystem-effects check passed for 3,019
+sites (raw SHA-256
+`176a01cbc1be4033f6fcf5a2639ca9689162b60aa150520f737cebdc13649d18`)
+and its exact `--self-test` passed (raw SHA-256
+`8fa490515a807532f428fbe8fbef1de198850a48156fd4e318782e22aada6c20`).
+The 900-line file-size guardrail passed for 4,252 files, and the diff check
+passed. The original C02c failure remained preserved with SHA-256
+`36b6e5ba8cb6c3a1e3e06fea13ac27c843014831ea4f1f52340c4f60c66dfb2c`.
+Scoped read-only Claude Opus 5.5 review returned **SATISFIED** with no findings
+(response SHA-256
+`04a4932de2b35ac0576efd5b18d9ce5e94c670905719207f5717a5da19d433a4`).
+Candidate-keyed evidence is outside the Git tree at
+`/data/sifr-architecture-v03-c02c-inventory-evidence-20260928/a46dd00bd2d3e47461e225820931e64892a3d41a/`
+(validation manifest SHA-256
+`79a374428ac085caa92b140e40396c3e56a7e355ad8e973d98d9eca4d519477f`).
+The approved intermediate-item policy defers the full merge profile to Q01.
 
 ## N06/F13-F14 and DX9-F5 generated-storage delivery receipt (2026-09-24)
 
