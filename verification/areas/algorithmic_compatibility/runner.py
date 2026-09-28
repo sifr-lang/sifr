@@ -298,7 +298,7 @@ def validate_representative_row(row: object, seen_ids: set[str], categories: set
     if not path.is_file() or path.parent != LEETCODE_ROOT:
         raise SystemExit(f"representative row {row_id} path must be a checked-in LeetCode fixture")
     command = required_string(row, "command")
-    expected_command = f"target/debug/sifr check {path.relative_to(REPO_ROOT)}"
+    expected_command = f"target/debug/sifr check --no-incremental {path.relative_to(REPO_ROOT)}"
     if command != expected_command:
         raise SystemExit(f"representative row {row_id} command must be {expected_command}")
     timeout = row.get("timeout_seconds")
@@ -348,7 +348,7 @@ def run_manifest_fixture(
     result_entry = result_entry_for_fixture(path, result)
     variant = {
         "label": str(row["id"]),
-        "argv": [str(sifr_bin), "check", str(path.relative_to(REPO_ROOT))],
+        "argv": [str(sifr_bin), "check", "--no-incremental", str(path.relative_to(REPO_ROOT))],
         "status": status,
         "mismatches": failures,
         "expected_exit_code": 0,
@@ -382,7 +382,7 @@ def run_leetcode_full() -> list[dict[str, Any]]:
         variants.append(
             {
                 "label": path.stem,
-                "argv": [str(sifr_bin), "check", str(path.relative_to(REPO_ROOT))],
+                "argv": [str(sifr_bin), "check", "--no-incremental", str(path.relative_to(REPO_ROOT))],
                 "status": status,
                 "mismatches": failures,
                 "expected_exit_code": 0,
@@ -531,7 +531,7 @@ def run_leetcode_check() -> tuple[list[str], subprocess.CompletedProcess[str]]:
         f"LeetCode corpus check completed: {len(paths) - len(failures)}/{len(paths)} passed in {elapsed:.1f}s"
     )
     stderr = render_failures(failures)
-    argv = [str(sifr_bin), "check", str(LEETCODE_ROOT.relative_to(REPO_ROOT))]
+    argv = [str(sifr_bin), "check", "--no-incremental", str(LEETCODE_ROOT.relative_to(REPO_ROOT))]
     return argv, subprocess.CompletedProcess(
         args=argv,
         returncode=1 if failures else 0,
@@ -547,8 +547,9 @@ def resolve_default_sifr_bin() -> Path:
 def run_fixture(sifr_bin: Path, path: Path, *, timeout_seconds: int | None = None) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.setdefault("SIFR_ARTIFACT_CACHE", "1")
+    # Corpus checks must not publish project hints into the pinned Git submodule.
     return subprocess.run(
-        [str(sifr_bin), "check", str(path.relative_to(REPO_ROOT))],
+        [str(sifr_bin), "check", "--no-incremental", str(path.relative_to(REPO_ROOT))],
         cwd=REPO_ROOT,
         env=env,
         text=True,

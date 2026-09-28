@@ -28,7 +28,7 @@
       "category": "arrays_hashing",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0001_two_sum.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0001_two_sum.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -38,7 +38,7 @@
       "category": "stack",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0020_valid_parentheses.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0020_valid_parentheses.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -48,7 +48,7 @@
       "category": "binary_search",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0033_search_in_rotated_sorted_array.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0033_search_in_rotated_sorted_array.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -58,7 +58,7 @@
       "category": "dynamic_programming",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0053_maximum_subarray.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0053_maximum_subarray.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -68,7 +68,7 @@
       "category": "backtracking",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0078_subsets.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0078_subsets.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -78,7 +78,7 @@
       "category": "linked_lists_trees",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0102_binary_tree_level_order_traversal.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0102_binary_tree_level_order_traversal.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -88,7 +88,7 @@
       "category": "design",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0146_lru_cache.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0146_lru_cache.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -98,7 +98,7 @@
       "category": "graphs",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0200_number_of_islands.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0200_number_of_islands.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -108,7 +108,7 @@
       "category": "heap_priority_queue",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0215_kth_largest_element_in_an_array.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0215_kth_largest_element_in_an_array.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -118,7 +118,7 @@
       "category": "sliding_window",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0239_sliding_window_maximum.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0239_sliding_window_maximum.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -128,7 +128,7 @@
       "category": "greedy_intervals",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0253_meeting_rooms.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0253_meeting_rooms.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     },
@@ -138,14 +138,14 @@
       "category": "two_pointers_strings",
       "owner": "algorithmic/compatibility",
       "expected_classification": "PASS",
-      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0347_top_k_frequent_elements.sifr",
+      "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src/0347_top_k_frequent_elements.sifr",
       "timeout_seconds": 15,
       "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
     }
   ],
   "full_corpus": {
     "id": "leetcode-full-corpus",
-    "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src",
+    "command": "target/debug/sifr check --no-incremental verification/areas/algorithmic_compatibility/corpora/leetcode/src",
     "timeout_seconds": 1800,
     "expected_fixture_count": 411,
     "result_artifact": "target/verification/areas/algorithmic_compatibility/leetcode-full-results.json",
