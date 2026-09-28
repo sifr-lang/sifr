@@ -520,6 +520,56 @@ measured editor performance. These are not E01c merge blockers. With E01a
 with their named assertions, E01/F20-F21 is complete. E02, E03 and Q01 remain
 separately owned.
 
+## E02/F22 canonical lint and current-action delivery receipt (2026-09-28)
+
+[PR #4083](https://github.com/sifr-lang/sifr/pull/4083) merged as
+339bb5096da4c2905b7fc07258ff877033dd1e8f from exact tested and
+reviewed candidate d7ecb71f109153af26216f9d31f94115eab0b25c (base
+f58a63f0c2196c06c347b6891e8810c1bc1ebf25, tree
+016d8b2a2864c9233f7c0d23a197506de5242c46). On a lint miss,
+analysis now passes its current frontend context's parsed syntax and HIR views
+to the lint engine; a hit returns its existing per-file result. Current policy
+code actions consume that result, reject a diagnostic moved off the requested
+line, and insert suppression on the current diagnostic line. Fix-all applies
+current diagnostics and rechecks changed text as a new lint source snapshot.
+Standalone policy selection, per-file ignores, severity, suppression filtering
+and sorting remain shared. Code actions moved to a separate analysis module to
+keep hand-maintained files below 900 lines. The architecture note records this
+authority boundary.
+
+On Linux x86_64 with rustc/Cargo 1.98.1, all **13 exact one-assertion**
+selections passed: four new sifr_lint cases, three new sifr_analysis
+cases, five preserved analysis lint/action regressions, and one sifr_lsp
+SQL editor action regression. Formatting, the 900-line file-size guardrail
+(4,266 files), HIR maintainability, documentation structure, analysis
+split-brain guard and committed diff checks passed. The tracked Cargo.lock
+and Ruff gitlink were unchanged. The owned warm target reached 17 GiB with
+71 GiB free on /data; no target was cleaned. The first documentation
+attempt failed only because the new worktree lacked the pinned nested VS Code
+submodule; after initialization the check passed. Candidate-keyed commands,
+inputs and raw logs are outside the Git tree at
+/data/sifr-architecture-e02-evidence-20260928/d7ecb71f109153af26216f9d31f94115eab0b25c/;
+the validation manifest SHA-256 is
+b8449adb5f4224b3bc48e24f7694d55ef535e2c136c83a1848cb024c7b0fdf41.
+
+Scoped read-only Claude Opus 5.5 review returned **SATISFIED** with no
+blocking findings (response SHA-256
+1dd7235cac1c6469c753cb9afad48ae70491cfd67e739f6dc8ac85982f537620).
+Its nonblocking follow-ups are a more explicit parse-failure view sentinel for
+the lint API, the pre-existing end-of-line suppression edit behavior for the
+lint/action owner, and a shared line index for large-file action lookup under
+E03 performance ownership. Supplemental strict Clippy stopped in already
+recorded sifr_codegen/src/checked_place.rs:111,116
+items_after_statements warnings; allowing those exposed an older analysis
+preview uninlined_format_args warning at implementation.rs:494 (original
+preview code predates E02). A scoped Clippy run with only those two known
+categories allowed passed. Neither failed attempt is E02 acceptance evidence
+or a reason to absorb the other owners' code.
+
+E02/F22 is complete on current main. E03 remains the measured-performance
+owner after E01c and E02. Q01 retains the final exact-candidate full merge
+profile and whole-phase integration decision.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -807,7 +857,7 @@ holds the separate passing and partial area receipts.
 | E01a | LSP/package external-input owner; F20-F21; merged in [PR #4075](https://github.com/sifr-lang/sifr/pull/4075), receipt above. | Per-root external snapshots and generations; manifest/lock/config/bridge/binding/certification/environment transitions, positive and negative cache invalidation, unchanged warm reuse. Named cases above. |
 | E01b | LSP watcher/protocol owner; F20-F21 after merged E01a; merged in [PR #4077](https://github.com/sifr-lang/sifr/pull/4077), receipt above. | Capability-gated registration and response acknowledgement; rejected/unsupported/unconfirmed per-request revalidation, lifecycle events, reconnect, storms and multi-root isolation. Named cases above. |
 | E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; merged in [PR #4081](https://github.com/sifr-lang/sifr/pull/4081), receipt above. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, nested-to-ancestor root reassignment, unstable inputs, cancellation and multi-root lifecycle. Named cases above. |
-| E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
+| E02 | Analysis/lint owner; F22; merged in [PR #4083](https://github.com/sifr-lang/sifr/pull/4083), receipt above. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; open after E01c and E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
 | E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01 | Fuzz/property owner; F28; open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. |
