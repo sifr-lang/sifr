@@ -160,6 +160,9 @@ def run_generated_rust_preview(client: LspClient, uri: str) -> None:
     client.request("workspace/executeCommand", {"command": "sifr.server.showGeneratedRust", "arguments": [uri]})
 
 
+WORKSPACE_SCENARIOS = {"lsp.cold_start", "lsp.workspace_diagnostics", "lsp.references", "lsp.rename"}
+
+
 WARM_SCENARIOS: dict[str, Callable[[LspClient, str], None]] = {
     "lsp.request_families": run_family,
     "lsp.code_actions": run_code_actions,
@@ -195,6 +198,7 @@ def run_document_diagnostics(client: LspClient, uri: str, source: str, state: di
 
 
 def cache_stats(client: LspClient) -> tuple[int, int]:
+    """Read cumulative Python declaration snapshot reuse counters from the server."""
     payload = client.request("sifr/debugCacheStats", {})
     if not isinstance(payload, dict):
         raise ValueError("LSP cache statistics response must be an object")
@@ -297,15 +301,14 @@ def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: in
     return samples, *cache_delta(before, after)
 
 
-def validate_benchmark_input(project_root: Path, source_path: Path) -> None:
+def validate_benchmark_input(project_root: Path, source_path: Path, minimum_modules: int = 0) -> None:
     if not project_root.joinpath("sifr.toml").is_file():
         raise ValueError("LSP benchmark project root requires sifr.toml")
     if source_path != project_root / "src" / "main.sifr":
         raise ValueError("LSP benchmark source must be project_root/src/main.sifr")
-    if project_root.name == "lsp_workspace":
-        module_count = len(list(project_root.joinpath("src").glob("*.sifr")))
-        if module_count < 25:
-            raise ValueError(f"LSP workspace benchmark requires at least 25 modules, found {module_count}")
+    module_count = len(list(project_root.joinpath("src").glob("*.sifr")))
+    if module_count < minimum_modules:
+        raise ValueError(f"LSP workspace benchmark requires at least {minimum_modules} modules, found {module_count}")
 
 
 def run_scenario(
@@ -347,7 +350,7 @@ def main() -> int:
     inner_repetitions = int(sys.argv[5])
     if inner_repetitions <= 0:
         raise ValueError("inner-repetitions must be positive")
-    validate_benchmark_input(project_root, source_path)
+    validate_benchmark_input(project_root, source_path, 25 if scenario in WORKSPACE_SCENARIOS else 0)
     source = source_path.read_text(encoding="utf-8")
     samples, cache_hits, cache_misses = run_scenario(
         scenario,

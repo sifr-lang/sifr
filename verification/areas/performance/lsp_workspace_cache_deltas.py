@@ -40,7 +40,7 @@ def main() -> int:
         root = Path(raw) / "lsp_workspace"
         shutil.copytree(FIXTURE_ROOT, root)
         source_path = root / "src" / "main.sifr"
-        validate_benchmark_input(root, source_path)
+        validate_benchmark_input(root, source_path, 25)
         module_count = len(list((root / "src").glob("*.sifr")))
         if module_count < 25:
             raise AssertionError(f"expected at least 25 source modules, found {module_count}")
@@ -108,7 +108,18 @@ def main() -> int:
             )
             expect("external_change", results["external_change"], hits=0, misses=1)
 
-            edit(api_text.replace("return 11", "return 12"), 4)
+            # Closing the last document retires the project analysis. Reopen
+            # without diagnostics so cancellation races a real cold 25-module
+            # query rather than an already-warm millisecond-scale hit.
+            for document_uri in (uri, api_uri):
+                client.notify("textDocument/didClose", {"textDocument": {"uri": document_uri}})
+            cache_stats(client)
+            for document_uri, source in ((uri, original), (api_uri, original_api)):
+                client.notify(
+                    "textDocument/didOpen",
+                    {"textDocument": {"uri": document_uri, "languageId": "sifr", "version": 1, "text": source}},
+                )
+            cache_stats(client)
             before = cache_stats(client)
             cancellation_id = 900_003
             cancellation_started = time.perf_counter()
