@@ -414,3 +414,80 @@ fn multi_root_requests_keep_generation_and_publication_isolated() {
     let current_publication = publish(&mut session, &server, &client, &first_uri);
     assert_eq!(current_publication["version"], 2);
 }
+
+#[test]
+fn nested_manifest_removal_reassigns_to_ancestor_and_publishes_current_diagnostics() {
+    let (mut session, temp, uri) = open_fixture(SOURCE);
+    let ancestor = temp.path();
+    let nested = ancestor.join("src");
+    let nested_path = nested.join("main.sifr");
+    let nested_manifest = nested.join("sifr.toml");
+    std::fs::write(
+        &nested_manifest,
+        "[package]\nname = \"nested-python\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \".\"\n\n[python]\nvenv = \"../.venv\"\npyproject = \"../pyproject.toml\"\nlock = \"../uv.lock\"\n\n[trust]\npython = [\"builtins\", \"math\"]\n",
+    )
+    .expect("write nested manifest");
+    session.observe_external_inputs_for_path(&nested_path);
+    let warm = completion(&mut session, &uri);
+    assert!(warm.to_string().contains("math.sqrt"));
+    assert_eq!(
+        session
+            .external_input_identity_for_path(&nested_path)
+            .package_root,
+        Some(nested.clone())
+    );
+    assert!(session.python_declarations.has_entry(&nested));
+
+    let mut manifest = std::fs::read_to_string(&nested_manifest).expect("read nested manifest");
+    manifest.push_str("# advance nested generation\n");
+    std::fs::write(&nested_manifest, manifest).expect("change nested manifest");
+    session.observe_external_inputs_for_path(&nested_path);
+    assert!(
+        completion(&mut session, &uri)
+            .to_string()
+            .contains("math.sqrt")
+    );
+
+    let invalid = SOURCE.replace("math.sqrt", "math.pi");
+    session
+        .change_compacted(&uri, Some(2), &[json!({"text": invalid})])
+        .expect("change nested source");
+    session
+        .python_declarations
+        .inject_external_change_before_verification(nested_manifest, None);
+    let stale = session
+        .python_declaration_snapshot(&uri)
+        .expect_err("nested result must be rejected after manifest deletion");
+    assert_eq!(stale.code(), lsp_server::ErrorCode::ContentModified as i32);
+    assert_eq!(session.external_input_generation(&nested), None);
+    assert!(session.external_input_generation(ancestor).is_some());
+
+    let current = session
+        .python_declaration_snapshot(&uri)
+        .expect("ancestor-owned status must complete");
+    assert!(!current.insights.is_empty());
+    let identity = session.external_input_identity_for_path(&nested_path);
+    assert_eq!(identity.package_root.as_deref(), Some(ancestor));
+    assert_eq!(
+        identity.generation,
+        session.external_input_generation(ancestor).unwrap_or(0)
+    );
+    assert!(!session.python_declarations.has_entry(&nested));
+    assert!(session.python_declarations.has_entry(ancestor));
+
+    let (server, client) = Connection::memory();
+    let publication = publish(&mut session, &server, &client, &uri);
+    assert_eq!(publication["version"], 2);
+    assert!(has_code(
+        publication["diagnostics"]
+            .as_array()
+            .expect("current diagnostics"),
+        "SIFR-PYCALL-0001"
+    ));
+    assert!(
+        completion(&mut session, &uri)
+            .to_string()
+            .contains("math.pi")
+    );
+    assert!(hover(&mut session, &uri).to_string().contains("math.pi"));
+}

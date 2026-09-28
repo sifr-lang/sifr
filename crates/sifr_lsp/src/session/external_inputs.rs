@@ -1,5 +1,11 @@
 use super::Session;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ExternalInputIdentity {
+    pub(crate) package_root: Option<PathBuf>,
+    pub(crate) generation: u64,
+}
 
 impl Session {
     #[cfg(test)]
@@ -7,31 +13,70 @@ impl Session {
         self.external_inputs.generation(root)
     }
 
-    pub(crate) fn external_input_generation_for_path(&self, path: &Path) -> u64 {
-        self.external_inputs
-            .owning_root(path)
-            .and_then(|root| self.external_inputs.generation(root))
-            .unwrap_or(0)
-    }
-
-    /// Revalidate a root on demand. E01b uses this while watcher authority is absent.
-    pub(crate) fn observe_external_inputs_for_path(&mut self, path: &Path) -> u64 {
+    fn external_input_roots_for_path(&self, path: &Path) -> (Option<PathBuf>, Option<PathBuf>) {
         let mut provider = sifr_analysis::DiskSourceProvider::new();
         let current = crate::python_declarations::package_root_for(path, &mut provider);
         let tracked = self
             .external_inputs
             .owning_root(path)
             .map(Path::to_path_buf);
-        if let (Some(current), Some(tracked)) = (&current, &tracked) {
-            if tracked.components().count() > current.components().count() {
-                // A nested manifest may have disappeared. Retire its old owner,
-                // then establish the ancestor that now owns the open document.
-                self.observe_external_root(tracked);
+        (current, tracked)
+    }
+
+    pub(crate) fn external_input_identity_for_path(&self, path: &Path) -> ExternalInputIdentity {
+        let (package_root, tracked) = self.external_input_roots_for_path(path);
+        let generation = package_root
+            .as_deref()
+            .or(tracked.as_deref())
+            .and_then(|root| self.external_inputs.generation(root))
+            .unwrap_or(0);
+        ExternalInputIdentity {
+            package_root,
+            generation,
+        }
+    }
+
+    /// Revalidate a root on demand. E01b uses this while watcher authority is absent.
+    pub(crate) fn observe_external_inputs_for_path(&mut self, path: &Path) -> u64 {
+        self.observe_external_input_identity_for_path(path)
+            .generation
+    }
+
+    pub(crate) fn observe_external_input_identity_for_path(
+        &mut self,
+        path: &Path,
+    ) -> ExternalInputIdentity {
+        let (package_root, tracked) = self.external_input_roots_for_path(path);
+        let owner_changed = if let (Some(current), Some(previous)) = (&package_root, &tracked) {
+            if previous.components().count() > current.components().count() {
+                // The nested manifest disappeared. Remove its old authority so
+                // later captures and watcher events use the ancestor owner.
+                self.external_inputs.retire_root(previous);
+                self.python_declarations.invalidate_external_root(previous);
+                self.analysis.refresh_external_root(previous, &self.store);
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        let generation = package_root
+            .as_deref()
+            .or(tracked.as_deref())
+            .map_or(0, |root| self.observe_external_root(root));
+        if owner_changed {
+            if let Some(current) = package_root.as_deref() {
+                // Rebuild the ancestor project with the reassigned open source.
+                // A stable external fingerprint alone cannot update its file map.
+                self.python_declarations.invalidate_external_root(current);
+                self.analysis.refresh_external_root(current, &self.store);
             }
         }
-        current
-            .or(tracked)
-            .map_or(0, |root| self.observe_external_root(&root))
+        ExternalInputIdentity {
+            package_root,
+            generation,
+        }
     }
 
     pub(super) fn observe_external_root(&mut self, root: &Path) -> u64 {

@@ -191,7 +191,6 @@ impl Session {
         self.check_active_request_cancelled()?;
         let document_path = self.store().document(uri)?.path().to_path_buf();
         let mut provider = DiskSourceProvider::new();
-        let package_root = package_root_for(&document_path, &mut provider);
         let (graph_revision, source_revision, current_file) =
             self.with_document_analysis(uri, |snapshot, _host, file, _source| {
                 Ok((
@@ -200,10 +199,12 @@ impl Session {
                     file,
                 ))
             })?;
+        let external_identity = self.external_input_identity_for_path(&document_path);
+        let package_root = external_identity.package_root.clone();
         let cache_key = package_root
             .clone()
             .unwrap_or_else(|| document_path.clone());
-        let external_fingerprint = self.external_input_generation_for_path(&document_path);
+        let external_fingerprint = external_identity.generation;
         let package_owner = package_root
             .as_deref()
             .is_none_or(|root| self.is_python_package_diagnostic_owner(uri, root, &mut provider));
@@ -214,7 +215,7 @@ impl Session {
             {
                 let result = entry.snapshot.for_document(current_file, package_owner);
                 self.check_active_request_cancelled()?;
-                self.verify_python_request_input(&document_path, &cache_key, external_fingerprint)?;
+                self.verify_python_request_input(&document_path, &external_identity)?;
                 return Ok(result);
             }
         }
@@ -273,7 +274,7 @@ impl Session {
             mark_embedded_bridge_targets(&mut plan);
         }
         self.check_active_request_cancelled()?;
-        self.verify_python_request_input(&document_path, &cache_key, external_fingerprint)?;
+        self.verify_python_request_input(&document_path, &external_identity)?;
         let snapshot = PackageSnapshot {
             insights: declaration_insights(&plan, &analysis_plan.module_files),
             diagnostics,
@@ -297,8 +298,7 @@ impl Session {
     fn verify_python_request_input(
         &mut self,
         document_path: &Path,
-        expected_root: &Path,
-        fingerprint: u64,
+        expected: &crate::session::ExternalInputIdentity,
     ) -> LspResult<()> {
         #[cfg(test)]
         if let Some((path, contents)) = self.python_declarations.before_verification_change.take() {
@@ -308,11 +308,8 @@ impl Session {
             }
             .map_err(|error| LspError::internal(format!("test input mutation failed: {error}")))?;
         }
-        let current_fingerprint = self.observe_external_inputs_for_path(document_path);
-        let mut provider = DiskSourceProvider::new();
-        let current_root = package_root_for(document_path, &mut provider)
-            .unwrap_or_else(|| document_path.to_path_buf());
-        if current_root != expected_root || current_fingerprint != fingerprint {
+        let current = self.observe_external_input_identity_for_path(document_path);
+        if current != *expected {
             return Err(LspError::content_modified(
                 "Python declaration inputs changed during the request",
             ));

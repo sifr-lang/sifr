@@ -19,6 +19,7 @@ use sifr_diagnostics::RenderedDiagnostic;
 use sifr_source::PositionEncoding;
 
 mod external_inputs;
+pub(crate) use external_inputs::ExternalInputIdentity;
 pub(crate) mod watcher_events;
 
 const MAX_LSP_TRACE_EVENTS: usize = 256;

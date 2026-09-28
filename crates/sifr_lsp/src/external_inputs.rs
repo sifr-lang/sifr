@@ -54,6 +54,12 @@ impl ExternalInputSnapshots {
         self.roots.contains_key(root)
     }
 
+    pub(crate) fn retire_root(&mut self, root: &Path) {
+        if self.roots.remove(root).is_some() {
+            self.revision = self.revision.saturating_add(1);
+        }
+    }
+
     pub(crate) fn owning_root(&self, path: &Path) -> Option<&Path> {
         self.roots
             .keys()
