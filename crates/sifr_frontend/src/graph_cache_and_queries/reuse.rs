@@ -124,6 +124,7 @@ impl FrontendContext {
                 .unwrap_or(ModuleAnalysisView {
                     module,
                     symbols: Vec::new(),
+                    classes: Vec::new(),
                     editor_semantics: Default::default(),
                     sql_documents: Vec::new(),
                 }),

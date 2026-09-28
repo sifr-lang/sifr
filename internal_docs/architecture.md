@@ -3,6 +3,7 @@
 ## Architecture Scope
 
 - LSP embedding entrypoints require the caller's explicit compiler context (or product identity for the identity entrypoint), carried into session/workspace construction before any queries. Dependency-bound test identity construction is confined to the test session constructor.
+- Editor type hierarchy consumes frontend-resolved class identities and direct parent types for each current workspace revision; analysis supplies declaration ranges, and the LSP maps relation items to their current document URI and source.
 
 - Iterator lowering uses one canonical path from the type system through HIR and code generation, with explicit single-pass, multi-pass, and reversible/double-ended capability tracking.
 - RNG and cryptographic behavior follow the production semantic rules.

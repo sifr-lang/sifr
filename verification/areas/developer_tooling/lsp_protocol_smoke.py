@@ -22,6 +22,14 @@ def main() -> int:
     return result
 """
 
+HIERARCHY_SAMPLE = """\
+class lower:
+    pass
+class Child(lower):
+    pass
+UPPER: int = 1
+"""
+
 UNFORMATTED_SAMPLE = """\
 def main()->int:
     value: int=1
@@ -182,6 +190,37 @@ def run_queries(client: LspClient, uri: str) -> None:
     )
     if not isinstance(preview, dict) or "rust" not in preview:
         raise LspProtocolError("generated Rust command did not return preview payload")
+
+
+def run_hierarchy_check(client: LspClient, path: Path) -> None:
+    path.write_text(HIERARCHY_SAMPLE, encoding="utf-8")
+    open_document(client, path, HIERARCHY_SAMPLE)
+    document = {"uri": file_uri(path)}
+    child = client.request(
+        "textDocument/prepareTypeHierarchy",
+        {"textDocument": document, "position": {"line": 2, "character": 8}},
+    )
+    if not isinstance(child, dict) or child.get("name") != "Child":
+        raise LspProtocolError(f"class preparation failed: {child!r}")
+    parents = client.request("typeHierarchy/supertypes", {"item": child})
+    if not isinstance(parents, list) or len(parents) != 1 or parents[0].get("name") != "lower":
+        raise LspProtocolError(f"class supertype edge missing: {parents!r}")
+    children = client.request("typeHierarchy/subtypes", {"item": parents[0]})
+    if not isinstance(children, list) or len(children) != 1 or children[0].get("name") != "Child":
+        raise LspProtocolError(f"class subtype edge missing: {children!r}")
+    value = client.request(
+        "textDocument/prepareTypeHierarchy",
+        {"textDocument": document, "position": {"line": 4, "character": 2}},
+    )
+    if value is not None:
+        raise LspProtocolError(f"uppercase value was treated as a type: {value!r}")
+    client.notify("textDocument/didChange", {
+        "textDocument": {"uri": file_uri(path), "version": 2},
+        "contentChanges": [{"text": HIERARCHY_SAMPLE.replace("Child(lower)", "Child")}],
+    })
+    stale_children = client.request("typeHierarchy/subtypes", {"item": parents[0]})
+    if stale_children != []:
+        raise LspProtocolError(f"edited inheritance edge remained: {stale_children!r}")
 
 
 def run_explain_diagnostic_check(client: LspClient, path: Path) -> None:
@@ -430,6 +469,7 @@ def run_smoke() -> None:
         source = root / "main.sifr"
         formatting_source = root / "formatting.sifr"
         explain_source = root / "explain.sifr"
+        hierarchy_source = root / "hierarchy.sifr"
         source.write_text(SAMPLE, encoding="utf-8")
         formatting_source.write_text(UNFORMATTED_SAMPLE, encoding="utf-8")
         explain_source.write_text(EXPLAIN_DIAGNOSTIC_SAMPLE, encoding="utf-8")
@@ -444,6 +484,14 @@ def run_smoke() -> None:
             client.notify("exit", {})
         finally:
             client.close()
+        hierarchy_client = LspClient()
+        try:
+            initialize(hierarchy_client, root)
+            run_hierarchy_check(hierarchy_client, hierarchy_source)
+            hierarchy_client.request("shutdown", {})
+            hierarchy_client.notify("exit", {})
+        finally:
+            hierarchy_client.close()
         run_disabled_formatting_check(root)
         run_utf8_negotiation_check(root)
         run_utf16_position_behavior_check(root)

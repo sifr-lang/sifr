@@ -15,9 +15,18 @@ pub enum SymbolKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ClassHierarchyView {
+    pub name: String,
+    pub identity: String,
+    pub parent_identity: Option<String>,
+    pub parent_name: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ModuleAnalysisView {
     pub module: ModuleId,
     pub symbols: Vec<SymbolView>,
+    pub classes: Vec<ClassHierarchyView>,
     pub editor_semantics: EditorSemanticView,
     pub sql_documents: Vec<SqlEditorDocumentView>,
 }

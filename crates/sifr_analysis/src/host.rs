@@ -25,6 +25,7 @@ mod stdlib_tests;
 #[cfg(test)]
 mod tests;
 mod text_edits;
+mod type_hierarchy;
 
 #[cfg(test)]
 mod dx11_snapshot_tests;

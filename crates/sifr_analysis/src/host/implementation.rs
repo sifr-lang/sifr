@@ -5,8 +5,8 @@ use crate::queries::{
     CompletionItem, CompletionItems, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
     DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange, GeneratedRustPreview, HoverInfo,
     InlayHint, Location, RenameTarget, SelectionRange, SemanticToken, SignatureHelp, SymbolName,
-    SymbolQuery, TestCommand, TestCommandKind, TestItem, TestItemId, TypeHierarchyItem,
-    TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
+    SymbolQuery, TestCommand, TestCommandKind, TestItem, TestItemId, WorkspaceEdit,
+    WorkspaceSymbol,
 };
 use crate::snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
@@ -427,45 +427,6 @@ impl AnalysisHost {
     ) -> QueryResult<Vec<SelectionRange>> {
         let ranges = self.editor_facts(file)?.selection_ranges(positions);
         Ok(self.result(AnalysisQueryKind::SelectionRanges, ranges))
-    }
-
-    pub fn prepare_type_hierarchy(
-        &mut self,
-        file: FileId,
-        position: &TextPosition,
-    ) -> QueryResult<Option<TypeHierarchyItem>> {
-        let facts = self.editor_facts(file)?;
-        let item = facts.identifier_at_position(position).and_then(|token| {
-            token
-                .text
-                .chars()
-                .next()
-                .is_some_and(char::is_uppercase)
-                .then(|| TypeHierarchyItem {
-                    id: TypeHierarchyItemId(format!("{}:{}", file.as_u32(), token.text)),
-                    name: token.text.clone(),
-                    kind: "type".to_string(),
-                    location: Location {
-                        file,
-                        range: Some(token.range),
-                    },
-                })
-        });
-        Ok(self.result(AnalysisQueryKind::PrepareTypeHierarchy, item))
-    }
-
-    pub fn type_hierarchy_supertypes(
-        &mut self,
-        _item: TypeHierarchyItemId,
-    ) -> QueryResult<Vec<TypeHierarchyItem>> {
-        Ok(self.result(AnalysisQueryKind::TypeHierarchySupertypes, Vec::new()))
-    }
-
-    pub fn type_hierarchy_subtypes(
-        &mut self,
-        _item: TypeHierarchyItemId,
-    ) -> QueryResult<Vec<TypeHierarchyItem>> {
-        Ok(self.result(AnalysisQueryKind::TypeHierarchySubtypes, Vec::new()))
     }
 
     pub fn generated_rust_preview(
