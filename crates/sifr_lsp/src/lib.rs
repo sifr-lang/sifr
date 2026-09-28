@@ -16,6 +16,7 @@ mod diagnostics;
 mod document_events;
 mod document_store;
 mod errors;
+mod external_inputs;
 mod notifications;
 mod progress;
 mod python_declarations;

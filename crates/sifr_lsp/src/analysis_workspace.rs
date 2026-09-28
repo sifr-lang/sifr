@@ -177,6 +177,34 @@ impl LspAnalysisWorkspace {
         }
     }
 
+    pub(crate) fn owns_document(&self, uri: &str) -> bool {
+        self.documents.contains_key(uri)
+            || self
+                .projects
+                .values()
+                .any(|project| project.open_uris.contains(uri))
+    }
+
+    pub(crate) fn refresh_external_root(
+        &mut self,
+        root: &Path,
+        documents: &crate::document_store::DocumentStore,
+    ) {
+        let previous = self
+            .projects
+            .remove(root)
+            .map(|project| project.open_uris)
+            .unwrap_or_default();
+        for document in documents.documents() {
+            if previous.contains(document.uri())
+                || workspace_root_for(document.path()).as_deref() == Some(root)
+            {
+                self.open_document(document);
+            }
+        }
+        self.refresh_projects(documents);
+    }
+
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
         for analysis in self.projects.values_mut() {
             if let Some(host) = analysis.host.as_mut() {

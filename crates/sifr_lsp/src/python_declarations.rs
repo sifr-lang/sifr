@@ -6,12 +6,11 @@ use sifr_analysis::{DiskSourceProvider, SourceProvider};
 use sifr_compiler_services::python::{
     PythonEditorEnvironment, PythonInteropPlan, PythonInteropPlanDiagnostic,
     PythonTargetInspection, apply_python_target_inspection, inspect_python_target_if_active,
-    mark_embedded_bridge_targets, policy_help, python_environment_selection,
-    resolve_editor_environment, status_name, validate_protocol_certifications_for_plan,
+    mark_embedded_bridge_targets, policy_help, resolve_editor_environment, status_name,
+    validate_protocol_certifications_for_plan,
 };
 use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic};
 use std::collections::{BTreeMap, HashMap};
-use std::hash::{DefaultHasher, Hash as _, Hasher as _};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,6 +64,8 @@ pub(crate) struct PythonDeclarationCache {
     environments: BTreeMap<EnvironmentCacheKey, EnvironmentSnapshot>,
     target_inspections: BTreeMap<(PathBuf, u64, String), Result<PythonTargetInspection, String>>,
     #[cfg(test)]
+    snapshot_builds: usize,
+    #[cfg(test)]
     probe_runs: usize,
     #[cfg(test)]
     environment_probe_runs: usize,
@@ -94,10 +95,32 @@ impl PythonDeclarationCache {
             .retain(|(root, _, _), _| roots.contains(root));
     }
 
+    pub(crate) fn invalidate_external_root(&mut self, root: &Path) {
+        self.entries.remove(root);
+        self.environments.retain(|key, _| key.package_root != root);
+        self.target_inspections
+            .retain(|(owner, _, _), _| owner != root);
+    }
+
     pub(crate) fn invalidate_external(&mut self) {
         self.entries.clear();
         self.environments.clear();
         self.target_inspections.clear();
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn snapshot_builds(&self) -> usize {
+        self.snapshot_builds
+    }
+
+    #[cfg(test)]
+    pub(crate) fn has_entry(&self, root: &Path) -> bool {
+        self.entries.contains_key(root)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn has_environment(&self, root: &Path) -> bool {
+        self.environments.keys().any(|key| key.package_root == root)
     }
 
     #[cfg(test)]
@@ -149,9 +172,7 @@ impl Session {
         let document_path = self.store().document(uri)?.path().to_path_buf();
         let mut provider = DiskSourceProvider::new();
         let package_root = package_root_for(&document_path, &mut provider);
-        let external_fingerprint = package_root
-            .as_deref()
-            .map_or(0, |root| package_input_fingerprint(root, &mut provider));
+        let external_fingerprint = self.observe_external_inputs_for_path(&document_path);
         let (graph_revision, source_revision, analysis_plan, compiler_has_errors, current_file) =
             self.with_document_analysis(uri, |snapshot, host, file, _source| {
                 let plan = snapshot
@@ -226,6 +247,10 @@ impl Session {
             insights: declaration_insights(&plan, &analysis_plan.module_files),
             diagnostics,
         };
+        #[cfg(test)]
+        {
+            self.python_declarations.snapshot_builds += 1;
+        }
         self.python_declarations.entries.insert(
             cache_key,
             CacheEntry {
@@ -414,7 +439,7 @@ fn declaration_insights(
         .collect()
 }
 
-fn package_root_for(path: &Path, provider: &mut impl SourceProvider) -> Option<PathBuf> {
+pub(crate) fn package_root_for(path: &Path, provider: &mut impl SourceProvider) -> Option<PathBuf> {
     let mut current = path.parent()?.to_path_buf();
     loop {
         if provider.is_file(&current.join("sifr.toml")) {
@@ -422,97 +447,6 @@ fn package_root_for(path: &Path, provider: &mut impl SourceProvider) -> Option<P
         }
         if !current.pop() {
             return None;
-        }
-    }
-}
-
-fn package_input_fingerprint(root: &Path, provider: &mut impl SourceProvider) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    let mut paths = vec![
-        root.join("Cargo.toml"),
-        root.join("Cargo.lock"),
-        root.join("sifr.toml"),
-        root.join(sifr_package::PYTHON_BINDINGS_FILE),
-        root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE),
-    ];
-    let interpreter = python_environment_selection(root, provider).map(|selection| {
-        paths.extend(selection.pyproject);
-        paths.extend(selection.lock);
-        selection.interpreter
-    });
-    for path in paths {
-        path.hash(&mut hasher);
-        match std::fs::read(&path) {
-            Ok(bytes) => bytes.hash(&mut hasher),
-            Err(error) => error.kind().hash(&mut hasher),
-        }
-    }
-    hash_python_bridge_inputs(root, &mut hasher);
-    hash_runnable_app_entries(root, &mut hasher, provider);
-    if let Some(interpreter) = interpreter {
-        interpreter.hash(&mut hasher);
-        match std::fs::metadata(&interpreter) {
-            Ok(metadata) => {
-                metadata.len().hash(&mut hasher);
-                metadata.modified().ok().hash(&mut hasher);
-            }
-            Err(error) => error.kind().hash(&mut hasher),
-        }
-    }
-    hasher.finish()
-}
-
-fn hash_runnable_app_entries(
-    root: &Path,
-    hasher: &mut DefaultHasher,
-    provider: &mut impl SourceProvider,
-) {
-    "runnable-app-entries".hash(hasher);
-    let result = sifr_package::PackageSession::discover(
-        sifr_package::PackageSessionOptions {
-            current_dir: root.to_path_buf(),
-            lock_mode: sifr_package::CargoLockMode::Frozen,
-        },
-        provider,
-    )
-    .and_then(|session| session.runnable_app_paths());
-    match result {
-        Ok(mut paths) => {
-            paths.sort();
-            paths.hash(hasher);
-        }
-        Err(error) => format!("{error:?}").hash(hasher),
-    }
-}
-
-fn hash_python_bridge_inputs(root: &Path, hasher: &mut DefaultHasher) {
-    let bridge_root = root.join(sifr_package::PYTHON_BRIDGE_ROOT);
-    bridge_root.hash(hasher);
-    let mut pending = vec![bridge_root];
-    while let Some(directory) = pending.pop() {
-        let entries = match std::fs::read_dir(&directory) {
-            Ok(entries) => entries,
-            Err(error) => {
-                error.kind().hash(hasher);
-                continue;
-            }
-        };
-        let mut entries = entries.filter_map(Result::ok).collect::<Vec<_>>();
-        entries.sort_by_key(std::fs::DirEntry::path);
-        for entry in entries {
-            let path = entry.path();
-            path.hash(hasher);
-            match entry.file_type() {
-                Ok(kind) if kind.is_dir() => pending.push(path),
-                Ok(kind) if kind.is_file() => match std::fs::read(&path) {
-                    Ok(bytes) => bytes.hash(hasher),
-                    Err(error) => error.kind().hash(hasher),
-                },
-                Ok(kind) => {
-                    kind.is_symlink().hash(hasher);
-                }
-                Err(error) => error.kind().hash(hasher),
-            }
         }
     }
 }
@@ -570,7 +504,8 @@ pub(crate) fn enrich_hover(
 
 #[cfg(test)]
 mod tests {
-    use super::{package_input_fingerprint, policy_help};
+    use super::policy_help;
+    use crate::external_inputs::package_input_fingerprint;
     use sifr_analysis::DiskSourceProvider;
 
     #[test]
