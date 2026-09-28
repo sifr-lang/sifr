@@ -1,5 +1,44 @@
 # Ad Hoc Issue: Algorithmic Full-Corpus Pre-Existing Failures
 
+## 2026-09-28 merge-gate producer hint blocker
+
+The Emitted-Rust final integration qualifier is blocked outside its codegen
+scope. On exact merged main `d18c70668fcced6922c58d6588045855db941840`,
+full merge-profile attempt 18 first failed at performance
+`representative/benchmark-subset`: named qualification requires a clean
+producer worktree. The passing algorithmic representative selection created
+untracked `src/.sifrbuildinfo` in the checked-in LeetCode submodule.
+After preserving and cleaning only the generated hint, algorithmic 12/12 and
+performance 8/8 focused selections passed on the warm cache, but that was
+not a full-gate pass.
+
+Clean-source attempt 19 on the same candidate recreated the hint immediately
+after algorithmic compatibility passed at 2026-09-28 04:37:36 UTC. Its SHA-256
+was `a7d8f785473aad5486f0452f3bdb0d20ea20ed7694f3460f95d2d61baa4f9c9a`;
+its project-cache context `4148bd78...` differed from the focused warm
+context `5b5cdf...`. The driver's `Store::point` publishes this optional
+workspace hint when it points to a generation; the exact changed context
+input has not been established. Attempt 19 was stopped after recurrence
+rather than spending another broad run on the already proven failure. It
+exited 143, restored `schedutil`, and left no active Cargo/rustc/gate worker.
+Its log SHA-256 is
+`9d204ef9c92e6d0d4086899bd93307ca518dfddbc13a5510ef7d548f7a81e94e`;
+lane SHA-256 is
+`9c27b9ae7218395a5662db49b49f4caf33145650f49d2adb53dfa44b2e8cc3ab`.
+The byte-identical hint copy and receipts are under
+`/data/sifr-emitted-final-qualifier-retry-evidence-20260924/final-d18c7066/attempt19/`.
+Attempt-18 gate and focused-transition evidence are in sibling `attempt18/`.
+
+The algorithmic compatibility owner must make its checked-in corpus selection
+leave the producer clean across a new project-cache context, coordinating with
+the project-cache owner if its publication contract needs to change. Preserve
+the corpus assertions and the performance clean-producer requirement. Re-run
+the exact algorithmic representative selection and affected performance
+benchmark under a new context, then return a merged candidate for the
+Emitted-Rust qualifier's complete merge-profile rerun. This blocker record
+does not change implementation source.
+
+
 ## 2026-09-23 retained Item 12 corpus source-contract correction
 
 The retained emitted-Rust Item 12 native audit stopped at
