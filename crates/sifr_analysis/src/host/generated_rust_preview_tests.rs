@@ -72,3 +72,28 @@ def main():
             && file.source.contains("fn main")
     }));
 }
+
+#[test]
+fn generated_rust_preview_matches_compiler_frontend_product() {
+    let source = "from sifr.random import randint\n\ndef main():\n    print(randint(1, 2))\n";
+    let compiler = sifr_driver::CompilerContext::for_test_tokens(
+        crate::compiled_input_tokens(),
+        "sifr_analysis-tests",
+    );
+    let mut host = AnalysisHost::open_single_file(&compiler, single_file_input(source)).unwrap();
+    let file = host.files()[0];
+    let preview = host
+        .generated_rust_preview(file, None)
+        .unwrap()
+        .into_value();
+    let sifr_driver::CompileResultFull::Success {
+        rust_source,
+        generated_source_map,
+        ..
+    } = sifr_driver::compile_with_metadata(&compiler, source)
+    else {
+        panic!("driver must compile the same C01 product");
+    };
+    assert_eq!(preview.rust.as_deref(), Some(rust_source.as_str()));
+    assert_eq!(preview.source_map_files, generated_source_map);
+}

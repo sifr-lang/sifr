@@ -3,7 +3,6 @@ use sifr_diagnostics::{
     ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, SourceMap,
 };
 pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
-use sifr_frontend::SourceOrigin;
 use sifr_stdlib_manifest::StdlibFeature;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -30,12 +29,7 @@ pub enum CompileResultFull {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct GeneratedSourceMapFile {
-    pub path: String,
-    pub origin: SourceOrigin,
-    pub source: String,
-}
+pub use sifr_compiler_services::editor::GeneratedSourceMapFile;
 
 /// Creates a rendered error diagnostic with canonical diagnostic identity.
 #[must_use]

@@ -54,7 +54,7 @@ impl AnalysisHost {
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         session = session.with_compiler_identity(compiler.identity().clone());
         let restored_check_modules =
-            sifr_driver::project_cache::restore_editor_checks(compiler, &mut session)
+            sifr_compiler_services::editor::restore_editor_checks(compiler, &mut session)
                 .iter()
                 .filter(|decision| decision.action == "restored")
                 .count();

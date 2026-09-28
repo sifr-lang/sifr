@@ -579,16 +579,15 @@ impl AnalysisHost {
     ) -> QueryResult<GeneratedRustPreview> {
         self.module_for_file(file)?;
         let source = self.source_text(file)?;
-        let (rust, source_map_files) = match sifr_driver::compile_with_metadata(
+        let (rust, source_map_files) = match sifr_compiler_services::editor::generated_rust_preview(
             &self.compiler,
             &source,
         ) {
-            sifr_driver::CompileResultFull::Success {
-                rust_source,
-                generated_source_map,
-                ..
-            } => (Some(rust_source), generated_source_map),
-            sifr_driver::CompileResultFull::Errors { errors } => {
+            sifr_compiler_services::editor::PreviewResult::Success {
+                rust,
+                source_map_files,
+            } => (Some(rust), source_map_files),
+            sifr_compiler_services::editor::PreviewResult::Unavailable { diagnostic_count } => {
                 return Ok(self.result(
                     AnalysisQueryKind::GeneratedRustPreview,
                     GeneratedRustPreview {
@@ -598,7 +597,7 @@ impl AnalysisHost {
                         source_map_files: Vec::new(),
                         unavailable_reason: Some(format!(
                             "generated Rust preview unavailable because compilation produced {} diagnostic(s)",
-                            errors.len()
+                            diagnostic_count
                         )),
                     },
                 ));

@@ -17,10 +17,9 @@ mod tests;
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::{
     SourceProvider,
-    persistence::{CapturingSourceProvider, CompletedCheck, SemanticInputs, identity},
+    persistence::{CapturingSourceProvider, CompletedCheck, SemanticInputs},
 };
 use std::{
-    collections::BTreeMap,
     path::Path,
     sync::atomic::{AtomicBool, Ordering},
     time::Instant,
@@ -136,7 +135,11 @@ pub fn check_saved_sources(
                 .filter(|path| !path.as_os_str().is_empty())
                 .unwrap_or(Path::new("."))
         });
-    let mut inputs = match manifestless_inputs(compiler, &metadata.metadata.metadata_id, file) {
+    let mut inputs = match sifr_compiler_services::editor::manifestless_inputs(
+        compiler,
+        &metadata.metadata.metadata_id,
+        file,
+    ) {
         Ok(inputs) => inputs,
         Err(_) => {
             return (
@@ -163,7 +166,7 @@ pub fn check_saved_sources(
         }
     };
     check(
-        (&crate::cache_storage::root(), workspace),
+        (compiler.cache_root(), workspace),
         file,
         provider,
         inputs,
@@ -378,80 +381,5 @@ pub fn prune_project_cache(
     housekeeping::prune_workspace(&crate::cache_storage::root(), workspace, pressure, dry_run)
 }
 
-fn saved_check_policy(file: &Path, cwd: &Path) -> Result<String, String> {
-    identity("saved-check-policy-v1", &(file.parent(), cwd))
-        .map_err(|error| format!("could not serialize saved-check policy: {error}"))
-}
-
-fn manifestless_inputs(
-    compiler: &crate::CompilerContext,
-    metadata: &str,
-    file: &Path,
-) -> Result<SemanticInputs, String> {
-    let cwd = std::env::current_dir()
-        .map_err(|error| format!("could not read saved-check working directory: {error}"))?;
-    let policy = saved_check_policy(file, &cwd)?;
-
-    Ok(SemanticInputs {
-        compiler: compiler.identity().as_str().into(),
-        metadata: metadata.into(),
-        target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
-        workspace_and_source_policy: policy,
-        package_and_lock: "manifestless-owner-v1".into(),
-        language_options: "ordinary-check-defaults-v1".into(),
-        diagnostic_policy: "canonical-source-diagnostics-v1".into(),
-        components: BTreeMap::new(),
-        required_external: Default::default(),
-        external: BTreeMap::new(),
-    })
-}
-
-/// Restore saved diagnostic facts into an already captured editor generation.
-/// This function never publishes editor state. Both disk observations and the
-/// frontend's captured source bytes must agree with the CLI record.
-pub fn restore_editor_checks(
-    compiler: &crate::CompilerContext,
-    session: &mut sifr_frontend::WorkspaceSession,
-) -> Vec<sifr_frontend::ModuleCheckDecision> {
-    if !compiler.project_incremental() {
-        return Vec::new();
-    }
-    let Some(frontend) = session.context() else {
-        return Vec::new();
-    };
-    let graph = frontend.module_graph();
-    let Some(entry) = graph
-        .modules
-        .iter()
-        .find(|module| module.id == graph.entrypoint)
-    else {
-        return Vec::new();
-    };
-    let file = entry.canonical_path.as_path();
-    let Some(workspace) = file.parent() else {
-        return Vec::new();
-    };
-    let Ok(metadata) = compiler.metadata_provider() else {
-        return Vec::new();
-    };
-    let Ok(inputs) = manifestless_inputs(compiler, &metadata.metadata.metadata_id, file) else {
-        return Vec::new();
-    };
-    let Ok(context) = inputs.identity() else {
-        return Vec::new();
-    };
-    let Ok(store) = storage::Store::open(&crate::cache_storage::root(), workspace, &context) else {
-        return Vec::new();
-    };
-    let Some(generation) = store.latest() else {
-        return Vec::new();
-    };
-    for record in generation.records().flatten() {
-        if record.result.inputs.source.path == file {
-            if let Some(decisions) = session.restore_saved_checks(&record, &inputs) {
-                return decisions;
-            }
-        }
-    }
-    Vec::new()
-}
+#[cfg(test)]
+use sifr_compiler_services::editor::saved_check_policy;
