@@ -4622,6 +4622,62 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_compiler_services/src/sql_editor.rs",
+      "symbol": "load_sql_editor_profiles",
+      "operation": "is_file",
+      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor.rs",
+      "symbol": "load_sql_editor_profiles",
+      "operation": "is_file",
+      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor.rs",
+      "symbol": "load_sql_editor_profiles",
+      "operation": "is_file",
+      "site": "if !workspace_root.join(\"Cargo.lock\").is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor_tests.rs",
+      "symbol": "missing_lock_defers_profiles",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor_tests.rs",
+      "symbol": "missing_lock_defers_profiles",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"sifr.toml\"), \"[source]\\nroot = \\\"src\\\"\\n\")",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor_tests.rs",
+      "symbol": "missing_lock_defers_profiles",
+      "operation": "exists",
+      "site": "assert!(!root.path().join(\"Cargo.lock\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor_tests.rs",
+      "symbol": "invalid_component_preserves_source_diagnostic",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&owner_root).expect(\"owner\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/sql_editor_tests.rs",
+      "symbol": "invalid_component_preserves_source_diagnostic",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&provider_root).expect(\"provider\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_diagnostics/src/bin/gen-error-docs.rs",
       "symbol": "read_example_fragment",
       "operation": "read_to_string",
@@ -7847,27 +7903,6 @@
       "operation": "write",
       "site": "std::fs::write(bridge_dir.join(\"hash.rs\"), \"pub unsafe fn hash() {}\\n\")",
       "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/sql_profiles.rs",
-      "symbol": "load_sql_editor_profiles",
-      "operation": "is_file",
-      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/sql_profiles.rs",
-      "symbol": "load_sql_editor_profiles",
-      "operation": "is_file",
-      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/sql_profiles.rs",
-      "symbol": "load_sql_editor_profiles",
-      "operation": "is_file",
-      "site": "if !workspace_root.join(\"Cargo.lock\").is_file() {",
-      "classification": "build-identity"
     },
     {
       "path": "crates/sifr_driver/src/build/sql_profiles_discovery_tests.rs",
