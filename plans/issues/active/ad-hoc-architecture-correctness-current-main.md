@@ -466,6 +466,60 @@ validate the new candidate independently; the draft commits may be selectively
 ported but are not approved for merge. E01/F20-F21, E02, E03 and Q01 remain
 open.
 
+## E01c/F20-F21 verified fast-hit delivery receipt (2026-09-28)
+
+[PR #4081](https://github.com/sifr-lang/sifr/pull/4081) merged as
+`5130e8294f000faa5d69c3ac1da95a53b8668e9d` from independently tested and
+reviewed candidate `15fe3c223f3f99b8f989b5ea94d5825394a74073` (base
+`15e0452920e49bf0e8f995278e071914c8735d8d`, tree
+`7641534485f35360c22aec4def3edcb323181ef9`). This branch selectively
+ported draft #4079 code, then established one current package-root and external
+input identity for Python fast-hit capture and verification. Removing a nested
+`sifr.toml` now retires that root, reassigns open-source analysis to the
+ancestor and rejects stale work once before completion, hover and diagnostics
+resume. Unstable external inputs retain per-observation invalidation without a
+permanent `ContentModified` loop: an unchanged observed failure state
+completes, while changed input is rejected and recomputed. Request-time
+diagnostics and watcher paths publish only current results. The unmerged draft
+and its failed reviews above remain historical evidence, not approval for this
+delivery.
+
+On Linux x86_64 with rustc/Cargo 1.98.1, 24 exact
+`cargo test --locked -p sifr_lsp --lib <case> -- --exact` selections passed on
+the final candidate: all four E01c named cases, all three preserved cases, the
+nested-to-ancestor and unstable-input regressions, and focused request,
+publication, external-input, watcher, cancellation, close/reopen and multi-root
+cases. Each selected one assertion. `cargo fmt --check`, the 900-line
+file-size guardrail (4,265 files) and full PR diff check passed. The tracked
+`Cargo.lock` and Ruff gitlink were unchanged; the prepared Python fixture and
+separate worktree-owned warm Cargo target were retained. Candidate-keyed raw
+logs, input identities and the exact-commit bundle are outside the Git tree
+under
+`/data/sifr-architecture-e01c-root-transition-evidence-20260928/15fe3c223f3f99b8f989b5ea94d5825394a74073/`;
+the validation-manifest SHA-256 is
+`d510a99f2e89d2b69066afacacd9effbc611025a38c850ab54a46342425b8032`.
+Earlier fixture and repair failures remain in the `development/` sibling and
+are not counted as passes. The approved intermediate-item policy leaves the
+full merge profile to Q01.
+
+The first read-only scoped Opus 5.5 review on candidate
+`1c843f35991453eadf7f4c72a22a58d47444cd66` was **NOT SATISFIED**
+(response SHA-256
+`5af228d98039d4f5223178200646d9f75ae37a2414b0f5fd7dde0234f939114a`):
+unstable inputs advanced their generation again at verification, permanently
+rejecting requests. That finding was repaired and the affected selection plus
+the full exact E01c validation reran. The second read-only scoped review on the
+final candidate was **SATISFIED** with no blockers (response SHA-256
+`33d7e9eb511ed8b55c2556a6fb4623c7cace9601d89c9aa4981ee7809f6aaf3c`).
+Deferred follow-ups remain with their owners: E01a's transient unreadable-input
+race, E01b's immediate watcher-side root reassignment, a later LSP diagnostics
+scheduler item for idle pending jobs, and E03's unstable-root refresh cost and
+measured editor performance. These are not E01c merge blockers. With E01a
+[#4075](https://github.com/sifr-lang/sifr/pull/4075), E01b
+[#4077](https://github.com/sifr-lang/sifr/pull/4077) and E01c #4081 merged
+with their named assertions, E01/F20-F21 is complete. E02, E03 and Q01 remain
+separately owned.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -752,7 +806,7 @@ holds the separate passing and partial area receipts.
 | C02e | Dependency-direction guard owner; F19 after C02d; merged in [PR #4071](https://github.com/sifr-lang/sifr/pull/4071), receipt below. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
 | E01a | LSP/package external-input owner; F20-F21; merged in [PR #4075](https://github.com/sifr-lang/sifr/pull/4075), receipt above. | Per-root external snapshots and generations; manifest/lock/config/bridge/binding/certification/environment transitions, positive and negative cache invalidation, unchanged warm reuse. Named cases above. |
 | E01b | LSP watcher/protocol owner; F20-F21 after merged E01a; merged in [PR #4077](https://github.com/sifr-lang/sifr/pull/4077), receipt above. | Capability-gated registration and response acknowledgement; rejected/unsupported/unconfirmed per-request revalidation, lifecycle events, reconnect, storms and multi-root isolation. Named cases above. |
-| E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; needs new scope after draft PR #4079 and second scoped review. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, cancellation and multi-root lifecycle. Named cases above. |
+| E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; merged in [PR #4081](https://github.com/sifr-lang/sifr/pull/4081), receipt above. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, nested-to-ancestor root reassignment, unstable inputs, cancellation and multi-root lifecycle. Named cases above. |
 | E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; open after E01c and E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
 | E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
