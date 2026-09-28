@@ -66,14 +66,20 @@ pub(crate) struct PythonDeclarationCache {
     #[cfg(test)]
     snapshot_builds: usize,
     #[cfg(test)]
+    analysis_plan_builds: usize,
+    #[cfg(test)]
+    before_verification_change: Option<(PathBuf, Option<Vec<u8>>)>,
+    #[cfg(test)]
     probe_runs: usize,
     #[cfg(test)]
     environment_probe_runs: usize,
 }
 
 impl PythonDeclarationCache {
-    pub(crate) fn invalidate_source(&mut self) {
-        self.entries.clear();
+    pub(crate) fn invalidate_source_for_path(&mut self, path: &Path) {
+        let mut provider = DiskSourceProvider::new();
+        let root = package_root_for(path, &mut provider).unwrap_or_else(|| path.to_path_buf());
+        self.entries.remove(&root);
     }
 
     pub(crate) fn retain_open_projects(
@@ -111,6 +117,20 @@ impl PythonDeclarationCache {
     #[cfg(test)]
     pub(crate) const fn snapshot_builds(&self) -> usize {
         self.snapshot_builds
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn analysis_plan_builds(&self) -> usize {
+        self.analysis_plan_builds
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inject_external_change_before_verification(
+        &mut self,
+        path: PathBuf,
+        contents: Option<Vec<u8>>,
+    ) {
+        self.before_verification_change = Some((path, contents));
     }
 
     #[cfg(test)]
@@ -172,9 +192,35 @@ impl Session {
         let document_path = self.store().document(uri)?.path().to_path_buf();
         let mut provider = DiskSourceProvider::new();
         let package_root = package_root_for(&document_path, &mut provider);
-        let external_fingerprint = self.observe_external_inputs_for_path(&document_path);
-        let (graph_revision, source_revision, analysis_plan, compiler_has_errors, current_file) =
-            self.with_document_analysis(uri, |snapshot, host, file, _source| {
+        let (graph_revision, source_revision, current_file) =
+            self.with_document_analysis(uri, |snapshot, _host, file, _source| {
+                Ok((
+                    snapshot.revision().graph.as_u64(),
+                    snapshot.revision().source.as_u64(),
+                    file,
+                ))
+            })?;
+        let cache_key = package_root
+            .clone()
+            .unwrap_or_else(|| document_path.clone());
+        let external_fingerprint = self.external_input_generation_for_path(&document_path);
+        let package_owner = package_root
+            .as_deref()
+            .is_none_or(|root| self.is_python_package_diagnostic_owner(uri, root, &mut provider));
+        if let Some(entry) = self.python_declarations.entries.get(&cache_key) {
+            if entry.graph_revision == graph_revision
+                && entry.source_revision == source_revision
+                && entry.external_fingerprint == external_fingerprint
+            {
+                let result = entry.snapshot.for_document(current_file, package_owner);
+                self.check_active_request_cancelled()?;
+                self.verify_python_request_input(&document_path, &cache_key, external_fingerprint)?;
+                return Ok(result);
+            }
+        }
+
+        let (analysis_plan, compiler_has_errors) =
+            self.with_document_analysis(uri, |snapshot, host, _file, _source| {
                 let plan = snapshot
                     .python_interop_plan(host)
                     .map_err(|error| LspError::internal(error.message))?
@@ -186,29 +232,13 @@ impl Session {
                     .into_iter()
                     .flat_map(|file| file.diagnostics)
                     .any(|diagnostic| diagnostic.severity == sifr_diagnostics::Severity::Error);
-                Ok((
-                    snapshot.revision().graph.as_u64(),
-                    snapshot.revision().source.as_u64(),
-                    plan,
-                    compiler_has_errors,
-                    file,
-                ))
+                Ok((plan, compiler_has_errors))
             })?;
-        let cache_key = package_root
-            .clone()
-            .unwrap_or_else(|| document_path.clone());
-        let package_owner = package_root
-            .as_deref()
-            .is_none_or(|root| self.is_python_package_diagnostic_owner(uri, root, &mut provider));
-        if let Some(entry) = self.python_declarations.entries.get(&cache_key) {
-            if entry.graph_revision == graph_revision
-                && entry.source_revision == source_revision
-                && entry.external_fingerprint == external_fingerprint
-            {
-                return Ok(entry.snapshot.for_document(current_file, package_owner));
-            }
-        }
 
+        #[cfg(test)]
+        {
+            self.python_declarations.analysis_plan_builds += 1;
+        }
         let mut plan = analysis_plan.plan;
         let mut diagnostics = Vec::new();
         if let Some(root) = package_root.as_deref() {
@@ -243,6 +273,7 @@ impl Session {
             mark_embedded_bridge_targets(&mut plan);
         }
         self.check_active_request_cancelled()?;
+        self.verify_python_request_input(&document_path, &cache_key, external_fingerprint)?;
         let snapshot = PackageSnapshot {
             insights: declaration_insights(&plan, &analysis_plan.module_files),
             diagnostics,
@@ -261,6 +292,40 @@ impl Session {
             },
         );
         Ok(snapshot.for_document(current_file, package_owner))
+    }
+
+    fn verify_python_request_input(
+        &mut self,
+        document_path: &Path,
+        expected_root: &Path,
+        fingerprint: u64,
+    ) -> LspResult<()> {
+        #[cfg(test)]
+        if let Some((path, contents)) = self.python_declarations.before_verification_change.take() {
+            match contents {
+                Some(contents) => std::fs::write(path, contents),
+                None => std::fs::remove_file(path),
+            }
+            .map_err(|error| LspError::internal(format!("test input mutation failed: {error}")))?;
+        }
+        let current_fingerprint = self.observe_external_inputs_for_path(document_path);
+        let mut provider = DiskSourceProvider::new();
+        let current_root = package_root_for(document_path, &mut provider)
+            .unwrap_or_else(|| document_path.to_path_buf());
+        if current_root != expected_root || current_fingerprint != fingerprint {
+            return Err(LspError::content_modified(
+                "Python declaration inputs changed during the request",
+            ));
+        }
+        self.generations.publish(self.generation, |current| {
+            if current {
+                Ok(())
+            } else {
+                Err(LspError::content_modified(
+                    "Python declaration request was superseded",
+                ))
+            }
+        })
     }
 
     fn package_python_environment(
