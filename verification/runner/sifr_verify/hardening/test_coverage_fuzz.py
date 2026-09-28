@@ -1,4 +1,4 @@
-"""Named H01a acceptance cases for the parser-guided runner."""
+"""Named acceptance cases for the frontend guided runner."""
 
 from __future__ import annotations
 
@@ -28,9 +28,11 @@ class CoverageFuzzTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def fake_run(self, *responses: dict, budget: int = 10) -> dict:
+    def fake_run(self, *responses: dict, budget: int = 10, target: str | None = None) -> dict:
         with patch.object(fuzz, "invoke", side_effect=responses) as invoke:
-            receipt = fuzz.run(profile="nightly", corpus=self.corpus, budget_override=budget)
+            receipt = fuzz.run(
+                profile="nightly", target=target, corpus=self.corpus, budget_override=budget,
+            )
         self.assertEqual(invoke.call_count, len(responses))
         return receipt
 
@@ -126,8 +128,46 @@ class CoverageFuzzTests(unittest.TestCase):
 
     def test_no_unused_fuzz_dependencies(self) -> None:
         manifest = tomllib.loads((fuzz.ROOT / "verification/fuzz/Cargo.toml").read_text())
-        self.assertEqual(set(manifest["dependencies"]), {"libfuzzer-sys", "sifr_syntax"})
+        self.assertEqual(set(manifest["dependencies"]), {"libfuzzer-sys", "sifr_syntax", "sifr_frontend"})
         self.assertNotIn("serde_json", manifest["dependencies"])
+
+    def test_frontend_target_selection_and_identity(self) -> None:
+        for target in ("lowering", "ownership"):
+            with self.subTest(target=target):
+                receipt = self.fake_run(
+                    result(0, "cargo-fuzz 0.13.2"), result(0, "rustc nightly"),
+                    result(), result(0, "#12 cov: 8"),
+                    target=target,
+                )
+                self.assertEqual(receipt["target"], target)
+                self.assertEqual(receipt["status"], "pass")
+                self.assertEqual(
+                    receipt["input_identity"]["target_source_sha256"],
+                    fuzz.file_hash(fuzz.ROOT / f"verification/fuzz/fuzz_targets/{target}.rs"),
+                )
+                self.assertEqual(
+                    receipt["input_identity"]["configuration"]["corpus"],
+                    f"verification/fuzz/corpus/{target}",
+                )
+                self.assertEqual(receipt["variants"][0]["argv"][-1], target)
+                self.assertEqual(receipt["variants"][-1]["argv"][6], target)
+                self.assertEqual(
+                    (Path(receipt["working_corpus"]) / "seed").read_text(encoding="utf-8"),
+                    "def main():\n    pass\n",
+                )
+
+    def test_frontend_target_classification(self) -> None:
+        for target in ("lowering", "ownership"):
+            with self.subTest(target=target):
+                receipt = self.fake_run(
+                    result(0, "cargo-fuzz 0.13.2"), result(0, "rustc nightly"),
+                    result(101, "no matching package named libfuzzer-sys found in offline mode"),
+                    target=target,
+                )
+                self.assertEqual(receipt["status"], "offline-dependency-failure")
+                self.assertTrue(receipt["variants"][0]["label"].startswith(
+                    f"sustained-fuzz:{target}:nightly:"
+                ))
 
     def test_sustained_suite_is_explicit_only(self) -> None:
         from verification.areas.fuzz_property.runner import select_suites

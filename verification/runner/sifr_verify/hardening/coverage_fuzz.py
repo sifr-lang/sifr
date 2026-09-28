@@ -1,4 +1,4 @@
-"""Instrumented Sifr parser fuzzing with explicit infrastructure and finding outcomes."""
+"""Instrumented Sifr frontend fuzzing with explicit infrastructure and finding outcomes."""
 
 from __future__ import annotations
 
@@ -84,11 +84,13 @@ def counters(output: str) -> tuple[int, int]:
     return max(executions, default=0), max(coverage, default=0)
 
 
-def identity(manifest: dict[str, Any], corpus: Path, *, tool: str, rustc: str) -> dict[str, Any]:
+def identity(
+    manifest: dict[str, Any], target: str, corpus: Path, *, tool: str, rustc: str,
+) -> dict[str, Any]:
     return {
         "manifest_sha256": file_hash(MANIFEST),
         "cargo_lock_sha256": file_hash(ROOT / "verification/fuzz/Cargo.lock"),
-        "target_source_sha256": file_hash(ROOT / "verification/fuzz/fuzz_targets/parser.rs"),
+        "target_source_sha256": file_hash(ROOT / f"verification/fuzz/fuzz_targets/{target}.rs"),
         "corpus": {
             path.name: file_hash(path)
             for path in sorted(corpus.iterdir())
@@ -97,9 +99,9 @@ def identity(manifest: dict[str, Any], corpus: Path, *, tool: str, rustc: str) -
         "tool": tool.strip(),
         "rustc": rustc.strip(),
         "configuration": {
-            "target": manifest["target"],
+            "target": target,
             "cargo_fuzz_version": manifest["cargo_fuzz_version"],
-            "corpus": manifest["corpus"],
+            "corpus": manifest["targets"][target]["corpus"],
             "budgets_seconds": manifest["budgets_seconds"],
             "build_timeout_seconds": manifest["build_timeout_seconds"],
         },
@@ -175,12 +177,16 @@ def preserve_finding(
 def run(
     *,
     profile: str,
+    target: str | None = None,
     corpus: Path | None = None,
     budget_override: int | None = None,
 ) -> dict[str, Any]:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    target = target or manifest["default_target"]
+    if target not in manifest["targets"]:
+        raise ValueError(f"unknown fuzz target: {target}")
     if corpus is None:
-        corpus = ROOT / manifest["corpus"]
+        corpus = ROOT / manifest["targets"][target]["corpus"]
     if profile not in manifest["budgets_seconds"]:
         raise ValueError(f"unknown fuzz profile: {profile}")
     if not corpus.is_dir() or not any(path.is_file() for path in corpus.iterdir()):
@@ -188,7 +194,6 @@ def run(
     budget = budget_override if budget_override is not None else manifest["budgets_seconds"][profile]
     if budget < 1:
         raise ValueError("fuzz budget must be positive")
-    target = manifest["target"]
     label = f"sustained-fuzz:{target}:{profile}"
     env = {**os.environ, "CARGO_NET_OFFLINE": "true"}
     env.setdefault("CARGO_TARGET_DIR", str(ROOT / "target"))
@@ -200,7 +205,7 @@ def run(
         "schema_version": 1, "target": target, "profile": profile,
         "budget_seconds": budget, "variants": [],
         "input_identity": identity(
-            manifest, corpus, tool=tool["output_tail"], rustc=rustc["output_tail"],
+            manifest, target, corpus, tool=tool["output_tail"], rustc=rustc["output_tail"],
         ),
     }
     if tool["exit_code"] != 0 or rustc["exit_code"] != 0:
@@ -268,11 +273,15 @@ def run(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=("nightly", "release"), required=True)
+    parser.add_argument("--target")
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--budget-seconds", type=int)
     parser.add_argument("--result-json", type=Path, required=True)
     args = parser.parse_args()
-    receipt = run(profile=args.profile, corpus=args.corpus, budget_override=args.budget_seconds)
+    receipt = run(
+        profile=args.profile, target=args.target, corpus=args.corpus,
+        budget_override=args.budget_seconds,
+    )
     args.result_json.parent.mkdir(parents=True, exist_ok=True)
     args.result_json.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": receipt["status"], "result_json": str(args.result_json)}))
