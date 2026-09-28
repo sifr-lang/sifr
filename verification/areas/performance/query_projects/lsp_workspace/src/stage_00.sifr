@@ -1,0 +1,4 @@
+from api import api_value
+
+def stage_value_00() -> int:
+    return api_value() + 1

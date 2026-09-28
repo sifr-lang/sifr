@@ -52,6 +52,10 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
         "sifr/sysroot" => sysroot_status(session, &params),
+        "sifr/debugCacheStats" => {
+            let (hits, misses) = session.python_declarations.cache_stats();
+            Ok(json!({"pythonDeclarations": {"hits": hits, "misses": misses}}))
+        }
         "sifr/debugTrace" => {
             let mut text = session.trace_snapshot().render_text();
             let _ = write!(

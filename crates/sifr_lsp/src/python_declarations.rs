@@ -63,6 +63,8 @@ pub(crate) struct PythonDeclarationCache {
     entries: BTreeMap<PathBuf, CacheEntry>,
     environments: BTreeMap<EnvironmentCacheKey, EnvironmentSnapshot>,
     target_inspections: BTreeMap<(PathBuf, u64, String), Result<PythonTargetInspection, String>>,
+    cache_hits: u64,
+    cache_misses: u64,
     #[cfg(test)]
     snapshot_builds: usize,
     #[cfg(test)]
@@ -76,6 +78,10 @@ pub(crate) struct PythonDeclarationCache {
 }
 
 impl PythonDeclarationCache {
+    pub(crate) fn cache_stats(&self) -> (u64, u64) {
+        (self.cache_hits, self.cache_misses)
+    }
+
     pub(crate) fn invalidate_source_for_path(&mut self, path: &Path) {
         let mut provider = DiskSourceProvider::new();
         let root = package_root_for(path, &mut provider).unwrap_or_else(|| path.to_path_buf());
@@ -216,10 +222,11 @@ impl Session {
                 let result = entry.snapshot.for_document(current_file, package_owner);
                 self.check_active_request_cancelled()?;
                 self.verify_python_request_input(&document_path, &external_identity)?;
+                self.python_declarations.cache_hits =
+                    self.python_declarations.cache_hits.saturating_add(1);
                 return Ok(result);
             }
         }
-
         let (analysis_plan, compiler_has_errors) =
             self.with_document_analysis(uri, |snapshot, host, _file, _source| {
                 let plan = snapshot
@@ -283,6 +290,8 @@ impl Session {
         {
             self.python_declarations.snapshot_builds += 1;
         }
+        self.python_declarations.cache_misses =
+            self.python_declarations.cache_misses.saturating_add(1);
         self.python_declarations.entries.insert(
             cache_key,
             CacheEntry {

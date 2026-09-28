@@ -4,3 +4,9 @@ def helper(value: int) -> int:
 def main() -> int:
     result: int = helper(41)
     return result
+
+from stage_19 import stage_value_19
+from view import view_value
+
+def workspace_value() -> int:
+    return stage_value_19() + view_value()
