@@ -679,6 +679,38 @@ Strict no-deps Clippy passed for lower services and LSP. Driver Clippy passed wi
 
 **V03/F24 owner handoff:** the direct filesystem-effect guard reports exactly five newly located lower-service sites and four stale LSP rows after the move (raw log SHA-256 2132f9c20d60971cddb568235245be227e3b4c964f6bbf6a553493acf7174491). V03 owns classification and retirement of those inventory rows; C02b did not change guard semantics or inventory. The strict Clippy failures remain with the touched subsystem owners, not this Python extraction. The prospective intermediate-item exception deferred the full merge profile to Q01; no C02c or whole-phase qualification is claimed here.
 
+## V03/F24 C02b filesystem-effect inventory handoff delivery (2026-09-28)
+
+The C02b handoff above merged in [PR #4061](https://github.com/sifr-lang/sifr/pull/4061)
+as `4b16fe5bb33d1936a9edff8857b91274f630660d` from exact tested and
+reviewed candidate `2c00a3db24758d487a944021c46f592de81831a5` (base
+`ac248ddb32ee6df80cc9a63eebbcab14690a1aa4`, tree
+`5685ee6d559cc2491994cf3c51c64a735830c3a4`). The inventory now follows
+four Python authoring filesystem probes from LSP into the lower compiler service,
+retaining their `semantic-input` classifications and exact site/operation keys
+under the new paths and symbols. It classifies the new lower-service test fixture
+write as `output-effect` and retires the four stale LSP rows. Only the checked-in
+inventory changed; the scanner, guard semantics, Rust source and C02c scope did
+not change.
+
+On Linux x86_64, the exact `python3 verification/areas/developer_tooling/check_direct_filesystem_effects.py` check
+passed for 3,014 sites (raw log SHA-256
+`ffdd9cdf148f83daea2a72c1604cb0971a90f78077f75ae5edbc26cf2deb12da`),
+and its exact `--self-test` passed (raw log SHA-256
+`8fa490515a807532f428fbe8fbef1de198850a48156fd4e318782e22aada6c20`).
+The 900-line file-size guardrail passed for 4,250 files (raw log SHA-256
+`2b6bd1126230ab80146304fc103843ccd69352a5a9f2ea20dca7635738224ab5`),
+and the diff check passed. The raw baseline failure matches the C02b handoff
+SHA-256 `2132f9c20d60971cddb568235245be227e3b4c964f6bbf6a553493acf7174491`.
+Scoped read-only Claude Opus 5.5 review returned **SATISFIED** with no blocking
+findings (response SHA-256
+`d203fc92cfd6c69c98ce5241c0553740166717e9c4a001a4da0481501274a25a`).
+Candidate-keyed evidence is outside the Git tree at
+`/data/sifr-architecture-v03-c02b-inventory-evidence-20260928/2c00a3db24758d487a944021c46f592de81831a5/`.
+The review suggested a future stronger key for repeated multi-line call sites;
+this is a pre-existing guard-design suggestion, not a defect in these rows.
+The approved intermediate-item policy defers the full merge profile to Q01.
+
 ## N06/F13-F14 and DX9-F5 generated-storage delivery receipt (2026-09-24)
 
 [PR #4012](https://github.com/sifr-lang/sifr/pull/4012) merged as `7069cb8826efce2c78be4e1a60e96472f785bd5e` from exact tested and reviewed candidate `b7cb0064f195dcece63190644b4ec73f93ba0707` (base `ab53fba76f62398e9604e79b3c82dd27629315d7`, tree `ddece952e76d0fbf8538780944b3d9acbd1cc4c5`). The DX.3 cache inspection names the generated-artifact, prepared-resolution, probe-receipt, native-family, publication, metadata, project and fixture owners. Generic pressure pruning is scoped to the current canonical worktree and an uncontended permanent entry lease. It handles owned abandoned staging and inactive whole-family or prepared-resolution roots, protects unknown and orphan auxiliary roots without an ownership contract, and never removes another session's target or a live ownership lock. The cache CLI exposes the inspection and scoped pressure controls.
