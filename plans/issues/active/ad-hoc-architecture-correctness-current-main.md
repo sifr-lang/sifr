@@ -555,7 +555,7 @@ holds the separate passing and partial area receipts.
 | C02b | Python authoring service owner; F19 after C02a1; merged in [PR #4059](https://github.com/sifr-lang/sifr/pull/4059), receipt below. | Move editor runtime selection, environment/target probes, certification checks, interop-plan status and package diagnostic conversion below driver; preserve exact declaration identity and cancellation. Named tests and boundaries below. |
 | C02c | SQL editor service owner; F19 after C02b; merged in [PR #4063](https://github.com/sifr-lang/sifr/pull/4063), receipt below. | Move editor profile discovery/preparation and profile import diagnostics below driver while retaining component and schema behavior. Named tests and boundaries below. |
 | C02d | Preview and editor-check service owner; F19 after C02c; merged in [PR #4067](https://github.com/sifr-lang/sifr/pull/4067), receipt below. | Move generated Rust preview and editor check restore below driver using the C01 frontend product and explicit metadata/semantic identity. Named tests and boundaries below. |
-| C02e | Dependency-direction guard owner; F19 after C02d; open. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
+| C02e | Dependency-direction guard owner; F19 after C02d; merged in [PR #4071](https://github.com/sifr-lang/sifr/pull/4071), receipt below. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
 | E01 | LSP/package input owner; F20-F21; persistent Session guard prerequisite merged in [PR #4045](https://github.com/sifr-lang/sifr/pull/4045); broader item open before fast-hit reorder. | Registered watcher or explicit unsupported-client revalidation, external generations across manifest/lock/config/bridge/certification/environment, and create/delete/rename/reconnect/storm/multi-root/stale-publication tests. |
 | E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; open after E01-E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
@@ -795,6 +795,54 @@ findings (response SHA-256
 Candidate-keyed raw logs and review response are outside the Git tree at
 `/data/sifr-architecture-v03-c02d-inventory-evidence-20260928/9785f0903c64d4a233a27a3b82ce946e693dde14/`.
 The approved intermediate-item policy defers the full merge profile to Q01.
+
+## C02e/F19 dependency-direction guard delivery receipt (2026-09-28)
+
+[PR #4071](https://github.com/sifr-lang/sifr/pull/4071) merged as
+`69e417224a721906005f9ecad50bb2b0b3b14602` from exact tested and reviewed
+candidate `2964a824e4e4e9272c37b4028570ecdb198c37bb` (base
+`d3d3386da5a0087857f137c98a3f12c364e7b08b`, tree
+`696521c27e7e750264004aafc27f0be365efcdbd`). Analysis and LSP now
+take `CompilerContext`, stdlib/tooling services, Python interop plans and
+startup identity directly from `sifr_compiler_services`; neither crate
+declares or references `sifr_driver`. The lower service's compiled input
+tokens cover the package, component and SQL inputs formerly inherited through
+driver. Driver remains the CLI/build orchestration adapter. `Cargo.lock`
+drops only the two removed dependency edges.
+
+`check_source_crate_dependency_direction.py` now resolves Cargo package
+identity for direct and workspace-inherited aliases, checks normal, build and
+dev dependencies under top-level and target-specific sections, including
+optional feature dependencies, and scans manifest-declared lib, bin, example,
+test, bench and build-script Rust sources outside `src/`. Analysis and LSP
+reject driver dependencies and source aliases in all configurations;
+`sifr_compiler_services` and `sifr_cache_storage` reject upward edges. The
+positive fixture, current tree and five independently named negative mutations
+passed. The extra workspace-rename and lower-service negative cases passed.
+
+On Linux x86_64 with rustc/Cargo 1.98.1, all three C02e named exact Cargo
+cases passed 1/1 each. Five focused exact regressions for generated preview
+source maps and product projection, Python plan file identity and LSP compiler
+context identity passed 1/1 each. Rustfmt, the 900-line file-size guardrail,
+HIR maintainability and diff checks passed. Candidate-keyed raw commands,
+logs and hashes are outside the Git tree at
+`/data/sifr-architecture-c02e-evidence-20260928/2964a824e4e4e9272c37b4028570ecdb198c37bb/validation.md`
+(SHA-256 `35fa9498a39cabc39e5d6ae1f63b7162c42aef88c237e387c1e7c40263957a2d`).
+The first LSP case failed only because this fresh worktree lacked the pinned
+Python interop environment; after offline fixture preparation, the same exact
+case passed without code changes. Both logs remain in the evidence directory.
+
+The scoped read-only Opus 5.5 review returned **SATISFIED** with no blocking
+findings (response SHA-256
+`bf298cbf028b9594aa23ce6d728a9b60c6b428e8a3473684e9cd0d358bec8d1e`).
+Follow-up guard hardening for Cargo's auto-discovered target files and
+out-of-crate `#[path]` includes remains separate; no guarded crate currently
+uses those auto-discovered target directories. The automatic create-PR CI job
+failed at V01 performance-reference admission before C02e validation because
+`SIFR_PERFORMANCE_REFERENCE` was absent. Its failure remains V01 evidence.
+The approved intermediate-item policy defers the full merge profile to Q01;
+this receipt does not claim whole-phase integration or review. The record-only
+update passed documentation structure and diff checks.
 
 ## N06/F13-F14 and DX9-F5 generated-storage delivery receipt (2026-09-24)
 

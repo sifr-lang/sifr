@@ -618,7 +618,10 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   `sifr_cache_storage` for private files, leases, Unix bounded waits,
   Windows cancellable lease polling, and atomic publication. `sifr_compiler_services` also owns the single metadata reader, provider/navigation cache, tooling sysroot views, `stdlib_external_defs`, and `CompilerContext`. The context pins compiler identity, resolved sysroot, and cache root for its provider generation. The driver reexports those capabilities and retains CLI cache policy and pruning. Dependencies point
   from driver to the lower services and storage, and from services to storage.
-  The lower Python service resolves frozen package snapshots and editor environments, validates live binding and certification identities, inspects declaration targets with a cancellation boundary, applies compiler probe status, and renders package diagnostics. LSP retains document ownership and cache invalidation; driver retains build execution and generated-project adaptation.
+  Analysis and LSP depend directly on the lower services, never on driver; the
+  source crate dependency-direction guard resolves Cargo package aliases and
+  checks build, dev, feature and target declarations plus explicit target
+  sources. The lower Python service resolves frozen package snapshots and editor environments, validates live binding and certification identities, inspects declaration targets with a cancellation boundary, applies compiler probe status, and renders package diagnostics. LSP retains document ownership and cache invalidation; driver retains build execution and generated-project adaptation.
   The lower editor service builds generated Rust preview from the C01 frontend product, shares SQL query finalization and source-map projection with the driver, and restores saved diagnostics only after read-only cache-owner, metadata, record and current-source validation. The driver retains project-cache publication, build/test orchestration and pruning.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
@@ -627,10 +630,12 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 
 ### Compiler and Native Invocation Identity
 
-Outer executables embed a canonical compiler input identity and inject
-sifr_driver::CompilerContext through driver, frontend and analysis/LSP
-constructors. Bare library tests compose compiled dependency-local tokens;
-common libraries do not embed the application-wide volatile identity.
+Outer executables embed a canonical compiler input identity and construct
+`sifr_compiler_services::CompilerContext`. Driver reexports that context for
+CLI callers, while analysis and LSP accept the lower context directly and
+compose their own dependency-local compiled tokens. Bare library tests compose
+compiled dependency-local tokens; common libraries do not embed the
+application-wide volatile identity.
 sifr_sysroot::NativeToolchain resolves explicit tools and effective Cargo
 configuration before temporary project creation. On Windows, bare tool names
 on `PATH` select their `.exe` file; explicit paths remain exact, and rustup
