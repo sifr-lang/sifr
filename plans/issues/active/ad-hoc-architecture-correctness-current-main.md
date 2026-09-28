@@ -318,6 +318,53 @@ after initialization the supported command passed. This documentation-only
 split required no broad gate or new external review. E01a is the next item;
 no E01a, E01b, E01c, E02, E03 or Q01 acceptance is claimed.
 
+## E01a/F20-F21 per-root external-input delivery receipt (2026-09-28)
+
+[PR #4075](https://github.com/sifr-lang/sifr/pull/4075) merged as
+`8dcb758fd11109fe205a4645713a2b232d59b8eb` from exact tested and
+reviewed candidate `58e15d59fa33087ae60135e12b5b2e6c36a45641` (base
+`20457942c26d97c6a5ab6e0293b2acc9b627abd1`, tree
+`df435e31a54ce7dba0ccf58ecb2c234e7dbdb0f8`). The LSP now tracks a
+snapshot and generation per package root for manifests, Cargo configuration
+and locks, Python bridge sources/inventory, binding/certification artifacts,
+and selected Python environment declarations. Request-time observation
+advances only a changed root and refreshes its analysis owner and Python
+declaration success/failure caches; stable inputs retain warm reuse. Newly
+present and deleted nested manifests move document ownership between roots.
+This item leaves watcher registration/acknowledgement to E01b and Python
+fast-hit ordering to E01c.
+
+On that candidate, all four new E01a cases, both preserved existing cases and
+six focused ownership, source, lockfile and certification regressions passed
+with one selected assertion each. Formatting, the 900-line file-size guard
+(4,259 files), documentation structure (1/1) and diff checks passed. The
+candidate-keyed raw logs and input identity are under
+`/data/sifr-architecture-e01a-external-generations-evidence-20260928/58e15d59fa33087ae60135e12b5b2e6c36a45641/`;
+validation manifest SHA-256 is
+`9b8060fd4478ecb6af04291eb6f0cd35110e33300d4d49ccfbd54f380878a279`,
+and the raw-log digest index SHA-256 is
+`2aacec2b17c7a690f21c2b0f3f6217d01a536c4e69aa9171a6ec7d0f32611c79`.
+The initial cold build and a subsequent selection ran zero new assertions
+before the test module was registered; a later negative/positive analysis
+assertion failed because its new Cargo fixture lacked `src/lib.rs`. These
+attempts remain preserved as incomplete/failing evidence, followed by the
+fixed fixture and twelve exact passing selections on the final candidate.
+The isolated target and prepared Python environment stayed warm, with no
+cache cleanup.
+
+Scoped Opus review of that exact candidate returned **SATISFIED** with no
+blocking findings (response SHA-256
+`3010e913c1002b9d8e6f6ece2c7b4907272b521ff41428de5c538649c8cae0bc`).
+Review suggestions concerning interpreter hashing cost and root retirement
+belong to later E01b/E03 work; live distribution changes without declared-file
+changes remain an existing environment-authority follow-up and are not
+qualified by E01a. An optional strict scoped Clippy run stopped in
+pre-existing `sifr_codegen/src/checked_place.rs:111,116` warnings, recorded
+in the Emitted-Rust issue;  it was not an E01a acceptance gate (raw
+log SHA-256 `08ddb955f2ed756160898d2991f362e16e9df6d114af5d8d20e4a39014d7487e`).
+The prospective intermediate-item policy defers the full merge profile to
+Q01. E01b is next; this receipt does not claim E01b, E01c, E02, E03 or Q01.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -602,7 +649,7 @@ holds the separate passing and partial area receipts.
 | C02c | SQL editor service owner; F19 after C02b; merged in [PR #4063](https://github.com/sifr-lang/sifr/pull/4063), receipt below. | Move editor profile discovery/preparation and profile import diagnostics below driver while retaining component and schema behavior. Named tests and boundaries below. |
 | C02d | Preview and editor-check service owner; F19 after C02c; merged in [PR #4067](https://github.com/sifr-lang/sifr/pull/4067), receipt below. | Move generated Rust preview and editor check restore below driver using the C01 frontend product and explicit metadata/semantic identity. Named tests and boundaries below. |
 | C02e | Dependency-direction guard owner; F19 after C02d; merged in [PR #4071](https://github.com/sifr-lang/sifr/pull/4071), receipt below. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
-| E01a | LSP/package external-input owner; F20-F21 first item after merged persistent Session prerequisite and C02e; open. | Per-root external snapshots and generations; manifest/lock/config/bridge/binding/certification/environment transitions, positive and negative cache invalidation, unchanged warm reuse. Named cases above. |
+| E01a | LSP/package external-input owner; F20-F21; merged in [PR #4075](https://github.com/sifr-lang/sifr/pull/4075), receipt above. | Per-root external snapshots and generations; manifest/lock/config/bridge/binding/certification/environment transitions, positive and negative cache invalidation, unchanged warm reuse. Named cases above. |
 | E01b | LSP watcher/protocol owner; F20-F21 after merged E01a; open. | Capability-gated registration and response acknowledgement; rejected/unsupported/unconfirmed per-request revalidation, lifecycle events, reconnect, storms and multi-root isolation. Named cases above. |
 | E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; open. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, cancellation and multi-root lifecycle. Named cases above. |
 | E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
