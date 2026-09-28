@@ -733,3 +733,51 @@ fn windows_portability_workspace_identity_alias_and_orphan_prune() {
     );
     assert!(!context.exists());
 }
+
+#[test]
+fn editor_restore_requires_current_cache_owner_and_source() {
+    let (_root, file, cache) = fixture();
+    let compiler = crate::CompilerContext::for_test().with_cache_root(cache.clone());
+    let metadata = compiler.metadata_provider().unwrap();
+    let inputs = sifr_compiler_services::editor::manifestless_inputs(
+        &compiler,
+        &metadata.metadata.metadata_id,
+        &file,
+    )
+    .unwrap();
+    let (diagnostics, report) = check(
+        (&cache, file.parent().unwrap()),
+        &file,
+        &mut DiskSourceProvider::new(),
+        inputs,
+        &AtomicBool::new(false),
+        None,
+        |provider| compute(&file, provider).into(),
+    );
+    assert!(diagnostics.is_empty());
+    assert_eq!(report.status, "published");
+    let open = || {
+        sifr_frontend::WorkspaceSession::open_project(sifr_frontend::ProjectRoot {
+            root: SourcePath::new(file.parent().unwrap()),
+            entrypoint: SourcePath::new(&file),
+        })
+        .unwrap()
+        .with_compiler_identity(compiler.identity().clone())
+    };
+    let mut session = open();
+    let decisions = sifr_compiler_services::editor::restore_editor_checks(&compiler, &mut session);
+    assert!(
+        decisions
+            .iter()
+            .any(|decision| decision.action == "restored")
+    );
+
+    let other_owner = compiler.clone().with_cache_root(cache.join("other"));
+    assert!(
+        sifr_compiler_services::editor::restore_editor_checks(&other_owner, &mut open()).is_empty()
+    );
+    fs::write(&file, "def main() -> None:\n    value: int = 2\n").unwrap();
+    assert!(
+        sifr_compiler_services::editor::restore_editor_checks(&compiler, &mut open()).is_empty()
+    );
+}

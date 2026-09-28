@@ -2,7 +2,7 @@
 use crate::windows_storage_security as security;
 use std::fs::{self, File, OpenOptions};
 use std::io;
-use std::os::windows::fs::OpenOptionsExt;
+use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
 use std::os::windows::io::AsRawHandle;
 use std::path::{Component, Path, PathBuf};
 use std::time::Duration;
@@ -166,4 +166,35 @@ pub fn new_private_file(path: &Path) -> io::Result<File> {
 }
 pub fn publish(source: &Path, destination: &Path) -> io::Result<()> {
     security::durable_rename(source, destination)
+}
+
+/// Open an existing private cache payload without following a reparse point.
+pub fn read_private_file(path: &Path) -> io::Result<File> {
+    security::open_read(path)
+}
+
+/// Open an existing stable lease without following a reparse point.
+pub fn read_write_private_file(path: &Path) -> io::Result<File> {
+    check_owned(path)?;
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT)
+        .open(path)?;
+    if file.metadata()?.file_attributes()
+        & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+        != 0
+    {
+        return Err(invalid("reparse-point storage file"));
+    }
+    Ok(file)
+}
+
+pub fn real_directory(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|meta| {
+        meta.is_dir()
+            && meta.file_attributes()
+                & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+                == 0
+    })
 }

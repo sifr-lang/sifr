@@ -415,3 +415,25 @@ mod tests {
         owner.unlock().unwrap();
     }
 }
+
+/// Open an existing private cache payload without following a final symlink.
+pub fn read_private_file(path: &Path) -> io::Result<File> {
+    OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+}
+
+/// Open an existing stable lease without following a final symlink.
+pub fn read_write_private_file(path: &Path) -> io::Result<File> {
+    check_owned(path)?;
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+}
+
+pub fn real_directory(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())
+}
