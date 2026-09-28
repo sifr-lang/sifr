@@ -10,6 +10,67 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## V01/F05 live selected-reference qualification (2026-09-28)
+
+On exact merged main `8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b`, the
+immutable `linux-i7-4720hq-12gb-dev-v1` reference was admitted live on its
+captured Linux host. The selected reference digest was
+`a33f46702c3e16b4f7e511a155b9c7a06880c19e703611e071e1b86103cee91d`;
+Python 3.14.7, Rust/Cargo 1.98.1, two Cargo jobs, root ext4 target and temporary
+storage, and the captured CPU frequency policy matched. The approved idle-host
+window changed all eight CPU governors from `schedutil` to `performance` for
+the run and restored `schedutil` afterward. The benchmark report records a
+clean source tree, controlled latency mode, and no competing build process.
+
+The exact `python3 verification/areas/performance/runner.py --suite representative`
+selection passed **8/8** area variants with zero failures. Its producer ran
+all **10/10** selected benchmark cases with the manifest sample counts and no
+timeouts; the selected-reference subset budget check passed. Seven five-sample
+cases did not claim p95 qualification because the policy requires at least 20
+samples for that metric. The standalone live admission log has SHA-256
+`1789864d62da777d2978a10c787f414eaed63832c8c007923bfd8f2fbd498b34`;
+the area log, result JSON, benchmark report, and trend report have SHA-256
+`3434e0a0805a24c7243e618815964e6d3ccb1e4adcb3690b66fd96be9450d642`,
+`01a242ddce06a2857543bdd76323ba670fe64fa0fe3ec9e1d4d0b532a3c2aef4`,
+`cd5226dfa7c7cd8343cce113a761278856131c85a6794037c4f7a18b9aacc6e8`,
+and `7bac51a16e5fd9beb8b9b84e66587c5587bc0860c696f5111e84ff797a78e298`,
+respectively. Raw candidate-keyed evidence is outside the Git tree at
+`/data/sifr-architecture-v01-live-qualification-evidence-20260928/8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b/`.
+
+The first standalone admission probe rejected the default tmpfs temporary
+storage as `execution.temporary_storage` (raw log SHA-256
+`d0255739737fcd60dee835a5cdd50d785f2476df071a484a0269eee7dcd9139a`);
+admission passed after setting temporary storage on the captured root ext4
+device. The first representative run then failed during setup because the new
+worktree lacked the pinned Ruff submodule (raw log SHA-256
+`37c49c7422161d68b4c91dc73526d3caf5d9d087187a7e4c1da232b906e81859`).
+After initialization, the cold compiler build exceeded the benchmark runner's
+180-second preparation deadline before measurements (raw log SHA-256
+`f95cba8a8718decdef47e14d8378975725603fcdb20dc2cd66ecd8d062aac832`).
+The compiler and frontend query helper were then built in the same owned Cargo
+target; the passing run reused those warm artifacts. All three failed probes
+and attempts remain separate from the passing evidence. The standalone probe
+and passing run retain governor before/during/after receipts; the two failed
+representative attempts retain their logs and exit statuses, while their
+governor snapshots were overwritten by the passing run.
+
+The record-only delivery is [PR #4058](https://github.com/sifr-lang/sifr/pull/4058).
+This closes V01/F05's outstanding live admission and named representative
+qualification prerequisite. Q01 still owns the final exact-candidate full
+merge profile and whole-phase integration decision.
+
+The record-only documentation structure check passed (raw log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+the 900-line file-size guardrail passed for 4,245 files (raw log SHA-256
+`2e10821206a8db09bbb2a00e21e9618f4f9f216f73b5c56afcd7ce13f9e819d2`),
+and the diff check passed.
+
+Scoped read-only Opus review of the earlier record candidate
+`443965362753f49c576bcb02847066e286517dd5` found the omitted first
+admission rejection and imprecise governor-receipt wording. Both are corrected
+above; its response is preserved outside the Git tree (SHA-256
+`94331217faaa3355b7c35f68c3d1f9351ccf600f6da3eb64c3ffa3044cf8c21a`).
+
 ## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
 
 The Emitted-Rust final qualifier's exact-main
@@ -470,7 +531,7 @@ holds the separate passing and partial area receipts.
 | P00 | This record; F33; record-only preparation. | One owner, evidence class, bounded acceptance and order for F01-F34 and M1-M13. Documentation structure check. No named Sifr executable case. |
 | X01 | Generated Rust owner in [Emitted Rust Excellence](ad-hoc-emitted-rust-excellence.md); F01; merged in [PR #3916](https://github.com/sifr-lang/sifr/pull/3916), receipt below. | Legal unwrap/expect names in check, emit, build, native, project and test flows; compiler-owned extraction still rejected. |
 | X02 | Existing Emitted Rust owner, including retained Item 12; F02-F04 and codegen part of F32; open after X01. | Contextual Result failures at every public emission boundary, no partial output, origin-aware exhaustive IR/final-source validation, trusted macro/bridge policy, diagnostic and fixture checks. |
-| V01 | Compiler/performance qualification owner; F05; fail-closed admission merged, live qualification blocked by shared-host CPU policy. | Compatible reference selected before long work, controlled-clock freshness boundary tests, host/toolchain admission and actual selected reference check. Old Mac capture is expired; Linux reference is host-specific. |
+| V01 | Compiler/performance qualification owner; F05; fail-closed admission merged and live selected-reference representative qualification passed on main `8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b`. | Compatible reference selected before long work, controlled-clock freshness boundary tests, host/toolchain admission and actual selected reference check. Old Mac capture is expired; Linux reference is host-specific. |
 | V02 | Verification runner owner; F06; merged in [PR #3921](https://github.com/sifr-lang/sifr/pull/3921), receipt below. | One Python-interop area ID across selection, receipt, export and required cache paths; mutated suite/cache inputs alter identity and cold classification. |
 | V03 | Verification guard owner; F24; merged in [PR #3926](https://github.com/sifr-lang/sifr/pull/3926), receipt below. Current-main inventory drift was repaired in [PR #4043](https://github.com/sifr-lang/sifr/pull/4043), receipt below. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
 | V03b | Semantic parser guard owner; F25; merged in [PR #3929](https://github.com/sifr-lang/sifr/pull/3929), receipt below. | Detect aliased parse, parse_module_raw and parse_module_suite calls, and adjudicate existing parse-and-lower sites. Separate production from test-only code, including mixed files and cross-file module gating; negative tests cover aliased parse in mixed test/production source. |
