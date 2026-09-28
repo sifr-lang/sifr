@@ -1,0 +1,5 @@
+from missing_seed_module import value
+
+
+def main():
+    print(str(value))
