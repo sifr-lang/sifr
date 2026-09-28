@@ -45,6 +45,19 @@
       ]
     },
     {
+      "name": "lsp-workspace-cache",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "lsp-cache-deltas",
+          "entry": "verification/areas/performance/lsp_workspace_cache_deltas.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "rules",
       "kind": "adapter",
       "cases": [

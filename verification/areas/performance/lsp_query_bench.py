@@ -160,6 +160,9 @@ def run_generated_rust_preview(client: LspClient, uri: str) -> None:
     client.request("workspace/executeCommand", {"command": "sifr.server.showGeneratedRust", "arguments": [uri]})
 
 
+WORKSPACE_SCENARIOS = {"lsp.cold_start", "lsp.workspace_diagnostics", "lsp.references", "lsp.rename"}
+
+
 WARM_SCENARIOS: dict[str, Callable[[LspClient, str], None]] = {
     "lsp.request_families": run_family,
     "lsp.code_actions": run_code_actions,
@@ -194,18 +197,43 @@ def run_document_diagnostics(client: LspClient, uri: str, source: str, state: di
     client.request("textDocument/diagnostic", {"textDocument": document})
 
 
-def run_cold_start(project_root: Path, iterations: int) -> list[float]:
+def cache_stats(client: LspClient) -> tuple[int, int]:
+    """Read cumulative Python declaration snapshot reuse counters from the server."""
+    payload = client.request("sifr/debugCacheStats", {})
+    if not isinstance(payload, dict):
+        raise ValueError("LSP cache statistics response must be an object")
+    declarations = payload.get("pythonDeclarations")
+    if not isinstance(declarations, dict):
+        raise ValueError("LSP cache statistics lack Python declaration counters")
+    hits, misses = declarations.get("hits"), declarations.get("misses")
+    if type(hits) is not int or type(misses) is not int or hits < 0 or misses < 0:
+        raise ValueError("LSP cache statistics must be nonnegative integer counters")
+    return hits, misses
+
+
+def cache_delta(before: tuple[int, int], after: tuple[int, int]) -> tuple[int, int]:
+    hits, misses = after[0] - before[0], after[1] - before[1]
+    if hits < 0 or misses < 0:
+        raise ValueError("LSP cache counters moved backwards")
+    return hits, misses
+
+
+def run_cold_start(project_root: Path, iterations: int) -> tuple[list[float], int, int]:
     samples: list[float] = []
+    total_hits = total_misses = 0
     for _ in range(iterations):
         started = time.perf_counter()
         client = LspClient(timeout=90.0)
         try:
             initialize(client, project_root)
             samples.append((time.perf_counter() - started) * 1000.0)
+            hits, misses = cache_stats(client)
+            total_hits += hits
+            total_misses += misses
             client.request("shutdown", {})
         finally:
             client.close()
-    return samples
+    return samples, total_hits, total_misses
 
 
 def run_warm_scenario(
@@ -215,12 +243,13 @@ def run_warm_scenario(
     source: str,
     iterations: int,
     inner_repetitions: int,
-) -> list[float]:
+) -> tuple[list[float], int, int]:
     client = LspClient(timeout=90.0)
     samples: list[float] = []
     try:
         initialize(client, project_root)
         open_document(client, source_path, source)
+        before = cache_stats(client)
         uri = file_uri(source_path)
         diagnostic_state = {"version": 1}
         for _ in range(iterations):
@@ -231,19 +260,21 @@ def run_warm_scenario(
                 else:
                     WARM_SCENARIOS[scenario](client, uri)
             samples.append((time.perf_counter() - started) * 1000.0 / inner_repetitions)
+        after = cache_stats(client)
         client.request("shutdown", {})
     finally:
         client.close()
-    return samples
+    return samples, *cache_delta(before, after)
 
 
-def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: int) -> list[float]:
+def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: int) -> tuple[list[float], int, int]:
     samples: list[float] = []
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-did-open-bench-") as raw:
         root = Path(raw)
         client = LspClient(timeout=90.0)
         try:
             initialize(client, root)
+            before = cache_stats(client)
             for index in range(iterations):
                 started = time.perf_counter()
                 for repetition in range(inner_repetitions):
@@ -263,17 +294,21 @@ def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: in
                     )
                     client.wait_for_notification("textDocument/publishDiagnostics")
                 samples.append((time.perf_counter() - started) * 1000.0 / inner_repetitions)
+            after = cache_stats(client)
             client.request("shutdown", {})
         finally:
             client.close()
-    return samples
+    return samples, *cache_delta(before, after)
 
 
-def validate_benchmark_input(project_root: Path, source_path: Path) -> None:
+def validate_benchmark_input(project_root: Path, source_path: Path, minimum_modules: int = 0) -> None:
     if not project_root.joinpath("sifr.toml").is_file():
         raise ValueError("LSP benchmark project root requires sifr.toml")
     if source_path != project_root / "src" / "main.sifr":
         raise ValueError("LSP benchmark source must be project_root/src/main.sifr")
+    module_count = len(list(project_root.joinpath("src").glob("*.sifr")))
+    if module_count < minimum_modules:
+        raise ValueError(f"LSP workspace benchmark requires at least {minimum_modules} modules, found {module_count}")
 
 
 def run_scenario(
@@ -283,7 +318,7 @@ def run_scenario(
     source: str,
     iterations: int,
     inner_repetitions: int,
-) -> list[float]:
+) -> tuple[list[float], int, int]:
     if scenario == "lsp.cold_start":
         return run_cold_start(project_root, iterations)
     if scenario == "lsp.did_open_diagnostics":
@@ -315,9 +350,9 @@ def main() -> int:
     inner_repetitions = int(sys.argv[5])
     if inner_repetitions <= 0:
         raise ValueError("inner-repetitions must be positive")
-    validate_benchmark_input(project_root, source_path)
+    validate_benchmark_input(project_root, source_path, 25 if scenario in WORKSPACE_SCENARIOS else 0)
     source = source_path.read_text(encoding="utf-8")
-    samples = run_scenario(
+    samples, cache_hits, cache_misses = run_scenario(
         scenario,
         project_root,
         source_path,
@@ -329,8 +364,9 @@ def main() -> int:
         json.dumps(
             {
                 "samples_ms": samples,
-                "cache_hits": 0,
-                "cache_misses": iterations,
+                "cache_hits": cache_hits,
+                "cache_misses": cache_misses,
+                "module_count": len(list(project_root.joinpath("src").glob("*.sifr"))),
                 "diagnostics_count": 0,
                 "timed_out": False,
             },

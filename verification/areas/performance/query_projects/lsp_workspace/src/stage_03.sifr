@@ -1,0 +1,4 @@
+from stage_02 import stage_value_02
+
+def stage_value_03() -> int:
+    return stage_value_02() + 1

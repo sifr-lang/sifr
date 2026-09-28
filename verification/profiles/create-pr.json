@@ -790,7 +790,8 @@
       "area": "performance",
       "suites": [
         "smoke",
-        "frontend-syntax-guardrails"
+        "frontend-syntax-guardrails",
+        "lsp-workspace-cache"
       ],
       "resource_classes": [
         "default-local"
