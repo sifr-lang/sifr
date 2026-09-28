@@ -39,6 +39,48 @@ Emitted-Rust qualifier's complete merge-profile rerun. This blocker record
 does not change implementation source.
 
 
+### Owner repair candidate and focused evidence (2026-09-28)
+
+Implementation candidate `88aeceb745728188180e5afa253337f7568bfa1c`
+(base `483977029ec7d4f3e4b6adfb97ccabaa7ad0c484`) makes every checked-in
+LeetCode check use the existing `--no-incremental` CLI mode and updates the
+manifest command strings and reported argv to match. This bypasses project
+semantic cache reads and writes, including optional workspace-hint publication;
+stdlib and Cargo storage remain available. The corpus classifications,
+assertions, expected counts, timeouts, and artifacts are unchanged. The
+performance clean-producer check is unchanged.
+
+With a fresh private `SIFR_CACHE_DIR` and this worktree's owned Cargo target,
+`algorithmic_compatibility --suite representative-subset` passed 12/12 on the
+committed candidate. The affected `--suite leetcode-full` passed 411/411 with
+zero failures, and its taxonomy completed. The area runner reported
+`--no-incremental` for every selected fixture in both selections. The pinned LeetCode submodule
+was clean before and after both selections, and `src/.sifrbuildinfo` was absent.
+The representative result SHA-256 is
+`12471c369ba04dbb139132ec703f494e1dfe96122d0730cc926b8d06b05162d2`;
+the full-corpus result SHA-256 is
+`ca30ae9f7aebc3afd0be52de817e4e3d635859281b007ec3600499d6cd32fdc1`.
+Diff hygiene, Python syntax, manifest validation, maintainability, and the
+900-line file-size guardrail passed. The scoped read-only
+`claude-opus-5-5` review approved the implementation with no blocking findings;
+its SHA-keyed response is
+`/data/sifr-algorithmic-producer-hint-evidence-20260928/review-88aeceb745728188180e5afa253337f7568bfa1c.md`
+(SHA-256 `c43c72699a55fef4fe751454bbe6259099e9a5e54dc297128bad278826fe18b5`).
+It noted a pre-existing `full_corpus.command` validation gap as a separate
+follow-up suggestion and the pre-existing descriptive directory argv in
+`leetcode-check`; this repair does not expand either surface.
+
+The named performance benchmark has not been run on this candidate. Its
+reference requires a root-ext4 Cargo target. Root has 41,151,225,856 bytes
+free; the prior qualifier required a 30,000,000,000-byte reserve, leaving
+about 11.15 GB for a separate cold target, while its warm owned target occupies
+87 GB. This session did not allocate an unsafe target or mutate the qualifier's
+target. The implementation is ready for administrative PR publication and
+merge; the Emitted-Rust final qualifier must run the affected performance
+selection and complete merge profile with its warm owned target after merge.
+No broad-gate pass is claimed here.
+
+
 ## 2026-09-23 retained Item 12 corpus source-contract correction
 
 The retained emitted-Rust Item 12 native audit stopped at
