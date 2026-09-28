@@ -136,15 +136,16 @@ impl WatcherRegistration {
             })
     }
 
-    pub(super) fn respond(&mut self, response: &Response) {
+    pub(super) fn respond(&mut self, response: &Response) -> bool {
         if self.pending.as_ref() != Some(&response.id) {
-            return;
+            return false;
         }
         self.pending = None;
         self.acknowledged = response.response_result.is_ok();
         if self.acknowledged {
             self.registered_id = Some(format!("sifr/watched-files/{}", self.next_id));
         }
+        self.acknowledged
     }
 }
 

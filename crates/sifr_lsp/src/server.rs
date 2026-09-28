@@ -180,7 +180,13 @@ impl LspServer {
                         std::process::exit(code);
                     }
                 }
-                Message::Response(response) => self.watchers.respond(&response),
+                Message::Response(response) => {
+                    if self.watchers.respond(&response)
+                        && self.session.revalidate_open_external_inputs()
+                    {
+                        reconcile_diagnostics(&self.connection, &mut self.session);
+                    }
+                }
             }
         }
         if message_pump.join().is_err() {
@@ -190,7 +196,11 @@ impl LspServer {
     }
 
     fn handle_request(&mut self, request: Request) -> ServerResult<()> {
-        revalidate_without_watchers(&mut self.session, &self.watchers);
+        revalidate_and_publish_without_watchers(
+            &mut self.session,
+            &self.watchers,
+            &self.connection,
+        );
         let id = request.id.clone();
         let lane = Scheduler::lane_for_method(&request.method);
         if let Err(error) = self.session.enqueue_request(&id, &request.method, lane) {
@@ -303,8 +313,39 @@ impl LspServer {
     }
 }
 
-fn revalidate_without_watchers(session: &mut Session, watchers: &WatcherRegistration) {
-    session.revalidate_open_external_inputs_where(|path| !watchers.covers(path));
+fn revalidate_without_watchers(session: &mut Session, watchers: &WatcherRegistration) -> bool {
+    session.revalidate_open_external_inputs_where(|path| !watchers.covers(path))
+}
+
+fn revalidate_and_publish_without_watchers(
+    session: &mut Session,
+    watchers: &WatcherRegistration,
+    connection: &Connection,
+) {
+    if revalidate_without_watchers(session, watchers) {
+        reconcile_diagnostics(connection, session);
+    } else if let Err(error) =
+        crate::diagnostics::DiagnosticsController::flush_pending(connection, session)
+    {
+        session.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!("pending diagnostics failed: {}", error.message()),
+        );
+    }
+}
+
+fn reconcile_diagnostics(connection: &Connection, session: &mut Session) {
+    if let Err(error) =
+        crate::diagnostics::DiagnosticsController::reconcile_changes(connection, session)
+    {
+        session.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!(
+                "external diagnostics reconciliation failed: {}",
+                error.message()
+            ),
+        );
+    }
 }
 
 fn response_from_result(id: RequestId, result: LspResult<Value>) -> Response {
@@ -321,6 +362,8 @@ fn response_from_result(id: RequestId, result: LspResult<Value>) -> Response {
 
 #[cfg(test)]
 mod tests {
+    #[path = "e01c_publication_tests.rs"]
+    mod e01c_publication_tests;
     use super::response_from_result;
     use crate::errors::LspError;
     use lsp_server::RequestId;
@@ -460,6 +503,114 @@ mod tests {
             session.external_input_generation(&second),
             Some(second_generation)
         );
+    }
+
+    #[test]
+    fn request_time_external_change_publishes_current_diagnostics() {
+        use super::{
+            revalidate_and_publish_without_watchers, watcher_registration::WatcherRegistration,
+        };
+        use lsp_server::{Connection, Message};
+        let temp = tempfile::tempdir().expect("temporary root");
+        let uri = watcher_fixture(temp.path(), "watcher-publication");
+        let mut session = crate::session::Session::new();
+        open_watcher_document(&mut session, uri.clone());
+        let unsupported = WatcherRegistration::new(&json!({"capabilities": {}}));
+        let (server, client) = Connection::memory();
+
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server);
+        assert!(client.receiver.try_recv().is_err());
+
+        let manifest = temp.path().join("sifr.toml");
+        std::fs::write(
+            &manifest,
+            "invalid = [
+",
+        )
+        .expect("invalidate manifest");
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server);
+        let publication = client
+            .receiver
+            .try_iter()
+            .find_map(|message| match message {
+                Message::Notification(notification)
+                    if notification.method == "textDocument/publishDiagnostics" =>
+                {
+                    Some(notification.params)
+                }
+                _ => None,
+            })
+            .expect("current diagnostics publication");
+        assert_eq!(publication["uri"], uri);
+        assert_eq!(publication["version"], 1);
+        assert!(
+            !publication["diagnostics"]
+                .as_array()
+                .expect("diagnostics")
+                .is_empty()
+        );
+
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server);
+        assert!(client.receiver.try_recv().is_err());
+    }
+
+    #[test]
+    fn request_time_probe_drift_keeps_server_flow_and_publishes_latest_diagnostics() {
+        use super::{
+            revalidate_and_publish_without_watchers, watcher_registration::WatcherRegistration,
+        };
+        use crate::session::tests::python_declaration_tests::{SOURCE, open_fixture};
+        use lsp_server::{Connection, Message};
+        let (mut session, temp, uri) = open_fixture(SOURCE);
+        session
+            .python_declaration_snapshot(&uri)
+            .expect("prime status");
+        let lock = temp.path().join("Cargo.lock");
+        let mut lock_contents = std::fs::read_to_string(&lock).expect("read lock");
+        lock_contents.push_str("# changed before request\n");
+        std::fs::write(lock, lock_contents).expect("change external input");
+        session
+            .python_declarations
+            .inject_external_change_before_verification(
+                temp.path().join("sifr.python-bindings.json"),
+                Some(
+                    b"{\"schema_version\":1,\"environment_digest\":\"stale\",\"bindings\":[]}\n"
+                        .to_vec(),
+                ),
+            );
+
+        let unsupported = WatcherRegistration::new(&json!({"capabilities": {}}));
+        let (server, client) = Connection::memory();
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server);
+        let publication = client
+            .receiver
+            .try_iter()
+            .find_map(|message| match message {
+                Message::Notification(notification)
+                    if notification.method == "textDocument/publishDiagnostics" =>
+                {
+                    Some(notification.params)
+                }
+                _ => None,
+            })
+            .expect("latest diagnostics publication");
+        assert_eq!(publication["uri"], uri);
+        assert!(
+            publication["diagnostics"]
+                .as_array()
+                .expect("diagnostics")
+                .iter()
+                .any(|item| item["code"] == "SIFR-PYCONV-0001")
+        );
+        assert!(session.take_next_diagnostic_job().is_none());
+
+        let response = crate::requests::handle(
+            &mut session,
+            "textDocument/completion",
+            json!({"textDocument":{"uri":uri},"position":{"line":6,"character":15}}),
+        )
+        .expect("request after drift still receives a response");
+        assert!(response.to_string().contains("sqrt"));
     }
 
     #[test]

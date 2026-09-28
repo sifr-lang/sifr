@@ -14,6 +14,7 @@ struct RootSnapshot {
 #[derive(Default)]
 pub(crate) struct ExternalInputSnapshots {
     roots: BTreeMap<PathBuf, RootSnapshot>,
+    revision: u64,
 }
 
 impl ExternalInputSnapshots {
@@ -24,12 +25,14 @@ impl ExternalInputSnapshots {
                 (snapshot.generation, false)
             }
             Some(snapshot) => {
+                self.revision = self.revision.saturating_add(1);
                 snapshot.fingerprint = fingerprint;
                 snapshot.stable = stable;
                 snapshot.generation = snapshot.generation.saturating_add(1);
                 (snapshot.generation, true)
             }
             None => {
+                self.revision = self.revision.saturating_add(1);
                 self.roots.insert(
                     root.to_path_buf(),
                     RootSnapshot {
@@ -43,8 +46,18 @@ impl ExternalInputSnapshots {
         }
     }
 
+    pub(crate) const fn revision(&self) -> u64 {
+        self.revision
+    }
+
     pub(crate) fn contains_root(&self, root: &Path) -> bool {
         self.roots.contains_key(root)
+    }
+
+    pub(crate) fn retire_root(&mut self, root: &Path) {
+        if self.roots.remove(root).is_some() {
+            self.revision = self.revision.saturating_add(1);
+        }
     }
 
     pub(crate) fn owning_root(&self, path: &Path) -> Option<&Path> {
@@ -55,9 +68,14 @@ impl ExternalInputSnapshots {
             .map(PathBuf::as_path)
     }
 
-    #[cfg(test)]
     pub(crate) fn generation(&self, root: &Path) -> Option<u64> {
         self.roots.get(root).map(|snapshot| snapshot.generation)
+    }
+
+    pub(crate) fn state(&self, root: &Path) -> Option<(u64, u64, bool)> {
+        self.roots
+            .get(root)
+            .map(|snapshot| (snapshot.generation, snapshot.fingerprint, snapshot.stable))
     }
 }
 
