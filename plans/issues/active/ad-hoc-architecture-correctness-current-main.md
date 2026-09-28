@@ -964,7 +964,7 @@ holds the separate passing and partial area receipts.
 | E02 | Analysis/lint owner; F22; merged in [PR #4083](https://github.com/sifr-lang/sifr/pull/4083), receipt above. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; merged in [PR #4085](https://github.com/sifr-lang/sifr/pull/4085), receipt above. | Actual Python declaration cache deltas in 25 connected modules: cold, unchanged, private/API edit, external change and cancellation/recovery. |
 | E04 | Separate editor correctness owner; F34; merged in [PR #4087](https://github.com/sifr-lang/sifr/pull/4087), receipt above. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
-| H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a and H01b merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090) and [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
+| H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a-H01c merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), [PR #4093](https://github.com/sifr-lang/sifr/pull/4093) and [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
 | H02 | Typed lowering and unsafe bridge owners, split by subsystem; F29; open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. |
 | H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
 | D01a | Diagnostic and verification registry prerequisite; non-codegen F32; merged in [PR #3936](https://github.com/sifr-lang/sifr/pull/3936), receipt below. | Active code identity, owner-module and fixture references, related-span JSON, verification mutation inventory and negative drift tests. Do not change codegen diagnostics or historical numeric codes. |
@@ -994,7 +994,7 @@ mutation smoke throughout. Do not claim H01/F28 complete from one slice.
 | --- | --- | --- |
 | H01a / verification runner and parser; merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), receipt below | First. Add a real instrumented, coverage-guided parser target and a sustained runner with a measured nonzero execution count and coverage feedback. Keep cold build preflight outside each target budget. Classify missing tool, offline dependency, instrumented build, target timeout, and compiler finding separately; retain bounded build-output tails, globally unique variant labels and input/tool/config identity. Minimize and preserve a stable reproducing seed before promotion; the current whitespace-only `minimize_seed.py` is not minimization evidence. Reconcile nightly/release timeouts and resource classes. Remove the historical fuzz workspace’s unused `serde_json` dependency unless a target genuinely consumes it. | `python3 -m unittest verification.runner.sifr_verify.hardening.test_coverage_fuzz` cases `test_missing_tool`, `test_offline_dependency_failure`, `test_instrumented_build_failure`, `test_target_timeout`, `test_compiler_finding_minimized_seed`, `test_nonzero_guided_executions_and_coverage`, `test_budget_and_unique_labels`, `test_no_unused_fuzz_dependencies`; `cargo +nightly fuzz run --fuzz-dir verification/fuzz parser <corpus> -- -max_total_time=10 -print_final_stats=1` with measured execution/coverage receipt. |
 | H01b / frontend guided targets; merged in [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), receipt below | After H01a. Add lowering and ownership targets through real compiler APIs, with diverse typed source grammar rather than fixed literal templates. Reuse H01a taxonomy, corpus and minimization contracts; do not change diagnostic, project or codegen target ownership. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz lowering <corpus> -- -max_total_time=10 -print_final_stats=1` and the same exact command for `ownership`; `cargo test -p sifr_frontend --lib guided_target_replay_tests::lowering_seed_replay -- --exact` and `cargo test -p sifr_frontend --lib guided_target_replay_tests::ownership_seed_replay -- --exact`. Record nonzero executions, feedback, and stable minimized reproductions for findings. |
-| H01c / diagnostics guided target | After H01a. Mutate structured rendered-diagnostic envelopes directly and exercise JSON, human and compact renderers. Use a specific active diagnostic identity; never use the forbidden catch-all `SIFR-TYPE-0001`. Preserve H01a failure taxonomy and minimized JSON artifacts. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz diagnostics <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::diagnostic_renderer -- --exact`; assert nonzero guided executions, all three renderers and a stable minimized structured seed. |
+| H01c / diagnostics guided target; merged in [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), receipt below | After H01a. Mutate structured rendered-diagnostic envelopes directly and exercise JSON, human and compact renderers. Use a specific active diagnostic identity; never use the forbidden catch-all `SIFR-TYPE-0001`. Preserve H01a failure taxonomy and minimized JSON artifacts. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz diagnostics <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::diagnostic_renderer -- --exact`; assert nonzero guided executions, all three renderers and a stable minimized structured seed. |
 | H01d / project-graph guided target | After H01a. Generate bounded project/manifest/import graphs, create each fixture outside the fuzz hot loop, and exercise the canonical project compiler. Keep dependency/tool failures separate from compiler findings and preserve minimized project trees. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz project_graph <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::project_graph -- --exact`; assert nonzero guided executions, graph mutations and stable minimized project-tree replay. |
 | H01e / codegen guided target | After H01a and H01b. Generate varied *valid* typed programs and exercise codegen plus emitted-Rust validation without treating expected user diagnostics as findings. Do not alter X02 codegen safety ownership. Preserve minimized valid wrong-code/panic seeds. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz codegen_validation <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::codegen_validation -- --exact`; assert nonzero guided executions, valid-program diversity and stable minimized replay. |
 | H01f / type-system semantic properties | After H01b. Add generative normalization idempotence/equivalence and narrowing partition/soundness properties using canonical type-system operations, including unions, optionals and complements. A repeated fixed fixture is insufficient. Own the Rust semantic-property one-run contract: reject an unused `repeat_runs` field on Rust test entries or execute the declared count. Leave ownership transfer and incremental sessions to H01g/H01h. | `cargo test -p sifr_type_system --lib semantic_property_tests::normalization_idempotent -- --exact` and `cargo test -p sifr_type_system --lib semantic_property_tests::narrowing_partition -- --exact`, plus existing `narrow::tests` regressions. Save deterministic failing seeds and replay commands. |
@@ -1101,6 +1101,55 @@ before Cargo because the runner did not select `SIFR_PERFORMANCE_REFERENCE`
 It is not H01b validation evidence. No local create-PR or full merge gate ran
 under the approved intermediate-item exception. H01/F28 remains open for
 H01c-H01i.
+
+### H01c/F28 diagnostics-guided delivery receipt (2026-09-29)
+
+[PR #4096](https://github.com/sifr-lang/sifr/pull/4096) merged as
+`1154d338c0050fa15beea25c4271ef4fb47e1f75` from exact tested and
+reviewed candidate `070a87f070678ee85a563328210f8afe5eeb4bf1` (base
+`38fa9140f676fcd6963e4af2c9825553eba4fe64`, tree
+`8331738a66185413906d54d5c16fde388d5bdc71`). The target mutates
+serialized `DiagnosticEnvelope` JSON directly and invokes JSON, human and
+compact renderers. It uses active `SIFR-TYPE-0002`, with bounded envelope and
+snippet-highlight sizes. Three pinned structured JSON seeds cover a minimal
+envelope, source spans/children/suggestion edits, and edge span/argument forms;
+the exact driver replay asserts all three renderers and stable output. No
+`SIFR-TYPE-0001` seed or registry change was added. H01d/e targets remain
+separately owned.
+
+The H01a runner now selects `diagnostics`, preserves minimized diagnostic
+findings as `.json` with two-replay confirmation, and retains its separate
+tool, offline dependency, instrumented build, timeout and compiler-finding
+outcomes. It captures execution and coverage counters from full LibFuzzer
+output before retaining the bounded tail. The first classified run incorrectly
+reported `no-coverage-feedback` because its tail contained only LibFuzzer's
+recommended dictionary; the counter fix has a focused regression, and that
+failed attempt remains separate from the final passing run.
+
+On the exact candidate, the named `sifr_driver` replay passed **1/1** and the
+focused runner unit suite passed **15/15**. The exact ten-second cargo-fuzz
+selection passed **383,006 executions / 3,876 coverage edges** with no
+finding. The classified runner separately passed build and target execution
+at **415,658 / 3,866**, using cargo-fuzz 0.13.2 and rustc
+1.101.0-nightly. Package-scoped nightly formatting, the 900-line file-size
+guardrail (4,273 files), driver maintainability guardrail and committed diff
+check passed. Candidate-keyed logs, input hashes and exact commands are
+outside the Git tree at
+`/home/yaser5/projects/sifr/h01c-evidence-20260929/070a87f070678ee85a563328210f8afe5eeb4bf1/`;
+validation manifest SHA-256
+`413eeff0cf4e8c61feeaca9265005c900a1f5dc62012db447c423f8144204d4a`.
+No compiler finding occurred, so no minimized failing seed is claimed. The
+first cold driver attempt lacked the pinned Ruff submodule; the exact replay
+passed after initialization.
+
+Scoped read-only Claude Opus 5.5 review returned **SATISFIED** with no
+blocking findings (response SHA-256
+`c81392aac77d7605f141b4e3b4b8d47dc0cc66393a10347c0529eae853cf1853`).
+Its nonblocking suggestions on mutated identity filtering, possible future
+float round-trip findings and an invalid-minimized-JSON negative test are
+tracked separately in [issue #4097](https://github.com/sifr-lang/sifr/issues/4097).
+No local create-PR or full merge gate ran under the approved intermediate-item
+exception. H01/F28 remains open for H01d-H01i; Q01 retains the final gate.
 
 ### Resolved prerequisites and boundaries
 
