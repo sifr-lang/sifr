@@ -302,6 +302,22 @@ assertions on their respective exact candidates. E02 remains the separate
 analysis/lint owner after C01; E03 remains the performance owner after E01c
 and E02. Neither has a completion claim here.
 
+The record-only scope split merged in [PR #4073](https://github.com/sifr-lang/sifr/pull/4073)
+as `b8407d71bb1cf07155cc17ad392d434ebda6bfaa` from exact candidate
+`57da2676e426090668708c434e307ee11a99d723` (base
+`ea82b1e4558b95addc75277f131a281575bc058f`). Documentation structure
+passed 1/1 (raw log SHA-256
+`4601ca3d4aeb803a83ef2f7d831ac86a47372bea2a162ba46f1b1bf953a302c3`),
+the 900-line file-size guardrail passed for 4,256 files (raw log SHA-256
+`9dd0c274eab36227042a9f9ea2391ea0e47018a05c1f17e935d9e8d28c18f7d0`),
+and the committed diff check passed. Candidate-keyed raw logs are outside the
+Git tree at `/data/sifr-architecture-e01-scope-split-evidence-20260928/`.
+The first documentation attempt failed during worktree setup because the pinned
+editor submodule was absent and the runner requires an in-tree result path;
+after initialization the supported command passed. This documentation-only
+split required no broad gate or new external review. E01a is the next item;
+no E01a, E01b, E01c, E02, E03 or Q01 acceptance is claimed.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
