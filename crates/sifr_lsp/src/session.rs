@@ -19,6 +19,7 @@ use sifr_diagnostics::RenderedDiagnostic;
 use sifr_source::PositionEncoding;
 
 mod external_inputs;
+pub(crate) mod watcher_events;
 
 const MAX_LSP_TRACE_EVENTS: usize = 256;
 
@@ -214,6 +215,7 @@ impl Session {
         closed
     }
 
+    #[cfg(test)]
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
         self.python_declarations.invalidate_external();
         self.analysis.record_watcher_events(event_count);
@@ -517,6 +519,8 @@ mod tests {
     mod dx11_editor_tests;
     #[path = "e01_external_input_tests.rs"]
     mod e01_external_input_tests;
+    #[path = "e01_watcher_tests.rs"]
+    mod e01_watcher_tests;
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
     #[path = "python_declaration_tests.rs"]

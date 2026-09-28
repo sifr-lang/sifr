@@ -2,6 +2,11 @@ use super::Session;
 use std::path::Path;
 
 impl Session {
+    #[cfg(test)]
+    pub(crate) fn external_input_generation(&self, root: &Path) -> Option<u64> {
+        self.external_inputs.generation(root)
+    }
+
     /// Revalidate a root on demand. E01b uses this while watcher authority is absent.
     pub(crate) fn observe_external_inputs_for_path(&mut self, path: &Path) -> u64 {
         let mut provider = sifr_analysis::DiskSourceProvider::new();
@@ -22,7 +27,7 @@ impl Session {
             .map_or(0, |root| self.observe_external_root(&root))
     }
 
-    fn observe_external_root(&mut self, root: &Path) -> u64 {
+    pub(super) fn observe_external_root(&mut self, root: &Path) -> u64 {
         let new_root = !self.external_inputs.contains_root(root);
         let (generation, changed) = self.external_inputs.observe(root);
         let new_owner = new_root

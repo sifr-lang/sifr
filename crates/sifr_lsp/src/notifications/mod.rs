@@ -1,6 +1,7 @@
 use crate::diagnostics::DiagnosticsController;
 use crate::errors::{LspError, LspResult, optional_i32, required_string};
 use crate::session::Session;
+use crate::session::watcher_events::WatcherEvent;
 use lsp_server::{Connection, Message, Notification, RequestId};
 use serde_json::{Value, json};
 use sifr_analysis::WorkspaceTracePhase;
@@ -121,8 +122,26 @@ fn workspace_did_change_watched_files(
     let changes = params
         .get("changes")
         .and_then(Value::as_array)
-        .map_or(0, Vec::len);
-    session.record_watcher_events(changes);
+        .ok_or_else(|| LspError::invalid_params("watched files require changes"))?;
+    let events = changes
+        .iter()
+        .map(|change| {
+            let uri = change
+                .get("uri")
+                .and_then(Value::as_str)
+                .ok_or_else(|| LspError::invalid_params("watched file requires uri"))?;
+            let kind = change
+                .get("type")
+                .and_then(Value::as_u64)
+                .ok_or_else(|| LspError::invalid_params("watched file requires type"))?;
+            WatcherEvent::from_protocol(uri, kind).ok_or_else(|| {
+                LspError::invalid_params(
+                    "watched file requires file URI and create/change/delete type",
+                )
+            })
+        })
+        .collect::<LspResult<Vec<_>>>()?;
+    session.record_watcher_file_events(&events);
     DiagnosticsController::publish_all(connection, session)
 }
 
