@@ -309,7 +309,13 @@ impl Session {
             .map_err(|error| LspError::internal(format!("test input mutation failed: {error}")))?;
         }
         let current = self.observe_external_input_identity_for_path(document_path);
-        if current != *expected {
+        // Unstable inputs advance their generation on every observation. The
+        // same root, fingerprint and failure state still describe current work.
+        if current.package_root != expected.package_root
+            || current.fingerprint != expected.fingerprint
+            || current.stable != expected.stable
+            || (current.stable && current.generation != expected.generation)
+        {
             return Err(LspError::content_modified(
                 "Python declaration inputs changed during the request",
             ));

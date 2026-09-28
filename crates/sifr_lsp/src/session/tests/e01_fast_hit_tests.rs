@@ -491,3 +491,48 @@ fn nested_manifest_removal_reassigns_to_ancestor_and_publishes_current_diagnosti
     );
     assert!(hover(&mut session, &uri).to_string().contains("math.pi"));
 }
+
+#[test]
+fn unstable_external_input_returns_status_and_publishes_diagnostics() {
+    let (mut session, temp, uri) = open_fixture(SOURCE);
+    let artifact = temp.path().join(sifr_package::PYTHON_BINDINGS_FILE);
+    std::fs::create_dir(&artifact).expect("make binding artifact unreadable as a file");
+    let before = session.external_input_generation(temp.path()).unwrap_or(0);
+    let invalid = SOURCE.replace("math.sqrt", "math.pi");
+    session
+        .change_compacted(&uri, Some(2), &[json!({"text": invalid})])
+        .expect("change source while external input is unstable");
+
+    assert!(
+        completion(&mut session, &uri)
+            .to_string()
+            .contains("math.pi")
+    );
+    assert!(hover(&mut session, &uri).to_string().contains("math.pi"));
+    assert!(session.external_input_generation(temp.path()).unwrap_or(0) > before);
+
+    let (server, client) = Connection::memory();
+    let publication = publish(&mut session, &server, &client, &uri);
+    assert_eq!(publication["version"], 2);
+    assert!(has_code(
+        publication["diagnostics"]
+            .as_array()
+            .expect("current diagnostics"),
+        "SIFR-PYCALL-0001"
+    ));
+    assert!(session.take_next_diagnostic_job().is_none());
+
+    session
+        .python_declarations
+        .inject_external_change_before_verification(
+            temp.path().join(sifr_package::PYTHON_CERTIFICATIONS_FILE),
+            Some(b"{}\n".to_vec()),
+        );
+    let stale = session
+        .python_declaration_snapshot(&uri)
+        .expect_err("changed unstable inputs must reject stale work");
+    assert_eq!(stale.code(), lsp_server::ErrorCode::ContentModified as i32);
+    session
+        .python_declaration_snapshot(&uri)
+        .expect("unchanged unstable input must complete on retry");
+}

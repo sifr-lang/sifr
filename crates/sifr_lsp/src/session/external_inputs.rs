@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 pub(crate) struct ExternalInputIdentity {
     pub(crate) package_root: Option<PathBuf>,
     pub(crate) generation: u64,
+    pub(crate) fingerprint: u64,
+    pub(crate) stable: bool,
 }
 
 impl Session {
@@ -25,14 +27,16 @@ impl Session {
 
     pub(crate) fn external_input_identity_for_path(&self, path: &Path) -> ExternalInputIdentity {
         let (package_root, tracked) = self.external_input_roots_for_path(path);
-        let generation = package_root
+        let (generation, fingerprint, stable) = package_root
             .as_deref()
             .or(tracked.as_deref())
-            .and_then(|root| self.external_inputs.generation(root))
-            .unwrap_or(0);
+            .and_then(|root| self.external_inputs.state(root))
+            .unwrap_or((0, 0, true));
         ExternalInputIdentity {
             package_root,
             generation,
+            fingerprint,
+            stable,
         }
     }
 
@@ -61,10 +65,13 @@ impl Session {
         } else {
             false
         };
-        let generation = package_root
-            .as_deref()
-            .or(tracked.as_deref())
-            .map_or(0, |root| self.observe_external_root(root));
+        let root = package_root.as_deref().or(tracked.as_deref());
+        if let Some(root) = root {
+            self.observe_external_root(root);
+        }
+        let (generation, fingerprint, stable) = root
+            .and_then(|root| self.external_inputs.state(root))
+            .unwrap_or((0, 0, true));
         if owner_changed {
             if let Some(current) = package_root.as_deref() {
                 // Rebuild the ancestor project with the reassigned open source.
@@ -76,6 +83,8 @@ impl Session {
         ExternalInputIdentity {
             package_root,
             generation,
+            fingerprint,
+            stable,
         }
     }
 

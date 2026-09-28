@@ -71,6 +71,12 @@ impl ExternalInputSnapshots {
     pub(crate) fn generation(&self, root: &Path) -> Option<u64> {
         self.roots.get(root).map(|snapshot| snapshot.generation)
     }
+
+    pub(crate) fn state(&self, root: &Path) -> Option<(u64, u64, bool)> {
+        self.roots
+            .get(root)
+            .map(|snapshot| (snapshot.generation, snapshot.fingerprint, snapshot.stable))
+    }
 }
 
 #[cfg(test)]
