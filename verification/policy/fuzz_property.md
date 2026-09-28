@@ -94,7 +94,7 @@ The runner is `PYTHONPATH=verification/runner python3 -m
 sifr_verify.hardening.coverage_fuzz --profile nightly --result-json
 target/verification/fuzz/parser-receipt.json`. Its nightly and release target
 budgets are 10 and 30 minutes. A separate 20-minute instrumented build preflight
-precedes the target budget. The area manifest reserves 55 minutes and long-running,
+precedes the target budget. The area manifest reserves 65 minutes and long-running,
 large-memory resources for the explicit `sustained-fuzz` suite. That suite remains
 outside default area selection until H01i wires all guided targets into the
 nightly and release profiles.

@@ -87,6 +87,8 @@ def counters(output: str) -> tuple[int, int]:
 def identity(manifest: dict[str, Any], corpus: Path, *, tool: str, rustc: str) -> dict[str, Any]:
     return {
         "manifest_sha256": file_hash(MANIFEST),
+        "cargo_lock_sha256": file_hash(ROOT / "verification/fuzz/Cargo.lock"),
+        "target_source_sha256": file_hash(ROOT / "verification/fuzz/fuzz_targets/parser.rs"),
         "corpus": {
             path.name: file_hash(path)
             for path in sorted(corpus.iterdir())
@@ -96,6 +98,8 @@ def identity(manifest: dict[str, Any], corpus: Path, *, tool: str, rustc: str) -
         "rustc": rustc.strip(),
         "configuration": {
             "target": manifest["target"],
+            "cargo_fuzz_version": manifest["cargo_fuzz_version"],
+            "corpus": manifest["corpus"],
             "budgets_seconds": manifest["budgets_seconds"],
             "build_timeout_seconds": manifest["build_timeout_seconds"],
         },
@@ -114,7 +118,10 @@ def preserve_finding(
     env: dict[str, str],
     label: str,
 ) -> dict[str, Any]:
-    candidates = [Path(match) for match in ARTIFACT.findall(output)]
+    candidates = [
+        ROOT / match for match in ARTIFACT.findall(output)
+        if (ROOT / match).is_file() and (ROOT / match).resolve().is_relative_to(artifact_dir.resolve())
+    ]
     candidates.extend(path for path in artifact_dir.iterdir() if path.is_file())
     source = next((path for path in candidates if path.is_file()), None)
     if source is None:
@@ -168,10 +175,12 @@ def preserve_finding(
 def run(
     *,
     profile: str,
-    corpus: Path,
+    corpus: Path | None = None,
     budget_override: int | None = None,
 ) -> dict[str, Any]:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    if corpus is None:
+        corpus = ROOT / manifest["corpus"]
     if profile not in manifest["budgets_seconds"]:
         raise ValueError(f"unknown fuzz profile: {profile}")
     if not corpus.is_dir() or not any(path.is_file() for path in corpus.iterdir()):
@@ -209,8 +218,10 @@ def run(
         receipt["status"] = build_status
         return receipt
 
-    artifact_dir = ROOT / "target/verification/fuzz/artifacts" / target
-    artifact_dir.mkdir(parents=True, exist_ok=True)
+    artifact_root = ROOT / "target/verification/fuzz/artifacts" / target
+    artifact_root.mkdir(parents=True, exist_ok=True)
+    artifact_dir = Path(tempfile.mkdtemp(prefix=f"{profile}-", dir=artifact_root))
+    receipt["artifact_dir"] = str(artifact_dir)
     corpus_root = ROOT / "target/verification/fuzz/corpus"
     corpus_root.mkdir(parents=True, exist_ok=True)
     working_corpus = Path(tempfile.mkdtemp(prefix=f"{target}-{profile}-", dir=corpus_root))
@@ -228,7 +239,12 @@ def run(
     if execution["timed_out"]:
         status = "target-timeout"
     elif execution["exit_code"] != 0:
-        status = "compiler-finding"
+        has_new_artifact = any(path.is_file() for path in artifact_dir.iterdir())
+        status = (
+            "compiler-finding"
+            if FINDING_SIGNAL.search(execution["output_tail"]) or has_new_artifact
+            else "target-run-failure"
+        )
     elif count < 1:
         status = "no-guided-executions"
     elif coverage < 1:
@@ -252,7 +268,7 @@ def run(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=("nightly", "release"), required=True)
-    parser.add_argument("--corpus", type=Path, default=ROOT / "verification/fuzz/corpus/parser")
+    parser.add_argument("--corpus", type=Path)
     parser.add_argument("--budget-seconds", type=int)
     parser.add_argument("--result-json", type=Path, required=True)
     args = parser.parse_args()

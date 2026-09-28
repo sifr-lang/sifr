@@ -131,7 +131,6 @@ def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
     if suite["runner"] == "sustained-fuzz":
         receipt = run_coverage_fuzz(
             profile=os.environ.get("SIFR_VALIDATION_PROFILE", "nightly"),
-            corpus=REPO_ROOT / "verification/fuzz/corpus/parser",
         )
         case = {"id": "parser-guided", "variants": receipt["variants"], "receipt": receipt}
         failed = int(receipt["status"] != "pass")

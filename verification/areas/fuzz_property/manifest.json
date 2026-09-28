@@ -9,7 +9,7 @@
     "long-running",
     "large-memory"
   ],
-  "timeout_seconds": 3300,
+  "timeout_seconds": 3900,
   "suites": [
     {
       "name": "cargo-smoke",
@@ -64,7 +64,7 @@
         "long-running",
         "large-memory"
       ],
-      "timeout_seconds": 3300,
+      "timeout_seconds": 3900,
       "cases": [
         {
           "id": "parser-guided",

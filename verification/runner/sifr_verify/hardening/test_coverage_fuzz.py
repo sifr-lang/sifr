@@ -62,6 +62,20 @@ class CoverageFuzzTests(unittest.TestCase):
         self.assertEqual(receipt["status"], "target-timeout")
         self.assertEqual(receipt["variants"][-1]["executions"], 42)
 
+    def test_non_crash_exit_ignores_old_artifact(self) -> None:
+        old = fuzz.ROOT / "target/verification/fuzz/artifacts/parser/old-artifact-h01a-unit"
+        old.parent.mkdir(parents=True, exist_ok=True)
+        old.write_bytes(b"old crash")
+        try:
+            receipt = self.fake_run(
+                result(0, "cargo-fuzz 0.13.2"), result(0, "rustc nightly"),
+                result(), result(137, "Killed by host memory pressure"),
+            )
+        finally:
+            old.unlink(missing_ok=True)
+        self.assertEqual(receipt["status"], "target-run-failure")
+        self.assertNotIn("finding", receipt)
+
     def test_compiler_finding_minimized_seed(self) -> None:
         artifact_dir = Path(self.temp.name) / "artifacts"
         artifact_dir.mkdir()
