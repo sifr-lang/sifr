@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 impl AnalysisHost {
     pub fn open_project(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         root: &ProjectRoot,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
@@ -18,26 +18,26 @@ impl AnalysisHost {
         );
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_compiler_services::stdlib::external_defs(compiler)?,
             Vec::new(),
         )?;
         Self::new_with_sql_profiles(compiler, session, profiles)
     }
 
     pub fn open_single_file(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         input: FrontendInput,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let session = WorkspaceSession::open_single_file_with_external_defs_and_auxiliary_sources(
             input,
-            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_compiler_services::stdlib::external_defs(compiler)?,
             Vec::new(),
         )?;
         Self::new(compiler, session)
     }
 
     pub(super) fn new(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         session: WorkspaceSession,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         Self::new_with_sql_profiles(
@@ -48,7 +48,7 @@ impl AnalysisHost {
     }
 
     pub(super) fn new_with_sql_profiles(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         mut session: WorkspaceSession,
         profiles: sifr_compiler_services::sql_editor::PreparedSqlProfiles,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {

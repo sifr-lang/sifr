@@ -31,8 +31,9 @@ pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 pub struct AnalysisHost {
     pub(super) restored_check_modules: usize,
     pub(super) snapshot_owner: std::sync::Arc<()>,
-    pub(super) stdlib_navigation: std::sync::Arc<sifr_driver::StdlibNavigation>,
-    pub(super) compiler: sifr_driver::CompilerContext,
+    pub(super) stdlib_navigation:
+        std::sync::Arc<sifr_compiler_services::metadata::reader::StdlibNavigation>,
+    pub(super) compiler: sifr_compiler_services::CompilerContext,
     pub(super) session: WorkspaceSession,
     pub(super) file_to_module: BTreeMap<FileId, ModuleId>,
     pub(super) symbol_index: Option<SymbolIndex>,

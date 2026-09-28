@@ -9,7 +9,9 @@ pub use environment::{
     resolve_editor_environment, resolve_editor_environment_from_snapshot,
 };
 pub use package_diagnostics::render_package_diagnostic;
-pub use sifr_codegen::{PythonInteropPlan, PythonTargetProbeStatus};
+pub use sifr_codegen::{
+    PythonInteropPlan, PythonTargetProbeStatus, interop_build_plan_for_named_modules,
+};
 
 pub use certification::{
     validate_binding_distributions, validate_certification_distributions,

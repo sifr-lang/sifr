@@ -121,7 +121,7 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
     let dir = temp_project_dir("editor_corpus");
     write_fixtures(&dir, &fixtures);
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -290,7 +290,7 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
 #[test]
 fn snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),

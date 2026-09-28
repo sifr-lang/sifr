@@ -73,18 +73,18 @@ impl Session {
         }
     }
 
-    pub(crate) fn compiler_context(&self) -> &sifr_driver::CompilerContext {
+    pub(crate) fn compiler_context(&self) -> &sifr_compiler_services::CompilerContext {
         &self.analysis.compiler
     }
     #[cfg(test)]
     pub(crate) fn new() -> Self {
-        Self::with_compiler(sifr_driver::CompilerContext::for_test_tokens(
+        Self::with_compiler(sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_lsp-tests",
         ))
     }
 
-    pub(crate) fn with_compiler(compiler: sifr_driver::CompilerContext) -> Self {
+    pub(crate) fn with_compiler(compiler: sifr_compiler_services::CompilerContext) -> Self {
         Self {
             store: DocumentStore::new(),
             generations: Default::default(),

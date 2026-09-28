@@ -4,7 +4,7 @@ use super::*;
 fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
     let source = "# TODO: follow up\ndef main():\n    configure(True)\n";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -32,7 +32,7 @@ fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
 fn workspace_diagnostic_order_is_stable_across_repeated_queries() {
     let source = "# TODO: follow up\ndef main():\n    return 1  \n";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -72,7 +72,7 @@ fn workspace_diagnostic_order_is_stable_under_parallel_readers() {
     };
 
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -118,7 +118,7 @@ fn workspace_diagnostic_order_is_stable_under_parallel_readers() {
 fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
     let source = "def main():\n    return 1  \n";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -185,7 +185,7 @@ fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
 #[test]
 fn safe_fix_applies_then_rechecks_the_new_document_version() {
     let source = "def main():\n    value: int = 1  \n    assert value == 1\n";
-    let context = sifr_driver::CompilerContext::for_test_tokens(
+    let context = sifr_compiler_services::CompilerContext::for_test_tokens(
         crate::compiled_input_tokens(),
         "sifr_analysis-tests",
     );

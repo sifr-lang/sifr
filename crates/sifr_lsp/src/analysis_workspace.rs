@@ -11,7 +11,7 @@ use std::time::Instant;
 use url::Url;
 
 pub(crate) struct LspAnalysisWorkspace {
-    pub(crate) compiler: sifr_driver::CompilerContext,
+    pub(crate) compiler: sifr_compiler_services::CompilerContext,
     documents: BTreeMap<String, LspDocumentAnalysis>,
     projects: BTreeMap<PathBuf, LspProjectAnalysis>,
 }
@@ -36,7 +36,7 @@ enum ProjectDocumentFailure {
 }
 
 pub(crate) struct LspFileMaps {
-    stdlib_navigation: std::sync::Arc<sifr_driver::StdlibNavigation>,
+    stdlib_navigation: std::sync::Arc<sifr_compiler_services::metadata::reader::StdlibNavigation>,
     uri_by_file: BTreeMap<u32, String>,
     source_by_file: BTreeMap<u32, String>,
 }
@@ -47,7 +47,7 @@ pub(crate) struct LspWorkspaceSymbol {
 }
 
 impl LspAnalysisWorkspace {
-    pub(crate) fn new(compiler: sifr_driver::CompilerContext) -> Self {
+    pub(crate) fn new(compiler: sifr_compiler_services::CompilerContext) -> Self {
         Self {
             compiler,
             documents: BTreeMap::new(),
@@ -322,7 +322,7 @@ impl LspFileMaps {
 
 impl LspProjectAnalysis {
     fn open(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         root: PathBuf,
         documents: &[&DocumentState],
     ) -> Self {
@@ -628,7 +628,7 @@ impl LspProjectAnalysis {
 }
 
 impl LspDocumentAnalysis {
-    fn open(compiler: &sifr_driver::CompilerContext, document: &DocumentState) -> Self {
+    fn open(compiler: &sifr_compiler_services::CompilerContext, document: &DocumentState) -> Self {
         let started = Instant::now();
         match AnalysisHost::open_single_file_overlay(
             compiler,
@@ -651,7 +651,11 @@ impl LspDocumentAnalysis {
         }
     }
 
-    fn update(&mut self, compiler: &sifr_driver::CompilerContext, document: &DocumentState) {
+    fn update(
+        &mut self,
+        compiler: &sifr_compiler_services::CompilerContext,
+        document: &DocumentState,
+    ) {
         let started = Instant::now();
         let result = if let Some(host) = self.host.as_mut() {
             host.upsert_overlay_document(

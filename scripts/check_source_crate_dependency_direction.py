@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SELF_TEST_TMP_ROOT = REPO_ROOT / "target"
 
 NORMAL_DEP_SECTIONS = ("dependencies", "build-dependencies")
-TARGET_DEP_SECTIONS = ("dependencies", "build-dependencies")
+ALL_DEP_SECTIONS = ("dependencies", "build-dependencies", "dev-dependencies")
 
 ALL_SIFR_CRATES = {
     "sifr",
@@ -134,6 +134,8 @@ class CrateRule:
     forbidden_normal_dependencies: frozenset[str] = frozenset()
     forbidden_source_references: frozenset[str] = frozenset()
     skip_test_sources: bool = False
+    forbidden_all_dependencies: frozenset[str] = frozenset()
+    scan_manifest_targets: bool = False
 
 
 RULES = (
@@ -204,6 +206,32 @@ RULES = (
         forbidden_source_references=frozenset({"sifr_lowering"}),
         skip_test_sources=True,
     ),
+    # Editor and lower-service boundaries include dev/build/target dependencies,
+    # optional features, tests, and manifest-declared sources outside src/.
+    CrateRule(
+        crate="sifr_analysis",
+        forbidden_all_dependencies=frozenset({"sifr_driver"}),
+        forbidden_source_references=frozenset({"sifr_driver"}),
+        scan_manifest_targets=True,
+    ),
+    CrateRule(
+        crate="sifr_lsp",
+        forbidden_all_dependencies=frozenset({"sifr_driver"}),
+        forbidden_source_references=frozenset({"sifr_driver"}),
+        scan_manifest_targets=True,
+    ),
+    CrateRule(
+        crate="sifr_compiler_services",
+        forbidden_all_dependencies=frozenset({"sifr", "sifr_driver", "sifr_analysis", "sifr_lsp"}),
+        forbidden_source_references=frozenset({"sifr_driver", "sifr_analysis", "sifr_lsp"}),
+        scan_manifest_targets=True,
+    ),
+    CrateRule(
+        crate="sifr_cache_storage",
+        forbidden_all_dependencies=frozenset({"sifr", "sifr_driver", "sifr_analysis", "sifr_lsp", "sifr_compiler_services"}),
+        forbidden_source_references=frozenset({"sifr_driver", "sifr_analysis", "sifr_lsp", "sifr_compiler_services"}),
+        scan_manifest_targets=True,
+    ),
 )
 
 
@@ -214,14 +242,58 @@ def load_manifest(root: Path, crate: str) -> dict:
     return tomllib.loads(manifest_path.read_text(encoding="utf-8"))
 
 
-def normal_dependencies(manifest: dict) -> set[str]:
-    dependencies: set[str] = set()
-    for section in NORMAL_DEP_SECTIONS:
-        dependencies.update(manifest.get(section, {}))
+def workspace_dependency_specs(root: Path) -> dict:
+    manifest_path = root / "Cargo.toml"
+    if not manifest_path.exists():
+        return {}
+    manifest = tomllib.loads(manifest_path.read_text(encoding="utf-8"))
+    return manifest.get("workspace", {}).get("dependencies", {})
+
+
+def dependency_entries(manifest: dict, root: Path, *, include_dev: bool) -> dict[str, set[str]]:
+    workspace = workspace_dependency_specs(root)
+    sections = ALL_DEP_SECTIONS if include_dev else NORMAL_DEP_SECTIONS
+    entries: dict[str, set[str]] = {}
+
+    def add_from(container: dict) -> None:
+        for section in sections:
+            for alias, spec in container.get(section, {}).items():
+                package = alias
+                if isinstance(spec, dict):
+                    if spec.get("workspace") is True:
+                        inherited = workspace.get(alias, {})
+                        if isinstance(inherited, dict):
+                            package = inherited.get("package", alias)
+                    package = spec.get("package", package)
+                entries.setdefault(alias, set()).add(package)
+
+    add_from(manifest)
     for target in manifest.get("target", {}).values():
-        for section in TARGET_DEP_SECTIONS:
-            dependencies.update(target.get(section, {}))
-    return dependencies
+        add_from(target)
+    return entries
+
+
+def normal_dependencies(manifest: dict, root: Path) -> set[str]:
+    return {package for packages in dependency_entries(manifest, root, include_dev=False).values() for package in packages}
+
+
+def declared_target_paths(manifest: dict) -> set[Path]:
+    paths: set[Path] = set()
+    package = manifest.get("package", {})
+    build = package.get("build")
+    if isinstance(build, str):
+        paths.add(Path(build))
+    elif build is not False:
+        paths.add(Path("build.rs"))
+    for kind in ("lib", "bin", "example", "test", "bench"):
+        entries = manifest.get(kind, [])
+        if isinstance(entries, dict):
+            entries = [entries]
+        for target in entries:
+            source = target.get("path")
+            if isinstance(source, str):
+                paths.add(Path(source))
+    return paths
 
 
 def is_test_source(path: Path) -> bool:
@@ -234,14 +306,26 @@ def is_test_source(path: Path) -> bool:
     )
 
 
-def crate_source_files(root: Path, crate: str, *, skip_test_sources: bool) -> list[Path]:
-    src = root / "crates" / crate / "src"
-    if not src.exists():
-        return []
-    files = sorted(src.rglob("*.rs"))
+def crate_source_files(
+    root: Path,
+    crate: str,
+    *,
+    skip_test_sources: bool,
+    manifest: dict | None = None,
+    scan_manifest_targets: bool = False,
+) -> list[Path]:
+    crate_root = root / "crates" / crate
+    src = crate_root / "src"
+    files = set(src.rglob("*.rs")) if src.exists() else set()
+    if scan_manifest_targets and manifest is not None:
+        files.update(
+            crate_root / relative
+            for relative in declared_target_paths(manifest)
+            if (crate_root / relative).is_file()
+        )
     if skip_test_sources:
-        files = [path for path in files if not is_test_source(path.relative_to(src))]
-    return files
+        files = {path for path in files if not is_test_source(path.relative_to(crate_root))}
+    return sorted(files)
 
 
 def references_crate(text: str, crate: str) -> bool:
@@ -257,7 +341,7 @@ def validate_crate_rule(root: Path, rule: CrateRule) -> list[str]:
         failures.append(f"{rule.crate}: missing Cargo.toml")
         return failures
 
-    dependencies = normal_dependencies(manifest)
+    dependencies = normal_dependencies(manifest, root)
     if rule.allowed_normal_dependencies is not None:
         unexpected = sorted(dependencies - rule.allowed_normal_dependencies)
         if unexpected:
@@ -273,14 +357,33 @@ def validate_crate_rule(root: Path, rule: CrateRule) -> list[str]:
             + ", ".join(forbidden_dependencies)
         )
 
+    aliases = dependency_entries(manifest, root, include_dev=True)
+    all_packages = {package for packages in aliases.values() for package in packages}
+    forbidden_all = sorted(all_packages & rule.forbidden_all_dependencies)
+    if forbidden_all:
+        failures.append(
+            f"{rule.crate}: forbidden dependency/dependencies: "
+            + ", ".join(forbidden_all)
+        )
+
     for path in crate_source_files(
-        root, rule.crate, skip_test_sources=rule.skip_test_sources
+        root,
+        rule.crate,
+        skip_test_sources=rule.skip_test_sources,
+        manifest=manifest,
+        scan_manifest_targets=rule.scan_manifest_targets,
     ):
         text = path.read_text(encoding="utf-8", errors="replace")
-        for crate in sorted(rule.forbidden_source_references):
-            if references_crate(text, crate):
+        forbidden_aliases = set(rule.forbidden_source_references)
+        forbidden_aliases.update(
+            alias
+            for alias, packages in aliases.items()
+            if packages & rule.forbidden_source_references
+        )
+        for alias in sorted(forbidden_aliases):
+            if references_crate(text, alias):
                 rel = path.relative_to(root)
-                failures.append(f"{rule.crate}: {rel} references {crate}")
+                failures.append(f"{rule.crate}: {rel} references {alias}")
     return failures
 
 
@@ -436,7 +539,7 @@ def seed_valid_repo(root: Path) -> None:
         "sifr_lint": ["sifr_frontend", "sifr_ir"],
         "sifr_analysis": ["sifr_frontend", "sifr_lint"],
     }
-    for crate in ALL_SIFR_CRATES | {"ruff_text_size"}:
+    for crate in ALL_SIFR_CRATES | {"ruff_text_size", "sifr_compiler_services", "sifr_cache_storage"}:
         write_manifest(root / "crates" / crate, crate, allowed_deps.get(crate, []))
     stdlib_src = root / "crates" / "sifr_stdlib_manifest" / "src" / "features.rs"
     stdlib_src.write_text("pub struct GeneratedCargoDependency;\n", encoding="utf-8")
@@ -586,6 +689,94 @@ def run_self_test() -> int:
             root / "crates" / "sifr_analysis", "sifr_analysis", ["sifr_lowering"]
         ),
         "sifr_analysis: forbidden normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "direct-driver-dependency",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_analysis", "sifr_analysis", ["sifr_driver"]
+        ),
+        "sifr_analysis: forbidden dependency/dependencies: sifr_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "renamed-driver-dependency",
+        lambda root: (root / "crates" / "sifr_lsp" / "Cargo.toml").write_text(
+            '[package]\nname = "sifr_lsp"\nversion = "0.0.0"\nedition = "2024"\n'
+            '[dependencies]\nrenamed_driver = { package = "sifr_driver", path = "../sifr_driver" }\n',
+            encoding="utf-8",
+        ),
+        "sifr_lsp: forbidden dependency/dependencies: sifr_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "workspace-renamed-driver-dependency",
+        lambda root: (
+            (root / "Cargo.toml").write_text(
+                '[workspace]\n[workspace.dependencies]\n'
+                'workspace_driver = { package = "sifr_driver", path = "crates/sifr_driver" }\n',
+                encoding="utf-8",
+            ),
+            (root / "crates" / "sifr_lsp" / "Cargo.toml").write_text(
+                '[package]\nname = "sifr_lsp"\nversion = "0.0.0"\nedition = "2024"\n'
+                '[dev-dependencies]\nworkspace_driver = { workspace = true }\n',
+                encoding="utf-8",
+            ),
+        ),
+        "sifr_lsp: forbidden dependency/dependencies: sifr_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "optional-feature-target-alias",
+        lambda root: (root / "crates" / "sifr_analysis" / "Cargo.toml").write_text(
+            '[package]\nname = "sifr_analysis"\nversion = "0.0.0"\nedition = "2024"\n'
+            '[features]\nprobe = ["dep:platform_driver"]\n'
+            '[target.\'cfg(windows)\'.dependencies]\n'
+            'platform_driver = { package = "sifr_driver", path = "../sifr_driver", optional = true }\n',
+            encoding="utf-8",
+        ),
+        "sifr_analysis: forbidden dependency/dependencies: sifr_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "aliased-source-import",
+        lambda root: (
+            (root / "crates" / "sifr_lsp" / "Cargo.toml").write_text(
+                '[package]\nname = "sifr_lsp"\nversion = "0.0.0"\nedition = "2024"\n'
+                '[dependencies]\ncompiler_driver = { package = "sifr_driver", path = "../sifr_driver" }\n',
+                encoding="utf-8",
+            ),
+            (root / "crates" / "sifr_lsp" / "src" / "lib.rs").write_text(
+                "use compiler_driver::CompilerContext;\n", encoding="utf-8"
+            ),
+        ),
+        "crates/sifr_lsp/src/lib.rs references compiler_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "explicit-target-outside-src",
+        lambda root: (
+            (root / "crates" / "sifr_lsp" / "Cargo.toml").write_text(
+                '[package]\nname = "sifr_lsp"\nversion = "0.0.0"\nedition = "2024"\n'
+                '[[test]]\nname = "outside"\npath = "checks/outside.rs"\n',
+                encoding="utf-8",
+            ),
+            (root / "crates" / "sifr_lsp" / "checks").mkdir(),
+            (root / "crates" / "sifr_lsp" / "checks" / "outside.rs").write_text(
+                "use sifr_driver::CompilerContext;\n", encoding="utf-8"
+            ),
+        ),
+        "crates/sifr_lsp/checks/outside.rs references sifr_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "lower-service-upward-dependency",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_compiler_services",
+            "sifr_compiler_services",
+            ["sifr_analysis"],
+        ),
+        "sifr_compiler_services: forbidden dependency/dependencies: sifr_analysis",
         failures,
     )
     assert_self_test_case(

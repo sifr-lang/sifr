@@ -36,7 +36,7 @@ fn temp_project_dir(name: &str) -> std::path::PathBuf {
 #[test]
 fn single_file_session_updates_versions_and_invalidates_symbols() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -74,7 +74,7 @@ fn single_file_session_updates_versions_and_invalidates_symbols() {
 #[test]
 fn stale_document_version_is_rejected() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -103,7 +103,7 @@ fn stale_document_version_is_rejected() {
 #[test]
 fn stale_snapshot_is_rejected_after_update() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -156,7 +156,7 @@ fn dependency_sensitive_invalidation_is_explained_in_trace() {
         entrypoint: SourcePath::new(dir.join("main.sifr")),
     };
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -197,7 +197,7 @@ fn dependency_sensitive_invalidation_is_explained_in_trace() {
 fn analysis_snapshot_carries_workspace_state_and_query_metadata() {
     let source = "def main():\n    return 1\n";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -267,7 +267,7 @@ fn analysis_snapshot_carries_workspace_state_and_query_metadata() {
 fn completion_query_includes_rust_interop_policy_candidates() {
     let source = "@rust.callback(\n    \n)\ndef main():\n    return 1\n";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -317,7 +317,7 @@ fn project_symbol_index_is_stable_for_workspace_queries() {
         .expect("helper should be written");
 
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -369,7 +369,7 @@ fn project_symbol_index_refreshes_dirty_module_buckets_only() {
         .expect("helper should be written");
 
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -453,7 +453,7 @@ fn project_symbol_index_refreshes_dirty_module_buckets_only() {
 #[test]
 fn all_editor_query_methods_expose_current_revision_metadata() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -680,7 +680,7 @@ def main():
     return value
 ";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),

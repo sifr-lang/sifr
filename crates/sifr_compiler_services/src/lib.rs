@@ -11,4 +11,4 @@ pub mod stdlib;
 mod application_profile;
 pub use application_profile::ApplicationProfile;
 mod compiler_context;
-pub use compiler_context::CompilerContext;
+pub use compiler_context::{CompilerContext, compiled_input_tokens};

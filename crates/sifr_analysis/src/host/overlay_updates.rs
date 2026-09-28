@@ -8,7 +8,7 @@ use std::path::Path;
 
 impl AnalysisHost {
     pub fn open_project_with_overlays(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         root: &ProjectRoot,
         overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
@@ -21,7 +21,7 @@ impl AnalysisHost {
         );
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_compiler_services::stdlib::external_defs(compiler)?,
             Vec::new(),
         );
         for (path, uri, version, source) in overlays {
@@ -32,7 +32,7 @@ impl AnalysisHost {
     }
 
     pub fn open_single_file_overlay(
-        compiler: &sifr_driver::CompilerContext,
+        compiler: &sifr_compiler_services::CompilerContext,
         path: SourcePath,
         uri: Option<String>,
         version: DocumentVersion,
@@ -42,7 +42,7 @@ impl AnalysisHost {
         let mut session = WorkspaceSession::single_file_with_external_defs_and_auxiliary_sources(
             path.clone(),
             mode,
-            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_compiler_services::stdlib::external_defs(compiler)?,
             Vec::new(),
         );
         session.upsert_overlay(path, uri, version, source, None);

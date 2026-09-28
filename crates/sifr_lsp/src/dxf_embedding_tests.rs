@@ -1,5 +1,5 @@
 use crate::session::Session;
-use sifr_driver::{ApplicationProfile, CompilerContext};
+use sifr_compiler_services::{ApplicationProfile, CompilerContext};
 use sifr_identity::CompilerIdentity;
 
 #[test]

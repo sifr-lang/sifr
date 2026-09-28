@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn no_profile_sql_editor_preserves_snapshot_queries_after_update() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -45,7 +45,7 @@ fn no_profile_sql_editor_preserves_snapshot_queries_after_update() {
 fn sql_templates_route_through_virtual_document_editor_queries() {
     let source = "@app.query\ndef query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -118,7 +118,7 @@ fn lockfile_less_project_defers_sql_profiles_and_preserves_overlay_analysis() {
         entrypoint: SourcePath::new(entrypoint.clone()),
     };
     let mut host = AnalysisHost::open_project_with_overlays(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -163,7 +163,7 @@ fn lockfile_less_project_defers_sql_profiles_and_preserves_disk_analysis() {
         entrypoint: SourcePath::new(entrypoint),
     };
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -195,7 +195,7 @@ def query(user_id: int) -> Template:
     return app.sql(t\"SELECT {user_id}\")
 ";
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),

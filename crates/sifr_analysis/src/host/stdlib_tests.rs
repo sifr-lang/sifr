@@ -21,7 +21,7 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
         entrypoint: SourcePath::new(&path),
     };
     let mut host = AnalysisHost::open_project_with_overlays(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -39,10 +39,12 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
     let old_answers = old.diagnostics(&mut host, file).unwrap();
     assert!(old_answers.value().is_empty());
     let weak = std::sync::Arc::downgrade(old.workspace().source_map.as_ref().unwrap());
-    let defs = sifr_driver::stdlib_external_defs(&sifr_driver::CompilerContext::for_test_tokens(
-        crate::compiled_input_tokens(),
-        "sifr_analysis-tests",
-    ))
+    let defs = sifr_compiler_services::stdlib::external_defs(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+    )
     .unwrap();
     let defs = defs.prepare_modules(&["sifr.calendar".into()]).unwrap();
     assert!(defs.functions.contains_key("sifr.calendar"));
@@ -173,7 +175,7 @@ fn assert_stdlib_import_resolves(host: &mut AnalysisHost, file: FileId) {
 #[test]
 fn single_file_analysis_resolves_sysroot_stdlib_imports() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -196,7 +198,7 @@ fn project_analysis_resolves_sysroot_stdlib_imports() {
     };
 
     let mut host = AnalysisHost::open_project(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -214,7 +216,7 @@ fn project_analysis_resolves_sysroot_stdlib_imports() {
 #[test]
 fn analysis_source_map_tracks_public_and_private_sysroot_origins() {
     let host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -255,7 +257,7 @@ fn analysis_source_map_tracks_public_and_private_sysroot_origins() {
 #[test]
 fn stdlib_symbol_bucket_is_available_without_private_declarations() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -296,7 +298,7 @@ fn stdlib_symbol_bucket_is_available_without_private_declarations() {
 #[test]
 fn definition_for_public_stdlib_import_lands_in_sysroot_source() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),
@@ -333,7 +335,7 @@ fn definition_for_public_stdlib_import_lands_in_sysroot_source() {
 #[test]
 fn definition_inside_public_stdlib_can_link_to_private_declaration_file() {
     let mut host = AnalysisHost::open_single_file(
-        &sifr_driver::CompilerContext::for_test_tokens(
+        &sifr_compiler_services::CompilerContext::for_test_tokens(
             crate::compiled_input_tokens(),
             "sifr_analysis-tests",
         ),

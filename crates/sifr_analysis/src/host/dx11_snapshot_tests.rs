@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 #[test]
 fn dx11_overlapping_snapshots_pin_text_toolchain_and_release_after_close() {
-    let compiler = sifr_driver::CompilerContext::for_test_tokens(
+    let compiler = sifr_compiler_services::CompilerContext::for_test_tokens(
         crate::compiled_input_tokens(),
         "dx11-snapshots",
     );
