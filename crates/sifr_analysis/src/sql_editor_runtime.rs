@@ -3,8 +3,8 @@ use sifr_compiler_component::{
     AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost,
     EmbeddedAnalysisRequest, HoleDescriptor, PlanKind, SourceSpan, TemplatePart,
 };
+use sifr_compiler_services::sql_editor::PreparedSqlProfiles;
 use sifr_diagnostics::RenderedDiagnostic;
-use sifr_driver::PreparedSqlProfiles;
 use sifr_frontend::{
     CacheKeyContext, CacheKeyFingerprint, EmbeddedAnalysisKey, EmbeddedProviderOperationError,
     SqlEditorCatalog, SqlEditorDocumentView, TemplateSourceMapKind, run_embedded_provider_items,
@@ -98,7 +98,7 @@ impl SqlEditorRuntime {
         source: &str,
         display_path: &str,
     ) -> Vec<RenderedDiagnostic> {
-        sifr_driver::sql_profile_import_diagnostics_for_names(
+        sifr_compiler_services::sql_editor::sql_profile_import_diagnostics_for_names(
             source,
             display_path,
             &self.profile_names,

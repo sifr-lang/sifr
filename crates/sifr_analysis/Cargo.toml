@@ -16,6 +16,7 @@ sifr_format = { workspace = true }
 sifr_frontend = { workspace = true }
 sifr_lint = { workspace = true }
 sifr_driver = { workspace = true }
+sifr_compiler_services = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_compiler_component = { workspace = true }
 sifr_sql_contract = { workspace = true }

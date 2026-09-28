@@ -29,10 +29,14 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
     let fixture = profile_fixture(fixture_component(&schema_response()));
     let prepared = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
         .expect("offline schema profile preparation should succeed");
-    assert!(
+    assert_eq!(
         prepared
-            .module("app")
-            .is_some_and(|module| module.module_path == "sifr.sql.schemas.app")
+            .registry()
+            .profile("app")
+            .expect("prepared app profile")
+            .module()
+            .module_path,
+        "sifr.sql.schemas.app"
     );
     let first = prepared
         .cache_fragment()
@@ -50,8 +54,10 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
     assert!(first.contains("sifr.sql.schemas.app"));
     assert_eq!(prepared.requirements().len(), 1);
     let generated_source = &prepared
-        .module("app")
+        .registry()
+        .profile("app")
         .expect("generated app profile")
+        .module()
         .source;
     for expected in [
         "from enum import Enum",

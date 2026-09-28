@@ -1,6 +1,6 @@
 //! Residency of the SQL editor's Wasmtime host follows prepared profile demand.
 use sifr_compiler_component::{ComponentError, ComponentHost, ComponentHostLimits};
-use sifr_driver::PreparedSqlProfiles;
+use sifr_compiler_services::sql_editor::PreparedSqlProfiles;
 
 pub(super) fn update_host(
     host: &mut Option<ComponentHost>,

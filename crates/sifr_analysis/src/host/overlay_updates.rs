@@ -12,9 +12,13 @@ impl AnalysisHost {
         root: &ProjectRoot,
         overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let profiles =
-            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
-                .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
+        let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
+            root.root.as_path(),
+            root.entrypoint.as_path(),
+        )
+        .unwrap_or_else(
+            sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
+        );
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs(compiler)?,
@@ -92,9 +96,13 @@ impl AnalysisHost {
         self.refresh_current_revision();
         self.symbol_index = None;
         self.last_invalidation = None;
-        let profiles =
-            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
-                .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
+        let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
+            root.root.as_path(),
+            root.entrypoint.as_path(),
+        )
+        .unwrap_or_else(
+            sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
+        );
         self.sql_editor_runtime
             .replace_profiles(profiles)
             .map_err(|error| {
