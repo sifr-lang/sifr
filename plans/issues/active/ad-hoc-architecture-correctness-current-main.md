@@ -413,6 +413,59 @@ possible re-registration after malformed notifications. They do not qualify
 E01c/E03. The prospective intermediate-item policy defers the full merge
 profile to Q01. E01c is next; E01/F20-F21, E02, E03 and Q01 remain open.
 
+## E01c/F20-F21 fast-hit delivery needs new scope (2026-09-28)
+
+The E01c request/diagnostics implementation stopped at **needs-new-scope**.
+[Draft PR #4079](https://github.com/sifr-lang/sifr/pull/4079) remains unmerged
+at tested candidate `9ad0f8a34922046dc4fbdacb23f3d05170e3ecb3`
+(base `34e78b959b069ddc0dc5f4ddf3fb0d8ddd67d30e`, tree
+`9eeeb52654aa74044459ef3258637878d5ed4a8a`). The candidate moved
+Python declaration cache hits ahead of interop-plan and workspace-diagnostic
+queries, scoped source invalidation to a package root, and attempted current
+request and diagnostics publication after external-input changes. This is
+historical implementation evidence, not E01c acceptance or merge approval.
+
+On that exact candidate, the four E01c named cases, all three preserved cases,
+and ten focused regressions passed individually with exact
+`cargo test --locked -p sifr_lsp --lib <case> -- --exact` selection.
+`cargo fmt --check`, the 900-line guardrail (4,265 files), and the full PR
+diff check passed. Candidate-keyed raw logs, compiler/lock/submodule/fixture
+identity and the transport bundle are outside the Git tree under
+`/data/sifr-architecture-e01c-fast-hit-publication-evidence-20260928/9ad0f8a34922046dc4fbdacb23f3d05170e3ecb3/`;
+the validation-manifest SHA-256 is
+`6ede8c0f104f5286ec4ea0a1f4cd9b1d1ab1dce973d2b0213b55be9c99c4f4c2`.
+The initial missing-Python-venv assertion failures, corrected after copying
+the prepared fixture into this worktree, and the first repair-loop failures
+remain under the evidence root's `development/` sibling. No full merge
+profile was run under the approved intermediate-item policy.
+
+The first scoped read-only Opus 5.5 review was **NOT SATISFIED** (response
+SHA-256 `d5c7129723d79b885125b8ca27c29299f908b08c2fd8e2a5d6e771b42f3453aa`):
+request-time diagnostics errors could end the server and drop jobs, and the
+tests missed package-root changes and cross-root external drift. Those findings
+were repaired and retested. The second scoped review was also
+**NOT SATISFIED** (response SHA-256
+`5c9fed8adf275077e6edb64d94c407cf6d6a6cc134cad2d9be108125293272e1`)
+with a new mechanism-level defect: after a nested package's `sifr.toml` is
+removed, the fast-hit expected generation can come from the deepest
+ever-tracked nested root while verification observes the current ancestor
+root. Their independent generation counters can remain different, causing
+every later completion, hover and diagnostics request to return
+`ContentModified`; current diagnostics never publish. The named root-change
+test removed the only manifest, so it did not exercise nested-to-ancestor
+ownership. Under the phase-closure-loop second-review rule, this item stops
+for rescope rather than another patch in this session.
+
+The next E01c owner must establish one current package-root identity and
+external-generation source for both fast-hit capture and verification,
+including nested-to-ancestor transitions, then add an exact regression that
+warms a nested package, deletes its manifest, rejects stale work once,
+recomputes under the ancestor and publishes current diagnostics. Keep
+cross-root isolation and request-time publication assertions. Review and
+validate the new candidate independently; the draft commits may be selectively
+ported but are not approved for merge. E01/F20-F21, E02, E03 and Q01 remain
+open.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -699,7 +752,7 @@ holds the separate passing and partial area receipts.
 | C02e | Dependency-direction guard owner; F19 after C02d; merged in [PR #4071](https://github.com/sifr-lang/sifr/pull/4071), receipt below. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
 | E01a | LSP/package external-input owner; F20-F21; merged in [PR #4075](https://github.com/sifr-lang/sifr/pull/4075), receipt above. | Per-root external snapshots and generations; manifest/lock/config/bridge/binding/certification/environment transitions, positive and negative cache invalidation, unchanged warm reuse. Named cases above. |
 | E01b | LSP watcher/protocol owner; F20-F21 after merged E01a; merged in [PR #4077](https://github.com/sifr-lang/sifr/pull/4077), receipt above. | Capability-gated registration and response acknowledgement; rejected/unsupported/unconfirmed per-request revalidation, lifecycle events, reconnect, storms and multi-root isolation. Named cases above. |
-| E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; open. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, cancellation and multi-root lifecycle. Named cases above. |
+| E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; needs new scope after draft PR #4079 and second scoped review. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, cancellation and multi-root lifecycle. Named cases above. |
 | E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; open after E01c and E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
 | E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
