@@ -4,6 +4,7 @@ use crate::diagnostic_jobs::{DiagnosticJobs, ScheduledDiagnosticJob};
 use crate::document_events::{CompactedDocumentChange, compact_content_changes};
 use crate::document_store::DocumentStore;
 use crate::errors::{LspError, LspResult};
+use crate::external_inputs::ExternalInputSnapshots;
 use crate::progress::{ProgressHandle, ProgressKind, ProgressState};
 use crate::python_declarations::PythonDeclarationCache;
 use crate::request_queue::{CancellationTarget, RequestQueue, ScheduledRequest};
@@ -16,6 +17,8 @@ use sifr_analysis::{
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_source::PositionEncoding;
+
+mod external_inputs;
 
 const MAX_LSP_TRACE_EVENTS: usize = 256;
 
@@ -37,6 +40,7 @@ pub(crate) struct Session {
     next_trace_sequence: u64,
     diagnostic_jobs: DiagnosticJobs,
     pub(crate) python_declarations: PythonDeclarationCache,
+    external_inputs: ExternalInputSnapshots,
 }
 
 pub(crate) struct DocumentChangeSummary {
@@ -51,6 +55,8 @@ impl Session {
     }
 
     pub(crate) fn ensure_document_analysis(&mut self, uri: &str) -> LspResult<()> {
+        let path = self.store.document(uri)?.path().to_path_buf();
+        self.observe_external_inputs_for_path(&path);
         let document = self.store.document(uri)?;
         if !self.analysis.can_analyze_document(document)
             && self.analysis.load_diagnostics(uri).is_empty()
@@ -103,6 +109,7 @@ impl Session {
             next_trace_sequence: 0,
             diagnostic_jobs: DiagnosticJobs::default(),
             python_declarations: PythonDeclarationCache::default(),
+            external_inputs: ExternalInputSnapshots::default(),
         }
     }
 
@@ -131,6 +138,8 @@ impl Session {
     ) -> LspResult<()> {
         self.python_declarations.invalidate_source();
         self.store.open(uri.clone(), language_id, version, text)?;
+        let path = self.store.document(&uri)?.path().to_path_buf();
+        self.observe_external_inputs_for_path(&path);
         let document = self.store.document(&uri)?;
         if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off
             && !self.analysis.has_analysis(document)
@@ -506,6 +515,8 @@ mod tests {
 
     #[path = "dx11_editor_tests.rs"]
     mod dx11_editor_tests;
+    #[path = "e01_external_input_tests.rs"]
+    mod e01_external_input_tests;
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
     #[path = "python_declaration_tests.rs"]
