@@ -1148,8 +1148,14 @@ blocking findings (response SHA-256
 Its nonblocking suggestions on mutated identity filtering, possible future
 float round-trip findings and an invalid-minimized-JSON negative test are
 tracked separately in [issue #4097](https://github.com/sifr-lang/sifr/issues/4097).
-No local create-PR or full merge gate ran under the approved intermediate-item
-exception. H01/F28 remains open for H01d-H01i; Q01 retains the final gate.
+The automatic PR `local-first-create-pr` [job](https://github.com/sifr-lang/sifr/actions/runs/36497751498/job/109181180304)
+stopped at the already recorded V01 `performance_reference_admission`
+prerequisite before Cargo because `SIFR_PERFORMANCE_REFERENCE` was not
+selected (raw job log SHA-256
+`6cf31238d07f5bd212977346c8f7ccd3b65eedbd5b3808a4a389b29a8bd5cbdc`).
+It is not H01c validation evidence. No local create-PR or full merge gate ran
+under the approved intermediate-item exception. H01/F28 remains open for
+H01d-H01i; Q01 retains the final gate.
 
 ### Resolved prerequisites and boundaries
 
