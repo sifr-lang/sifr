@@ -94,7 +94,12 @@ impl WatcherRegistration {
             return Ok(());
         }
         self.acknowledged = false;
-        if let Some(old_id) = self.registered_id.take() {
+        let old_id = self.registered_id.take().or_else(|| {
+            self.pending
+                .take()
+                .map(|_| format!("sifr/watched-files/{}", self.next_id))
+        });
+        if let Some(old_id) = old_id {
             self.next_id += 1;
             connection
                 .sender

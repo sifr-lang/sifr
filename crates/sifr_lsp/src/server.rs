@@ -651,5 +651,50 @@ mod tests {
             response_result: Ok(Value::Null),
         });
         assert!(reconnected.acknowledged());
+        let (pending_server, pending_client) = Connection::memory();
+        let mut pending = WatcherRegistration::new(&capabilities);
+        pending
+            .register(&pending_server)
+            .expect("pending registration");
+        let Message::Request(old_pending) =
+            pending_client.receiver.recv().expect("old pending request")
+        else {
+            panic!("expected pending registration");
+        };
+        pending.change_workspace_folders(&json!({"event": {
+            "removed": [{"uri": first_uri, "name": "first"}],
+            "added": [{"uri": second_uri, "name": "second"}]
+        }}));
+        pending
+            .register(&pending_server)
+            .expect("replace pending registration");
+        let Message::Request(pending_unregistration) = pending_client
+            .receiver
+            .recv()
+            .expect("pending unregistration")
+        else {
+            panic!("expected pending unregistration");
+        };
+        assert_eq!(
+            pending_unregistration
+                .params
+                .pointer("/unregisterations/0/id"),
+            Some(&json!("sifr/watched-files/1"))
+        );
+        let Message::Request(replacement) =
+            pending_client.receiver.recv().expect("pending replacement")
+        else {
+            panic!("expected replacement registration");
+        };
+        pending.respond(&Response {
+            id: old_pending.id,
+            response_result: Ok(Value::Null),
+        });
+        assert!(!pending.acknowledged());
+        pending.respond(&Response {
+            id: replacement.id,
+            response_result: Ok(Value::Null),
+        });
+        assert!(pending.covers(&second_root.join("src/main.sifr")));
     }
 }

@@ -79,9 +79,11 @@ fn create_delete_rename_and_storm_events_preserve_multi_root_isolation() {
         .external_input_generation(&first)
         .expect("deleted generation");
     assert!(deleted > previous);
-    previous = deleted;
     std::fs::write(&original, "value = 2\n").expect("recreate bridge");
     session.record_watcher_file_events(&[event(&original, 1)]);
+    previous = session
+        .external_input_generation(&first)
+        .expect("recreated generation");
     let renamed = bridge_dir.join("renamed.py");
     std::fs::rename(&original, &renamed).expect("rename bridge");
     session.record_watcher_file_events(&[event(&original, 3), event(&renamed, 1)]);
@@ -104,6 +106,27 @@ fn create_delete_rename_and_storm_events_preserve_multi_root_isolation() {
         Some(second_generation)
     );
     assert!(session.python_declarations.has_entry(&second));
+    let first_before_cross_root = session
+        .external_input_generation(&first)
+        .expect("first before cross-root rename");
+    let second_before_cross_root = session
+        .external_input_generation(&second)
+        .expect("second before cross-root rename");
+    let moved = second.join("src/python_bridges/moved.py");
+    std::fs::rename(&renamed, &moved).expect("move bridge between roots");
+    session.record_watcher_file_events(&[event(&renamed, 3), event(&moved, 1)]);
+    assert!(
+        session
+            .external_input_generation(&first)
+            .expect("first after cross-root rename")
+            > first_before_cross_root
+    );
+    assert!(
+        session
+            .external_input_generation(&second)
+            .expect("second after cross-root rename")
+            > second_before_cross_root
+    );
     assert_eq!(event(&lock, 2).kind, WatcherEventKind::Changed);
     assert!(WatcherEvent::from_protocol("https://example.invalid/lock", 2).is_none());
     assert!(
