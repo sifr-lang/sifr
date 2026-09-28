@@ -37,24 +37,39 @@ and `7bac51a16e5fd9beb8b9b84e66587c5587bc0860c696f5111e84ff797a78e298`,
 respectively. Raw candidate-keyed evidence is outside the Git tree at
 `/data/sifr-architecture-v01-live-qualification-evidence-20260928/8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b/`.
 
-The first run failed during setup because the new worktree lacked the pinned
-Ruff submodule (raw log SHA-256
+The first standalone admission probe rejected the default tmpfs temporary
+storage as `execution.temporary_storage` (raw log SHA-256
+`d0255739737fcd60dee835a5cdd50d785f2476df071a484a0269eee7dcd9139a`);
+admission passed after setting temporary storage on the captured root ext4
+device. The first representative run then failed during setup because the new
+worktree lacked the pinned Ruff submodule (raw log SHA-256
 `37c49c7422161d68b4c91dc73526d3caf5d9d087187a7e4c1da232b906e81859`).
 After initialization, the cold compiler build exceeded the benchmark runner's
 180-second preparation deadline before measurements (raw log SHA-256
 `f95cba8a8718decdef47e14d8378975725603fcdb20dc2cd66ecd8d062aac832`).
 The compiler and frontend query helper were then built in the same owned Cargo
-target; the passing run reused those warm artifacts. Both failed attempts and
-the governor restoration receipts remain separate from the passing evidence.
+target; the passing run reused those warm artifacts. All three failed probes
+and attempts remain separate from the passing evidence. The standalone probe
+and passing run retain governor before/during/after receipts; the two failed
+representative attempts retain their logs and exit statuses, while their
+governor snapshots were overwritten by the passing run.
+
 The record-only delivery is [PR #4058](https://github.com/sifr-lang/sifr/pull/4058).
 This closes V01/F05's outstanding live admission and named representative
 qualification prerequisite. Q01 still owns the final exact-candidate full
 merge profile and whole-phase integration decision.
+
 The record-only documentation structure check passed (raw log SHA-256
 `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
 the 900-line file-size guardrail passed for 4,245 files (raw log SHA-256
 `2e10821206a8db09bbb2a00e21e9618f4f9f216f73b5c56afcd7ce13f9e819d2`),
 and the diff check passed.
+
+Scoped read-only Opus review of the earlier record candidate
+`443965362753f49c576bcb02847066e286517dd5` found the omitted first
+admission rejection and imprecise governor-receipt wording. Both are corrected
+above; its response is preserved outside the Git tree (SHA-256
+`94331217faaa3355b7c35f68c3d1f9351ccf600f6da3eb64c3ffa3044cf8c21a`).
 
 ## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
 
