@@ -111,6 +111,14 @@ impl DiagnosticsController {
         Ok(())
     }
 
+    pub(crate) fn flush_pending(connection: &Connection, session: &mut Session) -> LspResult<()> {
+        Self::flush_ready(
+            connection,
+            session,
+            session.store().settings().diagnostics_mode,
+        )
+    }
+
     fn flush_ready(
         connection: &Connection,
         session: &mut Session,
@@ -126,6 +134,7 @@ impl DiagnosticsController {
         if !session.generations.publish(session.generation, Ok)? {
             return Ok(());
         }
+        let mut retry_used = false;
         while let Some(job) = session.take_next_diagnostic_job() {
             if !session.document_version_matches(&job.uri, job.version)? {
                 session.trace(
@@ -137,7 +146,32 @@ impl DiagnosticsController {
                 );
                 continue;
             }
-            let diagnostics = document_diagnostics(session, &job.uri)?;
+            let diagnostics = match document_diagnostics(session, &job.uri) {
+                Ok(diagnostics) => diagnostics,
+                Err(error)
+                    if error.code() == lsp_server::ErrorCode::ContentModified as i32
+                        || error.code() == lsp_server::ErrorCode::RequestCanceled as i32 =>
+                {
+                    session.schedule_document_diagnostics(&job.uri)?;
+                    session.trace(
+                        WorkspaceTracePhase::StaleRejection,
+                        format!(
+                            "retry_diagnostics uri={} error={}",
+                            job.uri,
+                            error.message()
+                        ),
+                    );
+                    if retry_used {
+                        break;
+                    }
+                    retry_used = true;
+                    continue;
+                }
+                Err(error) => {
+                    session.schedule_document_diagnostics(&job.uri)?;
+                    return Err(error);
+                }
+            };
             if !session.document_version_matches(&job.uri, job.version)? {
                 session.trace(
                     WorkspaceTracePhase::StaleRejection,

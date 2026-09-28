@@ -164,8 +164,12 @@ fn source_config_and_external_changes_recompute_requests_and_publish_current_dia
             .expect("diagnostics array"),
         "SIFR-PYCONV-0001"
     ));
-    let _ = completion(&mut session, &uri);
-    let _ = hover(&mut session, &uri);
+    assert!(
+        completion(&mut session, &uri)
+            .to_string()
+            .contains("math.sqrt")
+    );
+    assert!(hover(&mut session, &uri).to_string().contains("math.sqrt"));
 }
 
 #[test]
@@ -207,6 +211,18 @@ fn cancelled_and_reopened_requests_cannot_publish_stale_results() {
     session
         .schedule_document_diagnostics(&uri)
         .expect("schedule old diagnostics");
+    session
+        .generations
+        .observe(Some("textDocument/didClose"))
+        .expect("superseding close");
+    DiagnosticsController::publish_document(
+        &server,
+        &mut session,
+        &uri,
+        DiagnosticsMode::OpenFiles,
+    )
+    .expect("stale generation stays pending");
+    assert!(published(&client).is_empty());
     assert!(session.close_document(&uri));
     session
         .open_document(uri.clone(), "sifr", Some(1), SOURCE.to_string())
@@ -231,6 +247,30 @@ fn cancelled_and_reopened_requests_cannot_publish_stale_results() {
             .contains("verified")
     );
     assert!(hover(&mut session, &uri).to_string().contains("verified"));
+}
+
+#[test]
+fn changed_external_input_during_publication_retries_current_diagnostics() {
+    let (mut session, temp, uri) = open_fixture(SOURCE);
+    session
+        .python_declaration_snapshot(&uri)
+        .expect("prime status");
+    session
+        .python_declarations
+        .inject_external_change_before_verification(
+            temp.path().join("sifr.python-bindings.json"),
+            Some(
+                b"{\"schema_version\":1,\"environment_digest\":\"stale\",\"bindings\":[]}\n"
+                    .to_vec(),
+            ),
+        );
+    let (server, client) = Connection::memory();
+    let current = publish(&mut session, &server, &client, &uri);
+    assert!(has_code(
+        current["diagnostics"].as_array().expect("diagnostics"),
+        "SIFR-PYCONV-0001"
+    ));
+    assert!(session.take_next_diagnostic_job().is_none());
 }
 
 #[test]
@@ -300,5 +340,77 @@ fn multi_root_requests_keep_generation_and_publication_isolated() {
         session.external_input_generation(second.path()),
         second_generation
     );
-    assert!(first.path() != second.path());
+    let before_external_builds = session.python_declarations.analysis_plan_builds();
+    let artifact = first.path().join("sifr.python-bindings.json");
+    std::fs::write(
+        &artifact,
+        "{\"schema_version\":1,\"environment_digest\":\"stale\",\"bindings\":[]}\n",
+    )
+    .expect("change first-root artifact");
+    let event = WatcherEvent::from_protocol(
+        &url::Url::from_file_path(&artifact)
+            .expect("artifact URI")
+            .to_string(),
+        1,
+    )
+    .expect("watcher event");
+    session.record_watcher_file_events(&[event]);
+    DiagnosticsController::publish_all(&server, &mut session).expect("publish external change");
+    let external_publications = published(&client);
+    let first_external = external_publications
+        .iter()
+        .find(|params| params["uri"] == first_uri)
+        .expect("first external publication");
+    let second_external = external_publications
+        .iter()
+        .find(|params| params["uri"] == second_uri)
+        .expect("second external publication");
+    assert!(has_code(
+        first_external["diagnostics"]
+            .as_array()
+            .expect("first diagnostics"),
+        "SIFR-PYCONV-0001"
+    ));
+    assert!(!has_code(
+        second_external["diagnostics"]
+            .as_array()
+            .expect("second diagnostics"),
+        "SIFR-PYCONV-0001"
+    ));
+    assert!(session.python_declarations.analysis_plan_builds() > before_external_builds);
+    let after_first_rebuild = session.python_declarations.analysis_plan_builds();
+    assert!(
+        completion(&mut session, &second_uri)
+            .to_string()
+            .contains("verified")
+    );
+    assert_eq!(
+        session.python_declarations.analysis_plan_builds(),
+        after_first_rebuild
+    );
+    assert_eq!(
+        session.external_input_generation(second.path()),
+        second_generation
+    );
+
+    let manifest = first.path().join("sifr.toml");
+    session
+        .python_declarations
+        .inject_external_change_before_verification(manifest, None);
+    let stale = session
+        .python_declaration_snapshot(&first_uri)
+        .expect_err("old package-root result must be rejected");
+    assert_eq!(stale.code(), lsp_server::ErrorCode::ContentModified as i32);
+    assert!(!session.python_declarations.has_entry(first.path()));
+    let current = session
+        .python_declaration_snapshot(&first_uri)
+        .expect("new root status");
+    assert!(!current.insights.is_empty());
+    assert_eq!(
+        session.external_input_generation(second.path()),
+        second_generation
+    );
+    assert!(session.python_declarations.has_entry(second.path()));
+    let current_publication = publish(&mut session, &server, &client, &first_uri);
+    assert_eq!(current_publication["version"], 2);
 }
