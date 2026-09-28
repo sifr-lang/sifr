@@ -4125,6 +4125,41 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_private_file",
+      "operation": "open",
+      "site": ".open(path)",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_write_private_file",
+      "operation": "open-write",
+      "site": ".open(path)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "real_directory",
+      "operation": "symlink_metadata",
+      "site": "fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "real_directory",
+      "operation": "is_dir",
+      "site": "fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "real_directory",
+      "operation": "is_symlink",
+      "site": "fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())",
+      "classification": "build-identity"
+    },
+    {
       "path": "crates/sifr_cache_storage/src/windows.rs",
       "symbol": "owner_scope",
       "operation": "canonicalize",
@@ -4171,6 +4206,34 @@
       "symbol": "open_entry_lock",
       "operation": "is_file",
       "site": "if !file.metadata()?.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "read_write_private_file",
+      "operation": "open-write",
+      "site": ".open(path)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "read_write_private_file",
+      "operation": "metadata",
+      "site": "if file.metadata()?.file_attributes()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "real_directory",
+      "operation": "symlink_metadata",
+      "site": "fs::symlink_metadata(path).is_ok_and(|meta| {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "real_directory",
+      "operation": "is_dir",
+      "site": "meta.is_dir()",
       "classification": "build-identity"
     },
     {
@@ -4430,6 +4493,97 @@
       "symbol": "cached_responses_obey_the_current_host_input_limit",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(root).expect(\"fixture cache should be removable\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "read",
+      "operation": "metadata",
+      "site": "if !file.metadata()?.is_file() || file.metadata()?.len() > limit {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "read",
+      "operation": "is_file",
+      "site": "if !file.metadata()?.is_file() || file.metadata()?.len() > limit {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "read",
+      "operation": "metadata",
+      "site": "if !file.metadata()?.is_file() || file.metadata()?.len() > limit {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "existing_lease",
+      "operation": "metadata",
+      "site": "if !lease.metadata()?.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "existing_lease",
+      "operation": "is_file",
+      "site": "if !lease.metadata()?.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "file_identity",
+      "operation": "metadata",
+      "site": "let metadata = fs::metadata(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "check_owner",
+      "operation": "metadata",
+      "site": "let created_ns = fs::metadata(workspace)?",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
+      "symbol": "load_generation",
+      "operation": "canonicalize",
+      "site": "let workspace = workspace.canonicalize()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/tests.rs",
+      "symbol": "changed_source_or_metadata_rejects_restored_check",
+      "operation": "write",
+      "site": "fs::write(&file, \"def main() -> None:\\n pass\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/tests.rs",
+      "symbol": "changed_source_or_metadata_rejects_restored_check",
+      "operation": "write",
+      "site": "fs::write(&file, \"def main() -> None:\\n print(1)\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/tests.rs",
+      "symbol": "corrupt_or_missing_check_is_a_miss",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&workspace).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/tests.rs",
+      "symbol": "corrupt_or_missing_check_is_a_miss",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&generation).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/editor/tests.rs",
+      "symbol": "corrupt_or_missing_check_is_a_miss",
+      "operation": "write",
+      "site": "fs::write(",
       "classification": "output-effect"
     },
     {
@@ -11361,6 +11515,13 @@
       "operation": "exists",
       "site": "assert!(!context.exists());",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/tests.rs",
+      "symbol": "editor_restore_requires_current_cache_owner_and_source",
+      "operation": "write",
+      "site": "fs::write(&file, \"def main() -> None:\\n value: int = 2\\n\").unwrap();",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs",
