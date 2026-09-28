@@ -1,5 +1,5 @@
 use super::{
-    CacheFamily, CacheKeyContext, DiagnosticsCacheKey, DocumentVersion, FileId,
+    CacheFamily, CacheKeyContext, ClassHierarchyView, DiagnosticsCacheKey, DocumentVersion, FileId,
     HirLoweringCacheKey, ModuleAnalysisView, ParseCacheKey, ProjectAnalysisView, SourceFileView,
     SourceHash, SourceMapCacheKey, SourceMapView, SourceOrigin, SourcePath, SourceProvider,
     SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceAuxiliarySource,
@@ -20,6 +20,7 @@ use sifr_lowering::{
 };
 use sifr_python_ast::{Stmt, Suite};
 use sifr_syntax::ParsedModule;
+use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
 use std::path::Path;
@@ -747,6 +748,46 @@ impl FrontendContext {
             .as_ref()
             .map(|lowered| symbols_from_hir(&lowered.module))
             .unwrap_or_default();
+        let classes = self.modules[index]
+            .lowered
+            .as_ref()
+            .map(|lowered| {
+                let module_name = &self.modules[index].module_name;
+                let local_classes = lowered
+                    .module
+                    .classes
+                    .iter()
+                    .map(|class| class.name.as_str())
+                    .collect::<BTreeSet<_>>();
+                lowered
+                    .module
+                    .classes
+                    .iter()
+                    .map(|class| {
+                        let parent_identity = match class.parent_type.as_ref() {
+                            Some(Type::Class {
+                                identity: Some(identity),
+                                ..
+                            }) => Some(identity.clone()),
+                            Some(Type::Class {
+                                identity: None,
+                                name,
+                                ..
+                            }) if local_classes.contains(name.as_str()) => {
+                                Some(format!("{module_name}.{name}"))
+                            }
+                            _ => None,
+                        };
+                        ClassHierarchyView {
+                            name: class.name.clone(),
+                            identity: format!("{module_name}.{}", class.name),
+                            parent_identity,
+                            parent_name: class.parent_class.clone(),
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
         let editor_semantics = self.modules[index]
             .lowered
             .as_ref()
@@ -773,6 +814,7 @@ impl FrontendContext {
             ModuleAnalysisView {
                 module,
                 symbols,
+                classes,
                 editor_semantics,
                 sql_documents,
             },
