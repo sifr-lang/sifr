@@ -77,6 +77,15 @@ pub fn generated_rust_preview(compiler: &CompilerContext, source: &str) -> Previ
             || sifr_codegen::generate_rust_with_stdlib_for_module(main, &stdlib.code, Some("main")),
         )
         .map_err(|error| vec![*error])?;
+        // A single-file preview has no application package Cargo owner. The
+        // driver rejects direct Rust declarations at metadata resolution;
+        // report the same failure before exposing any generated source.
+        if !generated.interop.rust.declarations.is_empty() {
+            return Err(vec![crate::diagnostics::diagnostic_with_code(
+                "Rust interop declarations require a Sifr package Cargo context",
+                sifr_diagnostics::DiagnosticCode::RUST_CARGO_METADATA,
+            )]);
+        }
         Ok::<_, Vec<sifr_diagnostics::RenderedDiagnostic>>(generated.rust_source)
     })();
     match compiled {

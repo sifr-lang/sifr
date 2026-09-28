@@ -57,4 +57,9 @@ fn failed_preview_has_no_partial_output() {
     assert!(
         matches!(result, PreviewResult::Unavailable { diagnostic_count } if diagnostic_count > 0)
     );
+    let direct_interop = "@rust(crc32fast.hash, panic=trusted_no_panic)\ndef crc32(data: bytes) -> uint32:\n    zero: uint32 = 0\n    return zero\n\ndef main():\n    print(crc32(b\"abc\"))\n";
+    assert!(matches!(
+        generated_rust_preview(&compiler, direct_interop),
+        PreviewResult::Unavailable { diagnostic_count } if diagnostic_count > 0
+    ));
 }
