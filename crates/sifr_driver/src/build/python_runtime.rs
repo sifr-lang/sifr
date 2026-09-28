@@ -46,6 +46,20 @@ fn certification_identity<T: Serialize>(certifications: &[T]) -> Result<String, 
         .map_err(|error| format!("could not serialize Python certifications: {error}"))
 }
 
+impl sifr_compiler_services::python::PythonCertificationRuntime for PackagePythonRuntime {
+    fn interpreter(&self) -> &std::path::Path {
+        self.interpreter()
+    }
+
+    fn arrow_certification(&self, target: &str) -> Option<&sifr_package::ArrowCertification> {
+        self.arrow_certification(target)
+    }
+
+    fn dlpack_certification(&self, target: &str) -> Option<&sifr_package::DlpackCertification> {
+        self.dlpack_certification(target)
+    }
+}
+
 impl PackagePythonRuntime {
     pub fn from_probe(
         request: &sifr_package::PythonEnvironmentProbeRequest,
