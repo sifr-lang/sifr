@@ -3,6 +3,7 @@ mod diagnostics;
 pub mod export_policy;
 pub mod metadata;
 pub mod private_re_exports;
+pub mod python;
 pub mod stdlib;
 
 mod application_profile;

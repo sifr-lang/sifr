@@ -3,11 +3,13 @@ use crate::session::Session;
 use serde_json::Value;
 use sifr_analysis::FileId;
 use sifr_analysis::{DiskSourceProvider, SourceProvider};
-use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
-use sifr_driver::{
-    PackagePythonRuntime, PythonInteropPlan, PythonInteropPlanDiagnostic, PythonTargetInspection,
-    PythonTargetProbeStatus,
+use sifr_compiler_services::python::{
+    PythonEditorEnvironment, PythonInteropPlan, PythonInteropPlanDiagnostic,
+    PythonTargetInspection, apply_python_target_inspection, inspect_python_target_if_active,
+    mark_embedded_bridge_targets, policy_help, python_environment_selection,
+    resolve_editor_environment, status_name, validate_protocol_certifications_for_plan,
 };
+use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic};
 use std::collections::{BTreeMap, HashMap};
 use std::hash::{DefaultHasher, Hash as _, Hasher as _};
 use std::path::{Path, PathBuf};
@@ -55,11 +57,7 @@ struct EnvironmentCacheKey {
     required_import_roots: Vec<String>,
 }
 
-#[derive(Clone, Debug)]
-struct EnvironmentSnapshot {
-    runtime: Option<PackagePythonRuntime>,
-    diagnostics: Vec<RenderedDiagnostic>,
-}
+type EnvironmentSnapshot = PythonEditorEnvironment;
 
 #[derive(Default)]
 pub(crate) struct PythonDeclarationCache {
@@ -194,7 +192,7 @@ impl Session {
         let mut diagnostics = Vec::new();
         if let Some(root) = package_root.as_deref() {
             let environment =
-                self.package_python_environment(root, external_fingerprint, &plan, &mut provider);
+                self.package_python_environment(root, external_fingerprint, &plan, &mut provider)?;
             diagnostics.extend(environment.diagnostics.into_iter().map(|diagnostic| {
                 ScopedDiagnostic {
                     file: None,
@@ -204,7 +202,7 @@ impl Session {
             if let Some(runtime) = environment.runtime {
                 if !compiler_has_errors && !plan.declarations.is_empty() {
                     diagnostics.extend(scoped_diagnostics(
-                        sifr_driver::validate_protocol_certifications_for_plan(&plan, &runtime),
+                        validate_protocol_certifications_for_plan(&plan, &runtime),
                         &analysis_plan.module_files,
                     ));
                     diagnostics.extend(self.probe_python_targets(
@@ -246,7 +244,7 @@ impl Session {
         external_fingerprint: u64,
         plan: &PythonInteropPlan,
         provider: &mut impl SourceProvider,
-    ) -> EnvironmentSnapshot {
+    ) -> LspResult<EnvironmentSnapshot> {
         let mut required_import_roots = plan.required_import_roots.clone();
         required_import_roots.sort();
         required_import_roots.dedup();
@@ -256,10 +254,13 @@ impl Session {
             required_import_roots: required_import_roots.clone(),
         };
         if let Some(snapshot) = self.python_declarations.environments.get(&key) {
-            return snapshot.clone();
+            return Ok(snapshot.clone());
         }
         let snapshot =
-            resolve_package_python_environment(package_root, &required_import_roots, provider);
+            resolve_editor_environment(package_root, &required_import_roots, provider, || {
+                self.check_active_request_cancelled().is_err()
+            })
+            .map_err(|_| LspError::request_cancelled("Python declaration request was cancelled"))?;
         #[cfg(test)]
         if snapshot.runtime.is_some() {
             self.python_declarations.environment_probe_runs += 1;
@@ -267,7 +268,7 @@ impl Session {
         self.python_declarations
             .environments
             .insert(key, snapshot.clone());
-        snapshot
+        Ok(snapshot)
     }
 
     fn probe_python_targets(
@@ -299,7 +300,12 @@ impl Session {
                 if let Some(inspection) = self.python_declarations.target_inspections.get(&key) {
                     inspection.clone()
                 } else {
-                    let inspection = sifr_driver::inspect_python_target(interpreter, &target);
+                    let inspection = inspect_python_target_if_active(interpreter, &target, || {
+                        self.check_active_request_cancelled().is_err()
+                    })
+                    .map_err(|_| {
+                        LspError::request_cancelled("Python declaration request was cancelled")
+                    })?;
                     #[cfg(test)]
                     {
                         self.python_declarations.probe_runs += 1;
@@ -310,7 +316,7 @@ impl Session {
                     inspection
                 };
             diagnostics.extend(scoped_diagnostics(
-                sifr_driver::apply_python_target_inspection(
+                apply_python_target_inspection(
                     plan,
                     &target,
                     inspection.as_ref().map_err(String::as_str),
@@ -339,198 +345,6 @@ impl Session {
             .min();
         owner.as_deref() == Some(uri)
     }
-}
-
-fn resolve_package_python_environment(
-    package_root: &Path,
-    required_import_roots: &[String],
-    provider: &mut impl SourceProvider,
-) -> EnvironmentSnapshot {
-    if !provider.is_file(&package_root.join("Cargo.toml")) {
-        return EnvironmentSnapshot {
-            runtime: None,
-            diagnostics: Vec::new(),
-        };
-    }
-    match resolve_package_python_environment_inner(package_root, required_import_roots, provider) {
-        Ok(snapshot) => snapshot,
-        Err(diagnostics) => EnvironmentSnapshot {
-            runtime: None,
-            diagnostics,
-        },
-    }
-}
-
-fn resolve_package_python_environment_inner(
-    package_root: &Path,
-    required_import_roots: &[String],
-    provider: &mut impl SourceProvider,
-) -> Result<EnvironmentSnapshot, Vec<RenderedDiagnostic>> {
-    let session = sifr_package::PackageSession::discover(
-        sifr_package::PackageSessionOptions {
-            current_dir: package_root.to_path_buf(),
-            lock_mode: sifr_package::CargoLockMode::Frozen,
-        },
-        provider,
-    )
-    .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
-    let snapshot = match sifr_package::load_package_graph_snapshot(
-        &session.workspace_root,
-        sifr_package::CargoLockMode::Frozen,
-        provider,
-    ) {
-        Ok(snapshot) => snapshot,
-        Err(failure) if missing_lockfile_frozen_failure(&failure) => {
-            return Ok(EnvironmentSnapshot {
-                runtime: None,
-                diagnostics: Vec::new(),
-            });
-        }
-        Err(failure) => return Err(render_package_diagnostics(failure.into_diagnostics())),
-    };
-    let package_id = session.package_id(&snapshot.graph).ok_or_else(|| {
-        vec![diagnostic_with_code(
-            DiagnosticCode::PACKAGE_METADATA_PARSE,
-            "current Sifr package is missing from the Cargo package graph".to_string(),
-            "repair Cargo package metadata before requesting Python editor status".to_string(),
-        )]
-    })?;
-    let mut requirements = required_import_roots
-        .iter()
-        .map(|root| sifr_package::PythonRequirementContribution {
-            root: root.clone(),
-            package_id: package_id.clone(),
-            kind: sifr_package::PythonRequirementKind::Declaration,
-            source: "language-server compiler plan".to_string(),
-        })
-        .collect::<Vec<_>>();
-    let bridge = sifr_package::resolve_python_bridge_graph(&snapshot.graph, &package_id)
-        .map_err(render_package_diagnostics)?;
-    requirements.extend(bridge.requirements);
-    let allow_deferral = session
-        .runnable_app_paths()
-        .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?
-        .is_empty();
-    let resolution = sifr_package::resolve_python_environment_for_check(
-        &snapshot.graph,
-        &package_id,
-        &requirements,
-        allow_deferral,
-    )
-    .map_err(render_package_diagnostics)?;
-    let sifr_package::PythonEnvironmentResolution::Resolved(resolved) = resolution else {
-        return Ok(EnvironmentSnapshot {
-            runtime: None,
-            diagnostics: Vec::new(),
-        });
-    };
-    let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
-    let probe = sifr_package::probe_python_environment(&request)
-        .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe)
-        .map_err(|error| {
-            vec![diagnostic_with_code(
-                DiagnosticCode::PYENV_PROBE_FAILED,
-                error,
-                "check Python environment paths".to_string(),
-            )]
-        })?
-        .hex;
-    let mut runtime = PackagePythonRuntime::from_probe(
-        &request,
-        &probe,
-        digest.clone(),
-        resolved.required_imports,
-        resolved.trusted_imports,
-        resolved.trusted_native_imports,
-    )
-    .map_err(|error| {
-        vec![diagnostic_with_code(
-            DiagnosticCode::PYENV_PROBE_FAILED,
-            error,
-            "check Python environment paths".to_string(),
-        )]
-    })?;
-    let mut diagnostics = Vec::new();
-    let binding_path = package_root.join(sifr_package::PYTHON_BINDINGS_FILE);
-    if binding_path.is_file() {
-        match sifr_package::load_python_bindings(
-            package_root,
-            runtime.authoring_environment_digest(),
-        ) {
-            Ok(artifact) => match serde_json::to_string(&artifact.bindings) {
-                Ok(identity) => runtime.set_binding_identity(identity),
-                Err(error) => diagnostics.push(diagnostic_with_code(
-                    DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
-                    format!("could not fingerprint Python bindings: {error}"),
-                    "rerun `sifr python bind --check`".to_string(),
-                )),
-            },
-            Err(reason) => diagnostics.push(diagnostic_with_code(
-                DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
-                format!("invalid Python binding artifact: {reason}"),
-                "rerun `sifr python bind --check`".to_string(),
-            )),
-        }
-    }
-    let certification_path = package_root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE);
-    if certification_path.is_file() {
-        match sifr_package::load_python_certifications(package_root, &digest) {
-            Ok(artifact) => {
-                match sifr_driver::validate_certification_distributions(&runtime, &artifact) {
-                    Ok(()) => {
-                        if let Err(error) = runtime
-                            .set_arrow_certifications(artifact.arrow)
-                            .and_then(|()| runtime.set_dlpack_certifications(artifact.dlpack))
-                        {
-                            diagnostics.push(diagnostic_with_code(
-                                DiagnosticCode::PYZC_INVALID_DECLARATION,
-                                error,
-                                "rerun `sifr python certify --check`".to_string(),
-                            ));
-                        }
-                    }
-                    Err(reason) => diagnostics.push(diagnostic_with_code(
-                        DiagnosticCode::PYZC_INVALID_DECLARATION,
-                        format!("invalid Python certification artifact: {reason}"),
-                        "rerun `sifr python certify --check`".to_string(),
-                    )),
-                }
-            }
-            Err(reason) => diagnostics.push(diagnostic_with_code(
-                DiagnosticCode::PYZC_INVALID_DECLARATION,
-                format!("invalid Python certification artifact: {reason}"),
-                "rerun `sifr python certify --check`".to_string(),
-            )),
-        }
-    }
-    Ok(EnvironmentSnapshot {
-        runtime: diagnostics.is_empty().then_some(runtime),
-        diagnostics,
-    })
-}
-
-fn missing_lockfile_frozen_failure(failure: &sifr_package::PackageGraphLoadFailure) -> bool {
-    if failure.plan.current_dir.join("Cargo.lock").exists() {
-        return false;
-    }
-    let sifr_package::PackageGraphLoadFailureKind::Command { output, .. } = &failure.kind else {
-        return false;
-    };
-    let output = output.to_ascii_lowercase();
-    output.contains("lock file")
-        && (output.contains("needs to be updated")
-            || output.contains("cannot create")
-            || output.contains("could not be updated"))
-}
-
-fn render_package_diagnostics(
-    diagnostics: Vec<sifr_package::PackageDiagnostic>,
-) -> Vec<RenderedDiagnostic> {
-    diagnostics
-        .into_iter()
-        .map(sifr_driver::render_package_diagnostic)
-        .collect()
 }
 
 fn scoped_diagnostics(
@@ -598,43 +412,6 @@ fn declaration_insights(
             })
         })
         .collect()
-}
-
-const fn status_name(status: PythonTargetProbeStatus) -> &'static str {
-    match status {
-        PythonTargetProbeStatus::Planned => "deferred",
-        PythonTargetProbeStatus::Verified => "verified",
-        PythonTargetProbeStatus::RuntimeChecked => "runtime-checked",
-    }
-}
-
-fn policy_help(kind: &str) -> &'static str {
-    match kind {
-        "Coroutine" => "Runs on the application-owned Python loop with typed cancellation.",
-        "Opaque" => {
-            "Preserves sealed Python identity and the declaration's consuming cleanup policy."
-        }
-        "ContextEnter" | "ContextExit" | "ContextAsyncEnter" | "ContextAsyncExit" => {
-            "Context cleanup is consuming and follows the declared suppression/error precedence."
-        }
-        "Callback" => {
-            "Callback lifetime, dispatch, concurrency, and owner policy are compiler checked."
-        }
-        "Buffer" => "Buffer access is borrow-scoped with checked layout and exact release.",
-        "Arrow" => "Arrow transfer is affine, certified, no-copy, and exact-release.",
-        "Dlpack" | "DlpackStream" => {
-            "DLPack transfer is one-shot, certified, no-copy, and exact-deleter."
-        }
-        _ => "Arguments and results use the compiler's closed typed Python conversion grammar.",
-    }
-}
-
-fn mark_embedded_bridge_targets(plan: &mut PythonInteropPlan) {
-    for probe in &mut plan.target_probes {
-        if probe.target_path.starts_with("__sifr_bridge__.") {
-            probe.status = PythonTargetProbeStatus::RuntimeChecked;
-        }
-    }
 }
 
 fn package_root_for(path: &Path, provider: &mut impl SourceProvider) -> Option<PathBuf> {
@@ -737,42 +514,6 @@ fn hash_python_bridge_inputs(root: &Path, hasher: &mut DefaultHasher) {
                 Err(error) => error.kind().hash(hasher),
             }
         }
-    }
-}
-
-fn python_environment_selection(
-    root: &Path,
-    provider: &mut impl SourceProvider,
-) -> Option<sifr_package::PythonEnvironmentSelection> {
-    let session = sifr_package::PackageSession::discover(
-        sifr_package::PackageSessionOptions {
-            current_dir: root.to_path_buf(),
-            lock_mode: sifr_package::CargoLockMode::Frozen,
-        },
-        provider,
-    )
-    .ok()?;
-    let manifest = session.manifest?;
-    sifr_package::select_root_python_environment(root, &manifest.python)
-}
-
-fn diagnostic_with_code(code: DiagnosticCode, message: String, help: String) -> RenderedDiagnostic {
-    let mut args = BTreeMap::new();
-    args.insert(
-        "message".to_string(),
-        DiagnosticArg::String(message.clone()),
-    );
-    RenderedDiagnostic {
-        code: code.code().to_string(),
-        severity: code.declared_severity(),
-        message,
-        message_template: "{message}".to_string(),
-        args,
-        url: code.docs_url(),
-        spans: Vec::new(),
-        children: Vec::new(),
-        help: Some(help),
-        suggestions: Vec::new(),
     }
 }
 

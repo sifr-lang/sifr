@@ -16,6 +16,7 @@ sifr_ir = { workspace = true }
 sifr_stdlib_imports = { workspace = true }
 sifr_stdlib_manifest = { workspace = true }
 sifr_frontend = { workspace = true }
+sifr_package = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_codegen = { workspace = true }
 sifr_sysroot = { workspace = true }
