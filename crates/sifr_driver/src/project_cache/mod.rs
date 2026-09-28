@@ -15,10 +15,14 @@ mod storage;
 #[cfg(test)]
 mod tests;
 use sifr_diagnostics::RenderedDiagnostic;
+#[cfg(test)]
+use sifr_frontend::persistence::identity;
 use sifr_frontend::{
     SourceProvider,
     persistence::{CapturingSourceProvider, CompletedCheck, SemanticInputs},
 };
+#[cfg(test)]
+use std::collections::BTreeMap;
 use std::{
     path::Path,
     sync::atomic::{AtomicBool, Ordering},
