@@ -68,6 +68,8 @@ pub(crate) struct PythonDeclarationCache {
     #[cfg(test)]
     analysis_plan_builds: usize,
     #[cfg(test)]
+    before_verification_change: Option<(PathBuf, Option<Vec<u8>>)>,
+    #[cfg(test)]
     probe_runs: usize,
     #[cfg(test)]
     environment_probe_runs: usize,
@@ -120,6 +122,15 @@ impl PythonDeclarationCache {
     #[cfg(test)]
     pub(crate) const fn analysis_plan_builds(&self) -> usize {
         self.analysis_plan_builds
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inject_external_change_before_verification(
+        &mut self,
+        path: PathBuf,
+        contents: Option<Vec<u8>>,
+    ) {
+        self.before_verification_change = Some((path, contents));
     }
 
     #[cfg(test)]
@@ -192,7 +203,7 @@ impl Session {
         let cache_key = package_root
             .clone()
             .unwrap_or_else(|| document_path.clone());
-        let external_fingerprint = self.external_input_generation(&cache_key).unwrap_or(0);
+        let external_fingerprint = self.external_input_generation_for_path(&document_path);
         let package_owner = package_root
             .as_deref()
             .is_none_or(|root| self.is_python_package_diagnostic_owner(uri, root, &mut provider));
@@ -289,6 +300,14 @@ impl Session {
         expected_root: &Path,
         fingerprint: u64,
     ) -> LspResult<()> {
+        #[cfg(test)]
+        if let Some((path, contents)) = self.python_declarations.before_verification_change.take() {
+            match contents {
+                Some(contents) => std::fs::write(path, contents),
+                None => std::fs::remove_file(path),
+            }
+            .map_err(|error| LspError::internal(format!("test input mutation failed: {error}")))?;
+        }
         let current_fingerprint = self.observe_external_inputs_for_path(document_path);
         let mut provider = DiskSourceProvider::new();
         let current_root = package_root_for(document_path, &mut provider)

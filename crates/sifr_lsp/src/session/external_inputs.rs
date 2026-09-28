@@ -2,8 +2,16 @@ use super::Session;
 use std::path::Path;
 
 impl Session {
+    #[cfg(test)]
     pub(crate) fn external_input_generation(&self, root: &Path) -> Option<u64> {
         self.external_inputs.generation(root)
+    }
+
+    pub(crate) fn external_input_generation_for_path(&self, path: &Path) -> u64 {
+        self.external_inputs
+            .owning_root(path)
+            .and_then(|root| self.external_inputs.generation(root))
+            .unwrap_or(0)
     }
 
     /// Revalidate a root on demand. E01b uses this while watcher authority is absent.

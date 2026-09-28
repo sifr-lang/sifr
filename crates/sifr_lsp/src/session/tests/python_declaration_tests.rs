@@ -3,7 +3,7 @@ use crate::session::Session;
 use lsp_server::RequestId;
 use serde_json::json;
 
-pub(super) const SOURCE: &str = "\
+pub(crate) const SOURCE: &str = "\
 from sifr.python import PythonError
 
 @python(math.sqrt)
@@ -803,7 +803,7 @@ fn request(
     .unwrap_or_else(|error| panic!("{method} failed: {error:?}"))
 }
 
-pub(super) fn open_fixture(source: &str) -> (Session, tempfile::TempDir, String) {
+pub(crate) fn open_fixture(source: &str) -> (Session, tempfile::TempDir, String) {
     open_fixture_named(source, "main.sifr")
 }
 

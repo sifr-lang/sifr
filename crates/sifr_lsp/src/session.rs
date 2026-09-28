@@ -512,7 +512,7 @@ impl Session {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::Session;
     use crate::progress::ProgressKind;
     use crate::request_queue::CancellationTarget;
@@ -531,7 +531,7 @@ mod tests {
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
     #[path = "python_declaration_tests.rs"]
-    mod python_declaration_tests;
+    pub(crate) mod python_declaration_tests;
     #[path = "python_package_ownership_tests.rs"]
     mod python_package_ownership_tests;
     #[path = "sql_editor_tests.rs"]
