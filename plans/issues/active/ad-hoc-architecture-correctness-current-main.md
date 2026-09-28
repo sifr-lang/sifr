@@ -266,11 +266,41 @@ the pinned nested editor submodule; its first missing-submodule setup
 attempt failed.
 
 This closes only the persistent Session guard prerequisite from the
-developer-tooling blocker. E01 still owns watcher registration or explicit
-unsupported-client revalidation, external input generations, fast-hit
-ordering, and their named lifecycle tests. The item-scoped pass does not
-qualify the full developer-tooling area or the phase-end merge profile; Q01
-retains final integration qualification.
+developer-tooling blocker. E01a-E01c below own the remaining external input,
+watcher and fast-hit work. The item-scoped pass does not qualify the full
+developer-tooling area or the phase-end merge profile; Q01 retains final
+integration qualification.
+
+## E01/F20-F21 needs-new-scope split (2026-09-28)
+
+The broad E01 implementation assignment stopped at **needs-new-scope** on
+clean main `ea82b1e4558b95addc75277f131a281575bc058f`. It produced no
+implementation, test pass, review approval or E01 closure. Inspection found
+that `Session::record_watcher_events` reduces notifications to a count,
+`LspAnalysisWorkspace` applies that count across all projects, and the server
+discards `Message::Response`. Existing authoring requests fingerprint some
+package inputs, but the watcher transport has no registration acknowledgement
+or root-specific change authority. A fast-hit reorder cannot safely precede
+that authority. The merged persistent Session guard above remains a completed
+prerequisite, not acceptance for the three items below.
+
+Each row has one implementation owner and one merge/receipt. Start the next row
+only after its predecessor merges. Run every listed path with
+`cargo test --locked -p sifr_lsp --lib <path> -- --exact`; create the new named
+cases where needed, then run focused regressions for touched APIs. Keep the
+candidate, validation inputs, raw results and scoped review keyed by SHA.
+The approved intermediate-item policy applies; Q01 owns the final full gate.
+
+| Item and dependency | Bounded ownership and acceptance | Named focused positive and negative cases |
+| --- | --- | --- |
+| **E01a** after the persistent Session prerequisite and C02e | LSP/package external-input owner. Give each package root a snapshot and generation covering `sifr.toml`, `Cargo.toml`, `Cargo.lock`, relevant configuration, Python bridge sources/inventory, binding and certification artifacts, and selected Python environment and its declared files. Changed, newly present, absent, deleted, renamed, empty and unreadable inputs must change or invalidate the correct authority; unchanged inputs retain warm reuse. Invalidate analysis and Python declaration cache successes and failures for the affected root only. Do not add watcher protocol registration or reorder request fast hits. | `session::tests::e01_external_input_tests::unchanged_inputs_keep_the_owning_root_warm`; `session::tests::e01_external_input_tests::changed_and_renamed_inputs_advance_only_the_owning_root`; `session::tests::e01_external_input_tests::absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries`; `session::tests::e01_external_input_tests::environment_bridge_and_certification_drift_revalidate_without_source_edits`. Preserve exact existing `session::tests::python_declaration_tests::watcher_drift_revalidates_authoring_artifacts` and `session::tests::python_declaration_tests::live_bridge_sources_without_inventory_are_validated_and_fingerprinted`. |
+| **E01b** after merged E01a | LSP server/protocol owner. Register watched files only when client capability permits; track request ID and acknowledgement or rejection, and route create/change/delete events and rename delete/create pairs to the owning root. Until acknowledgement, after rejection, and for unsupported clients, revalidate external inputs per request using E01a generations. Re-establish authority on reconnect and workspace-folder changes; coalesce storms without losing a change or invalidating unrelated roots. Do not change Python fast-hit ordering. | `server::tests::watcher_registration_acknowledgement_enables_root_scoped_events`; `server::tests::unconfirmed_rejected_and_unsupported_watchers_revalidate_per_request`; `server::tests::watcher_reconnect_and_workspace_folder_change_restore_authority`; `session::tests::e01_watcher_tests::create_delete_rename_and_storm_events_preserve_multi_root_isolation`. Preserve exact existing `session::tests::python_declaration_tests::stale_existing_lockfile_remains_a_package_error`. |
+| **E01c** after merged E01b | LSP request/diagnostics owner. Reorder verified Python fast-hit checks only after source, configuration, external generation, package/root identity and cancellation are current. Prove warm hit reuse and full completion, hover and diagnostics publication after each relevant change; stale work must not publish over newer edits, close/reopen, root changes or cancelled requests. Include end-to-end multi-root acceptance. Do not take E02 canonical HIR/lint reuse or E03 measured 25-module cache deltas. | `session::tests::e01_fast_hit_tests::verified_unchanged_request_reuses_python_status`; `session::tests::e01_fast_hit_tests::source_config_and_external_changes_recompute_requests_and_publish_current_diagnostics`; `session::tests::e01_fast_hit_tests::cancelled_and_reopened_requests_cannot_publish_stale_results`; `session::tests::e01_fast_hit_tests::multi_root_requests_keep_generation_and_publication_isolated`. Preserve exact existing `session::tests::python_declaration_tests::python_declaration_diagnostics_and_source_drift_invalidate_cached_status`, `session::tests::python_declaration_tests::cancelled_python_declaration_request_stops_before_probe`, and `session::tests::dx11_editor_tests::dx11_stale_close_clear_cannot_overwrite_reopened_document`. |
+
+E01/F20-F21 completion requires all three merged receipts and the named lifecycle
+assertions on their respective exact candidates. E02 remains the separate
+analysis/lint owner after C01; E03 remains the performance owner after E01c
+and E02. Neither has a completion claim here.
 
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
@@ -556,9 +586,11 @@ holds the separate passing and partial area receipts.
 | C02c | SQL editor service owner; F19 after C02b; merged in [PR #4063](https://github.com/sifr-lang/sifr/pull/4063), receipt below. | Move editor profile discovery/preparation and profile import diagnostics below driver while retaining component and schema behavior. Named tests and boundaries below. |
 | C02d | Preview and editor-check service owner; F19 after C02c; merged in [PR #4067](https://github.com/sifr-lang/sifr/pull/4067), receipt below. | Move generated Rust preview and editor check restore below driver using the C01 frontend product and explicit metadata/semantic identity. Named tests and boundaries below. |
 | C02e | Dependency-direction guard owner; F19 after C02d; merged in [PR #4071](https://github.com/sifr-lang/sifr/pull/4071), receipt below. | Remove direct analysis/LSP driver dependencies and references, then enforce the lower-service boundary across manifest package aliases, optional features and explicit Cargo target paths. Negative tests and final C02 closure below. |
-| E01 | LSP/package input owner; F20-F21; persistent Session guard prerequisite merged in [PR #4045](https://github.com/sifr-lang/sifr/pull/4045); broader item open before fast-hit reorder. | Registered watcher or explicit unsupported-client revalidation, external generations across manifest/lock/config/bridge/certification/environment, and create/delete/rename/reconnect/storm/multi-root/stale-publication tests. |
+| E01a | LSP/package external-input owner; F20-F21 first item after merged persistent Session prerequisite and C02e; open. | Per-root external snapshots and generations; manifest/lock/config/bridge/binding/certification/environment transitions, positive and negative cache invalidation, unchanged warm reuse. Named cases above. |
+| E01b | LSP watcher/protocol owner; F20-F21 after merged E01a; open. | Capability-gated registration and response acknowledgement; rejected/unsupported/unconfirmed per-request revalidation, lifecycle events, reconnect, storms and multi-root isolation. Named cases above. |
+| E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; open. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, cancellation and multi-root lifecycle. Named cases above. |
 | E02 | Analysis/lint owner; F22; open after C01. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
-| E03 | LSP performance owner; F23; open after E01-E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
+| E03 | LSP performance owner; F23; open after E01c and E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
 | E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01 | Fuzz/property owner; F28; open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. |
 | H02 | Typed lowering and unsafe bridge owners, split by subsystem; F29; open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. |
@@ -621,7 +653,7 @@ The unmerged [V03b draft PR #3928](https://github.com/sifr-lang/sifr/pull/3928) 
 3. Native/cache N01-N06; N01 depends on merged DX9-F7 behavior, N06 uses DX9-F5 ownership, and N02 establishes identities before warm-consumer claims.
 4. X02 with generated Rust owner after X01, updating diagnostics/fixtures/materialization together.
 5. C01, then C02a0 metadata production/storage, C02a1 metadata consumer/stdlib, C02b Python authoring, C02c SQL editor, C02d preview/editor checks, and C02e final boundary guard in that order.
-6. E01 before Python fast-hit reorder, E02 after C01, E03 after E01-E02. E04 independently completes before editor closure.
+6. E01a external generations, then E01b watcher authority, then E01c verified Python fast-hit reorder and publication. E02 remains separate after C01; E03 follows E01c and E02. E04 independently completes before editor closure.
 7. H01-H03, D01b current documentation and D01c residual registry completion.
 8. Q01 exact-candidate integration, owner handoff audit, whole-phase review and closure. Release qualification only on an actual request.
 
