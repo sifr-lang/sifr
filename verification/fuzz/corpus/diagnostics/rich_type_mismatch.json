@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "diagnostics": [
+    {
+      "code": "SIFR-TYPE-0002",
+      "severity": "Error",
+      "message": "[demo] type mismatch: expected int, got str",
+      "message_template": "type mismatch: expected {expected}, got {actual}",
+      "args": {
+        "expected": {
+          "kind": "string",
+          "value": "int"
+        },
+        "actual": {
+          "kind": "string",
+          "value": "str"
+        },
+        "count": {
+          "kind": "unsigned",
+          "value": 2
+        },
+        "safe": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
+      "spans": [
+        {
+          "file": "fuzz/diagnostics.sifr",
+          "byte_start": 0,
+          "byte_end": 5,
+          "line": 2,
+          "column": 5,
+          "end_line": 2,
+          "end_column": 10,
+          "is_primary": true,
+          "label": null,
+          "lines": [
+            {
+              "text": "value = word",
+              "highlight_start": 5,
+              "highlight_end": 10
+            }
+          ]
+        },
+        {
+          "file": "fuzz/diagnostics.sifr",
+          "byte_start": 0,
+          "byte_end": 5,
+          "line": 1,
+          "column": 1,
+          "end_line": 1,
+          "end_column": 6,
+          "is_primary": false,
+          "label": "value defined here",
+          "lines": [
+            {
+              "text": "word = 's'",
+              "highlight_start": 1,
+              "highlight_end": 6
+            }
+          ]
+        }
+      ],
+      "children": [
+        {
+          "severity": "Note",
+          "message": "expected by annotation"
+        },
+        {
+          "severity": "Help",
+          "message": "convert the value"
+        }
+      ],
+      "help": "use an integer",
+      "suggestions": [
+        {
+          "message": "replace the value",
+          "applicability": "MachineApplicable",
+          "edits": [
+            {
+              "span": {
+                "file": "fuzz/diagnostics.sifr",
+                "byte_start": 0,
+                "byte_end": 5,
+                "line": 2,
+                "column": 5,
+                "end_line": 2,
+                "end_column": 10,
+                "is_primary": true,
+                "label": null,
+                "lines": [
+                  {
+                    "text": "value = word",
+                    "highlight_start": 5,
+                    "highlight_end": 10
+                  }
+                ]
+              },
+              "replacement": "42"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

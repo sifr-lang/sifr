@@ -1,4 +1,4 @@
-"""Instrumented Sifr frontend fuzzing with explicit infrastructure and finding outcomes."""
+"""Instrumented Sifr fuzzing with explicit infrastructure and finding outcomes."""
 
 from __future__ import annotations
 
@@ -45,9 +45,12 @@ def invoke(argv: list[str], *, timeout: int, env: dict[str, str]) -> dict[str, A
             argv, cwd=ROOT, env=env, text=True, capture_output=True,
             check=False, timeout=timeout,
         )
+        output = proc.stdout + proc.stderr
+        count, coverage = counters(output)
         return {
             "exit_code": proc.returncode,
-            "output_tail": bounded_tail(proc.stdout + proc.stderr),
+            "output_tail": bounded_tail(output),
+            "executions": count, "coverage_edges": coverage,
             "timed_out": False,
             "duration_ms": round((time.perf_counter() - started) * 1000, 3),
         }
@@ -147,8 +150,22 @@ def preserve_finding(
             "minimization": variant(label + ":minimize", "fail", minimize_argv, minimized),
         }
     digest = file_hash(minimized_source)
-    saved = artifact_dir / ("minimized-" + digest[:16])
+    suffix = ".json" if target == "diagnostics" else ""
+    saved = artifact_dir / ("minimized-" + digest[:16] + suffix)
     shutil.copyfile(minimized_source, saved)
+    if target == "diagnostics":
+        try:
+            payload = json.loads(saved.read_text(encoding="utf-8"))
+            if (not isinstance(payload, dict) or payload.get("version") != 1
+                    or not isinstance(payload.get("diagnostics"), list)
+                    or not payload["diagnostics"]):
+                raise ValueError("minimized seed is not a diagnostic envelope")
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+            return {
+                "status": "compiler-finding-unminimized",
+                "artifact": str(source), "reason": f"minimized-json-invalid: {error}",
+                "minimization": variant(label + ":minimize", "fail", minimize_argv, minimized),
+            }
     replay_argv = [
         "cargo", "+nightly", "fuzz", "run", "--fuzz-dir", "verification/fuzz",
         target, str(saved), "--", "-runs=1",
@@ -240,7 +257,10 @@ def run(
         f"-artifact_prefix={artifact_dir}/", "-print_final_stats=1",
     ]
     execution = invoke(run_argv, timeout=budget + manifest["target_grace_seconds"], env=env)
-    count, coverage = counters(execution["output_tail"])
+    count = execution.get("executions")
+    coverage = execution.get("coverage_edges")
+    if count is None or coverage is None:
+        count, coverage = counters(execution["output_tail"])
     if execution["timed_out"]:
         status = "target-timeout"
     elif execution["exit_code"] != 0:

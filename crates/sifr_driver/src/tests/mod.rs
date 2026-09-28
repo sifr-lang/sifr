@@ -8,6 +8,7 @@ mod diagnostics;
 mod discovery_and_workspace;
 mod early_adapters;
 mod generic_adapter_representation;
+mod guided_target_replay;
 mod handler_descriptors;
 mod imported_attached_apis;
 mod inheritance_metadata;

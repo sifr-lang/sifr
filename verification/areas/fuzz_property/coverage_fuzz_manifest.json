@@ -20,6 +20,9 @@
     },
     "ownership": {
       "corpus": "verification/fuzz/corpus/ownership"
+    },
+    "diagnostics": {
+      "corpus": "verification/fuzz/corpus/diagnostics"
     }
   }
 }
