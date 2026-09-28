@@ -397,8 +397,10 @@ New crates added as compiler and runtime needs grow:
 - Analysis retains only the latest lint result per live file. The frontend's typed
   lint key binds source, HIR/compiler context, semantic graph, module/path and lint
   policy; version-only changes reuse it, edits replace it, and host/file removal
-  releases it. Misses still use the standalone lint engine's default policy,
-  independently of frontend and SQL diagnostics.
+  releases it. On a miss, policy rules use the current frontend context's parsed
+  syntax and HIR views with the standalone lint engine's default policy. Current
+  policy code actions reuse that result; applying a fix creates a new source
+  revision and rechecks changed text. Frontend and SQL diagnostics remain separate.
 - Snapshot reuse: `sifr_frontend` adds ref-counted, cache-key identity-keyed reuse storage for parse trees, source-map file views, lowered HIR, module diagnostics, and module symbol indexes. `WorkspaceSnapshot` stores immutable snapshot payloads behind `Arc`, and `FrontendContext::can_replace_module_in_project` gates safe one-module replacement on unchanged import/export signatures. `internal_docs/typescript_go_architecture_transfer_snapshot_reuse.md` records reuse requirements.
 - `sifr_lsp::RequestQueue`: latency-sensitive, formatting, workspace, and background requests route through explicit priority lanes with bounded fairness, while diagnostic jobs preserve captured document versions. `internal_docs/typescript_go_architecture_transfer_lsp_scheduler.md` records scheduler behavior.
 - LSP latency budgets: protocol-level LSP performance coverage is split into per-request `perf.lsp.*` budget ids, leaving `perf.lsp.request_families` as aggregate smoke only. `internal_docs/typescript_go_architecture_transfer_lsp_latency_budgets.md` records the request-family budget taxonomy and frontend query architecture relationship.

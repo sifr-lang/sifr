@@ -22,7 +22,7 @@ pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
 pub use engine::{LintPhase, LintRun, LintRunner, PhaseExecution};
 pub use fixes::{
     FixOptions, FixedSource, LintFix, SourceEdit, UnsafeFixPolicy, collect_fixes, fix_rule_allowed,
-    fix_source,
+    fix_source, fix_source_from_diagnostics,
 };
 pub use suppression::ParserAwareSuppressions;
 
@@ -267,6 +267,18 @@ pub fn rule_metadata(rule_id: &str) -> Option<&'static RuleMetadata> {
 
 pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> LintResult {
     LintRunner::new(options).run_source(source, file).result
+}
+
+pub fn lint_frontend_snapshot(
+    source: &str,
+    file: Option<&Path>,
+    options: &LintOptions,
+    parsed: Option<&sifr_syntax::ParsedModule>,
+    hir: Option<&sifr_ir::HirModule>,
+) -> LintResult {
+    LintRunner::new(options)
+        .run_with_frontend(source, file, parsed, hir)
+        .result
 }
 
 pub(crate) fn lint_physical_line_rules(

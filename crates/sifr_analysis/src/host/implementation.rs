@@ -1,11 +1,8 @@
-use super::text_edits::{fixed_source_edits, ranges_overlap, source_edit_to_text_edit};
 use crate::completion::{
     CompletionCandidate, rank_completion_candidates, rust_interop_completion_candidates,
 };
-use crate::editor::line_end_insert_range;
 use crate::queries::{
-    CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems,
-    DeferredCodeAction, DiagnosticClass, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
+    CompletionItem, CompletionItems, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
     DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange, GeneratedRustPreview, HoverInfo,
     InlayHint, Location, RenameTarget, SelectionRange, SemanticToken, SignatureHelp, SymbolName,
     SymbolQuery, TestCommand, TestCommandKind, TestItem, TestItemId, TypeHierarchyItem,
@@ -469,108 +466,6 @@ impl AnalysisHost {
         _item: TypeHierarchyItemId,
     ) -> QueryResult<Vec<TypeHierarchyItem>> {
         Ok(self.result(AnalysisQueryKind::TypeHierarchySubtypes, Vec::new()))
-    }
-
-    pub fn code_actions(
-        &mut self,
-        file: FileId,
-        range: TextRange,
-        context: &CodeActionContext,
-    ) -> QueryResult<Vec<CodeAction>> {
-        let source = self.source_text(file)?;
-        let mut actions = Vec::new();
-        if let Some(policy) = context
-            .diagnostics
-            .iter()
-            .find(|diagnostic| diagnostic.class == DiagnosticClass::Policy)
-        {
-            if let Some(insert_range) = line_end_insert_range(&source, range) {
-                let rule = policy.rule_id.as_deref().unwrap_or("trailing-whitespace");
-                actions.push(CodeAction {
-                    title: format!("Suppress {rule} policy diagnostic"),
-                    kind: "quickfix.sifr.suppress".to_string(),
-                    edit: Some(WorkspaceEdit {
-                        edits: vec![FileTextEdits {
-                            file,
-                            edits: vec![sifr_format::TextEdit {
-                                range: insert_range,
-                                replacement: format!("  # sifr: ignore[{rule}]"),
-                            }],
-                        }],
-                    }),
-                    data: None,
-                });
-            }
-        }
-        actions.extend(self.safe_fix_actions(file, range, context)?);
-        actions.extend(self.sql_code_actions(file, range, context)?);
-        Ok(self.result(AnalysisQueryKind::CodeActions, actions))
-    }
-
-    pub fn safe_fix_all_action(&mut self, file: FileId) -> QueryResult<WorkspaceEdit> {
-        let source = self.source_text(file)?;
-        let fixed = sifr_lint::fix_source(&source, None, &sifr_lint::LintOptions::default());
-        Ok(self.result(
-            AnalysisQueryKind::CodeActions,
-            WorkspaceEdit {
-                edits: fixed_source_edits(file, &source, &fixed.fixed_source),
-            },
-        ))
-    }
-
-    fn safe_fix_actions(
-        &mut self,
-        file: FileId,
-        range: TextRange,
-        context: &CodeActionContext,
-    ) -> Result<Vec<CodeAction>, AnalysisError> {
-        let source = self.source_text(file)?;
-        let lint = sifr_lint::lint_source(&source, None, &sifr_lint::LintOptions::default());
-        let fixes = sifr_lint::collect_fixes(
-            &lint.diagnostics,
-            &sifr_lint::FixOptions::from(&sifr_lint::LintOptions::default()),
-        );
-        let mut actions = Vec::new();
-        for fix in fixes {
-            if !context.diagnostics.iter().any(|diagnostic| {
-                diagnostic.class == DiagnosticClass::Policy
-                    && diagnostic.rule_id.as_deref() == Some(fix.rule_id.as_str())
-            }) {
-                continue;
-            }
-            let edits = fix
-                .edits
-                .iter()
-                .map(source_edit_to_text_edit)
-                .collect::<Vec<_>>();
-            if edits.is_empty() || !edits.iter().any(|edit| ranges_overlap(edit.range, range)) {
-                continue;
-            }
-            actions.push(CodeAction {
-                title: format!("Apply safe fix for {}", fix.rule_id),
-                kind: "quickfix.sifr.applySafeFix".to_string(),
-                edit: Some(WorkspaceEdit {
-                    edits: vec![FileTextEdits { file, edits }],
-                }),
-                data: None,
-            });
-        }
-        if !actions.is_empty() {
-            actions.push(CodeAction {
-                title: "Fix all safe Sifr policy diagnostics".to_string(),
-                kind: "source.fixAll.sifr".to_string(),
-                edit: None,
-                data: Some(CodeActionData {
-                    action: DeferredCodeAction::FixAllSafePolicy,
-                    file,
-                    expected_version: self
-                        .context()?
-                        .document_version_for_file(file)
-                        .map(DocumentVersion::as_i64),
-                }),
-            });
-        }
-        Ok(actions)
     }
 
     pub fn generated_rust_preview(

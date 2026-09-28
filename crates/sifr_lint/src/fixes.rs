@@ -72,7 +72,18 @@ pub fn fix_source(
     options: &LintOptions,
 ) -> FixedSource {
     let diagnostics = crate::lint_source(source, file, options).diagnostics;
-    let fixes = collect_fixes(&diagnostics, &FixOptions::from(options));
+    fix_source_from_diagnostics(source, file, options, &diagnostics)
+}
+
+/// Apply fixes from diagnostics for this exact source revision and policy.
+/// Changed fix text is linted again as a new source snapshot.
+pub fn fix_source_from_diagnostics(
+    source: &str,
+    file: Option<&std::path::Path>,
+    options: &LintOptions,
+    diagnostics: &[RenderedDiagnostic],
+) -> FixedSource {
+    let fixes = collect_fixes(diagnostics, &FixOptions::from(options));
     let application = apply_fixes(source, fixes);
     let remaining_diagnostics = crate::lint_source(&application.fixed_source, file, options)
         .diagnostics
@@ -87,7 +98,7 @@ pub fn fix_source(
         .collect();
     FixedSource {
         fixed_source: application.fixed_source,
-        diagnostics,
+        diagnostics: diagnostics.to_vec(),
         remaining_diagnostics,
         applied_fixes: application.applied_fixes,
         skipped_conflicting_fixes: application.skipped_conflicting_fixes,
@@ -252,6 +263,18 @@ fn string_arg(arg: &DiagnosticArg) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn e02_fix_from_current_diagnostics_rechecks_changed_text() {
+        let source = "def main():  \n    return 1\n";
+        let options = LintOptions::default();
+        let diagnostics = crate::lint_source(source, None, &options).diagnostics;
+        let fixed = fix_source_from_diagnostics(source, None, &options, &diagnostics);
+        assert_eq!(fixed.diagnostics, diagnostics);
+        assert_eq!(fixed.fixed_source, "def main():\n    return 1\n");
+        assert!(fixed.remaining_diagnostics.is_empty());
+        assert_eq!(fixed, fix_source(source, None, &options));
+    }
 
     #[test]
     fn trailing_whitespace_fix_is_idempotent() {

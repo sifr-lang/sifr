@@ -1,6 +1,8 @@
 use crate::{LintOptions, LintResult, RULES, RuleMetadata};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;
+use sifr_ir::HirModule;
+use sifr_syntax::ParsedModule;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -40,6 +42,30 @@ impl<'a> LintRunner<'a> {
     }
 
     pub fn run_source(&self, source: &str, file: Option<&Path>) -> LintRun {
+        let phases = self.phase_plan(file);
+        let parse_context = file.map(|path| path.display().to_string());
+        let parsed = if parse_dependent_phase_ran(&phases) {
+            sifr_syntax::parse_module(source, parse_context.as_deref()).ok()
+        } else {
+            None
+        };
+        let hir = if mark_phase_readonly(&phases, LintPhase::Hir) && parsed.is_some() {
+            frontend_hir(source, file)
+        } else {
+            None
+        };
+        self.run_with_frontend(source, file, parsed.as_ref(), hir.as_ref())
+    }
+
+    /// Evaluate policy against the parsed and lowered views owned by the current
+    /// frontend snapshot. A missing view skips only rules requiring that view.
+    pub fn run_with_frontend(
+        &self,
+        source: &str,
+        file: Option<&Path>,
+        parsed: Option<&ParsedModule>,
+        hir: Option<&HirModule>,
+    ) -> LintRun {
         let mut phases = self.phase_plan(file);
         let mut diagnostics = Vec::new();
         let mut suppressions =
@@ -58,12 +84,6 @@ impl<'a> LintRunner<'a> {
                 &mut suppressions,
             ));
         }
-        let parse_context = file.map(|path| path.display().to_string());
-        let parsed = if parse_dependent_phase_ran(&phases) {
-            sifr_syntax::parse_module(source, parse_context.as_deref()).ok()
-        } else {
-            None
-        };
         if mark_phase(&mut phases, LintPhase::TokenTrivia) {
             if let Some(parsed) = parsed.as_ref() {
                 diagnostics.extend(crate::rules::todo_comment::lint(
@@ -87,16 +107,14 @@ impl<'a> LintRunner<'a> {
             }
         }
         if mark_phase(&mut phases, LintPhase::Hir) {
-            if parsed.is_some() {
-                if let Some(lowered) = frontend_hir(source, file) {
-                    diagnostics.extend(crate::rules::large_parameter_list::lint(
-                        &lowered,
-                        source,
-                        file,
-                        self.options,
-                        &mut suppressions,
-                    ));
-                }
+            if let (Some(_), Some(hir)) = (parsed, hir) {
+                diagnostics.extend(crate::rules::large_parameter_list::lint(
+                    hir,
+                    source,
+                    file,
+                    self.options,
+                    &mut suppressions,
+                ));
             }
         }
         if mark_phase(&mut phases, LintPhase::Workspace) {
@@ -378,6 +396,91 @@ mod tests {
         source.push_str("value = 2  \n");
         let run = LintRunner::new(&LintOptions::default()).run_source(&source, None);
         assert_eq!(run.result.diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn e02_canonical_views_preserve_rule_and_suppression_policy() {
+        let source = "import math\nimport math\n# TODO: review\ndef configure(a: int, b: int, c: int, d: int, e: int, f: int) -> int:\n    return a  # sifr: ignore[trailing-whitespace]  \n";
+        let path = Path::new("main.sifr");
+        let input = sifr_frontend::FrontendInput {
+            path: sifr_frontend::SourcePath::new(path),
+            source: sifr_frontend::SourceText::new(source),
+            mode: sifr_frontend::FrontendMode::SingleFile,
+        };
+        let mut context = sifr_frontend::FrontendContext::load_single_file(input).unwrap();
+        let module = context.module_graph().entrypoint;
+        let parsed = context.parse_module(module).into_value().parsed;
+        let hir = context.hir_module_view(module).into_value().hir;
+        for options in [
+            LintOptions::default(),
+            LintOptions {
+                select: vec!["large-parameter-list".to_string()],
+                ..LintOptions::default()
+            },
+            LintOptions {
+                ignore_suppressions: true,
+                ..LintOptions::default()
+            },
+            LintOptions {
+                per_file_ignores: vec![crate::PerFileIgnore {
+                    pattern: "*.sifr".to_string(),
+                    rules: vec!["duplicate-import".to_string()],
+                }],
+                ..LintOptions::default()
+            },
+        ] {
+            let standalone = LintRunner::new(&options).run_source(source, Some(path));
+            let canonical = LintRunner::new(&options).run_with_frontend(
+                source,
+                Some(path),
+                Some(&parsed),
+                Some(&hir),
+            );
+            assert_eq!(canonical, standalone);
+        }
+    }
+
+    #[test]
+    fn e02_hir_rule_uses_supplied_view_without_relowering() {
+        let source =
+            "def configure(a: int, b: int, c: int, d: int, e: int, f: int) -> int:\n    return a\n";
+        let input = sifr_frontend::FrontendInput {
+            path: sifr_frontend::SourcePath::new("main.sifr"),
+            source: sifr_frontend::SourceText::new(source),
+            mode: sifr_frontend::FrontendMode::SingleFile,
+        };
+        let mut context = sifr_frontend::FrontendContext::load_single_file(input).unwrap();
+        let module = context.module_graph().entrypoint;
+        let parsed = context.parse_module(module).into_value().parsed;
+        let mut hir = context.hir_module_view(module).into_value().hir;
+        let options = LintOptions::default();
+        assert!(
+            LintRunner::new(&options)
+                .run_with_frontend(source, None, Some(&parsed), Some(&hir))
+                .result
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "SIFR-LINT-0007")
+        );
+        hir.functions.clear();
+        hir.classes.clear();
+        assert!(
+            !LintRunner::new(&options)
+                .run_with_frontend(source, None, Some(&parsed), Some(&hir))
+                .result
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "SIFR-LINT-0007")
+        );
+    }
+
+    #[test]
+    fn e02_missing_parsed_view_keeps_source_independent_rules() {
+        let source = "def main(:  \n";
+        let options = LintOptions::default();
+        let standalone = LintRunner::new(&options).run_source(source, None);
+        let canonical = LintRunner::new(&options).run_with_frontend(source, None, None, None);
+        assert_eq!(canonical, standalone);
     }
 
     fn temp_dir(name: &str) -> PathBuf {
