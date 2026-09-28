@@ -9,9 +9,13 @@ impl AnalysisHost {
         compiler: &sifr_driver::CompilerContext,
         root: &ProjectRoot,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let profiles =
-            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
-                .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
+        let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
+            root.root.as_path(),
+            root.entrypoint.as_path(),
+        )
+        .unwrap_or_else(
+            sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
+        );
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs(compiler)?,
@@ -39,14 +43,14 @@ impl AnalysisHost {
         Self::new_with_sql_profiles(
             compiler,
             session,
-            sifr_driver::PreparedSqlProfiles::default(),
+            sifr_compiler_services::sql_editor::PreparedSqlProfiles::default(),
         )
     }
 
     pub(super) fn new_with_sql_profiles(
         compiler: &sifr_driver::CompilerContext,
         mut session: WorkspaceSession,
-        profiles: sifr_driver::PreparedSqlProfiles,
+        profiles: sifr_compiler_services::sql_editor::PreparedSqlProfiles,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         session = session.with_compiler_identity(compiler.identity().clone());
         let restored_check_modules =
