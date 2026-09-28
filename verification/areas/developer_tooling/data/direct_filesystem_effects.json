@@ -4587,6 +4587,41 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_compiler_services/src/python/environment.rs",
+      "symbol": "resolve_editor_environment",
+      "operation": "is_file",
+      "site": "if !provider.is_file(&package_root.join(\"Cargo.toml\")) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/python/environment.rs",
+      "symbol": "resolve_editor_environment_from_snapshot",
+      "operation": "is_file",
+      "site": "if binding_path.is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/python/environment.rs",
+      "symbol": "resolve_editor_environment_from_snapshot",
+      "operation": "is_file",
+      "site": "if certification_path.is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/python/environment.rs",
+      "symbol": "missing_lockfile_frozen_failure",
+      "operation": "exists",
+      "site": "if failure.plan.current_dir.join(\"Cargo.lock\").exists() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/python/mod.rs",
+      "symbol": "wrong_distribution_or_environment_digest_rejects_certification",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_diagnostics/src/bin/gen-error-docs.rs",
       "symbol": "read_example_fragment",
       "operation": "read_to_string",
@@ -16121,34 +16156,6 @@
       "operation": "symlink_dir",
       "site": "std::os::windows::fs::symlink_dir(source, destination).expect(\"link Python environment\");",
       "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "resolve_package_python_environment",
-      "operation": "is_file",
-      "site": "if !provider.is_file(&package_root.join(\"Cargo.toml\")) {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "resolve_package_python_environment_inner",
-      "operation": "is_file",
-      "site": "if binding_path.is_file() {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "resolve_package_python_environment_inner",
-      "operation": "is_file",
-      "site": "if certification_path.is_file() {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "missing_lockfile_frozen_failure",
-      "operation": "exists",
-      "site": "if failure.plan.current_dir.join(\"Cargo.lock\").exists() {",
-      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_lsp/src/python_declarations.rs",
