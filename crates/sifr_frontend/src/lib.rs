@@ -109,3 +109,8 @@ pub use workspace_trace::*;
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+#[cfg(test)]
+mod guided_target_replay_tests;
+#[doc(hidden)]
+pub mod guided_targets;
