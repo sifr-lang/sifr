@@ -2,7 +2,6 @@ use super::Session;
 use std::path::Path;
 
 impl Session {
-    #[cfg(test)]
     pub(crate) fn external_input_generation(&self, root: &Path) -> Option<u64> {
         self.external_inputs.generation(root)
     }

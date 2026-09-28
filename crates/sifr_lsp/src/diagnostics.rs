@@ -226,6 +226,12 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
                 })
                 .collect::<LspResult<Vec<_>>>()?,
         ),
+        Err(error)
+            if error.code() == lsp_server::ErrorCode::RequestCanceled as i32
+                || error.code() == lsp_server::ErrorCode::ContentModified as i32 =>
+        {
+            return Err(error);
+        }
         Err(error) => session.trace(
             WorkspaceTracePhase::LspTiming,
             format!(

@@ -54,14 +54,15 @@ impl WatcherEvent {
 }
 
 impl Session {
-    pub(crate) fn revalidate_open_external_inputs(&mut self) {
-        self.revalidate_open_external_inputs_where(|_| true);
+    pub(crate) fn revalidate_open_external_inputs(&mut self) -> bool {
+        self.revalidate_open_external_inputs_where(|_| true)
     }
 
     pub(crate) fn revalidate_open_external_inputs_where(
         &mut self,
         mut needs_revalidation: impl FnMut(&Path) -> bool,
-    ) {
+    ) -> bool {
+        let previous_revision = self.external_inputs.revision();
         let paths: Vec<_> = self
             .store()
             .documents()
@@ -71,6 +72,7 @@ impl Session {
         for path in paths {
             self.observe_external_inputs_for_path(&path);
         }
+        self.external_inputs.revision() != previous_revision
     }
 
     pub(crate) fn record_watcher_file_events(&mut self, events: &[WatcherEvent]) {
