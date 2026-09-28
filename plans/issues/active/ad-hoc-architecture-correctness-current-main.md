@@ -46,6 +46,7 @@ After initialization, the cold compiler build exceeded the benchmark runner's
 The compiler and frontend query helper were then built in the same owned Cargo
 target; the passing run reused those warm artifacts. Both failed attempts and
 the governor restoration receipts remain separate from the passing evidence.
+The record-only delivery is [PR #4058](https://github.com/sifr-lang/sifr/pull/4058).
 This closes V01/F05's outstanding live admission and named representative
 qualification prerequisite. Q01 still owns the final exact-candidate full
 merge profile and whole-phase integration decision.
