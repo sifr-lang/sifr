@@ -137,9 +137,9 @@ impl Session {
         version: Option<i32>,
         text: String,
     ) -> LspResult<()> {
-        self.python_declarations.invalidate_source();
         self.store.open(uri.clone(), language_id, version, text)?;
         let path = self.store.document(&uri)?.path().to_path_buf();
+        self.python_declarations.invalidate_source_for_path(&path);
         self.observe_external_inputs_for_path(&path);
         let document = self.store.document(&uri)?;
         if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off
@@ -169,10 +169,11 @@ impl Session {
         version: Option<i32>,
         compacted: CompactedDocumentChange,
     ) -> LspResult<DocumentChangeSummary> {
-        self.python_declarations.invalidate_source();
         let text_changed =
             self.store
                 .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
+        let path = self.store.document(uri)?.path().to_path_buf();
+        self.python_declarations.invalidate_source_for_path(&path);
         let document = self.store.document(uri)?;
         if (self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
             || self.analysis.has_analysis(document))
@@ -188,10 +189,11 @@ impl Session {
     }
 
     pub(crate) fn save_document(&mut self, uri: &str, text: Option<String>) -> LspResult<bool> {
-        self.python_declarations.invalidate_source();
         if !self.store.save(uri, text) {
             return Ok(false);
         }
+        let path = self.store.document(uri)?.path().to_path_buf();
+        self.python_declarations.invalidate_source_for_path(&path);
         let document = self.store.document(uri)?;
         if (self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
             || self.analysis.has_analysis(document))
@@ -203,7 +205,10 @@ impl Session {
     }
 
     pub(crate) fn close_document(&mut self, uri: &str) -> bool {
-        self.python_declarations.invalidate_source();
+        if let Ok(document) = self.store.document(uri) {
+            self.python_declarations
+                .invalidate_source_for_path(document.path());
+        }
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
@@ -519,6 +524,8 @@ mod tests {
     mod dx11_editor_tests;
     #[path = "e01_external_input_tests.rs"]
     mod e01_external_input_tests;
+    #[path = "e01_fast_hit_tests.rs"]
+    mod e01_fast_hit_tests;
     #[path = "e01_watcher_tests.rs"]
     mod e01_watcher_tests;
     #[path = "project_ownership_tests.rs"]

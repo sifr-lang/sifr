@@ -180,7 +180,16 @@ impl LspServer {
                         std::process::exit(code);
                     }
                 }
-                Message::Response(response) => self.watchers.respond(&response),
+                Message::Response(response) => {
+                    if self.watchers.respond(&response)
+                        && self.session.revalidate_open_external_inputs()
+                    {
+                        crate::diagnostics::DiagnosticsController::reconcile_changes(
+                            &self.connection,
+                            &mut self.session,
+                        )?;
+                    }
+                }
             }
         }
         if message_pump.join().is_err() {
@@ -190,7 +199,11 @@ impl LspServer {
     }
 
     fn handle_request(&mut self, request: Request) -> ServerResult<()> {
-        revalidate_without_watchers(&mut self.session, &self.watchers);
+        revalidate_and_publish_without_watchers(
+            &mut self.session,
+            &self.watchers,
+            &self.connection,
+        )?;
         let id = request.id.clone();
         let lane = Scheduler::lane_for_method(&request.method);
         if let Err(error) = self.session.enqueue_request(&id, &request.method, lane) {
@@ -303,8 +316,19 @@ impl LspServer {
     }
 }
 
-fn revalidate_without_watchers(session: &mut Session, watchers: &WatcherRegistration) {
-    session.revalidate_open_external_inputs_where(|path| !watchers.covers(path));
+fn revalidate_without_watchers(session: &mut Session, watchers: &WatcherRegistration) -> bool {
+    session.revalidate_open_external_inputs_where(|path| !watchers.covers(path))
+}
+
+fn revalidate_and_publish_without_watchers(
+    session: &mut Session,
+    watchers: &WatcherRegistration,
+    connection: &Connection,
+) -> LspResult<()> {
+    if revalidate_without_watchers(session, watchers) {
+        crate::diagnostics::DiagnosticsController::reconcile_changes(connection, session)?;
+    }
+    Ok(())
 }
 
 fn response_from_result(id: RequestId, result: LspResult<Value>) -> Response {
@@ -460,6 +484,58 @@ mod tests {
             session.external_input_generation(&second),
             Some(second_generation)
         );
+    }
+
+    #[test]
+    fn request_time_external_change_publishes_current_diagnostics() {
+        use super::{
+            revalidate_and_publish_without_watchers, watcher_registration::WatcherRegistration,
+        };
+        use lsp_server::{Connection, Message};
+        let temp = tempfile::tempdir().expect("temporary root");
+        let uri = watcher_fixture(temp.path(), "watcher-publication");
+        let mut session = crate::session::Session::new();
+        open_watcher_document(&mut session, uri.clone());
+        let unsupported = WatcherRegistration::new(&json!({"capabilities": {}}));
+        let (server, client) = Connection::memory();
+
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server)
+            .expect("unchanged request");
+        assert!(client.receiver.try_recv().is_err());
+
+        let manifest = temp.path().join("sifr.toml");
+        std::fs::write(
+            &manifest,
+            "invalid = [
+",
+        )
+        .expect("invalidate manifest");
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server)
+            .expect("changed request");
+        let publication = client
+            .receiver
+            .try_iter()
+            .find_map(|message| match message {
+                Message::Notification(notification)
+                    if notification.method == "textDocument/publishDiagnostics" =>
+                {
+                    Some(notification.params)
+                }
+                _ => None,
+            })
+            .expect("current diagnostics publication");
+        assert_eq!(publication["uri"], uri);
+        assert_eq!(publication["version"], 1);
+        assert!(
+            !publication["diagnostics"]
+                .as_array()
+                .expect("diagnostics")
+                .is_empty()
+        );
+
+        revalidate_and_publish_without_watchers(&mut session, &unsupported, &server)
+            .expect("warm request");
+        assert!(client.receiver.try_recv().is_err());
     }
 
     #[test]
