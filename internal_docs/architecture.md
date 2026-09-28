@@ -357,7 +357,7 @@ sifr/
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_cache_storage/     (private cache entry, lease, bounded wait, and atomic publication primitives)
-    sifr_compiler_services/ (stdlib and metadata services; Python editor environment, probe, and certification services)
+    sifr_compiler_services/ (stdlib and metadata services; Python and SQL editor services; generated preview and saved editor checks)
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
     sifr_format/            (Sifr-facing Ruff-backed formatter API, config conversion, diagnostics, and text edits)
     sifr_analysis/          (editor query host; routes formatting through sifr_format)
@@ -619,6 +619,7 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   Windows cancellable lease polling, and atomic publication. `sifr_compiler_services` also owns the single metadata reader, provider/navigation cache, tooling sysroot views, `stdlib_external_defs`, and `CompilerContext`. The context pins compiler identity, resolved sysroot, and cache root for its provider generation. The driver reexports those capabilities and retains CLI cache policy and pruning. Dependencies point
   from driver to the lower services and storage, and from services to storage.
   The lower Python service resolves frozen package snapshots and editor environments, validates live binding and certification identities, inspects declaration targets with a cancellation boundary, applies compiler probe status, and renders package diagnostics. LSP retains document ownership and cache invalidation; driver retains build execution and generated-project adaptation.
+  The lower editor service builds generated Rust preview from the C01 frontend product, shares SQL query finalization and source-map projection with the driver, and restores saved diagnostics only after read-only cache-owner, metadata, record and current-source validation. The driver retains project-cache publication, build/test orchestration and pruning.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
