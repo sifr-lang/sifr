@@ -13,13 +13,13 @@ use sifr_analysis::WorkspaceTracePhase;
 use std::collections::BTreeMap;
 
 /// Run the embedded server with the caller's compiler and toolchain ownership.
-pub fn run_stdio(compiler: sifr_driver::CompilerContext) -> ServerResult<()> {
+pub fn run_stdio(compiler: sifr_compiler_services::CompilerContext) -> ServerResult<()> {
     run_stdio_with_options(LspServerOptions::stdio(), compiler)
 }
 
 pub fn run_stdio_with_options(
     options: LspServerOptions,
-    compiler: sifr_driver::CompilerContext,
+    compiler: sifr_compiler_services::CompilerContext,
 ) -> ServerResult<()> {
     LspServer::stdio(options, compiler).run()
 }
@@ -28,7 +28,10 @@ pub fn run_stdio_with_identity(
     options: LspServerOptions,
     identity: sifr_identity::CompilerIdentity,
 ) -> ServerResult<()> {
-    run_stdio_with_options(options, sifr_driver::CompilerContext::new(identity))
+    run_stdio_with_options(
+        options,
+        sifr_compiler_services::CompilerContext::new(identity),
+    )
 }
 
 struct LspServer {
@@ -40,7 +43,7 @@ struct LspServer {
 }
 
 impl LspServer {
-    fn stdio(options: LspServerOptions, compiler: sifr_driver::CompilerContext) -> Self {
+    fn stdio(options: LspServerOptions, compiler: sifr_compiler_services::CompilerContext) -> Self {
         let (connection, io_threads) = Connection::stdio();
         let watchdog = ParentWatchdog::new(options.parent_pid);
         watchdog.spawn_exit_thread();

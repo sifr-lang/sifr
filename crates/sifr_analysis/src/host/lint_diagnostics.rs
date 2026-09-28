@@ -51,7 +51,7 @@ mod tests {
 
     fn host(path: &str, source: &str) -> AnalysisHost {
         AnalysisHost::open_single_file(
-            &sifr_driver::CompilerContext::for_test_tokens(
+            &sifr_compiler_services::CompilerContext::for_test_tokens(
                 crate::compiled_input_tokens(),
                 "sifr_analysis-tests",
             ),

@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PythonInteropAnalysisPlan {
-    pub plan: sifr_driver::PythonInteropPlan,
+    pub plan: sifr_compiler_services::python::PythonInteropPlan,
     pub module_files: BTreeMap<String, FileId>,
 }
 
@@ -27,7 +27,7 @@ impl AnalysisHost {
                 .hir;
             lowered.push((name, module));
         }
-        let plan = sifr_driver::interop_build_plan_for_named_modules(
+        let plan = sifr_compiler_services::python::interop_build_plan_for_named_modules(
             lowered
                 .iter()
                 .map(|(name, module)| (Some(name.as_str()), module)),
@@ -50,7 +50,7 @@ mod tests {
     fn plan_preserves_declaration_module_file_identity() {
         let source = "from sifr.python import PythonError\n\n@python(math.sqrt)\ndef sqrt(value: float) -> Result[float, PythonError]: ...\n";
         let mut host = AnalysisHost::open_single_file(
-            &sifr_driver::CompilerContext::for_test_tokens(
+            &sifr_compiler_services::CompilerContext::for_test_tokens(
                 crate::compiled_input_tokens(),
                 "analysis-tests",
             ),

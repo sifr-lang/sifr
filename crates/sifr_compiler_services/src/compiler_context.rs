@@ -269,7 +269,7 @@ fn default_cache_root() -> std::path::PathBuf {
         }
     }
 }
-fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
+pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
     let mut tokens = vec![
         ("sifr_compiler_services", env!("SIFR_LOCAL_INPUT_TOKEN")),
         (
@@ -285,6 +285,9 @@ fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
     tokens.extend(sifr_frontend::compiled_input_tokens());
     tokens.extend(sifr_syntax::compiled_input_tokens());
     tokens.extend(sifr_codegen::compiled_input_tokens());
+    tokens.extend(sifr_package::compiled_input_tokens());
+    tokens.extend(sifr_compiler_component::compiled_input_tokens());
+    tokens.extend(sifr_sql_contract::compiled_input_tokens());
     tokens.extend(sifr_sysroot::compiled_input_tokens());
     tokens.extend(sifr_type_system::compiled_input_tokens());
     tokens.sort_unstable();

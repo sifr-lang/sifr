@@ -12,7 +12,9 @@ impl AnalysisHost {
             .ok_or_else(|| unknown_file(file))
     }
 
-    pub fn stdlib_navigation(&self) -> std::sync::Arc<sifr_driver::StdlibNavigation> {
+    pub fn stdlib_navigation(
+        &self,
+    ) -> std::sync::Arc<sifr_compiler_services::metadata::reader::StdlibNavigation> {
         self.stdlib_navigation.clone()
     }
     pub fn source_text_for_file(&self, file: FileId) -> Result<&str, AnalysisError> {

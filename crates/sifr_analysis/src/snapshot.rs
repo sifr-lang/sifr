@@ -92,7 +92,7 @@ impl AnalysisSnapshot {
     pub(crate) fn new(
         workspace: WorkspaceSnapshot,
         revision: AnalysisRevision,
-        compiler: sifr_driver::CompilerContext,
+        compiler: sifr_compiler_services::CompilerContext,
         owner: std::sync::Arc<()>,
     ) -> Self {
         Self {
@@ -107,7 +107,10 @@ impl AnalysisSnapshot {
         std::sync::Arc::ptr_eq(&self.compiler.1, owner)
     }
 
-    pub(crate) fn matches_compiler(&self, compiler: &sifr_driver::CompilerContext) -> bool {
+    pub(crate) fn matches_compiler(
+        &self,
+        compiler: &sifr_compiler_services::CompilerContext,
+    ) -> bool {
         self.compiler.0.shares_metadata_generation(compiler)
     }
 
@@ -164,7 +167,7 @@ impl AnalysisError {
 // Retaining a snapshot pins the exact toolchain owner even after host closure or
 // explicit re-resolution. Equality is generation identity, never live disk state.
 #[derive(Clone)]
-struct SnapshotCompiler(sifr_driver::CompilerContext, std::sync::Arc<()>);
+struct SnapshotCompiler(sifr_compiler_services::CompilerContext, std::sync::Arc<()>);
 impl std::fmt::Debug for SnapshotCompiler {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("SnapshotCompiler")

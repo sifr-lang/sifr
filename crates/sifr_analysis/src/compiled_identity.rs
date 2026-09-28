@@ -15,7 +15,7 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
             tokens.extend(sifr_format::compiled_input_tokens());
             tokens.extend(sifr_frontend::compiled_input_tokens());
             tokens.extend(sifr_lint::compiled_input_tokens());
-            tokens.extend(sifr_driver::compiled_input_tokens());
+            tokens.extend(sifr_compiler_services::compiled_input_tokens());
             tokens.extend(sifr_syntax::compiled_input_tokens());
             tokens.extend(sifr_compiler_component::compiled_input_tokens());
             tokens.extend(sifr_sql_contract::compiled_input_tokens());

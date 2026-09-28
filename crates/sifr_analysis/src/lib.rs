@@ -50,17 +50,21 @@ pub use sifr_frontend::{
 };
 pub use sifr_syntax::TextPosition;
 
-pub use sifr_driver::{ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus};
+pub use sifr_compiler_services::stdlib::tooling::{
+    ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus,
+};
 
 pub fn tooling_sysroot_status(
-    compiler: &sifr_driver::CompilerContext,
+    compiler: &sifr_compiler_services::CompilerContext,
 ) -> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
-    sifr_driver::stdlib_tooling_sysroot_status(compiler)
+    sifr_compiler_services::stdlib::tooling::sysroot_status(compiler)
 }
 
 #[must_use]
-pub fn tooling_sysroot_probe(compiler: &sifr_driver::CompilerContext) -> ToolingSysrootProbe {
-    sifr_driver::stdlib_tooling_sysroot_probe(compiler)
+pub fn tooling_sysroot_probe(
+    compiler: &sifr_compiler_services::CompilerContext,
+) -> ToolingSysrootProbe {
+    sifr_compiler_services::stdlib::tooling::sysroot_probe(compiler)
 }
 
 pub fn format_options_for_path(

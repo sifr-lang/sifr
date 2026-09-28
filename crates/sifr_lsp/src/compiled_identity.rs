@@ -13,7 +13,7 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
             ];
             tokens.extend(sifr_analysis::compiled_input_tokens());
             tokens.extend(sifr_diagnostics::compiled_input_tokens());
-            tokens.extend(sifr_driver::compiled_input_tokens());
+            tokens.extend(sifr_compiler_services::compiled_input_tokens());
             tokens.extend(sifr_package::compiled_input_tokens());
             tokens.extend(sifr_source::compiled_input_tokens());
             tokens.sort_unstable();
