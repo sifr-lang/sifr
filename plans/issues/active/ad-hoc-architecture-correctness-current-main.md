@@ -630,6 +630,50 @@ for the expanded workspace fixture. These do not qualify Q01. E03/F23 is
 complete on current main; Q01 retains the final integration gate and
 whole-phase review.
 
+## E04/F34 resolved editor type-hierarchy delivery receipt (2026-09-28)
+
+[PR #4087](https://github.com/sifr-lang/sifr/pull/4087) merged as
+`b12ced85ebca4b6e1ec2c1ecff82f0bbd86351e4` from exact tested and
+reviewed candidate `c57bb1320fdbcc3d6e0cabf6800ed38c5c363be6` (base
+`29148ae25b56fda239078a5143694a00d7bf25c1`, tree
+`d1ae5d17afe8fd8e4718cff88eda5131199f6d94`). Frontend module analysis
+now exposes class identities and direct parent identities from resolved HIR.
+The analysis host uses those identities for current class preparation and
+nonempty direct supertype/subtype answers, with parsed syntax supplying only
+source ranges. The LSP maps returned relation items to the owning current
+file URI and source instead of discarding them. A standalone class without a
+resolved relationship returns no prepared hierarchy item.
+
+On the exact candidate, two `sifr_analysis` hierarchy cases passed **1/1**
+each for lowercase classes, uppercase non-types, imported aliases, source
+ranges and removal of stale edges after edits. The native `sifr_lsp` relation
+and edit case passed **1/1**, and the existing frontend analysis-cache reuse
+case passed **1/1**. The executable stdio LSP protocol smoke passed with a
+nonempty parent/child fixture and edit invalidation. `cargo build --locked -p
+sifr`, documentation structure, HIR maintainability, formatting, the
+900-line file-size guardrail (4,268 files), and the committed diff check
+passed. Exact command/log digests, compiler and input identities and the
+transport bundle are outside the Git tree at
+`/data/sifr-architecture-e04-f34-evidence-20260928/c57bb1320fdbcc3d6e0cabf6800ed38c5c363be6/`;
+validation-manifest SHA-256 is
+`14c9d8aa9540c56b09f5a86d3ab9ddc65532f449d71a80bc241dee3e0972191f`.
+The owned Cargo target stayed warm; no cache was cleaned. The first
+documentation check lacked the pinned nested VS Code submodule, an earlier
+CLI build found a production/dev-dependency import mistake, and the first
+protocol smoke consumed an unrelated queued diagnostic. The final candidate
+fixed setup, import and fixture isolation; failed attempts remain distinct.
+The automatic GitHub create-PR job failed and is not used as validation under
+the approved intermediate-item policy; Q01 retains the full merge gate.
+
+Scoped read-only Claude Opus 5.5 review returned **SATISFIED** with no
+blocking findings (response SHA-256
+`06391716af596927c9eb520b18f71f9308c647b1f1cbfb813b4a6e59ecced240`).
+Nonblocking follow-ups are the UX choice to omit standalone types with no
+edges, possible performance work under E03's latency budget, attribute-base
+reference preparation, and a cross-file LSP conversion regression case.
+These do not change E04 acceptance. E04/F34 is complete on current main;
+Q01 retains final exact-candidate integration and whole-phase closure.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -919,7 +963,7 @@ holds the separate passing and partial area receipts.
 | E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; merged in [PR #4081](https://github.com/sifr-lang/sifr/pull/4081), receipt above. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, nested-to-ancestor root reassignment, unstable inputs, cancellation and multi-root lifecycle. Named cases above. |
 | E02 | Analysis/lint owner; F22; merged in [PR #4083](https://github.com/sifr-lang/sifr/pull/4083), receipt above. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; merged in [PR #4085](https://github.com/sifr-lang/sifr/pull/4085), receipt above. | Actual Python declaration cache deltas in 25 connected modules: cold, unchanged, private/API edit, external change and cancellation/recovery. |
-| E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
+| E04 | Separate editor correctness owner; F34; merged in [PR #4087](https://github.com/sifr-lang/sifr/pull/4087), receipt above. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01 | Fuzz/property owner; F28; open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. |
 | H02 | Typed lowering and unsafe bridge owners, split by subsystem; F29; open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. |
 | H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
