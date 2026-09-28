@@ -570,6 +570,66 @@ E02/F22 is complete on current main. E03 remains the measured-performance
 owner after E01c and E02. Q01 retains the final exact-candidate full merge
 profile and whole-phase integration decision.
 
+## E03/F23 measured 25-module LSP cache delivery receipt (2026-09-28)
+
+[PR #4085](https://github.com/sifr-lang/sifr/pull/4085) merged as
+`4b319c0f784c4c5e71d93621de8331d41f98e3fc` from exact tested and
+reviewed candidate `28381613b509ae45456895118991e1b3abc686ab` (base
+`7fbf85e96895c99d5a6b4060417d93a0322f498b`, tree
+`96da54cdc21f713f1196626161f77cf999945509`). The LSP exposes cumulative
+Python declaration snapshot hits and completed misses through its debug
+protocol; the LSP benchmark reads actual server deltas instead of fixed
+values. The workspace fixture has 25 connected source modules, and workspace
+benchmark scenarios enforce that minimum independently of its directory name.
+The new live cache-delta case is selected by both create-PR and merge profiles.
+The historical SHA-pinned DX.1 budget file is unchanged.
+
+On that candidate, the live `performance/lsp-workspace-cache/lsp-cache-deltas`
+case passed **1/1**. Its real 25-module server reported cold workspace query
+**0 hits/1 miss**, unchanged completion and hover **2/0**, private-body edit
+**0/1**, public API edit **0/1**, external manifest change **0/1**, cancellation
+**0/0**, and the next current query **0/1**. The case uses diagnostics-off to
+isolate request cache work; it does not claim a controlled-host latency budget.
+The existing initialization-only cold-start benchmark observed **0/0** during
+that interval, while the separately measured cold workspace query made the
+miss. Focused completion, hover, cold-start, workspace-diagnostics, references
+and rename benchmark invocations passed and emitted actual counters. An
+undersized workspace was rejected and the 25-module input accepted.
+
+All **seven exact one-assertion** `sifr_lsp` selections passed: four E01c
+fast-hit lifecycle cases, cancelled Python probing, Python declaration source
+drift, and unchanged external-input warm reuse. The compiler build,
+performance manifest validation, benchmark runner and budget self-tests,
+create-PR and merge profile plans, coverage readiness **4/4**, formatting,
+HIR maintainability, the 900-line file-size guardrail (4,267 files), and the
+committed diff check passed. The Ruff gitlink and tracked Cargo.lock did not
+change. The owned target was 19 GiB with 46 GiB free on `/data`; no cache was
+cleaned. The first Rust selection failed only before this worktree's Python
+fixture environment was prepared, and an earlier exploratory edit to the
+immutable historical budget failed its DX.1 self-test and was reverted before
+the candidate. Those attempts are not counted as passing evidence.
+Candidate-keyed raw logs, commands and input identity are outside the Git
+tree at `/data/sifr-architecture-e03-evidence-20260928/28381613b509ae45456895118991e1b3abc686ab/`;
+validation-manifest SHA-256 is
+`54185808fab98122af0f7ad834459b61f0dc0a46374c105ad829853bd1fb886b`.
+The prospective intermediate-item policy leaves the full merge profile to
+Q01.
+
+The first scoped read-only Opus 5.5 review returned **SATISFIED** with no
+blockers (response SHA-256
+`be6a1b1af86c2e9ea6dc84219c7625a2e628074dd1c91c2371e70427a9149944`).
+The test was then hardened to cancel a cold query after project retirement,
+and the module minimum was bound to workspace scenarios. The second scoped
+review of the final candidate returned **SATISFIED** with no blockers
+(response SHA-256
+`52368d7921850c113c6f07d5baa6737f492acf1fe7af5a95390c9699e6f2b517`).
+Its nonblocking follow-ups are a remaining theoretical cancellation timing
+race on unusually fast hosts, separate frontend query-cache counters if future
+performance work needs them, and Q01's reference/trend comparability decision
+for the expanded workspace fixture. These do not qualify Q01. E03/F23 is
+complete on current main; Q01 retains the final integration gate and
+whole-phase review.
+
 ## C01 diagnostic docs sync integration blocker (2026-09-26)
 
 The Emitted-Rust final qualifier's full merge profile on exact merged main
@@ -858,7 +918,7 @@ holds the separate passing and partial area receipts.
 | E01b | LSP watcher/protocol owner; F20-F21 after merged E01a; merged in [PR #4077](https://github.com/sifr-lang/sifr/pull/4077), receipt above. | Capability-gated registration and response acknowledgement; rejected/unsupported/unconfirmed per-request revalidation, lifecycle events, reconnect, storms and multi-root isolation. Named cases above. |
 | E01c | LSP request/diagnostics owner; F20-F21 after merged E01b; merged in [PR #4081](https://github.com/sifr-lang/sifr/pull/4081), receipt above. | Verified fast-hit reorder and end-to-end current request/diagnostics publication under source/config/external changes, nested-to-ancestor root reassignment, unstable inputs, cancellation and multi-root lifecycle. Named cases above. |
 | E02 | Analysis/lint owner; F22; merged in [PR #4083](https://github.com/sifr-lang/sifr/pull/4083), receipt above. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
-| E03 | LSP performance owner; F23; open after E01c and E02. | Actual cache deltas in at least 25 modules: cold, unchanged, private/API edit, external change and cancellation. |
+| E03 | LSP performance owner; F23; merged in [PR #4085](https://github.com/sifr-lang/sifr/pull/4085), receipt above. | Actual Python declaration cache deltas in 25 connected modules: cold, unchanged, private/API edit, external change and cancellation/recovery. |
 | E04 | Separate editor correctness owner; F34; open. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01 | Fuzz/property owner; F28; open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. |
 | H02 | Typed lowering and unsafe bridge owners, split by subsystem; F29; open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. |
