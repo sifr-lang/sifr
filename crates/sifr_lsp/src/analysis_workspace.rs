@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use url::Url;
 
+mod watcher_events;
+
 pub(crate) struct LspAnalysisWorkspace {
     pub(crate) compiler: sifr_compiler_services::CompilerContext,
     documents: BTreeMap<String, LspDocumentAnalysis>,
@@ -205,6 +207,7 @@ impl LspAnalysisWorkspace {
         self.refresh_projects(documents);
     }
 
+    #[cfg(test)]
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
         for analysis in self.projects.values_mut() {
             if let Some(host) = analysis.host.as_mut() {
