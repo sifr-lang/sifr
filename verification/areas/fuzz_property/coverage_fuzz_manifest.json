@@ -1,9 +1,7 @@
 {
-  "schema_version": 1,
-  "id": "H01A-PARSER-GUIDED-0001",
-  "target": "parser",
+  "schema_version": 2,
+  "id": "H01-FRONTEND-GUIDED-0001",
   "cargo_manifest": "verification/fuzz/Cargo.toml",
-  "corpus": "verification/fuzz/corpus/parser",
   "toolchain": "nightly",
   "cargo_fuzz_version": "0.13.2",
   "budgets_seconds": {
@@ -11,5 +9,17 @@
     "release": 1800
   },
   "build_timeout_seconds": 1200,
-  "target_grace_seconds": 120
+  "target_grace_seconds": 120,
+  "default_target": "parser",
+  "targets": {
+    "parser": {
+      "corpus": "verification/fuzz/corpus/parser"
+    },
+    "lowering": {
+      "corpus": "verification/fuzz/corpus/lowering"
+    },
+    "ownership": {
+      "corpus": "verification/fuzz/corpus/ownership"
+    }
+  }
 }
