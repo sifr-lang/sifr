@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "diagnostics": [
+    {
+      "code": "SIFR-TYPE-0002",
+      "severity": "Error",
+      "message": "type mismatch: expected int, got str",
+      "message_template": "type mismatch: expected {expected}, got {actual}",
+      "args": {
+        "expected": {
+          "kind": "string",
+          "value": "int"
+        },
+        "actual": {
+          "kind": "string",
+          "value": "str"
+        }
+      },
+      "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
+      "spans": [
+        {
+          "file": null,
+          "byte_start": 0,
+          "byte_end": 0,
+          "line": null,
+          "column": null,
+          "end_line": null,
+          "end_column": null,
+          "is_primary": true,
+          "label": "",
+          "lines": []
+        }
+      ],
+      "children": [],
+      "help": "",
+      "suggestions": []
+    },
+    {
+      "code": "SIFR-TYPE-0002",
+      "severity": "Error",
+      "message": "another mismatch",
+      "message_template": "type mismatch: expected {expected}, got {actual}",
+      "args": {
+        "ratio": {
+          "kind": "float",
+          "value": 0.5
+        },
+        "delta": {
+          "kind": "signed",
+          "value": -1
+        }
+      },
+      "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
+      "spans": [
+        {
+          "file": "fuzz/diagnostics.sifr",
+          "byte_start": 0,
+          "byte_end": 5,
+          "line": 1,
+          "column": 1,
+          "end_line": 1,
+          "end_column": 6,
+          "is_primary": true,
+          "label": null,
+          "lines": [
+            {
+              "text": "x = 'a'",
+              "highlight_start": 1,
+              "highlight_end": 6
+            }
+          ]
+        }
+      ],
+      "children": [],
+      "help": null,
+      "suggestions": []
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import tempfile
 import tomllib
 import unittest
@@ -104,6 +105,52 @@ class CoverageFuzzTests(unittest.TestCase):
         self.assertEqual(Path(finding["minimized_seed"]).read_bytes(), b"minimal crash")
         self.assertEqual(len(finding["replays"]), 2)
 
+    def test_diagnostic_target_minimized_json_artifact(self) -> None:
+        artifact_dir = Path(self.temp.name) / "diagnostic-artifacts"
+        artifact_dir.mkdir()
+        crash = artifact_dir / "crash-raw"
+        crash.write_text('{"version":1,"diagnostics":[{"code":"SIFR-TYPE-0002"}]}')
+        minimized_crash = artifact_dir / "minimized-by-fuzzer"
+        calls = iter([
+            result(0, f"Minimized artifact: {minimized_crash}"),
+            result(1, "ERROR: libFuzzer: deadly signal"),
+            result(1, "ERROR: libFuzzer: deadly signal"),
+        ])
+
+        def minimize(argv: list[str], **_kwargs: object) -> dict:
+            if "tmin" in argv:
+                minimized_crash.write_bytes(crash.read_bytes())
+            return next(calls)
+
+        with patch.object(fuzz, "invoke", side_effect=minimize):
+            finding = fuzz.preserve_finding(
+                target="diagnostics", output=f"Test unit written to {crash}",
+                artifact_dir=artifact_dir, env={}, label="sustained-fuzz:diagnostics:nightly",
+            )
+        self.assertEqual(finding["status"], "compiler-finding")
+        self.assertTrue(finding["minimized_seed"].endswith(".json"))
+        self.assertEqual(fuzz.file_hash(Path(finding["minimized_seed"])), finding["minimized_sha256"])
+        self.assertEqual(len(finding["replays"]), 2)
+
+    def test_diagnostic_target_selection_and_identity(self) -> None:
+        receipt = self.fake_run(
+            result(0, "cargo-fuzz 0.13.2"), result(0, "rustc nightly"),
+            result(), result(0, "#12 cov: 8"), target="diagnostics",
+        )
+        self.assertEqual(receipt["status"], "pass")
+        self.assertEqual(receipt["input_identity"]["configuration"]["corpus"],
+                         "verification/fuzz/corpus/diagnostics")
+        self.assertEqual(receipt["variants"][-1]["executions"], 12)
+
+    def test_counters_survive_bounded_dictionary_tail(self) -> None:
+        output = "#12 cov: 8\n" + "dictionary" * fuzz.MAX_OUTPUT_TAIL
+        completed = subprocess.CompletedProcess(["cargo"], 0, output, "")
+        with patch.object(fuzz.subprocess, "run", return_value=completed):
+            actual = fuzz.invoke(["cargo"], timeout=10, env={})
+        self.assertEqual(actual["executions"], 12)
+        self.assertEqual(actual["coverage_edges"], 8)
+        self.assertLessEqual(len(actual["output_tail"]), fuzz.MAX_OUTPUT_TAIL)
+
     def test_nonzero_guided_executions_and_coverage(self) -> None:
         receipt = self.fake_run(
             result(0, "cargo-fuzz 0.13.2"), result(0, "rustc nightly"),
@@ -128,8 +175,12 @@ class CoverageFuzzTests(unittest.TestCase):
 
     def test_no_unused_fuzz_dependencies(self) -> None:
         manifest = tomllib.loads((fuzz.ROOT / "verification/fuzz/Cargo.toml").read_text())
-        self.assertEqual(set(manifest["dependencies"]), {"libfuzzer-sys", "sifr_syntax", "sifr_frontend"})
-        self.assertNotIn("serde_json", manifest["dependencies"])
+        self.assertEqual(set(manifest["dependencies"]), {
+            "libfuzzer-sys", "sifr_syntax", "sifr_frontend", "sifr_diagnostics", "serde_json",
+        })
+        self.assertIn("serde_json::from_slice", (
+            fuzz.ROOT / "verification/fuzz/fuzz_targets/diagnostics.rs"
+        ).read_text())
 
     def test_frontend_target_selection_and_identity(self) -> None:
         for target in ("lowering", "ownership"):
