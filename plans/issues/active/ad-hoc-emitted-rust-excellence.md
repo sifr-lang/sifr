@@ -1,5 +1,18 @@
 # Ad Hoc Phase: Emitted Rust Excellence
 
+## External scoped Clippy observation (2026-09-28)
+
+The Architecture E01a owner attempted optional
+`cargo clippy --locked -p sifr_lsp --lib -- -D warnings` on clean current-main
+base `20457942c26d97c6a5ab6e0293b2acc9b627abd1` plus its E01a candidate.
+Clippy stopped in pre-existing `crates/sifr_codegen/src/checked_place.rs` at
+lines 111 and 116 (`clippy::items_after_statements`); both local function
+locations predate E01a. The raw log SHA-256 is
+`08ddb955f2ed756160898d2991f362e16e9df6d114af5d8d20e4a39014d7487e`
+at `/data/sifr-architecture-e01a-external-generations-evidence-20260928/clippy-lsp.log`.
+This was not an Emitted-Rust merge-profile attempt or an E01a acceptance gate.
+The Emitted-Rust/codegen owner retains any repair and validation decision.
+
 ## Final integration qualifier blocked by algorithmic producer cache hint (2026-09-28)
 
 **BLOCKED; no full merge-profile pass or whole-phase closure.** The final
