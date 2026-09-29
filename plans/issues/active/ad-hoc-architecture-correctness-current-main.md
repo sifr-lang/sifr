@@ -1020,6 +1020,18 @@ Record failures in those packages in their owning issues. Q01 retains the
 final exact-candidate full merge profile and whole-phase review; this split
 claims no H02 test, review, gate or release.
 
+The H02/F29 scope split merged in [PR #4113](https://github.com/sifr-lang/sifr/pull/4113)
+as `d973fb5d46c249dcad55350b6902cc2cd17d468d` from candidate
+`0a33a6188af984ddcca6bc0cd7b16f861d77c562` (base
+`fc0e0d834e2b32169603eb93c610057c1be71d95`, tree
+`678e7a847a9108cd9f1953c189e87d24026a8c8d`). Documentation structure,
+the 900-line file-size guardrail and `git diff --check` passed for the
+split and record; the guardrail source inputs were unchanged by the receipt. The documentation check initially stopped because the pinned nested
+VS Code editor submodule was absent in this new worktree; initialization
+restored the declared input, after which the check passed. No production
+code, Cargo gate or external review was required for this documentation-only
+scope split. H02a-H02h remain open; their named tests are prospective.
+
 ### H01/F28 needs-new-scope split (2026-09-28)
 
 At the split, main had deterministic source-mutation smoke and repeated-output
