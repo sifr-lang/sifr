@@ -57,6 +57,6 @@ pub(super) fn method_type(
     ))
 }
 
-pub(super) fn is_raw_method(method: &str) -> bool {
+pub(in crate::lower) fn is_raw_method(method: &str) -> bool {
     matches!(method, "get_attr" | "get_item" | "call" | "call_method")
 }

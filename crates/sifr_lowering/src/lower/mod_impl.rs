@@ -849,6 +849,13 @@ pub(in crate::lower) fn lower_module_impl<'defs>(
             }
         }
         super::descriptor_declarations::erase_markers(&mut module, &ctx);
+        for violation in super::method_authority::classify_module(&mut module, &ctx) {
+            ctx.error_with_code_at(
+                sifr_diagnostics::DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+                violation.message,
+                violation.range,
+            );
+        }
         for violation in super::method_call_verifier::verify_module_method_calls(
             &mut module,
             &ctx.class_types,

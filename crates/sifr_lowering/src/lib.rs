@@ -15,6 +15,8 @@ mod hir_snapshot_expr_projection;
 mod hir_snapshot_tests;
 mod lower;
 #[cfg(test)]
+mod method_authority_tests;
+#[cfg(test)]
 mod name_resolution_snapshot_tests;
 mod scope;
 

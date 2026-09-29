@@ -92,6 +92,7 @@ mod ipc_schema_extraction;
 mod len_aliases;
 mod match_diagnostics;
 mod match_lowering;
+mod method_authority;
 mod method_call_args;
 mod method_call_metadata;
 mod method_call_verifier;
@@ -288,3 +289,15 @@ use sifr_python_ast::{
     ExprSetComp, str,
 };
 use sifr_type_system::ParamConvention;
+
+#[cfg(test)]
+pub(crate) fn verify_method_authority_for_tests(module: &mut HirModule) -> Vec<String> {
+    method_call_verifier::verify_module_method_calls(
+        module,
+        &std::collections::HashMap::new(),
+        &std::collections::HashMap::new(),
+    )
+    .into_iter()
+    .map(|violation| violation.message)
+    .collect()
+}
