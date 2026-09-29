@@ -109,6 +109,10 @@ impl RustEmitter {
             // no checked value witness, rather than requiring a plain value.
             if let Some(witness) = self.checked_place_read_borrow_witness(collection, index) {
                 Some(witness)
+            } else if let Some(checked_value) =
+                self.lower_non_option_index_expr_for_ir(collection, index)?
+            {
+                Some(checked_value)
             } else {
                 let Some(lowered_collection) = self.lower_stmt_expr_for_ir(collection)? else {
                     return Ok(RegistryMethodOperands {
@@ -124,17 +128,12 @@ impl RustEmitter {
                         discard_result,
                     });
                 };
-                let option = crate::checked_place::checked_sequence_get_option(
+                Some(crate::checked_place::checked_sequence_get_option(
                     lowered_collection,
                     false,
                     Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
                     "__sifr_method_read",
-                );
-                Some(RustExpr::MethodCall {
-                    receiver: Box::new(option),
-                    method: "cloned".to_string(),
-                    args: Vec::new(),
-                })
+                ))
             }
         } else {
             self.lower_method_receiver_place_for_stmt(
