@@ -5,6 +5,13 @@ use super::{
 };
 use crate::place_emitter::MethodCallPlaces;
 use sifr_ir::MutableReceiverTarget;
+
+struct RegistryMethodOperands {
+    object: Option<RustExpr>,
+    args: Option<Vec<RustExpr>>,
+    discard_result: bool,
+}
+
 impl RustEmitter {
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
@@ -14,6 +21,7 @@ impl RustEmitter {
         places: MethodCallPlaces<'_>,
         method_return_ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let operands = self.lower_registry_method_operands(object, method, args, places, false)?;
         let is_defaultdict_bucket_mutator = match object {
             HirExpr::Index {
                 object: base_object,
@@ -46,7 +54,7 @@ impl RustEmitter {
             args,
             places,
             method_return_ty,
-            false,
+            operands,
         ))
     }
 
@@ -67,14 +75,65 @@ impl RustEmitter {
                 method_return_ty,
             );
         }
+        let operands = self.lower_registry_method_operands(object, method, args, places, true)?;
         Ok(self.try_lower_registry_method_call_expr_unchecked(
             object,
             method,
             args,
             places,
             method_return_ty,
-            true,
+            operands,
         ))
+    }
+
+    // The registry consumes operands lowered by the statement authority. A
+    // nested method decline is an error, never an Option decline or a retry.
+    fn lower_registry_method_operands(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        places: MethodCallPlaces<'_>,
+        discard_result: bool,
+    ) -> Result<RegistryMethodOperands, crate::CodegenError> {
+        let lowered_object = self.lower_method_receiver_place_for_stmt(
+            object,
+            places.receiver_convention,
+            places.receiver_target,
+        )?;
+        let effective_object_ty = self.effective_method_object_ty(object);
+        let method_params = self.resolve_registry_method_params(&effective_object_ty, method);
+        let mut lowered_args = Vec::with_capacity(args.len());
+        for (index, argument) in args.iter().enumerate() {
+            let convention = method_params
+                .as_ref()
+                .and_then(|params| params.get(index))
+                .map_or(
+                    sifr_type_system::ParamConvention::default(),
+                    |(_, convention)| *convention,
+                );
+            let Some(lowered) = self.lower_method_argument_place_for_stmt(
+                argument,
+                convention,
+                places
+                    .mutable_arg_places
+                    .get(index)
+                    .and_then(Option::as_ref),
+            )?
+            else {
+                return Ok(RegistryMethodOperands {
+                    object: lowered_object,
+                    args: None,
+                    discard_result,
+                });
+            };
+            lowered_args.push(lowered);
+        }
+        Ok(RegistryMethodOperands {
+            object: lowered_object,
+            args: Some(lowered_args),
+            discard_result,
+        })
     }
 
     fn try_lower_registry_method_call_expr_unchecked(
@@ -84,8 +143,9 @@ impl RustEmitter {
         args: &[HirExpr],
         places: MethodCallPlaces<'_>,
         method_return_ty: &Type,
-        discard_result: bool,
+        operands: RegistryMethodOperands,
     ) -> Option<crate::RustExpr> {
+        let discard_result = operands.discard_result;
         let effective_object_ty = self.effective_method_object_ty(object);
         let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
         if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
@@ -236,11 +296,7 @@ impl RustEmitter {
             }
         }
         let is_deque_data_field = self.is_deque_data_field(object);
-        let object_expr = self.lower_method_receiver_place_for_registry(
-            object,
-            places.receiver_convention,
-            places.receiver_target,
-        )?;
+        let object_expr = operands.object?;
         if method == "len"
             && args.is_empty()
             && !indexed_list_receiver_is_checked_value(&object_expr)
@@ -258,26 +314,7 @@ impl RustEmitter {
             return Some(self.lower_string_len_with_cache(object, object_expr));
         }
         let method_params = self.resolve_registry_method_params(&effective_object_ty, method);
-        let mut arg_exprs = Vec::with_capacity(args.len());
-        for (index, argument) in args.iter().enumerate() {
-            let convention = method_params
-                .as_ref()
-                .and_then(|params| params.get(index))
-                .map_or(
-                    sifr_type_system::ParamConvention::default(),
-                    |(_, convention)| *convention,
-                );
-            arg_exprs.push(
-                self.lower_method_argument_place_for_registry(
-                    argument,
-                    convention,
-                    places
-                        .mutable_arg_places
-                        .get(index)
-                        .and_then(Option::as_ref),
-                )?,
-            );
-        }
+        let mut arg_exprs = operands.args?;
 
         if matches!(object_ty, Type::Decimal | Type::BigDecimal)
             && matches!(method, "quantize" | "round")

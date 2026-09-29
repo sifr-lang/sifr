@@ -195,3 +195,55 @@ fn list_append_cloned_decline_regression() {
         .unwrap();
     assert_eq!(render_expr(&emitted), "value.clone()");
 }
+
+#[test]
+fn nested_builtin_declines_preserve_structural_errors() {
+    let list_ty = Type::List(Box::new(Type::Int));
+    let mut receiver_call = builtin(list_ty.clone(), "cloned", Vec::new());
+    if let HirExpr::MethodCall { object, .. } = &mut receiver_call {
+        *object = Box::new(builtin(list_ty.clone(), "invented_receiver", Vec::new()));
+    }
+    let argument_call = builtin(
+        list_ty.clone(),
+        "append",
+        vec![builtin(list_ty.clone(), "invented_argument", Vec::new())],
+    );
+    let function_call = HirExpr::Call {
+        func: "consume".to_string(),
+        args: vec![builtin(
+            list_ty.clone(),
+            "invented_function_arg",
+            Vec::new(),
+        )],
+        mutable_arg_places: vec![None],
+        ty: Type::None,
+    };
+    for (expr, method) in [
+        (receiver_call, "invented_receiver"),
+        (argument_call, "invented_argument"),
+        (function_call, "invented_function_arg"),
+    ] {
+        let error = RustEmitter::new()
+            .lower_stmt_expr_for_ir(&expr)
+            .unwrap_err();
+        assert!(
+            error
+                .message
+                .contains(&format!("builtin method '{method}' is unsupported")),
+            "{}",
+            error.message
+        );
+    }
+    let mut unclassified_argument = builtin(list_ty.clone(), "cloned", Vec::new());
+    if let HirExpr::MethodCall { authority, .. } = &mut unclassified_argument {
+        *authority = MethodAuthority::Unclassified;
+    }
+    let expr = builtin(list_ty, "append", vec![unclassified_argument]);
+    assert!(
+        RustEmitter::new()
+            .lower_stmt_expr_for_ir(&expr)
+            .unwrap_err()
+            .message
+            .contains("unclassified source method")
+    );
+}
