@@ -62,6 +62,7 @@ fn lower_scope_spawn_blocking(
     let receiver_convention =
         super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: method.to_string(),
         args: vec![worker],
@@ -105,6 +106,7 @@ fn lower_scope_spawn_cpu(object: HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -
     let receiver_convention =
         super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: method.to_string(),
         args: vec![worker],
@@ -165,6 +167,7 @@ fn lower_scope_spawn_process(
         "__sifr_scope_spawn_process",
     );
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: "__sifr_scope_spawn_process".to_string(),
         args: vec![command],

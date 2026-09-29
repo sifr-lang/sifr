@@ -13,6 +13,7 @@ mod hir_flow;
 pub mod hir_nodes;
 pub mod lowering_outcome;
 pub mod lowering_result;
+pub mod method_call_metadata;
 pub mod python_interop;
 mod readonly_visit;
 pub mod rust_interop;
@@ -122,6 +123,7 @@ mod tests {
     fn method_call_schema_retains_receiver_and_source_metadata() {
         let range = TextRange::new(TextSize::new(2), TextSize::new(6));
         let call = HirExpr::MethodCall {
+            authority: crate::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "items".to_string(),
                 binding_id: Some(crate::BindingId(7)),
@@ -218,4 +220,77 @@ pub use compiled_identity::compiled_input_tokens;
 #[doc(hidden)]
 pub fn portable_source_token() -> &'static str {
     env!("SIFR_PORTABLE_SOURCE_TOKEN")
+}
+
+#[cfg(test)]
+mod method_authority_tests {
+    use super::*;
+    use ruff_text_size::{TextRange, TextSize};
+    use sifr_type_system::{ReceiverConvention, Type};
+
+    #[test]
+    fn carrier_preserves_receiver_and_source() {
+        let declaration = CallableIdentity {
+            module: "sample".into(),
+            owner: Some("Protocol".into()),
+            symbol: "mutate".into(),
+            generic_arguments: vec!["int".into()],
+            signature: "(mut int) -> None".into(),
+        };
+        let receiver = Place {
+            root: BindingId(7),
+            projections: vec![PlaceProjection::Field(FieldIdentity {
+                declaring_class: "sample.Protocol".into(),
+                field: "data".into(),
+            })],
+        };
+        let call_range = TextRange::new(TextSize::new(2), TextSize::new(21));
+        let receiver_range = TextRange::new(TextSize::new(2), TextSize::new(12));
+        let arg_range = TextRange::new(TextSize::new(13), TextSize::new(20));
+        let call = HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "value".into(),
+                binding_id: Some(BindingId(7)),
+                ty: Type::Int,
+            }),
+            method: "mutate".into(),
+            args: vec![HirExpr::IntLiteral(1)],
+            authority: MethodAuthority::Protocol {
+                declaration: declaration.clone(),
+            },
+            receiver_convention: Some(ReceiverConvention::MutableBorrow),
+            receiver_target: Some(MutableReceiverTarget::Place(receiver.clone())),
+            mutable_arg_places: vec![Some(MutableArgumentTarget::Place(receiver.clone()))],
+            source: Some(MethodCallSource {
+                call_range,
+                receiver_range,
+                arg_ranges: vec![arg_range],
+            }),
+            ty: Type::None,
+        };
+        let HirExpr::MethodCall {
+            authority,
+            receiver_convention,
+            receiver_target,
+            mutable_arg_places,
+            source: Some(source),
+            ..
+        } = call
+        else {
+            panic!("expected method call");
+        };
+        assert_eq!(authority, MethodAuthority::Protocol { declaration });
+        assert_eq!(receiver_convention, Some(ReceiverConvention::MutableBorrow));
+        assert_eq!(
+            receiver_target,
+            Some(MutableReceiverTarget::Place(receiver.clone()))
+        );
+        assert_eq!(
+            mutable_arg_places,
+            vec![Some(MutableArgumentTarget::Place(receiver))]
+        );
+        assert_eq!(source.call_range, call_range);
+        assert_eq!(source.receiver_range, receiver_range);
+        assert_eq!(source.arg_ranges, vec![arg_range]);
+    }
 }

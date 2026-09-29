@@ -296,6 +296,7 @@ mod tests {
                 return_type: Type::None,
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::MethodCall {
+                        authority: sifr_ir::MethodAuthority::Unclassified,
                         object: Box::new(HirExpr::ListLiteral {
                             elements: Vec::new(),
                             ty: Type::List(Box::new(Type::Int)),
@@ -358,6 +359,7 @@ mod tests {
                 return_type: Type::None,
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::MethodCall {
+                        authority: sifr_ir::MethodAuthority::Unclassified,
                         object: Box::new(HirExpr::ListLiteral {
                             elements: Vec::new(),
                             ty: Type::List(Box::new(Type::Int)),

@@ -5,6 +5,7 @@ use sifr_type_system::ReceiverConvention;
 fn list_method_stmt(method: &str) -> crate::HirStmt {
     crate::HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "values".to_string(),
                 binding_id: None,

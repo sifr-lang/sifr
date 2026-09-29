@@ -19,6 +19,7 @@ fn test_mut_on_mutating_method_call() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::MethodCall {
+                        authority: sifr_ir::MethodAuthority::Unclassified,
                         object: Box::new(HirExpr::Name {
                             name: "items".to_string(),
                             binding_id: Some(sifr_ir::BindingId(1)),

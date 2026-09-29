@@ -362,6 +362,7 @@ pub(in crate::lower) fn lower_method_call(
         consume_declared_owned_receiver(&object, attr.value.range(), ctx);
     }
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: method_name,
         args,

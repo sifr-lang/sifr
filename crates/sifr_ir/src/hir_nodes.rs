@@ -1,5 +1,9 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
+pub use crate::method_call_metadata::{
+    FieldIdentity, MethodAuthority, MethodCallSource, MutableArgumentTarget, MutableReceiverTarget,
+    Place, PlaceProjection,
+};
 use crate::{PythonInteropDeclaration, RustInteropDeclaration, TypedDeclarationMetadata};
 use ruff_text_size::TextRange;
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
@@ -132,51 +136,6 @@ pub enum MethodKind {
 /// Stable identity assigned to a resolved source binding during lowering.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct BindingId(pub u32);
-
-/// Source ranges retained for ownership diagnostics on source method calls.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MethodCallSource {
-    pub call_range: TextRange,
-    pub receiver_range: TextRange,
-    pub arg_ranges: Vec<TextRange>,
-}
-
-/// Stable identity of a field projection used by ownership-place analysis.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct FieldIdentity {
-    pub declaring_class: String,
-    pub field: String,
-}
-
-/// A projection from a binding root to checked storage.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum PlaceProjection {
-    Field(FieldIdentity),
-}
-
-/// A checked source storage place.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Place {
-    pub root: BindingId,
-    pub projections: Vec<PlaceProjection>,
-}
-
-/// Proven target shape for a mutable method receiver.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum MutableReceiverTarget {
-    Place(Place),
-    OwnedTemporary,
-    /// Compiler-owned indexed container mutation with a separately audited
-    /// lowering. The base place is retained for exclusivity checks.
-    SpecializedIndexedStorage(Place),
-}
-
-/// Proven target shape for a mutable call argument.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum MutableArgumentTarget {
-    Place(Place),
-    OwnedTemporary,
-}
 
 /// A function definition with resolved types.
 #[derive(Debug, Clone)]
@@ -759,6 +718,7 @@ pub enum HirExpr {
         object: Box<HirExpr>,
         method: String,
         args: Vec<HirExpr>,
+        authority: MethodAuthority,
         receiver_convention: Option<ReceiverConvention>,
         receiver_target: Option<MutableReceiverTarget>,
         mutable_arg_places: Vec<Option<MutableArgumentTarget>>,

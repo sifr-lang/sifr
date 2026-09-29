@@ -641,6 +641,7 @@ mod tests {
     #[test]
     fn local_binding_setdefault_materializes_owned_key_and_default() {
         let expr = HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "defaults".to_string(),
                 binding_id: None,

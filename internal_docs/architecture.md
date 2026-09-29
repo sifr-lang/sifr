@@ -2,6 +2,7 @@
 
 ## Architecture Scope
 
+- Source method-call HIR carries an explicit typed dispatch authority alongside receiver convention, checked mutable places and source ranges. The indexed metadata v5 wire record round-trips that authority and rejects older or malformed authority records. `Unclassified` is an explicit H02a0 transition state for lowering to replace, never an implied builtin owner.
 - LSP embedding entrypoints require the caller's explicit compiler context (or product identity for the identity entrypoint), carried into session/workspace construction before any queries. Dependency-bound test identity construction is confined to the test session constructor.
 - Editor type hierarchy consumes frontend-resolved class identities and direct parent types for each current workspace revision; analysis supplies declaration ranges, and the LSP maps relation items to their current document URI and source.
 
@@ -2156,7 +2157,7 @@ family without cleaning metadata or Cargo; `cache prune-project` is scoped to
 one explicit workspace and only deletes inactive generations under pressure.
 
 
-DX.15 toolchain metadata uses private container version 4: three bounded compressed
+DX.15 toolchain metadata uses private container version 5: three bounded compressed
 frames and a sorted contiguous directory, with full artifact integrity
 verification before opening and unchanged lazy semantic record validation.
 See compiler_dx_architecture.md for physical limits and compatibility rules.

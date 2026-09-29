@@ -590,6 +590,7 @@ fn collection_target_coercion_recovers_contextually_narrowed_safe_get() {
     let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
     let runtime_source = sifr_type_system::safe_optional_result(target.clone());
     let expr = HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(HirExpr::Name {
             name: "values".to_string(),
             binding_id: None,

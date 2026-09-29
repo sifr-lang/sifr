@@ -78,6 +78,40 @@ impl Encode<wire::Ref<wire::MethodKind>> for sifr_ir::MethodKind {
         cx.records.intern(&value)
     }
 }
+impl Encode<wire::Ref<wire::MethodAuthority>> for sifr_ir::MethodAuthority {
+    fn encode(&self, cx: &mut Encoder) -> Result<wire::Ref<wire::MethodAuthority>> {
+        let value = match self {
+            sifr_ir::MethodAuthority::Unclassified => wire::MethodAuthority::Unclassified,
+            sifr_ir::MethodAuthority::BuiltinIntrinsic { declaration } => {
+                wire::MethodAuthority::BuiltinIntrinsic {
+                    declaration: declaration.encode(cx)?,
+                }
+            }
+            sifr_ir::MethodAuthority::Protocol { declaration } => wire::MethodAuthority::Protocol {
+                declaration: declaration.encode(cx)?,
+            },
+            sifr_ir::MethodAuthority::LocalNominal { declaration } => {
+                wire::MethodAuthority::LocalNominal {
+                    declaration: declaration.encode(cx)?,
+                }
+            }
+            sifr_ir::MethodAuthority::InheritedNominal { declaration } => {
+                wire::MethodAuthority::InheritedNominal {
+                    declaration: declaration.encode(cx)?,
+                }
+            }
+            sifr_ir::MethodAuthority::Imported { declaration } => wire::MethodAuthority::Imported {
+                declaration: declaration.encode(cx)?,
+            },
+            sifr_ir::MethodAuthority::RustAdapted { declaration } => {
+                wire::MethodAuthority::RustAdapted {
+                    declaration: declaration.encode(cx)?,
+                }
+            }
+        };
+        cx.records.intern(&value)
+    }
+}
 impl Encode<wire::Ref<wire::MethodCallSource>> for sifr_ir::MethodCallSource {
     fn encode(&self, cx: &mut Encoder) -> Result<wire::Ref<wire::MethodCallSource>> {
         let value = wire::MethodCallSource {
@@ -857,6 +891,7 @@ impl Encode<wire::Ref<wire::HirExpr>> for sifr_ir::HirExpr {
                 object,
                 method,
                 args,
+                authority,
                 receiver_convention,
                 receiver_target,
                 mutable_arg_places,
@@ -866,6 +901,7 @@ impl Encode<wire::Ref<wire::HirExpr>> for sifr_ir::HirExpr {
                 object: object.encode(cx)?,
                 method: method.encode(cx)?,
                 args: args.encode(cx)?,
+                authority: authority.encode(cx)?,
                 receiver_convention: receiver_convention.encode(cx)?,
                 receiver_target: receiver_target.encode(cx)?,
                 mutable_arg_places: mutable_arg_places.encode(cx)?,

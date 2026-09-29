@@ -82,6 +82,7 @@ fn collect_typevar_operator_requirements_detects_collection_contains() {
     let stmts = vec![
         HirStmt::Expr {
             expr: HirExpr::MethodCall {
+                authority: sifr_ir::MethodAuthority::Unclassified,
                 object: Box::new(items.clone()),
                 method: "contains".to_string(),
                 args: vec![value.clone()],
