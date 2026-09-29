@@ -154,6 +154,40 @@ async fn close_cancel_reentrancy_releases_once() {
         .expect_err("escaped shell rejects before touching dead captures");
     assert_eq!(error.exception_type, "SifrCallbackClosedError");
     super::asyncio_invocation::prove_queued_output_revocation();
+    // Rejected retained publication must leave the wrapper owning its target;
+    // an owner may already have admitted setup when close wins publication.
+    let failed_publication_releases = Arc::new(AtomicUsize::new(0));
+    let decode_capture = ReleaseProbe(Arc::clone(&failed_publication_releases));
+    let retained_owner = CallbackOwnerState::new_retained(|| Ok(())).expect("retained owner");
+    let retained = asyncio_callback_with_owner(
+        retained_owner.clone(),
+        3,
+        1,
+        AsyncioCallbackConcurrency::Parallel,
+        move |args| {
+            let _capture = &decode_capture;
+            to_int(&args[0])
+        },
+        |_, value, _| async move { Ok(value) },
+        from_int,
+    )
+    .expect("owned callback");
+    let lease = retained_owner.accept(3, false).expect("admitted setup");
+    drop(retained_owner.begin_owner_unregister().expect("unregister"));
+    let mut closing = Box::pin(retained_owner.close_after_owner_unregister_async());
+    assert!(closing.as_mut().poll(&mut context).is_pending());
+    assert!(retained.retain_in_owner().is_err());
+    assert_eq!(failed_publication_releases.load(Ordering::SeqCst), 0);
+    drop(closing);
+    drop(retained);
+    assert_eq!(failed_publication_releases.load(Ordering::SeqCst), 1);
+    drop(lease);
+    retained_owner
+        .close_after_owner_unregister_async()
+        .await
+        .expect("drain rejected publication");
+    assert_eq!(retained_owner.status(), CallbackOwnerStatus::Closed);
+    assert_eq!(failed_publication_releases.load(Ordering::SeqCst), 1);
     reset_runtime_state_for_tests();
 }
 

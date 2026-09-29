@@ -156,7 +156,7 @@ pub struct AsyncioCallback<'a> {
     object: ObjectHandle,
     owner: CallbackOwnerState,
     callback_id: u64,
-    target: Mutex<Option<Box<dyn AsyncioTarget<'a> + 'a>>>,
+    target: Arc<Mutex<Option<Box<dyn AsyncioTarget<'a> + 'a>>>>,
     admission: Arc<AsyncioAdmission>,
     drain: Arc<InvocationDrain>,
     retained: AtomicBool,
@@ -311,20 +311,25 @@ impl AsyncioCallback<'_> {
 
 impl AsyncioCallback<'static> {
     pub fn retain_in_owner(&self) -> Result<(), PythonError> {
-        if self.retained.swap(true, Ordering::AcqRel) {
+        if self.retained.load(Ordering::Acquire) {
             return Ok(());
         }
-        let target = self
-            .target
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .take()
-            .ok_or_else(|| errors::unavailable("asyncio retained target"))?;
+        // Register shared teardown ownership before changing the wrapper's
+        // ownership. Failed publication leaves its target live through admitted
+        // setup and normal Drop; only a successfully drained owner takes it.
+        let target = Arc::clone(&self.target);
         let object = self.object.clone();
         self.owner.retain_capture(move || {
-            drop(target);
+            drop(
+                target
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .take(),
+            );
             super::ownership::release_callable(object);
-        })
+        })?;
+        self.retained.store(true, Ordering::Release);
+        Ok(())
     }
 }
 
@@ -555,7 +560,7 @@ where
         object,
         owner,
         callback_id,
-        target: Mutex::new(Some(target)),
+        target: Arc::new(Mutex::new(Some(target))),
         admission,
         drain,
         retained: AtomicBool::new(false),
