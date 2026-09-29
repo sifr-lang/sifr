@@ -66,6 +66,17 @@ def run_property_suite(
     }
 
     for entry in entries:
+        if entry.get("kind") == "rust-test":
+            rust_case = run_rust_property(entry=entry, repo_root=repo_root)
+            result["cases"].append(rust_case)
+            result["total_variants"] += len(rust_case["variants"])
+            result["total_failures"] += sum(
+                variant["status"] == "fail" for variant in rust_case["variants"]
+            )
+            result["failed_cases"] += any(
+                variant["status"] == "fail" for variant in rust_case["variants"]
+            )
+            continue
         case_id = str(entry.get("id", "<missing-id>"))
         case_result = {
             "id": case_id,
@@ -193,6 +204,47 @@ def run_property_suite(
         result["cases"].append(case_result)
 
     return result
+
+
+def run_rust_property(*, entry: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    """Execute a semantic Rust property exactly once per manifest entry."""
+    case = {"id": entry.get("id", "<missing-id>"), "entry": entry.get("test_name"),
+            "command": "cargo test", "variants": []}
+    mismatches = required_missing(entry, ("id", "crate", "test_name", "note"))
+    if entry.get("crate") != "sifr_type_system":
+        mismatches.append("crate")
+    if entry.get("test_name") not in {
+        "semantic_property_tests::normalization_idempotent",
+        "semantic_property_tests::narrowing_partition",
+    }:
+        mismatches.append("test_name")
+    if "repeat_runs" in entry:
+        mismatches.append("repeat_runs.unused")
+    argv = ["cargo", "test", "-p", "sifr_type_system", "--lib",
+            str(entry.get("test_name")), "--", "--exact"]
+    if entry.get("reproduction_command") != argv:
+        mismatches.append("reproduction_command")
+    if mismatches:
+        case["variants"].append({"label": "metadata", "status": "fail",
+                                 "mismatches": sorted(set(mismatches))})
+        return case
+
+    started = time.perf_counter()
+    try:
+        completed = subprocess.run(argv, cwd=repo_root, capture_output=True, text=True,
+                                   timeout=600, check=False)
+    except subprocess.TimeoutExpired:
+        case["variants"].append({"label": "run-1", "status": "fail",
+                                 "mismatches": ["timeout"], "argv": argv})
+        return case
+    case["variants"].append({
+        "label": "run-1", "status": "pass" if completed.returncode == 0 else "fail",
+        "mismatches": [] if completed.returncode == 0 else ["unexpected-exit"],
+        "argv": argv, "actual_exit_code": completed.returncode,
+        "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+        "stdout_tail": completed.stdout[-4000:], "stderr_tail": completed.stderr[-4000:],
+    })
+    return case
 
 
 def deterministic_mutations(seed_source: str, iterations: int, random_seed: int) -> list[str]:

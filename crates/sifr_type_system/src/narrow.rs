@@ -72,8 +72,8 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
         }
         NarrowingCondition::IsNone(_) => {
             if is_true {
-                // x is None -> x: None
-                Type::None
+                // An impossible None branch remains unreachable.
+                intersect_with_union(ty, &Type::None)
             } else {
                 // x is not None -> remove None
                 remove_none_from_union(ty)
@@ -84,8 +84,8 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
                 // x is not None -> remove None
                 remove_none_from_union(ty)
             } else {
-                // x is None
-                Type::None
+                // An impossible None branch remains unreachable.
+                intersect_with_union(ty, &Type::None)
             }
         }
         NarrowingCondition::IsInstance(_, target_type) => {
@@ -99,8 +99,13 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
         }
         NarrowingCondition::Equality(_, value) => {
             if is_true {
-                // x == "GET" -> narrow to LiteralStr("GET")
-                value.to_type()
+                // Equality refines to a singleton only when it overlaps the input.
+                let literal = value.to_type();
+                if intersect_with_union(ty, &literal) == Type::Never {
+                    Type::Never
+                } else {
+                    literal
+                }
             } else {
                 // x != "GET" -> remove that literal (if applicable)
                 subtract_from_union(ty, &value.to_type())

@@ -92,3 +92,6 @@ pub use union::{
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+#[cfg(test)]
+mod semantic_property_tests;
