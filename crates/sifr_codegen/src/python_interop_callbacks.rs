@@ -75,7 +75,7 @@ pub(crate) fn callback_setup(
     }
 
     let factory = match callback.dispatch {
-        PythonCallbackDispatch::Current => "current_callback_with_owner",
+        PythonCallbackDispatch::Current => "current_callback_scoped_with_owner",
         PythonCallbackDispatch::Foreign if callback.lifetime == PythonCallbackLifetime::Call => {
             "foreign_callback_scoped_with_owner"
         }
@@ -114,8 +114,20 @@ pub(crate) fn callback_setup(
             .map(|_| handler_slot_var.as_str()),
     ));
     factory_args.push(encoder(callback, opaque_classes)?);
+    let mut construction = runtime_call(factory, factory_args);
+    if callback.lifetime == PythonCallbackLifetime::Call {
+        // Only these compiler-owned locals may construct borrowed callbacks.
+        // Users cannot name, move, forget or retain the wrapper; Rust drops it
+        // before the handler binding on setup error, return, unwind and async
+        // cancellation. Runtime Drop drains/revokes every admitted borrowed use.
+        // Verbatim is syntax-validated by the normal final-source pipeline.
+        construction = RustExpr::Verbatim(format!(
+            "unsafe {{ /* SAFETY: private callback local drains before handler captures expire, including cancellation. */ {} }}",
+            crate::render::Renderer::render_expr_string(&construction),
+        ));
+    }
     let factory = mapped_try(
-        owner_outcome_with_evidence(runtime_call(factory, factory_args), owner_retained_errors),
+        owner_outcome_with_evidence(construction, owner_retained_errors),
         error_type,
     );
     if let Some(provisional) = &provisional_var {

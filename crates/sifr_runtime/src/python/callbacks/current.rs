@@ -95,25 +95,62 @@ impl Drop for CurrentCallback<'_> {
     }
 }
 
-pub fn current_callback<'a, A, R, Decode, Handler, Encode>(
+pub fn current_callback<A, R, Decode, Handler, Encode>(
     callback_id: u64,
     expected_arity: usize,
     decode: Decode,
     handler: Handler,
     encode: Encode,
-) -> Result<CurrentCallback<'a>, PythonError>
+) -> Result<CurrentCallback<'static>, PythonError>
 where
-    A: 'a,
-    R: 'a,
-    Decode: Fn(Vec<ObjectHandle>) -> Result<A, PythonError> + 'a,
-    Handler: Fn(u64, A) -> Result<R, CallbackExecutionError> + 'a,
-    Encode: Fn(R) -> Result<ObjectHandle, PythonError> + 'a,
+    A: 'static,
+    R: 'static,
+    Decode: Fn(Vec<ObjectHandle>) -> Result<A, PythonError> + 'static,
+    Handler: Fn(u64, A) -> Result<R, CallbackExecutionError> + 'static,
+    Encode: Fn(R) -> Result<ObjectHandle, PythonError> + 'static,
 {
     let owner = CallbackOwnerState::new_call_scoped()?;
     current_callback_with_owner(owner, callback_id, expected_arity, decode, handler, encode)
 }
 
-pub fn current_callback_with_owner<'a, A, R, Decode, Handler, Encode>(
+pub fn current_callback_with_owner<A, R, Decode, Handler, Encode>(
+    owner: CallbackOwnerState,
+    callback_id: u64,
+    expected_arity: usize,
+    decode: Decode,
+    handler: Handler,
+    encode: Encode,
+) -> Result<CurrentCallback<'static>, PythonError>
+where
+    A: 'static,
+    R: 'static,
+    Decode: Fn(Vec<ObjectHandle>) -> Result<A, PythonError> + 'static,
+    Handler: Fn(u64, A) -> Result<R, CallbackExecutionError> + 'static,
+    Encode: Fn(R) -> Result<ObjectHandle, PythonError> + 'static,
+{
+    // SAFETY: every capture and converted value is owned and static.
+    unsafe {
+        current_callback_scoped_with_owner(
+            owner,
+            callback_id,
+            expected_arity,
+            decode,
+            handler,
+            encode,
+        )
+    }
+}
+
+/// Constructs a compiler-owned borrowed callback.
+///
+/// # Safety
+/// The caller must keep all captures live until this wrapper is dropped. It must
+/// not forget the wrapper, move it into its own handler, or drop it reentrantly.
+/// Escaped Python shells may outlive the wrapper: creator-thread admission and
+/// registry removal reject their entry after teardown. Generated callers keep
+/// the wrapper in a private local after the handler binding, so return, setup
+/// errors and unwind drop it before any handler capture ends.
+pub unsafe fn current_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode>(
     owner: CallbackOwnerState,
     callback_id: u64,
     expected_arity: usize,
@@ -128,6 +165,7 @@ where
     Handler: Fn(u64, A) -> Result<R, CallbackExecutionError> + 'a,
     Encode: Fn(R) -> Result<ObjectHandle, PythonError> + 'a,
 {
+    owner.require_call_scope()?;
     let token = NEXT_CURRENT_TOKEN
         .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
             current.checked_add(1)

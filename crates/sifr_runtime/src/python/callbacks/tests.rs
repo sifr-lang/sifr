@@ -4,8 +4,8 @@ use super::{
     CallbackExecutionError, CallbackFailureSlot, CallbackHandlerFailure, CallbackOwnerSlot,
     CallbackOwnerState, CallbackOwnerStatus, ForeignCallbackConcurrency, RetainedCallbackCleanup,
     RetainedCallbackGroup, attach_callback_failure_evidence, current_callback,
-    current_callback_with_owner, foreign_callback, foreign_callback_with_owner,
-    reconcile_callback_outcome,
+    current_callback_scoped_with_owner, current_callback_with_owner, foreign_callback,
+    foreign_callback_scoped_with_owner, foreign_callback_with_owner, reconcile_callback_outcome,
 };
 use crate::python::{
     ObjectHandle, PythonError, call_object_owned, close_object, context_exit_normal_with_callbacks,
@@ -130,17 +130,21 @@ fn call_scoped_callbacks_accept_borrowed_handler_state() {
 
     let current_total = Cell::new(0_i64);
     {
-        let callback = current_callback(
-            20,
-            1,
-            |args| to_int(&args[0]),
-            |_, value| {
-                let increment = value.try_to_i64().expect("fixture integer fits i64");
-                current_total.set(current_total.get() + increment);
-                Ok(value)
-            },
-            from_int,
-        )
+        /* SAFETY: private wrapper drops before current_total and only shells escape. */
+        let callback = unsafe {
+            current_callback_scoped_with_owner(
+                CallbackOwnerState::new_call_scoped().expect("owner"),
+                20,
+                1,
+                |args| to_int(&args[0]),
+                |_, value| {
+                    let increment = value.try_to_i64().expect("fixture integer fits i64");
+                    current_total.set(current_total.get() + increment);
+                    Ok(value)
+                },
+                from_int,
+            )
+        }
         .expect("borrowed current callback should create");
         let arg = from_int(3).expect("argument should convert");
         call_object_owned(callback.object(), &[arg], &[]).expect("callback should execute");
@@ -150,18 +154,22 @@ fn call_scoped_callbacks_accept_borrowed_handler_state() {
 
     let foreign_total = AtomicUsize::new(0);
     {
-        let callback = foreign_callback(
-            21,
-            1,
-            ForeignCallbackConcurrency::Parallel,
-            |args| to_int(&args[0]),
-            |_, value| {
-                let increment = value.try_to_usize().expect("fixture integer fits usize");
-                foreign_total.fetch_add(increment, Ordering::SeqCst);
-                Ok(value)
-            },
-            from_int,
-        )
+        /* SAFETY: private wrapper drains foreign calls before foreign_total ends. */
+        let callback = unsafe {
+            foreign_callback_scoped_with_owner(
+                CallbackOwnerState::new_call_scoped().expect("owner"),
+                21,
+                1,
+                ForeignCallbackConcurrency::Parallel,
+                |args| to_int(&args[0]),
+                |_, value| {
+                    let increment = value.try_to_usize().expect("fixture integer fits usize");
+                    foreign_total.fetch_add(increment, Ordering::SeqCst);
+                    Ok(value)
+                },
+                from_int,
+            )
+        }
         .expect("borrowed foreign callback should create");
         invoke_from_threads(callback.object(), 4);
         callback.close_call_scope().expect("callback should close");

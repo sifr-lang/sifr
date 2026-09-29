@@ -1,7 +1,7 @@
 use super::{
     AsyncioCallbackConcurrency, CallbackExecutionError, CallbackOwnerSlot, CallbackOwnerState,
     CallbackOwnerStatus, RetainedCallbackGroup, abandon_callback_owner_after_error_async,
-    asyncio_callback_scoped_with_owner, asyncio_callback_with_owner, finalize_retained_callbacks,
+    asyncio_callback_with_owner, finalize_retained_callbacks,
     finish_retained_callback_finalization, retained_callback_finalization_scope,
 };
 use crate::cancellation::{CancellationBind, CancellationCarrier, CancellationRequest};
@@ -30,7 +30,7 @@ async fn asyncio_callback_round_trips_on_owned_loop_and_drains_asynchronously() 
     let _guard = test_guard();
     initialize_callback_runtime("asyncio-callback-roundtrip");
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner,
         1,
         1,
@@ -69,7 +69,7 @@ async fn python_future_cancellation_reaches_the_exact_sifr_handler() {
     let cancellation_seen = Arc::new(tokio::sync::Notify::new());
     let cancellation_seen_by_handler = Arc::clone(&cancellation_seen);
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner,
         2,
         1,
@@ -123,7 +123,7 @@ async fn serial_reentrancy_is_rejected_before_waiting_for_the_fifo() {
     let _guard = test_guard();
     initialize_callback_runtime("asyncio-callback-reentrancy");
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner,
         3,
         1,
@@ -174,7 +174,7 @@ async fn call_scoped_close_cancels_and_joins_an_active_asyncio_callback() {
     let started_by_handler = Arc::clone(&started);
     let release_by_handler = Arc::clone(&release);
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner.clone(),
         4,
         1,
@@ -518,7 +518,7 @@ async fn provisional_receiver_rollback_cancels_entries_and_releases_target() {
     reset_runtime_state_for_tests();
 }
 
-fn initialize_callback_runtime(label: &str) {
+pub(super) fn initialize_callback_runtime(label: &str) {
     reset_runtime_state_for_tests();
     let mut config = test_config(label);
     config.start_async_loop = true;
@@ -543,7 +543,7 @@ fn install_module(py: Python<'_>) {
         .expect("callback test module should register");
 }
 
-fn function_request(
+pub(super) fn function_request(
     member: &str,
     args: Vec<crate::python::PythonAsyncValue>,
 ) -> PythonAsyncRequest {

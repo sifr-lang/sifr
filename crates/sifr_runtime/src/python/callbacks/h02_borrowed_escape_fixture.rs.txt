@@ -1,0 +1,22 @@
+use sifr_runtime::python::*;
+use std::cell::Cell;
+fn safe_borrowed_forget() {
+    let value = Cell::new(0);
+    let callback = current_callback(1, 0, |_| Ok(()), |_, ()| {
+        value.set(1); Ok(())
+    }, |_| from_none()).unwrap();
+    let _escaped = callback.object().clone();
+    std::mem::forget(callback);
+}
+fn unsafe_current_requires_authority() {
+    let _ = current_callback_scoped_with_owner(CallbackOwnerState::new_call_scoped().unwrap(),
+        1, 0, |_| Ok(()), |_, ()| Ok(()), |_| from_none());
+}
+fn unsafe_foreign_requires_authority() {
+    let _ = foreign_callback_scoped_with_owner(CallbackOwnerState::new_call_scoped().unwrap(),
+        1, 0, ForeignCallbackConcurrency::Parallel, |_| Ok(()), |_, ()| Ok(()), |_| from_none());
+}
+fn unsafe_asyncio_requires_authority() {
+    let _ = asyncio_callback_scoped_with_owner(CallbackOwnerState::new_call_scoped().unwrap(),
+        1, 0, AsyncioCallbackConcurrency::Parallel, |_| Ok(()), |_, (), _| async { Ok(()) }, |_| from_none());
+}

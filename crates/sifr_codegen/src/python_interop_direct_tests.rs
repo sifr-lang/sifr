@@ -339,7 +339,7 @@ fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_clean
     );
     assert!(rendered.contains("CallbackFailureSlot::new"), "{rendered}");
     assert!(
-        rendered.contains("current_callback_with_owner"),
+        rendered.contains("current_callback_scoped_with_owner"),
         "{rendered}"
     );
     assert!(rendered.contains("list_items"), "{rendered}");
@@ -355,6 +355,7 @@ fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_clean
         rendered.contains("__sifr_callback_failure_0.take_if_owner_first"),
         "{rendered}"
     );
+    assert!(rendered.contains("unsafe {"));
     syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
         .expect("generated callback statements should be valid Rust syntax");
 }
