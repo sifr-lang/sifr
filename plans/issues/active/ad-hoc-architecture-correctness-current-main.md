@@ -996,7 +996,7 @@ mutation smoke throughout. Do not claim H01/F28 complete from one slice.
 | H01b / frontend guided targets; merged in [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), receipt below | After H01a. Add lowering and ownership targets through real compiler APIs, with diverse typed source grammar rather than fixed literal templates. Reuse H01a taxonomy, corpus and minimization contracts; do not change diagnostic, project or codegen target ownership. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz lowering <corpus> -- -max_total_time=10 -print_final_stats=1` and the same exact command for `ownership`; `cargo test -p sifr_frontend --lib guided_target_replay_tests::lowering_seed_replay -- --exact` and `cargo test -p sifr_frontend --lib guided_target_replay_tests::ownership_seed_replay -- --exact`. Record nonzero executions, feedback, and stable minimized reproductions for findings. |
 | H01c / diagnostics guided target; merged in [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), receipt below | After H01a. Mutate structured rendered-diagnostic envelopes directly and exercise JSON, human and compact renderers. Use a specific active diagnostic identity; never use the forbidden catch-all `SIFR-TYPE-0001`. Preserve H01a failure taxonomy and minimized JSON artifacts. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz diagnostics <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::diagnostic_renderer -- --exact`; assert nonzero guided executions, all three renderers and a stable minimized structured seed. |
 | H01d / project-graph guided target; merged in [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), receipt below | After H01a. Generate bounded project/manifest/import graphs, create each fixture outside the fuzz hot loop, and exercise the canonical project compiler. Keep dependency/tool failures separate from compiler findings and preserve minimized project trees. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz project_graph <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::project_graph -- --exact`; assert nonzero guided executions, graph mutations and stable minimized project-tree replay. |
-| H01e / codegen guided target | After H01a and H01b. Generate varied *valid* typed programs and exercise codegen plus emitted-Rust validation without treating expected user diagnostics as findings. Do not alter X02 codegen safety ownership. Preserve minimized valid wrong-code/panic seeds. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz codegen_validation <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::codegen_validation -- --exact`; assert nonzero guided executions, valid-program diversity and stable minimized replay. |
+| H01e / codegen guided target; blocked pending resolution of automatic content review restriction, receipt below | After H01a and H01b. Generate varied *valid* typed programs and exercise codegen plus emitted-Rust validation without treating expected user diagnostics as findings. Do not alter X02 codegen safety ownership. Preserve minimized valid wrong-code/panic seeds. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz codegen_validation <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::codegen_validation -- --exact`; assert nonzero guided executions, valid-program diversity and stable minimized replay. |
 | H01f / type-system semantic properties | After H01b. Add generative normalization idempotence/equivalence and narrowing partition/soundness properties using canonical type-system operations, including unions, optionals and complements. A repeated fixed fixture is insufficient. Own the Rust semantic-property one-run contract: reject an unused `repeat_runs` field on Rust test entries or execute the declared count. Leave ownership transfer and incremental sessions to H01g/H01h. | `cargo test -p sifr_type_system --lib semantic_property_tests::normalization_idempotent -- --exact` and `cargo test -p sifr_type_system --lib semantic_property_tests::narrowing_partition -- --exact`, plus existing `narrow::tests` regressions. Save deterministic failing seeds and replay commands. |
 | H01g / frontend ownership property | After H01b and H01f. Generate move/borrow/mutability programs and compare accepted/rejected ownership behavior to explicit transfer invariants through the canonical frontend product. Include non-Copy values and branch joins. Do not substitute panic-free compilation for the ownership oracle. | `cargo test -p sifr_frontend --lib ownership_property_tests::move_borrow_branch_invariants -- --exact` plus focused existing ownership fixtures; record generated case count, deterministic random seed and minimized failing program. |
 | H01h / frontend/session equivalence | After H01g and E01c. Compare incremental edits with fresh full compilation from the same source and external-input snapshot, including add/delete/rename, diagnostic spans, cancellation and recovery. Preserve E01 watcher and cache ownership; this item owns only the equivalence property. | `cargo test -p sifr_frontend --lib query_diagnostics_equivalence_tests::incremental_full_property -- --exact` and `cargo test -p sifr_lsp --lib incremental_full_property_tests::request_publication -- --exact`; record edit-sequence seed, matched products/diagnostics and minimized failing sequence. |
@@ -1200,6 +1200,32 @@ Its nonblocking disk-replay, diagnostic-detail and fixture-documentation
 suggestions are tracked in [issue #4101](https://github.com/sifr-lang/sifr/issues/4101).
 No local create-PR or full merge gate ran under the approved intermediate-item
 exception. H01/F28 remains open for H01e-H01i; Q01 retains the final gate.
+
+### H01e/F28 codegen-guided external blocker (2026-09-29)
+
+This docs-only blocker record is [PR #4103](https://github.com/sifr-lang/sifr/pull/4103).
+Documentation structure, file-size guardrail and diff checks passed.
+
+The H01e worker's exact driver replay selection,
+`cargo test -p sifr_driver --lib tests::guided_target_replay::codegen_validation -- --exact`,
+passed on its owned worktree. The required exact live guided selection,
+`cargo +nightly fuzz run --fuzz-dir verification/fuzz codegen_validation <corpus> -- -max_total_time=10 -print_final_stats=1`,
+was still in instrumented build when automatic content review stopped the
+worker twice with the stated reason `possible cybersecurity risk`. Neither
+interruption establishes an instrumented-build failure or a compiler finding.
+The live selection has no passing execution or coverage receipt; H01e has no
+scoped review, implementation PR, or completion claim.
+
+The worker's edited worktree at
+`/home/yaser5/projects/sifr/h01e-codegen-guided-20260929` and its target
+are preserved. After the worker errors, the orchestrator stopped its orphaned
+Cargo process. An earlier SSH outage and disk-pressure cleanup were setup
+history, not the current blocker or a failed H01e acceptance result. H01e is
+**blocked pending resolution of the automatic content review restriction**.
+The exact next action is to resolve that restriction, resume the preserved H01e
+candidate, complete the named live selection and scoped review, then prepare
+and merge its implementation PR. H01f-H01i and whole H01/F28 qualification
+remain open.
 
 ### Resolved prerequisites and boundaries
 
