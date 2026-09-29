@@ -1,2 +1,2 @@
 def value_beta() -> int:
-    return 1
+    return 2

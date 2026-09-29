@@ -1,2 +1,2 @@
 def value_gamma() -> int:
-    return 1
+    return 3

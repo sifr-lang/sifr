@@ -182,8 +182,14 @@ def preserve_finding(
         tree_dir = artifact_dir / ("minimized-project-tree-" + digest[:16])
         tree_env = {**env, "SIFR_FUZZ_PROJECT_TREE_EXPORT_DIR": str(tree_dir)}
         export = invoke(replay_argv, timeout=90, env=tree_env)
-        expected = {"sifr.toml", "main.sifr", "alpha.sifr", "beta.sifr", "gamma.sifr"}
-        actual = {path.name for path in tree_dir.iterdir()} if tree_dir.is_dir() else set()
+        expected = {
+            f"{name}/{relative}"
+            for name in ("app", "alpha", "beta", "gamma")
+            for relative in ("Cargo.toml", "sifr.toml", "src/lib.rs")
+        } | {"app/src/main.sifr"} | {
+            f"{name}/src/__init__.sifr" for name in ("alpha", "beta", "gamma")
+        }
+        actual = {str(path.relative_to(tree_dir)) for path in tree_dir.rglob("*") if path.is_file()} if tree_dir.is_dir() else set()
         if actual != expected or "PROJECT_TREE_EXPORT_ERROR" in export["output_tail"]:
             return {
                 "status": "compiler-finding-unminimized",
@@ -194,7 +200,8 @@ def preserve_finding(
         project_tree_receipt = {
             "minimized_project_tree": str(tree_dir),
             "minimized_project_tree_sha256": {
-                path.name: file_hash(path) for path in sorted(tree_dir.iterdir())
+                str(path.relative_to(tree_dir)): file_hash(path)
+                for path in sorted(tree_dir.rglob("*")) if path.is_file()
             },
             "tree_export": variant(label + ":tree-export", "pass", replay_argv, export),
         }

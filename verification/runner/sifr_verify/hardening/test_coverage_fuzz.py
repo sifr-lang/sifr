@@ -124,8 +124,13 @@ class CoverageFuzzTests(unittest.TestCase):
             if "SIFR_FUZZ_PROJECT_TREE_EXPORT_DIR" in env:
                 root = Path(env["SIFR_FUZZ_PROJECT_TREE_EXPORT_DIR"])
                 root.mkdir()
-                for name in ("sifr.toml", "main.sifr", "alpha.sifr", "beta.sifr", "gamma.sifr"):
-                    (root / name).write_text(name, encoding="utf-8")
+                for name in ("app", "alpha", "beta", "gamma"):
+                    package = root / name
+                    (package / "src").mkdir(parents=True)
+                    for relative in ("Cargo.toml", "sifr.toml", "src/lib.rs"):
+                        (package / relative).write_text(relative, encoding="utf-8")
+                    source = "src/main.sifr" if name == "app" else "src/__init__.sifr"
+                    (package / source).write_text(source, encoding="utf-8")
             return next(calls)
 
         with patch.object(fuzz, "invoke", side_effect=invoke):
@@ -134,8 +139,8 @@ class CoverageFuzzTests(unittest.TestCase):
                 artifact_dir=artifact_dir, env={}, label="sustained-fuzz:project_graph:nightly",
             )
         self.assertEqual(finding["status"], "compiler-finding")
-        self.assertEqual(len(finding["minimized_project_tree_sha256"]), 5)
-        self.assertTrue(Path(finding["minimized_project_tree"]).joinpath("sifr.toml").is_file())
+        self.assertEqual(len(finding["minimized_project_tree_sha256"]), 16)
+        self.assertTrue(Path(finding["minimized_project_tree"]).joinpath("app/sifr.toml").is_file())
 
     def test_diagnostic_target_minimized_json_artifact(self) -> None:
         artifact_dir = Path(self.temp.name) / "diagnostic-artifacts"
