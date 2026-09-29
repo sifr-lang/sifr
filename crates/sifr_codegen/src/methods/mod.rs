@@ -42,6 +42,13 @@ fn lower_method_impl(
             args: Vec::new(),
         }),
         (_, "len") => common::lower_len(object, args),
+        (ty, "clone") if ty.supports_derived_clone() && args.is_empty() => {
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(object.clone()),
+                method: "clone".to_string(),
+                args: Vec::new(),
+            })
+        }
         (Type::Str, "upper") => string::lower_upper(object, args),
         (Type::Str, "lower") => string::lower_lower(object, args),
         (Type::Str, "strip") => string::lower_strip(object, args),
@@ -94,6 +101,7 @@ fn lower_method_impl(
         (Type::List(_), "insert") => list::lower_insert(object, args),
         (Type::List(_), "clear") => list::lower_clear(object, args),
         (Type::List(_), "copy") => list::lower_copy(object, args),
+        (Type::List(_), "cloned") => list::lower_copy(object, args),
         (Type::List(_), "reverse") => list::lower_reverse(object, args),
         (Type::List(elem), "sort") => list::lower_sort(object, elem, args),
         (Type::List(_), "count") => list::lower_count(object, args),

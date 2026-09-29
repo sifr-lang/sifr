@@ -328,13 +328,24 @@ pub(super) fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<Rust
     })
 }
 
-pub(super) fn try_lower_simple_method_call_expr(
-    object: &HirExpr,
-    method: &str,
-    args: &[HirExpr],
-) -> Option<RustExpr> {
-    if (matches!(
+pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::MethodCall {
+        object,
         method,
+        args,
+        ..
+    } = expr
+    else {
+        return None;
+    };
+    if !crate::method_call_emitter::source_method_path(expr)
+        .ok()?
+        .is_builtin()
+    {
+        return None;
+    }
+    if (matches!(
+        method.as_str(),
         "__sifr_spawn_infallible"
             | "__sifr_spawn_infallible_with_context"
             | "__sifr_spawn_result"
@@ -402,7 +413,7 @@ pub(super) fn try_lower_simple_method_call_expr(
     }
     if method == "__sifr_timeout" && matches!(resolve_alias_type(object.ty()), Type::Task(_, _)) {
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
-        let [duration] = args else {
+        let [duration] = args.as_slice() else {
             return None;
         };
         let lowered_args = vec![try_lower_task_duration_expr(
@@ -415,7 +426,7 @@ pub(super) fn try_lower_simple_method_call_expr(
             args: lowered_args,
         });
     }
-    if matches!(method, "__sifr_join_all" | "__sifr_cancel_all")
+    if matches!(method.as_str(), "__sifr_join_all" | "__sifr_cancel_all")
         && matches!(resolve_alias_type(object.ty()), Type::JoinSet(_, _))
         && args.is_empty()
     {

@@ -170,7 +170,7 @@ fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_conditio
 fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
     let stmt = HirStmt::If {
         condition: HirExpr::MethodCall {
-            authority: sifr_ir::MethodAuthority::Unclassified,
+            authority: crate::method_authority_tests::builtin_authority("get"),
             object: Box::new(HirExpr::Name {
                 name: "nums".to_string(),
                 binding_id: None,

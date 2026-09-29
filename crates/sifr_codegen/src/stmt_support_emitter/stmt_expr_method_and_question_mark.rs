@@ -30,211 +30,219 @@ macro_rules! stmt_expr_method_call {
             ..
         } = $expr
         {
-            if let Some(lowered) = $emitter.try_lower_python_raw_object_method(
-                object,
-                method,
-                args,
-                *receiver_convention,
-                receiver_target.as_ref(),
-                $expr.ty(),
-            ) {
-                return Ok(Some(lowered));
-            }
-            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_append_expr($expr) {
-                return Ok(Some(lowered));
-            }
-            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_pop_expr($expr) {
-                return Ok(Some(lowered));
-            }
-            if let Some(lowered) = $emitter.try_lower_dict_indexed_list_len_expr($expr) {
-                return Ok(Some(lowered));
-            }
-            if method == "len"
-                && args.is_empty()
-                && matches!(
-                    crate::resolve_alias_type_for_plain_call(object.ty()),
-                    Type::Str | Type::LiteralStr(_)
-                )
-            {
-                let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+            let source_path = crate::method_call_emitter::source_method_path($expr)?;
+            if source_path.is_builtin() {
+                if let Some(lowered) = crate::lower_expr::try_lower_simple_method_call_expr($expr) {
+                    return Ok(Some(lowered));
+                }
+                if let Some(lowered) = $emitter.try_lower_python_raw_object_method(
                     object,
+                    method,
+                    args,
                     *receiver_convention,
                     receiver_target.as_ref(),
-                )?
-                else {
-                    return Ok(None);
-                };
-                return Ok(Some($emitter.lower_string_len_with_cache(object, lowered_object)));
-            }
-            if method == "len" && args.is_empty() {
-                if let HirExpr::Call {
-                    func,
-                    args: set_args,
-                    ..
-                } = object.as_ref()
-                {
-                    if func == "set"
-                        && set_args.len() == 1
-                        && matches!(
-                            crate::resolve_alias_type_for_plain_call(set_args[0].ty()),
-                            Type::Str | Type::LiteralStr(_)
-                        )
-                    {
-                        let Some(lowered_source) =
-                            $emitter.lower_stmt_expr_for_ir(&set_args[0])?
-                        else {
-                            return Ok(None);
-                        };
-                        let char_set = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(lowered_source),
-                                method: "chars".to_string(),
-                                args: vec![],
-                            }),
-                            method: "collect::<std::collections::HashSet<_>>".to_string(),
-                            args: vec![],
-                        };
-                        return Ok(Some(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec![
-                                "SifrInt".to_string(),
-                                "from".to_string(),
-                            ])),
-                            args: vec![crate::RustExpr::MethodCall {
-                                receiver: Box::new(char_set),
-                                method: "len".to_string(),
-                                args: vec![],
-                            }],
-                        }));
-                    }
+                    $expr.ty(),
+                ) {
+                    return Ok(Some(lowered));
                 }
-            }
-            if method == "append"
-                && args.len() == 1
-                && matches!(
-                    receiver_target.as_ref(),
-                    Some(sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(_))
-                )
-            {
-                if let HirExpr::Index {
-                    object: index_object,
-                    index,
-                    ..
-                } = object.as_ref()
+                if let Some(lowered) = $emitter.try_lower_dict_indexed_list_append_expr($expr) {
+                    return Ok(Some(lowered));
+                }
+                if let Some(lowered) = $emitter.try_lower_dict_indexed_list_pop_expr($expr) {
+                    return Ok(Some(lowered));
+                }
+                if let Some(lowered) = $emitter.try_lower_dict_indexed_list_len_expr($expr) {
+                    return Ok(Some(lowered));
+                }
+                if method == "len"
+                    && args.is_empty()
+                    && matches!(
+                        crate::resolve_alias_type_for_plain_call(object.ty()),
+                        Type::Str | Type::LiteralStr(_)
+                    )
                 {
-                    let index_object_ty =
-                        crate::resolve_alias_type_for_plain_call(index_object.ty());
-                    if let Type::Dict(_, value_ty) = index_object_ty {
-                        if matches!(
-                            crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
-                            Type::List(_)
-                        ) {
-                            let Some(
-                                sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(
-                                    base_place,
-                                ),
-                            ) = receiver_target.as_ref()
+                    let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+                        object,
+                        *receiver_convention,
+                        receiver_target.as_ref(),
+                    )?
+                    else {
+                        return Ok(None);
+                    };
+                    return Ok(Some(
+                        $emitter.lower_string_len_with_cache(object, lowered_object),
+                    ));
+                }
+                if method == "len" && args.is_empty() {
+                    if let HirExpr::Call {
+                        func,
+                        args: set_args,
+                        ..
+                    } = object.as_ref()
+                    {
+                        if func == "set"
+                            && set_args.len() == 1
+                            && matches!(
+                                crate::resolve_alias_type_for_plain_call(set_args[0].ty()),
+                                Type::Str | Type::LiteralStr(_)
+                            )
+                        {
+                            let Some(lowered_source) =
+                                $emitter.lower_stmt_expr_for_ir(&set_args[0])?
                             else {
                                 return Ok(None);
                             };
-                            let Some(lowered_object) =
-                                $emitter.emit_checked_place(index_object, base_place)
-                            else {
-                                return Ok(None);
+                            let char_set = crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(lowered_source),
+                                    method: "chars".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "collect::<std::collections::HashSet<_>>".to_string(),
+                                args: vec![],
                             };
-                            let Some(lowered_index) = $emitter.lower_stmt_expr_for_ir(index)? else {
-                                return Ok(None);
-                            };
-                            let Some(lowered_arg) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
-                                return Ok(None);
-                            };
-                            let lowered_index =
-                                Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
-                            let lowered_arg = $emitter
-                                .materialize_reusable_value_for_ir(&args[0], lowered_arg);
-                            let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
-                            return Ok(Some(crate::RustExpr::Block {
-                                stmts: vec![crate::RustStmt::IfLet {
-                                    pattern: "Some(__elem)".to_string(),
-                                    expr: crate::RustExpr::MethodCall {
-                                        receiver: Box::new(lowered_object),
-                                        method: "get_mut".to_string(),
-                                        args: vec![key_arg],
-                                    },
-                                    then_body: vec![crate::RustStmt::Expr(
-                                        crate::RustExpr::MethodCall {
-                                            receiver: Box::new(crate::RustExpr::Ident(
-                                                "__elem".to_string(),
-                                            )),
-                                            method: "push".to_string(),
-                                            args: vec![lowered_arg],
-                                        },
-                                    )],
-                                    else_body: None,
+                            return Ok(Some(crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec![
+                                    "SifrInt".to_string(),
+                                    "from".to_string(),
+                                ])),
+                                args: vec![crate::RustExpr::MethodCall {
+                                    receiver: Box::new(char_set),
+                                    method: "len".to_string(),
+                                    args: vec![],
                                 }],
-                                expr: None,
                             }));
                         }
                     }
                 }
-            }
-            if method == "__sifr_timeout"
-                && matches!(
-                    crate::resolve_alias_type_for_plain_call(object.ty()),
-                    Type::Task(_, _)
-                )
-            {
-                let [duration] = args.as_slice() else {
-                    return Ok(None);
-                };
-                let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+                if method == "append"
+                    && args.len() == 1
+                    && matches!(
+                        receiver_target.as_ref(),
+                        Some(sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(_))
+                    )
+                {
+                    if let HirExpr::Index {
+                        object: index_object,
+                        index,
+                        ..
+                    } = object.as_ref()
+                    {
+                        let index_object_ty =
+                            crate::resolve_alias_type_for_plain_call(index_object.ty());
+                        if let Type::Dict(_, value_ty) = index_object_ty {
+                            if matches!(
+                                crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
+                                Type::List(_)
+                            ) {
+                                let Some(
+                                    sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(
+                                        base_place,
+                                    ),
+                                ) = receiver_target.as_ref()
+                                else {
+                                    return Ok(None);
+                                };
+                                let Some(lowered_object) =
+                                    $emitter.emit_checked_place(index_object, base_place)
+                                else {
+                                    return Ok(None);
+                                };
+                                let Some(lowered_index) = $emitter.lower_stmt_expr_for_ir(index)?
+                                else {
+                                    return Ok(None);
+                                };
+                                let Some(lowered_arg) =
+                                    $emitter.lower_stmt_expr_for_ir(&args[0])?
+                                else {
+                                    return Ok(None);
+                                };
+                                let lowered_index =
+                                    Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
+                                let lowered_arg = $emitter
+                                    .materialize_reusable_value_for_ir(&args[0], lowered_arg);
+                                let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
+                                return Ok(Some(crate::RustExpr::Block {
+                                    stmts: vec![crate::RustStmt::IfLet {
+                                        pattern: "Some(__elem)".to_string(),
+                                        expr: crate::RustExpr::MethodCall {
+                                            receiver: Box::new(lowered_object),
+                                            method: "get_mut".to_string(),
+                                            args: vec![key_arg],
+                                        },
+                                        then_body: vec![crate::RustStmt::Expr(
+                                            crate::RustExpr::MethodCall {
+                                                receiver: Box::new(crate::RustExpr::Ident(
+                                                    "__elem".to_string(),
+                                                )),
+                                                method: "push".to_string(),
+                                                args: vec![lowered_arg],
+                                            },
+                                        )],
+                                        else_body: None,
+                                    }],
+                                    expr: None,
+                                }));
+                            }
+                        }
+                    }
+                }
+                if method == "__sifr_timeout"
+                    && matches!(
+                        crate::resolve_alias_type_for_plain_call(object.ty()),
+                        Type::Task(_, _)
+                    )
+                {
+                    let [duration] = args.as_slice() else {
+                        return Ok(None);
+                    };
+                    let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+                        object,
+                        *receiver_convention,
+                        receiver_target.as_ref(),
+                    )?
+                    else {
+                        return Ok(None);
+                    };
+                    let Some(lowered_duration) = $emitter.lower_stmt_expr_for_ir(duration)? else {
+                        return Ok(None);
+                    };
+                    return Ok(Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_object),
+                        method: method.clone(),
+                        args: vec![crate::task_duration_expr_from_seconds(
+                            lowered_duration,
+                            "__sifr_task_timeout_seconds",
+                        )],
+                    }));
+                }
+                let lowered_registry = $emitter.try_lower_registry_method_call_expr(
                     object,
-                    *receiver_convention,
-                    receiver_target.as_ref(),
-                )? else {
-                    return Ok(None);
-                };
-                let Some(lowered_duration) = $emitter.lower_stmt_expr_for_ir(duration)? else {
-                    return Ok(None);
-                };
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object),
-                    method: method.clone(),
-                    args: vec![crate::task_duration_expr_from_seconds(
-                        lowered_duration,
-                        "__sifr_task_timeout_seconds",
-                    )],
-                }));
-            }
-            let lowered_registry = $emitter.try_lower_registry_method_call_expr(
-                object,
-                method,
-                args,
-                crate::place_emitter::MethodCallPlaces::new(
-                    *receiver_convention,
-                    receiver_target.as_ref(),
-                    mutable_arg_places,
-                ),
-                $expr.ty(),
-            )?;
-            if let Some(lowered_registry) = lowered_registry {
-                return Ok(Some(lowered_registry));
+                    method,
+                    args,
+                    crate::place_emitter::MethodCallPlaces::new(
+                        *receiver_convention,
+                        receiver_target.as_ref(),
+                        mutable_arg_places,
+                    ),
+                    $expr.ty(),
+                )?;
+                if let Some(lowered_registry) = lowered_registry {
+                    return Ok(Some(lowered_registry));
+                }
+                return Err(crate::method_call_emitter::builtin_method_decline(
+                    object, method,
+                ));
             }
 
             let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
                 object,
                 *receiver_convention,
                 receiver_target.as_ref(),
-            )? else {
+            )?
+            else {
                 return Ok(None);
             };
-            if let Some(materialized) = $emitter.materialize_explicit_borrowed_clone(
-                object,
-                method,
-                args,
-                lowered_object.clone(),
-            ) {
-                return Ok(Some(materialized));
-            }
             let effective_object_ty = $emitter.effective_method_object_ty(object);
             let method_params =
                 $emitter.resolve_registry_method_params(&effective_object_ty, method);
@@ -243,30 +251,19 @@ macro_rules! stmt_expr_method_call {
                 let convention = method_params
                     .as_ref()
                     .and_then(|params| params.get(idx))
-                    .map_or(sifr_type_system::ParamConvention::default(), |(_, convention)| {
-                        *convention
-                    });
+                    .map_or(
+                        sifr_type_system::ParamConvention::default(),
+                        |(_, convention)| *convention,
+                    );
                 let Some(lowered_arg) = $emitter.lower_method_argument_place_for_stmt(
                     arg,
                     convention,
                     mutable_arg_places.get(idx).and_then(Option::as_ref),
-                )? else {
-                    return Ok(None);
-                };
-                lowered_args.push(lowered_arg);
-            }
-            if matches!(
-                crate::resolve_alias_type_for_plain_call(&effective_object_ty),
-                Type::Decimal | Type::BigDecimal
-            ) && matches!(method.as_str(), "quantize" | "round")
-                && args.len() == 1
-            {
-                let Some(scale) = crate::integer_literal_decimal(&args[0])
-                    .and_then(|value| value.parse::<i64>().ok())
+                )?
                 else {
                     return Ok(None);
                 };
-                lowered_args[0] = crate::RustExpr::Literal(crate::RustLiteral::Int(scale));
+                lowered_args.push(lowered_arg);
             }
             if effective_object_ty.callable_field_type(method).is_some() {
                 if let Some(method_params) = method_params.as_deref() {
@@ -283,52 +280,6 @@ macro_rules! stmt_expr_method_call {
                     }))),
                     args: lowered_args,
                 }));
-            }
-            if method == "append"
-                && lowered_args.len() == 1
-                && matches!(
-                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
-                    Type::List(_)
-                )
-            {
-                lowered_args[0] = $emitter
-                    .materialize_reusable_value_for_ir(&args[0], lowered_args[0].clone());
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object),
-                    method: "push".to_string(),
-                    args: lowered_args,
-                }));
-            }
-            if method == "cloned"
-                && lowered_args.is_empty()
-                && matches!(
-                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
-                    Type::List(_)
-                )
-            {
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object),
-                    method: "clone".to_string(),
-                    args: vec![],
-                }));
-            }
-            if method == "cloned" && lowered_args.is_empty() {
-                let collected_vec = match &lowered_object {
-                    crate::RustExpr::MethodCall { method, .. } => {
-                        method == "collect" || method.starts_with("collect::<")
-                    }
-                    crate::RustExpr::Paren(inner) => {
-                        matches!(
-                            inner.as_ref(),
-                            crate::RustExpr::MethodCall { method, .. }
-                                if method == "collect" || method.starts_with("collect::<")
-                        )
-                    }
-                    _ => false,
-                };
-                if collected_vec {
-                    return Ok(Some(lowered_object));
-                }
             }
             if let Some(method_params) = method_params {
                 let method_receiver_class =
@@ -371,23 +322,6 @@ macro_rules! stmt_expr_method_call {
                 $emitter.is_deque_data_field(object),
                 lowered_method,
             );
-            if matches!(
-                crate::resolve_alias_type_for_plain_call($expr.ty()),
-                Type::Int
-            ) && matches!(method.as_str(), "len" | "count")
-                && !matches!(
-                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
-                    Type::Class { .. }
-                )
-            {
-                return Ok(Some(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec![
-                        "SifrInt".to_string(),
-                        "from".to_string(),
-                    ])),
-                    args: vec![lowered_method],
-                }));
-            }
             return Ok(Some(lowered_method));
         }
     }};

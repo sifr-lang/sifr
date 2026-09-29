@@ -97,6 +97,35 @@ impl RustEmitter {
                 mutable_arg_places,
                 ..
             } => {
+                let source_path = crate::method_call_emitter::source_method_path(expr).ok()?;
+                if !source_path.is_builtin() {
+                    let (object_expr, effective_object_ty, mut arg_exprs) = self
+                        .lower_recursive_method_receiver_and_args(
+                            object,
+                            method,
+                            args,
+                            *receiver_convention,
+                            receiver_target.as_ref(),
+                            mutable_arg_places,
+                        )?;
+                    if let Some(method_params) =
+                        self.resolve_registry_method_params(&effective_object_ty, method)
+                    {
+                        self.apply_registry_method_arg_conventions(
+                            args,
+                            &method_params,
+                            &mut arg_exprs,
+                        );
+                    }
+                    return Some(crate::RustExpr::from_source_method(
+                        object_expr,
+                        method.clone(),
+                        arg_exprs,
+                    ));
+                }
+                if let Some(lowered) = crate::lower_expr::try_lower_simple_method_call_expr(expr) {
+                    return Some(lowered);
+                }
                 let places = MethodCallPlaces::new(
                     *receiver_convention,
                     receiver_target.as_ref(),
@@ -234,30 +263,9 @@ impl RustEmitter {
                         lowered.expr,
                     ));
                 }
-                if let Some(method_params) = method_params {
-                    for (idx, arg_expr) in arg_exprs.iter_mut().enumerate() {
-                        if let (Some((param_ty, convention)), Some(arg)) =
-                            (method_params.get(idx), args.get(idx))
-                        {
-                            let adjusted = self.apply_registry_method_arg_convention(
-                                arg,
-                                param_ty,
-                                *convention,
-                                arg_expr.clone(),
-                            );
-                            *arg_expr = adjusted;
-                        }
-                    }
-                }
-                Some(Self::unwrap_compiler_verified_nonempty_pop_result(
-                    object.ty(),
-                    method,
-                    args,
-                    ty,
-                    object_expr.clone(),
-                    self.is_deque_data_field(object),
-                    crate::RustExpr::from_source_method(object_expr, method.clone(), arg_exprs),
-                ))
+                // A typed builtin has one semantics owner. A registry decline
+                // must not fall through to a name-based Rust method call.
+                None
             }
             HirExpr::ConstructorCall {
                 class_name,

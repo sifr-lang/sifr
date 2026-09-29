@@ -61,6 +61,12 @@ pub(super) fn try_lower_expr_stmt_with_bindings(
         ..
     } = expr
     {
+        if !crate::method_call_emitter::source_method_path(expr)
+            .ok()?
+            .is_builtin()
+        {
+            return None;
+        }
         if let HirExpr::Name { name, ty, .. } = object.as_ref() {
             if matches!(resolve_alias_type(ty), Type::Any | Type::Unknown) {
                 if let Some(bound_ty) = local_binding_types.get(name) {

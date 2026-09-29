@@ -108,6 +108,8 @@ pub use lower_item::*;
 mod lower_stmt;
 pub use lower_stmt::*;
 mod match_guard_helpers;
+#[cfg(test)]
+mod method_authority_tests;
 mod method_call_emitter;
 mod methods;
 mod module_body;

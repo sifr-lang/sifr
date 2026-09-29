@@ -9,11 +9,12 @@ pub use leaves_and_plain_calls::*;
 mod plain_calls;
 use plain_calls::try_lower_simple_call_expr;
 mod iterators_and_callables;
+pub(crate) use iterators_and_callables::try_lower_simple_method_call_expr;
 use iterators_and_callables::{
     try_lower_dict_get_key_expr, try_lower_simple_constructor_call_expr,
     try_lower_simple_defaultdict_index_expr, try_lower_simple_divmod_call_expr,
     try_lower_simple_filter_call_expr, try_lower_simple_iter_source_expr,
-    try_lower_simple_map_call_expr, try_lower_simple_method_call_expr,
+    try_lower_simple_map_call_expr,
 };
 mod collections_and_comprehensions;
 use collections_and_comprehensions::{

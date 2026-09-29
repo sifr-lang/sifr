@@ -181,9 +181,9 @@ impl RustEmitter {
                 Some(MutableReceiverTarget::Place(place)) => self
                     .emit_checked_place(object, place)
                     .map(|lowered| self.explicit_class_receiver_borrow(object, lowered)),
-                Some(MutableReceiverTarget::OwnedTemporary) => {
-                    self.try_lower_registry_expr_strict(object)
-                }
+                Some(MutableReceiverTarget::OwnedTemporary) => self
+                    .try_lower_registry_expr_strict(object)
+                    .or_else(|| self.lower_stmt_expr_for_ir(object).ok().flatten()),
                 Some(MutableReceiverTarget::SpecializedIndexedStorage(_)) => None,
                 None => None,
             },
@@ -197,12 +197,14 @@ impl RustEmitter {
                 {
                     return Some(witness);
                 }
-                self.emit_shared_receiver_path(object)
-                    .or_else(|| self.try_lower_registry_expr_strict(object))
+                self.emit_shared_receiver_path(object).or_else(|| {
+                    self.try_lower_registry_expr_strict(object)
+                        .or_else(|| self.lower_stmt_expr_for_ir(object).ok().flatten())
+                })
             }
-            Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => {
-                self.try_lower_registry_expr_strict(object)
-            }
+            Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => self
+                .try_lower_registry_expr_strict(object)
+                .or_else(|| self.lower_stmt_expr_for_ir(object).ok().flatten()),
             None => None,
         }
     }
@@ -218,13 +220,15 @@ impl RustEmitter {
                 Some(MutableArgumentTarget::Place(place)) => {
                     self.emit_checked_place(argument, place)
                 }
-                Some(MutableArgumentTarget::OwnedTemporary) => {
-                    self.try_lower_registry_expr_strict(argument)
-                }
+                Some(MutableArgumentTarget::OwnedTemporary) => self
+                    .try_lower_registry_expr_strict(argument)
+                    .or_else(|| self.lower_stmt_expr_for_ir(argument).ok().flatten()),
                 None => None,
             };
         }
-        let lowered = self.try_lower_registry_expr_strict(argument)?;
+        let lowered = self
+            .try_lower_registry_expr_strict(argument)
+            .or_else(|| self.lower_stmt_expr_for_ir(argument).ok().flatten())?;
         Some(self.clone_borrowed_argument_for_owned_convention(argument, convention, lowered))
     }
 

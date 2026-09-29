@@ -588,14 +588,8 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                         args: lowered_args,
                     }
                 }
-            } else if let HirExpr::MethodCall {
-                object,
-                method,
-                args,
-                ..
-            } = value.as_ref()
-            {
-                try_lower_simple_method_call_expr(object, method, args)?
+            } else if matches!(value.as_ref(), HirExpr::MethodCall { .. }) {
+                try_lower_simple_method_call_expr(value)?
             } else if matches!(
                 resolve_alias_type(value.ty()),
                 Type::Task(_, _) | Type::BlockingTask(_, _)
@@ -659,12 +653,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             HirIteratorOp::Filter => try_lower_simple_filter_call_expr(args),
             _ => try_lower_simple_call_expr(iterator_op_func_name(op), args),
         },
-        HirExpr::MethodCall {
-            object,
-            method,
-            args,
-            ..
-        } => try_lower_simple_method_call_expr(object, method, args),
+        HirExpr::MethodCall { .. } => try_lower_simple_method_call_expr(expr),
         HirExpr::ConstructorCall {
             class_name, args, ..
         } => try_lower_simple_constructor_call_expr(class_name, args),
