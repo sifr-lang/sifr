@@ -964,7 +964,7 @@ holds the separate passing and partial area receipts.
 | E02 | Analysis/lint owner; F22; merged in [PR #4083](https://github.com/sifr-lang/sifr/pull/4083), receipt above. | Current-revision diagnostics/actions reuse canonical parsed/HIR input; changed fix text gets new snapshot; policy/suppression equivalence. |
 | E03 | LSP performance owner; F23; merged in [PR #4085](https://github.com/sifr-lang/sifr/pull/4085), receipt above. | Actual Python declaration cache deltas in 25 connected modules: cold, unchanged, private/API edit, external change and cancellation/recovery. |
 | E04 | Separate editor correctness owner; F34; merged in [PR #4087](https://github.com/sifr-lang/sifr/pull/4087), receipt above. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
-| H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a-H01d merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), [PR #4096](https://github.com/sifr-lang/sifr/pull/4096) and [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
+| H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a-H01d and H01f merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), and [PR #4104](https://github.com/sifr-lang/sifr/pull/4104), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
 | H02 | Typed lowering and unsafe bridge owners, split by subsystem; F29; open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. |
 | H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
 | D01a | Diagnostic and verification registry prerequisite; non-codegen F32; merged in [PR #3936](https://github.com/sifr-lang/sifr/pull/3936), receipt below. | Active code identity, owner-module and fixture references, related-span JSON, verification mutation inventory and negative drift tests. Do not change codegen diagnostics or historical numeric codes. |
@@ -997,7 +997,7 @@ mutation smoke throughout. Do not claim H01/F28 complete from one slice.
 | H01c / diagnostics guided target; merged in [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), receipt below | After H01a. Mutate structured rendered-diagnostic envelopes directly and exercise JSON, human and compact renderers. Use a specific active diagnostic identity; never use the forbidden catch-all `SIFR-TYPE-0001`. Preserve H01a failure taxonomy and minimized JSON artifacts. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz diagnostics <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::diagnostic_renderer -- --exact`; assert nonzero guided executions, all three renderers and a stable minimized structured seed. |
 | H01d / project-graph guided target; merged in [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), receipt below | After H01a. Generate bounded project/manifest/import graphs, create each fixture outside the fuzz hot loop, and exercise the canonical project compiler. Keep dependency/tool failures separate from compiler findings and preserve minimized project trees. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz project_graph <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::project_graph -- --exact`; assert nonzero guided executions, graph mutations and stable minimized project-tree replay. |
 | H01e / codegen guided target; blocked pending resolution of automatic content review restriction, receipt below | After H01a and H01b. Generate varied *valid* typed programs and exercise codegen plus emitted-Rust validation without treating expected user diagnostics as findings. Do not alter X02 codegen safety ownership. Preserve minimized valid wrong-code/panic seeds. | `cargo +nightly fuzz run --fuzz-dir verification/fuzz codegen_validation <corpus> -- -max_total_time=10 -print_final_stats=1`; `cargo test -p sifr_driver --lib tests::guided_target_replay::codegen_validation -- --exact`; assert nonzero guided executions, valid-program diversity and stable minimized replay. |
-| H01f / type-system semantic properties | After H01b. Add generative normalization idempotence/equivalence and narrowing partition/soundness properties using canonical type-system operations, including unions, optionals and complements. A repeated fixed fixture is insufficient. Own the Rust semantic-property one-run contract: reject an unused `repeat_runs` field on Rust test entries or execute the declared count. Leave ownership transfer and incremental sessions to H01g/H01h. | `cargo test -p sifr_type_system --lib semantic_property_tests::normalization_idempotent -- --exact` and `cargo test -p sifr_type_system --lib semantic_property_tests::narrowing_partition -- --exact`, plus existing `narrow::tests` regressions. Save deterministic failing seeds and replay commands. |
+| H01f / type-system semantic properties | After H01b; merged in [PR #4104](https://github.com/sifr-lang/sifr/pull/4104), receipt below. Add generative normalization idempotence/equivalence and narrowing partition/soundness properties using canonical type-system operations, including unions, optionals and complements. A repeated fixed fixture is insufficient. Own the Rust semantic-property one-run contract: reject an unused `repeat_runs` field on Rust test entries or execute the declared count. Leave ownership transfer and incremental sessions to H01g/H01h. | `cargo test -p sifr_type_system --lib semantic_property_tests::normalization_idempotent -- --exact` and `cargo test -p sifr_type_system --lib semantic_property_tests::narrowing_partition -- --exact`, plus existing `narrow::tests` regressions. Save deterministic failing seeds and replay commands. |
 | H01g / frontend ownership property | After H01b and H01f. Generate move/borrow/mutability programs and compare accepted/rejected ownership behavior to explicit transfer invariants through the canonical frontend product. Include non-Copy values and branch joins. Do not substitute panic-free compilation for the ownership oracle. | `cargo test -p sifr_frontend --lib ownership_property_tests::move_borrow_branch_invariants -- --exact` plus focused existing ownership fixtures; record generated case count, deterministic random seed and minimized failing program. |
 | H01h / frontend/session equivalence | After H01g and E01c. Compare incremental edits with fresh full compilation from the same source and external-input snapshot, including add/delete/rename, diagnostic spans, cancellation and recovery. Preserve E01 watcher and cache ownership; this item owns only the equivalence property. | `cargo test -p sifr_frontend --lib query_diagnostics_equivalence_tests::incremental_full_property -- --exact` and `cargo test -p sifr_lsp --lib incremental_full_property_tests::request_publication -- --exact`; record edit-sequence seed, matched products/diagnostics and minimized failing sequence. |
 | H01i / codegen determinism and H01 integration | After H01e-H01h. Compile the same generated valid program in separate compiler processes and isolated output roots, compare emitted Rust and binary-observable behavior under varied process hash seeds, and verify reproducible diagnostics. Wire completed guided targets into nightly/release selection and keep local deterministic mutation smoke. At integration, rename the existing `fuzz-smoke` suite to `mutation-smoke` in the manifest and every caller; retain its seed execution and assertions. Map the existing five `*_entrypoint` ids to the six guided target names without duplicating ownership, reconcile the 10/30-minute sustained budgets with the area timeout/resource class, and update fuzz policy and release-evidence labels; do not claim a release checkpoint absent a release request. | `cargo test -p sifr_driver --lib tests::semantic_properties::cross_process_deterministic_codegen -- --exact`; `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite mutation-smoke`; nightly/release selected `sustained-fuzz` runs with measured executions, unique labels, separated outcomes and corpus/minimized-seed receipts. |
@@ -1226,6 +1226,45 @@ The exact next action is to resolve that restriction, resume the preserved H01e
 candidate, complete the named live selection and scoped review, then prepare
 and merge its implementation PR. H01f-H01i and whole H01/F28 qualification
 remain open.
+
+### H01f/F28 type-system semantic-property delivery receipt (2026-09-29)
+
+[PR #4104](https://github.com/sifr-lang/sifr/pull/4104) merged as
+`ebdc82132bfafe4b541a6a525030fda6e6078675` from exact tested and
+reviewed candidate `01531b3487fea22b873c1c2982e3029d1c8456c8` (base
+`2fbc376520962ce6ec6e9aea4de6a43942b9b585`, tree
+`86d9791be89d7f289c9f236c03add8aa94ed299b`). Seeded generation
+exercises canonical union normalization idempotence, permutation and duplicate
+equivalence, and assignability witnesses over nested unions, optionals and
+literals. A separate generated finite-domain oracle checks narrowing partition
+and complement soundness for 2,048 domains, 11 conditions, seven witnesses and
+both branches. The first failing seed was `0x483031664e415252`, case 0, mask
+`0x76`: an impossible `is None` true branch produced `None`. The exact replay
+is `cargo test -p sifr_type_system --lib semantic_property_tests::narrowing_partition -- --exact`; assertion output
+includes seed, case, mask, condition, branch and witness. The repair also keeps
+reachable alias-member, float equality and TypeVar branches conservative.
+
+On the final candidate, both named exact semantic-property selections passed
+**1/1** each, existing `narrow::tests` passed **14/14**, and Rust property
+runner contract tests passed **3/3**. Both manifest Rust entries passed once
+through the runner as `run-1`. Scoped Clippy, formatting, diff and 900-line
+file-size checks passed. The optional full type-system library run became
+unverified after an SSH stall and is not acceptance evidence. Candidate-keyed
+validation and both read-only review responses are outside the Git tree under
+`/home/yaser5/projects/sifr/h01f-evidence-20260929/01531b3487fea22b873c1c2982e3029d1c8456c8/`;
+the validation manifest SHA-256 is
+`f2bb07fbdb76e7d51bb6b6e6bf8d0108481ff48f7b36ecab249322d9926a1f86`.
+
+The first scoped Opus 5.5 review found an in-scope alias/float/TypeVar omission,
+which the second candidate repaired. Final read-only review returned
+**SATISFIED** with no blocking findings (response SHA-256
+`132843704912bcf37458ddbb0faa2a54d0eb7fbb0d2b232a934595440ea650e9`).
+Pre-existing `IsInstance` alias-member overlap is tracked in
+[issue #4105](https://github.com/sifr-lang/sifr/issues/4105); optional broader
+property witnesses and dead-branch lowering coverage remain follow-up ideas,
+not H01f claims. No local create-PR or full merge gate ran under the approved
+intermediate-item exception. H01/F28 remains open; H01e remains blocked and
+H01g-H01i retain their separate scope. Q01 owns the final gate.
 
 ### Resolved prerequisites and boundaries
 
