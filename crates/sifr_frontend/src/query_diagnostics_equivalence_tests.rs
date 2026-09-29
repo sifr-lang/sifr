@@ -563,10 +563,10 @@ fn incremental_full_property() {
             3 => {
                 sources.insert(
                     "extra.sifr",
-                    "def extra() -> int:\\n    return 3\\n".to_string(),
+                    "def extra() -> int:\n    return 3\n".to_string(),
                 );
                 std::fs::write(dir.join("extra.sifr"), &sources["extra.sifr"]).expect("add");
-                let main = "from helper import value\\nfrom extra import extra\\n\\ndef main() -> int:\\n    return value() + extra()\\n";
+                let main = "from helper import value\nfrom extra import extra\n\ndef main() -> int:\n    return value() + extra()\n";
                 sources.insert("main.sifr", main.to_string());
                 std::fs::write(dir.join("main.sifr"), main).expect("import added module");
                 session.reload().expect("reload after add");
@@ -579,7 +579,7 @@ fn incremental_full_property() {
                         std::fs::remove_file(dir.join(name)).expect("delete");
                     }
                 }
-                let main = "from helper import value\\nfrom extra import extra\\n\\ndef main() -> int:\\n    return value() + extra()\\n";
+                let main = "from helper import value\nfrom extra import extra\n\ndef main() -> int:\n    return value() + extra()\n";
                 sources.insert("main.sifr", main.to_string());
                 std::fs::write(dir.join("main.sifr"), main).expect("retain missing import");
                 session.reload().expect("reload after delete");
@@ -592,12 +592,12 @@ fn incremental_full_property() {
                         std::fs::remove_file(dir.join(name)).expect("remove prior auxiliary");
                     }
                 }
-                let renamed = "def extra() -> int:\\n    return 3\\n";
+                let renamed = "def extra() -> int:\n    return 3\n";
                 std::fs::write(dir.join("extra.sifr"), renamed).expect("create rename source");
                 std::fs::rename(dir.join("extra.sifr"), dir.join("renamed.sifr"))
                     .expect("rename module");
                 sources.insert("renamed.sifr", renamed.to_string());
-                let main = "from helper import value\\nfrom renamed import extra\\n\\ndef main() -> int:\\n    return value() + extra()\\n";
+                let main = "from helper import value\nfrom renamed import extra\n\ndef main() -> int:\n    return value() + extra()\n";
                 sources.insert("main.sifr", main.to_string());
                 std::fs::write(dir.join("main.sifr"), main).expect("import renamed module");
                 session.reload().expect("reload after rename");
@@ -648,11 +648,25 @@ fn incremental_full_property() {
             "modules seed={H01H_SEED:#x} step={step} operation={label}"
         );
         match label {
-            "add" => assert!(actual_modules.contains("extra")),
-            "rename" => assert!(actual_modules.contains("renamed")),
+            "add" => {
+                assert!(actual.is_empty(), "added import must resolve");
+                assert!(edge_summary(context).contains(&("main".to_string(), "extra".to_string())));
+            }
+            "rename" => {
+                assert!(actual.is_empty(), "renamed import must resolve");
+                assert!(
+                    edge_summary(context).contains(&("main".to_string(), "renamed".to_string()))
+                );
+            }
             "delete" => {
                 assert!(!actual_modules.contains("extra"));
-                assert!(!actual.is_empty(), "deleted import must diagnose");
+                assert!(
+                    actual.iter().any(|diagnostic| {
+                        diagnostic.code
+                            == sifr_diagnostics::DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
+                    }),
+                    "deleted import must diagnose as unresolved"
+                );
             }
             _ => {}
         }

@@ -121,4 +121,155 @@ fn request_publication() {
         saw_span |= diagnostics.iter().any(|item| item.get("range").is_some());
     }
     assert!(saw_error && saw_recovery && saw_span);
+    project_structural_publication_equivalence();
+}
+
+fn project_structural_publication_equivalence() {
+    let temp = tempfile::tempdir().expect("temporary project");
+    let src = temp.path().join("src");
+    std::fs::create_dir(&src).expect("source directory");
+    std::fs::write(src.join("lib.rs"), "").expect("Cargo library marker");
+    std::fs::write(
+        temp.path().join("Cargo.toml"),
+        r#"[package]
+name = "h01h-equivalence"
+version = "0.0.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]
+"#,
+    )
+    .expect("Cargo manifest");
+    std::fs::write(
+        temp.path().join("Cargo.lock"),
+        r#"version = 4
+
+[[package]]
+name = "h01h-equivalence"
+version = "0.0.0"
+"#,
+    )
+    .expect("Cargo lock");
+    std::fs::write(
+        temp.path().join("sifr.toml"),
+        "[package]\nname = \"h01h-equivalence\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    )
+    .expect("project manifest");
+    let main_path = src.join("main.sifr");
+    let helper_path = temp.path().join("extra.sifr");
+    let renamed_path = temp.path().join("renamed.sifr");
+    let mut main_source =
+        "from extra import extra\n\ndef main() -> int:\n    return extra()\n".to_string();
+    let helper_source = "def extra() -> int:\n    return 3\n";
+    std::fs::write(&main_path, &main_source).expect("main source");
+    let uri = url::Url::from_file_path(&main_path)
+        .expect("main URI")
+        .to_string();
+    let helper_uri = url::Url::from_file_path(&helper_path)
+        .expect("helper URI")
+        .to_string();
+    let renamed_uri = url::Url::from_file_path(&renamed_path)
+        .expect("renamed URI")
+        .to_string();
+    let mut incremental = Session::new();
+    incremental
+        .open_document(
+            uri.clone(),
+            crate::capabilities::LANGUAGE_ID,
+            Some(1),
+            main_source.clone(),
+        )
+        .expect("open project main");
+    let (server, client) = Connection::memory();
+    let initial = publish(&mut incremental, &server, &client, &uri);
+    assert!(
+        initial["diagnostics"]
+            .as_array()
+            .expect("initial diagnostics")
+            .iter()
+            .any(|item| item["code"] == "SIFR-IMPORT-0002")
+    );
+
+    for (step, changes) in [
+        (0, json!([{"uri":helper_uri,"type":1}])),
+        (1, json!([{"uri":helper_uri,"type":3}])),
+        (
+            2,
+            json!([
+                {"uri":helper_uri,"type":3},
+                {"uri":renamed_uri,"type":1}
+            ]),
+        ),
+    ] {
+        match step {
+            0 => std::fs::write(&helper_path, helper_source).expect("add imported module"),
+            1 => std::fs::remove_file(&helper_path).expect("delete imported module"),
+            _ => {
+                std::fs::write(&helper_path, helper_source).expect("source to rename");
+                std::fs::rename(&helper_path, &renamed_path).expect("rename imported module");
+                main_source =
+                    "from renamed import extra\n\ndef main() -> int:\n    return extra()\n"
+                        .to_string();
+                std::fs::write(&main_path, &main_source).expect("update import");
+                incremental
+                    .change_compacted(&uri, Some(2), &[json!({"text":main_source})])
+                    .expect("change import to renamed module");
+            }
+        }
+        crate::notifications::handle(
+            &mut incremental,
+            &server,
+            "workspace/didChangeWatchedFiles",
+            json!({"changes":changes}),
+        )
+        .expect("watcher notification");
+        let actual = publications(&client)
+            .into_iter()
+            .filter(|params| params["uri"] == uri)
+            .last()
+            .expect("watcher must publish current diagnostics");
+
+        let mut fresh = Session::new();
+        fresh
+            .open_document(
+                uri.clone(),
+                crate::capabilities::LANGUAGE_ID,
+                Some(if step == 2 { 2 } else { 1 }),
+                main_source.clone(),
+            )
+            .expect("fresh project at identical snapshot");
+        let (fresh_server, fresh_client) = Connection::memory();
+        let expected = publish(&mut fresh, &fresh_server, &fresh_client, &uri);
+        assert_eq!(
+            actual["diagnostics"], expected["diagnostics"],
+            "seed={SEED:#x} structural step={step} source={main_source:?}"
+        );
+        match step {
+            0 | 2 => assert!(
+                actual["diagnostics"]
+                    .as_array()
+                    .expect("diagnostics")
+                    .is_empty(),
+                "step={step} diagnostics={:?}",
+                actual["diagnostics"]
+            ),
+            _ => assert!(
+                actual["diagnostics"]
+                    .as_array()
+                    .expect("diagnostics")
+                    .iter()
+                    .any(|item| {
+                        item["code"] == "SIFR-IMPORT-0002"
+                            && item["range"]
+                                == json!({
+                                    "start": {"line": 0, "character": 0},
+                                    "end": {"line": 0, "character": 23}
+                                })
+                    })
+            ),
+        }
+    }
 }
