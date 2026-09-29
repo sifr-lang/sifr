@@ -1203,6 +1203,9 @@ exception. H01/F28 remains open for H01e-H01i; Q01 retains the final gate.
 
 ### H01e/F28 codegen-guided external blocker (2026-09-29)
 
+This docs-only blocker record is [PR #4103](https://github.com/sifr-lang/sifr/pull/4103).
+Documentation structure, file-size guardrail and diff checks passed.
+
 The H01e worker's exact driver replay selection,
 `cargo test -p sifr_driver --lib tests::guided_target_replay::codegen_validation -- --exact`,
 passed on its owned worktree. The required exact live guided selection,
