@@ -25,6 +25,8 @@ mod process_signals;
 pub use compiler_context::CompilerContext;
 mod diagnostics;
 mod frontend;
+#[doc(hidden)]
+pub mod guided_project_graph;
 mod project;
 mod python_binding;
 mod stdlib;

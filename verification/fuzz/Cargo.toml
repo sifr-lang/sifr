@@ -12,6 +12,7 @@ libfuzzer-sys = "0.4.13"
 sifr_syntax = { path = "../../crates/sifr_syntax" }
 sifr_frontend = { path = "../../crates/sifr_frontend" }
 sifr_diagnostics = { path = "../../crates/sifr_diagnostics" }
+sifr_driver = { path = "../../crates/sifr_driver" }
 serde_json = "1"
 
 [[bin]]
@@ -40,6 +41,13 @@ bench = false
 [[bin]]
 name = "diagnostics"
 path = "fuzz_targets/diagnostics.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "project_graph"
+path = "fuzz_targets/project_graph.rs"
 test = false
 doc = false
 bench = false

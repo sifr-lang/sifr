@@ -23,6 +23,9 @@
     },
     "diagnostics": {
       "corpus": "verification/fuzz/corpus/diagnostics"
+    },
+    "project_graph": {
+      "corpus": "verification/fuzz/corpus/project_graph"
     }
   }
 }
