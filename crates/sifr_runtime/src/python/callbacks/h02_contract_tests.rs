@@ -154,6 +154,54 @@ async fn close_cancel_reentrancy_releases_once() {
         .expect_err("escaped shell rejects before touching dead captures");
     assert_eq!(error.exception_type, "SifrCallbackClosedError");
     super::asyncio_invocation::prove_queued_output_revocation();
+    // Cancellation may skip the close statement entirely. Wrapper Drop must
+    // still cancel Python entries and let its executor finish logical owner drain.
+    let drop_polls = AtomicUsize::new(0);
+    let drop_futures = AtomicUsize::new(0);
+    let drop_owner = CallbackOwnerState::new_call_scoped().expect("drop owner");
+    let drop_started = Arc::new(tokio::sync::Notify::new());
+    // SAFETY: this private wrapper drops before both borrowed counters, and
+    // neither wrapper nor captures are available from its handler.
+    let dropped_without_close = unsafe {
+        asyncio_callback_scoped_with_owner(
+            drop_owner.clone(),
+            9,
+            1,
+            AsyncioCallbackConcurrency::Parallel,
+            |args| to_int(&args[0]),
+            |_, _, _| BorrowedPending {
+                polls: &drop_polls,
+                releases: &drop_futures,
+                started: Arc::clone(&drop_started),
+            },
+            from_int,
+        )
+    }
+    .expect("callback before close statement");
+    let request = super::asyncio_tests::function_request(
+        "start_and_fail",
+        vec![crate::python::async_from_object(dropped_without_close.object()).expect("transport")],
+    );
+    crate::python::submit_async_declaration(request, None)
+        .await
+        .expect_err("fixture failure");
+    while drop_polls.load(Ordering::SeqCst) == 0 {
+        tokio::task::yield_now().await;
+    }
+    drop(dropped_without_close);
+    assert_eq!(drop_futures.load(Ordering::SeqCst), 1);
+    let drop_polls_at_close = drop_polls.load(Ordering::SeqCst);
+    tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        while drop_owner.status() != CallbackOwnerStatus::Closed {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("Drop's owned drain must finish without another closer");
+    assert_eq!(drop_owner.active_calls(), 0);
+    assert_eq!(drop_polls.load(Ordering::SeqCst), drop_polls_at_close);
+    assert_eq!(drop_futures.load(Ordering::SeqCst), 1);
+
     // Rejected retained publication must leave the wrapper owning its target;
     // an owner may already have admitted setup when close wins publication.
     let failed_publication_releases = Arc::new(AtomicUsize::new(0));

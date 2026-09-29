@@ -116,6 +116,16 @@ impl Drop for CloseAuthority {
 }
 
 impl CallbackOwnerState {
+    pub(super) fn is_call_scoped(&self) -> bool {
+        !self.inner.retained
+    }
+
+    pub(super) fn request_callback_entry_cancellation(&self, callback_id: u64) {
+        let cancellations =
+            pending_async_cancellations_for_callback(&mut lock_state(&self.inner), callback_id);
+        invoke_cancellations(cancellations);
+    }
+
     pub(super) fn require_call_scope(&self) -> Result<(), PythonError> {
         if self.inner.retained {
             return Err(errors::unavailable(

@@ -159,6 +159,7 @@ pub struct AsyncioCallback<'a> {
     target: Arc<Mutex<Option<Box<dyn AsyncioTarget<'a> + 'a>>>>,
     admission: Arc<AsyncioAdmission>,
     drain: Arc<InvocationDrain>,
+    cleanup_runtime: tokio::runtime::Handle,
     retained: AtomicBool,
 }
 
@@ -343,10 +344,23 @@ impl Drop for AsyncioCallback<'_> {
         // borrowed state synchronously even on a current-thread executor.
         let drain = || {
             self.admission.close_and_wait_sync();
+            // Revocation alone must not leave the Python future pending. Ask
+            // each admitted entry to cancel before removing borrowed work.
+            self.owner
+                .request_callback_entry_cancellation(self.callback_id);
             self.drain.revoke();
         };
         if Python::try_attach(|py| py.detach(drain)).is_none() {
             drain();
+        }
+        if self.owner.is_call_scoped() {
+            // Only owned owner/entry state remains after synchronous revocation.
+            // The constructor's executor completes logical drain when its caller
+            // was cancelled before reaching the generated async close statement.
+            let owner = self.owner.clone();
+            std::mem::drop(self.cleanup_runtime.spawn(async move {
+                let _ignored = owner.close_call_scope_async().await;
+            }));
         }
         let _ignored = object_ops::close_object(self.object.clone());
     }
@@ -421,12 +435,16 @@ where
             "asyncio callback requires an active Sifr executor: {error}"
         )))
     })?;
+    let cleanup_runtime = runtime.clone();
     let target: Box<dyn AsyncioTarget<'a> + 'a> = Box::new(TypedAsyncioTarget {
         decode: Arc::new(decode),
         handler: Arc::new(handler),
         encode: Arc::new(encode),
     });
     let target_ptr: *const (dyn AsyncioTarget<'a> + 'a) = &*target;
+    // SAFETY: the private wrapper owns this stable Box until setup admission
+    // closes and drains. Shared setup only reads the Sync target; the unsafe
+    // caller keeps captures live, and no alias gains mutable ownership.
     let target_ptr = Arc::new(unsafe { erase_target_lifetime(target_ptr) });
     let drain = Arc::new(InvocationDrain::default());
     let shell_drain = Arc::clone(&drain);
@@ -469,8 +487,15 @@ where
                 let entry_sequence = invocation.entry_sequence();
                 let _active_setup = invocation.enter_poll();
                 let values = collect_args(args).map_err(python_error)?;
+                // SAFETY: the setup lease excludes target destruction; owner
+                // admission covers conversion and the target supports shared
+                // Sync access. Python handles are decoded while holding the GIL.
                 let prepared = unsafe { (&*target_ptr.0).prepare(values) }.map_err(python_error)?;
                 let cancellation = CancellationCarrier::new();
+                // SAFETY: setup retains captures until this future either drops
+                // on setup error or enters the revocation registry. Its mutex
+                // excludes polling/encoding from wrapper teardown; Send permits
+                // the worker handoff without creating mutable aliases.
                 let prepared = unsafe {
                     erase_future_lifetime(prepared.invoke(entry_sequence, cancellation.clone()))
                 };
@@ -563,6 +588,7 @@ where
         target: Arc::new(Mutex::new(Some(target))),
         admission,
         drain,
+        cleanup_runtime,
         retained: AtomicBool::new(false),
     })
 }
