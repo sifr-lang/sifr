@@ -500,3 +500,185 @@ fn unrelated_module_drops_global_cycle_diagnostic_after_repair() {
         clean_project_diagnostics(&sources, &dir),
     );
 }
+
+const H01H_SEED: u64 = 0x4830_3168_4551_5549;
+
+#[test]
+fn incremental_full_property() {
+    // Replay a failing step with the printed seed, step and operation.
+    let dir = temp_project_dir("incremental_full_property");
+    let mut sources = BTreeMap::from([
+        (
+            "main.sifr",
+            "from helper import value\n\ndef main() -> int:\n    return value()\n".to_string(),
+        ),
+        (
+            "helper.sifr",
+            "def value() -> int:\n    return 1\n".to_string(),
+        ),
+    ]);
+    write_project(&dir, &sources);
+    let root = ProjectRoot {
+        root: SourcePath::new(&dir),
+        entrypoint: SourcePath::new(dir.join("main.sifr")),
+    };
+    let mut session = crate::WorkspaceSession::open_project(root).expect("initial project");
+    let mut state = H01H_SEED;
+    let mut version = 1;
+    let mut seen = std::collections::BTreeSet::new();
+    for step in 0..64 {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        let operation = if step < 8 { step } else { state as usize % 8 };
+        let label = match operation {
+            0 => {
+                let value = (state % 97) as i64;
+                let source = format!("def value() -> int:\n    return {value}\n");
+                sources.insert("helper.sifr", source.clone());
+                std::fs::write(dir.join("helper.sifr"), &source).expect("edit helper");
+                let context = session.context_mut().expect("loaded context");
+                update_module(context, module_by_stem(context, "helper"), &source, version);
+                "edit"
+            }
+            1 => {
+                let source = format!(
+                    "from helper import value\n\ndef main() -> int:\n    result: str = value()\n    return {}\n",
+                    state % 19
+                );
+                sources.insert("main.sifr", source.clone());
+                std::fs::write(dir.join("main.sifr"), &source).expect("edit main");
+                let context = session.context_mut().expect("loaded context");
+                update_module(context, module_by_stem(context, "main"), &source, version);
+                "diagnostic"
+            }
+            2 => {
+                let source = "from helper import value\n\ndef main() -> int:\n    return value()\n";
+                sources.insert("main.sifr", source.to_string());
+                std::fs::write(dir.join("main.sifr"), source).expect("repair main");
+                let context = session.context_mut().expect("loaded context");
+                update_module(context, module_by_stem(context, "main"), source, version);
+                "recover"
+            }
+            3 => {
+                sources.insert(
+                    "extra.sifr",
+                    "def extra() -> int:\\n    return 3\\n".to_string(),
+                );
+                std::fs::write(dir.join("extra.sifr"), &sources["extra.sifr"]).expect("add");
+                let main = "from helper import value\\nfrom extra import extra\\n\\ndef main() -> int:\\n    return value() + extra()\\n";
+                sources.insert("main.sifr", main.to_string());
+                std::fs::write(dir.join("main.sifr"), main).expect("import added module");
+                session.reload().expect("reload after add");
+                "add"
+            }
+            4 => {
+                for name in ["extra.sifr", "renamed.sifr"] {
+                    sources.remove(name);
+                    if dir.join(name).exists() {
+                        std::fs::remove_file(dir.join(name)).expect("delete");
+                    }
+                }
+                let main = "from helper import value\\nfrom extra import extra\\n\\ndef main() -> int:\\n    return value() + extra()\\n";
+                sources.insert("main.sifr", main.to_string());
+                std::fs::write(dir.join("main.sifr"), main).expect("retain missing import");
+                session.reload().expect("reload after delete");
+                "delete"
+            }
+            5 => {
+                for name in ["extra.sifr", "renamed.sifr"] {
+                    sources.remove(name);
+                    if dir.join(name).exists() {
+                        std::fs::remove_file(dir.join(name)).expect("remove prior auxiliary");
+                    }
+                }
+                let renamed = "def extra() -> int:\\n    return 3\\n";
+                std::fs::write(dir.join("extra.sifr"), renamed).expect("create rename source");
+                std::fs::rename(dir.join("extra.sifr"), dir.join("renamed.sifr"))
+                    .expect("rename module");
+                sources.insert("renamed.sifr", renamed.to_string());
+                let main = "from helper import value\\nfrom renamed import extra\\n\\ndef main() -> int:\\n    return value() + extra()\\n";
+                sources.insert("main.sifr", main.to_string());
+                std::fs::write(dir.join("main.sifr"), main).expect("import renamed module");
+                session.reload().expect("reload after rename");
+                "rename"
+            }
+            6 => {
+                // A version-only update must retain the exact same product.
+                let source = sources["helper.sifr"].clone();
+                let context = session.context_mut().expect("loaded context");
+                update_module(context, module_by_stem(context, "helper"), &source, version);
+                "version"
+            }
+            _ => {
+                // Repeated query probes exercise the warmed diagnostics cache.
+                let context = session.context_mut().expect("loaded context");
+                let _ = project_diagnostics(context);
+                "warm-query"
+            }
+        };
+        seen.insert(label);
+        let context = session.context_mut().expect("loaded context");
+        let actual = project_diagnostics(context);
+        let mut fresh = load_project(&dir);
+        let expected = project_diagnostics(&mut fresh);
+        assert_eq!(
+            actual, expected,
+            "seed={H01H_SEED:#x} step={step} operation={label} sources={sources:?}"
+        );
+        assert_eq!(
+            edge_summary(context),
+            edge_summary(&fresh),
+            "graph seed={H01H_SEED:#x} step={step} operation={label}"
+        );
+        let actual_modules = context
+            .module_graph()
+            .modules
+            .iter()
+            .map(|module| module_stem(&module.canonical_path))
+            .collect::<std::collections::BTreeSet<_>>();
+        let fresh_modules = fresh
+            .module_graph()
+            .modules
+            .iter()
+            .map(|module| module_stem(&module.canonical_path))
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(
+            actual_modules, fresh_modules,
+            "modules seed={H01H_SEED:#x} step={step} operation={label}"
+        );
+        match label {
+            "add" => assert!(actual_modules.contains("extra")),
+            "rename" => assert!(actual_modules.contains("renamed")),
+            "delete" => {
+                assert!(!actual_modules.contains("extra"));
+                assert!(!actual.is_empty(), "deleted import must diagnose");
+            }
+            _ => {}
+        }
+        let source_map = |context: &FrontendContext| {
+            context
+                .source_map()
+                .files
+                .into_iter()
+                .map(|file| {
+                    (
+                        file.canonical_path
+                            .as_path()
+                            .strip_prefix(&dir)
+                            .expect("project-relative source")
+                            .to_path_buf(),
+                        file.source.as_str().to_string(),
+                    )
+                })
+                .collect::<BTreeMap<_, _>>()
+        };
+        assert_eq!(
+            source_map(context),
+            source_map(&fresh),
+            "source product seed={H01H_SEED:#x} step={step} operation={label}"
+        );
+        version += 1;
+    }
+    assert_eq!(seen.len(), 8, "seed must cover every operation");
+}

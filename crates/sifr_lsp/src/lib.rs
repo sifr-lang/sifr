@@ -40,3 +40,6 @@ mod generation;
 
 #[cfg(test)]
 mod dxf_embedding_tests;
+
+#[cfg(test)]
+mod incremental_full_property_tests;
