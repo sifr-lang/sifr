@@ -121,7 +121,7 @@ use python_arrow_methods::{
     consume_python_arrow_release_receiver, resolve_python_arrow_method_type,
 };
 mod python_dlpack_methods;
-mod python_raw_object_methods;
+pub(super) mod python_raw_object_methods;
 use python_dlpack_methods::{
     consume_python_dlpack_release_receiver, resolve_python_dlpack_method_type,
 };

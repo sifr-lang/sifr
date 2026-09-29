@@ -10,11 +10,12 @@ use sifr_type_system::Type;
 use std::collections::HashSet;
 
 pub(in crate::lower) fn is_task_scope_type(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
+    ty.resolve_alias() == &super::task_owner_scope_state::task_scope_type()
+        || ty.resolve_alias() == &super::task_owner_scope_state::task_group_type()
 }
 
 pub(in crate::lower) fn is_task_group_type(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "TaskGroup")
+    ty.resolve_alias() == &super::task_owner_scope_state::task_group_type()
 }
 
 pub(in crate::lower) fn lower_task_scope_spawn_call(

@@ -1,7 +1,9 @@
 use super::method_receiver_analysis::method_signature;
 use crate::hir_nodes::{HirExpr, HirFunction, HirIteratorOp, HirModule};
 use ruff_text_size::TextRange;
-use sifr_ir::{MutableArgumentTarget, Place, PlaceProjection, visit_hir_function_exprs_mut};
+use sifr_ir::{
+    MethodAuthority, MutableArgumentTarget, Place, PlaceProjection, visit_hir_function_exprs_mut,
+};
 use sifr_type_system::ReceiverConvention;
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
@@ -103,16 +105,28 @@ fn verify_function(
             object,
             method,
             args,
+            authority,
             receiver_convention,
             receiver_target,
             mutable_arg_places,
-            source: Some(source),
+            source,
             ..
         } = expr
         else {
             return;
         };
 
+        if matches!(authority, MethodAuthority::Unclassified) {
+            violations.push(MethodCallInvariantViolation {
+                message: format!(
+                    "internal compiler error: source method call '{method}' has no classified authority"
+                ),
+                range: source.as_ref().map_or_default(|source| source.call_range),
+            });
+        }
+        let Some(source) = source else {
+            return;
+        };
         if receiver_convention.is_none() {
             violations.push(MethodCallInvariantViolation {
                 message: format!(
@@ -331,7 +345,7 @@ mod tests {
         };
 
         let violations = verify_module_method_calls(&mut module, &HashMap::new(), &HashMap::new());
-        assert_eq!(violations.len(), 3);
+        assert_eq!(violations.len(), 4);
         assert!(
             violations
                 .iter()
@@ -359,7 +373,15 @@ mod tests {
                 return_type: Type::None,
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::MethodCall {
-                        authority: sifr_ir::MethodAuthority::Unclassified,
+                        authority: sifr_ir::MethodAuthority::BuiltinIntrinsic {
+                            declaration: sifr_ir::CallableIdentity {
+                                module: "sifr.builtin".to_string(),
+                                owner: Some("list[int]".to_string()),
+                                symbol: "append".to_string(),
+                                generic_arguments: Vec::new(),
+                                signature: "(int) -> None".to_string(),
+                            },
+                        },
                         object: Box::new(HirExpr::ListLiteral {
                             elements: Vec::new(),
                             ty: Type::List(Box::new(Type::Int)),

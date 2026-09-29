@@ -82,7 +82,7 @@ pub(in crate::lower) fn receiver_convention_for_non_class_method(
             }
             _ => ReceiverConvention::SharedBorrow,
         },
-        Type::Class { name, .. } if matches!(name.as_str(), "TaskScope" | "TaskGroup") => {
+        Type::Class { .. } if super::task_scope_calls::is_task_scope_type(object_ty) => {
             if method.starts_with("__sifr_") {
                 ReceiverConvention::MutableBorrow
             } else {
