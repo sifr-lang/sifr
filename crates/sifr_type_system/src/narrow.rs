@@ -73,7 +73,11 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
         NarrowingCondition::IsNone(_) => {
             if is_true {
                 // An impossible None branch remains unreachable.
-                intersect_with_union(ty, &Type::None)
+                if may_be_none(ty) {
+                    Type::None
+                } else {
+                    Type::Never
+                }
             } else {
                 // x is not None -> remove None
                 remove_none_from_union(ty)
@@ -85,7 +89,11 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
                 remove_none_from_union(ty)
             } else {
                 // An impossible None branch remains unreachable.
-                intersect_with_union(ty, &Type::None)
+                if may_be_none(ty) {
+                    Type::None
+                } else {
+                    Type::Never
+                }
             }
         }
         NarrowingCondition::IsInstance(_, target_type) => {
@@ -99,12 +107,28 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
         }
         NarrowingCondition::Equality(_, value) => {
             if is_true {
-                // Equality refines to a singleton only when it overlaps the input.
+                // Keep opaque or cross-type equality cases broad; only refine
+                // when every possibly equal member can hold this literal.
                 let literal = value.to_type();
-                if intersect_with_union(ty, &literal) == Type::Never {
+                let members = ty.union_members();
+                let matching = members
+                    .iter()
+                    .filter(|member| may_equal_literal(member, &literal))
+                    .collect::<Vec<_>>();
+                if matching.is_empty() {
                     Type::Never
-                } else {
+                } else if matching
+                    .iter()
+                    .all(|member| equality_member_is_exact(member, &literal))
+                {
                     literal
+                } else {
+                    make_union(
+                        matching
+                            .into_iter()
+                            .map(|member| (*member).clone())
+                            .collect(),
+                    )
                 }
             } else {
                 // x != "GET" -> remove that literal (if applicable)
@@ -153,6 +177,61 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
                 result
             }
         }
+    }
+}
+
+/// Return false only when a type proves that `None` is impossible.
+fn may_be_none(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Union(members) => members.iter().any(may_be_none),
+        Type::Never
+        | Type::Int
+        | Type::Float
+        | Type::Bool
+        | Type::Str
+        | Type::Bytes
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_) => false,
+        _ => true,
+    }
+}
+
+/// Equality may cross numeric types or dispatch to an opaque implementation.
+/// Reject only pairs whose disjointness is known from their concrete types.
+fn may_equal_literal(ty: &Type, literal: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Union(members) => members
+            .iter()
+            .any(|member| may_equal_literal(member, literal)),
+        Type::Never => false,
+        Type::None => matches!(literal, Type::None),
+        Type::Int | Type::Float => matches!(literal, Type::LiteralInt(_)),
+        Type::LiteralInt(left) => matches!(literal, Type::LiteralInt(right) if left == right),
+        Type::Bool => matches!(literal, Type::LiteralBool(_)),
+        Type::LiteralBool(left) => matches!(literal, Type::LiteralBool(right) if left == right),
+        Type::Str | Type::LiteralStr(_) => match literal {
+            Type::LiteralStr(right) => match ty.resolve_alias() {
+                Type::LiteralStr(left) => left == right,
+                _ => true,
+            },
+            _ => false,
+        },
+        Type::Bytes => false,
+        _ => true,
+    }
+}
+
+/// A literal refinement must cover every potentially equal member, including
+/// members hidden inside aliases and nested unions.
+fn equality_member_is_exact(ty: &Type, literal: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Union(members) => members
+            .iter()
+            .filter(|member| may_equal_literal(member, literal))
+            .all(|member| equality_member_is_exact(member, literal)),
+        Type::Float if matches!(literal, Type::LiteralInt(_)) => false,
+        other => literal.is_assignable_to(other),
     }
 }
 
@@ -324,6 +403,46 @@ mod tests {
         // False branch: Unknown minus Int is still Unknown
         let false_result = narrow_type(&ty, &cond, false);
         assert_eq!(false_result, Type::Unknown);
+    }
+
+    #[test]
+    fn test_impossible_none_branch_and_opaque_none_branch() {
+        let cond = NarrowingCondition::IsNone("x".to_string());
+        assert_eq!(narrow_type(&Type::Int, &cond, true), Type::Never);
+        assert_eq!(
+            narrow_type(&Type::TypeVar("T".to_string()), &cond, true),
+            Type::None
+        );
+        let alias = Type::Alias {
+            name: "OptionalNone".to_string(),
+            type_args: vec![],
+            body: Box::new(Type::None),
+        };
+        assert_eq!(
+            narrow_type(&make_union(vec![Type::Str, alias]), &cond, true),
+            Type::None
+        );
+    }
+
+    #[test]
+    fn test_alias_and_numeric_cross_type_equality() {
+        let cond =
+            NarrowingCondition::Equality("x".to_string(), LiteralValue::Str("GET".to_string()));
+        let alias = Type::Alias {
+            name: "Method".to_string(),
+            type_args: vec![],
+            body: Box::new(Type::Str),
+        };
+        assert_eq!(
+            narrow_type(&make_union(vec![alias, Type::None]), &cond, true),
+            Type::LiteralStr("GET".to_string())
+        );
+        let numeric = NarrowingCondition::Equality("x".to_string(), LiteralValue::Int(0));
+        assert_eq!(narrow_type(&Type::Float, &numeric, true), Type::Float);
+        assert_eq!(
+            narrow_type(&Type::TypeVar("T".to_string()), &numeric, true),
+            Type::TypeVar("T".to_string())
+        );
     }
 
     #[test]
