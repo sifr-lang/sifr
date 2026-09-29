@@ -114,3 +114,5 @@ pub use compiled_identity::compiled_input_tokens;
 mod guided_target_replay_tests;
 #[doc(hidden)]
 pub mod guided_targets;
+#[cfg(test)]
+mod ownership_property_tests;
