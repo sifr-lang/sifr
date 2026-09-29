@@ -2,6 +2,7 @@
 
 use crate::ConstValue;
 use num_bigint::BigInt;
+use sifr_ir::MethodAuthority;
 use sifr_lowering::{HirExpr, HirFunction, HirIteratorOp, HirModule, HirStmt};
 use sifr_type_system::Type;
 use std::collections::BTreeMap;
@@ -435,24 +436,66 @@ impl<'a> DeterministicConstEvaluator<'a> {
                 object,
                 method,
                 args,
+                authority,
                 ..
-            } if method == "len" && args.is_empty() => {
+            } => self.eval_method_call(object, method, args, authority, environment, depth),
+            _ => error(
+                ConstEvalErrorKind::UnsupportedExpression,
+                "expression is not supported by deterministic const evaluation",
+            ),
+        }
+    }
+
+    fn eval_method_call(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        authority: &MethodAuthority,
+        environment: &mut Environment,
+        depth: usize,
+    ) -> Result<ConstValue, ConstEvalError> {
+        // The const interpreter accepts only this closed, pure/local method
+        // subset from the same resolved builtin declaration as runtime calls.
+        let receiver_ty = object.ty().resolve_alias();
+        let MethodAuthority::BuiltinIntrinsic { declaration } = authority else {
+            return unsupported_const_method(method);
+        };
+        if declaration.module != "sifr.builtin"
+            || declaration.owner.as_deref() != Some(receiver_ty.display_name().as_str())
+            || declaration.symbol != method
+        {
+            return unsupported_const_method(method);
+        }
+
+        match (receiver_ty, method, args) {
+            (
+                Type::Str | Type::Bytes | Type::Tuple(_) | Type::List(_) | Type::Dict(_, _),
+                "len",
+                [],
+            ) => {
                 let value = self.eval_expr(object, environment, depth)?;
+                let matching_value = matches!(
+                    (receiver_ty, &value),
+                    (Type::Str, ConstValue::String(_))
+                        | (Type::Bytes, ConstValue::Bytes(_))
+                        | (Type::Tuple(_), ConstValue::Tuple(_))
+                        | (Type::List(_), ConstValue::List(_))
+                        | (Type::Dict(_, _), ConstValue::Record(_))
+                );
+                if !matching_value {
+                    return error(
+                        ConstEvalErrorKind::TypeMismatch,
+                        "const method receiver does not match its resolved type",
+                    );
+                }
                 len(&[value])
             }
-            HirExpr::MethodCall {
-                object,
-                method,
-                args,
-                ..
-            } if method == "append" && args.len() == 1 => {
-                let HirExpr::Name { name, .. } = object.as_ref() else {
-                    return error(
-                        ConstEvalErrorKind::UnsupportedExpression,
-                        "const append receiver must be a local list",
-                    );
+            (Type::List(_), "append", [argument]) => {
+                let HirExpr::Name { name, .. } = object else {
+                    return unsupported_const_method(method);
                 };
-                let value = self.eval_expr(&args[0], environment, depth)?;
+                let value = self.eval_expr(argument, environment, depth)?;
                 let Some(ConstValue::List(values)) = environment.get_mut(name) else {
                     return error(
                         ConstEvalErrorKind::TypeMismatch,
@@ -468,10 +511,7 @@ impl<'a> DeterministicConstEvaluator<'a> {
                 values.push(value);
                 Ok(ConstValue::None)
             }
-            _ => error(
-                ConstEvalErrorKind::UnsupportedExpression,
-                "expression is not supported by deterministic const evaluation",
-            ),
+            _ => unsupported_const_method(method),
         }
     }
 
@@ -551,6 +591,13 @@ impl<'a> DeterministicConstEvaluator<'a> {
             Ok(())
         }
     }
+}
+
+fn unsupported_const_method<T>(method: &str) -> Result<T, ConstEvalError> {
+    error(
+        ConstEvalErrorKind::UnsupportedExpression,
+        format!("method '{method}' is not supported by deterministic const evaluation"),
+    )
 }
 
 fn unary(op: &str, value: ConstValue) -> Result<ConstValue, ConstEvalError> {
@@ -771,116 +818,9 @@ fn error<T>(kind: ConstEvalErrorKind, detail: impl Into<String>) -> Result<T, Co
 mod target_tests;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use sifr_lowering::lower_module;
-    use sifr_syntax::parse_module_suite;
+#[path = "const_evaluator_tests.rs"]
+mod tests;
 
-    fn lower(source: &str) -> sifr_lowering::LoweringResult {
-        let parsed = parse_module_suite(source, None).expect("fixture parses");
-        lower_module(&parsed).expect("fixture lowers")
-    }
-
-    #[test]
-    fn evaluates_bounded_pure_const_function_deterministically() {
-        let lowered = lower(
-            "@const_eval\ndef describe(values: list[int]) -> int:\n    total: int = 0\n    for value in values:\n        total = total + value\n    return total\n",
-        );
-        let args = vec![ConstValue::List(vec![
-            ConstValue::Integer(BigInt::from(2)),
-            ConstValue::Integer(BigInt::from(5)),
-        ])];
-        let first = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("describe", args.clone())
-            .expect("const evaluation succeeds");
-        let second = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("describe", args)
-            .expect("const evaluation succeeds");
-        assert_eq!(first, ConstValue::Integer(BigInt::from(7)));
-        assert_eq!(first, second);
-    }
-
-    #[test]
-    fn fails_closed_on_unbounded_const_evaluation() {
-        let lowered = lower(
-            "@const_eval\ndef forever() -> int:\n    while True:\n        pass\n    return 0\n",
-        );
-        let error = DeterministicConstEvaluator::with_limits(&lowered.module, 20, 4, 8)
-            .evaluate_function("forever", Vec::new())
-            .expect_err("step budget is enforced");
-        assert_eq!(error.kind, ConstEvalErrorKind::StepLimit);
-    }
-
-    #[test]
-    fn augmented_assignment_preserves_floor_division_and_modulo_semantics() {
-        let lowered = lower(
-            "@const_eval\ndef arithmetic() -> tuple[int, int]:\n    quotient: int = -7\n    quotient += 0\n    quotient //= 3\n    remainder: int = -7\n    remainder %= 3\n    return (quotient, remainder)\n",
-        );
-        let value = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("arithmetic", Vec::new())
-            .expect("const evaluation succeeds");
-        assert_eq!(
-            value,
-            ConstValue::Tuple(vec![
-                ConstValue::Integer(BigInt::from(-3)),
-                ConstValue::Integer(BigInt::from(2)),
-            ])
-        );
-    }
-
-    #[test]
-    fn preserves_bytes_as_the_closed_bytes_const_variant() {
-        let lowered = lower("@const_eval\ndef payload() -> bytes:\n    return b\"typed\"\n");
-        let value = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("payload", Vec::new())
-            .expect("byte const evaluation succeeds");
-        assert_eq!(value, ConstValue::Bytes(b"typed".to_vec()));
-    }
-
-    #[test]
-    fn evaluates_primitive_isinstance_for_typed_union_normalization() {
-        let lowered = lower(
-            "@const_eval\ndef kind(value: int | str) -> str:\n    if isinstance(value, str):\n        return \"text\"\n    return \"integer\"\n",
-        );
-        let text = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("kind", vec![ConstValue::String("value".to_string())])
-            .expect("string branch evaluates");
-        let integer = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("kind", vec![ConstValue::Integer(BigInt::ONE)])
-            .expect("integer branch evaluates");
-        assert_eq!(text, ConstValue::String("text".to_string()));
-        assert_eq!(integer, ConstValue::String("integer".to_string()));
-    }
-
-    #[test]
-    fn iterates_closed_record_keys_in_canonical_order() {
-        let lowered = lower(
-            "@const_eval\ndef keys(value: dict[str, str]) -> list[str]:\n    output: list[str] = []\n    for key in value:\n        output.append(key)\n    return output\n",
-        );
-        let value = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function(
-                "keys",
-                vec![ConstValue::Record(BTreeMap::from([
-                    ("zeta".to_string(), ConstValue::String("last".to_string())),
-                    ("alpha".to_string(), ConstValue::String("first".to_string())),
-                ]))],
-            )
-            .expect("record iteration succeeds");
-        assert_eq!(
-            value,
-            ConstValue::List(vec![
-                ConstValue::String("alpha".to_string()),
-                ConstValue::String("zeta".to_string()),
-            ])
-        );
-    }
-
-    #[test]
-    fn rejects_runtime_function_as_const_entrypoint() {
-        let lowered = lower("def runtime() -> int:\n    return 1\n");
-        let error = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("runtime", Vec::new())
-            .expect_err("runtime function is rejected");
-        assert_eq!(error.kind, ConstEvalErrorKind::FunctionNotConst);
-    }
-}
+#[cfg(test)]
+#[path = "const_evaluator_method_authority_tests.rs"]
+mod method_authority_tests;
