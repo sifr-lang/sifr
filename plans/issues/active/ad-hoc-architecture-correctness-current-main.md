@@ -1032,6 +1032,41 @@ restored the declared input, after which the check passed. No production
 code, Cargo gate or external review was required for this documentation-only
 scope split. H02a-H02h remain open; their named tests are prospective.
 
+### H02a typed-method carrier boundary (2026-09-29)
+
+H02a stopped at **needs-new-scope** on clean main
+`6f2fb1ff8923d6c98c091539325c75944ff839e7`. It produced no
+implementation, named test pass, review approval or typed-method closure.
+The required authority cannot be retained within the assigned
+`sifr_lowering` package alone. `HirExpr::MethodCall` is defined in
+`crates/sifr_ir/src/hir_nodes.rs` with receiver convention, checked
+receiver target and source ranges, but no dispatch-authority field.
+`HirExpr::IntrinsicCall` distinguishes explicit intrinsics, while a
+source method call carries no typed distinction among builtin,
+protocol, local or inherited nominal, imported, and Rust-adapted
+dispatch. The method call is serialized through
+`crates/sifr_sysroot/src/metadata/hir_nodes.rs` and the
+`crates/sifr_compiler_services/src/metadata/` encoder and decoder.
+A lowering-only classification that is discarded at construction
+would not preserve the typed decision for later consumers or metadata
+reuse. Adding the field locally would break the shared HIR and wire
+contracts, requiring changes in the other package owners.
+
+The proposed bounded prerequisite is **H02a0**, owned by the HIR and
+metadata-contract packages: add a typed method-authority carrier to
+`HirExpr::MethodCall`, preserve the existing receiver ownership,
+convention and source ranges, and round-trip the authority through
+metadata with an explicit format/version decision and focused
+positive/negative tests. Then **H02a1**, owned by `sifr_lowering`,
+can classify accepted builtin/intrinsic, protocol, user/nominal,
+imported and Rust-adapted calls at construction, reject unsupported
+method/type pairs and unresolved receivers with diagnostics, and run
+the two H02a named cases plus the three existing lowering regression
+groups. H02b/H02c should depend on the merged H02a1 receipt. Neither
+proposal authorizes frontend constant evaluation or codegen emission
+in this item. No Cargo target was created or cleaned, and no broad
+gate was attempted for this scope record.
+
 ### H01/F28 needs-new-scope split (2026-09-28)
 
 At the split, main had deterministic source-mutation smoke and repeated-output
