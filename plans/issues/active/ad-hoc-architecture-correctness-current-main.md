@@ -1072,6 +1072,34 @@ The formal H02a0/H02a1 rows above replace the provisional H02a row and
 make H02d depend on H02a1 as well. Neither replacement is implemented by
 this documentation change.
 
+### H02a0/H02a1 formal scope-split receipt (2026-09-29)
+
+The H02a carrier/classification split merged in
+[PR #4116](https://github.com/sifr-lang/sifr/pull/4116) as
+`ebf8440fb71342ae5d038bda5d7d1ad4ad449121` from final documentation
+candidate `b86b0d07f00fa849052620320e19f53653e0b996` (base
+`1062a15a352e1f67599515d4fddd6d681a8754a5`). H02a0 owns the atomic
+HIR/wire/codec carrier and metadata v5 handoff; H02a1 owns lowering
+classification. H02b, H02c and H02d now depend on H02a1, with H02h and
+whole-H02 order updated. Both child items are open; the listed cases are
+prospective, not test passes.
+
+The final documentation candidate passed
+`python3 verification/areas/documentation/check_structure.py`,
+`python3 scripts/check_hir_maintainability_guardrails.py`,
+`python3 scripts/check_file_size_guardrails.py` (4,278 files), and
+`git diff --check`. The first documentation check lacked the pinned nested
+VS Code submodule; initializing `editor_integrations` recursively restored
+that declared input and the check passed. A read-only scoped Opus review of
+the initial docs candidate `b27c32d27d982fe6822a4f0b6d9583e9fe77ddab`
+returned **SATISFIED**, with no blocking findings (response
+`/tmp/sifr-h02a-formal-review.FtDDkq/response.md`, SHA-256
+`e959d687e1e8b65b21c6f15609c077b417317c65fa604a71d014bc0cc1c11875`).
+Its documentation suggestions were incorporated in the final docs-only
+candidate; under the phase workflow, that edit needed documentation
+rechecks, not a second external review. No production code, Cargo
+test, full gate, or release qualification is claimed.
+
 ### H01/F28 needs-new-scope split (2026-09-28)
 
 At the split, main had deterministic source-mutation smoke and repeated-output
