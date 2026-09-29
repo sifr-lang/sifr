@@ -177,7 +177,29 @@ def preserve_finding(
         and all(signal is not None for signal in signals)
         and len({signal.group(0) for signal in signals if signal is not None}) == 1
     )
+    project_tree_receipt = {}
+    if stable and target == "project_graph":
+        tree_dir = artifact_dir / ("minimized-project-tree-" + digest[:16])
+        tree_env = {**env, "SIFR_FUZZ_PROJECT_TREE_EXPORT_DIR": str(tree_dir)}
+        export = invoke(replay_argv, timeout=90, env=tree_env)
+        expected = {"sifr.toml", "main.sifr", "alpha.sifr", "beta.sifr", "gamma.sifr"}
+        actual = {path.name for path in tree_dir.iterdir()} if tree_dir.is_dir() else set()
+        if actual != expected or "PROJECT_TREE_EXPORT_ERROR" in export["output_tail"]:
+            return {
+                "status": "compiler-finding-unminimized",
+                "artifact": str(source), "minimized_seed": str(saved),
+                "reason": "minimized-project-tree-export-failed",
+                "tree_export": variant(label + ":tree-export", "fail", replay_argv, export),
+            }
+        project_tree_receipt = {
+            "minimized_project_tree": str(tree_dir),
+            "minimized_project_tree_sha256": {
+                path.name: file_hash(path) for path in sorted(tree_dir.iterdir())
+            },
+            "tree_export": variant(label + ":tree-export", "pass", replay_argv, export),
+        }
     return {
+        **project_tree_receipt,
         "status": "compiler-finding" if stable else "compiler-finding-unconfirmed",
         "artifact": str(source),
         "minimized_seed": str(saved),

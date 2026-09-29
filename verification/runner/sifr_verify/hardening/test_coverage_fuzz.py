@@ -105,6 +105,38 @@ class CoverageFuzzTests(unittest.TestCase):
         self.assertEqual(Path(finding["minimized_seed"]).read_bytes(), b"minimal crash")
         self.assertEqual(len(finding["replays"]), 2)
 
+    def test_project_graph_finding_exports_minimized_tree(self) -> None:
+        artifact_dir = Path(self.temp.name) / "project-artifacts"
+        artifact_dir.mkdir()
+        crash = artifact_dir / "crash-raw"
+        crash.write_bytes(b"\x07\x07\x03\x01")
+        minimized = artifact_dir / "minimized-by-fuzzer"
+        calls = iter([
+            result(0, f"Minimized artifact: {minimized}"),
+            result(1, "ERROR: libFuzzer: deadly signal"),
+            result(1, "ERROR: libFuzzer: deadly signal"),
+            result(1, "ERROR: libFuzzer: deadly signal"),
+        ])
+
+        def invoke(argv: list[str], *, env: dict, **_kwargs: object) -> dict:
+            if "tmin" in argv:
+                minimized.write_bytes(crash.read_bytes())
+            if "SIFR_FUZZ_PROJECT_TREE_EXPORT_DIR" in env:
+                root = Path(env["SIFR_FUZZ_PROJECT_TREE_EXPORT_DIR"])
+                root.mkdir()
+                for name in ("sifr.toml", "main.sifr", "alpha.sifr", "beta.sifr", "gamma.sifr"):
+                    (root / name).write_text(name, encoding="utf-8")
+            return next(calls)
+
+        with patch.object(fuzz, "invoke", side_effect=invoke):
+            finding = fuzz.preserve_finding(
+                target="project_graph", output=f"Test unit written to {crash}",
+                artifact_dir=artifact_dir, env={}, label="sustained-fuzz:project_graph:nightly",
+            )
+        self.assertEqual(finding["status"], "compiler-finding")
+        self.assertEqual(len(finding["minimized_project_tree_sha256"]), 5)
+        self.assertTrue(Path(finding["minimized_project_tree"]).joinpath("sifr.toml").is_file())
+
     def test_diagnostic_target_minimized_json_artifact(self) -> None:
         artifact_dir = Path(self.temp.name) / "diagnostic-artifacts"
         artifact_dir.mkdir()
@@ -176,7 +208,8 @@ class CoverageFuzzTests(unittest.TestCase):
     def test_no_unused_fuzz_dependencies(self) -> None:
         manifest = tomllib.loads((fuzz.ROOT / "verification/fuzz/Cargo.toml").read_text())
         self.assertEqual(set(manifest["dependencies"]), {
-            "libfuzzer-sys", "sifr_syntax", "sifr_frontend", "sifr_diagnostics", "serde_json",
+            "libfuzzer-sys", "sifr_syntax", "sifr_frontend", "sifr_diagnostics",
+            "sifr_driver", "serde_json",
         })
         self.assertIn("serde_json::from_slice", (
             fuzz.ROOT / "verification/fuzz/fuzz_targets/diagnostics.rs"

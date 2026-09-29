@@ -50,3 +50,29 @@ fn diagnostic_renderer() {
         }
     }
 }
+
+#[test]
+fn project_graph() {
+    use crate::guided_project_graph::{ReplayOutcome, project_tree, replay};
+    let corpus =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../verification/fuzz/corpus/project_graph");
+    let mut distinct_trees = std::collections::BTreeSet::new();
+    for seed in ["isolated", "star", "chain", "cycle"] {
+        let input = std::fs::read(corpus.join(seed)).expect("pinned project seed exists");
+        let tree = project_tree(&input).expect("bounded project seed");
+        assert_eq!(tree.files.len(), 4);
+        distinct_trees.insert(format!("{tree:?}"));
+        let first = replay(&input);
+        assert_ne!(first, ReplayOutcome::InvalidInput, "{seed}");
+        assert_ne!(first, ReplayOutcome::ManifestDiagnostic, "{seed}");
+        assert_eq!(first, replay(&input), "stable project-tree replay: {seed}");
+    }
+    assert_eq!(distinct_trees.len(), 4, "seeds must mutate graph edges");
+    assert_eq!(replay(&[0x80, 0, 0, 0]), ReplayOutcome::ManifestDiagnostic);
+    let minimized = std::fs::read(corpus.join("cycle")).expect("cycle seed exists");
+    assert_eq!(minimized.len(), 4, "all tree decisions fit in four bytes");
+    let tree = project_tree(&minimized).expect("minimized tree decodes");
+    assert!(tree.files[1].1.contains("from beta import value_beta"));
+    assert!(tree.files[2].1.contains("from gamma import value_gamma"));
+    assert!(tree.files[3].1.contains("from alpha import value_alpha"));
+}
