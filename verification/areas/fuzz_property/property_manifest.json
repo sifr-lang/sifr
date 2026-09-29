@@ -154,6 +154,40 @@
         "property"
       ],
       "note": "Template parsing, typed lowering, format-spec evaluation, and generated execution must remain deterministic and panic-free."
+    },
+    {
+      "id": "PROP-TYPE-0001",
+      "kind": "rust-test",
+      "crate": "sifr_type_system",
+      "test_name": "semantic_property_tests::normalization_idempotent",
+      "note": "Seeded generated union, optional, and literal normalization equivalence.",
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "-p",
+        "sifr_type_system",
+        "--lib",
+        "semantic_property_tests::normalization_idempotent",
+        "--",
+        "--exact"
+      ]
+    },
+    {
+      "id": "PROP-TYPE-0002",
+      "kind": "rust-test",
+      "crate": "sifr_type_system",
+      "test_name": "semantic_property_tests::narrowing_partition",
+      "note": "Seeded generated finite-domain narrowing partition and complement soundness.",
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "-p",
+        "sifr_type_system",
+        "--lib",
+        "semantic_property_tests::narrowing_partition",
+        "--",
+        "--exact"
+      ]
     }
   ]
 }
