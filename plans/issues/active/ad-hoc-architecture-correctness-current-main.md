@@ -993,7 +993,7 @@ regressions, scoped review and merge receipt before a dependent item begins.
 | H02a0 / typed HIR and metadata carrier | Merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118); first; one atomic, independently compiling contract prerequisite across `sifr_ir` (HIR field/type), `sifr_sysroot` (wire record, references and container version), and `sifr_compiler_services` (encoder/decoder). These are explicit package handoffs, not lowering or codegen semantics ownership. Add a typed authority field to `HirExpr::MethodCall` and its wire variant; preserve receiver convention, checked receiver target, mutable-argument places and source ranges. Mechanical constructor updates outside these packages are limited to making the new carrier compile; do not classify methods there. Carry an explicit unclassified transition state only until H02a1, never infer builtin authority from a missing field. Bump the private indexed metadata container version from 4 to 5 for the changed record shape; reject v4 and malformed/new unknown authority tags rather than decoding them as a default. Update the explicit record corpus. No frontend constant evaluation or codegen emission. | Add and run `cargo test -p sifr_ir --lib method_authority_tests::carrier_preserves_receiver_and_source -- --exact`; `cargo test -p sifr_sysroot --lib metadata::tests::h02a0_authority_record_roundtrip -- --exact`; `cargo test -p sifr_sysroot --lib metadata::tests::h02a0_old_version_and_invalid_authority_reject -- --exact`; `cargo test -p sifr_compiler_services --lib metadata::tests::h02a0_hir_authority_roundtrip -- --exact`; `cargo test -p sifr_compiler_services --lib metadata::tests::h02a0_corrupt_authority_rejects -- --exact`. Focused regressions: `cargo test -p sifr_sysroot --lib metadata::tests::all_explicit_record_families_and_variants_roundtrip -- --exact`, `cargo test -p sifr_sysroot --lib metadata::tests::dx15_physical_frames_are_bounded_canonical_and_versioned -- --exact`, `cargo test -p sifr_compiler_services --lib metadata::tests::incompatible_identity_rejects_provider -- --exact`, `cargo test -p sifr_lowering --lib lower::method_receiver_analysis_tests::builtin_method_calls_carry_canonical_receiver_conventions_and_source_ranges -- --exact`, and `cargo test -p sifr_lowering --lib name_resolution_snapshot_tests::name_resolution_snapshot_matrix_matches_lowered_name_facts -- --exact`. Handoff: independently compiling carrier; both direct and encoded/decoded HIR retain identical authority, receiver data and ranges; old/corrupt metadata declines; no generated dispatch changes. |
 | H02a1 / `sifr_lowering` typed classification | Merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120); after H02a0. At typed HIR construction, replace the transition state with semantic builtin/intrinsic, protocol, local/inherited nominal, imported and Rust-adapted authority, using resolved declaration identity rather than name alone. Preserve receiver ownership, convention and ranges; unresolved receivers and unsupported method/type pairs produce diagnostics. Assert every accepted source method call has a classified carrier, including imported/inherited and compiler-synthesized calls, before the HIR leaves lowering. No metadata schema change, frontend constant evaluation or codegen emission. | Add and run `cargo test -p sifr_lowering --lib method_authority_tests::typed_dispatch_classification -- --exact`; `cargo test -p sifr_lowering --lib method_authority_tests::unsupported_method_declines_with_diagnostic -- --exact`; `cargo test -p sifr_lowering --lib method_authority_tests::unclassified_method_cannot_leave_lowering -- --exact`. Focused existing `lower::method_receiver_analysis_tests`, `lower::own_mut_semantics_tests` and `lower::python_interop_callback_tests` selections must record resolved names/assertion counts. Handoff: H02b/H02c/H02d consume a merged typed HIR product whose method authority is populated, whose receiver data survived metadata reuse, and whose declines carry source diagnostics. |
 | H02b / `sifr_frontend` constant evaluation | Merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122) after H02a1. Classify the closed `@const_eval` method subset as compile-time semantics, compare results and failures with the corresponding runtime language contract, and decline unsupported or effectful methods. Preserve frontend product ownership. | `cargo test -p sifr_frontend --lib const_evaluator::method_authority_tests::supported_methods_match_runtime_semantics -- --exact`; `cargo test -p sifr_frontend --lib const_evaluator::method_authority_tests::unsupported_methods_decline -- --exact`; focused existing `const_evaluator` tests. |
-| H02c / `sifr_codegen` method authority | After merged H02a1 and H02b. Own typed builtin/intrinsic emission in one source-method authority. Classify other name branches as user/protocol dispatch, contextual Rust adaptation or Rust-IR consumption. On authority decline, only a proven user/protocol/contextual path may continue; unsupported builtins fail structurally. Reproduce historical list `append`/`cloned` strict-registry-decline risk before removing fallback. Reject a remaining unclassified carrier before source-method emission; mark codegen-created contextual calls explicitly rather than treating that state as a builtin fallback. No X02 generated-Rust safety rewrite. | `cargo test -p sifr_codegen --lib method_authority_tests::typed_builtin_dispatch_and_strict_decline -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::user_protocol_and_contextual_paths -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::list_append_cloned_decline_regression -- --exact`; focused `methods::tests` and `lib_codegen_tests::emitted_rust_quality_codegen_tests`, plus exact list-method E2E pass/fail fixtures through the existing runner. Assert behavior, diagnostic failure and no second builtin fallback. |
+| H02c / `sifr_codegen` method authority | Blocked by host storage; draft [PR #4124](https://github.com/sifr-lang/sifr/pull/4124), receipt below. After merged H02a1 and H02b. Own typed builtin/intrinsic emission in one source-method authority. Classify other name branches as user/protocol dispatch, contextual Rust adaptation or Rust-IR consumption. On authority decline, only a proven user/protocol/contextual path may continue; unsupported builtins fail structurally. Reproduce historical list `append`/`cloned` strict-registry-decline risk before removing fallback. Reject a remaining unclassified carrier before source-method emission; mark codegen-created contextual calls explicitly rather than treating that state as a builtin fallback. No X02 generated-Rust safety rewrite. | `cargo test -p sifr_codegen --lib method_authority_tests::typed_builtin_dispatch_and_strict_decline -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::user_protocol_and_contextual_paths -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::list_append_cloned_decline_regression -- --exact`; focused `methods::tests` and `lib_codegen_tests::emitted_rust_quality_codegen_tests`, plus exact list-method E2E pass/fail fixtures through the existing runner. Assert behavior, diagnostic failure and no second builtin fallback. |
 | H02d / `sifr_runtime::python` callbacks and CPython core | After merged H02a1; independent of H02c and H02e-H02g. Audit initialization, GIL, foreign object/callback state, erased lifetimes, `Send`/`Sync`, registration, close/cancel/reentrancy and capture release. Give each unsafe boundary a local thread, lifetime, alias and ownership contract; narrow broad allowances to a function or cohesive ABI module. | `cargo test -p sifr_runtime --lib python::callbacks::h02_contract_tests::borrowed_callback_lifetime_and_thread_owner -- --exact`; `cargo test -p sifr_runtime --lib python::callbacks::h02_contract_tests::close_cancel_reentrancy_releases_once -- --exact`; focused existing `python::callbacks::tests`, `python::callbacks::asyncio_tests`, `python::callbacks::current_tests` and `python::callbacks::ownership_tests`. Assert foreign-thread entry, GIL, in-flight close and exact-once capture release. |
 | H02e / `sifr_runtime::python::buffer_ops` | After H02d. Own `Py_buffer` acquisition/release, shape/stride/bounds/alignment, writable alias admission, indirect access and exporter lifetime. Document unsafe pointer/read/write and `Send` contracts; reject conflicting aliases and malformed layouts before access. | `cargo test -p sifr_runtime --lib python::buffer_ops::h02_contract_tests::layout_bounds_and_alias_admission -- --exact`; `cargo test -p sifr_runtime --lib python::buffer_ops::h02_contract_tests::all_release_paths_are_exact_once -- --exact`; focused existing `python::buffer_ops::tests`, `python::buffer_ops::release_evidence_tests` and `python::buffer_ops::typed_access_evidence_tests`. Include negative strides, indirect pointers, shared storage, failure, explicit release and drop. |
 | H02f / `sifr_runtime::python::arrow_ops` | After H02d; independent of H02e. Own Arrow C Data/Stream/Device ABI layout, capsule identity, pointer lifetime, alias/transfer rules and release callbacks. Validate nullable callbacks and malformed capsules before dereference; distinguish borrowed observation from consumed ownership and prove exact-once release. | `cargo test -p sifr_runtime --lib python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer -- --exact`; `cargo test -p sifr_runtime --lib python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once -- --exact`; focused existing `python::arrow_ops::tests`, including malformed capsule, full/partial/failed consumption and stream/device release. |
@@ -1234,6 +1234,130 @@ integration; no release qualification is claimed. The record-only
 documentation structure check passed after the pinned editor submodule was
 initialized; its first missing-submodule setup attempt failed and is not a
 passing check.
+
+### H02c codegen method authority resource blocker (2026-09-30)
+
+H02c is **blocked by host storage**, with unmerged draft
+[PR #4124](https://github.com/sifr-lang/sifr/pull/4124) at exact candidate
+`9a7be02e543d7c386cf36acce75be979eb936205` (base
+`42fca77df7538cd04b3dde12d70b212c771b992c`, tree
+`7a1c97ff4fc4d817402280bebbe9a709edaff6f2`). No H02c implementation
+merge, E2E acceptance or full gate is claimed. H02d was not started.
+
+The continuation owns branch `codex/architecture-h02c-resume-20260929`
+and worktree `/data/sifr-architecture-h02c-resume-20260929`.
+The inactive prior source worktree
+`/data/sifr-architecture-h02c-method-authority-20260929` remains untouched,
+including its two pending in-scope source edits. Their patch provenance was
+preserved before adopting the fixture-carrier repair and removing the new
+place-emitter fallback in the owned continuation. The first recovered scoped
+Opus review of candidate `279b421d71c5fb5d8839991fa96b17fafaf44432`
+was **NOT SATISFIED**: the ordinary setdefault unit test was unclassified and
+new fallback expressions swallowed nested structural errors. The continuation
+repaired both, added nested receiver/argument structural-error regression
+coverage, and repaired two newly exposed indexed-list length regressions.
+Historical failed and incomplete test/preparation attempts remain preserved.
+
+On the final candidate, all three required exact
+`method_authority_tests` cases passed 1/1 each; the additional
+`nested_builtin_declines_preserve_structural_errors` case and exact
+`lower_stmt::candidate_and_validation::tests::local_binding_setdefault_materializes_owned_key_and_default`
+case also passed 1/1 each. Focused `methods::tests` passed 12/12 and
+`lib_codegen_tests::emitted_rust_quality_codegen_tests` passed 33/33.
+The selected `sifr_codegen --lib` run passed **1,739/1,739**, with exactly
+three independently reproduced base failures excluded from 1,742 cases.
+Formatting, HIR maintainability, diff check and the 900-line source guardrail
+(4,285 files) passed. This does not claim an unfiltered 1,742-case or the
+original worker's unfiltered 550-case pass.
+
+Final read-only Opus 5.5 review returned **SATISFIED**, with no blocking
+findings, on this exact candidate. Response SHA-256:
+`c7370218583843fd70be94b349a302796f1f41b9fe0c88699fc8c4d7bd9628f0`.
+It did not treat the concurrently pending E2E run as passing.
+Codegen-owner suggestions remain separate follow-up work: avoid duplicate
+operand lowering on special contextual paths, preserve early classification
+diagnostics consistently, and add a well-formed place-decline regression
+alongside the existing wrong-arity decline case. These are not new H02c
+acceptance requirements.
+
+Final evidence is outside the reviewed tree under
+`/data/sifr-architecture-h02c-resume-evidence-20260929/9a7be02e543d7c386cf36acce75be979eb936205/`.
+Its `validation.json` records the exact commands, configuration, inputs,
+results and log hashes (SHA-256
+`730ac17e8e184a5cb6e78005178c5f685b9dc8c1fe3ad70edc28b7de82f58508`).
+The required command was:
+
+```bash
+CARGO_TARGET_DIR=/data/sifr-architecture-h02c-method-authority-20260929/target \
+CARGO_BUILD_JOBS=2 \
+verification/runner/e2e/run_e2e_pass.sh --profile create-pr \
+  --fixture-manifest verification/areas/core_language/data/h02_method_e2e_manifest.json \
+  --cache-dir /data/sifr-architecture-h02c-method-authority-20260929/target/sifr_e2e_cache/create-pr
+```
+
+That run exited 101 while building/linking the compiler: `cc` exited 1,
+and `/data` simultaneously reported zero available bytes. The log ends
+during the linker command and contains no complete trailing filesystem
+diagnostic. Neither selected fixture executed. Preserve the exact incomplete
+`e2e.log` (SHA-256
+`6203cd824d616bc4765583bd75b06c907e593058287f52199bdeda51649ce9f8`);
+the older candidate's 2/2 E2E result cannot qualify this changed candidate.
+
+The parent explicitly transferred exclusive ownership of the inactive prior
+Cargo target at
+`/data/sifr-architecture-h02c-method-authority-20260929/target`.
+No active prior compiler process or open target lock/handle was found;
+rustc 1.98.1, Linux target, empty rustflags and Cargo configuration were
+compatible. Source and Git index stayed in the owned continuation. Under
+actual disk pressure, only obsolete completed incremental snapshots in this
+adopted target were pruned after handle/lock checks, retaining current
+snapshots. After the failed link stopped, its inactive 1,299,873,792-byte
+temporary executable
+`target/debug/deps/sifr-006e8ddf4da3b465.tmp93269e7` was removed solely to
+make this documentation checkpoint possible. The resulting 999 MiB reserve
+is insufficient to retry linking. Cleanup decisions and provenance are in
+`pressure-cleanup.log`; no other session's target was touched.
+
+**Next action:** the parent coordinates sequential cleanup with completed
+phase owners, then dispatches a fresh H02c retry worker. Verify target
+exclusivity, candidate, configuration and validation inputs; reuse unchanged
+passing evidence and warm artifacts, then rerun the exact required E2E
+selection only after sufficient build/link reserve exists. Merge #4124 only
+after required validation succeeds. This continuation stops at the resource
+blocker under the repository's external-blocker rule.
+
+**H02a1 lowering-owner follow-up (observed during H02c):** three optional
+length cases fail in unchanged lowering on H02c base
+`42fca77df7538cd04b3dde12d70b212c771b992c`, before codegen.
+They remain excluded explicitly from the selected codegen run:
+
+- `lib_codegen_tests::checked_place_read_codegen_tests::nested_list_string_compare_borrows_row_without_temporary_clone`:
+  unsupported `len` on `None | list[str]`.
+- `lib_codegen_tests::structured_path_codegen_tests::recursive_nested_checked_reads_use_the_injected_capture_binding`:
+  unsupported `len` on `None | list[int]`.
+- `lib_codegen_tests::union_representation_codegen_tests::optional_string_length_keeps_a_payload_compatible_callback`:
+  unsupported `len` on `None | str`.
+
+Base reproductions are
+`/data/sifr-architecture-h02c-method-authority-evidence-20260929/base-42fca77df/optional-len-{1,2,3}.log`,
+with SHA-256 respectively
+`c12a7da21db837576bfe930c3e3fcd5da23542a5638a287c640f27818618bb99`,
+`81e1f4af882a27a7aaa500445faf196e6863215d6b4bb5703a665749e23abbe3`,
+and
+`e6cecba821fe89e0739257a1b9595913087a5e4922edd1e8c1b7b105b07140c6`.
+This records separate lowering work without revising historical H02a1
+named-test acceptance.
+
+**V01/CI admission-owner follow-up:** GitHub's
+[create-PR job](https://github.com/sifr-lang/sifr/actions/runs/36634682383/job/109632314445)
+failed before validation setup at `performance_reference_admission`:
+`SIFR_PERFORMANCE_REFERENCE` was unset. Its normalized log is retained as
+`ci-create-pr-failed.log` in the final candidate evidence directory. This is
+an infrastructure failure, not H02c codegen evidence or a passing CI claim.
+
+This blocker receipt changes documentation only. Documentation structure,
+the source file-size guardrail (4,284 files on the documentation branch) and
+diff check passed. No repeated Cargo gate or external review was required.
 
 ### H01/F28 needs-new-scope split (2026-09-28)
 
