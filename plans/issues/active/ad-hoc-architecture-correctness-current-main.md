@@ -1364,6 +1364,48 @@ and the diff check. Their inputs were unchanged by this evidence paragraph.
 Raw documentation checks are under the retry evidence directory's `record/`
 child. No repeated Cargo gate or external review was required.
 
+### H02d0/H02d1 formal scope split receipt (2026-09-30)
+
+The documentation-only scope split merged in
+[PR #4128](https://github.com/sifr-lang/sifr/pull/4128) as
+`a5ca8832a685e85c0ece1e6e27f08facbffe0930` from exact candidate
+`e619507551a48cdf7b4e2f69341de7a89244633b` (base
+`61cfcb15ec1d52699d5d34f3c6af052d9ea1857f`, tree
+`2907da5277a88c51e12283ed8393012e396f461d`).
+It formalizes H02d0 as one atomic runtime/generated-caller lifetime
+prerequisite and H02d1 as the following runtime-only CPython/core audit.
+H02e-H02g wait for merged H02d1; H02h waits for all ten bounded items.
+The rows specify package ownership, exact Python-enabled runtime and
+codegen caller checks, nonzero selections, scoped regressions,
+forget/escape evidence and cancelled-closer authority handoff.
+
+Documentation structure passed (raw log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+the 900-line source guardrail passed for 4,285 files (SHA-256
+`70059422f26550d91a3f601e32168bd70ffabd2006d6baf690cc05e9c8a2ddd5`),
+and `git diff --check` passed. Raw logs and the candidate-keyed
+validation manifest are outside the Git tree at
+`/data/sifr-architecture-h02d-formal-split-evidence-20260930/`.
+The pinned editor submodule and its nested VS Code input were initialized
+before validation; their declared pins were unchanged. The execution host
+had no `gh`, so a session-owned local bare repository relayed the exact
+commit bundle; the published head matched the tested candidate.
+
+This record changes only the canonical phase document. It claims no
+runtime implementation, prospective acceptance pass, external review,
+Cargo gate, H02d0/H02d1 completion or whole H02 closure. The original
+H02d needs-new-scope findings and failed setup evidence below remain
+historical evidence. Documentation checks also cover this record-only
+receipt; source guardrail inputs remain unchanged.
+
+The session owns worktree
+`/data/sifr-architecture-h02d-formal-split-20260930`, split branch
+`codex/architecture-h02d-formal-split-20260930` and record branch
+`codex/architecture-h02d-formal-split-record-20260930`.
+The formalization has no current blocker. The exact next action is a
+separately assigned H02d0 callback runtime/generated-caller lifetime
+prerequisite under its formal row. This session stops before implementation.
+
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
 The H02d audit stopped **needs-new-scope** on clean main
