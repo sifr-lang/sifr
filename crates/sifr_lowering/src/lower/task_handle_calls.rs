@@ -46,6 +46,7 @@ pub(in crate::lower) fn lower_task_handle_method_call(
         super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method_name);
     if method_name == "cancel" {
         return Some(HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(object),
             method: method_name.to_string(),
             args: vec![],
@@ -63,6 +64,7 @@ pub(in crate::lower) fn lower_task_handle_method_call(
         ctx.mark_moved_with_flow(name);
     }
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: method_name.to_string(),
         args: vec![],

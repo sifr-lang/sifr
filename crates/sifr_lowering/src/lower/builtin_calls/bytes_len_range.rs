@@ -122,6 +122,7 @@ pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         | Type::Dict(_, _)
         | Type::Tuple(_)
         | Type::Set(_) => Some(HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(arg),
             method: "len".to_string(),
             args: vec![],
@@ -138,6 +139,7 @@ pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         }),
         Type::Class { methods, .. } if methods.iter().any(|(name, _)| name == "len") => {
             Some(HirExpr::MethodCall {
+                authority: sifr_ir::MethodAuthority::Unclassified,
                 object: Box::new(arg),
                 method: "len".to_string(),
                 args: vec![],

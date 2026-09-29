@@ -679,6 +679,7 @@ fn lower_task_timeout_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLower
         "__sifr_timeout",
     );
     TaskCallLowering::Lowered(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(handle),
         method: "__sifr_timeout".to_string(),
         args: vec![duration],

@@ -82,6 +82,8 @@ def check_fields() -> None:
     groups = ("hir_nodes", "specialization_metadata", "rust_interop", "python_interop", "template_strings", "sql_queries", "sql_migrations")
     for group in groups:
         source = (ROOT / f"crates/sifr_ir/src/{group}.rs").read_text()
+        if group == "hir_nodes":
+            source += "\n" + (ROOT / "crates/sifr_ir/src/method_call_metadata.rs").read_text()
         wire = (ROOT / f"crates/sifr_sysroot/src/metadata/{group}.rs").read_text()
         for name in re.findall(r"pub struct (\w+)\s*\{", source):
             if name == "SourceOriginId":

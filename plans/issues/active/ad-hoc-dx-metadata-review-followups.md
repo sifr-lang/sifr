@@ -170,3 +170,14 @@ separate from the new CI smoke preparation contract, whose registration is fixed
 in `05c72e32a2b66fc1414929e40b59f6c6e619e454`. The metadata owner should assess
 which existing assertions remain current before registering them; no metadata
 implementation or new phase closure requirement is included in CI admission.
+
+## DX.5 consumer-site inventory drift observed during H02a0 — 2026-09-29
+
+The H02a0 carrier split required `check_dx_metadata_inventory.py` to include
+`crates/sifr_ir/src/method_call_metadata.rs` in the `hir_nodes` payload-family
+comparison. With that in-scope correction, the field/family check passes, but
+the command still reports `DX.5 consumer sites changed`. The pinned site table
+already differs from current main across unrelated frontend, driver, analysis and
+editor moves, in addition to new H02a0 test-site lines. A broad refresh would
+rewrite 228 lines and is deferred to the DX inventory owner for classification.
+This supplemental guard failure does not alter the passing H02a0 named tests.

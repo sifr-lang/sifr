@@ -827,3 +827,5 @@ fn dx15_empty_payload_frames_still_require_valid_decompression() {
     bytes[112..120].copy_from_slice(&size.to_le_bytes());
     assert!(MetadataStore::open_bytes(bytes, identity(), limits()).is_err());
 }
+
+include!("h02a0_tests.rs");

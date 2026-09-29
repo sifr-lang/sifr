@@ -14,8 +14,8 @@ use super::{
     HirTemplateFormatSpecPart, HirTemplateInterpolation, HirTemplateOffsetMapping,
     HirTemplateSegment, HirTemplateStaticMapping, HirTemplateString, HirTupleTarget,
     HirTupleTargetBinding, HirWithItem, HirWithItemKind, InteropSummary,
-    JsonIntegerBoundaryRequest, MetadataStore, MethodCallSource, MethodKind, Module,
-    MutableArgumentTarget, MutableReceiverTarget, NominalView, Package, ParamConvention,
+    JsonIntegerBoundaryRequest, MetadataStore, MethodAuthority, MethodCallSource, MethodKind,
+    Module, MutableArgumentTarget, MutableReceiverTarget, NominalView, Package, ParamConvention,
     ParamMutability, ParamOwnership, Place, PlaceProjection, PythonArrowDeclaration,
     PythonArrowKind, PythonArrowSchemaMode, PythonBufferAccess, PythonBufferDeclaration,
     PythonBufferLayout, PythonCallbackConcurrency, PythonCallbackDeclaration,
@@ -148,6 +148,7 @@ pub(crate) fn references(
         JsonIntegerBoundaryRequest::KIND => {
             decode_refs::<JsonIntegerBoundaryRequest>(store, bytes, &mut refs)?;
         }
+        MethodAuthority::KIND => decode_refs::<MethodAuthority>(store, bytes, &mut refs)?,
         MethodCallSource::KIND => decode_refs::<MethodCallSource>(store, bytes, &mut refs)?,
         MethodKind::KIND => decode_refs::<MethodKind>(store, bytes, &mut refs)?,
         Module::KIND => decode_refs::<Module>(store, bytes, &mut refs)?,

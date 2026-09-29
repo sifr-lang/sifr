@@ -298,6 +298,7 @@ pub(super) fn lower_regular_call(
             call_ft.params.iter().map(|(_, _, convention)| *convention),
         );
         return Some(HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(object),
             method: "__call__".to_string(),
             args,

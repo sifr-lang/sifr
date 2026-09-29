@@ -181,6 +181,7 @@ fn lower_join_set_add(
     let receiver_convention =
         super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: method.to_string(),
         args: vec![handle],
@@ -221,6 +222,7 @@ fn lower_join_set_spawn_blocking(
         "__sifr_spawn_blocking",
     );
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: "__sifr_spawn_blocking".to_string(),
         args: vec![worker],
@@ -283,6 +285,7 @@ fn lower_join_set_spawn_cpu(
         "__sifr_spawn_cpu",
     );
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: "__sifr_spawn_cpu".to_string(),
         args: vec![worker],
@@ -306,6 +309,7 @@ fn lower_join_set_terminal(
     let receiver_convention =
         super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(object),
         method: method.to_string(),
         args: vec![],

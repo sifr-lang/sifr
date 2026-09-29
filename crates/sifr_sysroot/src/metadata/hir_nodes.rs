@@ -62,6 +62,29 @@ pub enum MethodKind {
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub enum MethodAuthority {
+    Unclassified,
+    BuiltinIntrinsic {
+        declaration: Ref<super::CallableIdentity>,
+    },
+    Protocol {
+        declaration: Ref<super::CallableIdentity>,
+    },
+    LocalNominal {
+        declaration: Ref<super::CallableIdentity>,
+    },
+    InheritedNominal {
+        declaration: Ref<super::CallableIdentity>,
+    },
+    Imported {
+        declaration: Ref<super::CallableIdentity>,
+    },
+    RustAdapted {
+        declaration: Ref<super::CallableIdentity>,
+    },
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BindingId {
     pub binder: Ref<Binder>,
     pub slot: u32,
@@ -554,6 +577,7 @@ pub enum HirExpr {
         object: Ref<HirExpr>,
         method: Ref<Text>,
         args: Vec<Ref<HirExpr>>,
+        authority: Ref<MethodAuthority>,
         receiver_convention: Option<Ref<ReceiverConvention>>,
         receiver_target: Option<Ref<MutableReceiverTarget>>,
         mutable_arg_places: Vec<Option<Ref<MutableArgumentTarget>>>,

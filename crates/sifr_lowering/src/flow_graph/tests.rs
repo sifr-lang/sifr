@@ -73,6 +73,7 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
         },
         HirStmt::Expr {
             expr: HirExpr::MethodCall {
+                authority: sifr_ir::MethodAuthority::Unclassified,
                 object: Box::new(HirExpr::Name {
                     name: "items".to_string(),
                     binding_id: None,
@@ -101,6 +102,7 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
 fn shared_method_receiver_does_not_emit_mutation_effect() {
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "items".to_string(),
                 binding_id: None,

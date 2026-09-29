@@ -2,9 +2,9 @@ use super::{
     BindingId, CompilerIntrinsicId, FieldIdentity, HirAsyncWithKind, HirClass, HirClassKind,
     HirCollectionMutation, HirExceptHandler, HirFStringPart, HirFunction, HirImport, HirIteratorOp,
     HirMatchArm, HirModule, HirParam, HirPattern, HirStmt, HirTupleTarget, HirTupleTargetBinding,
-    HirWithItem, HirWithItemKind, MethodCallSource, MethodKind, MutableArgumentTarget,
-    MutableReceiverTarget, Place, PlaceProjection, PythonRecordExpansion, Record, RecordId,
-    References, sealed,
+    HirWithItem, HirWithItemKind, MethodAuthority, MethodCallSource, MethodKind,
+    MutableArgumentTarget, MutableReceiverTarget, Place, PlaceProjection, PythonRecordExpansion,
+    Record, RecordId, References, sealed,
 };
 impl References for HirModule {
     fn references(&self, out: &mut Vec<(RecordId, u16)>) {
@@ -90,6 +90,23 @@ impl References for MethodKind {
 impl sealed::Sealed for MethodKind {}
 impl Record for MethodKind {
     const KIND: u16 = 69;
+}
+impl References for MethodAuthority {
+    fn references(&self, out: &mut Vec<(RecordId, u16)>) {
+        match self {
+            Self::Unclassified => {}
+            Self::BuiltinIntrinsic { declaration }
+            | Self::Protocol { declaration }
+            | Self::LocalNominal { declaration }
+            | Self::InheritedNominal { declaration }
+            | Self::Imported { declaration }
+            | Self::RustAdapted { declaration } => declaration.references(out),
+        }
+    }
+}
+impl sealed::Sealed for MethodAuthority {}
+impl Record for MethodAuthority {
+    const KIND: u16 = 135;
 }
 impl References for BindingId {
     fn references(&self, out: &mut Vec<(RecordId, u16)>) {

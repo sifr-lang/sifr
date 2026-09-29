@@ -79,6 +79,34 @@ impl Decode<wire::Ref<wire::MethodKind>> for sifr_ir::MethodKind {
         })
     }
 }
+impl Decode<wire::Ref<wire::MethodAuthority>> for sifr_ir::MethodAuthority {
+    fn decode(reference: &wire::Ref<wire::MethodAuthority>, cx: &mut Decoder) -> Result<Self> {
+        cx.record(*reference, |value, cx| {
+            let _ = &cx;
+            Ok(match value {
+                wire::MethodAuthority::Unclassified => Self::Unclassified,
+                wire::MethodAuthority::BuiltinIntrinsic { declaration } => Self::BuiltinIntrinsic {
+                    declaration: Decode::decode(declaration, cx)?,
+                },
+                wire::MethodAuthority::Protocol { declaration } => Self::Protocol {
+                    declaration: Decode::decode(declaration, cx)?,
+                },
+                wire::MethodAuthority::LocalNominal { declaration } => Self::LocalNominal {
+                    declaration: Decode::decode(declaration, cx)?,
+                },
+                wire::MethodAuthority::InheritedNominal { declaration } => Self::InheritedNominal {
+                    declaration: Decode::decode(declaration, cx)?,
+                },
+                wire::MethodAuthority::Imported { declaration } => Self::Imported {
+                    declaration: Decode::decode(declaration, cx)?,
+                },
+                wire::MethodAuthority::RustAdapted { declaration } => Self::RustAdapted {
+                    declaration: Decode::decode(declaration, cx)?,
+                },
+            })
+        })
+    }
+}
 impl Decode<wire::Ref<wire::MethodCallSource>> for sifr_ir::MethodCallSource {
     fn decode(reference: &wire::Ref<wire::MethodCallSource>, cx: &mut Decoder) -> Result<Self> {
         cx.record(*reference, |value, cx| {
@@ -870,6 +898,7 @@ impl Decode<wire::Ref<wire::HirExpr>> for sifr_ir::HirExpr {
                     object,
                     method,
                     args,
+                    authority,
                     receiver_convention,
                     receiver_target,
                     mutable_arg_places,
@@ -879,6 +908,7 @@ impl Decode<wire::Ref<wire::HirExpr>> for sifr_ir::HirExpr {
                     object: Decode::decode(object, cx)?,
                     method: Decode::decode(method, cx)?,
                     args: Decode::decode(args, cx)?,
+                    authority: Decode::decode(authority, cx)?,
                     receiver_convention: Decode::decode(receiver_convention, cx)?,
                     receiver_target: Decode::decode(receiver_target, cx)?,
                     mutable_arg_places: Decode::decode(mutable_arg_places, cx)?,

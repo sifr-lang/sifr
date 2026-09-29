@@ -60,6 +60,7 @@ fn structured_intrinsic_supports_typed_method_call_arguments() {
     let module = module_with_expr(HirExpr::IntrinsicCall {
         intrinsic: CompilerIntrinsicId::BytesFromHex,
         args: vec![HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::StringLiteral("A0".to_string())),
             method: "lower".to_string(),
             args: vec![],

@@ -364,6 +364,7 @@ pub(super) fn does_not_lower_call_with_non_leaf_arg() {
 #[test]
 pub(super) fn does_not_lower_method_call_on_any_with_leaf_args() {
     let expr = HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(HirExpr::Name {
             name: "obj".to_string(),
             binding_id: None,
@@ -383,6 +384,7 @@ pub(super) fn does_not_lower_method_call_on_any_with_leaf_args() {
 #[test]
 pub(super) fn does_not_lower_method_call_on_typed_object() {
     let expr = HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(HirExpr::Name {
             name: "items".to_string(),
             binding_id: None,
@@ -402,6 +404,7 @@ pub(super) fn does_not_lower_method_call_on_typed_object() {
 #[test]
 pub(super) fn does_not_lower_len_method_call_on_any_object() {
     let expr = HirExpr::MethodCall {
+        authority: sifr_ir::MethodAuthority::Unclassified,
         object: Box::new(HirExpr::Name {
             name: "obj".to_string(),
             binding_id: None,

@@ -1,4 +1,4 @@
-//! Private indexed stdlib wire schema. Version 4 separates directory, module/name catalog and other payload frames; normal commands validate its complete digest before opening.
+//! Private indexed stdlib wire schema. Version 5 separates directory, module/name catalog and other payload frames; normal commands validate its complete digest before opening.
 //!
 //! Every non-scalar payload reference names a typed directory record, including
 //! strings and type occurrences. Wire records never contain live HIR or `Type`.
@@ -50,7 +50,7 @@ mod container_records_refs;
 mod semantic_records;
 pub use semantic_records::*;
 mod semantic_records_refs;
-pub const KIND_COUNT: u16 = 134;
+pub const KIND_COUNT: u16 = 135;
 
 pub type RecordId = [u8; 32];
 

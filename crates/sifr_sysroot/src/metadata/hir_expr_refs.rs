@@ -173,6 +173,7 @@ impl References for HirExpr {
                 object,
                 method,
                 args,
+                authority,
                 receiver_convention,
                 receiver_target,
                 mutable_arg_places,
@@ -182,6 +183,7 @@ impl References for HirExpr {
                 object.references(out);
                 method.references(out);
                 args.references(out);
+                authority.references(out);
                 receiver_convention.references(out);
                 receiver_target.references(out);
                 mutable_arg_places.references(out);

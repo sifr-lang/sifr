@@ -90,6 +90,7 @@ fn collect_mutated_vars_marks_method_mutborrow_argument() {
     };
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "receiver".to_string(),
                 binding_id: None,
@@ -139,6 +140,7 @@ fn collect_mutated_vars_marks_method_mutborrow_field_argument_root() {
     };
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "receiver".to_string(),
                 binding_id: None,
@@ -186,6 +188,7 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
         return_type: Type::None,
         body: vec![HirStmt::Expr {
             expr: HirExpr::MethodCall {
+                authority: sifr_ir::MethodAuthority::Unclassified,
                 object: Box::new(HirExpr::Name {
                     name: "xs".to_string(),
                     binding_id: None,
@@ -451,6 +454,7 @@ fn collect_mutated_vars_handles_nested_exprs() {
             mutable_arg_places: Vec::new(),
             func: "id".to_string(),
             args: vec![HirExpr::MethodCall {
+                authority: sifr_ir::MethodAuthority::Unclassified,
                 object: Box::new(HirExpr::Name {
                     name: "x".to_string(),
                     binding_id: None,
@@ -552,6 +556,7 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
         return_type: Type::None,
         body: vec![HirStmt::Expr {
             expr: HirExpr::MethodCall {
+                authority: sifr_ir::MethodAuthority::Unclassified,
                 object: Box::new(HirExpr::Name {
                     name: "items".to_string(),
                     binding_id: None,
@@ -591,6 +596,7 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
 fn collect_mutated_vars_marks_dict_setdefault_receiver() {
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "data".to_string(),
                 binding_id: None,
@@ -617,6 +623,7 @@ fn collect_mutated_vars_marks_dict_setdefault_receiver() {
 fn collect_mutated_vars_marks_set_update_receiver() {
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::Name {
                 name: "seen".to_string(),
                 binding_id: None,
@@ -659,6 +666,7 @@ fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
     };
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::MethodCall {
+            authority: sifr_ir::MethodAuthority::Unclassified,
             object: Box::new(HirExpr::FieldAccess {
                 object: Box::new(HirExpr::Name {
                     name: "self".to_string(),
