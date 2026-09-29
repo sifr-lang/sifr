@@ -96,11 +96,53 @@ impl RustEmitter {
         places: MethodCallPlaces<'_>,
         discard_result: bool,
     ) -> Result<RegistryMethodOperands, crate::CodegenError> {
-        let lowered_object = self.lower_method_receiver_place_for_stmt(
-            object,
-            places.receiver_convention,
-            places.receiver_target,
-        )?;
+        let lowered_object = if method == "len"
+            && args.is_empty()
+            && let HirExpr::Index {
+                object: collection,
+                index,
+                ..
+            } = object
+            && matches!(collection.ty().resolve_alias(), Type::List(_))
+        {
+            // Contextual indexed len retains an optional read when there is
+            // no checked value witness, rather than requiring a plain value.
+            if let Some(witness) = self.checked_place_read_borrow_witness(collection, index) {
+                Some(witness)
+            } else {
+                let Some(lowered_collection) = self.lower_stmt_expr_for_ir(collection)? else {
+                    return Ok(RegistryMethodOperands {
+                        object: None,
+                        args: None,
+                        discard_result,
+                    });
+                };
+                let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
+                    return Ok(RegistryMethodOperands {
+                        object: None,
+                        args: None,
+                        discard_result,
+                    });
+                };
+                let option = crate::checked_place::checked_sequence_get_option(
+                    lowered_collection,
+                    false,
+                    Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
+                    "__sifr_method_read",
+                );
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(option),
+                    method: "cloned".to_string(),
+                    args: Vec::new(),
+                })
+            }
+        } else {
+            self.lower_method_receiver_place_for_stmt(
+                object,
+                places.receiver_convention,
+                places.receiver_target,
+            )?
+        };
         let effective_object_ty = self.effective_method_object_ty(object);
         let method_params = self.resolve_registry_method_params(&effective_object_ty, method);
         let mut lowered_args = Vec::with_capacity(args.len());
