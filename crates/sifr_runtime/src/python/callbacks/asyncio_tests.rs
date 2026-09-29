@@ -310,6 +310,15 @@ async fn dropped_retained_group_drains_without_blocking_the_executor() {
     let value = async_to_int(invocation.expect("Python should observe callback cancellation"))
         .expect("cancellation result should convert");
     assert_eq!(value, -1);
+    // Python observes cancellation independently of the executor's owner drain.
+    // Observe the spawned closer's completion without electing another closer.
+    tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        while owner.status() != CallbackOwnerStatus::Closed {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("dropped retained group must finish its asynchronous drain");
     assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
     reset_runtime_state_for_tests();
 }
