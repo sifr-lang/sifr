@@ -67,6 +67,27 @@ def builtin(mut x: list[int]) -> None:
         matches!(method_authorities(&module, "builtin").as_slice(), [MethodAuthority::BuiltinIntrinsic { declaration }] if declaration.owner.as_deref() == Some("list[int]") && declaration.symbol == "append")
     );
 
+    let user_enum = r#"
+class Color(Enum):
+    RED = 1
+
+    def label(self) -> str:
+        return "red"
+
+def enum_label(color: Color) -> str:
+    return color.label()
+
+def enum_name(color: Color) -> str:
+    return color.name()
+"#;
+    let module = lower(user_enum);
+    assert!(
+        matches!(method_authorities(&module, "enum_label").as_slice(), [MethodAuthority::LocalNominal { declaration }] if declaration.owner.as_deref() == Some("Color") && declaration.symbol == "label")
+    );
+    assert!(
+        matches!(method_authorities(&module, "enum_name").as_slice(), [MethodAuthority::BuiltinIntrinsic { declaration }] if declaration.owner.as_deref() == Some("Color") && declaration.symbol == "name")
+    );
+
     let imported = r"
 from provider import Gadget
 

@@ -146,8 +146,9 @@ fn classify_call(
                 &signature,
                 ctx.current_module_name.as_deref(),
             );
-            let key = format!("{name}.{method}");
-            if let Some(binding) = ctx.attached_method_bindings.get(&key) {
+            if let Some(binding) =
+                super::attached_api_surfaces::binding_for_owner(ctx, name, receiver, method)
+            {
                 Some(MethodAuthority::RustAdapted {
                     declaration: CallableIdentity {
                         module: binding.declaration.module.clone(),
@@ -214,6 +215,31 @@ fn classify_call(
         {
             Some(builtin(receiver, method, args, return_ty))
         }
+        Type::Newtype { inner, .. } => {
+            if method == "value" {
+                Some(builtin(receiver, method, args, return_ty))
+            } else {
+                classify_call(inner, method, args, return_ty, ctx)
+            }
+        }
+        Type::Enum { identity, name, .. } => {
+            if matches!(method, "name" | "value") {
+                return Some(builtin(receiver, method, args, return_ty));
+            }
+            let signature = ctx.functions.get(&format!("{name}.{method}"))?;
+            let declaration = nominal_declaration(
+                identity.as_deref().unwrap_or(name),
+                method,
+                &[],
+                signature,
+                ctx.current_module_name.as_deref(),
+            );
+            if declaration.module != ctx.current_module_name.as_deref().unwrap_or_default() {
+                Some(MethodAuthority::Imported { declaration })
+            } else {
+                Some(MethodAuthority::LocalNominal { declaration })
+            }
+        }
         Type::List(_)
         | Type::Dict(_, _)
         | Type::Set(_)
@@ -227,8 +253,6 @@ fn classify_call(
         | Type::PythonDlpackStream
         | Type::AsyncGenerator(_, _)
         | Type::StructuralRecord(_)
-        | Type::Newtype { .. }
-        | Type::Enum { .. }
         | Type::Decimal
         | Type::BigDecimal => Some(builtin(receiver, method, args, return_ty)),
         _ => None,
