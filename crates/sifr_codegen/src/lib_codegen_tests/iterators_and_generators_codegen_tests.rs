@@ -561,7 +561,7 @@ fn test_checked_field_mutation_is_explicit_and_non_sticky() {
                     return_type: Type::None,
                     body: vec![HirStmt::Expr {
                         expr: HirExpr::MethodCall {
-                            authority: sifr_ir::MethodAuthority::Unclassified,
+                            authority: crate::method_authority_tests::builtin_authority("append"),
                             object: Box::new(HirExpr::FieldAccess {
                                 object: Box::new(HirExpr::Name {
                                     name: "self".to_string(),

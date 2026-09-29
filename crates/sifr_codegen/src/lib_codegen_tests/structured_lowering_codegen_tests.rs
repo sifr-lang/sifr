@@ -118,7 +118,7 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::MethodCall {
-                        authority: sifr_ir::MethodAuthority::Unclassified,
+                        authority: crate::method_authority_tests::builtin_authority("clear"),
                         object: Box::new(HirExpr::Name {
                             name: "items".to_string(),
                             binding_id: Some(sifr_ir::BindingId(1)),
@@ -194,7 +194,7 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
                 }],
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::MethodCall {
-                        authority: sifr_ir::MethodAuthority::Unclassified,
+                        authority: crate::method_authority_tests::contextual_authority("write"),
                         object: Box::new(HirExpr::Name {
                             name: "out".to_string(),
                             binding_id: Some(sifr_ir::BindingId(2)),
@@ -263,7 +263,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::MethodCall {
-                        authority: sifr_ir::MethodAuthority::Unclassified,
+                        authority: crate::method_authority_tests::builtin_authority("update"),
                         object: Box::new(HirExpr::Name {
                             name: "d2".to_string(),
                             binding_id: None,

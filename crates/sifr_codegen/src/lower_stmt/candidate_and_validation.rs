@@ -61,6 +61,12 @@ pub(super) fn try_lower_expr_stmt_with_bindings(
         ..
     } = expr
     {
+        if !crate::method_call_emitter::source_method_path(expr)
+            .ok()?
+            .is_builtin()
+        {
+            return None;
+        }
         if let HirExpr::Name { name, ty, .. } = object.as_ref() {
             if matches!(resolve_alias_type(ty), Type::Any | Type::Unknown) {
                 if let Some(bound_ty) = local_binding_types.get(name) {
@@ -641,7 +647,7 @@ mod tests {
     #[test]
     fn local_binding_setdefault_materializes_owned_key_and_default() {
         let expr = HirExpr::MethodCall {
-            authority: sifr_ir::MethodAuthority::Unclassified,
+            authority: crate::method_authority_tests::builtin_authority("setdefault"),
             object: Box::new(HirExpr::Name {
                 name: "defaults".to_string(),
                 binding_id: None,
