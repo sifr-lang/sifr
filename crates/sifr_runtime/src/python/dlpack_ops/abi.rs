@@ -1,3 +1,12 @@
+//! DLPack v1 C headers and read-only metadata inspection.
+//!
+//! Native producers must provide live, uniquely owned managed allocations and
+//! rank-sized initialized shape/stride arrays until their deleter is invoked.
+//! Capsule names, null/alignment checks and serialization cannot establish the
+//! allocation validity of arbitrary native addresses. All callers hold capsule
+//! and producer pins and a Python attachment; they copy metadata, never borrow
+//! tensor data or retain Rust references across a foreign callback.
+
 use super::{DEVICE_CPU, PythonDlpackTensorMetadata, dlpack_error, unsupported_dtype_error};
 use std::ffi::{CStr, c_void};
 
@@ -23,6 +32,7 @@ pub(super) struct DLDataType {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub(super) struct DLTensor {
     pub(super) data: *mut c_void,
     pub(super) device: DLDevice,
@@ -62,8 +72,9 @@ pub(super) enum ManagedTensor {
     Versioned(*mut DLManagedTensorVersioned),
 }
 
-// DLPack managed tensors are transferred only while attached to the one
-// application-owned Python runtime. The raw pointer never leaves that owner.
+// SAFETY: Send moves opaque ownership only. The store mutex serializes handles;
+// header inspection and callbacks require attachment and live capsule/producer
+// pins. Drop also attaches on a foreign thread. No tensor data is dereferenced.
 unsafe impl Send for ManagedTensor {}
 
 impl ManagedTensor {
@@ -75,8 +86,10 @@ impl ManagedTensor {
             return Err(dlpack_error("DLPack capsule pointer is null"));
         }
         if name == DLTENSOR_NAME {
+            validate_alignment::<DLManagedTensor>(pointer, "managed tensor")?;
             Ok(Self::Legacy(pointer.cast()))
         } else if name == DLTENSOR_VERSIONED_NAME {
+            validate_alignment::<DLManagedTensorVersioned>(pointer, "versioned managed tensor")?;
             Ok(Self::Versioned(pointer.cast()))
         } else {
             Err(dlpack_error(format!(
@@ -86,6 +99,7 @@ impl ManagedTensor {
         }
     }
 
+    // SAFETY: callers validated the version and retain the live managed header.
     pub(super) const fn tensor(self) -> *const DLTensor {
         match self {
             Self::Legacy(pointer) => unsafe { &raw const (*pointer).dl_tensor },
@@ -93,6 +107,7 @@ impl ManagedTensor {
         }
     }
 
+    // SAFETY: nullable deleter fields are read under the live header ownership.
     pub(super) const fn has_deleter(self) -> bool {
         match self {
             Self::Legacy(pointer) => unsafe { (*pointer).deleter.is_some() },
@@ -125,6 +140,7 @@ impl ManagedTensor {
         let Self::Versioned(pointer) = self else {
             return Ok(());
         };
+        // SAFETY: version is in the stable prefix; no incompatible tensor fields are read.
         let version = unsafe { (*pointer).version };
         if version.major != 1 {
             return Err(dlpack_error(format!(
@@ -132,6 +148,7 @@ impl ManagedTensor {
                 version.major, version.minor
             )));
         }
+        // SAFETY: major 1 guarantees this flag layout; the owner remains live.
         let flags = unsafe { (*pointer).flags };
         if flags & DLPACK_FLAG_BITMASK_IS_COPIED != 0 {
             return Err(dlpack_error(
@@ -141,6 +158,9 @@ impl ManagedTensor {
         Ok(())
     }
 
+    /// SAFETY: caller owns the sole unreleased managed header, is attached, and
+    /// will never inspect it again. The versioned deleter is a stable ABI prefix
+    /// even for incompatible major versions. Nullable deleters are valid.
     pub(super) unsafe fn release(self) {
         match self {
             Self::Legacy(pointer) => {
@@ -161,33 +181,33 @@ pub(super) fn metadata_for_managed_tensor(
     tensor: ManagedTensor,
 ) -> Result<PythonDlpackTensorMetadata, super::PythonError> {
     tensor.validate_version_and_copy()?;
-    let dl_tensor = unsafe { &*tensor.tensor() };
+    // SAFETY: supported ABI, live producer allocation; copy the header so no
+    // Rust reference can alias a foreign writer or escape to a callback.
+    let dl_tensor = unsafe { tensor.tensor().read() };
     if dl_tensor.ndim < 0 {
         return Err(dlpack_error("DLPack dimensions must be non-negative"));
     }
     let dimensions = i64::from(dl_tensor.ndim);
     let len = usize::try_from(dl_tensor.ndim)
         .map_err(|_| dlpack_error("DLPack dimensions exceed Sifr list range"))?;
-    if dl_tensor.data.is_null() && tensor_element_count(dl_tensor, len)? != 0 {
-        return Err(dlpack_error("DLPack tensor data pointer is null"));
-    }
-    if dl_tensor.shape.is_null() && len > 0 {
-        return Err(dlpack_error("DLPack tensor shape pointer is null"));
-    }
-    let shape = if dl_tensor.shape.is_null() {
-        Vec::new()
-    } else {
-        unsafe { slice_to_vec(dl_tensor.shape, len) }
-    };
+    let shape = metadata_slice(dl_tensor.shape, len, "shape")?;
     if shape.iter().any(|dimension| *dimension < 0) {
         return Err(dlpack_error(
             "DLPack tensor shape dimensions must be non-negative",
         ));
     }
+    let element_count = shape.iter().try_fold(1_u64, |count, dimension| {
+        count
+            .checked_mul(*dimension as u64)
+            .ok_or_else(|| dlpack_error("DLPack tensor element count overflow"))
+    })?;
+    if dl_tensor.data.is_null() && element_count != 0 {
+        return Err(dlpack_error("DLPack tensor data pointer is null"));
+    }
     let strides = if dl_tensor.strides.is_null() {
         Vec::new()
     } else {
-        unsafe { slice_to_vec(dl_tensor.strides, len) }
+        metadata_slice(dl_tensor.strides, len, "strides")?
     };
     if strides.iter().any(|stride| *stride < 0) {
         return Err(dlpack_error("negative DLPack strides are not supported"));
@@ -213,26 +233,38 @@ pub(super) fn metadata_for_managed_tensor(
     })
 }
 
-fn tensor_element_count(tensor: &DLTensor, len: usize) -> Result<u64, super::PythonError> {
-    if len == 0 {
-        return Ok(1);
+fn validate_alignment<T>(pointer: *mut c_void, context: &str) -> Result<(), super::PythonError> {
+    if !pointer.cast::<T>().is_aligned() {
+        return Err(dlpack_error(format!(
+            "DLPack {context} pointer is misaligned"
+        )));
     }
-    if tensor.shape.is_null() {
-        return Ok(0);
-    }
-    unsafe { std::slice::from_raw_parts(tensor.shape.cast_const(), len) }
-        .iter()
-        .try_fold(1_u64, |count, dimension| {
-            let dimension = u64::try_from(*dimension)
-                .map_err(|_| dlpack_error("DLPack tensor shape dimensions must be non-negative"))?;
-            count
-                .checked_mul(dimension)
-                .ok_or_else(|| dlpack_error("DLPack tensor element count overflow"))
-        })
+    Ok(())
 }
 
-unsafe fn slice_to_vec(pointer: *mut i64, len: usize) -> Vec<i64> {
-    unsafe { std::slice::from_raw_parts(pointer.cast_const(), len) }.to_vec()
+fn metadata_slice(
+    pointer: *mut i64,
+    len: usize,
+    context: &str,
+) -> Result<Vec<i64>, super::PythonError> {
+    if len == 0 {
+        return Ok(Vec::new());
+    }
+    if pointer.is_null() {
+        return Err(dlpack_error(format!(
+            "DLPack tensor {context} pointer is null"
+        )));
+    }
+    validate_alignment::<i64>(pointer.cast(), context)?;
+    if len > isize::MAX as usize / std::mem::size_of::<i64>() {
+        return Err(dlpack_error(
+            "DLPack metadata slice exceeds addressable range",
+        ));
+    }
+    // SAFETY: native producer guarantees rank-sized initialized allocation;
+    // non-null, alignment and addressable slice size were checked above. The
+    // attachment and capsule/producer pins prohibit release during this copy.
+    Ok(unsafe { std::slice::from_raw_parts(pointer.cast_const(), len) }.to_vec())
 }
 
 fn dtype_name(dtype: DLDataType) -> Result<String, super::PythonError> {
