@@ -2375,7 +2375,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
-| **H02h0 / policy scanner and validator foundation** | First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
+| **H02h0 / policy scanner and validator foundation** | **Open / needs-adjudication** after repeated blocking findings on unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); blocked receipt below. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
 | **H02h1 / semantic method policy authoring** | After H02h0. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
@@ -2494,6 +2494,88 @@ publishing setup issue, not an acceptance pass. This adjudication has no current
 blocker. H02h's implementation omissions remain assigned to H02h0-H02h5, and
 H02h/H02/F29 remain open. Next action: separately assign **H02h0 only** on current
 main. This owner stops without starting that batch or H03.
+
+### H02h0 policy foundation: repeated-finding stop (2026-09-30)
+
+**State: open / needs-adjudication; no implementation merge.** The assigned
+H02h0 owner started from main `21f47d01bb18cb7008aa7ad617e11ac7d727104d`
+in its own branch and worktree. Draft [PR #4148](https://github.com/sifr-lang/sifr/pull/4148)
+remains unmerged at candidate `850fec7526d990615a20085219f75921e7e09e1a`
+(tree `2b5fc8b6590516e55fa7ac4250ee1026fcea6f4e`). It contains scanner and pure validator
+foundation work only, with explicit method/unsafe schema and source-segment
+interfaces. No live inventory, profile wiring or Rust source was authored; no
+Cargo target was adopted or cleaned. H02h1-H02h5 and H03 remain unstarted by
+this owner.
+
+The initial candidate `f3f64780faeb0dfa87aa2d337b480c45ffb2cabf` passed
+all six exact `PolicyFoundationTests` cases, existing `MethodTests` 12/12,
+`UnsafeTests` 11/11 and `ColdCheckoutTests` 1/1. Both script self-tests,
+scripts-only cold mutation probes, the 900-line file-size guard (4,303 files)
+and diff checks passed. Scoped read-only Opus 5.5 review was **NOT SATISFIED**:
+real erasure wrapper calls were misclassified, Windows operations received a
+path-wide descriptor contract, copied metadata could evade template comparison,
+comparison missed repetition across segments, and neighboring SAFETY comments
+could bind to the wrong operation. All five findings were repaired in one
+batch on the final candidate. The same six exact cases, 12/11/1 suites,
+both self-tests, cold mutation probes, file-size guard and diff checks passed
+again with the new negative variants. Those assertion passes do not supersede
+the failed reviews or establish H02h0 acceptance.
+
+The remediation scoped Opus 5.5 review was **NOT SATISFIED**, repeating the
+normalization and SAFETY-locality mechanisms:
+
+- `scripts/unsafe_policy_contracts.py:123-150`: otherwise identical four-field
+  owner templates still pass with `unsafe block N`, `site N`, `(N)`,
+  `line <site.line>`, `<site.path>:<line>`, a shortened fingerprint prefix,
+  or copied source-path suffixes across two files. Correct the binding-value
+  normalization for path, line, standalone ordinal, kind separator forms and
+  fingerprint prefixes; add these exact negatives.
+- `scripts/rust_policy_sites.py:249-253`: the backwards comment-run extension
+  checks whitespace but not prior code on each earlier comment's line.
+  `let a = g(); // SAFETY: previous statement proof.` followed by
+  `// continued.` and `unsafe { other() };` imports the previous statement's
+  proof. Stop the run at any earlier comment sharing a line with preceding
+  code, and add the continuation negative.
+
+Under `.cursor/skills/phase-closure-loop/SKILL.md`, "If the same finding returns
+twice, stop and request adjudication." This is that stop: no further code
+repair, third remediation review, implementation merge or next batch is
+accepted by this receipt. **Next action:** separately assign a bounded
+adjudication of these two repeated foundation findings and the exact fixture
+scope, with an explicit decision about whether a new repair item is authorized.
+H02h0 stays open, and its successors remain blocked on its reviewed merge.
+
+Candidate-keyed evidence is on `yaser5@192.168.1.134` under
+`/data/sifr-architecture-h02h0-evidence-20260930/`. Initial manifest SHA-256:
+`a1ff53a86bb2074fb0560443cef8ce873bf0f8f0be32c0baa14f7a0c70ae048a`;
+initial review SHA-256:
+`6f37d590e2a621f4f0f57cc56ef0905f9df2f2d0c5dece59718c3bcff4cac204`.
+The final candidate directory's `validation.json` SHA-256 is
+`12eae677f456bbb0c9e1091945fc32b492145f08b83197061ad2727961a5ad31`;
+its `review.md` SHA-256 is
+`7941192b0722e525f1d80cf678d252e54a858cec98abe538144a22bae53f3dd5`.
+All historical failed candidate/review evidence remains preserved.
+
+The initial automatic create-pr job
+[109787953713](https://github.com/sifr-lang/sifr/actions/runs/36684762041/job/109787953713)
+failed before selected assertions at `performance_reference_admission` because
+`SIFR_PERFORMANCE_REFERENCE` was unset. Its preserved raw log SHA-256 is
+`55d96746178857a64e1b221229f129aebabc380196b651e1d5219e14117f43b0`.
+This remains V01/Q01-owned and is not a local gate pass or an H02h0 source
+repair. The authorized intermediate policy deferred create-pr/full merge gates
+to Q01; no local Cargo/Sifr gate was run. Formatted complex comma-less block
+arms are the scanner input contract; unsupported if-let, `.eq`, table/map lookup
+and aliased authority discovery remain separately owned follow-ups.
+Operation-family assignments and whether exact code proof references actually
+show admission, drain, revocation or teardown must be checked by the later
+H02h2-H02h4 author reviews. Static policy binding is not executable safety proof.
+
+This blocked receipt modifies the phase record only. Documentation structure,
+the file-size guard and diff checks passed. Two earlier documentation attempts
+could not read the uninitialized pinned editor package; restoring the declared
+editor integration and nested VS Code submodules supplied the required input,
+and their raw failures remain preserved in the evidence directory. No additional
+external review or Cargo gate was run for this record-only update.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
