@@ -7496,3 +7496,57 @@ reference failures retain their existing status.
 **Next action: separately assign H03a1p only.** This scope owner stops after the
 documentation merge/receipt. Source-inspection-supported implementability is not
 actual-producer capability acceptance, live union admission or H03a1 completion.
+
+### H03a1s builtin scope delivery receipt (2026-10-01)
+
+**State: documentation-only H03a1s closed; H03a1p and H03a1 acceptance open.**
+The scope adjudication merged in [PR #4192](https://github.com/sifr-lang/sifr/pull/4192)
+as `791497dd3fd2cc6925fe0101a94ab74ffb30f499`, from final candidate
+`319f10b0c679f64a708603261a7142c98b3b4f6a` on base
+`c2140cf6cbcfa21d431adb878bfbe508e98e8179`. The merged tree equals candidate
+`895cc7782d3213a5497416e574c7f17b16e2a145`.
+
+Exact official producer-source inspection supports the selected pinned compiler
+companion capability scope. RA's separate token model is rejected for generated
+call authority because its Clone, Debug and PartialEq expansions differ from the
+matching compiler. No feasibility build, rustc-dev installation, semantic adapter,
+actual-producer capability pass, accepted export or compiler mutation occurred.
+The #4191 builtin-body blocker remains historical failing evidence; H03a cannot
+resume. All five original SemanticInputTests, full configuration/input/external
+closure admission and all seven later MetricTests remain required.
+
+On the final scope candidate, documentation structure passed (raw SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+the 900-line guard passed for 4,317 maintained files (raw SHA-256
+`5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a`),
+and whitespace, single-canonical-path and clean-tree checks passed. Scoped
+self-review was satisfied for this source-based scope definition. The explicitly
+documentation-only batch required no external implementation review or broad
+Cargo gate and qualifies no integration, performance, release or CI pass.
+
+Evidence remains outside Git on `yaser5@192.168.1.134` at
+`/data/sifr-h03a1-builtin-scope-evidence-20261001/319f10b0c679f64a708603261a7142c98b3b4f6a/candidate-validation.json`
+(SHA-256 `5c53996392eefe01fb1cefde167212cebfe68c30423a2a360e3c5e9ade5d93a0`).
+The exact compiler-source receipt and producer-source audit have SHA-256
+`ae50cd9e76a1dc4411bcaf93eb624c8d7dce575213c4bc59e327502742e24a6b`
+and `46219079c653a757937898bc6d2484a4a03e1c4546116b1b29a5f206b74350e4`.
+An initial documentation invocation lacked the pinned nested editor input; its
+failure is preserved, followed by exact gitlink initialization and a passing
+check. An unnecessarily broad owned source-location search was stopped when it
+competed with verification I/O; exact acquisition-receipt paths supplied the audit.
+No other session's source, target or worktree was changed or cleaned.
+
+The owner used `/data/sifr-h03a1-builtin-scope-20261001`, branch
+`codex/h03a1-builtin-scope-20261001` and a separate record branch. Publication used
+an isolated Mac bare relay with authenticated GitHub credentials, preserving the
+shared Mac and Linux primary checkouts. This receipt requires documentation,
+diff/scope checks only; maintained-source guard inputs are unchanged, and no
+external review or broad validation is repeated.
+
+**Next action: assign H03a1p only.** Implement the pinned standalone builtin
+capability companion and its five exact `BuiltinCapabilityTests` above, after a
+fresh ownership/resource/component preflight. Merge and record that bounded
+capability result; then stop. A missing component or unsupported AST/HIR/provenance
+join must return its exact blocker. H03a1 full adapter resumption is a subsequent
+assignment, and H03a-H03f remain dependent and unstarted. This scope has no local
+blocker; actual-producer capability remains unproven.
