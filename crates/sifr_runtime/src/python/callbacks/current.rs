@@ -24,6 +24,7 @@ type CurrentTarget<'a> = dyn for<'py> Fn(
 struct CurrentTargetPtr(*const CurrentTarget<'static>);
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+#[allow(unsafe_code)]
 unsafe fn erase_target_lifetime(target: *const CurrentTarget<'_>) -> CurrentTargetPtr {
     // SAFETY: callers must keep the target alive until this pointer is removed
     // from the thread-local registry and all admitted invocations have drained.
@@ -70,7 +71,7 @@ impl CurrentCallback<'_> {
                 self.callback_id,
             ));
         }
-        self.owner.close_call_scope()?;
+        self.owner.close_synchronous_call_scope()?;
         CURRENT_TARGETS.with(|targets| {
             targets.borrow_mut().remove(&self.token);
         });
@@ -113,6 +114,7 @@ where
     current_callback_with_owner(owner, callback_id, expected_arity, decode, handler, encode)
 }
 
+#[allow(unsafe_code)]
 pub fn current_callback_with_owner<A, R, Decode, Handler, Encode>(
     owner: CallbackOwnerState,
     callback_id: u64,
@@ -150,6 +152,7 @@ where
 /// registry removal reject their entry after teardown. Generated callers keep
 /// the wrapper in a private local after the handler binding, so return, setup
 /// errors and unwind drop it before any handler capture ends.
+#[allow(unsafe_code)]
 pub unsafe fn current_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode>(
     owner: CallbackOwnerState,
     callback_id: u64,

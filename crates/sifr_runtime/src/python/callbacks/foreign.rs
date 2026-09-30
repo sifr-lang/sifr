@@ -130,6 +130,7 @@ where
 struct ForeignTargetPtr(*const (dyn ForeignTarget<'static> + 'static));
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+#[allow(unsafe_code)]
 unsafe fn erase_target_lifetime(target: *const (dyn ForeignTarget<'_> + '_)) -> ForeignTargetPtr {
     // SAFETY: callers must keep the target alive until owner admission closes
     // and every accepted invocation has drained.
@@ -144,8 +145,10 @@ unsafe fn erase_target_lifetime(target: *const (dyn ForeignTarget<'_> + '_)) -> 
 // SAFETY: the pointer is only dereferenced after owner admission. Call-scoped
 // close rejects new entries and drains all accepted calls before its owning box
 // can be dropped.
+#[allow(unsafe_code)]
 unsafe impl Send for ForeignTargetPtr {}
 // SAFETY: `ForeignTarget` is `Sync`, and its owner provides the lifetime proof.
+#[allow(unsafe_code)]
 unsafe impl Sync for ForeignTargetPtr {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -180,7 +183,7 @@ impl ForeignCallback<'_> {
         if self.closed.get() {
             return Ok(());
         }
-        self.owner.close_call_scope()?;
+        self.owner.close_synchronous_call_scope()?;
         self.admission.store(false, Ordering::Release);
         self.closed.set(true);
         object_ops::close_object(self.object.clone())
@@ -237,6 +240,7 @@ impl Drop for ForeignCallback<'_> {
     }
 }
 
+#[allow(unsafe_code)]
 pub fn foreign_callback<A, R, Decode, Handler, Encode>(
     callback_id: u64,
     expected_arity: usize,
@@ -276,6 +280,7 @@ where
 /// owner admission and drains decoding, execution and encoding before freeing
 /// the target. Send/Sync targets permit shared foreign-thread calls; mutable
 /// access must be synchronized by the capture's own safe types.
+#[allow(unsafe_code)]
 pub unsafe fn foreign_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode>(
     owner: CallbackOwnerState,
     callback_id: u64,
@@ -565,5 +570,6 @@ fn advance_cancelled(state: &mut FifoState) {
 }
 
 #[cfg(test)]
+#[allow(unsafe_code)]
 #[path = "foreign_tests.rs"]
 mod tests;

@@ -26,6 +26,10 @@ pub(super) struct ForeignObjectLease {
 }
 
 #[derive(Debug)]
+// Send/Sync are derived through Py<PyAny> and Mutex, not asserted over raw
+// pointers: detached threads can move ownership, but only a Python token can
+// clone/access a reference. The mutex serializes semantic close and lease pins;
+// no public handle admits new access after Closing/Poisoned/Closed.
 struct ForeignObjectInner {
     state: Mutex<ForeignObjectState>,
 }
@@ -213,6 +217,11 @@ impl Drop for ForeignObjectLease {
     }
 }
 
+// SAFETY: objects originate from an attached, process-lifetime CPython runtime.
+// PyGILState_Check only observes the current thread; no borrowed pointer escapes.
+// Taking the Option transfers the sole tracked reference to either its attached
+// destructor or the owned pending queue, never both.
+#[allow(unsafe_code)]
 fn release_object(object: Py<PyAny>) {
     if unsafe { ffi::PyGILState_Check() } != 0 {
         drop(object);

@@ -2,6 +2,7 @@ mod asyncio;
 mod asyncio_entry;
 mod asyncio_invocation;
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod asyncio_tests;
 mod current;
 #[cfg(test)]
@@ -54,6 +55,7 @@ pub(super) fn register_callback_errors(
 }
 
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod tests;
 pub use asyncio::{
     AsyncioCallback, AsyncioCallbackConcurrency, asyncio_callback_scoped_with_owner,
@@ -61,4 +63,8 @@ pub use asyncio::{
 };
 
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod h02_contract_tests;
+
+#[cfg(test)]
+mod h02_core_tests;
