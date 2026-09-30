@@ -6829,9 +6829,10 @@ is preserved in the external evidence. This documentation-only handoff requires
 documentation structure, diff/scope and file-size checks only. The documentation
 structure command and file-size guard passed (4,317 maintained files); the
 single-path diff and whitespace checks passed. Raw successful logs have SHA-256
-\`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0\` and
-\`5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a\`, respectively.
-No implementation review, Cargo gate or H03a acceptance pass is claimed. Historical failures and reviews retain their original status.
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0` and
+`5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a`, respectively.
+No implementation review, Cargo gate or H03a acceptance pass is claimed.
+Historical failures and reviews retain their original status.
 
 **Next action: separately assign the H03a semantic-input scope checkpoint.**
 H03b-H03f remain dependent on completed H03a and are not started. The current
