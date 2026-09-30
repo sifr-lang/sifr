@@ -629,10 +629,10 @@ unsafe { read_other(x); }
         for operation, family in [('GetNamedSecurityInfoW(path)', 'windows-security'),
                                   ('SetNamedSecurityInfoW(path)', 'windows-security'),
                                   ('LocalFree(descriptor)', 'windows-localfree'),
-                                  ('CloseHandle(token)', 'raw-access'),
-                                  ('CreateDirectoryW(path, attrs)', 'raw-access'),
-                                  ('File::from_raw_handle(handle)', 'raw-access'),
-                                  ('MoveFileExW(old, new, flags)', 'raw-access'),
+                                  ('CloseHandle(token)', 'external-owner-release'),
+                                  ('CreateDirectoryW(path, attrs)', 'external-state-mutation'),
+                                  ('File::from_raw_handle(handle)', 'external-owner-transfer'),
+                                  ('MoveFileExW(old, new, flags)', 'external-state-mutation'),
                                   ('information.assume_init()', 'raw-access')]:
             site = unsafe.discover(Source('crates/sifr_cache_storage/src/windows_storage_security.rs',
                                          'fn f() { unsafe { ' + operation + '; } }'))[0]
