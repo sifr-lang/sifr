@@ -39,7 +39,8 @@ def discover(source: Source) -> list[Site]:
     spans = []
     for i, t in enumerate(ts):
         if t.kind == 'ident' and t.value == 'MethodCall' and i + 1 < len(ts) and ts[i + 1].value == '{':
-            spans.append(('method-call-carrier', i, ps[i + 1]))
+            start = i - 2 if i >= 2 and ts[i - 1].value == '::' else i
+            spans.append(('method-call-carrier', start, ps[i + 1]))
         if t.kind != 'ident' or t.value not in ('match', 'matches'):
             continue
         if t.value == 'matches' and i + 2 < len(ts) and ts[i + 1].value == '!':

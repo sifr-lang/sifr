@@ -77,6 +77,7 @@ class MethodTests(unittest.TestCase):
         text = 'fn f(x: X) { match x { MethodDispatchAuthority::Builtin => emit(), _ => decline() } HirExpr::MethodCall { method: renamed, authority: a }; }'
         found = methods.discover(Source(self.path, text))
         self.assertEqual([s.kind for s in found], ['typed-authority-match', 'method-call-carrier'])
+        self.assertTrue(found[1].text.startswith('HirExpr::MethodCall'))
         self.assertFalse(methods.validate(found, method_records(found)))
 
     def test_literals_and_comments_are_not_dispatch(self):
