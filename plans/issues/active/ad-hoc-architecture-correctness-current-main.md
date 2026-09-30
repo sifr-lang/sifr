@@ -993,7 +993,7 @@ regressions, scoped review and merge receipt before a dependent item begins.
 | H02a0 / typed HIR and metadata carrier | Merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118); first; one atomic, independently compiling contract prerequisite across `sifr_ir` (HIR field/type), `sifr_sysroot` (wire record, references and container version), and `sifr_compiler_services` (encoder/decoder). These are explicit package handoffs, not lowering or codegen semantics ownership. Add a typed authority field to `HirExpr::MethodCall` and its wire variant; preserve receiver convention, checked receiver target, mutable-argument places and source ranges. Mechanical constructor updates outside these packages are limited to making the new carrier compile; do not classify methods there. Carry an explicit unclassified transition state only until H02a1, never infer builtin authority from a missing field. Bump the private indexed metadata container version from 4 to 5 for the changed record shape; reject v4 and malformed/new unknown authority tags rather than decoding them as a default. Update the explicit record corpus. No frontend constant evaluation or codegen emission. | Add and run `cargo test -p sifr_ir --lib method_authority_tests::carrier_preserves_receiver_and_source -- --exact`; `cargo test -p sifr_sysroot --lib metadata::tests::h02a0_authority_record_roundtrip -- --exact`; `cargo test -p sifr_sysroot --lib metadata::tests::h02a0_old_version_and_invalid_authority_reject -- --exact`; `cargo test -p sifr_compiler_services --lib metadata::tests::h02a0_hir_authority_roundtrip -- --exact`; `cargo test -p sifr_compiler_services --lib metadata::tests::h02a0_corrupt_authority_rejects -- --exact`. Focused regressions: `cargo test -p sifr_sysroot --lib metadata::tests::all_explicit_record_families_and_variants_roundtrip -- --exact`, `cargo test -p sifr_sysroot --lib metadata::tests::dx15_physical_frames_are_bounded_canonical_and_versioned -- --exact`, `cargo test -p sifr_compiler_services --lib metadata::tests::incompatible_identity_rejects_provider -- --exact`, `cargo test -p sifr_lowering --lib lower::method_receiver_analysis_tests::builtin_method_calls_carry_canonical_receiver_conventions_and_source_ranges -- --exact`, and `cargo test -p sifr_lowering --lib name_resolution_snapshot_tests::name_resolution_snapshot_matrix_matches_lowered_name_facts -- --exact`. Handoff: independently compiling carrier; both direct and encoded/decoded HIR retain identical authority, receiver data and ranges; old/corrupt metadata declines; no generated dispatch changes. |
 | H02a1 / `sifr_lowering` typed classification | Merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120); after H02a0. At typed HIR construction, replace the transition state with semantic builtin/intrinsic, protocol, local/inherited nominal, imported and Rust-adapted authority, using resolved declaration identity rather than name alone. Preserve receiver ownership, convention and ranges; unresolved receivers and unsupported method/type pairs produce diagnostics. Assert every accepted source method call has a classified carrier, including imported/inherited and compiler-synthesized calls, before the HIR leaves lowering. No metadata schema change, frontend constant evaluation or codegen emission. | Add and run `cargo test -p sifr_lowering --lib method_authority_tests::typed_dispatch_classification -- --exact`; `cargo test -p sifr_lowering --lib method_authority_tests::unsupported_method_declines_with_diagnostic -- --exact`; `cargo test -p sifr_lowering --lib method_authority_tests::unclassified_method_cannot_leave_lowering -- --exact`. Focused existing `lower::method_receiver_analysis_tests`, `lower::own_mut_semantics_tests` and `lower::python_interop_callback_tests` selections must record resolved names/assertion counts. Handoff: H02b/H02c/H02d0 consume a merged typed HIR product whose method authority is populated, whose receiver data survived metadata reuse, and whose declines carry source diagnostics. |
 | H02b / `sifr_frontend` constant evaluation | Merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122) after H02a1. Classify the closed `@const_eval` method subset as compile-time semantics, compare results and failures with the corresponding runtime language contract, and decline unsupported or effectful methods. Preserve frontend product ownership. | `cargo test -p sifr_frontend --lib const_evaluator::method_authority_tests::supported_methods_match_runtime_semantics -- --exact`; `cargo test -p sifr_frontend --lib const_evaluator::method_authority_tests::unsupported_methods_decline -- --exact`; focused existing `const_evaluator` tests. |
-| H02c / `sifr_codegen` method authority | Merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124) after H02a1 and H02b; statement-only admission repair merged in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142), with both receipts below. Own typed builtin/intrinsic emission in one source-method authority. Classify other name branches as user/protocol dispatch, contextual Rust adaptation or Rust-IR consumption. On authority decline, only a proven user/protocol/contextual path may continue; unsupported builtins fail structurally. Reproduce historical list `append`/`cloned` strict-registry-decline risk before removing fallback. Reject a remaining unclassified carrier before source-method emission; mark codegen-created contextual calls explicitly rather than treating that state as a builtin fallback. No X02 generated-Rust safety rewrite. | `cargo test -p sifr_codegen --lib method_authority_tests::typed_builtin_dispatch_and_strict_decline -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::user_protocol_and_contextual_paths -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::list_append_cloned_decline_regression -- --exact`; focused `methods::tests` and `lib_codegen_tests::emitted_rust_quality_codegen_tests`, plus exact list-method E2E pass/fail fixtures through the existing runner. Assert behavior, diagnostic failure and no second builtin fallback. |
+| H02c / `sifr_codegen` method authority | Merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124) after H02a1 and H02b; statement-only admission repair merged in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142), and checked-sequence exit-guard admission repair merged in [PR #4165](https://github.com/sifr-lang/sifr/pull/4165), with receipts below. Own typed builtin/intrinsic emission in one source-method authority. Classify other name branches as user/protocol dispatch, contextual Rust adaptation or Rust-IR consumption. On authority decline, only a proven user/protocol/contextual path may continue; unsupported builtins fail structurally. Reproduce historical list `append`/`cloned` strict-registry-decline risk before removing fallback. Reject a remaining unclassified carrier before source-method emission; mark codegen-created contextual calls explicitly rather than treating that state as a builtin fallback. No X02 generated-Rust safety rewrite. | `cargo test -p sifr_codegen --lib method_authority_tests::typed_builtin_dispatch_and_strict_decline -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::user_protocol_and_contextual_paths -- --exact`; `cargo test -p sifr_codegen --lib method_authority_tests::list_append_cloned_decline_regression -- --exact`; focused `methods::tests` and `lib_codegen_tests::emitted_rust_quality_codegen_tests`, plus exact list-method E2E pass/fail fixtures through the existing runner. Assert behavior, diagnostic failure and no second builtin fallback. |
 | H02d / original runtime-only boundary | **Needs-new-scope**, recorded in [PR #4127](https://github.com/sifr-lang/sifr/pull/4127) from audit base `eeb61f1c1710e2b587c46fbc47232076a5ac8544`. Superseded for execution by H02d0 and H02d1; this historical row is not an additional implementation item. | Source-audit findings below; no implementation or acceptance pass. |
 | H02d0 / callback runtime API and generated caller contract | Merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130) after H02a1; receipt below. No additional semantic dependency on H02b/H02c; the current base already includes their merges. One atomic, independently compiling handoff across `sifr_runtime::python::callbacks` (construction, admission, lifetime and teardown authority) and `sifr_codegen` (only the matching generated constructor/cleanup callers). Replace the safe lifetime-erased borrowed facade with a safe structural scope that survives forgetting exposed handles and drains on cancellation, or a narrow unsafe borrowed-construction contract used by compiler-generated scope glue with proved teardown. Keep owned `'static` callbacks safe. Prove borrowed captures stay live through all admitted decoding, execution and polling; normal return, conversion/setup error, escaped shell, early drop, cancellation, reentrant close and exact-once release must terminate safely. A cancelled closer must transfer or finish close authority so later closers terminate and captures release once. No compatibility facade, unrelated runtime-core audit, Buffer/Arrow/DLPack change, bridge-module change or X02 generated-Rust safety rewrite. | Add and run `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::borrowed_callback_lifetime_and_thread_owner -- --exact`; `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::close_cancel_reentrancy_releases_once -- --exact`; `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::borrowed_callback_forget_and_escape_is_rejected_or_drained -- --exact`; `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::cancelled_closer_handoff_releases_once -- --exact`. Run the three exact existing codegen caller cases and the focused runtime/codegen selections below. Require a compile-fail or structurally safe forget/escape proof, a cancelled-closer handoff regression, local thread/lifetime/alias/ownership contracts for changed unsafe boundaries, and independently compiling runtime plus generated callers. |
 | H02d1 / `sifr_runtime::python` CPython core and remaining callback audit | Merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); receipt below; after merged H02d0, runtime-only. Finish the original initialization/GIL/foreign-object and callback-state audit against the repaired lifetime API: initialization/error state, GIL attachment/detachment, foreign-thread entry, object/refcount lifetime, `Send`/`Sync`, registration, in-flight close/cancel/reentrancy and capture release. Give each remaining owned unsafe boundary a local thread, lifetime, alias and ownership contract; narrow broad allowances to a function or cohesive ABI module. Reuse H02d0's established callback contract; do not reopen its codegen handoff or take buffer, Arrow, DLPack, bridge modules or X02. If another package contract must change, stop needs-new-scope. | Add and run `cargo test -p sifr_runtime --features python --lib python::h02_contract_tests::initialization_and_gil_entry_contract -- --exact`; `cargo test -p sifr_runtime --features python --lib python::h02_contract_tests::foreign_object_thread_lifetime_and_release_contract -- --exact`. Run `cargo test -p sifr_runtime --features python --lib python::tests::` and `cargo test -p sifr_runtime --features python --lib python::config_verify::tests::`, the four callback selections below, and all four exact H02d0 runtime cases on the final H02d1 candidate. Assert repeated/conflicting initialization, uninitialized and foreign-thread GIL entry, detached-thread release draining, no premature release or access after semantic close, and exact-once final release. |
@@ -4933,3 +4933,115 @@ because this fresh worktree lacked the pinned nested editor submodule; its
 failed log is preserved as `docs-structure-initial.log`, and the rerun passed
 after initializing the unchanged recorded editor pins. No broad gate or external
 implementation review is claimed for this record-only handoff.
+
+
+### H02c checked-sequence exit-guard admission repair (2026-09-30)
+
+**State: this bounded source-owner repair is merged.**
+[PR #4165](https://github.com/sifr-lang/sifr/pull/4165) merged as
+`091263098fcb0db7b0b80b5d86eea63631a17fdb`, from exact tested/reviewed candidate
+`f8ee2ab1fb7017152a4f81fa5a8ead887e89222a`, base
+`32a402537f6647b9500c35b88251ed2ca5a3f911`, candidate tree
+`4ca3726d6e09f4ebe78737c822f438f1373cdc3a`. This resolves the preceding H02h1
+checked-sequence source-admission handoff only. H02h1 complete policy authoring
+remains separately assigned; H02h2-H02h5, H03 and phase closure remain waiting.
+
+The terminal checked-sequence exit consumer now admits each same-receiver,
+zero-argument source `len` carrier through the existing typed `source_method_path`
+before guard construction, condition replacement or witness installation. This
+covers the ordinary exclusion and prior-prefix-witness replacement predicates.
+Malformed authority fails structurally, even when another carrier declines.
+Matching protocol/local/inherited/imported/Rust-adapted carriers decline builtin
+replacement and preserve ordinary method lowering, with no second registry,
+builtin spelling retry, compatibility or fallback path. Truthiness and facts
+from stable alias declarations keep their ordinary lowering. No H02h policy,
+unsafe inventory/scanner, Python runtime or X02 implementation changed.
+
+**Final scoped validation: 96 successful codegen test-case executions.** Each of
+the three reserved exact cases resolved and executed 1/1:
+`checked_sequence_exit_guards_reject_unclassified_and_mismatched_authority`,
+`checked_sequence_exit_guards_preserve_nonbuiltin_authority_without_retry`, and
+`checked_sequence_exit_guards_preserve_admitted_read_and_prefix_behavior`, all in
+`method_authority_tests`, using `cargo test --locked -p sifr_codegen --lib
+method_authority_tests::<case> -- --exact`. Real source-lowered function bodies
+prepare `BodyAnalysis` before authority-only mutation; positive controls and
+rejection/preservation cover complete, partial, compound-or and prefix-witness
+variants at the direct exit consumer, statement block, scoped block, real nested
+block, capture and public structured-statement entries. Builtin list/bytes/string
+reads, early returns, source ranges and receiver ownership, truthiness, stable
+length/endpoint aliases and active Index failure-context decline are preserved.
+Successful ordinary public blocks with independent following returns retain
+nonbuiltin dispatch; the original scalar-read block can decline because ordinary
+method authority supplies no builtin presence proof.
+
+All twelve retained exact authority cases listed in the handoff passed 1/1 each.
+Focused `lib_codegen_tests::checked_place_read_codegen_tests` passed 35/35 with
+the existing explicit H02a1 exclusion below; the class-method checked-place
+selection passed 1/1. The existing `methods::tests` substring selection resolved
+and passed 12/12 (six primary method tests plus six companion namespace tests),
+and emitted-Rust quality passed 33/33. Every selection's actual names and counts
+are retained with its assertion-execution log. The focused checked-read suite
+also covers unchanged checked If/while/for consumers.
+
+The exact prescribed two-fixture H02 command passed both native assertions and
+its harness 1/1:
+`verification/runner/e2e/run_e2e_pass.sh --profile create-pr --fixture-manifest
+verification/areas/core_language/data/h02_method_e2e_manifest.json`.
+Both `list_append_extend_insert_registry` and `collection_cloning` were compiled
+and built into new native groups (`cache_hits=0/2`), then their assertions ran;
+report signature `d2b5ed658a42c554`. These timings are execution provenance, not
+host-sensitive performance qualification. The session exclusively adopted the
+clean inactive `/data/sifr-architecture-h02c-statement-admission-20260930`
+worktree on its own `codex/architecture-h02c-sequence-exit-20260930` branch and
+retained its warm owned target. Space/ownership were checked before Cargo work;
+no cleanup occurred. HIR, file-size (4,306 maintained files), formatting,
+included-test formatting and diff checks passed. Broad create-PR/merge gates
+remain assigned to Q01 under the explicit intermediate-item instruction.
+
+**Scoped review:** Claude Opus 5.5, read-only plan mode, returned **SATISFIED**
+with no blocking findings on the exact candidate. Candidate-keyed validation,
+resolution records, source digests, review prompt/response and raw logs remain
+outside Git on `yaser5@192.168.1.134` under
+`/data/sifr-architecture-h02c-sequence-exit-evidence-20260930/f8ee2ab1fb7017152a4f81fa5a8ead887e89222a/`.
+`review.md` SHA-256 is
+`d611035b5e75728aff15256e3090498b24bade78defcf619faffa7d281a1ce6a`;
+`manifest.json` SHA-256 is
+`6a44013778ddf85a152113ab20df23ede21707df6a279d3e5c149f5f2f8f1503`.
+The merged implementation sources match the tested/reviewed candidate exactly.
+
+**Preserved failure/follow-up ownership:** the exploratory full checked-read
+selection passed 35/36 and reproduced the already recorded H02a1 optional-length
+lowering failure in
+`nested_list_string_compare_borrows_row_without_temporary_clone`, on
+`None | list[str]`, before codegen. It remains explicitly excluded from the
+focused selection under the earlier H02a1 follow-up; raw failed selection and
+resolution logs are `initial-15.log` and `initial-15-resolve.log`, with the initial
+results record preserved. No lowering repair or historical passing claim is
+made. Development compilation/assertion/fixture failures were corrected before
+the final candidate; their logs/notes remain outside Git and are not passing
+evidence.
+
+[PR #4165's automatic create-PR job](https://github.com/sifr-lang/sifr/actions/runs/36722636994/job/109911388612)
+failed before validation setup at `performance_reference_admission` because
+`SIFR_PERFORMANCE_REFERENCE` is unset. Its raw job log is
+`ci-create-pr-failed.log`. This remains the existing V01/Q01 infrastructure
+follow-up; the local item qualification above passed. The pre-existing LSP
+`generation` warning did not fail the exact E2E selection.
+
+**Separate H02c test-strengthening follow-up, nonblocking:** replace the three
+redundant `SifrInt::from_usize(values.len())` absence assertions with actual
+builtin rendering checks, and independently count the target prefix guard in
+the nested-prefix positive control. Existing witness/condition counts, other
+prefix entry controls and the single authority boundary satisfy this item's
+acceptance. The review's stable-length-alias note retains the handoff's explicit
+preservation-only ownership; it does not extend this source repair.
+
+**Next action: separately assign H02h1 only** to resume complete method-policy
+authoring on this reviewed repair. This owner stops after the documentation-only
+receipt; no H02h1 implementation or later batch was started. The receipt requires
+only documentation structure, file-size and canonical-phase-only diff checks;
+no repeated broad gate or external implementation review is required.
+
+The documentation-only receipt passed documentation structure (1 variant,
+0 failures), the file-size guardrail (4,306 maintained files), and diff/scope
+checks confirming this canonical phase document is the only changed path.
