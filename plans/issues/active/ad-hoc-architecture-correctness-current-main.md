@@ -2376,7 +2376,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
 | **H02h0 / policy scanner and validator foundation** | **Closed / reviewed foundation merged** in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156) under H02h0r1; merge receipt below. The preservation rescope corrected the binding-preservation regression found by the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152); its blocked receipt remains below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
-| **H02h1 / semantic method policy authoring** | **Ready / unstarted** after H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
+| **H02h1 / semantic method policy authoring** | **Blocked / needs-implementation H02c handoff** from the read-only condition-method audit below; no policy implementation delivered. After H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
 | **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
@@ -4273,3 +4273,100 @@ review or broad implementation validation is required for this record update.
 **Next ready batch: separately assign H02h1 only.** H02h1 is ready and
 unstarted; H02h2-H02h5 and H03 remain waiting, and H02h/H02/F29 remain open.
 This owner stops after the receipt; no H02h1 or H03 work was started.
+
+### H02h1 condition-method admission handoff (2026-09-30)
+
+**State: H02h1 stopped at needs-implementation; H02c owns the bounded source
+repair.** Read-only inspection on exact main
+`df16b4f8572358a97806731e112da5b962fca23a` found direct source-method
+`len` emission before typed admission. Under H02h1's conditional handoff rule,
+these routes cannot be authored as admitted constituents or hidden as protocol
+or Rust-IR consumers. H02h1 remains open; H02h2-H02h5 wait. The H02h0 foundation
+and prior H02c receipts retain their original tested scopes.
+
+The concrete routes on that base are:
+
+- `stmt_support_emitter/condition_lowering.rs::lower_condition_expr_for_ir`
+  (lines 124-125) returns successful
+  `try_lower_numeric_truthiness_condition_for_ir` output before the later
+  `lower_stmt_expr_for_ir` path. The helper (lines 230-289) matches source
+  `HirExpr::MethodCall` named `len` with zero arguments, omits authority with
+  `..`, and emits `SifrInt::from(receiver.len())` compared with zero. Its arms
+  cover positive and negated numeric truthiness. `stmt_block.rs` (lines 556
+  and 703), `loops_try_finally.rs:67`, `if_condition_lowering.rs` (lines 611
+  and 629), and `assert_and_augassign.rs:65` reach this condition owner.
+- `lower_stmt/condition_lowering.rs::try_lower_simple_condition_test_expr`
+  (lines 158-159) returns successful `try_lower_numeric_truthiness_condition_expr`
+  output. Its `len` arms (lines 196-250) also ignore authority and directly emit
+  the Rust call in positive or negated truthiness. Simple if, while and assert
+  lowering reach this entry through `try_lower_simple_if_clause`,
+  `try_lower_simple_while_stmt`, and `try_lower_simple_stmt_with_ctx_and_bindings`.
+- The same simple condition entry (lines 155-156) first calls
+  `try_lower_structured_compare_condition_expr`, whose operand calls (lines
+  306-307) reach `try_lower_condition_operand_expr`. Its `len` arm (lines
+  430-504) ignores authority and directly produces a length expression. Indexed
+  list/dict receivers additionally emit a borrowed optional read followed by
+  `map` of the synthesized `len`; ordinary receivers emit a direct Rust `len`.
+  These are source HIR decisions, rather than consumption of an already lowered
+  method expression.
+
+The outer `lib_emitter_structured_stmt.rs` simple-lowering entry (lines 76-99)
+returns on successful lowering. Its fallible shape check in
+`lower_stmt/candidate_and_validation.rs::validate_expr_lowering_shape` calls
+`try_lower_leaf_expr_result`, then recursively validates MethodCall operands
+without inspecting authority. Leaf method lowering can decline with `None`
+after its `source_method_path(...).ok()?` check; shape validation treats that
+as success. Neither this shape check nor the later ordinary method emitter
+establishes typed admission for the early successful condition paths above.
+This is source inspection evidence; no executable Rust reproduction or Cargo
+acceptance is claimed by this policy owner.
+
+**Separately assigned H02c correction:** admit the exact source method carrier
+before any condition/truthiness/comparison builtin specialization; preserve
+structural diagnostics for Unclassified, malformed/mismatched builtin identity
+and unsupported builtin receiver/method combinations. Proven nominal, imported,
+protocol and RustAdapted methods must follow their authorized method path,
+including their actual return representation and truthiness conversion. Do not
+retry a declined builtin through a string-based specialization. Preserve the
+receiver/place and checked indexed-read semantics. Audit both simple and
+structured condition entries and the indexed comparison operand path as one
+bounded repair; no policy inventory or unsafe contract work belongs to it.
+
+Reserve and run these exact direct-HIR repair cases with
+`cargo test -p sifr_codegen --lib <case> -- --exact`:
+
+- `method_authority_tests::condition_specializations_decline_unclassified_without_builtin_retry`:
+  exercise the simple condition helper, structured condition owner and indexed
+  comparison operand with Unclassified, mismatched builtin identity and
+  unsupported builtin receiver; assert structural error at the diagnostic owner
+  or a deliberate early decline followed by that error, and no successful
+  builtin retry. Include positive/negated truthiness and comparisons.
+- `method_authority_tests::condition_comparison_and_truthiness_preserve_authority`:
+  exercise builtin and proven local/inherited nominal, imported, protocol and
+  RustAdapted carriers through direct HIR If, While and Assert statements,
+  including nested structured emission and indexed comparisons where applicable.
+  Assert selected method semantics, result representation, receiver/place
+  preservation and no nonbuiltin substitution with builtin length semantics.
+  Cover supported list/string length behavior through its actual authority;
+  compare emitted results with the ordinary admitted method path.
+
+Run the existing H02c exact strict-decline/user-contextual/list regression cases,
+statement-only admission repair cases, affected condition/comparison selections,
+and the H02-owned two-fixture list E2E selection on the final repair candidate.
+The prospective narrowing/mapping repair cases in the adjudication remain
+conditional on an independently found defect in those helpers; this audit did
+not establish one. A separate H02c source owner must implement, validate, obtain
+scoped review and merge before H02h1 resumes its complete policy authoring.
+
+The read-only lexical caller/context audit is outside Git at
+`/data/sifr-architecture-h02h1-evidence-20260930/read-only-call-chain-audit.json`
+on `yaser5@192.168.1.134` (SHA-256
+`4a41c47f692bcd5868fcd56ff8c2dcbc49df0f45f42925a6ea8d22db33f6d1d2`).
+It binds the five inspected helper contexts and every lexical reference,
+including module imports, on the unchanged source base. No live method/unsafe
+inventory, schema, verification profile or Rust implementation changed. No
+Cargo target was adopted, built or cleaned. Old drafts and their failed reviews
+remain preserved. This record-only handoff requires documentation structure,
+file-size and diff checks; no broad gate or external implementation review is
+claimed. **Next action: separately assign only the bounded H02c condition-method
+admission repair, then resume H02h1 after its reviewed merge.**
