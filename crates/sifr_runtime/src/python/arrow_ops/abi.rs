@@ -15,6 +15,7 @@ type DeviceStreamGetNext =
 type DeviceStreamGetLastError = unsafe extern "C" fn(*mut ArrowDeviceArrayStream) -> *const c_char;
 type DeviceStreamRelease = unsafe extern "C" fn(*mut ArrowDeviceArrayStream);
 
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub(super) struct ArrowSchema {
     pub(super) format: *const c_char,
@@ -28,8 +29,11 @@ pub(super) struct ArrowSchema {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: these headers only transport opaque addresses; inspection is under the
+// Python attachment and a live capsule owner, never via the Send marker itself.
 unsafe impl Send for ArrowSchema {}
 
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub(super) struct ArrowArray {
     pub(super) length: i64,
@@ -44,8 +48,11 @@ pub(super) struct ArrowArray {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: these headers only transport opaque addresses; inspection is under the
+// Python attachment and a live capsule owner, never via the Send marker itself.
 unsafe impl Send for ArrowArray {}
 
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub(super) struct ArrowArrayStream {
     pub(super) get_schema: Option<StreamGetSchema>,
@@ -55,8 +62,11 @@ pub(super) struct ArrowArrayStream {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: these headers only transport opaque addresses; inspection is under the
+// Python attachment and a live capsule owner, never via the Send marker itself.
 unsafe impl Send for ArrowArrayStream {}
 
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub(super) struct ArrowDeviceArray {
     pub(super) array: ArrowArray,
@@ -66,8 +76,11 @@ pub(super) struct ArrowDeviceArray {
     pub(super) reserved: [i64; 3],
 }
 
+// SAFETY: these headers only transport opaque addresses; inspection is under the
+// Python attachment and a live capsule owner, never via the Send marker itself.
 unsafe impl Send for ArrowDeviceArray {}
 
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub(super) struct ArrowDeviceArrayStream {
     pub(super) device_type: i32,
@@ -78,6 +91,8 @@ pub(super) struct ArrowDeviceArrayStream {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: these headers only transport opaque addresses; inspection is under the
+// Python attachment and a live capsule owner, never via the Send marker itself.
 unsafe impl Send for ArrowDeviceArrayStream {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -88,7 +103,7 @@ pub(super) enum ConsumptionState {
 }
 
 pub(super) fn validate_schema(pointer: NonNull<c_void>, context: &str) -> Result<(), PythonError> {
-    let schema = checked_ref::<ArrowSchema>(pointer, context, "ArrowSchema")?;
+    let schema = checked_value::<ArrowSchema>(pointer, context, "ArrowSchema")?;
     if schema.release.is_none() {
         return Err(arrow_error(format!(
             "{context} ArrowSchema has no release callback"
@@ -108,8 +123,8 @@ pub(super) fn validate_schema(pointer: NonNull<c_void>, context: &str) -> Result
 }
 
 pub(super) fn validate_array(pointer: NonNull<c_void>, context: &str) -> Result<(), PythonError> {
-    let array = checked_ref::<ArrowArray>(pointer, context, "ArrowArray")?;
-    validate_array_value(array, context)
+    let array = checked_value::<ArrowArray>(pointer, context, "ArrowArray")?;
+    validate_array_value(&array, context)
 }
 
 pub(super) fn validate_array_pair(
@@ -119,8 +134,8 @@ pub(super) fn validate_array_pair(
 ) -> Result<(), PythonError> {
     validate_schema(schema_pointer, context)?;
     validate_array(array_pointer, context)?;
-    let schema = checked_ref::<ArrowSchema>(schema_pointer, context, "ArrowSchema")?;
-    let array = checked_ref::<ArrowArray>(array_pointer, context, "ArrowArray")?;
+    let schema = checked_value::<ArrowSchema>(schema_pointer, context, "ArrowSchema")?;
+    let array = checked_value::<ArrowArray>(array_pointer, context, "ArrowArray")?;
     if schema.n_children != array.n_children {
         return Err(arrow_error(format!(
             "{context} schema/array child counts differ ({} != {})",
@@ -136,7 +151,7 @@ pub(super) fn validate_array_pair(
 }
 
 pub(super) fn validate_stream(pointer: NonNull<c_void>, context: &str) -> Result<(), PythonError> {
-    let stream = checked_ref::<ArrowArrayStream>(pointer, context, "ArrowArrayStream")?;
+    let stream = checked_value::<ArrowArrayStream>(pointer, context, "ArrowArrayStream")?;
     if stream.get_schema.is_none()
         || stream.get_next.is_none()
         || stream.get_last_error.is_none()
@@ -155,7 +170,7 @@ pub(super) fn validate_device_array_pair(
     context: &str,
 ) -> Result<(), PythonError> {
     validate_schema(schema_pointer, context)?;
-    let device = checked_ref::<ArrowDeviceArray>(device_pointer, context, "ArrowDeviceArray")?;
+    let device = checked_value::<ArrowDeviceArray>(device_pointer, context, "ArrowDeviceArray")?;
     validate_array_value(&device.array, context)?;
     validate_device_type(device.device_type, context)?;
     if device.device_id < 0 {
@@ -173,7 +188,7 @@ pub(super) fn validate_device_array_pair(
             "{context} ArrowDeviceArray reserved fields must be zero"
         )));
     }
-    let schema = checked_ref::<ArrowSchema>(schema_pointer, context, "ArrowSchema")?;
+    let schema = checked_value::<ArrowSchema>(schema_pointer, context, "ArrowSchema")?;
     if schema.n_children != device.array.n_children {
         return Err(arrow_error(format!(
             "{context} schema/device-array child counts differ ({} != {})",
@@ -192,7 +207,8 @@ pub(super) fn validate_device_stream(
     pointer: NonNull<c_void>,
     context: &str,
 ) -> Result<(), PythonError> {
-    let stream = checked_ref::<ArrowDeviceArrayStream>(pointer, context, "ArrowDeviceArrayStream")?;
+    let stream =
+        checked_value::<ArrowDeviceArrayStream>(pointer, context, "ArrowDeviceArrayStream")?;
     validate_device_type(stream.device_type, context)?;
     if stream.get_schema.is_none()
         || stream.get_next.is_none()
@@ -210,7 +226,7 @@ pub(super) fn schema_consumption(
     pointer: NonNull<c_void>,
 ) -> Result<ConsumptionState, PythonError> {
     Ok(bool_state(
-        checked_ref::<ArrowSchema>(pointer, "Arrow argument finalization", "ArrowSchema")?
+        checked_value::<ArrowSchema>(pointer, "Arrow argument finalization", "ArrowSchema")?
             .release
             .is_none(),
     ))
@@ -221,10 +237,10 @@ pub(super) fn array_pair_consumption(
     array_pointer: NonNull<c_void>,
 ) -> Result<ConsumptionState, PythonError> {
     Ok(combined_state([
-        checked_ref::<ArrowSchema>(schema_pointer, "Arrow argument finalization", "ArrowSchema")?
+        checked_value::<ArrowSchema>(schema_pointer, "Arrow argument finalization", "ArrowSchema")?
             .release
             .is_none(),
-        checked_ref::<ArrowArray>(array_pointer, "Arrow argument finalization", "ArrowArray")?
+        checked_value::<ArrowArray>(array_pointer, "Arrow argument finalization", "ArrowArray")?
             .release
             .is_none(),
     ]))
@@ -234,7 +250,7 @@ pub(super) fn stream_consumption(
     pointer: NonNull<c_void>,
 ) -> Result<ConsumptionState, PythonError> {
     Ok(bool_state(
-        checked_ref::<ArrowArrayStream>(
+        checked_value::<ArrowArrayStream>(
             pointer,
             "Arrow argument finalization",
             "ArrowArrayStream",
@@ -249,10 +265,10 @@ pub(super) fn device_array_pair_consumption(
     array_pointer: NonNull<c_void>,
 ) -> Result<ConsumptionState, PythonError> {
     Ok(combined_state([
-        checked_ref::<ArrowSchema>(schema_pointer, "Arrow argument finalization", "ArrowSchema")?
+        checked_value::<ArrowSchema>(schema_pointer, "Arrow argument finalization", "ArrowSchema")?
             .release
             .is_none(),
-        checked_ref::<ArrowDeviceArray>(
+        checked_value::<ArrowDeviceArray>(
             array_pointer,
             "Arrow argument finalization",
             "ArrowDeviceArray",
@@ -267,7 +283,7 @@ pub(super) fn device_stream_consumption(
     pointer: NonNull<c_void>,
 ) -> Result<ConsumptionState, PythonError> {
     Ok(bool_state(
-        checked_ref::<ArrowDeviceArrayStream>(
+        checked_value::<ArrowDeviceArrayStream>(
             pointer,
             "Arrow argument finalization",
             "ArrowDeviceArrayStream",
@@ -304,7 +320,12 @@ fn validate_array_value(array: &ArrowArray, context: &str) -> Result<(), PythonE
             "{context} ArrowArray has invalid negative shape metadata"
         )));
     }
-    if array.null_count < -1 {
+    if array.length.checked_add(array.offset).is_none() {
+        return Err(arrow_error(format!(
+            "{context} ArrowArray length/offset overflow"
+        )));
+    }
+    if array.null_count < -1 || array.null_count > array.length {
         return Err(arrow_error(format!(
             "{context} ArrowArray has invalid null_count {}",
             array.null_count
@@ -341,17 +362,23 @@ fn validate_count_and_pointer(
     Ok(())
 }
 
-fn checked_ref<'a, T>(
+fn checked_value<T: Copy>(
     pointer: NonNull<c_void>,
     context: &str,
     structure: &str,
-) -> Result<&'a T, PythonError> {
+) -> Result<T, PythonError> {
     if pointer.as_ptr().addr() % std::mem::align_of::<T>() != 0 {
         return Err(arrow_error(format!(
             "{context} {structure} payload is not correctly aligned"
         )));
     }
-    Ok(unsafe { pointer.cast::<T>().as_ref() })
+    // SAFETY: callers hold the Python attachment and a checked, live protocol
+    // capsule (or an owned test header) whose exporter guarantees initialized
+    // storage for the corresponding C ABI header. Capsule name/destructor and
+    // alignment are checked before this read. Native producers remain responsible
+    // for allocation validity; a capsule cannot prove arbitrary native memory safe.
+    // Copy only the header: no reference escapes, and no pointee is traversed.
+    Ok(unsafe { pointer.cast::<T>().as_ptr().read() })
 }
 
 fn validate_device_type(device_type: i32, context: &str) -> Result<(), PythonError> {
