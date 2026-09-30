@@ -233,6 +233,8 @@ def _profile_schema_self_test() -> None:
 
 def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
     required_guardrails = {
+        "method-dispatch-authority",
+        "unsafe-abi-contracts",
         "hir-maintainability",
         "file-size",
         "demo-emitted-freshness",
