@@ -6947,10 +6947,14 @@ with **8 GiB available RAM** (6 GiB estimated operation plus 2 GiB reserve),
 maximum two Cargo jobs, one semantic worker and one proc-macro process. These
 are prospective resource estimates, not measured producer requirements or
 performance qualification; revise estimates explicitly from operation evidence
-before starting if insufficient. The inspected host had only 5.4 GiB disk free.
-No shared artifact cleanup is authorized. Stop H03a1 for a resource blocker if
-its owned inactive cleanup cannot supply the planned reserve. Docs-only H03a0
-requires no Cargo target and has no such build blocker.
+before starting if insufficient. The initial read-only preflight saw 5.4 GiB disk free. The coordinating owner
+then reclaimed its separately owned obsolete inactive C02a1 target, after
+process/handle checks, and reported 40,485,814,272 bytes available (about
+37.7 GiB); its cleanup evidence is `/tmp/sifr-architecture-storage.u5Ec2y`.
+This does not replace H03a1's fresh disk/RAM/ownership preflight. No shared
+artifact cleanup is authorized. Stop H03a1 for a resource blocker if its owned
+inactive cleanup cannot supply the planned reserve. Docs-only H03a0 requires
+no Cargo target and has no such build blocker.
 
 #### Input identity, configuration union and completion contract
 
