@@ -215,13 +215,8 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
             }
             // Contextual and nominal calls decline to the structured owner.
             // Registry lowering preserves list and Unicode string semantics.
-            crate::methods::lower_method(
-                object.ty(),
-                method,
-                &try_lower_leaf_or_name_expr(object)?,
-                &[],
-            )?
-            .expr
+            crate::methods::lower_method(object.ty(), method, &try_lower_leaf_expr(object)?, &[])?
+                .expr
         }
         _ => return None,
     };

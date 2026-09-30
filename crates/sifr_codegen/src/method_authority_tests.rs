@@ -604,6 +604,33 @@ fn condition_comparison_and_truthiness_preserve_authority() {
         "{cached_condition}"
     );
     assert!(!cached_condition.contains("chars()"), "{cached_condition}");
+    // Numeric truthiness must not treat a plain indexed dict read as a leaf.
+    // Its structured owner retains the checked read instead of using Option
+    // length or discarding a tuple receiver in a constant length expression.
+    for receiver_ty in [
+        Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+        Type::Set(Box::new(Type::Int)),
+        Type::Tuple(vec![Type::Int]),
+        Type::Bytes,
+    ] {
+        let indexed = indexed_length(
+            &length_call(receiver_ty, builtin_authority("len"), Type::Int),
+            true,
+        );
+        for condition in condition_variants(&indexed).into_iter().take(2) {
+            for stmt in condition_stmts(&condition) {
+                assert!(simple_condition_stmt(&stmt).is_none(), "{stmt:?}");
+                let output = crate::render_stmts(
+                    &RustEmitter::new()
+                        .try_lower_stmt_block_for_ir(&[stmt])
+                        .unwrap()
+                        .unwrap(),
+                );
+                assert!(output.contains("get("), "{output}");
+                assert!(output.contains("is_some_and("), "{output}");
+            }
+        }
+    }
     for authority in authorities {
         let builtin = matches!(authority, MethodAuthority::BuiltinIntrinsic { .. });
         let mut receivers = vec![list_ty.clone(), Type::Str];
