@@ -228,8 +228,20 @@ class Source:
             return ''
         last = preceding[-1]
         gap = self.text[last.end:start]
-        if any(t.value in (';', '{', '}') for t in code_tokens(gap)):
+        # A trailing comment already belongs to code on its own line.
+        line_start = self.text.rfind('\n', 0, last.start) + 1
+        if self.text[line_start:last.start].strip():
             return ''
+        depth = 0
+        for token in code_tokens(gap):
+            if token.kind != 'punct':
+                continue
+            if token.value in (';', '{', '}', '=>') or (token.value == ',' and not depth):
+                return ''
+            if token.value in ('(', '['):
+                depth += 1
+            elif token.value in (')', ']'):
+                depth = max(0, depth - 1)
         # A blank line separates a neighboring explanation from this operation.
         if re.search(r'\n[ \t]*\n', gap):
             return ''

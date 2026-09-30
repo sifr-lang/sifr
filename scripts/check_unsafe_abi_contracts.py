@@ -117,10 +117,10 @@ def allowance_target(site: Site) -> tuple[str, str]:
     return 'expression', ''
 
 
-def validate(sites: list[Site], inventory: dict, *, sources=()) -> list[str]:
+def validate(sites: list[Site], inventory: dict, *, sources=(), compare_repeated=True) -> list[str]:
     errors = reconcile(sites, inventory['sites'])
     by_key = {s.key: s for s in sites}
-    errors += validate_contracts(sites, inventory, sources)
+    errors += validate_contracts(sites, inventory, sources, compare_repeated=compare_repeated)
     for record in inventory['sites']:
         key = record.get('site')
         owner = record.get('owner')

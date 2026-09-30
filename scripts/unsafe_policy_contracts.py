@@ -22,6 +22,10 @@ FAMILY_RULES = {
                        'stable-target-under-admission', 'wrapper-owns-target-until-drained'),
     'future-erasure': ('send-future-under-admission', 'captures-live-through-revocation',
                        'revocation-excludes-poll-and-drop', 'wrapper-revokes-before-capture-end'),
+    'callback-erasure': ('send-sync-capture-admission', 'captures-live-through-setup-drain-and-revocation',
+                         'admission-excludes-teardown-and-poll', 'wrapper-drains-target-and-revokes-futures'),
+    'windows-localfree': ('windows-api-thread', 'local-allocation-live-through-free',
+                         'exclusive-exact-once-free', 'localfree-owned-allocation-once'),
     'windows-security': ('windows-api-thread', 'descriptor-live-through-acl-use',
                          'descriptor-dacl-borrow', 'localfree-owned-descriptor-once'),
     'thread-marker': ('send-sync-type-invariant', 'transferred-storage-live',
@@ -48,13 +52,25 @@ def operation_family(site) -> str:
         return 'unsafe-allowance'
     if 'PyBuffer_Release' in identifiers:
         return 'exporter-release'
-    if 'transmute' in identifiers or 'transmute_copy' in identifiers:
-        if identifiers & {'BoxCallbackFuture', 'future'}:
-            return 'future-erasure'
-        if identifiers & {'AsyncioTarget', 'AsyncioTargetPtr', 'target'}:
-            return 'target-erasure'
-    if site.path.endswith('windows_storage_security.rs'):
+    target_erasure = bool(identifiers & {'erase_target_lifetime'})
+    future_erasure = bool(identifiers & {'erase_future_lifetime'})
+    if identifiers & {'transmute', 'transmute_copy'}:
+        target_erasure |= bool(identifiers & {'AsyncioTarget', 'AsyncioTargetPtr',
+                                             'ForeignTarget', 'CurrentTarget', 'target'})
+        future_erasure |= bool(identifiers & {'BoxCallbackFuture', 'future'})
+    if 'build_asyncio_callback' in identifiers or (target_erasure and future_erasure):
+        return 'callback-erasure'
+    if future_erasure:
+        return 'future-erasure'
+    if target_erasure:
+        return 'target-erasure'
+    if identifiers & {'GetNamedSecurityInfoW', 'SetNamedSecurityInfoW',
+                      'ConvertStringSecurityDescriptorToSecurityDescriptorW',
+                      'GetSecurityDescriptorDacl', 'GetSecurityDescriptorOwner',
+                      'GetSecurityDescriptorControl', 'GetAclInformation', 'GetAce'}:
         return 'windows-security'
+    if 'LocalFree' in identifiers:
+        return 'windows-localfree'
     if site.kind == 'unsafe-impl' and identifiers & {'Send', 'Sync'}:
         return 'thread-marker'
     if site.kind == 'unsafe-declaration':
@@ -110,20 +126,35 @@ def normalized_obligations(contract, site, record) -> tuple:
         text = contract[field]
         # Copied scope/ordinal, whole operations and whole evidence are bindings,
         # not operation-specific obligations. Strip them anywhere in the prose.
-        for copied in (record.get('operation', ''), record.get('source_evidence', ''),
-                       site.text, site.key):
+        for copied in (record.get('operation', ''), site.text):
             if copied:
-                text = text.replace(copied, '')
+                # Token spelling survives compact copies; whitespace does not.
+                pattern = r'\s*'.join(re.escape(t.value) for t in code_tokens(copied))
+                if pattern:
+                    text = re.sub(pattern, '', text)
+        evidence = record.get('source_evidence', '')
+        if evidence:
+            text = text.replace(evidence, '')
+            # Comment delimiters are presentation, not local obligations.
+            bodies = [re.sub(r'^\s*(?://[/!]?|/\*+|\*|\*/)?\s*', '', line)
+                      .removesuffix('*/').strip() for line in evidence.splitlines()]
+            for body in bodies:
+                if body:
+                    text = re.sub(r'\s*'.join(re.escape(word) for word in body.split()), '', text)
+        text = text.replace(site.key, '')
         text = re.sub(r'\b' + re.escape(site.scope) + r'\b', '', text)
-        text = re.sub(r'[^\n]*? / unsafe-[^:]+ #[0-9]+:\s*', '', text)
+        text = re.sub(r'\bunsafe-(?:block|impl|declaration|allowance)\s*#?\s*\d+', '', text)
+        text = re.sub(r'\bordinal\s*[:=]?\s*#?\s*\d+', '', text)
+        text = re.sub(r'#\s*\d+', '', text)
+        text = re.sub(r'[^\n]*? / unsafe-[^:]+:\s*', '', text)
         text = re.sub(r'\b[0-9a-f]{64}\b', '', text)
         text = re.sub(r'\b(?:operation|source_evidence|evidence|scope|ordinal)\s*[:=]\s*', '', text)
         values.append(' '.join(text.split()).strip(' ;:/'))
     return tuple(values)
 
 
-def validate_contracts(sites, inventory, sources=()) -> list[str]:
-    errors, repeated = [], defaultdict(list)
+def validate_contracts(sites, inventory, sources=(), *, compare_repeated=True) -> list[str]:
+    errors = []
     records = {r.get('site'): r for r in inventory['sites']}
     shared = inventory.get('shared_contracts', {})
     for site in sites:
@@ -135,8 +166,6 @@ def validate_contracts(sites, inventory, sources=()) -> list[str]:
                 not isinstance(contract.get(k), str) or not contract[k].strip() for k in FIELDS):
             errors.append(f'missing local thread/lifetime/alias/ownership contract: {site.key}')
             continue
-        normalized = normalized_obligations(contract, site, record)
-        repeated[normalized].append(record)
         family = operation_family(site)
         if record.get('operation_family') != family:
             errors.append(f'operation family mismatch: {site.key}; expected {family}')
@@ -153,9 +182,24 @@ def validate_contracts(sites, inventory, sources=()) -> list[str]:
                 errors.append(f'invalid {field} obligation/proof ({rule}): {site.key}')
             # The operation alone cannot establish external capture lifetime,
             # revocation or thread admission. Require a source code reference.
-            elif family in ('target-erasure', 'future-erasure', 'windows-security') and not any(
+            elif family in ('target-erasure', 'future-erasure', 'callback-erasure',
+                            'windows-security', 'windows-localfree') and not any(
                     p.get('kind') == 'code' for p in proofs):
                 errors.append(f'{field} requires source admission/teardown proof: {site.key}')
+    return errors + (validate_repeated_contracts(sites, inventory) if compare_repeated else [])
+
+
+def validate_repeated_contracts(sites, inventory) -> list[str]:
+    """Compare the selected union, resolving explicitly reviewed shared proofs."""
+    errors, repeated = [], defaultdict(list)
+    by_key = {s.key: s for s in sites}
+    shared = inventory.get('shared_contracts', {})
+    for record in inventory['sites']:
+        site = by_key.get(record.get('site'))
+        contract = record.get('contract')
+        if site and isinstance(contract, dict) and all(
+                isinstance(contract.get(k), str) for k in FIELDS):
+            repeated[normalized_obligations(contract, site, record)].append(record)
     for group in repeated.values():
         if len(group) < 2:
             continue

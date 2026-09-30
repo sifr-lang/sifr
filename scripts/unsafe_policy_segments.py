@@ -55,7 +55,7 @@ def validate_segments(sites, segments: dict, *, selected=SEGMENTS, sources=()) -
         for record in data['sites']:
             if record.get('site') not in keys:
                 errors.append(f'stale or wrong source partition in {name}: {record.get("site")}')
-        errors += unsafe.validate(bounded, data, sources=sources)
+        errors += unsafe.validate(bounded, data, sources=sources, compare_repeated=False)
         records += data['sites']
         for key, value in data.get('shared_contracts', {}).items():
             if key in proofs:
@@ -63,6 +63,8 @@ def validate_segments(sites, segments: dict, *, selected=SEGMENTS, sources=()) -
             proofs[key] = value
     bounded = [s for s in sites if segment_for(s) in selected]
     errors += reconcile(bounded, records)
+    from unsafe_policy_contracts import validate_repeated_contracts
+    errors += validate_repeated_contracts(bounded, {'sites': records, 'shared_contracts': proofs})
     return errors
 
 

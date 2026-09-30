@@ -196,7 +196,7 @@ class UnsafeTests(unittest.TestCase):
         self.assertTrue(any('changed fingerprint' in e for e in unsafe.validate(changed, unsafe_records(sites))))
 
     def test_operation_and_local_safety_evidence_cannot_be_pasted(self):
-        text = 'fn load(x: X) { // SAFETY: caller pins x through this read.\n unsafe { read(x); } }'
+        text = 'fn load(x: X) {\n // SAFETY: caller pins x through this read.\n unsafe { read(x); } }'
         sites = unsafe.discover(Source(self.path, text))
         records = unsafe_records(sites)
         self.assertFalse(unsafe.validate(sites, records))
@@ -328,6 +328,18 @@ unsafe { access(y); }
             record['contract'] = {field: f'{site.scope} / unsafe-block #{ordinal}: Shared owner template. operation: {record["operation"]}; evidence: {site.source_evidence}'
                                   for field in unsafe.CONTRACT_FIELDS}
         self.assertTrue(any('repeated owner-level' in e for e in unsafe.validate(sites, records)))
+        for variant in ('ordinal', 'site-kind', 'comment-body', 'compact-operation'):
+            records = unsafe_records(sites)
+            for ordinal, (site, record) in enumerate(zip(sites, records['sites']), 1):
+                suffix = {
+                    'ordinal': f'ordinal: {ordinal}',
+                    'site-kind': f'unsafe-block #{ordinal}',
+                    'comment-body': site.source_evidence.replace('// ', ''),
+                    'compact-operation': ''.join(t.value for t in code_tokens(site.text)),
+                }[variant]
+                record['contract'] = {field: 'Shared owner template. ' + suffix
+                                      for field in unsafe.CONTRACT_FIELDS}
+            self.assertTrue(any('repeated owner-level' in e for e in unsafe.validate(sites, records)), variant)
         # A reviewed shared obligation has exact source bindings, not a generic
         # authorization inherited by a newly discovered operation.
         records = unsafe_records(sites)
@@ -368,6 +380,13 @@ unsafe { read_other(x); }
         self.assertIn('Teardown drains all admissions.', declaration.source_evidence)
         block = next(s for s in declared if s.kind == 'unsafe-block')
         self.assertEqual(block.source_evidence, '')
+        neighbors = [
+            'fn f(x: X) { match x {\n// SAFETY: read_safe owns this proof.\nA => read_safe(x),\nB => unsafe { free(x) },\n} }',
+            'fn f() { call(\n// SAFETY: read_safe owns this proof.\nread_safe(),\nunsafe { other() },\n); }',
+            'fn f() { let a = 1; // SAFETY: the previous statement owns this proof.\nunsafe { other() }; }',
+        ]
+        for neighbor in neighbors:
+            self.assertEqual(unsafe.discover(Source(path, neighbor))[0].source_evidence, '', neighbor)
         proof = proof_reference(source, 'read_one', 'safe_step();')
         self.assertTrue(valid_proof(proof, sites[0], [source]))
         self.assertFalse(valid_proof(proof, sites[0], [Source(path, text.replace('safe_step();', 'bypass();'))]))
@@ -377,7 +396,10 @@ unsafe { read_other(x); }
             ('crates/example/src/lib.rs', 'fn f() { unsafe { PyBuffer_Release(view); } }', 'ownership', 'borrow-only'),
             ('crates/example/src/lib.rs', 'fn f() { drain(); unsafe { transmute(target); } }', 'lifetime', 'allocation-live'),
             ('crates/example/src/lib.rs', 'fn f() { revoke(); unsafe { transmute(future); } }', 'ownership', 'borrow-only'),
-            ('crates/sifr_cache_storage/src/windows_storage_security.rs', 'fn f() { LocalFree(descriptor); unsafe { use_acl(descriptor); } }', 'thread', 'supported-gil'),
+            ('crates/example/src/lib.rs', 'fn f() { drain(); unsafe { erase_target_lifetime(target_ptr); } }', 'lifetime', 'allocation-live'),
+            ('crates/example/src/lib.rs', 'fn f() { revoke(); unsafe { erase_future_lifetime(prepared.invoke(sequence, cancellation.clone())); } }', 'ownership', 'borrow-only'),
+            ('crates/example/src/lib.rs', 'fn f() { drain(); revoke(); unsafe { build_asyncio_callback(owner, captures); } }', 'lifetime', 'allocation-live'),
+            ('crates/sifr_cache_storage/src/windows_storage_security.rs', 'fn f() { LocalFree(descriptor); unsafe { SetNamedSecurityInfoW(descriptor); } }', 'thread', 'supported-gil'),
         ]
         for path, text, field, wrong in examples:
             with self.subTest(field=field, path=path):
@@ -389,9 +411,27 @@ unsafe { read_other(x); }
                 for obligation in records['sites'][0]['obligations'].values():
                     obligation['proofs'].append(proof_reference(source, 'f', text[text.index('{') + 1:text.rindex('}')].strip()))
                 self.assertFalse(unsafe.validate(sites, records, sources=[source]))
+                without_proof = copy.deepcopy(records)
+                for obligation in without_proof['sites'][0]['obligations'].values():
+                    obligation['proofs'] = []
+                self.assertTrue(any('obligation/proof' in e
+                                    for e in unsafe.validate(sites, without_proof, sources=[source])))
                 records['sites'][0]['obligations'][field]['rule'] = wrong
                 self.assertTrue(any(f'invalid {field} obligation' in e
                                     for e in unsafe.validate(sites, records, sources=[source])))
+
+        from unsafe_policy_contracts import operation_family
+        for operation, family in [('GetNamedSecurityInfoW(path)', 'windows-security'),
+                                  ('SetNamedSecurityInfoW(path)', 'windows-security'),
+                                  ('LocalFree(descriptor)', 'windows-localfree'),
+                                  ('CloseHandle(token)', 'raw-access'),
+                                  ('CreateDirectoryW(path, attrs)', 'raw-access'),
+                                  ('File::from_raw_handle(handle)', 'raw-access'),
+                                  ('MoveFileExW(old, new, flags)', 'raw-access'),
+                                  ('information.assume_init()', 'raw-access')]:
+            site = unsafe.discover(Source('crates/sifr_cache_storage/src/windows_storage_security.rs',
+                                         'fn f() { unsafe { ' + operation + '; } }'))[0]
+            self.assertEqual(operation_family(site), family, operation)
 
     def test_owner_segments_reject_missing_duplicate_and_stale_sites(self):
         from unsafe_policy_segments import SEGMENTS, segment_for, validate_segments
@@ -409,9 +449,13 @@ unsafe { read_other(x); }
             self.assertEqual(len(found), 1)
             self.assertEqual(segment_for(found[0]), expected)
             records = unsafe_records(found)['sites']
-            if 'evidence_tests' in path:
-                for field in unsafe.CONTRACT_FIELDS:
+            for field in unsafe.CONTRACT_FIELDS:
+                if 'evidence_tests' in path:
                     records[0]['contract'][field] += ' This adversarial test owns the synthetic allocation through its assertion.'
+                elif 'callbacks' in path:
+                    records[0]['contract'][field] += ' The callback fixture retains its admitted capture until setup drains.'
+                elif 'sifr_driver' in path:
+                    records[0]['contract'][field] += ' The driver fixture retains its process handle through the call.'
             if 'sifr_driver' in path:
                 records[0]['owner'] = 'driver-owner'
             if 'sifr_codegen' in path:
@@ -419,6 +463,20 @@ unsafe { read_other(x); }
             sites += found
             segments[expected]['sites'] += records
         self.assertFalse(validate_segments(sites, segments))
+        copied = copy.deepcopy(segments)
+        shared_template = {field: 'Owner allocation stays live under admitted access.'
+                           for field in unsafe.CONTRACT_FIELDS}
+        core = copied['python_core']['sites'][0]
+        resource = copied['python_resources']['sites'][1]
+        core['contract'], resource['contract'] = shared_template.copy(), shared_template.copy()
+        self.assertTrue(any('repeated owner-level' in e for e in validate_segments(sites, copied)))
+        for record in (core, resource):
+            record['contract_ref'] = 'reviewed-cross-segment'
+        copied['python_core']['shared_contracts'] = {'reviewed-cross-segment': {
+            'contract': shared_template,
+            'review_rationale': 'These two fixture accesses share one admitted allocation.',
+            'bindings': {record['site']: record['fingerprint'] for record in (core, resource)}}}
+        self.assertFalse(validate_segments(sites, copied))
         partial = {'python_core': segments['python_core']}
         self.assertFalse(validate_segments(sites, partial, selected=('python_core',)))
         self.assertTrue(any('missing required' in e for e in validate_segments(sites, partial)))

@@ -63,6 +63,8 @@
               "exporter-release",
               "target-erasure",
               "future-erasure",
+              "callback-erasure",
+              "windows-localfree",
               "windows-security",
               "thread-marker",
               "abi-declaration",
@@ -216,9 +218,11 @@
                       "bounded-allowance-lifetime",
                       "capture-live-through-setup-drain",
                       "captures-live-through-revocation",
+                      "captures-live-through-setup-drain-and-revocation",
                       "delegated-X02-lifetime",
                       "descriptor-live-through-acl-use",
                       "export-pinned-through-release",
+                      "local-allocation-live-through-free",
                       "transferred-storage-live"
                     ]
                   },
@@ -306,9 +310,11 @@
                     "enum": [
                       "abi-alias-preconditions",
                       "access-admitted",
+                      "admission-excludes-teardown-and-poll",
                       "bounded-allowance-alias",
                       "delegated-X02-alias",
                       "descriptor-dacl-borrow",
+                      "exclusive-exact-once-free",
                       "revocation-excludes-poll-and-drop",
                       "serialized-exclusive-release",
                       "shared-access-synchronized",
@@ -402,8 +408,10 @@
                       "bounded-allowance-owner",
                       "consume-export-once",
                       "delegated-X02-owner",
+                      "localfree-owned-allocation-once",
                       "localfree-owned-descriptor-once",
                       "transfer-owner-not-attachment",
+                      "wrapper-drains-target-and-revokes-futures",
                       "wrapper-owns-target-until-drained",
                       "wrapper-revokes-before-capture-end"
                     ]
