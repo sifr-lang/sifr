@@ -80,6 +80,7 @@
               "generated-rust",
               "resource-release",
               "resource-capsule-transfer",
+              "resource-reference-acquire",
               "resource-header-initialize",
               "buffer-export-acquire",
               "buffer-element-read",
@@ -149,6 +150,7 @@
                       "delegated-X02-thread",
                       "resource-release-attached",
                       "capsule-transfer-attached",
+                      "resource-reference-attached",
                       "resource-header-caller"
                     ]
                   },
@@ -255,6 +257,7 @@
                       "delegated-X02-lifetime",
                       "resource-live-until-terminal-release",
                       "capsule-and-payload-pinned-through-transfer",
+                      "resource-reference-live-through-acquisition",
                       "writable-initialized-size-header",
                       "pinned-view-through-export",
                       "exporter-pins-admitted-element"
@@ -363,6 +366,7 @@
                       "delegated-X02-alias",
                       "exclusive-terminal-resource-operation",
                       "one-shot-capsule-transfer",
+                      "exclusive-resource-reference-transfer",
                       "exclusive-output-header-write",
                       "exclusive-export-output",
                       "serialized-admitted-read",
@@ -471,6 +475,7 @@
                       "delegated-X02-owner",
                       "consume-resource-release-once",
                       "transfer-capsule-release-authority",
+                      "acquire-or-transfer-owned-resource-reference",
                       "initialize-output-release-owner",
                       "acquire-exporter-reference",
                       "copy-value-preserve-export-owner",

@@ -75,7 +75,7 @@
         "thread": "An attached protocol consumer calls this nullable C ABI slot only after validating it is Some.",
         "lifetime": "The matching live Arrow capsule or stream pins the input header; output/error storage follows the selected callback ABI lifetime.",
         "alias": "The caller grants the callback its specific mutable header/output access; opaque child/data addresses are not traversed merely by declaring the slot.",
-        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority, clear its release marker and retire exporter allocations exactly once."
+        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority; the release callback clears its marker and retires exporter allocations exactly once."
       },
       "obligations": {
         "thread": {
@@ -137,7 +137,7 @@
         "thread": "An attached protocol consumer calls this nullable C ABI slot only after validating it is Some.",
         "lifetime": "The matching live Arrow capsule or stream pins the input header; output/error storage follows the selected callback ABI lifetime.",
         "alias": "The caller grants the callback its specific mutable header/output access; opaque child/data addresses are not traversed merely by declaring the slot.",
-        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority, clear its release marker and retire exporter allocations exactly once."
+        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority; the release callback clears its marker and retires exporter allocations exactly once."
       },
       "obligations": {
         "thread": {
@@ -385,7 +385,7 @@
         "thread": "An attached protocol consumer calls this nullable C ABI slot only after validating it is Some.",
         "lifetime": "The matching live Arrow capsule or stream pins the input header; output/error storage follows the selected callback ABI lifetime.",
         "alias": "The caller grants the callback its specific mutable header/output access; opaque child/data addresses are not traversed merely by declaring the slot.",
-        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority, clear its release marker and retire exporter allocations exactly once."
+        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority; the release callback clears its marker and retires exporter allocations exactly once."
       },
       "obligations": {
         "thread": {
@@ -633,7 +633,7 @@
         "thread": "An attached protocol consumer calls this nullable C ABI slot only after validating it is Some.",
         "lifetime": "The matching live Arrow capsule or stream pins the input header; output/error storage follows the selected callback ABI lifetime.",
         "alias": "The caller grants the callback its specific mutable header/output access; opaque child/data addresses are not traversed merely by declaring the slot.",
-        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority, clear its release marker and retire exporter allocations exactly once."
+        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority; the release callback clears its marker and retires exporter allocations exactly once."
       },
       "obligations": {
         "thread": {
@@ -4199,10 +4199,10 @@
       "operation_family": "raw-access",
       "source_evidence": "// SAFETY: test changes identity only; restore before any native destructor.",
       "contract": {
-        "thread": "The acceptance test owns its initialized ABI headers and invokes protocol callbacks inside the attached fixture context.",
-        "lifetime": "The local schema/array/stream fixture and all writable output storage remain live for the selected assertion operation.",
-        "alias": "The test uses one mutable local header at a time; no Rust reference escapes to a callback or concurrently aliases the output.",
-        "ownership": "Mutate a local initialized fixture header to the specific malformed metadata used by the rejection assertion; no ownership transfer follows this write."
+        "thread": "The attached fixture mutates a capsule retained both by the Arrow store and a local strong reference.",
+        "lifetime": "The original initialized schema allocation remains live while the capsule payload is temporarily replaced; the original pointer must be restored before any capsule destructor runs.",
+        "alias": "SetPointer tests identity rejection only. The dangling replacement is never dereferenced or released; restoration precedes dropping the retained capsule.",
+        "ownership": "Borrow and preserve the original schema owner while temporarily changing capsule identity, then restore the original payload to return its destructor valid release authority."
       },
       "obligations": {
         "thread": {
@@ -4313,10 +4313,10 @@
       "operation_family": "raw-access",
       "source_evidence": "",
       "contract": {
-        "thread": "The acceptance test owns its initialized ABI headers and invokes protocol callbacks inside the attached fixture context.",
-        "lifetime": "The local schema/array/stream fixture and all writable output storage remain live for the selected assertion operation.",
-        "alias": "The test uses one mutable local header at a time; no Rust reference escapes to a callback or concurrently aliases the output.",
-        "ownership": "Mutate a local initialized fixture header to the specific malformed metadata used by the rejection assertion; no ownership transfer follows this write."
+        "thread": "The attached fixture mutates a capsule retained both by the Arrow store and a local strong reference.",
+        "lifetime": "The original initialized schema allocation remains live while the capsule payload is temporarily replaced; the original pointer must be restored before any capsule destructor runs.",
+        "alias": "SetPointer tests identity rejection only. The dangling replacement is never dereferenced or released; restoration precedes dropping the retained capsule.",
+        "ownership": "Borrow and preserve the original schema owner while temporarily changing capsule identity, then restore the original payload to return its destructor valid release authority."
       },
       "obligations": {
         "thread": {
@@ -4944,7 +4944,7 @@
       "owner": "H02f",
       "scope": "local",
       "operation": "unsafe { schema_release ( schema_pointer . as_ptr ( ) ) }",
-      "operation_family": "raw-access",
+      "operation_family": "resource-release",
       "source_evidence": "",
       "contract": {
         "thread": "The attached test consumer invokes the validated schema release slot while exclusively consuming the paired argument.",
@@ -4954,7 +4954,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "caller-thread",
+          "rule": "resource-release-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -4972,7 +4972,7 @@
           ]
         },
         "lifetime": {
-          "rule": "allocation-live",
+          "rule": "resource-live-until-terminal-release",
           "proofs": [
             {
               "kind": "operation",
@@ -4990,7 +4990,7 @@
           ]
         },
         "alias": {
-          "rule": "access-admitted",
+          "rule": "exclusive-terminal-resource-operation",
           "proofs": [
             {
               "kind": "operation",
@@ -5008,7 +5008,7 @@
           ]
         },
         "ownership": {
-          "rule": "borrow-only",
+          "rule": "consume-resource-release-once",
           "proofs": [
             {
               "kind": "operation",
@@ -5122,7 +5122,7 @@
       "owner": "H02f",
       "scope": "local",
       "operation": "unsafe { array_release ( array_pointer . as_ptr ( ) ) }",
-      "operation_family": "raw-access",
+      "operation_family": "resource-release",
       "source_evidence": "",
       "contract": {
         "thread": "The attached test consumer invokes the validated array release slot while exclusively consuming the paired argument.",
@@ -5132,7 +5132,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "caller-thread",
+          "rule": "resource-release-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -5150,7 +5150,7 @@
           ]
         },
         "lifetime": {
-          "rule": "allocation-live",
+          "rule": "resource-live-until-terminal-release",
           "proofs": [
             {
               "kind": "operation",
@@ -5168,7 +5168,7 @@
           ]
         },
         "alias": {
-          "rule": "access-admitted",
+          "rule": "exclusive-terminal-resource-operation",
           "proofs": [
             {
               "kind": "operation",
@@ -5186,7 +5186,7 @@
           ]
         },
         "ownership": {
-          "rule": "borrow-only",
+          "rule": "consume-resource-release-once",
           "proofs": [
             {
               "kind": "operation",
@@ -8452,7 +8452,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe fn __getbuffer__ ( slf : Bound < ' _ , Self > , view : * mut ffi :: Py_buffer , _flags : c_int , ) -> PyResult < ( ) > { if view . is_null ( ) { return Err ( PyBufferError :: new_err ( \"null view\" ) ) ; } let exporter = slf . borrow ( ) ; exporter . metrics . acquisitions . fetch_add ( 1 , Ordering :: SeqCst ) ; if matches ! ( exporter . layout , Layout :: FailedAcquisition ) { return Err ( PyBufferError :: new_err ( \"acquisition rejected before ownership transfer\" , ) ) ; } let mut data = exporter . data . as_ptr ( ) . cast_mut ( ) . cast ( ) ; let mut shape = exporter . shape . as_ptr ( ) . cast_mut ( ) ; let mut len = 4 ; let mut width = 1 ; let mut format = c\"B\" . as_ptr ( ) . cast_mut ( ) ; match exporter . layout { Layout :: Negative => data = exporter . data . as_ptr ( ) . cast_mut ( ) . wrapping_add ( 3 ) . cast ( ) , Layout :: Indirect | Layout :: NullRow => data = exporter . rows . as_ptr ( ) . cast_mut ( ) . cast ( ) , Layout :: OverflowAddress => data = ptr :: with_exposed_provenance_mut ( usize :: MAX - 1 ) , Layout :: MisalignedShape => shape = shape . wrapping_byte_add ( 1 ) , Layout :: MisalignedSlot => { data = exporter . rows . as_ptr ( ) . cast_mut ( ) . wrapping_byte_add ( 1 ) . cast ( ) } Layout :: UnalignedI16 => { data = exporter . data . as_ptr ( ) . cast_mut ( ) . wrapping_add ( 1 ) . cast ( ) ; width = 2 ; format = c\"h\" . as_ptr ( ) . cast_mut ( ) ; } Layout :: BadLength => len = 3 , _ => { } } let dimensions = i32 :: try_from ( exporter . shape . len ( ) ) . expect ( \"bounded fixture dimensions\" ) ; let strides = exporter . strides . as_ptr ( ) . cast_mut ( ) ; let suboffsets = if exporter . suboffsets . is_empty ( ) { ptr :: null_mut ( ) } else { exporter . suboffsets . as_ptr ( ) . cast_mut ( ) } ; drop ( exporter ) ; unsafe { * view = ffi :: Py_buffer { obj : slf . into_any ( ) . into_ptr ( ) , buf : data , len , itemsize : width , readonly : 0 , ndim : dimensions , format , shape , strides , suboffsets , internal : ptr :: null_mut ( ) , } ; } Ok ( ( ) ) }",
-      "operation_family": "abi-declaration",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "",
       "contract": {
         "thread": "CPython calls the fixture exporter while attached with a valid writable Py_buffer output pointer.",
@@ -8462,7 +8462,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "abi-caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -8480,7 +8480,7 @@
           ]
         },
         "lifetime": {
-          "rule": "abi-arguments-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -8498,7 +8498,7 @@
           ]
         },
         "alias": {
-          "rule": "abi-alias-preconditions",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -8516,7 +8516,7 @@
           ]
         },
         "ownership": {
-          "rule": "abi-transfer-explicit",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -8542,7 +8542,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe { * view = ffi :: Py_buffer { obj : slf . into_any ( ) . into_ptr ( ) , buf : data , len , itemsize : width , readonly : 0 , ndim : dimensions , format , shape , strides , suboffsets , internal : ptr :: null_mut ( ) , } ; }",
-      "operation_family": "raw-access",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "// SAFETY: PyO3 supplies the output view under the GIL. The strong owner\n// pins all fixture allocations. Malformed modes exercise checks that\n// must reject their layouts before reading data or invalid pointer slots.",
       "contract": {
         "thread": "CPython calls the fixture exporter while attached with a valid writable Py_buffer output pointer.",
@@ -8552,7 +8552,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -8576,7 +8576,7 @@
           ]
         },
         "lifetime": {
-          "rule": "allocation-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -8600,7 +8600,7 @@
           ]
         },
         "alias": {
-          "rule": "access-admitted",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -8624,7 +8624,7 @@
           ]
         },
         "ownership": {
-          "rule": "borrow-only",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -10507,7 +10507,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe fn __getbuffer__ ( slf : Bound < ' _ , Self > , view : * mut ffi :: Py_buffer , flags : c_int , ) -> PyResult < ( ) > { if view . is_null ( ) { return Err ( PyBufferError :: new_err ( \"buffer view is null\" ) ) ; } let exporter = slf . borrow ( ) ; let data_pointer = exporter . storage . as_ptr ( ) . cast :: < c_void > ( ) . cast_mut ( ) ; let length = isize :: try_from ( exporter . storage . len ( ) ) . map_err ( | _ | PyBufferError :: new_err ( \"buffer length exceeds Py_ssize_t\" ) ) ? ; exporter . metrics . acquisitions . fetch_add ( 1 , Ordering :: Relaxed ) ; drop ( exporter ) ; unsafe { ( * view ) . obj = slf . into_any ( ) . into_ptr ( ) ; ( * view ) . buf = data_pointer ; ( * view ) . len = length ; ( * view ) . readonly = 0 ; ( * view ) . itemsize = 1 ; ( * view ) . format = if flags & ffi :: PyBUF_FORMAT == ffi :: PyBUF_FORMAT { BUFFER_FORMAT . as_ptr ( ) . cast :: < c_char > ( ) . cast_mut ( ) } else { ptr :: null_mut ( ) } ; ( * view ) . ndim = 1 ; ( * view ) . shape = if flags & ffi :: PyBUF_ND == ffi :: PyBUF_ND { & raw mut ( * view ) . len } else { ptr :: null_mut ( ) } ; ( * view ) . strides = if flags & ffi :: PyBUF_STRIDES == ffi :: PyBUF_STRIDES { & raw mut ( * view ) . itemsize } else { ptr :: null_mut ( ) } ; ( * view ) . suboffsets = ptr :: null_mut ( ) ; ( * view ) . internal = ptr :: null_mut ( ) ; } Ok ( ( ) ) }",
-      "operation_family": "abi-declaration",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "",
       "contract": {
         "thread": "CPython calls the fixture exporter while attached with a valid writable Py_buffer output pointer.",
@@ -10517,7 +10517,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "abi-caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -10535,7 +10535,7 @@
           ]
         },
         "lifetime": {
-          "rule": "abi-arguments-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -10553,7 +10553,7 @@
           ]
         },
         "alias": {
-          "rule": "abi-alias-preconditions",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -10571,7 +10571,7 @@
           ]
         },
         "ownership": {
-          "rule": "abi-transfer-explicit",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -10597,7 +10597,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe { ( * view ) . obj = slf . into_any ( ) . into_ptr ( ) ; ( * view ) . buf = data_pointer ; ( * view ) . len = length ; ( * view ) . readonly = 0 ; ( * view ) . itemsize = 1 ; ( * view ) . format = if flags & ffi :: PyBUF_FORMAT == ffi :: PyBUF_FORMAT { BUFFER_FORMAT . as_ptr ( ) . cast :: < c_char > ( ) . cast_mut ( ) } else { ptr :: null_mut ( ) } ; ( * view ) . ndim = 1 ; ( * view ) . shape = if flags & ffi :: PyBUF_ND == ffi :: PyBUF_ND { & raw mut ( * view ) . len } else { ptr :: null_mut ( ) } ; ( * view ) . strides = if flags & ffi :: PyBUF_STRIDES == ffi :: PyBUF_STRIDES { & raw mut ( * view ) . itemsize } else { ptr :: null_mut ( ) } ; ( * view ) . suboffsets = ptr :: null_mut ( ) ; ( * view ) . internal = ptr :: null_mut ( ) ; }",
-      "operation_family": "raw-access",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "",
       "contract": {
         "thread": "CPython calls the fixture exporter while attached with a valid writable Py_buffer output pointer.",
@@ -10607,7 +10607,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -10625,7 +10625,7 @@
           ]
         },
         "lifetime": {
-          "rule": "allocation-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -10643,7 +10643,7 @@
           ]
         },
         "alias": {
-          "rule": "access-admitted",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -10661,7 +10661,7 @@
           ]
         },
         "ownership": {
-          "rule": "borrow-only",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -10777,7 +10777,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe { Bound :: from_owned_ptr_or_err ( py , ffi :: PyMemoryView_FromBuffer ( & view ) ) ? }",
-      "operation_family": "raw-access",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "// SAFETY: `storage` owns stable boxed data and metadata until after the\n// returned memoryview and acquired buffer are explicitly closed.",
       "contract": {
         "thread": "The test enters Python::attach before constructing the PyMemoryView over its fixture descriptor.",
@@ -10787,7 +10787,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -10811,7 +10811,7 @@
           ]
         },
         "lifetime": {
-          "rule": "allocation-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -10835,7 +10835,7 @@
           ]
         },
         "alias": {
-          "rule": "access-admitted",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -10859,7 +10859,7 @@
           ]
         },
         "ownership": {
-          "rule": "borrow-only",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -10890,7 +10890,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe fn __getbuffer__ ( slf : Bound < ' _ , Self > , view : * mut ffi :: Py_buffer , flags : c_int , ) -> PyResult < ( ) > { if view . is_null ( ) { return Err ( PyBufferError :: new_err ( \"buffer view is null\" ) ) ; } let exporter = slf . borrow ( ) ; let data_pointer = exporter . storage . as_ptr ( ) . cast :: < c_void > ( ) . cast_mut ( ) ; let format_pointer = exporter . format . as_ptr ( ) . cast :: < c_char > ( ) . cast_mut ( ) ; let shape_pointer = ptr :: from_ref ( & exporter . shape ) . cast_mut ( ) ; let stride_pointer = ptr :: from_ref ( & exporter . stride ) . cast_mut ( ) ; let length = isize :: try_from ( exporter . storage . len ( ) ) . map_err ( | _ | PyBufferError :: new_err ( \"buffer length exceeds Py_ssize_t\" ) ) ? ; let item_size = exporter . item_size ; drop ( exporter ) ; unsafe { ( * view ) . obj = slf . into_any ( ) . into_ptr ( ) ; ( * view ) . buf = data_pointer ; ( * view ) . len = length ; ( * view ) . readonly = 0 ; ( * view ) . itemsize = item_size ; ( * view ) . format = if flags & ffi :: PyBUF_FORMAT == ffi :: PyBUF_FORMAT { format_pointer } else { ptr :: null_mut ( ) } ; ( * view ) . ndim = 1 ; ( * view ) . shape = if flags & ffi :: PyBUF_ND == ffi :: PyBUF_ND { shape_pointer } else { ptr :: null_mut ( ) } ; ( * view ) . strides = if flags & ffi :: PyBUF_STRIDES == ffi :: PyBUF_STRIDES { stride_pointer } else { ptr :: null_mut ( ) } ; ( * view ) . suboffsets = ptr :: null_mut ( ) ; ( * view ) . internal = ptr :: null_mut ( ) ; } Ok ( ( ) ) }",
-      "operation_family": "abi-declaration",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "",
       "contract": {
         "thread": "CPython calls the fixture exporter while attached with a valid writable Py_buffer output pointer.",
@@ -10900,7 +10900,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "abi-caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -10918,7 +10918,7 @@
           ]
         },
         "lifetime": {
-          "rule": "abi-arguments-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -10936,7 +10936,7 @@
           ]
         },
         "alias": {
-          "rule": "abi-alias-preconditions",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -10954,7 +10954,7 @@
           ]
         },
         "ownership": {
-          "rule": "abi-transfer-explicit",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -10980,7 +10980,7 @@
       "owner": "H02e",
       "scope": "local",
       "operation": "unsafe { ( * view ) . obj = slf . into_any ( ) . into_ptr ( ) ; ( * view ) . buf = data_pointer ; ( * view ) . len = length ; ( * view ) . readonly = 0 ; ( * view ) . itemsize = item_size ; ( * view ) . format = if flags & ffi :: PyBUF_FORMAT == ffi :: PyBUF_FORMAT { format_pointer } else { ptr :: null_mut ( ) } ; ( * view ) . ndim = 1 ; ( * view ) . shape = if flags & ffi :: PyBUF_ND == ffi :: PyBUF_ND { shape_pointer } else { ptr :: null_mut ( ) } ; ( * view ) . strides = if flags & ffi :: PyBUF_STRIDES == ffi :: PyBUF_STRIDES { stride_pointer } else { ptr :: null_mut ( ) } ; ( * view ) . suboffsets = ptr :: null_mut ( ) ; ( * view ) . internal = ptr :: null_mut ( ) ; }",
-      "operation_family": "raw-access",
+      "operation_family": "resource-reference-acquire",
       "source_evidence": "",
       "contract": {
         "thread": "CPython calls the fixture exporter while attached with a valid writable Py_buffer output pointer.",
@@ -10990,7 +10990,7 @@
       },
       "obligations": {
         "thread": {
-          "rule": "caller-thread",
+          "rule": "resource-reference-attached",
           "proofs": [
             {
               "kind": "operation",
@@ -11008,7 +11008,7 @@
           ]
         },
         "lifetime": {
-          "rule": "allocation-live",
+          "rule": "resource-reference-live-through-acquisition",
           "proofs": [
             {
               "kind": "operation",
@@ -11026,7 +11026,7 @@
           ]
         },
         "alias": {
-          "rule": "access-admitted",
+          "rule": "exclusive-resource-reference-transfer",
           "proofs": [
             {
               "kind": "operation",
@@ -11044,7 +11044,7 @@
           ]
         },
         "ownership": {
-          "rule": "borrow-only",
+          "rule": "acquire-or-transfer-owned-resource-reference",
           "proofs": [
             {
               "kind": "operation",
@@ -15001,10 +15001,10 @@
       "operation_family": "abi-declaration",
       "source_evidence": "",
       "contract": {
-        "thread": "The Python token proves attachment during creation of the named DLPack capsule with its matching destructor ABI.",
-        "lifetime": "The entry or test fixture owns the live non-null managed allocation; a static original capsule name remains valid for the full capsule lifetime.",
-        "alias": "Exposing the payload leaves no Rust borrow live across the foreign consumer; capsule state gates one-shot ownership.",
-        "ownership": "Transfer managed-header release responsibility to the newly created original-name capsule. Production marks the tracked entry released immediately after success so creation errors and retained shells cannot double-delete."
+        "thread": "CPython invokes this supplied unsafe C destructor callback while attached with its live capsule.",
+        "lifetime": "The callback argument is a live original-name capsule for the callback duration; a used shell may have already freed its tensor.",
+        "alias": "The destructor signature requires original-name validation before any payload access and excludes duplicate release after consumption.",
+        "ownership": "The supplied matched fixture destructor consumes only an original-name managed owner once; this signature itself neither creates a capsule nor acquires a reference."
       },
       "obligations": {
         "thread": {
@@ -15079,8 +15079,7 @@
             }
           ]
         }
-      },
-      "contract_ref": "resource-local-boundary-32"
+      }
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-block::1",
@@ -18723,7 +18722,7 @@
         "thread": "An attached protocol consumer calls this nullable C ABI slot only after validating it is Some.",
         "lifetime": "The matching live Arrow capsule or stream pins the input header; output/error storage follows the selected callback ABI lifetime.",
         "alias": "The caller grants the callback its specific mutable header/output access; opaque child/data addresses are not traversed merely by declaring the slot.",
-        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority, clear its release marker and retire exporter allocations exactly once."
+        "ownership": "This callback signature requires the consumer to consume the unique initialized header release authority; the release callback clears its marker and retires exporter allocations exactly once."
       },
       "bindings": {
         "crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::1": "e79ea16f4d297b7db0c67d15edb5fb2ffd71aa5c9945de743145fa4c0b60007b",
@@ -18731,7 +18730,7 @@
         "crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::2": "b887ac4c45fd2d23149d8e265e669242c4a230a85a78e7955336d5fd7c8b8b9d",
         "crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::6": "5c4cddfa501ced3de4c4380f58191ff58fd6e3659321bea5bb33904d965d5dab"
       },
-      "review_rationale": "Exact finite sharing for crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::1, crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::10, crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::2, crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::6. These boundaries perform the same specific effect: This callback signature requires the consumer to consume the unique initialized header release authority, clear its release marker and retire exporter allocations exactly once. Their local operation and source-code proof contexts remain independently bound; no additional site inherits admission."
+      "review_rationale": "Exact finite sharing for crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::1, crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::10, crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::2, crates/sifr_runtime/src/python/arrow_ops/abi.rs::<module>::unsafe-declaration::6. These boundaries perform the same specific effect: This callback signature requires the consumer to consume the unique initialized header release authority; the release callback clears its marker and retires exporter allocations exactly once. Their local operation and source-code proof contexts remain independently bound; no additional site inherits admission."
     },
     "resource-local-boundary-2": {
       "contract": {
@@ -18763,16 +18762,16 @@
     },
     "resource-local-boundary-4": {
       "contract": {
-        "thread": "The acceptance test owns its initialized ABI headers and invokes protocol callbacks inside the attached fixture context.",
-        "lifetime": "The local schema/array/stream fixture and all writable output storage remain live for the selected assertion operation.",
-        "alias": "The test uses one mutable local header at a time; no Rust reference escapes to a callback or concurrently aliases the output.",
-        "ownership": "Mutate a local initialized fixture header to the specific malformed metadata used by the rejection assertion; no ownership transfer follows this write."
+        "thread": "The attached fixture mutates a capsule retained both by the Arrow store and a local strong reference.",
+        "lifetime": "The original initialized schema allocation remains live while the capsule payload is temporarily replaced; the original pointer must be restored before any capsule destructor runs.",
+        "alias": "SetPointer tests identity rejection only. The dangling replacement is never dereferenced or released; restoration precedes dropping the retained capsule.",
+        "ownership": "Borrow and preserve the original schema owner while temporarily changing capsule identity, then restore the original payload to return its destructor valid release authority."
       },
       "bindings": {
         "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::2": "679f00e2b66b48e9ea8de829986c571bc9af7fb950e1935c99d13adac29053ca",
         "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::3": "c7ad2e49700ab0d184385086b982ae52c3e920cfc7c75bb36220f219a22492a7"
       },
-      "review_rationale": "Exact finite sharing for crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::2, crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::3. These boundaries perform the same specific effect: Mutate a local initialized fixture header to the specific malformed metadata used by the rejection assertion; no ownership transfer follows this write. Their local operation and source-code proof contexts remain independently bound; no additional site inherits admission."
+      "review_rationale": "Exact finite sharing for crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::2, crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::3. These boundaries perform the same specific effect: Borrow and preserve the original schema owner while temporarily changing capsule identity, then restore the original payload to return its destructor valid release authority. Their local operation and source-code proof contexts remain independently bound; no additional site inherits admission."
     },
     "resource-local-boundary-5": {
       "contract": {
@@ -19168,10 +19167,9 @@
         "crates/sifr_runtime/src/python/dlpack_ops.rs::scalar_capsule::unsafe-block::1": "dac0bbd88ba0c6f78b3fc78cb0b9831440eb7e3c6b583e1301c2218d48e93c42",
         "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::<module>::unsafe-allowance::1": "e467839beaeb0d9046eae85350f501a8e1616f56c8e13c95ee0d945139868130",
         "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule::unsafe-block::1": "01c4a92622598d21dca769bfc89fe851b83ff01503171ffafc5617c8ebf3bcc8",
-        "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-block::1": "1d8ae25a43221060ee4cd5f1dc3181b8a3d63d600aa8b57ef68113d14c7655b6",
-        "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-declaration::1": "c60be1d5a5ef4b48f378d253472548fcb311ce86804411692df27598b06a4480"
+        "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-block::1": "1d8ae25a43221060ee4cd5f1dc3181b8a3d63d600aa8b57ef68113d14c7655b6"
       },
-      "review_rationale": "Exact finite sharing for crates/sifr_runtime/src/python/dlpack_ops.rs::capsule::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops.rs::scalar_capsule::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops/argument.rs::<module>::unsafe-allowance::1, crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-declaration::1. These boundaries perform the same specific effect: Transfer managed-header release responsibility to the newly created original-name capsule. Production marks the tracked entry released immediately after success so creation errors and retained shells cannot double-delete. Their local operation and source-code proof contexts remain independently bound; no additional site inherits admission."
+      "review_rationale": "Exact finite sharing for crates/sifr_runtime/src/python/dlpack_ops.rs::capsule::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops.rs::scalar_capsule::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops/argument.rs::<module>::unsafe-allowance::1, crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule::unsafe-block::1, crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-block::1. These boundaries perform the same specific effect: Transfer managed-header release responsibility to the newly created original-name capsule. Production marks the tracked entry released immediately after success so creation errors and retained shells cannot double-delete. Their local operation and source-code proof contexts remain independently bound; no additional site inherits admission."
     },
     "resource-local-boundary-33": {
       "contract": {

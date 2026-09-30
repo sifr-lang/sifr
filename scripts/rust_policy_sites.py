@@ -36,6 +36,7 @@ class Site:
     end: int
     test_only: bool = False
     source_evidence: str = ""
+    context_text: str = ""
 
     @property
     def key(self) -> str:
@@ -211,10 +212,15 @@ class Source:
         scope = self.scope(start)
         self.counts[(scope, kind)] += 1
         a, b = self.ts[start].start, self.ts[end].end
+        enclosing = [(a, b, c, name) for a, b, c, name in self.contexts if a <= start <= c]
+        context_text = ""
+        if enclosing:
+            first, _body, last, _name = max(enclosing, key=lambda x: x[0])
+            context_text = self.text[self.ts[first].start:self.ts[last].end]
         return Site(self.path, scope, kind, self.counts[(scope, kind)],
                     self.text.count('\n', 0, a) + 1,
                     self.site_fingerprint(start, end), self.text[a:b], a, b,
-                    self.test_only(start), self.safety_evidence(a, b))
+                    self.test_only(start), self.safety_evidence(a, b), context_text)
 
     def safety_evidence(self, start: int, end: int) -> str:
         """Bind complete adjacent comment runs, never a distance-based neighbor.

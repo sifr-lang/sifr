@@ -83,7 +83,8 @@ class UnsafePythonResourceTests(unittest.TestCase):
 
     def test_arrow_and_dlpack_transfer_cannot_reuse_pointer_read_contract(self):
         effects = [r for r in self.inventory['sites'] if r['operation_family'] in
-                   ('resource-release', 'resource-capsule-transfer', 'resource-header-initialize')]
+                   ('resource-release', 'resource-capsule-transfer', 'resource-header-initialize',
+                    'resource-reference-acquire')]
         self.assertTrue(any('/arrow_ops' in r['site'] for r in effects))
         self.assertTrue(any('/dlpack_ops' in r['site'] for r in effects))
         for original in effects:
@@ -102,6 +103,36 @@ class UnsafePythonResourceTests(unittest.TestCase):
             for obligation in changed['obligations'].values():
                 obligation['proofs'] = [p for p in obligation['proofs'] if p['kind'] != 'code']
             self.assertTrue(any('requires source admission/teardown proof' in e for e in self.one_record_errors(changed)))
+        # Renaming a selected release callback cannot turn its invocation into
+        # raw access: lexical origin is the actual release field, not its name.
+        from unsafe_policy_contracts import proof_reference
+        from architecture_policy_test_fixtures import unsafe_records
+        for name in ('schema_release', 'array_release', 'arbitrary_selected_callback'):
+            body = f'let {name} = unsafe {{ pointer.as_ref() }}.release.expect("present"); unsafe {{ {name}(pointer.as_ptr()) }};'
+            source = Source('crates/sifr_runtime/src/python/arrow_ops/release_fixture.rs',
+                            'fn consume() { ' + body + ' }')
+            sites = unsafe.discover(source)
+            self.assertEqual([operation_family(s) for s in sites], ['raw-access', 'resource-release'])
+            records = unsafe_records(sites)
+            invoked = records['sites'][1]
+            for obligation in invoked['obligations'].values():
+                obligation['proofs'].append(proof_reference(source, 'consume', body))
+            self.assertEqual(unsafe.validate(sites, records, sources=[source]), [])
+            invoked['operation_family'] = 'raw-access'
+            invoked['obligations']['ownership']['rule'] = 'borrow-only'
+            self.assertTrue(any('invalid ownership obligation' in e for e in unsafe.validate(sites, records, sources=[source])))
+        # The live consuming fixture records themselves are admitted as release,
+        # independent of the set used to choose mutation subjects above.
+        for ordinal in (2, 4):
+            record = next(r for r in self.inventory['sites'] if r['site'].endswith(
+                f'arrow_ops/tests.rs::consume_argument_pair::unsafe-block::{ordinal}'))
+            self.assertEqual(record['operation_family'], 'resource-release')
+        for suffix in ('buffer_ops/h02_contract_tests.rs::__getbuffer__::unsafe-block::1',
+                       'buffer_ops/release_evidence_tests.rs::__getbuffer__::unsafe-block::1',
+                       'buffer_ops/typed_access_evidence_tests.rs::__getbuffer__::unsafe-block::1',
+                       'buffer_ops/tests.rs::indirect_byte_memoryview::unsafe-block::1'):
+            record = next(r for r in self.inventory['sites'] if r['site'].endswith(suffix))
+            self.assertEqual(record['operation_family'], 'resource-reference-acquire')
         # A CPython observation cannot conceal a deleter/free or capsule rename
         # in the same resource block (H02h2 refinement consumption regression).
         from architecture_policy_test_fixtures import unsafe_records
