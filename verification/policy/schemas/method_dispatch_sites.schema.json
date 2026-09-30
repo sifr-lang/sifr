@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "H02h method policy interface v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "sites",
+    "constituents"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "site",
+          "fingerprint",
+          "classification",
+          "owner",
+          "contract"
+        ],
+        "properties": {
+          "site": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "classification": {
+            "enum": [
+              "source-method-admission",
+              "builtin-call-emission",
+              "typed-lowering",
+              "compile-time-semantics",
+              "language-emission",
+              "language-emission-constituent",
+              "user-protocol-dispatch",
+              "contextual-rust-adaptation",
+              "rust-ir-consumption",
+              "declaration-resolution",
+              "test-assertion",
+              "package-protocol",
+              "sql-protocol",
+              "cache-protocol",
+              "driver-protocol",
+              "generated-code"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contract": {
+            "type": "string",
+            "minLength": 1
+          },
+          "canonical_authority": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "admission_relationship": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "constituents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "scope",
+          "relationship",
+          "context_fingerprint",
+          "references"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "relationship": {
+            "type": "string",
+            "minLength": 1
+          },
+          "context_fingerprint": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "scope",
+                "context_fingerprint"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "scope": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "context_fingerprint": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

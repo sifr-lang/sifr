@@ -1,0 +1,556 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "H02h unsafe source partition v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "segment",
+    "sites"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "segment": {
+      "enum": [
+        "python_core",
+        "python_resources",
+        "external"
+      ]
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "site",
+          "fingerprint",
+          "owner",
+          "scope",
+          "operation",
+          "source_evidence",
+          "operation_family",
+          "contract",
+          "obligations"
+        ],
+        "properties": {
+          "site": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_evidence": {
+            "type": "string"
+          },
+          "operation_family": {
+            "enum": [
+              "raw-access",
+              "exporter-release",
+              "target-erasure",
+              "future-erasure",
+              "callback-erasure",
+              "windows-localfree",
+              "windows-security",
+              "thread-marker",
+              "abi-declaration",
+              "unsafe-allowance",
+              "generated-rust"
+            ]
+          },
+          "contract": {
+            "type": "object",
+            "required": [
+              "thread",
+              "lifetime",
+              "alias",
+              "ownership"
+            ],
+            "properties": {
+              "thread": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lifetime": {
+                "type": "string",
+                "minLength": 1
+              },
+              "alias": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ownership": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "obligations": {
+            "type": "object",
+            "required": [
+              "thread",
+              "lifetime",
+              "alias",
+              "ownership"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "thread": {
+                "type": "object",
+                "required": [
+                  "rule",
+                  "proofs"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "rule": {
+                    "enum": [
+                      "abi-caller-thread",
+                      "bounded-allowance-thread",
+                      "caller-thread",
+                      "delegated-X02-thread",
+                      "send-future-under-admission",
+                      "send-sync-capture-admission",
+                      "send-sync-type-invariant",
+                      "supported-gil",
+                      "windows-api-thread"
+                    ]
+                  },
+                  "proofs": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "site",
+                            "fingerprint",
+                            "quote"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "operation",
+                                "safety"
+                              ]
+                            },
+                            "site": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "path",
+                            "scope",
+                            "quote",
+                            "context_fingerprint"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "code"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "scope": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "context_fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "lifetime": {
+                "type": "object",
+                "required": [
+                  "rule",
+                  "proofs"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "rule": {
+                    "enum": [
+                      "abi-arguments-live",
+                      "allocation-live",
+                      "bounded-allowance-lifetime",
+                      "capture-live-through-setup-drain",
+                      "captures-live-through-revocation",
+                      "captures-live-through-setup-drain-and-revocation",
+                      "delegated-X02-lifetime",
+                      "descriptor-live-through-acl-use",
+                      "export-pinned-through-release",
+                      "local-allocation-live-through-free",
+                      "transferred-storage-live"
+                    ]
+                  },
+                  "proofs": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "site",
+                            "fingerprint",
+                            "quote"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "operation",
+                                "safety"
+                              ]
+                            },
+                            "site": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "path",
+                            "scope",
+                            "quote",
+                            "context_fingerprint"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "code"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "scope": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "context_fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "alias": {
+                "type": "object",
+                "required": [
+                  "rule",
+                  "proofs"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "rule": {
+                    "enum": [
+                      "abi-alias-preconditions",
+                      "access-admitted",
+                      "admission-excludes-teardown-and-poll",
+                      "bounded-allowance-alias",
+                      "delegated-X02-alias",
+                      "descriptor-dacl-borrow",
+                      "exclusive-exact-once-free",
+                      "revocation-excludes-poll-and-drop",
+                      "serialized-exclusive-release",
+                      "shared-access-synchronized",
+                      "stable-target-under-admission"
+                    ]
+                  },
+                  "proofs": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "site",
+                            "fingerprint",
+                            "quote"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "operation",
+                                "safety"
+                              ]
+                            },
+                            "site": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "path",
+                            "scope",
+                            "quote",
+                            "context_fingerprint"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "code"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "scope": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "context_fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "ownership": {
+                "type": "object",
+                "required": [
+                  "rule",
+                  "proofs"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "rule": {
+                    "enum": [
+                      "abi-transfer-explicit",
+                      "borrow-only",
+                      "bounded-allowance-owner",
+                      "consume-export-once",
+                      "delegated-X02-owner",
+                      "localfree-owned-allocation-once",
+                      "localfree-owned-descriptor-once",
+                      "transfer-owner-not-attachment",
+                      "wrapper-drains-target-and-revokes-futures",
+                      "wrapper-owns-target-until-drained",
+                      "wrapper-revokes-before-capture-end"
+                    ]
+                  },
+                  "proofs": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "site",
+                            "fingerprint",
+                            "quote"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "operation",
+                                "safety"
+                              ]
+                            },
+                            "site": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "path",
+                            "scope",
+                            "quote",
+                            "context_fingerprint"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "code"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "scope": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "context_fingerprint": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "contract_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "shared_contracts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "contract",
+          "review_rationale",
+          "bindings"
+        ],
+        "properties": {
+          "contract": {
+            "type": "object",
+            "required": [
+              "thread",
+              "lifetime",
+              "alias",
+              "ownership"
+            ],
+            "properties": {
+              "thread": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lifetime": {
+                "type": "string",
+                "minLength": 1
+              },
+              "alias": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ownership": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "review_rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bindings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
