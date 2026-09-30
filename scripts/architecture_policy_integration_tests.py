@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import importlib.util
 import os
 from pathlib import Path
 import shutil
@@ -53,6 +54,17 @@ class PolicyIntegrationTests(unittest.TestCase):
                 runner.run_script_with_self_test = Mock()
                 runner.run_guardrail(guard)
                 runner.run_script_with_self_test.assert_called_once_with(script)
+        adapter_path = ROOT / 'verification/areas/developer_tooling/runner.py'
+        spec = importlib.util.spec_from_file_location('architecture_policy_area_adapter', adapter_path)
+        adapter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(adapter)
+        self.assertIn('architecture-policy', adapter.FULL_SUITES)
+        self.assertEqual([s['name'] for s in adapter.select_suites(area, {'full', 'architecture-policy'})],
+                         ['full'])
+        self.assertEqual([s['name'] for s in adapter.select_suites(area, {'architecture-policy'})],
+                         ['architecture-policy'])
+        self.assertEqual(adapter.SUITE_COMMANDS['architecture-policy'][0][1],
+                         [sys.executable, '-m', 'unittest', '-f', 'test_architecture_policy_guards'])
         invalid = copy.deepcopy(data)
         invalid['guardrail_steps'].append('unregistered-architecture-guard')
         with self.assertRaises(SchemaError):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -236,8 +237,12 @@ def main(argv: list[str] | None = None) -> int:
 def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[str, Any]]:
     suites = manifest.get("suites", [])
     selected = [suite for suite in suites if not requested or str(suite.get("name")) in requested]
+    # Full already executes this source-bound proof suite. Preserve the explicit
+    # profile declaration without paying for the same assertions twice.
+    if "full" in {str(suite.get("name")) for suite in selected}:
+        selected = [suite for suite in selected if suite.get("name") != "architecture-policy"]
     if requested:
-        present = {str(suite.get("name")) for suite in selected}
+        present = {str(suite.get("name")) for suite in suites}
         missing = sorted(requested.difference(present))
         if missing:
             raise SystemExit(f"unknown developer_tooling suite filter(s): {', '.join(missing)}")
@@ -277,7 +282,6 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def run_command_variant(suite_name: str, label: str, argv: list[str]) -> dict[str, Any]:
     started = time.perf_counter()
-    import os
     env = dict(os.environ)
     if suite_name == "architecture-policy" or label.startswith("architecture-policy:"):
         env["PYTHONPATH"] = str(REPO_ROOT / "scripts") + os.pathsep + env.get("PYTHONPATH", "")
