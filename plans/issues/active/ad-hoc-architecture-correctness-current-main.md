@@ -6837,3 +6837,34 @@ Historical failures and reviews retain their original status.
 **Next action: separately assign the H03a semantic-input scope checkpoint.**
 H03b-H03f remain dependent on completed H03a and are not started. The current
 owner stops; unresolved surfaces cannot be waived through owned exceptions.
+
+### H03a readiness-handoff delivery receipt (2026-09-30)
+
+**State: docs-only handoff merged; H03a remains needs-new-scope.** The readiness
+record above merged in [PR #4187](https://github.com/sifr-lang/sifr/pull/4187)
+as `a903d32fee4d506d96ff53d7d3c0859c2d3fae8a`, from candidate
+`494e51dbdd981cfe8a2d2c22b129cc7d23b3d621` on base
+`6c5f1b759ecc9d72c3b9343119b1f6dfa3a4262f`. The merged tree matches
+candidate tree `7d8952e0846ad01d918d6237b0c22e5d27e912ca`.
+
+Documentation structure, the 900-line guard (4,317 files), whitespace and the
+canonical-phase single-path checks passed. The final candidate's audit, logs and
+validation manifest remain outside Git at
+`/data/sifr-architecture-h03a-evidence-20260930/494e51dbdd981cfe8a2d2c22b129cc7d23b3d621/`
+on `yaser5@192.168.1.134`. The initial missing pinned nested editor input
+failure and successful recovery remain recorded. No metric implementation,
+resolved baseline, owned exception admission, MetricTests pass, Cargo/build,
+Opus implementation review, full gate or CI pass is claimed. Automatic run
+`36780402260` was queued at inspection; its qualification remains external.
+
+The owner used isolated worktree
+`/data/sifr-architecture-h03a-normalized-ratchets-20260930`, branches
+`codex/architecture-h03a-normalized-ratchets-20260930` and
+`codex/architecture-h03a-record-20260930`, and an owned bundle/bare relay
+through authenticated Mac GitHub CLI. Shared checkouts and warm Cargo targets
+were untouched. This receipt needs documentation/scope/diff/file-size checks
+only and no repeat external review.
+
+**Next action: a separate scope owner defines the semantic-input prerequisite
+recorded above.** H03a acceptance and dependent H03b-H03f remain open; this owner
+stops before the next batch.
