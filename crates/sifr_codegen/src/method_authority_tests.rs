@@ -577,6 +577,33 @@ fn condition_comparison_and_truthiness_preserve_authority() {
         },
         contextual_authority("len"),
     ];
+    let text_len = length_call(Type::Str, builtin_authority("len"), Type::Int);
+    assert!(simple_condition_stmt(&condition_stmts(&text_len)[0]).is_none());
+    let mut cached_emitter = RustEmitter::new();
+    cached_emitter
+        .string_char_cache_vars
+        .insert("value".to_string(), "cached_chars".to_string());
+    let ordinary_cached = render_expr(
+        &cached_emitter
+            .lower_stmt_expr_for_ir(&text_len)
+            .unwrap()
+            .unwrap(),
+    );
+    let cached_condition = render_expr(
+        &cached_emitter
+            .lower_condition_expr_for_ir(&text_len)
+            .unwrap()
+            .unwrap(),
+    );
+    assert!(
+        cached_condition.contains(&ordinary_cached),
+        "{cached_condition}"
+    );
+    assert!(
+        cached_condition.contains("cached_chars.len()"),
+        "{cached_condition}"
+    );
+    assert!(!cached_condition.contains("chars()"), "{cached_condition}");
     for authority in authorities {
         let builtin = matches!(authority, MethodAuthority::BuiltinIntrinsic { .. });
         let mut receivers = vec![list_ty.clone(), Type::Str];
@@ -673,6 +700,65 @@ fn condition_comparison_and_truthiness_preserve_authority() {
                             assert!(!output.contains("chars()"), "{output}");
                         }
                     }
+                }
+            }
+        }
+        if !builtin {
+            for convention in [
+                ReceiverConvention::SharedBorrow,
+                ReceiverConvention::MutableBorrow,
+            ] {
+                let mut expr = length_call(list_ty.clone(), authority.clone(), Type::Int);
+                if let HirExpr::MethodCall {
+                    object,
+                    receiver_convention,
+                    receiver_target,
+                    ..
+                } = &mut expr
+                {
+                    *object = Box::new(HirExpr::FieldAccess {
+                        object: Box::new(HirExpr::Name {
+                            name: "value".to_string(),
+                            binding_id: Some(BindingId(1)),
+                            ty: Type::Class {
+                                identity: None,
+                                type_args: Vec::new(),
+                                name: "Container".to_string(),
+                                fields: Default::default(),
+                                methods: Default::default(),
+                                parent_class: None,
+                            },
+                        }),
+                        field: "items".to_string(),
+                        ty: list_ty.clone(),
+                    });
+                    *receiver_convention = Some(convention);
+                    *receiver_target = Some(MutableReceiverTarget::Place(Place {
+                        root: BindingId(1),
+                        projections: vec![sifr_ir::PlaceProjection::Field(
+                            sifr_ir::FieldIdentity {
+                                declaring_class: "Container".to_string(),
+                                field: "items".to_string(),
+                            },
+                        )],
+                    }));
+                }
+                let ordinary = render_expr(
+                    &RustEmitter::new()
+                        .lower_stmt_expr_for_ir(&expr)
+                        .unwrap()
+                        .unwrap(),
+                );
+                assert!(ordinary.contains("value.items"), "{ordinary}");
+                for condition in condition_variants(&expr) {
+                    let lowered = render_expr(
+                        &RustEmitter::new()
+                            .lower_condition_expr_for_ir(&condition)
+                            .unwrap()
+                            .unwrap(),
+                    );
+                    assert!(lowered.contains(&ordinary), "{lowered} vs {ordinary}");
+                    assert!(!lowered.contains("clone()"), "{lowered}");
                 }
             }
         }

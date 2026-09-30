@@ -206,6 +206,13 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
             {
                 return None;
             }
+            // String length requires the emitter's character-cache context.
+            if matches!(
+                resolve_alias_type(object.ty()),
+                Type::Str | Type::LiteralStr(_)
+            ) {
+                return None;
+            }
             // Contextual and nominal calls decline to the structured owner.
             // Registry lowering preserves list and Unicode string semantics.
             crate::methods::lower_method(

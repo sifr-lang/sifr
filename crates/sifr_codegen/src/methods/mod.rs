@@ -18,25 +18,8 @@ use sifr_type_system::Type;
 
 pub(crate) use dispatch::{
     LoweredMethod, is_in_place_collection_method, lower_method, lower_method_with_context,
-    lower_method_with_discard_context,
+    lower_method_with_discard_context, supports_builtin_len,
 };
-
-pub(crate) fn supports_builtin_len(ty: &Type) -> bool {
-    match ty.resolve_alias() {
-        Type::List(_)
-        | Type::Dict(_, _)
-        | Type::Set(_)
-        | Type::Bytes
-        | Type::Tuple(_)
-        | Type::Str
-        | Type::LiteralStr(_)
-        | Type::Class { .. } => true,
-        ty if is_option_type(ty) => ty
-            .optional_member_type()
-            .is_some_and(|payload| supports_builtin_len(&payload)),
-        _ => false,
-    }
-}
 
 fn lower_method_impl(
     object_ty: &Type,
