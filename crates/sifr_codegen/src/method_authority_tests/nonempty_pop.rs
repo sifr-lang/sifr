@@ -502,24 +502,32 @@ fn pop_preserve_deque_comparison() {
             );
         assert_eq!(render_expr(&unchanged), "values.pop()");
         for operator in ["==", "!="] {
-            let condition = HirExpr::Compare {
-                left: Box::new(value.clone()),
-                ops: vec![operator.into()],
-                comparators: vec![HirExpr::IntLiteral(1)],
-                ty: Type::Bool,
-            };
-            for condition_entry in [false, true] {
-                let output = if condition_entry {
-                    emitter.lower_condition_expr_for_ir(&condition)
+            for reversed in [false, true] {
+                let scalar = HirExpr::IntLiteral(1);
+                let (left, right) = if reversed {
+                    (scalar, value.clone())
                 } else {
-                    emitter.lower_stmt_expr_for_ir(&condition)
+                    (value.clone(), scalar)
+                };
+                let comparison = HirExpr::Compare {
+                    left: Box::new(left),
+                    ops: vec![operator.into()],
+                    comparators: vec![right],
+                    ty: Type::Bool,
+                };
+                for condition_entry in [false, true] {
+                    let output = if condition_entry {
+                        emitter.lower_condition_expr_for_ir(&comparison)
+                    } else {
+                        emitter.lower_stmt_expr_for_ir(&comparison)
+                    }
+                    .unwrap()
+                    .unwrap();
+                    let output = render_expr(&output);
+                    pop_assert_ordinary(&output, "values.pop()");
+                    assert!(output.contains("Some("), "{output}");
+                    assert!(!output.contains("unwrap("), "{output}");
                 }
-                .unwrap()
-                .unwrap();
-                let output = render_expr(&output);
-                assert!(output.contains("values.pop()"), "{output}");
-                assert!(output.contains("Some("), "{output}");
-                assert!(!output.contains("remove("), "{output}");
             }
         }
     }

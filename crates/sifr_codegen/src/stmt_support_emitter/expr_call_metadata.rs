@@ -63,9 +63,9 @@ pub(crate) fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> b
     }
 }
 
-/// Whether HIR proves a pop succeeds while the Rust deque API still returns
-/// `Option<T>`. Comparisons must account for the concrete Rust representation
-/// without introducing a panic-producing unwrap.
+/// Whether a narrowed pop retains the selected deque declaration's optional
+/// return representation. Callers must lower/admit the operands first; dispatch
+/// authority and scalar HIR narrowing alone do not prove the Rust result type.
 pub(crate) fn compiler_verified_pop_lowers_as_option_for_ir(expr: &HirExpr) -> bool {
     let HirExpr::MethodCall {
         object,
@@ -81,7 +81,10 @@ pub(crate) fn compiler_verified_pop_lowers_as_option_for_ir(expr: &HirExpr) -> b
         && is_narrowable_pop_call_for_ir(method, args)
         && matches!(
             crate::resolve_alias_type_for_plain_call(object.ty()),
-            Type::Class { name, .. } if is_deque_class_name_for_ir(name)
+            Type::Class { name, methods, .. } if is_deque_class_name_for_ir(name)
+                && methods.iter().any(|(name, signature)| {
+                    name == method && crate::helpers::is_option_type(&signature.return_type)
+                })
         )
 }
 
