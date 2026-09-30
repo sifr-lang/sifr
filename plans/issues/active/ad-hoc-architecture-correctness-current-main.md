@@ -2969,8 +2969,10 @@ The third case constructs repeated pairs across segment/file boundaries and
 an A/B, B/C chain with no A/C edge, asserting the exact connected group and
 order independence without normalizing against C during A/B comparison.
 A reviewed exact-raw shared definition passes for its complete group; removing,
-changing or adding a binding, changing the common reference/rationale/raw
-contract, or discovering a new duplicate fails through the real validator.
+changing or adding a binding, giving one group member a mismatched reference,
+removing/emptying the rationale, appending own-site binding metadata to one
+raw contract while preserving repetition, or discovering a new duplicate
+fails through the real validator.
 An unrelated third site's binding change cannot alter A/B's comparison result.
 These assertions must exercise the actual selected-union validator entrypoint
 and its reviewed-sharing checks; helper equality or count-only checks do not
