@@ -16,7 +16,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/unix.rs::uid::unsafe-block::1",
-      "fingerprint": "447d498a2fe6b6b1e1bf85f2b069d6ed3f16ed5e850e6b32ea2254a3a5721bca",
+      "fingerprint": "20446b4661c5bc623dec2334dcf36f38adaf0d65f3b4d040ee2e048555d469da",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -42,7 +42,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/unix.rs::inherit_lease::unsafe-block::1",
-      "fingerprint": "e09cdc50c386f5f8b7a4d4d193ec77c791d6c11de114763356b2c11b723ae026",
+      "fingerprint": "23d30ff399932d8ce4621c9af02c57f9b76840a01c8d3897f2fa116f5822dbde",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -68,7 +68,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows.rs::inherit_lease::unsafe-block::1",
-      "fingerprint": "56ccf995cd44e2165e906a18430aa450513830c41b01bd4f6ac2ed8034c20779",
+      "fingerprint": "d80eabc645d6f0b8a837bb396c3d8d5b219e8660f0bb706234fae316845bf8e1",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -94,7 +94,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::sid::unsafe-block::1",
-      "fingerprint": "613fa09e4d1334a8ade51dbc8ba758f267879e788a1921c2a9cf1fd5bb381aa6",
+      "fingerprint": "1af47ea8ccae6b716833aee5d241398ab9cf8c2272f5f4202777ef60d689c8c1",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -107,7 +107,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::drop::unsafe-block::1",
-      "fingerprint": "e38b0cc7b7263114bbce2da9c4279f94008820a7b6b116dfd3ac4d282ad87382",
+      "fingerprint": "ee30a7ef9f68427b27045b225e2f4a5bd50e306bef0f67781d7443e35dc19f57",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -120,7 +120,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::owner::unsafe-block::1",
-      "fingerprint": "e1f3f58adc45c545035ab40711e19e010db80bae0ab8ba951100f6a31cd2617d",
+      "fingerprint": "89b1719fcbac56632f968398f9278ca8e35049193be64a32e90aa08ead805a44",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -133,7 +133,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::token_default_owner_is_administrators::unsafe-block::1",
-      "fingerprint": "c8b076b30232655222a496719696a05957876ea8be7a98ce9aff6612a57347ba",
+      "fingerprint": "7852f2a12ba8b3dc1478ba61abc48a30f6cb1a157376315ccfe01f1f08ef448f",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -146,7 +146,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::drop#2::unsafe-block::1",
-      "fingerprint": "2be3e7cf296ad06cf7e2c3b88fc413b2856ff0084f7770e952d37b0bdd3b78af",
+      "fingerprint": "e5f48fc9ca545618027d3fcef9ac7b83d3404a92001bf9c08e2796be9ac0a5a9",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -159,7 +159,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::private_descriptor::unsafe-block::1",
-      "fingerprint": "607b9b474168a0b028dc52f7fc92cb6f1a49ee601388a0cfbfdec4563dc2d7a4",
+      "fingerprint": "598b934c4ab230a059255aa714c0f4465b65deab3e9827522359d9fac73d40f4",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -172,7 +172,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::private_descriptor::unsafe-block::2",
-      "fingerprint": "be8016968351752be35498979189eef3092d88a49ce6b0dc8153f7e96deb1fdc",
+      "fingerprint": "fd3f7f664142de9ee1c09d8a7697dc905abec90d6f51e3083e5a54e830c0bb17",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -185,7 +185,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::create_directory::unsafe-block::1",
-      "fingerprint": "fc8c26df193c7b1ed9e2ae0d0e0ea86b09c8842ae371deca69f0b2801cb64806",
+      "fingerprint": "59be763aa618a9d9765449cf5fa0e7cf0605b564708d7b38294ca75b95621bf8",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -198,7 +198,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::create_file::unsafe-block::1",
-      "fingerprint": "4946041bb953f7eaf3eef986512fd8e03f9646da8d7ad4bdbdec05ea755721f1",
+      "fingerprint": "e2512ec590bcc40f0b5f63c39e666c1fd845f6b03482c621fdfce9048b55e89f",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -211,7 +211,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::create_file::unsafe-block::2",
-      "fingerprint": "1da7ff8e996b08a8cc5e048dba362968768117f843fb4858b70a68c04e53b6ef",
+      "fingerprint": "eb6d60a2b9c311ac6e1a89b62f4908436418909c011230d4c57475d7ef3e54ed",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -224,7 +224,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::check::unsafe-block::1",
-      "fingerprint": "90eecfaf2f55b467e97527772b6b9ffbfd060f3bb0ae731d64724949b3ecc61d",
+      "fingerprint": "8954df3c55e90140699a54e121fada98b5d001ee2f06ecc78e1e99e5278701f1",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -237,7 +237,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::check::unsafe-block::2",
-      "fingerprint": "550c0d3c719512a16e70f435c18eb94d4f705a053cb5d13809846358a7cad89b",
+      "fingerprint": "6c1893c6046fce0cbac56cdad580cdc743a48c2b86516ad66ef8cf1a16aa811a",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -250,7 +250,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::available_bytes::unsafe-block::1",
-      "fingerprint": "bec9a2c80c37093e64a5fd332a3a6ad535195b120609656b40a5261b50ddfdbf",
+      "fingerprint": "b12b732a6c7595c8dd2e94164332e51ddfb1c70afe08c6f1422800ce25e9073f",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -263,7 +263,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::1",
-      "fingerprint": "df84a77981526bcb1ff8ba2beebb42585e14d098e62fe673f8bd19dca723150e",
+      "fingerprint": "a0df50c11146ff809460154d104952c7368b2b8e820e8cd9831b8be6b9caa008",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -276,7 +276,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::2",
-      "fingerprint": "4ea4c1c9cbe4595cef5992ea2871e4fb9a03a58d005d7fcf77d7164343c03eca",
+      "fingerprint": "05a32acc5a7aa4dcf20c132ee63f15385570f6f1eb65475068fd7648056dcd5d",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -289,7 +289,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::3",
-      "fingerprint": "654644fd52a7be45b404ab0c223d34b8d0ac1b69489c6d76665f4c370935e941",
+      "fingerprint": "04b6dd6b0570eb06869577effd3042b3407c876751f2bc09f02a6098aef45d77",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -302,7 +302,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::4",
-      "fingerprint": "dae951bfd8c54e5ea837d08dc8beef668f1c4f258cf071df6f50834a03c5398e",
+      "fingerprint": "dd0b9dbf6549ef8b47a279d4387295233c6c461d27ff217bb2d577dbe80afe16",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -315,7 +315,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::5",
-      "fingerprint": "6b74deaab245260e34148522ec3ec1921db80dd33f3c8d185fe8a6c670a41bc2",
+      "fingerprint": "a3862735eab6258b3a18d452595449d9a16c9bbb5e08c9ed9e2b92314f638a1d",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -328,7 +328,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::6",
-      "fingerprint": "e6fdc8ea680361f5ca4b9213924d323dbf316072dba4fb42946de2728a317aa2",
+      "fingerprint": "7284a149b6d8d900818438bbdb2661785f1d5fe9800751d6feb53b7c3d3aea73",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -341,7 +341,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::7",
-      "fingerprint": "cf4f3e3e3632a24f655c31b769bce2e619f1f0ca48b3f04f539e4aa43f17c2e4",
+      "fingerprint": "7c19efb05f9837ea403d5370708b943d583cf3bcb2306e21e28898e07f1dc61f",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -354,7 +354,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::seal::unsafe-block::8",
-      "fingerprint": "5d571d8d9a98858daddf846d141ae8389af7c7e54416a5a85ac06740357fbe4c",
+      "fingerprint": "5ca0d43e2b296cecd790ef295c653e07f59d540cc568452cf8f50b298c4f6ce7",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -367,7 +367,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::durable_rename::unsafe-block::1",
-      "fingerprint": "5f502b6d66a9da3d769c8eaed344e5d0dbd2c6d46f464f0b9bc90c942af01de6",
+      "fingerprint": "e682bb59525c5627a6c20ca91f5f51ae316ed52f6b0dd80b59e8b3f578135864",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -380,7 +380,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::test_grant_world::unsafe-block::1",
-      "fingerprint": "a4951adf3956dea7553e2f20b862a58b2a5e9fabcd37eb956d67f19efc2cfcec",
+      "fingerprint": "f65cdf396c93a2f6f2aef05844c9177400048da6bb49ca34c87af92623fc17c1",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -393,7 +393,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::test_grant_world::unsafe-block::2",
-      "fingerprint": "cf4f3e3e3632a24f655c31b769bce2e619f1f0ca48b3f04f539e4aa43f17c2e4",
+      "fingerprint": "501f50ea6867069b5063c4c9ba81d6ff1af57b33e25f670f2efd0b6e468a9eb4",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -406,7 +406,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::test_grant_world::unsafe-block::3",
-      "fingerprint": "9911f1a58e84f9b3188290a8884f5468c3ea3b58e534cacc10122cf4923616c9",
+      "fingerprint": "bb36fbcd08836ca3f2c7e1af7c4338f078fbbac372cd8ea34edb69517c83fd38",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -419,7 +419,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::file_identity::unsafe-block::1",
-      "fingerprint": "2ea7dadbdc6591d4684f5819b89c32628b23d50b38fd3df054ba8d632775b2a2",
+      "fingerprint": "7ff67443e733a1d7342543e850720fe571797638f850b1dc76813e724a98ba35",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -432,7 +432,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::file_identity::unsafe-block::2",
-      "fingerprint": "37f3a89006bb73a4b2ab593bd91b161718fdaa6fe2b3cb722bf95c9050c97fa4",
+      "fingerprint": "582162a7be9e6bad672809b6c9d21a68c7c71356cf5df91690cbbdcefc8fa375",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -445,7 +445,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::path_identity::unsafe-block::1",
-      "fingerprint": "6dce0c425ab124d7894fe9c960d8af294e9ee3877dc25929f8dc5808bc45277d",
+      "fingerprint": "3913f1fa971719b5017813aad90c3d1ac366876cba2f097178fad9953f2a95f2",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -458,7 +458,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::path_identity::unsafe-block::2",
-      "fingerprint": "1da7ff8e996b08a8cc5e048dba362968768117f843fb4858b70a68c04e53b6ef",
+      "fingerprint": "edfc953e3e23b17de9530e3a6e103ce96c64ae44739b0c4f3aaa29edeb2bdba9",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -471,7 +471,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::safe_workspace::unsafe-block::1",
-      "fingerprint": "90eecfaf2f55b467e97527772b6b9ffbfd060f3bb0ae731d64724949b3ecc61d",
+      "fingerprint": "4b21f2a4744795e8cafdb3a1564aa3c155fff803823dd67eef13edf7a592f399",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -484,7 +484,7 @@
     },
     {
       "site": "crates/sifr_cache_storage/src/windows_storage_security.rs::safe_workspace::unsafe-block::2",
-      "fingerprint": "f3fb1813ab613898dd834979494870775b0da4cd1afd1b8152bf1d19c4930ab3",
+      "fingerprint": "d5d165ece3b322ff4a2f0af5f6a07ea32499b02bde8ddd4c46050e041dc14f34",
       "owner": "cache-owner",
       "scope": "operation",
       "contract": {
@@ -497,7 +497,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/python_interop_callbacks.rs::callback_setup::generated-rust::1",
-      "fingerprint": "afccb4a5db2e28fc25b9378db8434de8817f3fb5757370c32fd99ee57278dd87",
+      "fingerprint": "4083756f26418cbb6c90f7d9d157d3e6b82aa346401a686ef85ee23ba996a6f0",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -510,7 +510,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
-      "fingerprint": "615e0c3d09e9a1b87eaf8faab7ff8d95f2d6dc017b8049b4ea5444a45e57f8f0",
+      "fingerprint": "93258d261bffe974265bf77c9eba5d2e0c0a78335e68dcaac3c5cba1f7f8d74c",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -522,7 +522,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
-      "fingerprint": "57bba672548c02ecbd6481bd3568df8a3c5b61634b1ec01a4fa53190fa11e918",
+      "fingerprint": "6c4a2980b0f96d2902cd87032e33868c143d5a0ff4ea0a7fa9f73ee51f87fe2f",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -534,7 +534,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/render/render_expr_and_blocks.rs::is_escape_required_keyword::generated-rust::1",
-      "fingerprint": "769b8821035212d26b97ee047b05b2571b1f09b421a0b4f339932f955f7c96ca",
+      "fingerprint": "333a2f66870bea2cdc0389bb7f64148cbf1047da723dd51ebd6cac7d12e17f1c",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -546,7 +546,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
-      "fingerprint": "ea148cac4981f74404b8bd7709646421f53f139750646c01dd1f4ebda48a4d70",
+      "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -558,7 +558,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
-      "fingerprint": "26119460667103160cbe91ce34e3320ac097b7ff84fc44201d35e7a36b226cd6",
+      "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -570,7 +570,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
-      "fingerprint": "7922fb01368452e29e2a47a9b555200c9a30aef9ab66aa6ec123f2dd4e610379",
+      "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -582,7 +582,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
-      "fingerprint": "eb98181e68c8a8c1504fda92948b6bcb067231e34625435acb76cbe22763e1ff",
+      "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
       "owner": "X02",
       "scope": "operation",
       "contract": {
@@ -594,7 +594,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/materialize_tests.rs::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner::unsafe-allowance::1",
-      "fingerprint": "5697b7f939f3a9c712b6dbfc097cf7b957927d098569e3731729c635b114bed3",
+      "fingerprint": "93a79c843d75f39a80242d348fcad674b95cc8d2bcbecd787484725dda23e6aa",
       "owner": "driver-owner",
       "scope": "expression",
       "contract": {
@@ -607,7 +607,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/materialize_tests.rs::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner::unsafe-block::1",
-      "fingerprint": "51d47ef7998f3efd5253d9d98bd103f3f9e45ae5c2c319802c81c94429ca5fbe",
+      "fingerprint": "e1393759d7fcdb47cfe7c7ae247c766d42215145bd01de27a6eb6a04c5990af4",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -620,7 +620,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::unsafe-allowance::1",
-      "fingerprint": "5697b7f939f3a9c712b6dbfc097cf7b957927d098569e3731729c635b114bed3",
+      "fingerprint": "d0508ec5e67ae61c8e2135547844566328462b1ea167eeeec9d529397ee83a9e",
       "owner": "driver-owner",
       "scope": "expression",
       "contract": {
@@ -633,7 +633,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::unsafe-block::1",
-      "fingerprint": "51d47ef7998f3efd5253d9d98bd103f3f9e45ae5c2c319802c81c94429ca5fbe",
+      "fingerprint": "a8f936b9aef9fcc18c25527d8019be2438dcf9ea6a580e8a0281141f42ebd412",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -659,7 +659,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::available_bytes::unsafe-block::1",
-      "fingerprint": "2b0dd17060465f58c312886486933a5d27d3e0cc595649d00f6ceca39c08de2b",
+      "fingerprint": "d88c0513882b6e76e7e2b60aabb6fa27f42f240703922c40f269e2152fb21c48",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -672,7 +672,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::available_bytes::unsafe-block::2",
-      "fingerprint": "ec7170c0177573d38d70fe4f9826f4410d89b12d57dcd8a28ad874a22c967de0",
+      "fingerprint": "7c16bf1c4f76700b694860fafff53716a71e6c264577e579b6c6be386b14dae8",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -698,7 +698,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution.rs::terminate_group::unsafe-block::1",
-      "fingerprint": "bc4895b8498a264515bb28548a140c4654d16a0575712a4eaadfda9381b66d4d",
+      "fingerprint": "ede8bd82872e166d2b3a3c35d3931aa5a14c8977f10d3b38edfdb980b359d95c",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -724,7 +724,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::drop::unsafe-block::1",
-      "fingerprint": "024b020eba65d62b161203469925c66d5e78953cfd48514ceaa7c69024a11d84",
+      "fingerprint": "e1bec2eaf722e7e14bfe929fe0645b6a755090df8b8900fc2387a5a395356ef5",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -750,7 +750,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::spawn::unsafe-block::1",
-      "fingerprint": "905142e71c0305fcc8aa07853872b078f4cbefca5c8f8afb84e7fc8ec320cbe6",
+      "fingerprint": "b041f7438ff34d1a30fa8ddbe9d37c4c7743ca01a7bd888247d6178753e85cc5",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -763,7 +763,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::spawn::unsafe-block::2",
-      "fingerprint": "daa1397cb6e380434d9e8302e540c363c9b1f34b6984d2e8d16020a75bca2d82",
+      "fingerprint": "834e079e0fc39b269f7005625c4b1fab20fd8e31988e7d9ebfd8e04a872c9a43",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -776,7 +776,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::spawn::unsafe-block::3",
-      "fingerprint": "e956cead48b7e712776ea9e658b9bafcf2a3a212faeb83daf7ffbe3de8f5043d",
+      "fingerprint": "1ba5504e197272d60bf1f04881408009f27d9a2f93140ab134220bf6bf245475",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -802,7 +802,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::terminate::unsafe-block::1",
-      "fingerprint": "d41bd39dacd46d7223ebcd5cee254efeb126b233d7a6dec2446c16cd8330ffa0",
+      "fingerprint": "70f07aa7a30c977faed5fad20d2e455d916635a0e210546a9409f6d228ec7a9b",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -828,7 +828,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::detach_normal::unsafe-block::1",
-      "fingerprint": "0d9a83b999fe3b03f8672888bcd35a39f36c64d9580a566ee26e6ced8cef73b9",
+      "fingerprint": "6fc892c4d0047075e5b75f1b9486cb2f4e5c29d143c45193011cd8a36fe54a81",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -854,7 +854,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::resume_primary_thread::unsafe-block::1",
-      "fingerprint": "94d10055959ba6cb7a744abc2a9dfd74503355e060446fe3bfe91b000283217b",
+      "fingerprint": "02c3ef013e40f3ef5427deadc2cccdd6150009798529977e58a78dfb514bccbf",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -867,7 +867,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::resume_primary_thread::unsafe-block::2",
-      "fingerprint": "b3726d9451fea8c713edb901d8bdc75a697864ea8410e08de1336f9bca198ed4",
+      "fingerprint": "5edfd4cfdd50c9cfc221018ccfd021e57295b56cb4249f62dd75217a4bd8760c",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -880,7 +880,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::resume_primary_thread::unsafe-block::3",
-      "fingerprint": "099d8738b5bba414a1e8013185b7eab2e097d11579aa73f5f14d794222690d5a",
+      "fingerprint": "4120325418497017331717b68f59d75da3b7d60c85055a7fd9a1628362ba636b",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -893,7 +893,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::resume_primary_thread::unsafe-block::4",
-      "fingerprint": "54aa9795adb42b069c5775aa7ba2c45139a1a5a4c961a1e1b15dd8755bcd6f96",
+      "fingerprint": "91cc9d856409dcd4b6291981381b5cd3d90cae4dae8284c30a3e7cf69497efaf",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -906,7 +906,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_execution_windows.rs::resume_primary_thread::unsafe-block::5",
-      "fingerprint": "e651b2d751c16b38497ccb536f9ea219bf5c8c2e06dca119c9a19fa1df4df94f",
+      "fingerprint": "3432584ea275634c1af54e877f54d270a08fe0239dc5172a027b6f8e5cb2f31b",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -932,7 +932,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_signals.rs::acquire::unsafe-block::1",
-      "fingerprint": "d086f4eb40b9713cafe7aa7a15cc8b4679f6817c31b65d7676588af0e71e0221",
+      "fingerprint": "2f116271c6bce01f68db0e775a986f11ff9f929731403e1e832b8c0a1240a592",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -958,7 +958,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_signals.rs::drop::unsafe-block::1",
-      "fingerprint": "0dbdaa7ccd75fd1b80a53d72d2eda2e3ed8cb73a18ec517aad5ad045272dd767",
+      "fingerprint": "b4f3b6bd3b7a86507689a048d0c3f142dae90c2b0a7215d2b2b9603e8be3d5a3",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -1010,7 +1010,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_signals_windows.rs::acquire::unsafe-block::1",
-      "fingerprint": "518ecc0c43281dc4ba06e3f216064d8b8832c1f7e975736d7fc8199ad02eb6da",
+      "fingerprint": "adebbad4949f475f7f57b164131edc7d80c9eb334632384f5ce1472751925455",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -1036,7 +1036,7 @@
     },
     {
       "site": "crates/sifr_driver/src/process_signals_windows.rs::drop::unsafe-block::1",
-      "fingerprint": "7ae9810836c5f9f9bed200281c289fcbfe27d747872f9bfab4d6d27b669d6e7f",
+      "fingerprint": "2512257432240f3e0b2b3312b542abb7a9c2cb8bff95165cc8fd6d6107635db6",
       "owner": "driver-owner",
       "scope": "operation",
       "contract": {
@@ -1234,7 +1234,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/abi.rs::checked_value::unsafe-block::1",
-      "fingerprint": "c1246771b5e27d21b6a73332a8a136aa0dc79eabe603412147927debda1a9ffa",
+      "fingerprint": "d54381553d8845addbb5e0a7d370270d3d9edca2e195ddb788748a94e9fd14ad",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1285,7 +1285,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::release_schema::unsafe-block::1",
-      "fingerprint": "77c98549f7b134edf69109a5f04be4786d7817e38a16b4eddc73c2b24f304569",
+      "fingerprint": "af7d55fcc3d3154b5f7a78096f7efe2e075ff09f9bcc1e1fe7530aed0ecbf525",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1311,7 +1311,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::release_array::unsafe-block::1",
-      "fingerprint": "77c98549f7b134edf69109a5f04be4786d7817e38a16b4eddc73c2b24f304569",
+      "fingerprint": "d6aa9eef7083b2e136c8d1ce8ebaa267a225accb34808128385eb51258147b3c",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1337,7 +1337,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::get_schema::unsafe-block::1",
-      "fingerprint": "d993fd2add62857e1e5c4f7ad59e619c89b2e23b8d6789a212f4b46477e0252a",
+      "fingerprint": "f718b22d33c29365c7424aedeb247519fbb4bd618da98f9c98c13b332d4f71b6",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1363,7 +1363,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::get_next::unsafe-block::1",
-      "fingerprint": "5df4ce2e177a58300788c2bd23980d4f1e250c196962cb2995ce1fdb48734d77",
+      "fingerprint": "cc89056a992fad5269c90a6e8396816f9063c62b308d07074fa151690df2f1ba",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1428,7 +1428,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::release_stream::unsafe-block::1",
-      "fingerprint": "77c98549f7b134edf69109a5f04be4786d7817e38a16b4eddc73c2b24f304569",
+      "fingerprint": "24a93eec90650e1fa42f02193ed9fc1ed4198e558bcc7aede5513bc0c8f5c719",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1454,7 +1454,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::device_get_schema::unsafe-block::1",
-      "fingerprint": "d993fd2add62857e1e5c4f7ad59e619c89b2e23b8d6789a212f4b46477e0252a",
+      "fingerprint": "c6afaa75c9ab3e00c4ef03b0880fafae4d5b23381e7dbfbe37537fd088906204",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1480,7 +1480,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::device_get_next::unsafe-block::1",
-      "fingerprint": "a373fb3e8ec2825af99c34584f04ac1ffe0ab232715adafa6f67eed596684661",
+      "fingerprint": "a2365a9b1ceda13f2925a96378526e6e3dd94554d6a9e0acca7c559de2477de1",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1519,7 +1519,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::release_device_stream::unsafe-block::1",
-      "fingerprint": "77c98549f7b134edf69109a5f04be4786d7817e38a16b4eddc73c2b24f304569",
+      "fingerprint": "d50807499266f4c3e187ad4419a1e3568bf6e9e13d38e409d8b63c766a951c55",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1532,7 +1532,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::capsule::unsafe-block::1",
-      "fingerprint": "938db16037bc27ff64fa84c54f7569ca39e2cbbf3a12a318078161e386c7ac8b",
+      "fingerprint": "5ca4dc6e0d31bf1b9876dc06e11792ef0f9df49c153e642dd06abe0e739e7bfe",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1545,7 +1545,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::capsule::unsafe-block::2",
-      "fingerprint": "938db16037bc27ff64fa84c54f7569ca39e2cbbf3a12a318078161e386c7ac8b",
+      "fingerprint": "5ca4dc6e0d31bf1b9876dc06e11792ef0f9df49c153e642dd06abe0e739e7bfe",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1558,7 +1558,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::capsule::unsafe-block::3",
-      "fingerprint": "50a14ef9a801a0b6fb800a6f00a345973a9cffbfbb7e34b42d2e10cb9f2f6c67",
+      "fingerprint": "9749dd44e9c096f2bc03b2844a25cc3e4b6a5ffc78e3c23634f0e5dddb1cf96a",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1571,7 +1571,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::capsule::unsafe-block::4",
-      "fingerprint": "938db16037bc27ff64fa84c54f7569ca39e2cbbf3a12a318078161e386c7ac8b",
+      "fingerprint": "5ca4dc6e0d31bf1b9876dc06e11792ef0f9df49c153e642dd06abe0e739e7bfe",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1584,7 +1584,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::capsule::unsafe-block::5",
-      "fingerprint": "938db16037bc27ff64fa84c54f7569ca39e2cbbf3a12a318078161e386c7ac8b",
+      "fingerprint": "5ca4dc6e0d31bf1b9876dc06e11792ef0f9df49c153e642dd06abe0e739e7bfe",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1597,7 +1597,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::1",
-      "fingerprint": "0ba43c05cd72ae46e5d36c794a5cb28989e49134ce9d45c77dac873c4ccec80a",
+      "fingerprint": "ca628e678ca9339f93b9165acbd6b20dba11d047a14e54b4467bf48fe10298c8",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1610,7 +1610,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::2",
-      "fingerprint": "8e5a3d19ca3041968489fa3cbcb29db250ed973ec6563326163509dea8f65abb",
+      "fingerprint": "679f00e2b66b48e9ea8de829986c571bc9af7fb950e1935c99d13adac29053ca",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1623,7 +1623,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::3",
-      "fingerprint": "6af6fce71296ef9170a71b2be14a181367917164166506d1f6d6d300e3550979",
+      "fingerprint": "c7ad2e49700ab0d184385086b982ae52c3e920cfc7c75bb36220f219a22492a7",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1636,7 +1636,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::4",
-      "fingerprint": "57e4350f3d8b0957c8a53f1eaf80909871bf2a68a6a2d337ed0f30dfc03716bb",
+      "fingerprint": "5341c7ca26107d8ee4270e4f4882cdd6e2f1a545cb15254dcea5d9d1e9d60d2f",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1649,7 +1649,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::5",
-      "fingerprint": "4407a37e03285ab2d413718ddeab28e1527af895243222ea329bfb97d0fca546",
+      "fingerprint": "a51be48b2ec0367b29160c6ab41fc5a525f532547d1f81b66f2e48d1fd5e244b",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1662,7 +1662,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::abi_layout_and_capsule_transfer::unsafe-block::6",
-      "fingerprint": "4d0dc99b7987320b6aa0b3b4fc53f56cec6e8bd8e5d7ac68fe939d42d5c21af3",
+      "fingerprint": "3a25a69bb4812de1be7bd35e032856657478fd16f5beb690dfcdea28ccbd9da0",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1675,7 +1675,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/h02_contract_tests.rs::stream_callbacks_release_exactly_once::unsafe-block::1",
-      "fingerprint": "d716c1b6de976bb492434599fd714b2eded1e5d660d01e6d0464aeff09e86c5a",
+      "fingerprint": "6e422455f223678ca8c6af4e14ce57eea590155ed3ea1b78c2b20a02682876f0",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1688,7 +1688,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::consume_argument_pair::unsafe-block::1",
-      "fingerprint": "821e310af39342124469c600348b7237d81636b234ece3575827e08b7527cb7d",
+      "fingerprint": "2fcb31c8089bd023f9d7980938c53644dec91ec54d5d106b05bff045ac2842c4",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1700,7 +1700,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::consume_argument_pair::unsafe-block::2",
-      "fingerprint": "f7753710ba815b5196fd8a41e569097b1e11f7c03d597d4b50102ed7b186949a",
+      "fingerprint": "e7b75b4ba45be9f7ffb340f9569e1ef28c8d294b7646cd5ff739f02a94b44a0c",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1712,7 +1712,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::consume_argument_pair::unsafe-block::3",
-      "fingerprint": "69d2fd9609e23d6f5cada1ff7c95d92c277e8522b88d0961a2220b98501f1526",
+      "fingerprint": "79acb1e1d4fe7b6770ddb181c88fe1af39b0e80cc6fa4456499d842e2eebffe7",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1724,7 +1724,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::consume_argument_pair::unsafe-block::4",
-      "fingerprint": "b7ffa21d7d5a75e14fc62925ea0516f47a4e2719ac8fa724686cabf7ef17aae8",
+      "fingerprint": "b9b7715ca03309122caaf3c563b53f0e81886d0cdc3df2d74f93247407c58e00",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1748,7 +1748,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_schema::unsafe-block::1",
-      "fingerprint": "162d925956802dd3843e139be5e3b48d15a5d77f445b4d404115dd3bac7d0dab",
+      "fingerprint": "4d1663f7ccaf424b31d2fb71d1fc1a6885eee7453ef7fb0fd817641362c79606",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1760,7 +1760,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_schema::unsafe-block::2",
-      "fingerprint": "88be0d974b79bcfc460c937716208ed1f696460696a624daf6d3f64e5e08e993",
+      "fingerprint": "ed2f8e7eb6711659098048103cfefadf951a59bca580fb52f83ac23874d9084c",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1784,7 +1784,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_array::unsafe-block::1",
-      "fingerprint": "1457b993cb953ce0482deaeb2acc34a84e4fff69669a0deb9fc13640207aafbd",
+      "fingerprint": "8e2f26ef5d66a1a20f5391e1a4cd9c975d45a049fdf18d9316be26871bd848ec",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1796,7 +1796,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_array::unsafe-block::2",
-      "fingerprint": "f25bf52f33c1b31a4b1f6b0b6fd33c449a068fdc1a17fe6217b56f780102e3be",
+      "fingerprint": "e83484e0cac7c2cec0e3576eb580db7a7d3247a2e5dad96a38e7e9f8e07028ae",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1808,7 +1808,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_counter::unsafe-block::1",
-      "fingerprint": "645615d4ee0fb4b883d7e36b8e8b86362049ec87b8ddcdb0232a948c042fb3f0",
+      "fingerprint": "1ed70519f733186e48334f843a4f790c8b5ba4301d5bf9a2df18eade210b4173",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1868,7 +1868,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_stream::unsafe-block::1",
-      "fingerprint": "7a2356c966ddfc474550c2771f96cfc11a3f301a4163fa062ca9ea90611e2ebb",
+      "fingerprint": "309b6fc1098c304e5b2347981b9371d5a59b2a164b090cf662961aea0d2c096e",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1928,7 +1928,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::release_device_stream::unsafe-block::1",
-      "fingerprint": "7a2356c966ddfc474550c2771f96cfc11a3f301a4163fa062ca9ea90611e2ebb",
+      "fingerprint": "07018c1f02c8e1011539a54e0071f9e1a43f2145fb76fa4f3f7510fd36950c74",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1940,7 +1940,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::capsule_with_counter::unsafe-block::1",
-      "fingerprint": "81a9e498a29e39896227fa73a00884966c0ea27948b348493f96aa66d0fef66c",
+      "fingerprint": "571a0e1ff3e71da031efde288f937f6f9f34b75ef7e2c36db8709fdb4e7c6110",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1952,7 +1952,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::capsule_with_counter::unsafe-block::2",
-      "fingerprint": "81a9e498a29e39896227fa73a00884966c0ea27948b348493f96aa66d0fef66c",
+      "fingerprint": "571a0e1ff3e71da031efde288f937f6f9f34b75ef7e2c36db8709fdb4e7c6110",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1964,7 +1964,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::capsule_with_counter::unsafe-block::3",
-      "fingerprint": "81a9e498a29e39896227fa73a00884966c0ea27948b348493f96aa66d0fef66c",
+      "fingerprint": "571a0e1ff3e71da031efde288f937f6f9f34b75ef7e2c36db8709fdb4e7c6110",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1976,7 +1976,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::capsule_with_counter::unsafe-block::4",
-      "fingerprint": "993e3fae78920cc1c7ee295d10a9bd0cffc3061f09b8ef0d8e4158425e563849",
+      "fingerprint": "9045aae6128a5ffa64e4e2e83ffdc0aab74dc2dc9c76b1550fbbd296811054c2",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -1988,7 +1988,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::capsule_with_counter::unsafe-block::5",
-      "fingerprint": "81a9e498a29e39896227fa73a00884966c0ea27948b348493f96aa66d0fef66c",
+      "fingerprint": "571a0e1ff3e71da031efde288f937f6f9f34b75ef7e2c36db8709fdb4e7c6110",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -2000,7 +2000,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops/tests.rs::capsule_without_destructor::unsafe-block::1",
-      "fingerprint": "52810f0b526423d3a1398edcb07cfce9b61e5145133d2a65bff9d54a430b46df",
+      "fingerprint": "cbbbc2f9e7d9656c5c9e3424fe074f996856945430dc12249b9a64f8ec59f5b4",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -2012,7 +2012,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops.rs::validate_capsule::unsafe-block::1",
-      "fingerprint": "514ed8ebfe70a6ad92fdde63a648f558c79ee97096fa90c3be78d08ba26962bb",
+      "fingerprint": "d474d1f4403ef9ba1e846bbfdf9c6caa332ad24a0ce6bbb4d747579e054a3ac9",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -2025,7 +2025,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops.rs::validate_capsule::unsafe-block::2",
-      "fingerprint": "b6bae62484c22cacc9b66e7e0a1bfdeb8a9d6886c442e8576315d8c78cd78c18",
+      "fingerprint": "65ba4419bf39e8cdc98be532f2099ccb963005ab6490c5634a6011c6b1ca2170",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -2038,7 +2038,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/arrow_ops.rs::validate_capsule::unsafe-block::3",
-      "fingerprint": "3e9f50713f03263378b39f811ccce872e549109e8569cdc90cba3bccc950951a",
+      "fingerprint": "81b2968eae1180afbdb6f86fc4c2b70c29348c4e97ba32346603d05bde718f04",
       "owner": "H02f",
       "scope": "operation",
       "contract": {
@@ -2063,7 +2063,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/access.rs::read_typed::unsafe-block::1",
-      "fingerprint": "32f14329dfb0b36c08879ab89045c0d1780119c52d802ab3ee4009e05dff09b0",
+      "fingerprint": "cc7a01aab88b5709ada124cba50e23b4e201dac3b74291e82f7604165636937e",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2089,7 +2089,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/access.rs::write_typed::unsafe-block::1",
-      "fingerprint": "1e1810f33ce91a7d126a89a3d1a4df2ee04873459346ba11baa6574fafff5ed2",
+      "fingerprint": "64ab5bff38d7f697cc1d6bba4421794a1c486b68aabaf8c527d7185dccddc347",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2115,7 +2115,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/access.rs::copy_typed_range::unsafe-block::1",
-      "fingerprint": "32f14329dfb0b36c08879ab89045c0d1780119c52d802ab3ee4009e05dff09b0",
+      "fingerprint": "35cff2d38b2957910bbc877b7b36820e82402f9811fcaae965a067d7af3ddbf5",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2140,7 +2140,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/h02_contract_tests.rs::__getbuffer__::unsafe-block::1",
-      "fingerprint": "29cc584ed9148a6460a30c6b95cdf279f18dbf450e6bd98a3e3b7559a3a59fb5",
+      "fingerprint": "44ba19d5352577e6b00e52aea9734406a6f9f18da3eee6df5b1b1b2d34abc4b9",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2166,7 +2166,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/layout.rs::snapshot_addresses::unsafe-block::1",
-      "fingerprint": "7c0a7a64880b39caf291784caef25d55406f7341ff1911d36795abfd538dd6ca",
+      "fingerprint": "804b8f396043e6f11ed9a6aaabb0861b9b72937da010f2d643ae15f275379983",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2192,7 +2192,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::acquire::unsafe-block::1",
-      "fingerprint": "f080927803352ef46ea7debe0a8f2c4604622f5e62bd3f305b50fbf975c4c881",
+      "fingerprint": "218ef54fb8912c32d2bdb090bc695d958401818c89c24da36b57941397626fe7",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2205,7 +2205,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::release_raw::unsafe-block::1",
-      "fingerprint": "492fe95857e5c3843b83fcab9618bf3524d27c1a7effa7d27aa71d9f73e1efdc",
+      "fingerprint": "77166c073efdbdb136f3095f08eb3c5392066c9cfb0b2fa56a162efb78db7254",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2218,7 +2218,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::release_raw::unsafe-block::2",
-      "fingerprint": "96de645bd58c0bf681e2206470ce954ab8751bcc7083c0f785c47239fbc49d1d",
+      "fingerprint": "9e1a570d1b6f6a46a1ec08c844e3b5153d901db1c3d09bd083c1ebbaa3722137",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2231,7 +2231,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::metadata_vectors::unsafe-block::1",
-      "fingerprint": "142c7ffa55fd4fcaeafe62c42d5621212fecbfd19a28759bd5959b1b4cc0a367",
+      "fingerprint": "d8df00f28e01ed67291e57974cf6743512c0d5f1516d76bbee7a2e2541ffceb2",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2244,7 +2244,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::metadata_vectors::unsafe-block::2",
-      "fingerprint": "65bb91baf3d1c5fd8195c31c0e65ab0918347987436bc4e0fa97cdeb1470b347",
+      "fingerprint": "ca00e9dde8afa12da046294c69f9712bde33a13d05c0cc951b094531121add0f",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2257,7 +2257,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::metadata_vectors::unsafe-block::3",
-      "fingerprint": "829273615048dd36621a15ecd30959a88d43cd7be6e0c349f9e83a8b1e62ba6f",
+      "fingerprint": "17e8346b5ee86d74bb9a452f809e137ae09bb302be006b26bbab54d2a2a90bff",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2270,7 +2270,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::format_bytes::unsafe-block::1",
-      "fingerprint": "e039047e1c5385bd40817731d6321fcb9d63e0078e649bed9c99eaa7eadf25f7",
+      "fingerprint": "e9f97c9a8c5ed965dd879d17de15a1f76e1fec047078fbe17ff1b5bf1834adb6",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2296,7 +2296,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/raw.rs::raw_mut::unsafe-block::1",
-      "fingerprint": "950b6f2d700939c9952bff0aa2da503a1e4d0f7aa2754cd5e22155e01f534a76",
+      "fingerprint": "b8d3f458a01c2d766b61eb1c360c5a9e9eb142b377fe4f2bba58b281b089197e",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2321,7 +2321,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs::__getbuffer__::unsafe-block::1",
-      "fingerprint": "e8ccaffc9d0f5709445b0b2c0cd700bc744bf23bd0726cfbb65571550065fc32",
+      "fingerprint": "d38f5ec3309447dfe639c0e23cf4941b3600520ea680fb813616c63da0c4725d",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2345,7 +2345,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/tests.rs::indirect_byte_memoryview::unsafe-block::1",
-      "fingerprint": "83076f03fda789c87dd2326d9239745fbb1af6551903c9faed7516b2eab7f2ee",
+      "fingerprint": "908852ece239eae75d5c608c93d6374f0039eaf3ef438ff8140a22cf091c39b8",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2370,7 +2370,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/buffer_ops/typed_access_evidence_tests.rs::__getbuffer__::unsafe-block::1",
-      "fingerprint": "b211185132b03c6e659aa169d0cf04ae6962bf5c8fac5ba2b2d83fecb214dd16",
+      "fingerprint": "f7062bbb0d4a1202bdcc9b6bc9de6207927e2754e69c7bdacccf25d8c9ece19d",
       "owner": "H02e",
       "scope": "operation",
       "contract": {
@@ -2492,7 +2492,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/asyncio.rs::erase_target_lifetime::unsafe-block::1",
-      "fingerprint": "85a5e08ee942bce0abc5f17df0fa755724c568a2d10bdc915772a8345e2386d3",
+      "fingerprint": "9bbce825f1d082d8d530380fb2e6f2025744083042393d8bf843233a94ab8f77",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2583,7 +2583,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/asyncio.rs::erase_future_lifetime::unsafe-block::1",
-      "fingerprint": "2c95ed751edc1eafd621d2ce24f9f97c1b02f7fde23ba31dd2dc01dc4eab221e",
+      "fingerprint": "c8d9a827b7a5d7ad9f53ed012457d5b4ed9b600947db05db85754839e2d296e7",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2738,7 +2738,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/asyncio_invocation.rs::prove_queued_output_revocation::unsafe-block::1",
-      "fingerprint": "2c95ed751edc1eafd621d2ce24f9f97c1b02f7fde23ba31dd2dc01dc4eab221e",
+      "fingerprint": "c4444bbd930c223dd7cbd7cef646b53d141b1f966aa45fdb0648b5ee18bec297",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2775,7 +2775,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/current.rs::erase_target_lifetime::unsafe-block::1",
-      "fingerprint": "d889dee9e3e0e188b5d975acd1101aaee8a9c72823fcea672ea825ffb644bd8a",
+      "fingerprint": "2988b9857b3d425b45b42df5ce584ca04717c9c6eecaeafe62f815af8921b722",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2801,7 +2801,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/current.rs::current_callback_with_owner::unsafe-block::1",
-      "fingerprint": "849cf51d0c8dc92e79e1eb1360db0cb376cd8c77a885967c71265fa4beaff226",
+      "fingerprint": "a3124263a91c34ef103168e933002d53d1e73ecc04b965b0e548bebd271a6b98",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2840,7 +2840,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/current.rs::current_callback_scoped_with_owner::unsafe-block::1",
-      "fingerprint": "35b1086879209097bc29151ac8141a43403f8e1029b0471a0a043f6d396a4e73",
+      "fingerprint": "2e124a8a81ce4f4f685fd7337aab7a052d829b5fce908b5a640bb45ad42e2a28",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2853,7 +2853,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/current.rs::current_callback_scoped_with_owner::unsafe-block::2",
-      "fingerprint": "26b3fc05c5871c1e741d23536ea1981b6d51741bff8726e2d97e288f29fca466",
+      "fingerprint": "0bd2328b62edf721ed42742afb8ff2d08b9d5ea48d6921f4238e6d1eab587f9c",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2890,7 +2890,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/foreign.rs::erase_target_lifetime::unsafe-block::1",
-      "fingerprint": "8dbbf48f3ceeced80a6cf29ba07b35f39e7bd303bc1f0ab05c711f749402b01f",
+      "fingerprint": "a4ef1f9d4eef8170ed9a8e6f5d42c5b81d7b14a0b5ed6735c0ec772e3e0e942d",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -2968,7 +2968,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/foreign.rs::foreign_callback::unsafe-block::1",
-      "fingerprint": "137db57267e1385fe370c1533ddf52d4e951d4f8e2341bbceae9e367d66fe270",
+      "fingerprint": "fc914d3d1f1d49579f8310e209bf66df0fd937bd73b0c97c72c0c3c0487df323",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3007,7 +3007,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/foreign.rs::foreign_callback_scoped_with_owner::unsafe-block::1",
-      "fingerprint": "35b1086879209097bc29151ac8141a43403f8e1029b0471a0a043f6d396a4e73",
+      "fingerprint": "b4aad301097247faf169eb33155f2fcfe95bc825abaf30461c7bc87a1802d54d",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3020,7 +3020,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/foreign.rs::foreign_callback_scoped_with_owner::unsafe-block::2",
-      "fingerprint": "118fa3673ba6d7916892567b84b480913488af48547fab219b3148e4cc3bfd05",
+      "fingerprint": "69f646f16630d6d7dbdfe95deb321a5734f6c5f23d5f7c50ac567a67a036d194",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3045,7 +3045,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/foreign_tests.rs::call_scope_close_drains_borrowed_target_while_decoding::unsafe-block::1",
-      "fingerprint": "7f4b978bcede010db31121f6e8f46a34395187ec24670f4df1b4a61bccc5bc69",
+      "fingerprint": "c7fa229b96a6e2169555d4217e681b78d967aaaac4761e7dfb96910fa76f3fdb",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3058,7 +3058,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs::borrowed_callback_lifetime_and_thread_owner::unsafe-block::1",
-      "fingerprint": "30041e09a2f89fa0d4ff9866c8c8ca0f09ed83634919fc75481193737489a65f",
+      "fingerprint": "835b5d0b4a0a07d2f36fa94d96a30dbbb3215e16674b2ed947a4666445790305",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3071,7 +3071,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs::close_cancel_reentrancy_releases_once::unsafe-block::1",
-      "fingerprint": "6bc2d7b31e229f1387dc01f0c5672f22c5747f0c0fafc381c2c882694fff5349",
+      "fingerprint": "e51b6942410ee07bdc042a14cb2f6fdb1142f4481c57b3f714c6c71ed82af172",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3084,7 +3084,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs::close_cancel_reentrancy_releases_once::unsafe-block::2",
-      "fingerprint": "85ee885736e4a540972cba4664b556acd9e2eed3fbf6de349efda2bbca2332eb",
+      "fingerprint": "45f392247f50ddb10aff4e364a923af74d2a59fb866a79020d93b74f011db3bd",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3110,7 +3110,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/h02_core_tests.rs::mixed_foreign_asyncio_cancellation_does_not_block_executor::unsafe-block::1",
-      "fingerprint": "007e47212c9efe0955c13f78c6e03515b3ff66d6540631a0f95f135501feb5d1",
+      "fingerprint": "8bb1083888114c5948a70c54587d1bd93a42ae03e5c9520fc82e00bfd393c6ab",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3122,7 +3122,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/h02_core_tests.rs::mixed_foreign_asyncio_cancellation_does_not_block_executor::unsafe-block::2",
-      "fingerprint": "67be2c13bf45c3e303bfd1107307ff14db168602ba1086acd7ed6fa2a989ea9d",
+      "fingerprint": "b11c9e5b3c9c684afc938c5c0cf6b81667f68dd75270c8c737b475db09879c6d",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3171,7 +3171,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::current_callback_keeps_non_send_capture_on_creator_thread_and_checks_shape::unsafe-block::1",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "f5f38b5173a7e685298229b33d144ef9968d41d19786a05e8743a4c1d5499239",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3183,7 +3183,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::current_callback_keeps_non_send_capture_on_creator_thread_and_checks_shape::unsafe-block::2",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "f5f38b5173a7e685298229b33d144ef9968d41d19786a05e8743a4c1d5499239",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3195,7 +3195,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::call_scoped_callbacks_accept_borrowed_handler_state::unsafe-block::1",
-      "fingerprint": "9d41b581d21802157b6d4804f9980067f362b3ee2ba35f7a94f1f953d3c132d8",
+      "fingerprint": "4f503354809089791dc424f9ea813f3d4043cf0400f43c4b11b0885b1b1e5836",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3208,7 +3208,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::call_scoped_callbacks_accept_borrowed_handler_state::unsafe-block::2",
-      "fingerprint": "1f2e72d7a76ff4a553ac60838040028f031f3fed2e73c64ec41c9c409de77d27",
+      "fingerprint": "2695b3db9e6215c2246e5bc97f8a205f673f1ff95dae7b2aa9075b8ee2bab900",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3221,7 +3221,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::foreign_serial_callback_is_fifo_and_runs_without_the_gil::unsafe-block::1",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "feb9ec9dd365bb6d2949f65c5f2b19ca9064e5c6f6d166142cccaa3dcce102f5",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3233,7 +3233,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::foreign_serial_callback_is_fifo_and_runs_without_the_gil::unsafe-block::2",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "feb9ec9dd365bb6d2949f65c5f2b19ca9064e5c6f6d166142cccaa3dcce102f5",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3245,7 +3245,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/callbacks/tests.rs::foreign_serial_callback_is_fifo_and_runs_without_the_gil::unsafe-block::3",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "feb9ec9dd365bb6d2949f65c5f2b19ca9064e5c6f6d166142cccaa3dcce102f5",
       "owner": "H02d0",
       "scope": "operation",
       "contract": {
@@ -3296,7 +3296,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::tensor::unsafe-block::1",
-      "fingerprint": "1e368c59f2413fe0eff1ac9a5288cb575cda1150216ee7416ebcfbe0ccee917a",
+      "fingerprint": "0525eb6d7d597ee7b61a4630a96f4d8849cb82e42dff9789f23f6c767fb8a1b3",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3309,7 +3309,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::tensor::unsafe-block::2",
-      "fingerprint": "1e368c59f2413fe0eff1ac9a5288cb575cda1150216ee7416ebcfbe0ccee917a",
+      "fingerprint": "0525eb6d7d597ee7b61a4630a96f4d8849cb82e42dff9789f23f6c767fb8a1b3",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3322,7 +3322,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::has_deleter::unsafe-block::1",
-      "fingerprint": "3796729587b6bf6276c5403c082aeb04b63f08f3d5d024cee3af1f672db73221",
+      "fingerprint": "34b3ceb1a1d0120f51afc8962514805c28ab3d44509b2531d26dcfa2e73f2327",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3335,7 +3335,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::has_deleter::unsafe-block::2",
-      "fingerprint": "3796729587b6bf6276c5403c082aeb04b63f08f3d5d024cee3af1f672db73221",
+      "fingerprint": "34b3ceb1a1d0120f51afc8962514805c28ab3d44509b2531d26dcfa2e73f2327",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3348,7 +3348,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::validate_version_and_copy::unsafe-block::1",
-      "fingerprint": "382cdb98aefb4de749c7a3bd13f61afb59279a1e3ecb8b1dcdcf1774a22f71b6",
+      "fingerprint": "e261eb07302473e2d65d54ad22c4caed31972ec1dcb33b82e953c57a6c0f844f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3361,7 +3361,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::validate_version_and_copy::unsafe-block::2",
-      "fingerprint": "6077c8cd65a3d442cdfff70a43f27e23404c07f44534e7e6c83561809bb14c25",
+      "fingerprint": "40dffc344f999fc02ff44add3b683f8f83dc57a020489be6cb8d712f6464d7c8",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3387,7 +3387,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::release::unsafe-block::1",
-      "fingerprint": "f7629071de9e298d935f3721b12d0141d3eb0feb810e4c8403bbde071fe3785f",
+      "fingerprint": "62ae64deed199080e8ab0bc6b312e420a97285d09f31a67f799ba740ac1daf11",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3400,7 +3400,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::release::unsafe-block::2",
-      "fingerprint": "11a116175161beb5da244025a1ff30c1544a150c9cd4cd40d352e53342ff91d6",
+      "fingerprint": "8fc41e781f773a19eb1d2b55b83911713530503e024ac360ebab341e7d83103f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3413,7 +3413,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::release::unsafe-block::3",
-      "fingerprint": "f7629071de9e298d935f3721b12d0141d3eb0feb810e4c8403bbde071fe3785f",
+      "fingerprint": "62ae64deed199080e8ab0bc6b312e420a97285d09f31a67f799ba740ac1daf11",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3426,7 +3426,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::release::unsafe-block::4",
-      "fingerprint": "11a116175161beb5da244025a1ff30c1544a150c9cd4cd40d352e53342ff91d6",
+      "fingerprint": "8fc41e781f773a19eb1d2b55b83911713530503e024ac360ebab341e7d83103f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3439,7 +3439,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::metadata_for_managed_tensor::unsafe-block::1",
-      "fingerprint": "c133426c99805335e28ce29cc938ffd3deea2500e83d5f9fbe54cc1f65224947",
+      "fingerprint": "790d7aab1411399fcd6317a7fc7199f5ac6b3f044ddcbe92bfba179ae11f2b1e",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3452,7 +3452,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::metadata_slice::unsafe-block::1",
-      "fingerprint": "6cfe926dd5df325e53e064eb5ca275611e8549f55293b1cbe7ed8f8900e0a80f",
+      "fingerprint": "79b3d561d3c0ae77fef5ac684e9389dc1bb2f06922acdaa8d9a104e3e62b633a",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3465,7 +3465,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::metadata_rejects_shape_stride_dtype_and_offset_drift::unsafe-block::1",
-      "fingerprint": "716bea55a7f5f20f8508d6c56bd5eee227f67ad66b3833a2cb3e99666ae8670f",
+      "fingerprint": "5d4925d46f48902ebe832714e46f6dd78f849941a0ee8de49f3b89334c5210d5",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3477,7 +3477,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/abi.rs::metadata_rejects_shape_stride_dtype_and_offset_drift::unsafe-block::2",
-      "fingerprint": "f47c5b87049f4f294ff20aa03cbad9e605826e99a4dee4905bf017ea6b589404",
+      "fingerprint": "b61459d38a251a57c1b919a17ff224c873dd8b4b88d1e5f64347a260efce1b79",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3502,7 +3502,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule::unsafe-block::1",
-      "fingerprint": "0fe6c4b6bd0a149939312484db001e98d0256d12cdc98f6449fd7dbbe3e4a38c",
+      "fingerprint": "01c4a92622598d21dca769bfc89fe851b83ff01503171ffafc5617c8ebf3bcc8",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3528,7 +3528,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::finalize::unsafe-block::1",
-      "fingerprint": "ce0b4bddaf092ee87884547fe399c174590bd9bbb6e15c4a1e77f78d94187f29",
+      "fingerprint": "388011cf8147a78ef23a74810b6053afbe0bc85b43d1e1cfa56016adbbed3a15",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3554,7 +3554,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::capsule_name::unsafe-block::1",
-      "fingerprint": "514ed8ebfe70a6ad92fdde63a648f558c79ee97096fa90c3be78d08ba26962bb",
+      "fingerprint": "4c6a7cb4ba4d78e8350fb99e44b244c0cd668b3ead1aa1318f41149292c098cb",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3567,7 +3567,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::capsule_name::unsafe-block::2",
-      "fingerprint": "085d99af072eee52d67fa884af6e4ac68edb40d07bce3e63dfb779441b17972a",
+      "fingerprint": "ab95009b693d9a5c058e6b4e4a0c2d9585a9c0ce7f8820bc178fe132db3ce7b6",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3606,7 +3606,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule_destructor::unsafe-block::1",
-      "fingerprint": "6ff464fa62a7d9abe44ea71a7fad73ced3090b15c79207f46c8b0bd3c979b113",
+      "fingerprint": "e27d440e0fe928e34ae725875bca7b32b262fa9e4dab6ad6f12c3e9b80d0f8cc",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3619,7 +3619,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule_destructor::unsafe-block::2",
-      "fingerprint": "085d99af072eee52d67fa884af6e4ac68edb40d07bce3e63dfb779441b17972a",
+      "fingerprint": "3fff36065453b603871b0f18ee0799a7423cb1ddc35ab751b378fe5616763aff",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3632,7 +3632,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule_destructor::unsafe-block::3",
-      "fingerprint": "02eddc69bb4cb7000c15e139a82c2880e59dea1d5244b3fc712a57bb15d5ac12",
+      "fingerprint": "152de0483f03102a24ba723fa6cb9cdfcffd4ff7daf252ae0931c12b5a852e8f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3645,7 +3645,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/argument.rs::argument_capsule_destructor::unsafe-block::4",
-      "fingerprint": "66b7567649e111a7471e892c5123eb81ddc30b617672ac62b89f7fbd6c9b2989",
+      "fingerprint": "7cf96647f94850becfec41b2de0445d7c6c44ed1f4fef5e891eac37df19cebd1",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3658,7 +3658,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::consumed_argument_transfers_deleter_ownership_exactly_once::unsafe-block::1",
-      "fingerprint": "60b7ff936811927ca1a6ec387705a36bc2c1de61715bf109d43f7a5d3fc2815b",
+      "fingerprint": "480197be77c2ae9fbeb5b00010ae4c2e43cd543a1b0c2dc2e22d0161b479f0d6",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3670,7 +3670,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::mark_argument_consumed::unsafe-block::1",
-      "fingerprint": "075dab8b09dd8ade27ef2f6c0be571b82bcda59d471ae3a09cf3c48519aa0ffd",
+      "fingerprint": "fcbecca84a9902188c9fa067a883f4916fbfd6d8bd585681d31defa149bac0c6",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3682,7 +3682,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::mark_argument_consumed::unsafe-block::2",
-      "fingerprint": "9d16c2ffe3958337b5a8cf4a828507cba342410cba73d687c7ae803267e93ec3",
+      "fingerprint": "6e60adec7114901b8e93cb181f00e2debccdf7f140eb2077f87a5ece49b40283",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3694,7 +3694,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-declaration::1",
-      "fingerprint": "6048d944f663c9942c0c9e4ed70ab3327975fd57f180c192e601c6fd5c1bb3d0",
+      "fingerprint": "c60be1d5a5ef4b48f378d253472548fcb311ce86804411692df27598b06a4480",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3706,7 +3706,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::capsule_from_pointer::unsafe-block::1",
-      "fingerprint": "6f3e10bf2e6a4608309c29b282ea761066ce4916ae7dd74cb791a72f1ffb3f46",
+      "fingerprint": "1d8ae25a43221060ee4cd5f1dc3181b8a3d63d600aa8b57ef68113d14c7655b6",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3730,7 +3730,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::legacy_capsule_destructor::unsafe-block::1",
-      "fingerprint": "60b7ff936811927ca1a6ec387705a36bc2c1de61715bf109d43f7a5d3fc2815b",
+      "fingerprint": "21ceabcaaec4e4a36d51c05cd689a3368e69d52a8d69cbe08b52232f79e59bcf",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3754,7 +3754,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::versioned_capsule_destructor::unsafe-block::1",
-      "fingerprint": "516a439d3b0e11bba0ee1198dcfba967dd7ce26a76dafe5f072816ea4830f33a",
+      "fingerprint": "60d59d900dd14a182825b4a657488ea6ab82241c6038fda3800a598d6cc263c5",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3766,7 +3766,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::release_capsule::unsafe-block::1",
-      "fingerprint": "6ff464fa62a7d9abe44ea71a7fad73ced3090b15c79207f46c8b0bd3c979b113",
+      "fingerprint": "af25b68545bb7377ced04288f7ea9106c50c5bcae009db7d6b7088d0c79fa2c9",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3778,7 +3778,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::release_capsule::unsafe-block::2",
-      "fingerprint": "085d99af072eee52d67fa884af6e4ac68edb40d07bce3e63dfb779441b17972a",
+      "fingerprint": "173f569d16e7fb2b207a0c82c78323493d8776e8eaf813795ac24b8796d3f913",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3790,7 +3790,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::release_capsule::unsafe-block::3",
-      "fingerprint": "aa82980f8c987d7b835e856470e7933c44575ce2d5085c03d40a6772e36d79c5",
+      "fingerprint": "c1bf9fb6d5448086c05a4b6e7fdda7476beb89eb2f647d4f14c164cae8fa285f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3814,7 +3814,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::legacy_deleter::unsafe-block::1",
-      "fingerprint": "cb4f32e3e126e64d87df773208dbff7bcacc65315b69375c2946f5bc80aa9363",
+      "fingerprint": "845a2fcc6c481565f5dea4cd66d72b09fc50f9df2a5989a996a3d012460e9b42",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3838,7 +3838,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs::versioned_deleter::unsafe-block::1",
-      "fingerprint": "ae4e862462b15a7642e626876f10df2e5199a55f129097db17a01e833e56434e",
+      "fingerprint": "647786ff421722e93eb98dc406ee11bfa70eb9906556de1dee44c445f1e63a49",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3850,7 +3850,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/h02_contract_tests.rs::legacy_versioned_layout_and_transfer::unsafe-block::1",
-      "fingerprint": "66b7567649e111a7471e892c5123eb81ddc30b617672ac62b89f7fbd6c9b2989",
+      "fingerprint": "672f8e1b8a453b59da7e3950eaf994821567b3e4e723d07f4569ab419ab74bce",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3863,7 +3863,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/h02_contract_tests.rs::rejection_and_reset_release_exactly_once::unsafe-block::1",
-      "fingerprint": "04be2573ebce11f3fea81cc19b5e2ebac23b2e42c382bd32b6e37ac1fc397f05",
+      "fingerprint": "6042da713b562a1c37f19d660d0f623f519b7479ed037ea2fa18eaa690606833",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3876,7 +3876,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/h02_contract_tests.rs::consume_and_release::unsafe-block::1",
-      "fingerprint": "950e93a193840ef0aa94c8a337f3bfc116badc5fdddc79fdab69a2ced93f86ad",
+      "fingerprint": "91561d116f31ab0347329c6c04b5969e4c40b0290cd89afffa96a7e075fd99ce",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3889,7 +3889,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/h02_contract_tests.rs::consume_and_release::unsafe-block::2",
-      "fingerprint": "66b7567649e111a7471e892c5123eb81ddc30b617672ac62b89f7fbd6c9b2989",
+      "fingerprint": "48209d1234dd4027a006d4000ecacd9c00e5c1ee6648b97c6a0bba543dae36f2",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3914,7 +3914,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/h02_contract_tests.rs::reentrant_deleter::unsafe-block::1",
-      "fingerprint": "47a5001b65609a974c15a34a3b0fbb19f88b1c49de4071f561009228dd0bf9cc",
+      "fingerprint": "2802872be5ef1aee00238911c33d9f4f97e86a6ea112168a142845cd7411f80a",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3927,7 +3927,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops/h02_contract_tests.rs::reentrant_deleter::unsafe-block::2",
-      "fingerprint": "05877b87675010cbd12f0702bc00aac279a6403f517c2a96639078c46f95ac32",
+      "fingerprint": "fd83a3895ca3b7a8189db9d0b78688c1ea8e190a31eba2b39ecb06823cc64e14",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -3991,7 +3991,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::drop::unsafe-block::1",
-      "fingerprint": "338d50cc64479a4232d47e43e9a1a4a01a17fe0cff6cab0ffecd24c449bf13f0",
+      "fingerprint": "234b8b47b557c513fa24974084c99798774a1893a364a121bef5af4e870c492f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4017,7 +4017,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::consume_capsule::unsafe-block::1",
-      "fingerprint": "950e93a193840ef0aa94c8a337f3bfc116badc5fdddc79fdab69a2ced93f86ad",
+      "fingerprint": "1b95766d576cd9690a2cc2d528fca392804ae25f68fa4081bf8c6d3bc056b37f",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4042,7 +4042,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::capsule_name::unsafe-block::1",
-      "fingerprint": "514ed8ebfe70a6ad92fdde63a648f558c79ee97096fa90c3be78d08ba26962bb",
+      "fingerprint": "9ab2916b74507015da2fa41e32329f9c5c287dc21976b0e0395d748b43e53656",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4055,7 +4055,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::capsule_name::unsafe-block::2",
-      "fingerprint": "b6bae62484c22cacc9b66e7e0a1bfdeb8a9d6886c442e8576315d8c78cd78c18",
+      "fingerprint": "00ec0ef4a7a49c62dd836cba8303efa9f03b9fb8447e95a3e601a8773d4a8787",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4081,7 +4081,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::capsule::unsafe-block::1",
-      "fingerprint": "263cd9d44636fdd3159c6e858239c0e75dd9c2acba4463757ad295f2fdc6078f",
+      "fingerprint": "23b43b2e8fb00ca9c5c3a47b80a78760b3e8cf4239ff30638f38dd2f574f120a",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4093,7 +4093,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::scalar_capsule::unsafe-block::1",
-      "fingerprint": "076580e5c321081b528a50ed4f252d7de55f8bd9dc817196194763fb71f802be",
+      "fingerprint": "dac0bbd88ba0c6f78b3fc78cb0b9831440eb7e3c6b583e1301c2218d48e93c42",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4117,7 +4117,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::test_capsule_destructor::unsafe-block::1",
-      "fingerprint": "6ff464fa62a7d9abe44ea71a7fad73ced3090b15c79207f46c8b0bd3c979b113",
+      "fingerprint": "d41b932dc244563db9a97089e621978d63c634306d81974a74907b842898746a",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4129,7 +4129,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::test_capsule_destructor::unsafe-block::2",
-      "fingerprint": "085d99af072eee52d67fa884af6e4ac68edb40d07bce3e63dfb779441b17972a",
+      "fingerprint": "3815832c33508c2cadbafed1685eca4fe533442b1d17271fecd9b5a558e62892",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4141,7 +4141,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::test_capsule_destructor::unsafe-block::3",
-      "fingerprint": "1f2ea7c52d35e11a6a666efd2554426e8eddb9f16c76c820f484db42a7d63b13",
+      "fingerprint": "62bd7be4da2782ba3dda0550c34d202444a1c38e3d7add7100a28ef4404d3a92",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4153,7 +4153,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::test_capsule_destructor::unsafe-block::4",
-      "fingerprint": "2043b1678b14fe772f5d39913691685352a4f7996bc76034c85f9222235f7b08",
+      "fingerprint": "dab734589c1b511e3fd6362dc8791c5bb95a3b727c36d8a59863aeef18a8331c",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4177,7 +4177,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/dlpack_ops.rs::test_deleter::unsafe-block::1",
-      "fingerprint": "4c0586a2249351ff169821718dd383c43884e1fc92ebd7c8dac532b2e5dbd662",
+      "fingerprint": "5c08942ffe36a6979d9939fe1804d9c5dd46d9796357a9a054d4af001bd48cf5",
       "owner": "H02g",
       "scope": "operation",
       "contract": {
@@ -4202,7 +4202,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/foreign_object.rs::release_object::unsafe-block::1",
-      "fingerprint": "47a5001b65609a974c15a34a3b0fbb19f88b1c49de4071f561009228dd0bf9cc",
+      "fingerprint": "013c94c99e0ce56e918311990ca8f8e3dcd33cda08fd1fe6e4393c5f814c8285",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4227,7 +4227,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/h02_contract_tests.rs::initialization_and_gil_entry_contract::unsafe-block::1",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "75b279f5e08879199445b77ad2432618aacf6b951b2f19505fb1256ae385a55e",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4240,7 +4240,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/h02_contract_tests.rs::initialization_and_gil_entry_contract::unsafe-block::2",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "75b279f5e08879199445b77ad2432618aacf6b951b2f19505fb1256ae385a55e",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4253,7 +4253,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/h02_contract_tests.rs::initialization_and_gil_entry_contract::unsafe-block::3",
-      "fingerprint": "4901dfa87ba467b6e94f5b298cb4c59c0355aa02be1167b3159d5493dedaac3c",
+      "fingerprint": "75b279f5e08879199445b77ad2432618aacf6b951b2f19505fb1256ae385a55e",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4279,7 +4279,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::initialize_cpython_with_config::unsafe-block::1",
-      "fingerprint": "d95e4a7532597244c637b7f1122e0461278a08a2d00baf9aefaeb5ad3f8fbc78",
+      "fingerprint": "29230b1b9980be6190fbb870ddd3b41d884204b2ccdc481b06ec87b8fecae23a",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4292,7 +4292,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::initialize_cpython_with_config::unsafe-block::2",
-      "fingerprint": "3e0547f23ab89be86ced9591f08003aae1b495bf476c6f66b93ecfbf7cc6e878",
+      "fingerprint": "1be184162208545f398b851c012ef1f56568888cb0f24093b7c00c30046deddb",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4305,7 +4305,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::initialize_cpython_with_config::unsafe-block::3",
-      "fingerprint": "0f9ba510da0be8686e43851abbf198c2c44c1a166cf08a807cf8be5b052d985a",
+      "fingerprint": "8c19f2093379c0109e699d69ad070ec96299a5fef747c2b8cda719ad21cabd8d",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4318,7 +4318,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::initialize_cpython_with_config::unsafe-block::4",
-      "fingerprint": "7449476e87b0402b7be01f3feeaba8af63e3b03face2e73db0754f5dc52792e3",
+      "fingerprint": "5185163456546e3d0624eda26ce77aa8f24d215250dadf49cd82d9da2739f081",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4331,7 +4331,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::initialize_cpython_with_config::unsafe-block::5",
-      "fingerprint": "b5d211b2c26f9082af0f95d6a893e02de2ec59bca6bab9fd341d63cbf1225049",
+      "fingerprint": "f3507f0f1af0c251423bedb87a575630a491330f7bf987ff5e31c4b6686d4212",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4344,7 +4344,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::initialize_cpython_with_config::unsafe-block::6",
-      "fingerprint": "6f95e661ff952f64b0425fd4607fcbc44ec220477b83be73be5c55ad96d7cb29",
+      "fingerprint": "3843074bb2645b8f0db5dfe60c6082991be0790d995e7703d67399b85981bb1f",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4357,7 +4357,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::set_config_string::unsafe-block::1",
-      "fingerprint": "14ef63c610309cb29c82f2cd802a54c1b2e0ebeb10c61555a9d59b2a217b8abc",
+      "fingerprint": "1287ae6300368cb20375df6edc960dfde7b92c04bc123321f92a8ee621801d08",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4370,7 +4370,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::set_config_argv::unsafe-block::1",
-      "fingerprint": "e6bfa879e95fc23933c097423bf8a7068d0296b881c09235ff55e12154b7f47e",
+      "fingerprint": "d2bf2092a767463f43e460bcc4802d44a98f115a83f6aee4dde95988cac42db0",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4383,7 +4383,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::append_module_search_path::unsafe-block::1",
-      "fingerprint": "3dee1910861d717303d21c83b2931d1e19e494422ac9725f189d836f54b8b38e",
+      "fingerprint": "003c863a0d47a714074609810743dd1bc5814476cedcd82fe5bdec821f2dfded",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4396,7 +4396,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::py_status_result::unsafe-block::1",
-      "fingerprint": "5c384c29311e3587fc54f376e559f55120ba25c97563f699f43d681401652795",
+      "fingerprint": "00c8e0713a8815d47bf532e5eee18ebd24a74a3ceafcaabd5fd44f4de683a0f5",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4409,7 +4409,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/initialization.rs::py_status_message::unsafe-block::1",
-      "fingerprint": "964dc65ee30755d86e110c62c2bd41761a43baf97438324d10295685a8803d39",
+      "fingerprint": "7b7a8dfcb80948e6b9d5129bad95b1d8f7ecd6f2eb2bee6ed1d677e30694e1fc",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4447,7 +4447,7 @@
     },
     {
       "site": "crates/sifr_runtime/src/python/loader.rs::loaded_library::unsafe-block::1",
-      "fingerprint": "f11143b015893dca66ab90a80a9354c63711638773475bac6b086ddf6ded9be7",
+      "fingerprint": "47a1d696fe5d8a1bd408a7d4faf8c4ec33149c9dc39a8565cbc77193eeb2d4ab",
       "owner": "H02d1",
       "scope": "operation",
       "contract": {
@@ -4509,7 +4509,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::parse_json::unsafe-block::1",
-      "fingerprint": "7e70554e8277a6d715471a67b1a04eec758d271d5e199b031ac77dfaf1c3d618",
+      "fingerprint": "cc69b6c17ae76a46d1807413afb8fdf0d76a451edd8322c35f724cc4d5562c68",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4522,7 +4522,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::parse_json::unsafe-block::2",
-      "fingerprint": "9070f77f9852352934d87834774ff3bb02478cbb403a2750e506bc3718986e93",
+      "fingerprint": "3e28508caefaa48a5a62a7a72cfc663a3e24a58fe850f0694e4a544caeefa7d4",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4535,7 +4535,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::parse_json::unsafe-block::3",
-      "fingerprint": "43e5701c98290c29276c34c50cacc022c0681c2f7ae371f7d2559c904c77cbe0",
+      "fingerprint": "f9ac9f9abdce97099de01f00879ac44be8ae34c306b1b3d77e9a97bb4eefc2cf",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4548,7 +4548,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::parse_json::unsafe-block::4",
-      "fingerprint": "07fd62514b89bda2f74b2ad24765587a73c3d29b6f2568b9478cf6dd42f6abee",
+      "fingerprint": "8bbeb5e86a5f70e5cf9a18dd5d265979efbdeccfe03099e3201adf867c746e89",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4561,7 +4561,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::normalize::unsafe-block::1",
-      "fingerprint": "f6e28c4e5314ed70082fccfd95b171ffdea15ed1f41ffe0fc9fe47dd8a6c5e7c",
+      "fingerprint": "03dc1ff7d6c23189bc3971976c442b39b4b26a652c0536fa25fde537b00be3e7",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4574,7 +4574,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::normalize::unsafe-block::2",
-      "fingerprint": "d53dc4bcadc5ba969238b308b18ada88081f943322190c0ed47ce9012a15b7c6",
+      "fingerprint": "ccc7b50738ff47ec6b27b05f01989f9e2fd54168bb97cdb091e15ba09ad75852",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4587,7 +4587,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::normalize::unsafe-block::3",
-      "fingerprint": "43e5701c98290c29276c34c50cacc022c0681c2f7ae371f7d2559c904c77cbe0",
+      "fingerprint": "f04566e119105b9427b37af16c49a295343f104ecb5d8aaaa357526963fc0fcd",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4600,7 +4600,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::normalize::unsafe-block::4",
-      "fingerprint": "16b3a33d356058ee706e828916d3cdac4d73da7e14c949cf067ed7c8933e6787",
+      "fingerprint": "1a095b3d3c01e6f981b30ac6c49cc964b0aa46753d1f1e5460054ab94267b65f",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {
@@ -4613,7 +4613,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/src/ffi.rs::copy_message::unsafe-block::1",
-      "fingerprint": "8a96a3c65b0bb982d58dd3b3ba8520b61c21d6e785ec80412cc8b4e539ee3e59",
+      "fingerprint": "0936d66eb5bdf457ec31ac22dc59bfc158088da3c9bfa17bc0ce87d3481824ef",
       "owner": "SQL-owner",
       "scope": "operation",
       "contract": {

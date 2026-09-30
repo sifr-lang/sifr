@@ -42,6 +42,14 @@ class MethodTests(unittest.TestCase):
         self.assertTrue(any('changed fingerprint' in e for e in methods.validate(
             methods.discover(Source(self.path, body_changed)), self.inventory)))
 
+    def test_comparison_branch_body_and_default_are_fingerprinted(self):
+        original = 'fn f(x: &str) { if x == "append" { emit(); } else { decline(); } }'
+        sites = methods.discover(Source(self.path, original))
+        records = method_records(sites)
+        for old, new in [('emit()', 'other()'), ('decline()', 'fallback()')]:
+            changed = methods.discover(Source(self.path, original.replace(old, new)))
+            self.assertTrue(any('changed fingerprint' in e for e in methods.validate(changed, records)))
+
     def test_renamed_dispatch_and_new_site_are_detected(self):
         renamed = self.text.replace('renamed', 'operation')
         found = methods.discover(Source(self.path, renamed))
@@ -111,6 +119,12 @@ class UnsafeTests(unittest.TestCase):
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].text, 'unsafe { deref(x); }')
         self.assertTrue(any(t.value == 'a' for t in code_tokens(text)))
+
+    def test_admission_context_is_part_of_unsafe_fingerprint(self):
+        original = "fn load<'a>(x: &'a u8) { validate(x); unsafe { deref(x); } }"
+        sites = unsafe.discover(Source(self.path, original))
+        changed = unsafe.discover(Source(self.path, original.replace('validate(x);', '')))
+        self.assertTrue(any('changed fingerprint' in e for e in unsafe.validate(changed, unsafe_records(sites))))
 
     def test_missing_local_contract_is_rejected(self):
         for field in unsafe.CONTRACT_FIELDS:

@@ -74,8 +74,10 @@ cannot authorize an additional production module.
 ## Updating a site
 
 The key is path, enclosing function, site kind and ordinal within that scope.
-The SHA-256 fingerprint covers the site's complete lexical span, including
-literal contents, without whitespace or comments. It does not use line numbers
+The SHA-256 fingerprint binds the site's complete lexical span and its enclosing
+function context, including literal contents, without whitespace or comments.
+This also detects changed comparison branch/default bodies and removed unsafe
+admission or layout validation around a stable operation. It does not use line numbers
 or per-file counts. Added/removed sites fail as unclassified/stale, and edits or
 binding renames fail as changed fingerprints. Duplicate records fail too.
 

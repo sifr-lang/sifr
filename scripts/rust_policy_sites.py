@@ -173,6 +173,7 @@ class Source:
                 scope = name if seen[name] == 1 else f'{name}#{seen[name]}'
                 self.functions.append((i, j, self.pairs[j], scope))
         self.counts = Counter()
+        self.context_hashes = {}
 
     def scope(self, i: int) -> str:
         enclosing = [(a, b, c, name) for a, b, c, name in self.functions if a <= i <= c]
@@ -184,8 +185,22 @@ class Source:
         a, b = self.ts[start].start, self.ts[end].end
         return Site(self.path, scope, kind, self.counts[(scope, kind)],
                     self.text.count('\n', 0, a) + 1,
-                    fingerprint(self.ts[start:end + 1]), self.text[a:b], a, b,
+                    self.site_fingerprint(start, end), self.text[a:b], a, b,
                     self.test_only(start))
+
+    def site_fingerprint(self, start: int, end: int) -> str:
+        # Selector-only fingerprints would miss changed branch bodies, and an
+        # isolated unsafe block would miss removed admission/bounds validation.
+        # Bind the lexical site and its enclosing function's complete context.
+        enclosing = [(a, b, c, name) for a, b, c, name in self.functions if a <= start <= c]
+        site_hash = fingerprint(self.ts[start:end + 1])
+        if not enclosing:
+            return site_hash
+        a, _b, c, _name = max(enclosing, key=lambda x: x[0])
+        if (a, c) not in self.context_hashes:
+            self.context_hashes[(a, c)] = fingerprint(self.ts[a:c + 1])
+        context_hash = self.context_hashes[(a, c)]
+        return hashlib.sha256((site_hash + ':' + context_hash).encode()).hexdigest()
 
     def test_only(self, i: int) -> bool:
         # A test module allowance is narrow only if its source cfg(test) guard
