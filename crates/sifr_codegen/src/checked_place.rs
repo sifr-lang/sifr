@@ -727,6 +727,11 @@ impl RustEmitter {
                 && args.is_empty()
                 && matches!(object.ty().resolve_alias(), Type::Dict(_, _)) =>
             {
+                // This optimization removes the source call. Presence evidence
+                // cannot replace its dispatch authority or its admitted behavior.
+                if !crate::method_call_emitter::source_method_path(collection)?.is_builtin() {
+                    return Ok(None);
+                }
                 object.as_ref()
             }
             collection => collection,
