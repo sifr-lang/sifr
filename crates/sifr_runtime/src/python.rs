@@ -17,8 +17,6 @@ mod async_runtime;
 mod async_terminal;
 mod async_value;
 mod bridge_loader;
-// Separate ABI owner; audited by its assigned H02 item.
-#[allow(unsafe_code)]
 mod buffer_ops;
 mod call_depth;
 mod callback_ops;
