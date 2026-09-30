@@ -7182,6 +7182,8 @@ scope owner stops before the next batch.
 
 ### H03a1 builtin derive semantic-body admission blocker (2026-10-01)
 
+Recorded in [PR #4191](https://github.com/sifr-lang/sifr/pull/4191).
+
 **State: needs-new-scope; H03a1 acceptance remains open.** On compiler-input
 base `8e731c052125a40ee724bbcb955f74b4ec10ae6e`, the pinned
 `03fcb77246f2568adb0e9b2fa60d19c6cc1686f4` producer could not expose the
