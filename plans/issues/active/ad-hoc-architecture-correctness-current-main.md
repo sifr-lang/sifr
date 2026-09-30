@@ -3004,6 +3004,43 @@ decision itself runs only documentation structure, the file-size guardrail and
 diff/phase-scope checks. No implementation tests, Cargo, target adoption/cleanup,
 new Opus request or draft modification is authorized by this docs-only batch.
 
+#### H02h0r preservation rescope merge receipt
+
+The docs-only scope decision merged in
+[PR #4154](https://github.com/sifr-lang/sifr/pull/4154) as
+`a7f1b46c5710fa8cbf9de93eed644646f527dcec`, from final candidate
+`7965e9d2a7e62b0be1935106025dc64fda0e4a8a` (base
+`6ff942629d8dbd72a6054cf3c4a6801457e3ded8`, tree
+`31f066ba6288fb3d1353d5856ac776b6d038b31c`). GitHub's published head
+and merged tree matched the tested execution-host candidate. Only this phase
+Markdown changed; the authenticated Mac bare-bundle relay preserved exact
+commits without changing the primary checkout or copying credentials.
+
+Documentation structure passed 1 variant / 0 failures, the 900-line guardrail
+passed 4,296 files, and committed diff plus phase-only scope checks passed.
+Pinned recursive editor submodules were initialized before the documentation
+check. Candidate-keyed raw logs and the validation manifest remain outside
+Git at `/data/sifr-architecture-h02h0r-preservation-rescope-evidence-20260930/7965e9d2a7e62b0be1935106025dc64fda0e4a8a/`
+on `yaser5@192.168.1.134`. Validation manifest SHA-256:
+`92f7e89e865eea46d4c81808fd361309d4936f36f9cfe3c388d8bac1b286b3a1`;
+documentation log SHA-256:
+`070ebc80352f5440588202f9a014db2b689346e9e07415d29fc37373c2040003`;
+file-size log SHA-256:
+`52cb2904b8cc5c6b66bfabd60a29ff19c293c10f91c97fa3011f26482dcd058b`.
+The initial docs candidate `d8547ad618161b33bba05807c7ab6f210685c12d`
+also passed those checks; its logs remain preserved, and final-candidate
+checks ran after the sharing-mutation wording was tightened.
+
+This receipt requires documentation/file-size/diff checks only. No implementation
+assertions, Cargo gate, new Opus review or target adoption/cleanup occurred.
+Both #4152 reviews remain failed and #4152 remains draft/unmerged; the older
+implementation drafts and failed evidence remain unchanged. There is no current
+blocker to this scope decision. **Next ready batch: separately assign H02h0r1
+only**, with the exact comparison semantics and reserved/retained acceptance
+above, from current main. H02h0, H02/F29, H02h1-H02h5 and H03 remain open;
+H02h1 waits for the reviewed H02h0r1 foundation merge. This owner stops after
+the docs-only receipt and does not begin implementation or another batch.
+
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
 The H02d audit stopped **needs-new-scope** on clean main
