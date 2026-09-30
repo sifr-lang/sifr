@@ -1,9 +1,10 @@
 use super::asyncio_entry::AsyncioCallbackEntry;
+use super::asyncio_invocation::{InvocationDrain, InvocationSlot};
 use super::execution::{
     CallbackExecutionError, collect_args, execution_error, python_error, result_object,
     validate_call_shape,
 };
-use super::{CallbackInvocationLease, CallbackOwnerState, errors};
+use super::{CallbackOwnerState, errors};
 use crate::cancellation::CancellationCarrier;
 use crate::python::{ObjectHandle, PythonError, PythonRuntimeError, object_ops};
 use pyo3::prelude::*;
@@ -13,11 +14,11 @@ use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::task::{Context, Poll, Waker};
 use tokio::sync::Notify;
 
-type BoxCallbackFuture<'a> = Pin<
+pub(super) type BoxCallbackFuture<'a> = Pin<
     Box<
         dyn Future<Output = Result<Box<dyn AsyncioOutput + 'a>, CallbackExecutionError>>
             + Send
@@ -40,7 +41,7 @@ trait AsyncioPrepared<'a>: Send {
     ) -> BoxCallbackFuture<'a>;
 }
 
-trait AsyncioOutput: Send {
+pub(super) trait AsyncioOutput: Send {
     fn encode(self: Box<Self>) -> Result<ObjectHandle, PythonError>;
 }
 
@@ -124,6 +125,8 @@ struct AsyncioTargetPtr(*const (dyn AsyncioTarget<'static> + 'static));
 
 #[allow(clippy::transmute_ptr_to_ptr)]
 unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> AsyncioTargetPtr {
+    // SAFETY: the unsafe constructor requires a live wrapper; setup admission
+    // excludes teardown, and wrapper Drop drains setup before dropping target.
     AsyncioTargetPtr(unsafe {
         std::mem::transmute::<
             *const (dyn AsyncioTarget<'_> + '_),
@@ -132,10 +135,14 @@ unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> 
     })
 }
 
+// SAFETY: AsyncioTarget is Send + Sync; shared setup admission protects lifetime.
 unsafe impl Send for AsyncioTargetPtr {}
+// SAFETY: shared calls use Sync captures, and teardown drains admitted setup.
 unsafe impl Sync for AsyncioTargetPtr {}
 
 unsafe fn erase_future_lifetime(future: BoxCallbackFuture<'_>) -> BoxCallbackFuture<'static> {
+    // SAFETY: every erased future/output enters the wrapper-owned revocation
+    // registry before setup releases its lease; Drop destroys it under exclusion.
     unsafe { std::mem::transmute::<BoxCallbackFuture<'_>, BoxCallbackFuture<'static>>(future) }
 }
 
@@ -149,8 +156,10 @@ pub struct AsyncioCallback<'a> {
     object: ObjectHandle,
     owner: CallbackOwnerState,
     callback_id: u64,
-    target: Mutex<Option<Box<dyn AsyncioTarget<'a> + 'a>>>,
+    target: Arc<Mutex<Option<Box<dyn AsyncioTarget<'a> + 'a>>>>,
     admission: Arc<AsyncioAdmission>,
+    drain: Arc<InvocationDrain>,
+    cleanup_runtime: tokio::runtime::Handle,
     retained: AtomicBool,
 }
 
@@ -158,6 +167,7 @@ pub struct AsyncioCallback<'a> {
 struct AsyncioAdmission {
     state: Mutex<AsyncioAdmissionState>,
     changed: Notify,
+    sync_changed: Condvar,
 }
 
 #[derive(Default)]
@@ -179,6 +189,7 @@ impl AsyncioAdmission {
                 active_setups: 0,
             }),
             changed: Notify::new(),
+            sync_changed: Condvar::new(),
         }
     }
 
@@ -205,10 +216,26 @@ impl AsyncioAdmission {
             .open = false;
     }
 
+    fn close_and_wait_sync(&self) {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.open = false;
+        while state.active_setups != 0 {
+            state = self
+                .sync_changed
+                .wait(state)
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+        }
+    }
+
     async fn close_and_wait(&self) {
         self.close();
         loop {
             let notified = self.changed.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
             if self
                 .state
                 .lock()
@@ -237,6 +264,7 @@ impl Drop for AsyncioAdmissionLease {
         state.active_setups = state.active_setups.saturating_sub(1);
         drop(state);
         self.admission.changed.notify_waiters();
+        self.admission.sync_changed.notify_all();
     }
 }
 
@@ -252,49 +280,61 @@ impl AsyncioCallback<'_> {
     }
 
     pub async fn close_call_scope(&self) -> Result<(), PythonError> {
+        self.owner.reject_close_reentrancy()?;
         self.admission.close_and_wait().await;
         self.owner.close_call_scope_async().await?;
         object_ops::close_object(self.object.clone())
     }
 
     pub async fn close_after_owner_unregister(&self) -> Result<(), PythonError> {
+        self.owner.reject_close_reentrancy()?;
         self.admission.close_and_wait().await;
         self.owner.close_after_owner_unregister_async().await?;
         object_ops::close_object(self.object.clone())
     }
+}
 
+impl AsyncioCallback<'static> {
     pub async fn rollback_provisional(&self) -> Result<(), PythonError> {
-        if self.retained.swap(true, Ordering::AcqRel) {
+        self.owner.reject_close_reentrancy()?;
+        if self.retained.load(Ordering::Acquire) {
             return Ok(());
         }
         self.admission.close_and_wait().await;
         self.owner.cancel_callback_entries(self.callback_id).await;
+        self.drain.revoke();
         drop(
             self.target
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .take(),
         );
+        // Only terminal cleanup may suppress Drop. Cancellation at an earlier
+        // await leaves the wrapper responsible for setup drain and revocation.
+        self.retained.store(true, Ordering::Release);
         object_ops::close_object(self.object.clone())
     }
-}
 
-impl AsyncioCallback<'static> {
     pub fn retain_in_owner(&self) -> Result<(), PythonError> {
-        if self.retained.swap(true, Ordering::AcqRel) {
+        if self.retained.load(Ordering::Acquire) {
             return Ok(());
         }
-        let target = self
-            .target
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .take()
-            .ok_or_else(|| errors::unavailable("asyncio retained target"))?;
+        // Register shared teardown ownership before changing the wrapper's
+        // ownership. Failed publication leaves its target live through admitted
+        // setup and normal Drop; only a successfully drained owner takes it.
+        let target = Arc::clone(&self.target);
         let object = self.object.clone();
         self.owner.retain_capture(move || {
-            drop(target);
+            drop(
+                target
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .take(),
+            );
             super::ownership::release_callable(object);
-        })
+        })?;
+        self.retained.store(true, Ordering::Release);
+        Ok(())
     }
 }
 
@@ -303,23 +343,79 @@ impl Drop for AsyncioCallback<'_> {
         if self.retained.load(Ordering::Acquire) {
             return;
         }
-        if self.owner.active_calls() == 0 {
-            let _ignored = self.owner.close_call_scope();
-            self.admission.close();
-            let _ignored = object_ops::close_object(self.object.clone());
-        } else if let Some(target) = self
-            .target
-            .get_mut()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .take()
-        {
-            Box::leak(target);
+        // This drain does not await executor abort delivery. Revocation excludes
+        // concurrent setup, polls and queued output encoding, and drops their
+        // borrowed state synchronously even on a current-thread executor.
+        let drain = || {
+            self.admission.close_and_wait_sync();
+            // Revocation alone must not leave the Python future pending. Ask
+            // each admitted entry to cancel before removing borrowed work.
+            self.owner
+                .request_callback_entry_cancellation(self.callback_id);
+            self.drain.revoke();
+        };
+        if Python::try_attach(|py| py.detach(drain)).is_none() {
+            drain();
         }
+        if self.owner.is_call_scoped() {
+            // Only owned owner/entry state remains after synchronous revocation.
+            // The constructor's executor completes logical drain when its caller
+            // was cancelled before reaching the generated async close statement.
+            let owner = self.owner.clone();
+            std::mem::drop(self.cleanup_runtime.spawn(async move {
+                let _ignored = owner.close_call_scope_async().await;
+            }));
+        }
+        let _ignored = object_ops::close_object(self.object.clone());
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn asyncio_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
+/// Constructs a compiler-owned borrowed asyncio callback.
+///
+/// # Safety
+/// The generated caller must hold this private wrapper until the enclosing
+/// handler frame ends, including cancellation; it must never forget it, retain
+/// it in its own handler, or drop it from a setup/poll/encoding invocation.
+/// Drop synchronously closes setup admission and revokes all pending futures
+/// and queued outputs before the capture borrow ends. Async close still drains
+/// Python/task entries; cancellation of that wait does not weaken Drop's proof.
+/// Send/Sync captures support shared foreign setup; all mutable access must use
+/// safe synchronization. Lifetime erasure grants no ownership or alias rights.
+pub unsafe fn asyncio_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
+    owner: CallbackOwnerState,
+    _callback_id: u64,
+    expected_arity: usize,
+    concurrency: AsyncioCallbackConcurrency,
+    decode: Decode,
+    handler: Handler,
+    encode: Encode,
+) -> Result<AsyncioCallback<'a>, PythonError>
+where
+    A: Send + 'a,
+    R: Send + 'a,
+    Decode: Fn(Vec<ObjectHandle>) -> Result<A, PythonError> + Send + Sync + 'a,
+    Handler: Fn(u64, A, CancellationCarrier) -> HandlerFuture + Send + Sync + 'a,
+    HandlerFuture: Future<Output = Result<R, CallbackExecutionError>> + Send + 'a,
+    Encode: Fn(R) -> Result<ObjectHandle, PythonError> + Send + Sync + 'a,
+{
+    owner.require_call_scope()?;
+    // SAFETY: the public caller supplies the documented borrowed scope proof.
+    unsafe {
+        build_asyncio_callback(
+            owner,
+            _callback_id,
+            expected_arity,
+            concurrency,
+            decode,
+            handler,
+            encode,
+        )
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe fn build_asyncio_callback<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
     owner: CallbackOwnerState,
     _callback_id: u64,
     expected_arity: usize,
@@ -343,13 +439,19 @@ where
             "asyncio callback requires an active Sifr executor: {error}"
         )))
     })?;
+    let cleanup_runtime = runtime.clone();
     let target: Box<dyn AsyncioTarget<'a> + 'a> = Box::new(TypedAsyncioTarget {
         decode: Arc::new(decode),
         handler: Arc::new(handler),
         encode: Arc::new(encode),
     });
     let target_ptr: *const (dyn AsyncioTarget<'a> + 'a) = &*target;
+    // SAFETY: the private wrapper owns this stable Box until setup admission
+    // closes and drains. Shared setup only reads the Sync target; the unsafe
+    // caller keeps captures live, and no alias gains mutable ownership.
     let target_ptr = Arc::new(unsafe { erase_target_lifetime(target_ptr) });
+    let drain = Arc::new(InvocationDrain::default());
+    let shell_drain = Arc::clone(&drain);
     let fifo = Arc::new(AsyncFifo::default());
     let admission = Arc::new(AsyncioAdmission::open());
     let shell_admission = Arc::clone(&admission);
@@ -387,9 +489,17 @@ where
                     .accept(callback_id, false)
                     .map_err(python_error)?;
                 let entry_sequence = invocation.entry_sequence();
+                let _active_setup = invocation.enter_poll();
                 let values = collect_args(args).map_err(python_error)?;
+                // SAFETY: the setup lease excludes target destruction; owner
+                // admission covers conversion and the target supports shared
+                // Sync access. Python handles are decoded while holding the GIL.
                 let prepared = unsafe { (&*target_ptr.0).prepare(values) }.map_err(python_error)?;
                 let cancellation = CancellationCarrier::new();
+                // SAFETY: setup retains captures until this future either drops
+                // on setup error or enters the revocation registry. Its mutex
+                // excludes polling/encoding from wrapper teardown; Send permits
+                // the worker handoff without creating mutable aliases.
                 let prepared = unsafe {
                     erase_future_lifetime(prepared.invoke(entry_sequence, cancellation.clone()))
                 };
@@ -438,10 +548,7 @@ where
                 } else {
                     None
                 };
-                let task_future = InvocationFuture {
-                    invocation: Some(invocation),
-                    future: prepared,
-                };
+                let task_future = shell_drain.register(invocation, prepared);
                 let task_loop = loop_object.clone().unbind();
                 let task_python_future = future.clone().unbind();
                 let task_owner = shell_owner.clone();
@@ -482,8 +589,10 @@ where
         object,
         owner,
         callback_id,
-        target: Mutex::new(Some(target)),
+        target: Arc::new(Mutex::new(Some(target))),
         admission,
+        drain,
+        cleanup_runtime,
         retained: AtomicBool::new(false),
     })
 }
@@ -506,46 +615,17 @@ where
     HandlerFuture: Future<Output = Result<R, CallbackExecutionError>> + Send + 'static,
     Encode: Fn(R) -> Result<ObjectHandle, PythonError> + Send + Sync + 'static,
 {
-    asyncio_callback_scoped_with_owner(
-        owner,
-        callback_id,
-        expected_arity,
-        concurrency,
-        decode,
-        handler,
-        encode,
-    )
-}
-
-struct InvocationCompletion {
-    invocation: CallbackInvocationLease,
-    outcome: Result<Box<dyn AsyncioOutput + 'static>, CallbackExecutionError>,
-}
-
-struct InvocationFuture {
-    invocation: Option<CallbackInvocationLease>,
-    future: BoxCallbackFuture<'static>,
-}
-
-impl Future for InvocationFuture {
-    type Output = InvocationCompletion;
-
-    fn poll(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Self::Output> {
-        let invocation = self
-            .invocation
-            .as_ref()
-            .expect("callback invocation must exist while its future is pending");
-        let _active = invocation.enter_poll();
-        match self.future.as_mut().poll(context) {
-            Poll::Pending => Poll::Pending,
-            Poll::Ready(outcome) => Poll::Ready(InvocationCompletion {
-                invocation: self
-                    .invocation
-                    .take()
-                    .expect("ready callback invocation must exist"),
-                outcome,
-            }),
-        }
+    // SAFETY: all callback captures, conversions and handler futures are static.
+    unsafe {
+        build_asyncio_callback(
+            owner,
+            callback_id,
+            expected_arity,
+            concurrency,
+            decode,
+            handler,
+            encode,
+        )
     }
 }
 
@@ -553,9 +633,8 @@ fn schedule_completion(
     loop_object: Py<PyAny>,
     future: Py<PyAny>,
     owner: CallbackOwnerState,
-    completion: InvocationCompletion,
+    state: Arc<InvocationSlot>,
 ) -> bool {
-    let state = Arc::new(Mutex::new(Some(completion)));
     let attached = Python::try_attach(|py| {
         let callback_state = Arc::clone(&state);
         let callback_future = future.clone_ref(py);
@@ -565,48 +644,48 @@ fn schedule_completion(
             Some(c"__sifr_asyncio_callback_complete"),
             None,
             move |args: &Bound<'_, PyTuple>, _kwargs: Option<&Bound<'_, PyDict>>| {
-                let Some(completion) = callback_state
-                    .lock()
-                    .unwrap_or_else(std::sync::PoisonError::into_inner)
-                    .take()
-                else {
-                    return Ok::<(), PyErr>(());
-                };
-                let py = args.py();
-                if callback_future
-                    .bind(py)
-                    .call_method0("done")?
-                    .extract::<bool>()?
-                {
-                    drop(completion);
-                    return Ok::<(), PyErr>(());
-                }
-                let entry_sequence = completion.invocation.entry_sequence();
-                match completion.outcome {
-                    Ok(output) => {
-                        match output.encode().and_then(|value| result_object(py, value)) {
-                            Ok(value) => {
-                                callback_future
-                                    .bind(py)
-                                    .call_method1("set_result", (value,))?;
+                callback_state
+                    .complete(|completion| {
+                        let _active_encoding = completion.invocation.enter_poll();
+                        let py = args.py();
+                        if callback_future
+                            .bind(py)
+                            .call_method0("done")?
+                            .extract::<bool>()?
+                        {
+                            drop(completion);
+                            return Ok::<(), PyErr>(());
+                        }
+                        let entry_sequence = completion.invocation.entry_sequence();
+                        match completion.outcome {
+                            Ok(output) => {
+                                match output.encode().and_then(|value| result_object(py, value)) {
+                                    Ok(value) => {
+                                        callback_future
+                                            .bind(py)
+                                            .call_method1("set_result", (value,))?;
+                                    }
+                                    Err(error) => {
+                                        let error = python_error(error);
+                                        callback_future.bind(py).call_method1(
+                                            "set_exception",
+                                            (error.into_value(py),),
+                                        )?;
+                                    }
+                                }
                             }
                             Err(error) => {
-                                let error = python_error(error);
+                                let error =
+                                    execution_error(py, &callback_owner, entry_sequence, error);
                                 callback_future
                                     .bind(py)
                                     .call_method1("set_exception", (error.into_value(py),))?;
                             }
                         }
-                    }
-                    Err(error) => {
-                        let error = execution_error(py, &callback_owner, entry_sequence, error);
-                        callback_future
-                            .bind(py)
-                            .call_method1("set_exception", (error.into_value(py),))?;
-                    }
-                }
-                drop(completion.invocation);
-                Ok::<(), PyErr>(())
+                        drop(completion.invocation);
+                        Ok::<(), PyErr>(())
+                    })
+                    .unwrap_or(Ok(()))
             },
         )?;
         loop_object
@@ -615,12 +694,7 @@ fn schedule_completion(
         Ok::<(), PyErr>(())
     });
     if !matches!(attached, Some(Ok(()))) {
-        drop(
-            state
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .take(),
-        );
+        state.discard();
         return false;
     }
     true

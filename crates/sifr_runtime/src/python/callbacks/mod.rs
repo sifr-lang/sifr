@@ -1,5 +1,6 @@
 mod asyncio;
 mod asyncio_entry;
+mod asyncio_invocation;
 #[cfg(test)]
 mod asyncio_tests;
 mod current;
@@ -14,7 +15,10 @@ mod ownership_tests;
 mod registry;
 mod state;
 
-pub use current::{CurrentCallback, current_callback, current_callback_with_owner};
+pub use current::{
+    CurrentCallback, current_callback, current_callback_scoped_with_owner,
+    current_callback_with_owner,
+};
 pub(super) use errors::install_python_callback_origin;
 pub use execution::{
     CallbackExecutionError, CallbackFailureSlot, CallbackHandlerFailure,
@@ -55,3 +59,6 @@ pub use asyncio::{
     AsyncioCallback, AsyncioCallbackConcurrency, asyncio_callback_scoped_with_owner,
     asyncio_callback_with_owner,
 };
+
+#[cfg(test)]
+mod h02_contract_tests;

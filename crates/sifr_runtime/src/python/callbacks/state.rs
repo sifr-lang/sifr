@@ -53,6 +53,7 @@ struct OwnerData {
     first_failure: Option<CallbackFailureEvidence>,
     first_failure_observed: bool,
     captures_released: bool,
+    closer_active: bool,
     unregister_status: CallbackUnregisterStatus,
     async_entries: BTreeMap<u64, AsyncEntry>,
 }
@@ -101,7 +102,46 @@ pub struct CallbackOwnerUnregisterGuard {
     active: bool,
 }
 
+// Admission stays closed when a cancelled closer relinquishes election. Another
+// closer can acquire authority and finish the same drain; release actions run
+// only under one authority, and contain no suspension point.
+struct CloseAuthority(CallbackOwnerState);
+
+impl Drop for CloseAuthority {
+    fn drop(&mut self) {
+        lock_state(&self.0.inner).closer_active = false;
+        self.0.inner.changed.notify_all();
+        self.0.inner.async_changed.notify_waiters();
+    }
+}
+
 impl CallbackOwnerState {
+    pub(super) fn is_call_scoped(&self) -> bool {
+        !self.inner.retained
+    }
+
+    pub(super) fn request_callback_entry_cancellation(&self, callback_id: u64) {
+        let cancellations =
+            pending_async_cancellations_for_callback(&mut lock_state(&self.inner), callback_id);
+        invoke_cancellations(cancellations);
+    }
+
+    pub(super) fn require_call_scope(&self) -> Result<(), PythonError> {
+        if self.inner.retained {
+            return Err(errors::unavailable(
+                "borrowed callback requires a call-scoped owner",
+            ));
+        }
+        Ok(())
+    }
+
+    pub(super) fn reject_close_reentrancy(&self) -> Result<(), PythonError> {
+        if owner_is_active(self.inner.id) {
+            return Err(errors::close_from_invocation(self.inner.id));
+        }
+        Ok(())
+    }
+
     pub fn new_call_scoped() -> Result<Self, PythonError> {
         Self::new(false, None, None)
     }
@@ -147,6 +187,7 @@ impl CallbackOwnerState {
                 first_failure: None,
                 first_failure_observed: false,
                 captures_released: false,
+                closer_active: false,
                 unregister_status: CallbackUnregisterStatus::NotStarted,
                 async_entries: BTreeMap::new(),
             }),
@@ -270,6 +311,8 @@ impl CallbackOwnerState {
     pub(super) async fn cancel_callback_entries(&self, callback_id: u64) {
         loop {
             let notified = self.inner.async_changed.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
             let (finished, cancellations) = {
                 let mut state = lock_state(&self.inner);
                 let cancellations =
@@ -452,26 +495,23 @@ impl CallbackOwnerState {
                 .wait(state)
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
         }
-        match state.status {
-            CallbackOwnerStatus::Closed => {
+        loop {
+            if state.status == CallbackOwnerStatus::Closed {
                 drop(state);
                 return self.retained_failure_result(surface_retained_failure);
             }
-            CallbackOwnerStatus::Closing => {
-                while state.status != CallbackOwnerStatus::Closed {
-                    state = self
-                        .inner
-                        .changed
-                        .wait(state)
-                        .unwrap_or_else(std::sync::PoisonError::into_inner);
-                }
-                drop(state);
-                return self.retained_failure_result(surface_retained_failure);
-            }
-            CallbackOwnerStatus::Open => {
+            if !state.closer_active {
                 state.status = CallbackOwnerStatus::Closing;
+                state.closer_active = true;
+                break;
             }
+            state = self
+                .inner
+                .changed
+                .wait(state)
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
         }
+        let _authority = CloseAuthority(self.clone());
         loop {
             let cancellations = pending_async_cancellations(&mut state);
             if state.active_calls == 0 && state.async_entries.is_empty() {
@@ -522,6 +562,8 @@ impl CallbackOwnerState {
         }
         loop {
             let notified = self.inner.async_changed.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
             let running =
                 lock_state(&self.inner).unregister_status == CallbackUnregisterStatus::Running;
             if !running {
@@ -529,31 +571,29 @@ impl CallbackOwnerState {
             }
             notified.await;
         }
-        let is_closer = {
-            let mut state = lock_state(&self.inner);
-            match state.status {
-                CallbackOwnerStatus::Closed => {
+        loop {
+            let notified = self.inner.async_changed.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
+            {
+                let mut state = lock_state(&self.inner);
+                if state.status == CallbackOwnerStatus::Closed {
                     drop(state);
                     return self.retained_failure_result(surface_retained_failure);
                 }
-                CallbackOwnerStatus::Closing => false,
-                CallbackOwnerStatus::Open => {
+                if !state.closer_active {
                     state.status = CallbackOwnerStatus::Closing;
-                    true
+                    state.closer_active = true;
+                    break;
                 }
             }
-        };
-        if !is_closer {
-            loop {
-                let notified = self.inner.async_changed.notified();
-                if lock_state(&self.inner).status == CallbackOwnerStatus::Closed {
-                    return self.retained_failure_result(surface_retained_failure);
-                }
-                notified.await;
-            }
+            notified.await;
         }
+        let _authority = CloseAuthority(self.clone());
         loop {
             let notified = self.inner.async_changed.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
             let (finished, cancellations) = {
                 let mut state = lock_state(&self.inner);
                 let cancellations = pending_async_cancellations(&mut state);

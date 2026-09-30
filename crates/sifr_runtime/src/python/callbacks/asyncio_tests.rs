@@ -1,7 +1,7 @@
 use super::{
     AsyncioCallbackConcurrency, CallbackExecutionError, CallbackOwnerSlot, CallbackOwnerState,
     CallbackOwnerStatus, RetainedCallbackGroup, abandon_callback_owner_after_error_async,
-    asyncio_callback_scoped_with_owner, asyncio_callback_with_owner, finalize_retained_callbacks,
+    asyncio_callback_with_owner, finalize_retained_callbacks,
     finish_retained_callback_finalization, retained_callback_finalization_scope,
 };
 use crate::cancellation::{CancellationBind, CancellationCarrier, CancellationRequest};
@@ -30,7 +30,7 @@ async fn asyncio_callback_round_trips_on_owned_loop_and_drains_asynchronously() 
     let _guard = test_guard();
     initialize_callback_runtime("asyncio-callback-roundtrip");
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner,
         1,
         1,
@@ -69,7 +69,7 @@ async fn python_future_cancellation_reaches_the_exact_sifr_handler() {
     let cancellation_seen = Arc::new(tokio::sync::Notify::new());
     let cancellation_seen_by_handler = Arc::clone(&cancellation_seen);
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner,
         2,
         1,
@@ -123,7 +123,7 @@ async fn serial_reentrancy_is_rejected_before_waiting_for_the_fifo() {
     let _guard = test_guard();
     initialize_callback_runtime("asyncio-callback-reentrancy");
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner,
         3,
         1,
@@ -174,7 +174,7 @@ async fn call_scoped_close_cancels_and_joins_an_active_asyncio_callback() {
     let started_by_handler = Arc::clone(&started);
     let release_by_handler = Arc::clone(&release);
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
-    let callback = asyncio_callback_scoped_with_owner(
+    let callback = asyncio_callback_with_owner(
         owner.clone(),
         4,
         1,
@@ -310,6 +310,15 @@ async fn dropped_retained_group_drains_without_blocking_the_executor() {
     let value = async_to_int(invocation.expect("Python should observe callback cancellation"))
         .expect("cancellation result should convert");
     assert_eq!(value, -1);
+    // Python observes cancellation independently of the executor's owner drain.
+    // Observe the spawned closer's completion without electing another closer.
+    tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        while owner.status() != CallbackOwnerStatus::Closed {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("dropped retained group must finish its asynchronous drain");
     assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
     reset_runtime_state_for_tests();
 }
@@ -518,7 +527,68 @@ async fn provisional_receiver_rollback_cancels_entries_and_releases_target() {
     reset_runtime_state_for_tests();
 }
 
-fn initialize_callback_runtime(label: &str) {
+#[tokio::test(flavor = "current_thread")]
+async fn cancelled_provisional_rollback_preserves_drop_teardown() {
+    let _guard = test_guard();
+    initialize_callback_runtime("cancelled-provisional-rollback");
+    let capture = Arc::new(());
+    let handler_capture = Arc::clone(&capture);
+    let started = Arc::new(tokio::sync::Notify::new());
+    let handler_started = Arc::clone(&started);
+    let owner = CallbackOwnerState::new_retained(|| Ok(())).expect("owner");
+    let callback = asyncio_callback_with_owner(
+        owner.clone(),
+        10,
+        1,
+        AsyncioCallbackConcurrency::Parallel,
+        |args| crate::python::to_int(&args[0]),
+        move |_, value, _| {
+            let capture = Arc::clone(&handler_capture);
+            let started = Arc::clone(&handler_started);
+            async move {
+                let _capture = capture;
+                started.notify_one();
+                std::future::pending::<()>().await;
+                Ok(value)
+            }
+        },
+        crate::python::from_int,
+    )
+    .expect("owned callback");
+    let shell = callback.object().clone();
+    let request = function_request(
+        "start_and_fail",
+        vec![async_from_object(&shell).expect("transport")],
+    );
+    submit_async_declaration(request, None)
+        .await
+        .expect_err("fixture setup failure");
+    started.notified().await;
+    let mut rollback = Box::pin(callback.rollback_provisional());
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    assert!(std::future::Future::poll(rollback.as_mut(), &mut context).is_pending());
+    drop(rollback);
+    drop(callback);
+    assert_eq!(Arc::strong_count(&capture), 1);
+    assert_eq!(owner.active_calls(), 0);
+    let error = crate::python::call_object_owned(
+        &shell,
+        &[crate::python::from_int(1).expect("argument")],
+        &[],
+    )
+    .expect_err("escaped provisional shell must reject after cancelled rollback");
+    assert_eq!(error.exception_type, "SifrCallbackClosedError");
+    drop(owner.begin_owner_unregister().expect("unregister"));
+    owner
+        .close_after_owner_unregister_async()
+        .await
+        .expect("owned terminal drain");
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    assert_eq!(Arc::strong_count(&capture), 1);
+    reset_runtime_state_for_tests();
+}
+
+pub(super) fn initialize_callback_runtime(label: &str) {
     reset_runtime_state_for_tests();
     let mut config = test_config(label);
     config.start_async_loop = true;
@@ -543,7 +613,7 @@ fn install_module(py: Python<'_>) {
         .expect("callback test module should register");
 }
 
-fn function_request(
+pub(super) fn function_request(
     member: &str,
     args: Vec<crate::python::PythonAsyncValue>,
 ) -> PythonAsyncRequest {
