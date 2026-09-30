@@ -2738,6 +2738,33 @@ H02h1-H02h5 and H03 remain waiting. This adjudication runs documentation
 structure, file-size and diff/scope checks only; no foundation assertions,
 Cargo gate, new Opus review, source mutation or draft change is claimed.
 
+#### H02h0 binding adjudication merge receipt
+
+The docs-only scope decision merged in
+[PR #4150](https://github.com/sifr-lang/sifr/pull/4150) as
+`f54b05c7d9af343b517a10b501af1e4e68690216`, from exact candidate
+`dee1d8a4378ea56d5e342f8564803028dcfea930` (base
+`5d8beb0bb111139ea4616b2d3b9ca050982eb780`, tree
+`3042450f5fca96360025d7be413ee65c17dc5a5f`). Published head and merged
+tree match the execution-host candidate. Only this phase Markdown changed.
+
+Documentation structure passed 1 variant / 0 failures after proactively
+initializing the pinned recursive editor submodules; the 900-line file-size
+guardrail passed 4,296 files, and committed diff plus phase-scope checks passed.
+Candidate-keyed raw results and manifest are outside the Git tree at
+`/data/sifr-architecture-h02h0-binding-adjudication-evidence-20260930/dee1d8a4378ea56d5e342f8564803028dcfea930/`
+on `yaser5@192.168.1.134`. Manifest SHA-256:
+`20b04556d045eb2d4ac15197c84654cdfdac295a2c1a984c33e5b28ff6da12e3`;
+documentation log SHA-256:
+`59987dd43671f321e39c8a4a83e523f4cf14c1e10ad0239b1a8029de4e0730fb`;
+file-size log SHA-256:
+`52cb2904b8cc5c6b66bfabd60a29ff19c293c10f91c97fa3011f26482dcd058b`.
+This receipt also requires only documentation/file-size/diff checks; no new
+external review or implementation/gate pass is claimed. **Next ready batch:
+H02h0r only**, under the exact semantics and acceptance matrix above. H02h0,
+H02h1-H02h5, H02/F29 and H03 remain open; the historical #4148 reviews remain
+failed, and no implementation defect is waived.
+
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
 The H02d audit stopped **needs-new-scope** on clean main
