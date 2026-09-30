@@ -2379,7 +2379,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 | **H02h1 / semantic method policy authoring** | **Closed / reviewed policy merged** in [PR #4175](https://github.com/sifr-lang/sifr/pull/4175), with the delivery receipt below. Candidate `926d9dd5b7429ebcd42bbf8f0fd6c825958e8d2d`; merged tree matches. The H02h0 foundation and H02c #4173/#4174 representation prerequisite are discharged. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | **Closed / reviewed core policy merged** in [PR #4177](https://github.com/sifr-lang/sifr/pull/4177), with the delivery receipt below. Final candidate `028868ae07a5f54ba5e9453cde6a65ab38fd7892`; merged tree matches. H02h1 is discharged. After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | **Closed / reviewed resource policy merged** in [PR #4179](https://github.com/sifr-lang/sifr/pull/4179), with the delivery receipt below. Final candidate `a0aff8fef23540b7e9515a918a82148301083db6`; merged tree matches. H02h2 is discharged. After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
-| **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
+| **H02h4 / remaining unsafe owner records** | **Closed / reviewed external policy merged** in [PR #4181](https://github.com/sifr-lang/sifr/pull/4181), with the delivery receipt below. Final candidate `1d7c5545bb67b2d5c0f1be8a73d40fe190f5f4e6`; merged tree matches. H02h3 is discharged. After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
 | **H02h5 / final H02h integration** | After H02h4. Wire the complete method/unsafe policies into their schema, guardrails, verification/profile/coverage registration. Run all original H02h acceptance on the integrated final candidate, preserving named predecessor runtime/codegen assertions and exact E2E selection. Whole H02h may close only after this child passes scoped review and merges; Q01 still owns the full merge gate and whole-phase review. | The four original H02h script commands; all new and existing policy suites; the two new `PolicyIntegrationTests` cases below; every exact named H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g command above, including merged H02c statement-only cases, the recorded focused list/Python selections and exact two-fixture H02 list E2E command. Resolve nonzero test names and assertion counts with the same crate/features/configuration. |
 
 Use this exact Python command for each new case below:
@@ -6151,3 +6151,125 @@ file-size, scope and diff checks; no repeat implementation review or broad gate.
 receipt. H02h3 has no local blocker. This owner stops before external records,
 policy integration or later batches; the V01/Q01 qualification prerequisite is
 unchanged.
+
+### H02h4 remaining unsafe owner contracts: merged delivery (2026-09-30)
+
+**State: H02h4 closed; H02h5, H03 and whole-phase closure remain open.**
+Implementation [PR #4181](https://github.com/sifr-lang/sifr/pull/4181) merged
+`ee87143382343541b5e4e4d2d9138abb577cace5` from final reviewed candidate
+`1d7c5545bb67b2d5c0f1be8a73d40fe190f5f4e6` on base
+`ecda5cca57bbea4592aa2e1ff1defce692241931`. The merged tree matches candidate
+`7ad96f7d2c62872cb89538088a94ea811c4587c6`. H02h3 is discharged. The initial failed Foundation fixture
+and initial NOT SATISFIED review remain failed evidence.
+
+The authored `external.json` covers all **95 independently discovered remaining
+sites**: cache-owner 38, driver-owner 35, SQL-owner 14 and X02 8. Current complete
+first-party discovery yields **366 exact sites** across disjoint source partitions
+(83 core + 188 resources + 95 external). That count is a resolved observation;
+acceptance compares the freshly discovered keys, operations, fingerprints and
+proofs against every segment rather than using a historical count. Missing,
+duplicate, new, stale and moved-partition sites fail. Existing core/resource
+records and their acceptance owners are unchanged. The independently discovered
+remaining partition currently has no separate native Python bridge, generic
+runtime or test-owner sites; those labels cannot replace actual SQL/cache/driver
+or generated-text ownership. Native Python bridge/tests retain their established
+core/resource source partition and reviewed acceptance labels.
+
+Windows contracts distinguish descriptor acquisition, interior SID/DACL/ACE
+borrows, copied path-security mutation and exact-once LocalFree. In particular,
+`test_grant_world` owns a Descriptor, borrows its checked DACL through the test
+mutation, and drops the sole allocation afterward; Python attachment has no role.
+Returned handle acquisition rejects null/invalid values before adoption;
+File::from_raw_handle transfers the unique handle, while CloseHandle consumes
+wrapper-owned handles. Token-output buffers use successful sized initialization
+and unaligned header copying; observation retains backing storage.
+
+Driver job contracts preserve suspended-child assignment before resume, owned
+snapshot/thread handles and terminal handle cleanup. Unix/Windows signal records
+bind the actual STATE/USERS mutex admission, saved handler restoration and static
+atomic callback state. Test umask writes occur in isolated self-test children.
+SQL libpg_query contracts distinguish acquired parse/normalize results, nullable
+string/error observations, copied Rust outputs and matching terminal result frees.
+The copy_message helper binds both real enclosing callers. SQL WIT allowances
+remain bounded component ABI records with SQL ownership. All eight generated
+strings remain X02 delegated constructor/assertion/keyword/syntax-fixture records;
+none is accepted as native ABI proof.
+
+Five bounded external effect families distinguish owner acquisition, terminal
+release, ownership transfer, OS-state mutation and output initialization from
+borrow-only access. They select the immutable external source partition, preserve
+existing stronger Windows/resource/erasure/ABI effects, and require code proofs.
+Thirteen finite sharing definitions bind real local allowance/declaration/enclosed
+operation relationships; additional sites cannot inherit approval. Source
+scanner keys/fingerprints, proof resolution, repeated-contract comparison and
+native owners are preserved. H02h5 still owns whole-profile/schema registration;
+this child adds only the segment schema's consumed effect/rule enumerations.
+
+**Named acceptance:** all three reserved `UnsafeExternalOwnerTests` cases ran
+individually with their exact `PYTHONPATH=scripts python3 -m unittest -f` commands,
+resolving one passing test each on the final candidate. Complete `UnsafeTests`
+passed 11/11, `ColdCheckoutTests` 1/1, `PolicyFoundationTests` 13/13,
+`UnsafePythonCoreTests` 5/5, `UnsafePythonResourceTests` 3/3 and `MethodTests` 16/16.
+The union case revalidates every record in all three segments, all four local
+obligations and source-proof bindings. Negative mutations preserve valid source
+bindings while changing Windows attachment, ownership effects or owner labels;
+generated text relabelled native ABI fails. Descriptor cleanup removal invalidates
+its bound code proof. Full union took 172.69 seconds; the resource suite's explicit
+271-site Python union took 87.15 seconds. Draft202012 validation of all three
+segment records, schema/rule agreement, changed Python compilation, source/scope
+and committed-diff checks, lowering maintainability and 900-line file-size
+guardrails passed (4,315 maintained files). Python was 3.14.4 on Linux.
+
+No native executable safety audit, create-PR profile, full merge profile, CI pass
+or release qualification is claimed. Native source/Cargo inputs/locks and
+production profiles are unchanged. No Cargo build, prepared compiler metadata,
+fixture preparation, target adoption or cleanup was needed. The warm H02c target
+was untouched. H02h5 owns complete live-guard/profile integration and Q01 owns
+final full qualification under the authorized intermediate policy.
+
+**Scoped review:** first read-only Claude Opus 5.5 review on
+`3a00f7b95702fca82104537acd2be3b5f674f336` returned **NOT SATISFIED** because
+four inherited Foundation expectations still classified refined external
+CloseHandle, File::from_raw_handle, CreateDirectoryW and MoveFileExW effects as
+raw-access. The first candidate's Foundation suite stopped at that failure;
+core/resource/method suites had not run and were never claimed passing.
+Response SHA-256: `83ea4410e0b1d0821ef2420580a71173974d1469872f39a13057188f5dde9ac1`.
+One remediation batch updated those four expectations, retained the existing
+Windows families and initialized-value observation, and reran all affected
+acceptance. The second exact-candidate review returned **SATISFIED**, with no
+blocking findings. Final response SHA-256: `a4fb9555f143af5d591964e00ff97a62d1e366a4e00e81ccf47ef455582ee8cc`.
+Nonblocking H02h5 suggestions: sharpen reused Windows thread prose for three
+plain memory/value observations; optionally add Owner/File cleanup breadcrumbs
+to the file-level storage allowance; tighten bare-identifier discovery if future
+unrelated external helpers reuse names such as kill/umask/sigaction. No current
+operation is misclassified. The final review's historical-owner-count sentence
+is not current coverage evidence; the exact current counts above derive from
+fresh discovery and the candidate inventories.
+
+**V01/Q01-owned external prerequisite:** initial candidate automatic GitHub
+create-PR job `110072448287` (run `36769635475`) failed at
+`performance_reference_admission` because `SIFR_PERFORMANCE_REFERENCE` was unset.
+Raw log SHA-256: `c8bdec60a306de328aa3193eba3b8318bb27d27ee7bedc0877f57e20ff9bbd98`.
+This is failed external full-qualification evidence, not failing local H02h4
+acceptance or a CI pass. Existing historical failures remain preserved.
+
+Exact commands, resolved counts, configuration, timings, raw logs, source audit,
+authoring history and both scoped reviews remain outside Git under
+`/data/sifr-architecture-h02h4-external-evidence-20260930/` on
+`yaser5@192.168.1.134`, separately keyed by initial/final candidate SHA.
+Final `candidate-validation.json` SHA-256:
+`dc714a4c90476a0ca4a11ec870483d2e6e21842afce2c5f661f4a54265e9f46d`;
+final `source-audit.md` SHA-256: `92a151f91414210e2b369f0c7536187cc9164d7b0eecdb1d7b03c0d7929e71c4`.
+The owner used fresh isolated worktree
+`/data/sifr-architecture-h02h4-external-20260930`, implementation branch
+`codex/architecture-h02h4-external-20260930`, then its own receipt branch
+`codex/architecture-h02h4-external-record-20260930`. Publication used an owned
+bundle/local temporary bare relay through authenticated Mac GitHub CLI;
+primary/shared checkouts were untouched. Pinned editor submodules were initialized
+only for documentation checks without changing gitlinks. This documentation-only
+receipt needs relevant documentation, scope, diff and file-size checks;
+no repeat external implementation review or broad gate is required.
+
+**Next action: separately assign H02h5 only** on main containing #4181 and this
+receipt. H02h4 has no local blocker. This owner stops before profile integration
+or later batches; the V01/Q01 full-qualification prerequisite is unchanged.
