@@ -700,6 +700,7 @@ unsafe { read_other(x); }
             root = Path(temp) / 'scripts'
             root.mkdir()
             for name in ('architecture_policy_test_fixtures.py', 'rust_policy_sites.py', 'method_policy_constituents.py',
+                         'method_policy_nodes.py', 'method_policy_semantics.py',
                          'unsafe_policy_contracts.py', 'unsafe_policy_segments.py',
                          'check_method_dispatch_authority.py', 'check_unsafe_abi_contracts.py',
                          'test_architecture_policy_guards.py'):
@@ -733,6 +734,7 @@ class ColdCheckoutTests(unittest.TestCase):
             script_root = Path(temp) / 'scripts'
             script_root.mkdir()
             for name in ('architecture_policy_test_fixtures.py', 'rust_policy_sites.py', 'method_policy_constituents.py',
+                         'method_policy_nodes.py', 'method_policy_semantics.py',
                          'unsafe_policy_contracts.py', 'unsafe_policy_segments.py',
                          'check_method_dispatch_authority.py',
                          'check_unsafe_abi_contracts.py', 'test_architecture_policy_guards.py'):
