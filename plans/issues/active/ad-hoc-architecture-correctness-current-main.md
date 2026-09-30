@@ -2376,7 +2376,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
 | **H02h0 / policy scanner and validator foundation** | **Closed / reviewed foundation merged** in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156) under H02h0r1; merge receipt below. The preservation rescope corrected the binding-preservation regression found by the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152); its blocked receipt remains below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
-| **H02h1 / semantic method policy authoring** | **Open / blocked on separately assigned H02c scalar-deque result-representation repair**, authorized by the docs-only adjudication below. The admitted scalar-deque comparison/condition defect blocks truthful policy completion; repair and reviewed merge must precede H02h1 resumption. The original ungated builtin-emission handoff and merged nonbuiltin-dispatch repair do not settle this distinct adaptation defect. The reviewed H02c nonempty-pop nonbuiltin-dispatch repair [PR #4168](https://github.com/sifr-lang/sifr/pull/4168) is merged, following checked-sequence exit-guard repair [PR #4165](https://github.com/sifr-lang/sifr/pull/4165) and its receipt [PR #4166](https://github.com/sifr-lang/sifr/pull/4166); no H02h1 policy implementation delivered. After H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
+| **H02h1 / semantic method policy authoring** | **Closed / reviewed policy merged** in [PR #4175](https://github.com/sifr-lang/sifr/pull/4175), with the delivery receipt below. Candidate `926d9dd5b7429ebcd42bbf8f0fd6c825958e8d2d`; merged tree matches. The H02h0 foundation and H02c #4173/#4174 representation prerequisite are discharged. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
 | **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
@@ -5801,3 +5801,117 @@ The receipt passed documentation structure (1 variant, 0 failures), the 900-line
 file-size guardrail (4,308 maintained files), and diff/scope checks. The canonical
 phase document is the sole tracked receipt change; exact commands and raw log
 digests are retained in `documentation-validation.json` outside Git.
+
+### H02h1 semantic method policy delivery (2026-09-30)
+
+**Complete for this policy-only child.** Implementation [PR #4175](https://github.com/sifr-lang/sifr/pull/4175)
+merged as `184bcd68d9a5c9a6974f7036e2704fe2a1374fa8`, from reviewed candidate
+`926d9dd5b7429ebcd42bbf8f0fd6c825958e8d2d` and base
+`18d59d8e1bb8b7395f11f969279dd92096d73b8e`. Candidate and merged tree both equal
+`eaa55d061dc48fd8ce1dcc63faf27cfc46b429bd`. The merged H02h0 foundation and
+H02c scalar-deque representation repair/receipt (#4173/#4174) were prerequisites;
+this delivery does not reclassify their historical failures or earlier blocked
+H02h1 handoffs. H02h1 closes; H02h2-H02h5, H03 and whole-phase closure remain open.
+
+The live guard now discovers all current first-party Rust sites and validates
+`method_dispatch_sites.json`: 6,269 literal/authority/carrier sites, with 233
+reviewed constituent, adaptation, analysis and routing nodes. Each site records
+its actual lexical operation, input/output signature, role and caller/admission
+relationship. Complete node contexts and all lexical references are fingerprinted,
+including macros, module aliases and function values. Name collisions remain
+conservative lexical references, not inferred Rust control flow. The method schema
+requires those fields and the semantic version. New/changed/unclassified sites,
+changed graph references and false semantic labels fail the live guard.
+
+Canonicalizer and optimizer records consume generated Rust syntax/IR; they are
+not source protocol dispatch. The graph includes the canonical methods registry
+and its implementation helpers, statement macro, recursive/simple lowering,
+collection/defaultdict/set/indexed/clone specializations, Python method substrates,
+condition and checked-place boundaries, and the actual narrowing/mapping consumers.
+Nonmethod compiler decisions retain their actual operation/signature evidence;
+no matching string invents builtin or declaration authority.
+
+The returning H02c representation relationship is preserved: statement comparison
+operands lower through `lower_stmt_expr_for_ir`; structured condition operands
+first validate through `try_lower_condition_operand_expr`. The retained deque
+Option predicate reads the selected class method's optional-return signature.
+The owned mapping default helper follows the admitted recursive builtin or
+collection path. The nonempty Let-tail preserves original method authority and
+place/source conventions in its optional call and lowers it before the narrowed
+tail. Receiver/argument predicates alone do not admit methods; the unused codegen
+narrowable-pop predicate explicitly has no production caller. The read-only audit
+claims no new native execution or executable safety proof.
+
+**Named acceptance:** each of the four reserved `MethodTests` cases was run
+individually with the exact `PYTHONPATH=scripts python3 -m unittest -f` case
+selection and resolved one passing test. Complete `MethodTests` passed 16/16;
+`ColdCheckoutTests` passed 1/1; the method self-test passed 17 cases including the
+cold suite. `python3 scripts/check_method_dispatch_authority.py` passed current-tree
+coverage at 6,269 sites / 233 nodes. Draft202012 schema/inventory validation,
+Python compilation, diff checks and the 900-line guard (4,310 maintained files)
+passed. Python was 3.14.4 on the Linux execution host. No Cargo build, compiler
+fixture preparation, cache adoption or target cleanup was needed. Rust/Cargo,
+unsafe inventory, production profiles, tracked locks and submodule pins are
+unchanged. Broad create-PR/full merge qualification remains with H02h5/Q01 under
+the authorized intermediate-item policy; no release qualification is claimed.
+
+**Scoped review:** read-only Claude Opus 5.5 returned **SATISFIED**, with no blocking
+findings, on the exact candidate. Response SHA-256:
+`7122046c097970349ac23f3592eef36aa56e954d647343b3257cabb6c021ef4b`.
+The reviewer independently reran the live guard and used the remaining recorded
+acceptance evidence. An initial incorrectly detached request was terminated as
+incomplete before acceptance; its outside-tree request record/logs remain
+incomplete evidence, not a review pass. The successful request used a fresh
+atomic-response/watchdog wrapper and its final evidence is keyed by candidate.
+
+**Explicit separately owned source follow-up, nonblocking:**
+`operator_protocol_emitters.rs::lower_operator_expr_ir` at lines 702-736 attempts
+`lower_stmt_expr_for_ir(...).ok().flatten()`, then leaf lowering, then may construct
+a generic name-preserving method call. `.ok()` discards structural errors. The
+inventory classifies that actual route as `source-method-routing` and expressly
+claims no guarantee of successful admission; it is not an admitted constituent,
+protocol exemption or contextual representation adaptation. Scoped review
+confirmed this truthful record satisfies H02h1 and emits no builtin-name
+specialization, so the conditional H02c builtin handoff is not triggered. The
+source-error fallback belongs to a separately bounded codegen source-authority
+follow-up needing scope assignment; this policy child does not repair it or
+silently extend H02c.
+
+**Deferred policy suggestions, separate from closure requirements:** H02h5's
+policy owner may remove the dead duplicate `nodes()` definition, sharpen generic
+`compiler-policy` role prose for mixed HIR/Rust iterable helpers and plain builtin
+function specializations, and consider discovery of future HIR helpers with a
+renamed string parameter and no local MethodCall carrier. The reviewer found no
+such uncovered method helper on this current tree. None is a new acceptance gate
+or merged implementation claim here. The prior forward-placeholder metadata and
+nonbuiltin mapping-convention suggestions remain unreproduced and are not new
+source defects established by this batch.
+
+**V01/Q01-owned external prerequisite:** PR #4175's broad GitHub create-PR job
+`109992604705` (run `36746110323`) failed at `performance_reference_admission`
+because `SIFR_PERFORMANCE_REFERENCE` was unset. Raw log SHA-256:
+`a64c80e88a8ff0baffd68f55c514b6961fb810cb06579f7a7a3d34288e7cfca9`.
+That is failed external qualification evidence, not passing CI or failed H02h1
+named acceptance. This intermediate batch did not wait for CI instead of local
+validation or absorb V01/Q01 work. Existing historical CI failures stay preserved.
+
+Exact commands, configuration, resolved counts, raw logs, schema evidence,
+read-only codegen source identities, full call-chain audit and review are retained
+outside Git under
+`/data/sifr-architecture-h02h1-after-representation-evidence-20260930/926d9dd5b7429ebcd42bbf8f0fd6c825958e8d2d/`
+on `yaser5@192.168.1.134`. `candidate-validation.json` SHA-256 is
+`c92ca5a556021f54566b4759a9340d65a1e7e25cad75643f573db9f19e10f312`;
+`call-chain-audit.md` SHA-256 is
+`4ca7f5b67fa7a77ab0f492e254eb5a40cfe98ab9e869243f2cd1fa4f145869ad`.
+The owner used fresh isolated worktree
+`/data/sifr-architecture-h02h1-after-representation-20260930` and implementation
+branch `codex/architecture-h02h1-after-representation-20260930`, then its own
+receipt branch `codex/architecture-h02h1-method-policy-record-20260930`.
+Publication used an owned bundle/local temporary bare relay through authenticated
+Mac GitHub CLI; primary/shared checkouts and the warm H02c Cargo target were not
+mutated. This documentation-only receipt requires relevant structure, scope,
+diff and file-size checks; it needs no repeat implementation review or broad gate.
+
+**Next action: separately assign H02h2 only** for callback/CPython core contract
+authoring on main containing #4175 and this receipt. This owner stops here;
+no H02h2 implementation or later batch has started. H02h1 has no blocker.
