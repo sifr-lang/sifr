@@ -2378,7 +2378,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 | **H02h0 / policy scanner and validator foundation** | **Closed / reviewed foundation merged** in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156) under H02h0r1; merge receipt below. The preservation rescope corrected the binding-preservation regression found by the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152); its blocked receipt remains below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
 | **H02h1 / semantic method policy authoring** | **Closed / reviewed policy merged** in [PR #4175](https://github.com/sifr-lang/sifr/pull/4175), with the delivery receipt below. Candidate `926d9dd5b7429ebcd42bbf8f0fd6c825958e8d2d`; merged tree matches. The H02h0 foundation and H02c #4173/#4174 representation prerequisite are discharged. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | **Closed / reviewed core policy merged** in [PR #4177](https://github.com/sifr-lang/sifr/pull/4177), with the delivery receipt below. Final candidate `028868ae07a5f54ba5e9453cde6a65ab38fd7892`; merged tree matches. H02h1 is discharged. After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
-| **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
+| **H02h3 / Buffer, Arrow and DLPack contract authoring** | **Closed / reviewed resource policy merged** in [PR #4179](https://github.com/sifr-lang/sifr/pull/4179), with the delivery receipt below. Final candidate `a0aff8fef23540b7e9515a918a82148301083db6`; merged tree matches. H02h2 is discharged. After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
 | **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
 | **H02h5 / final H02h integration** | After H02h4. Wire the complete method/unsafe policies into their schema, guardrails, verification/profile/coverage registration. Run all original H02h acceptance on the integrated final candidate, preserving named predecessor runtime/codegen assertions and exact E2E selection. Whole H02h may close only after this child passes scoped review and merges; Q01 still owns the full merge gate and whole-phase review. | The four original H02h script commands; all new and existing policy suites; the two new `PolicyIntegrationTests` cases below; every exact named H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g command above, including merged H02c statement-only cases, the recorded focused list/Python selections and exact two-fixture H02 list E2E command. Resolve nonzero test names and assertion counts with the same crate/features/configuration. |
 
@@ -6026,3 +6026,128 @@ no repeat external review or broad gate is required.
 **Next action: separately assign H02h3 only** on main containing #4177 and this
 receipt. This owner stops before resource contracts or later batches. H02h2 has
 no local blocker; the V01/Q01 external full-qualification prerequisite is unchanged.
+
+### H02h3 Buffer, Arrow and DLPack contracts: merged delivery (2026-09-30)
+
+**State: H02h3 closed; H02h4-H02h5, H03 and whole-phase closure remain open.**
+Implementation [PR #4179](https://github.com/sifr-lang/sifr/pull/4179) merged
+`280fa82fc9762f56a0a1b3b224a219832d8ade64` from final reviewed candidate
+`a0aff8fef23540b7e9515a918a82148301083db6` on base
+`26eb228e4c72aefb8685495002a2435839ede0fe`. The merged tree matches candidate
+`e8a9b85213ae4a63952c50e418ef6401c4cf0625`. H02h2 is discharged. This delivery
+preserves the first NOT SATISFIED review and authoring drafts as failed evidence;
+none becomes a passing record.
+
+The authored `python_resources.json` covers all **188 independently discovered
+resource sites**, including Arrow's parent allowance in `python.rs`, 21 local
+allowances and resource fixture callbacks. Discovery selects the foundation's
+source-owned Buffer/Arrow/DLPack partition. All operations, fingerprints, local
+SAFETY evidence, four effect obligations and code proofs agree with the discovered
+source. Forty finite sharing definitions bind their exact local sites/fingerprints;
+an additional site cannot inherit approval. Existing H02e/H02f/H02g native source,
+ABI and certification remain unchanged; this is policy authoring against predecessor
+source evidence, not a new executable runtime audit.
+
+Buffer records distinguish pinned-view borrowing, typed unaligned reads/writes,
+metadata bounds/alignment and the exporter's allocation-validity obligation.
+Exporter `raw.obj` pins the view through use. The supported GIL, tracked mutex and
+address-snapshot admission protect element access. `release_raw` first borrows the
+sole pinned header, then `PyBuffer_Release` consumes exporter cleanup/refcount
+once, then clears `obj` for inert Drop. Fixture export writes transfer an owned
+Python reference into `view.obj`; memoryview construction acquires its new owned
+reference while the separately returned fixture storage remains live until close.
+
+Arrow records distinguish nullable release-slot reads from consuming callback
+invocation, matched C callback ABI obligations, writable stream output ownership,
+opaque Send transport and checked header-only copying. Capsule name/destructor
+observations confer no transfer. Release callbacks clear their own markers so
+capsule destruction cannot release a consumed header twice. Device arrays release
+the embedded array. Both pointer-identity mutation records require restoring the
+original payload before capsule destruction; the dangling replacement is never
+admitted for dereference or release.
+
+DLPack records distinguish stable-prefix version/deleter reads, major-version
+admission before tensor/flag interpretation, copied header/vector metadata,
+original-name observation, successful used-name transfer and nullable terminal
+release. Structural argument capsule pins survive reset/close. Used-shell
+finalization observes capsule state without touching potentially freed headers.
+Original-name callbacks consume the sole managed owner once, and matched fixture
+`Box::from_raw` operations recover the unique allocations. Tracked Drop attaches
+independently of semantic reset and releases after store removal.
+
+The bounded resource effect families now distinguish consuming release,
+capsule transfer, output initialization, owned-reference acquisition and typed
+view access. Strong resource effects precede CPython observation/generic ABI
+refinement. The scanner exposes its already-fingerprinted enclosing context text
+so callback invocations can consume actual `.release` slot provenance, including
+renamed local variables. Discovery keys, fingerprints, source-proof resolution,
+binding normalization and repeated-contract enforcement are preserved. Native
+source and whole-profile integration stay outside this policy child.
+
+**Named acceptance:** each of the three reserved `UnsafePythonResourceTests`
+cases ran individually with its exact `PYTHONPATH=scripts python3 -m unittest -f`
+command and resolved one passing test. Complete `UnsafeTests` passed 11/11,
+`ColdCheckoutTests` 1/1, `PolicyFoundationTests` 13/13,
+`UnsafePythonCoreTests` 5/5 and `MethodTests` 16/16. The resource coverage case
+revalidated the explicit core/resource union of **271 sites (83 + 188)**. Negative
+mutations preserve valid source/evidence fingerprints while substituting
+borrow-only release or raw-read effects. Additional live-record and renamed-slot
+fixtures catch initially misclassified release invocations; mixed observation
+plus deleter/free/rename keeps the stronger effect. Draft202012 schema validation,
+changed Python compilation, source/scope identity, committed diff checks and the
+900-line guardrail passed (4,313 maintained files). Python was 3.14.4 on Linux.
+The exhaustive core/resource proof and repeated-contract check took 86.91 seconds;
+no Cargo, compiler fixture preparation, target adoption or cleanup was needed.
+
+Only the explicit core/resource partitions have been validated. No whole-tree
+unsafe guard, external coverage, runtime safety certification, create-PR/full
+merge profile, CI pass or release qualification is claimed. Rust/runtime, Cargo
+inputs/locks, production profiles, other inventories and the warm H02c Cargo target
+remain unchanged. H02h4 owns the remaining exact unsafe union; H02h5 owns policy
+integration and Q01 owns final full qualification under the authorized intermediate
+policy.
+
+**Scoped review:** first read-only Claude Opus 5.5 review on
+`640fecf54e488d413870b22f3f58efeccfa7ff61` returned **NOT SATISFIED**: two Arrow
+selected release calls were recorded as raw borrows, four Buffer fixture reference
+acquisitions lacked ownership effects, and two Arrow pointer-mutation records
+misdescribed their restoration obligation. Response SHA-256: `2c10378bd8983c163a89747a066bd297f55b2e607a20ae30537497fa9c75f620`.
+One remediation batch corrected those records and effects, added source-slot
+provenance regression coverage and corrected both wording suggestions. The second
+exact-candidate review returned **SATISFIED**, with no blocking findings.
+Final response SHA-256: `ad085811d5860dfc6099f97c4e886c5718dec9dc0a6910f65b4390986afa846e`. Both responses remain outside Git,
+keyed by their own candidates; no native implementation was patched by this child.
+
+The reviewer suggested separately expressing signature/body obligations for three
+`__getbuffer__` declarations classified by their owned-reference body effect.
+Their current contracts explicitly preserve the valid writable-output ABI
+precondition. This is a deferred policy suggestion for H02h5, not a blocking
+omission or native source defect.
+
+**V01/Q01-owned external prerequisite:** the first candidate's automatic GitHub
+create-PR job `110054486137` (run `36764311123`) failed at
+`performance_reference_admission` because `SIFR_PERFORMANCE_REFERENCE` was unset.
+Raw log SHA-256: `96b89967fb2373929429f11ec8a848bbeac9d444b707203982dde57ff8c0abdc`. This is failed external full-qualification evidence,
+not failing H02h3 named acceptance or a CI pass. The intermediate owner did not
+wait for CI instead of running local acceptance or absorb the external work.
+
+Exact commands, counts, configuration, timings, raw logs, source identities,
+authoring history and both reviews are retained outside Git under
+`/data/sifr-architecture-h02h3-python-resources-evidence-20260930/` on
+`yaser5@192.168.1.134`, separately keyed by each candidate.
+Final `candidate-validation.json` SHA-256: `7235b1110be39efc5797656f8ed261ba2429b167d99081ca5ca03b1b493ccfe1`;
+final `source-audit.md` SHA-256: `afde28c54128faa1ef3429d756095d51e850efd31fbb92a722e06b8c6a5544c0`.
+The owner used fresh isolated worktree
+`/data/sifr-architecture-h02h3-python-resources-20260930`, implementation branch
+`codex/architecture-h02h3-python-resources-20260930` and its own receipt branch
+`codex/architecture-h02h3-python-resources-record-20260930`.
+Publication used an owned bundle and local temporary bare relay through the
+Mac's authenticated GitHub CLI; shared primary checkouts were not mutated. Pinned
+nested editor submodules were initialized only for documentation checks, without
+changing gitlinks. This documentation-only receipt needs the relevant documentation,
+file-size, scope and diff checks; no repeat implementation review or broad gate.
+
+**Next action: separately assign H02h4 only** on main containing #4179 and this
+receipt. H02h3 has no local blocker. This owner stops before external records,
+policy integration or later batches; the V01/Q01 qualification prerequisite is
+unchanged.
