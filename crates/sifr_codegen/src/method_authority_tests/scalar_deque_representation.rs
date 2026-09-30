@@ -22,7 +22,7 @@ fn scalar_deque_comparisons_preserve_declared_result_representation() {
                 let lowered = sifr_lowering::lower_module(parsed.suite())
                     .unwrap_or_else(|errors| panic!("{source}: {errors:?}"));
                 let ordinary = match call {
-                    "pop(0)" => "values.pop(SifrInt::from_i64(0))",
+                    "pop(0)" => "values.pop(&SifrInt::from_i64(0))",
                     "popleft()" => "values.popleft()",
                     _ => "values.pop()",
                 };
