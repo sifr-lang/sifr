@@ -99,6 +99,10 @@ FILENAME_PATTERNS = (
 )
 
 ALLOW_TEXT_PATTERNS = (
+    # ABI policy schema references and the four local obligation-field constant
+    # are technical identifiers. Strip only these exact tokens, so any unrelated
+    # label on the same line remains governed by every rejection pattern.
+    re.compile(r"\b" + RULES_ALIAS + r"_(?:ref|fields)\b", re.IGNORECASE),
     # Stable metadata acceptance case identifiers are not delivery sequencing.
     re.compile(r"\bMetadata case M\d{2}\b"),
     re.compile(r"\b(?:WorkspaceTracePhase|SingleOwnerCompilerPhase|LintPhase|PhaseExecution|ProgressPhase)\b"),
@@ -625,6 +629,7 @@ def run_self_test(*, quiet: bool = False) -> int:
         bad_path_marker_label = "/m" + "4/http1"
         bad_path_marker.write_text(f'assert request[1] == "{bad_path_marker_label}"\n', encoding="utf-8")
         check_numbered_labels(root)
+        check_abi_policy_identifiers(root)
         failures = collect_failures((root,), audit_root=root)
     rendered = "\n".join(failure.render() for failure in failures)
     if (
@@ -762,6 +767,22 @@ def check_numbered_labels(root: Path) -> None:
     (skipped / "SKILL.md").write_text("Phase 99\n", encoding="utf-8")
     if collect_failures((root / "skills",), audit_root=root):
         raise AssertionError("skill files entered the codebase scan")
+
+
+
+def check_abi_policy_identifiers(root: Path) -> None:
+    source = root / "abi_policy_vocabulary.json"
+    identifiers = (RULES_ALIAS + "_ref", RULES_ALIAS.upper() + "_FIELDS")
+    for identifier in identifiers:
+        source.write_text(identifier + " = local_proof\n", encoding="utf-8")
+        if validate_text(source, audit_root=root):
+            raise AssertionError(f"ABI policy identifier was rejected: {identifier}")
+        for unrelated in (RULES_ALIAS + "_plan", RULES_ALIAS + "_reference",
+                          RULES_ALIAS.upper() + "_FIELDS_EXTRA", DELIVERY_STAGE + " 99"):
+            source.write_text(identifier + " = local_proof; " + unrelated + "\n", encoding="utf-8")
+            if not validate_text(source, audit_root=root):
+                raise AssertionError(f"ABI identifier hid an unrelated label: {unrelated}")
+    source.write_text("local_proof = evidence\n", encoding="utf-8")
 
 
 def repo_path(path: Path) -> str:
