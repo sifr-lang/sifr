@@ -2376,7 +2376,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
 | **H02h0 / policy scanner and validator foundation** | **Closed / reviewed foundation merged** in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156) under H02h0r1; merge receipt below. The preservation rescope corrected the binding-preservation regression found by the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152); its blocked receipt remains below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
-| **H02h1 / semantic method policy authoring** | **Open / needs-adjudication** after the admitted scalar-deque comparison/condition representation finding below; the original ungated builtin-emission handoff does not settle this adaptation defect. The reviewed H02c nonempty-pop nonbuiltin-dispatch repair [PR #4168](https://github.com/sifr-lang/sifr/pull/4168) is merged, following checked-sequence exit-guard repair [PR #4165](https://github.com/sifr-lang/sifr/pull/4165) and its receipt [PR #4166](https://github.com/sifr-lang/sifr/pull/4166); no H02h1 policy implementation delivered. After H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
+| **H02h1 / semantic method policy authoring** | **Open / blocked on separately assigned H02c scalar-deque result-representation repair**, authorized by the docs-only adjudication below. The admitted scalar-deque comparison/condition defect blocks truthful policy completion; repair and reviewed merge must precede H02h1 resumption. The original ungated builtin-emission handoff and merged nonbuiltin-dispatch repair do not settle this distinct adaptation defect. The reviewed H02c nonempty-pop nonbuiltin-dispatch repair [PR #4168](https://github.com/sifr-lang/sifr/pull/4168) is merged, following checked-sequence exit-guard repair [PR #4165](https://github.com/sifr-lang/sifr/pull/4165) and its receipt [PR #4166](https://github.com/sifr-lang/sifr/pull/4166); no H02h1 policy implementation delivered. After H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
 | **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
@@ -5497,3 +5497,168 @@ directory above. The fresh owned worktree initialized only the pinned editor
 submodules for documentation setup. The canonical phase document is the sole
 changed tracked path. No implementation review is required for this record-only
 update.
+
+
+### H02h1 scalar-deque representation scope adjudication (2026-09-30)
+
+**Decision: the reproduced admitted-call representation defect blocks truthful
+H02h1 policy completion. Separately assign H02c scalar-deque result-representation
+repair only, then resume H02h1 after its scoped review and merge.** This docs-only
+adjudication starts from main `449fba06f67574c3ba22ee8547b5f2f444926e70`, the merged
+[PR #4170](https://github.com/sifr-lang/sifr/pull/4170) handoff. The adjudication
+is complete; the source repair is open / needs-implementation. H02h1 remains
+open and undelivered; H02h2-H02h5, H03 and phase closure wait.
+
+The successful local-source check/emit evidence above establishes the mismatch:
+`deque.pop` declares and emits a scalar `SifrInt`, while value and condition
+comparisons wrap the other scalar in `Some`. Its ordinary source call already
+passed typed admission. The finding is therefore an incorrect contextual result
+adaptation, not an ungated builtin emission route or a recurrence of #4168's
+nonbuiltin dispatch replacement. A policy cannot classify the current predicate
+as a verified Option adaptation using only the receiver basename. Recording the
+known defect truthfully as a blocker is allowed; accepting that record as H02h1
+completion would waive the required actual-input/output relationship. This
+adjudication does not waive it or invent an admission/representation proof.
+
+The prior #4168 review observation was nonblocking for that bounded dispatch
+repair. The later #4170 reproduction and this scope decision establish a
+separate prerequisite for policy authoring. All prior passing dispatch evidence,
+failed package-root invocations and stopped policy drafts retain their original
+status. Source check/emit success is not Rust compilation or native execution;
+no such result is claimed here. The minimal scalar Let probe did not reproduce
+a Let-tail defect and supplies no repair requirement. The unreproduced
+nonbuiltin mapping-default convention suggestion remains separate H02h1 audit
+work.
+
+#### Authorized source-owner boundary and dependencies
+
+The separately assigned H02c owner starts on current main after this
+adjudication merges, retaining #4156's foundation and reviewed #4168/#4169
+nonbuiltin-dispatch preservation. Repair only the decision whether an admitted
+narrowed pop call still has an Option result in generated Rust. Use the selected
+declaration's actual return representation through existing canonical type and
+method metadata, not just the narrowed HIR result, class basename, method
+spelling or an authority tag. An authority tag establishes dispatch admission;
+it does not by itself establish Option representation. Preserve a real ordinary
+`deque.pop -> int | None` declaration's Option result after HIR narrows the call
+to `int`. A blanket builtin-only restriction would break that admitted ordinary
+class path and is not an authorized repair.
+
+Production source ownership is bounded to
+`crates/sifr_codegen/src/stmt_support_emitter/expr_call_metadata.rs::compiler_verified_pop_lowers_as_option_for_ir`
+and its actual callers in
+`stmt_support_emitter/stmt_expr_wrappers_and_compare.rs` and
+`lower_stmt/condition_lowering.rs::condition_operand_lowers_as_option`, including
+`try_lower_structured_compare_condition_expr`. The comparison macro first lowers
+method operands through `lower_stmt_expr_for_ir`; the structured condition
+consumer first validates/lowers them through `try_lower_condition_operand_expr`.
+Retain those admission boundaries and ordinary source-call dispatch. Update
+caller plumbing only if required to supply the existing selected result
+metadata. Do not reinterpret this representation predicate as a dispatch owner.
+Read all lexical references, including the existing positive-control tests, and
+record the final caller/representation relationship for the returning H02h1
+owner.
+
+Focused regression additions belong in the existing
+`crates/sifr_codegen/src/method_authority_tests` ownership boundary. Split by
+responsibility if required by the 900-line source guardrail. This repair does
+not authorize changes to the HIR/authority schema, frontend admission, canonical
+builtin registry, general class ABI, other shape predicates, pop replacement or
+Let-tail logic, mapping defaults, policy scanners/records, unsafe contracts,
+Python runtime or X02. Preserve receiver/place ownership and source ranges,
+optional-result calls and structural failures for malformed/unclassified calls.
+No spelling retry, compatibility or fallback path is authorized. A defect that
+requires those wider owners returns to separate scope adjudication.
+
+#### Exact repair acceptance
+
+Implement the reserved regression and run each of these three cases explicitly
+with `cargo test --locked -p sifr_codegen --lib method_authority_tests::<case> -- --exact`:
+
+- `scalar_deque_comparisons_preserve_declared_result_representation`: parse and
+  successfully lower the minimal local scalar `deque.pop` source from #4170;
+  prepare the actual body analysis and preserve its admitted declaration. Cover
+  `==` and `!=`, both operand orders, `lower_stmt_expr_for_ir` value comparison,
+  `lower_condition_expr_for_ir` condition comparison, and generated source
+  return/If entries. Each scalar comparison retains the ordinary scalar call and
+  has no injected `Some`, `is_some`, `is_none`, builtin removal or panic unwrap.
+  Cover the predicate's other narrowable argument/method shapes only with
+  successfully resolved matching scalar declarations; do not author fictitious
+  source support or claim qualified-basename coverage without source resolution.
+- `nonempty_pop_and_mapping_adaptation_preserve_authority`: retain its real
+  ordinary `deque.pop -> int | None` source control, prove the selected return
+  metadata remains optional while call HIR is scalar, and assert the preserved
+  source call plus Option adaptation for equality/inequality, both operand orders
+  and value/condition entries. Preserve all existing builtin, nonbuiltin,
+  optional-call, Let-tail and mapping-default assertions in this case.
+- `narrowing_specializations_decline_unclassified_without_builtin_retry`: retain
+  all existing structural-error and no-builtin-retry assertions, including
+  actual narrowed carriers, body analysis, nested receivers/arguments and its
+  public value/statement/block/capture entries. Representation metadata must
+  never bypass typed admission or convert an invalid carrier into success.
+
+Run the fifteen retained exact `method_authority_tests` cases from the
+checked-sequence handoff, using that same locked crate/lib/exact command:
+`typed_builtin_dispatch_and_strict_decline`, `user_protocol_and_contextual_paths`,
+`list_append_cloned_decline_regression`,
+`nested_builtin_declines_preserve_structural_errors`,
+`statement_only_method_admission_and_strict_decline`,
+`nested_statement_method_admission_and_strict_decline`,
+`class_statement_method_admission_and_strict_decline`,
+`condition_specializations_decline_unclassified_without_builtin_retry`,
+`condition_comparison_and_truthiness_preserve_authority`,
+`checked_dict_keys_guards_reject_unclassified_and_mismatched_authority`,
+`checked_dict_keys_guards_preserve_nonbuiltin_authority_without_retry`,
+`checked_dict_keys_guards_preserve_admitted_if_and_exit_behavior`,
+`checked_sequence_exit_guards_reject_unclassified_and_mismatched_authority`,
+`checked_sequence_exit_guards_preserve_nonbuiltin_authority_without_retry`, and
+`checked_sequence_exit_guards_preserve_admitted_read_and_prefix_behavior`.
+
+Run the bounded existing comparison/condition regressions with
+`cargo test --locked -p sifr_codegen --lib <selection>` for
+`lower_expr::option_compare_tests` and
+`lib_codegen_tests::structured_condition_codegen_tests`.
+Resolve every actual name and nonzero count before accepting these selections;
+fail fast and execute the assertions, not merely test discovery. Broaden focused
+checks only if the actual repair changes another consumer. The existing H02a1
+optional-length failure stays with its owner and is not absorbed into this item.
+
+Run the unchanged exact H02 list E2E command:
+`verification/runner/e2e/run_e2e_pass.sh --profile create-pr --fixture-manifest verification/areas/core_language/data/h02_method_e2e_manifest.json`.
+Both selected fixtures must execute their native assertions. This repair's named
+acceptance does not claim new native scalar-deque execution; the regression
+checks actual source lowering and emitted representation. Record exact candidate,
+resolved names/counts, source and configuration identity, and reuse compatible
+runner preparation and warm exclusively owned targets. Inspect free space and
+ownership before Cargo work; preserve the retained #4168 target and failed logs.
+Named acceptance, focused regressions and scoped source review/merge precede
+H02h1 resumption; intermediate broad gates remain with Q01. A failed or unresolved
+selection is not a pass. None of these prospective Rust tests ran in this
+adjudication.
+
+#### Adjudication evidence and stopping boundary
+
+The #4170 check/emit logs, `source-audit.json` and `reproductions.json` remain
+outside Git under
+`/data/sifr-architecture-h02h1-after-pop-evidence-20260930/` on
+`yaser5@192.168.1.134`. Read-only source inspection on this adjudication base
+confirms the predicate and both consumers are unchanged. This session owns
+branch `codex/architecture-h02h1-scalar-deque-scope-20260930` and fresh worktree
+`/data/sifr-architecture-h02h1-scalar-deque-scope-20260930`; its documentation
+validation and handoff evidence live outside Git in
+`/data/sifr-architecture-h02h1-scalar-deque-scope-evidence-20260930/`.
+
+The canonical phase document is the sole tracked change. Only documentation
+structure, file-size and diff/scope checks are required. No external
+implementation review, Cargo/policy acceptance or broad integration gate is
+claimed. No compiler target was adopted, rebuilt or cleaned.
+**Next action: separately assign only the bounded H02c scalar-deque
+result-representation repair above after this documentation adjudication
+merges.** Stop this owner here; do not implement the repair or resume H02h1.
+
+The documentation-only adjudication passed documentation structure (1 variant,
+0 failures), the 900-line file-size guardrail (4,307 maintained files), and
+diff/scope checks. The predicate and both consumer source digests match the
+#4170 audit. Raw commands, logs and digests are preserved in this session's
+`documentation-validation.json` and `scope.json` outside Git. The fresh worktree
+initialized only the pinned editor submodules for documentation input.
