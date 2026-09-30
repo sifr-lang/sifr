@@ -527,6 +527,67 @@ async fn provisional_receiver_rollback_cancels_entries_and_releases_target() {
     reset_runtime_state_for_tests();
 }
 
+#[tokio::test(flavor = "current_thread")]
+async fn cancelled_provisional_rollback_preserves_drop_teardown() {
+    let _guard = test_guard();
+    initialize_callback_runtime("cancelled-provisional-rollback");
+    let capture = Arc::new(());
+    let handler_capture = Arc::clone(&capture);
+    let started = Arc::new(tokio::sync::Notify::new());
+    let handler_started = Arc::clone(&started);
+    let owner = CallbackOwnerState::new_retained(|| Ok(())).expect("owner");
+    let callback = asyncio_callback_with_owner(
+        owner.clone(),
+        10,
+        1,
+        AsyncioCallbackConcurrency::Parallel,
+        |args| crate::python::to_int(&args[0]),
+        move |_, value, _| {
+            let capture = Arc::clone(&handler_capture);
+            let started = Arc::clone(&handler_started);
+            async move {
+                let _capture = capture;
+                started.notify_one();
+                std::future::pending::<()>().await;
+                Ok(value)
+            }
+        },
+        crate::python::from_int,
+    )
+    .expect("owned callback");
+    let shell = callback.object().clone();
+    let request = function_request(
+        "start_and_fail",
+        vec![async_from_object(&shell).expect("transport")],
+    );
+    submit_async_declaration(request, None)
+        .await
+        .expect_err("fixture setup failure");
+    started.notified().await;
+    let mut rollback = Box::pin(callback.rollback_provisional());
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    assert!(std::future::Future::poll(rollback.as_mut(), &mut context).is_pending());
+    drop(rollback);
+    drop(callback);
+    assert_eq!(Arc::strong_count(&capture), 1);
+    assert_eq!(owner.active_calls(), 0);
+    let error = crate::python::call_object_owned(
+        &shell,
+        &[crate::python::from_int(1).expect("argument")],
+        &[],
+    )
+    .expect_err("escaped provisional shell must reject after cancelled rollback");
+    assert_eq!(error.exception_type, "SifrCallbackClosedError");
+    drop(owner.begin_owner_unregister().expect("unregister"));
+    owner
+        .close_after_owner_unregister_async()
+        .await
+        .expect("owned terminal drain");
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    assert_eq!(Arc::strong_count(&capture), 1);
+    reset_runtime_state_for_tests();
+}
+
 pub(super) fn initialize_callback_runtime(label: &str) {
     reset_runtime_state_for_tests();
     let mut config = test_config(label);

@@ -20,3 +20,16 @@ fn unsafe_asyncio_requires_authority() {
     let _ = asyncio_callback_scoped_with_owner(CallbackOwnerState::new_call_scoped().unwrap(),
         1, 0, AsyncioCallbackConcurrency::Parallel, |_| Ok(()), |_, (), _| async { Ok(()) }, |_| from_none());
 }
+
+fn borrowed_rollback_cannot_obtain_static_owner_api() {
+    let value = std::sync::atomic::AtomicUsize::new(0);
+    // This constructor is explicitly unsafe, but its documented lifetime
+    // contract must not be weakened by a safe provisional rollback method.
+    let callback = unsafe { asyncio_callback_scoped_with_owner(
+        CallbackOwnerState::new_call_scoped().unwrap(), 1, 0,
+        AsyncioCallbackConcurrency::Parallel,
+        |_| { value.fetch_add(1, std::sync::atomic::Ordering::SeqCst); Ok(()) },
+        |_, (), _| async { Ok(()) }, |_| from_none(),
+    ) }.unwrap();
+    let _rollback = callback.rollback_provisional();
+}

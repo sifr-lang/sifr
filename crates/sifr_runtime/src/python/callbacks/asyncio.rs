@@ -292,25 +292,29 @@ impl AsyncioCallback<'_> {
         self.owner.close_after_owner_unregister_async().await?;
         object_ops::close_object(self.object.clone())
     }
+}
 
+impl AsyncioCallback<'static> {
     pub async fn rollback_provisional(&self) -> Result<(), PythonError> {
         self.owner.reject_close_reentrancy()?;
-        if self.retained.swap(true, Ordering::AcqRel) {
+        if self.retained.load(Ordering::Acquire) {
             return Ok(());
         }
         self.admission.close_and_wait().await;
         self.owner.cancel_callback_entries(self.callback_id).await;
+        self.drain.revoke();
         drop(
             self.target
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .take(),
         );
+        // Only terminal cleanup may suppress Drop. Cancellation at an earlier
+        // await leaves the wrapper responsible for setup drain and revocation.
+        self.retained.store(true, Ordering::Release);
         object_ops::close_object(self.object.clone())
     }
-}
 
-impl AsyncioCallback<'static> {
     pub fn retain_in_owner(&self) -> Result<(), PythonError> {
         if self.retained.load(Ordering::Acquire) {
             return Ok(());

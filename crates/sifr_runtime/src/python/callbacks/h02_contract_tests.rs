@@ -337,6 +337,10 @@ fn borrowed_callback_forget_and_escape_is_rejected_or_drained() {
         errors.contains("E0373") || errors.contains("E0597"),
         "safe constructor must reject borrowed capture: {errors}"
     );
+    assert!(
+        errors.contains("rollback_provisional"),
+        "borrowed rollback must be rejected: {errors}"
+    );
     for name in [
         "current_callback_scoped_with_owner",
         "foreign_callback_scoped_with_owner",

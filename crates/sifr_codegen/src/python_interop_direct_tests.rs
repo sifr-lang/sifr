@@ -355,7 +355,17 @@ fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_clean
         rendered.contains("__sifr_callback_failure_0.take_if_owner_first"),
         "{rendered}"
     );
-    assert!(rendered.contains("unsafe {"));
+    let scoped_block = rendered
+        .split("unsafe {")
+        .nth(1)
+        .expect("scoped unsafe block");
+    assert!(
+        scoped_block
+            .split('}')
+            .next()
+            .unwrap_or_default()
+            .contains("current_callback_scoped_with_owner")
+    );
     syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
         .expect("generated callback statements should be valid Rust syntax");
 }
