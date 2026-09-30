@@ -266,6 +266,10 @@ class ProfileRunner:
             self.run_python("scripts/check_hir_maintainability_guardrails.py")
         elif guardrail == "file-size":
             self.run_python("scripts/check_file_size_guardrails.py")
+        elif guardrail == "method-dispatch-authority":
+            self.run_script_with_self_test("scripts/check_method_dispatch_authority.py")
+        elif guardrail == "unsafe-abi-contracts":
+            self.run_script_with_self_test("scripts/check_unsafe_abi_contracts.py")
         elif guardrail == "demo-emitted-freshness":
             self.run_python("scripts/check_demo_emitted_freshness.py")
         elif guardrail == "source-crate-dependency-direction":

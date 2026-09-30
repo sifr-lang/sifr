@@ -273,6 +273,8 @@
         "enum": [
           "hir-maintainability",
           "file-size",
+          "method-dispatch-authority",
+          "unsafe-abi-contracts",
           "demo-emitted-freshness",
           "source-crate-dependency-direction",
           "submodule-ownership",
