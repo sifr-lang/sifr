@@ -21,6 +21,23 @@ pub(crate) use dispatch::{
     lower_method_with_discard_context,
 };
 
+pub(crate) fn supports_builtin_len(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::List(_)
+        | Type::Dict(_, _)
+        | Type::Set(_)
+        | Type::Bytes
+        | Type::Tuple(_)
+        | Type::Str
+        | Type::LiteralStr(_)
+        | Type::Class { .. } => true,
+        ty if is_option_type(ty) => ty
+            .optional_member_type()
+            .is_some_and(|payload| supports_builtin_len(&payload)),
+        _ => false,
+    }
+}
+
 fn lower_method_impl(
     object_ty: &Type,
     method: &str,
@@ -29,19 +46,24 @@ fn lower_method_impl(
     is_deque_data_field: bool,
     discard_result: bool,
 ) -> Option<LoweredMethod> {
+    if method == "len" && !supports_builtin_len(object_ty) {
+        return None;
+    }
     let resolved_object_ty = object_ty.resolve_alias();
     let expr = match (resolved_object_ty, method) {
         (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), args),
         (Type::Tuple(elems), "count") => common::lower_tuple_count(elems.len(), object, args),
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
-        (Type::Str, "len") => common::lower_string_char_len(object, args),
+        (Type::Str | Type::LiteralStr(_), "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(ty, object, args),
         (Type::Class { .. }, "len") if args.is_empty() => Some(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
             method: "len".to_string(),
             args: Vec::new(),
         }),
-        (_, "len") => common::lower_len(object, args),
+        (Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Bytes, "len") => {
+            common::lower_len(object, args)
+        }
         (ty, "clone") if ty.supports_derived_clone() && args.is_empty() => {
             Some(RustExpr::MethodCall {
                 receiver: Box::new(object.clone()),

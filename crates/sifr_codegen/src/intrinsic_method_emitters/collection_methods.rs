@@ -189,6 +189,11 @@ impl RustEmitter {
         let discard_result = operands.discard_result;
         let effective_object_ty = self.effective_method_object_ty(object);
         let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
+        // Checked-read length shortcuts obey the same receiver support as the
+        // registry; a witness proves presence, never method availability.
+        if method == "len" && !methods::supports_builtin_len(object_ty) {
+            return None;
+        }
         if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
             self,
             object,

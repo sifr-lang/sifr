@@ -121,7 +121,7 @@ impl RustEmitter {
         if let Some(lowered) = Self::try_lower_collection_truthiness_condition_for_ir(condition) {
             return Ok(Some(lowered));
         }
-        if let Some(lowered) = Self::try_lower_numeric_truthiness_condition_for_ir(condition) {
+        if let Some(lowered) = self.try_lower_numeric_truthiness_condition_for_ir(condition)? {
             return Ok(Some(lowered));
         }
         if let Some(lowered) = self.try_lower_borrowed_name_compare_condition_for_ir(condition) {
@@ -219,78 +219,33 @@ impl RustEmitter {
     }
 
     pub(crate) fn try_lower_numeric_truthiness_condition_for_ir(
+        &mut self,
         condition: &HirExpr,
-    ) -> Option<crate::RustExpr> {
-        match condition {
-            HirExpr::Name { name, ty, .. } => Some(crate::RustExpr::BinOp {
-                left: Box::new(crate::RustExpr::Ident(name.clone())),
-                op: "!=".to_string(),
-                right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
-            }),
-            HirExpr::MethodCall {
-                object,
-                method,
-                args,
-                ty,
-                ..
-            } if method == "len" && args.is_empty() => {
-                let HirExpr::Name { name, .. } = object.as_ref() else {
-                    return None;
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let (operand, op) = match condition {
+            HirExpr::UnaryOp { op, operand, .. } if op == "not" => (operand.as_ref(), "=="),
+            _ => (condition, "!="),
+        };
+        let Some(zero) = Self::zero_literal_for_numeric_truthiness_type_for_ir(operand.ty()) else {
+            return Ok(None);
+        };
+        let lhs = match operand {
+            HirExpr::Name { name, .. } => crate::RustExpr::Ident(name.clone()),
+            // Use the admitted method expression, including its actual return
+            // representation and receiver/place lowering, before testing zero.
+            HirExpr::MethodCall { .. } => {
+                let Some(lowered) = self.lower_stmt_expr_for_ir(operand)? else {
+                    return Ok(None);
                 };
-                let lhs = crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec![
-                        "SifrInt".to_string(),
-                        "from".to_string(),
-                    ])),
-                    args: vec![crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(name.clone())),
-                        method: "len".to_string(),
-                        args: vec![],
-                    }],
-                };
-                Some(crate::RustExpr::BinOp {
-                    left: Box::new(lhs),
-                    op: "!=".to_string(),
-                    right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
-                })
+                lowered
             }
-            HirExpr::UnaryOp { op, operand, .. } if op == "not" => match operand.as_ref() {
-                HirExpr::Name { name, ty, .. } => Some(crate::RustExpr::BinOp {
-                    left: Box::new(crate::RustExpr::Ident(name.clone())),
-                    op: "==".to_string(),
-                    right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
-                }),
-                HirExpr::MethodCall {
-                    object,
-                    method,
-                    args,
-                    ty,
-                    ..
-                } if method == "len" && args.is_empty() => {
-                    let HirExpr::Name { name, .. } = object.as_ref() else {
-                        return None;
-                    };
-                    let lhs = crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec![
-                            "SifrInt".to_string(),
-                            "from".to_string(),
-                        ])),
-                        args: vec![crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident(name.clone())),
-                            method: "len".to_string(),
-                            args: vec![],
-                        }],
-                    };
-                    Some(crate::RustExpr::BinOp {
-                        left: Box::new(lhs),
-                        op: "==".to_string(),
-                        right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
-                    })
-                }
-                _ => None,
-            },
-            _ => None,
-        }
+            _ => return Ok(None),
+        };
+        Ok(Some(crate::RustExpr::BinOp {
+            left: Box::new(lhs),
+            op: op.to_string(),
+            right: Box::new(zero),
+        }))
     }
 
     pub(crate) fn zero_literal_for_numeric_truthiness_type_for_ir(
