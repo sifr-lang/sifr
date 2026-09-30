@@ -3,12 +3,16 @@ use super::{ObjectHandle, PythonError, PythonRuntimeError};
 use pyo3::ffi;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyDict, PyTuple};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::CStr;
 use std::hash::BuildHasher;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
 mod abi;
+mod transfer;
+
+#[cfg(test)]
+mod h02_contract_tests;
 
 const ARROW_SCHEMA_NAME: &CStr = c"arrow_schema";
 const ARROW_ARRAY_NAME: &CStr = c"arrow_array";
@@ -45,6 +49,7 @@ struct ArrowEntry {
     token: i64,
     kind: ArrowKind,
     capsules: TrackedArrowCapsules,
+    pointers: Vec<usize>,
     capsule_names: Vec<String>,
 }
 
@@ -69,11 +74,14 @@ impl PythonArrowArgument {
             .ok_or_else(|| arrow_error("Python Arrow argument is already finalized"))?;
         let object = self.object.take();
         let state = super::attach(move |py| {
-            let state = consumption_state(py, &entry)?;
+            let state = consumption_state(py, &entry);
+            if let Some(object) = object.as_ref() {
+                finalize_proxy(py, object)?;
+            }
             drop(object);
             drop(entry);
             super::foreign_object::drain_pending_releases(py);
-            Ok(state)
+            state
         })
         .map_err(PythonError::runtime)??;
         if state == abi::ConsumptionState::Partial {
@@ -93,6 +101,9 @@ impl Drop for PythonArrowArgument {
         };
         let object = self.object.take();
         let _ignored = super::attach(move |py| {
+            if let Some(object) = object.as_ref() {
+                let _ignored = finalize_proxy(py, object);
+            }
             drop(object);
             drop(entry);
             super::foreign_object::drain_pending_releases(py);
@@ -102,11 +113,13 @@ impl Drop for PythonArrowArgument {
 
 struct TrackedArrowCapsules {
     capsules: Vec<Py<PyAny>>,
+    transfer: Option<transfer::TransferLease>,
 }
 
 impl Drop for TrackedArrowCapsules {
     fn drop(&mut self) {
         self.capsules.clear();
+        drop(self.transfer.take());
         let _ignored = super::update_object_count(-1);
     }
 }
@@ -224,12 +237,17 @@ pub fn prepare_arrow_argument(handle: ArrowHandle) -> Result<PythonArrowArgument
         }
     }
     .ok_or_else(|| closed_error(handle.0))?;
-    let (entry, object) = super::attach(move |py| match build_argument_proxy(py, &entry) {
-        Ok(object) => Ok((entry, object)),
-        Err(error) => {
-            drop(entry);
-            super::foreign_object::drain_pending_releases(py);
-            Err(error)
+    let (entry, object) = super::attach(move |py| {
+        let mut entry = entry;
+        validate_entry(py, &entry)?;
+        entry.capsules.transfer = Some(transfer::TransferLease::acquire(&entry.pointers)?);
+        match build_argument_proxy(py, &entry) {
+            Ok(object) => Ok((entry, object)),
+            Err(error) => {
+                drop(entry);
+                super::foreign_object::drain_pending_releases(py);
+                Err(error)
+            }
         }
     })
     .map_err(PythonError::runtime)??;
@@ -278,7 +296,9 @@ fn acquire_arrow_capsules(
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         let producer = producer_info(object.bind(py));
-        let requested_schema = requested_schema.map(take_requested_schema).transpose()?;
+        let requested_schema = requested_schema
+            .map(|handle| take_requested_schema(py, handle))
+            .transpose()?;
         let exported = call_export_method(
             object.bind(py),
             kind,
@@ -315,27 +335,32 @@ fn call_export_method<'py>(
     }
 }
 
-fn take_requested_schema(handle: ArrowHandle) -> Result<ArrowEntry, PythonError> {
-    let mut store = arrow_store()?;
-    let entry = store
-        .capsules
-        .get(&handle.0)
-        .filter(|entry| entry.token == handle.1)
-        .ok_or_else(|| closed_error(handle.0))?;
-    if entry.kind != ArrowKind::Schema {
-        return Err(arrow_error(
-            "requested_schema must be an owned python.ArrowSchema resource",
-        ));
-    }
-    if entry.capsules.capsules.len() != 1 {
-        return Err(arrow_error(
-            "requested ArrowSchema resource must own exactly one capsule",
-        ));
-    }
-    store
-        .capsules
-        .remove(&handle.0)
-        .ok_or_else(|| closed_error(handle.0))
+fn take_requested_schema(py: Python<'_>, handle: ArrowHandle) -> Result<ArrowEntry, PythonError> {
+    let mut entry = {
+        let mut store = arrow_store()?;
+        let entry = store
+            .capsules
+            .get(&handle.0)
+            .filter(|entry| entry.token == handle.1)
+            .ok_or_else(|| closed_error(handle.0))?;
+        if entry.kind != ArrowKind::Schema {
+            return Err(arrow_error(
+                "requested_schema must be an owned python.ArrowSchema resource",
+            ));
+        }
+        if entry.capsules.capsules.len() != 1 {
+            return Err(arrow_error(
+                "requested ArrowSchema resource must own exactly one capsule",
+            ));
+        }
+        store
+            .capsules
+            .remove(&handle.0)
+            .ok_or_else(|| closed_error(handle.0))?
+    };
+    validate_entry(py, &entry)?;
+    entry.capsules.transfer = Some(transfer::TransferLease::acquire(&entry.pointers)?);
+    Ok(entry)
 }
 
 fn build_argument_proxy(py: Python<'_>, entry: &ArrowEntry) -> Result<ObjectHandle, PythonError> {
@@ -362,6 +387,9 @@ class _SifrOwnedArrowArgument:
         self._capsules = capsules
         self._arrow_kind = arrow_kind
         self._exported = False
+    def _finalize(self):
+        self._capsules = ()
+        self._exported = True
     def _require(self, arrow_kind):
         if self._exported:
             raise RuntimeError("owned Arrow resource was already exported")
@@ -409,6 +437,14 @@ obj = _SifrOwnedArrowArgument(CAPSULES, ARROW_KIND)
     super::foreign_object::ForeignObject::new(object).map_err(PythonError::runtime)
 }
 
+fn finalize_proxy(py: Python<'_>, object: &ObjectHandle) -> Result<(), PythonError> {
+    clone_handle(py, object)?
+        .bind(py)
+        .call_method0("_finalize")
+        .map(|_| ())
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow finalization"))
+}
+
 fn consumption_state(
     py: Python<'_>,
     entry: &ArrowEntry,
@@ -427,6 +463,15 @@ fn consumption_state(
             .map_err(|error| {
                 PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument finalization")
             })
+            .and_then(|pointer| {
+                if entry.pointers.get(index) != Some(&pointer.as_ptr().addr()) {
+                    Err(arrow_error(
+                        "Python Arrow argument capsule pointer identity changed",
+                    ))
+                } else {
+                    Ok(pointer)
+                }
+            })
     };
     match entry.kind {
         ArrowKind::Array => abi::array_pair_consumption(
@@ -443,6 +488,53 @@ fn consumption_state(
             abi::device_stream_consumption(pointer(0, ARROW_DEVICE_STREAM_NAME)?)
         }
     }
+}
+
+fn capsule_pointers(
+    py: Python<'_>,
+    capsules: &[Py<PyAny>],
+    kind: ArrowKind,
+) -> Result<Vec<usize>, PythonError> {
+    capsules
+        .iter()
+        .zip(capsule_names(kind))
+        .map(|(capsule, name)| {
+            let name = std::ffi::CString::new(name)
+                .map_err(|_| arrow_error("invalid internal Arrow capsule name"))?;
+            capsule
+                .bind(py)
+                .cast::<PyCapsule>()
+                .map_err(|_| arrow_error("Python Arrow capsule identity changed"))?
+                .pointer_checked(Some(&name))
+                .map(|pointer| pointer.as_ptr().addr())
+                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow identity"))
+        })
+        .collect()
+}
+
+fn validate_entry(py: Python<'_>, entry: &ArrowEntry) -> Result<(), PythonError> {
+    if capsule_pointers(py, &entry.capsules.capsules, entry.kind)? != entry.pointers {
+        return Err(arrow_error("Python Arrow capsule pointer identity changed"));
+    }
+    let exported = if matches!(entry.kind, ArrowKind::Array | ArrowKind::DeviceArray) {
+        PyTuple::new(
+            py,
+            entry.capsules.capsules.iter().map(|value| value.bind(py)),
+        )
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow admission"))?
+        .into_any()
+    } else {
+        entry
+            .capsules
+            .capsules
+            .first()
+            .ok_or_else(|| arrow_error("Python Arrow capsule is missing"))?
+            .bind(py)
+            .clone()
+    };
+    // Revalidate release/callback metadata: a borrowed observer may have consumed
+    // the capsule since acquisition. Observation never confers transfer authority.
+    extract_capsules(py, &exported, entry.kind).map(|_| ())
 }
 
 fn extract_capsules(
@@ -544,6 +636,7 @@ fn validate_capsule(
             expected_name.to_string_lossy()
         ))
     })?;
+    // SAFETY: cast proves a live PyCapsule and the attachment protects its name.
     let actual_name = unsafe { ffi::PyCapsule_GetName(capsule.as_ptr()) };
     if actual_name.is_null() {
         return Err(arrow_error(format!(
@@ -551,6 +644,7 @@ fn validate_capsule(
             expected_name.to_string_lossy()
         )));
     }
+    // SAFETY: CPython capsule names are exporter-owned NUL-terminated strings.
     let actual_name = unsafe { CStr::from_ptr(actual_name) };
     if actual_name != expected_name {
         return Err(arrow_error(format!(
@@ -562,6 +656,7 @@ fn validate_capsule(
     let pointer = capsule
         .pointer_checked(Some(expected_name))
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", context))?;
+    // SAFETY: the live capsule type was checked above. Only observe the callback.
     let destructor = unsafe { ffi::PyCapsule_GetDestructor(capsule.as_ptr()) };
     if destructor.is_none() {
         let _stale_error = PyErr::take(py);
@@ -579,6 +674,11 @@ fn store_arrow_capsules(
     capsule_names: Vec<String>,
     producer: ProducerInfo,
 ) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    let pointers = super::attach(|py| capsule_pointers(py, &capsules, kind))
+        .map_err(PythonError::runtime)??;
+    if pointers.iter().copied().collect::<HashSet<_>>().len() != pointers.len() {
+        return Err(arrow_error("Python Arrow paired capsule payloads alias"));
+    }
     let mut store = arrow_store()?;
     let (handle, token) = reserve_handle(&mut store)?;
     super::update_object_count(1).map_err(PythonError::runtime)?;
@@ -587,7 +687,11 @@ fn store_arrow_capsules(
         ArrowEntry {
             token,
             kind,
-            capsules: TrackedArrowCapsules { capsules },
+            capsules: TrackedArrowCapsules {
+                capsules,
+                transfer: None,
+            },
+            pointers,
             capsule_names: capsule_names.clone(),
         },
     );
@@ -696,9 +800,12 @@ fn arrow_store() -> Result<MutexGuard<'static, ArrowStore>, PythonError> {
 
 #[cfg(test)]
 pub(super) fn reset_arrow_store_for_tests() {
-    if let Ok(mut store) = ARROW_STORE.lock() {
-        *store = ArrowStore::default();
-    }
+    // Drop capsules outside the store mutex: native destructors may reenter.
+    let entries = ARROW_STORE
+        .lock()
+        .ok()
+        .map(|mut store| std::mem::take(&mut store.capsules));
+    drop(entries);
 }
 
 #[cfg(test)]
