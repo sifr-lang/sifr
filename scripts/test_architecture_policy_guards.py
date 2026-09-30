@@ -51,12 +51,12 @@ class PolicyFoundationTests(unittest.TestCase):
             Source(paths[1], '\n\nfn reads() { let seed = ' + str(seed)
                    + '; unsafe { read(filler); }\nunsafe { read(second); } }')
             for seed in range(200))
-            if not unsafe.discover(source)[1].fingerprint.startswith('a'))
+            if all(not site.fingerprint.startswith('a') for site in unsafe.discover(source)))
         sources = [first_source, second_source]
         second = unsafe.discover(second_source)
         sites = [unsafe.discover(first_source)[0], second[1], second[0]]
         self.assertNotEqual(sites[0].ordinal, sites[1].ordinal)
-        self.assertFalse(sites[1].fingerprint.startswith('a'))
+        self.assertEqual(sum(site.fingerprint.startswith('a') for site in sites), 1)
         self.assertNotEqual(sites[0].line, sites[1].line)
         # The retained case also covers distinct ordinals in one source scope.
         self.test_actual_binding_values_cannot_distinguish_repeated_contracts()
@@ -74,7 +74,9 @@ class PolicyFoundationTests(unittest.TestCase):
                     for site, record in zip(sites, records['sites']):
                         record['contract'] = dict.fromkeys(unsafe.CONTRACT_FIELDS,
                             f'Owner keeps {word} leases on the allocation. ' + suffix(site))
-                    self.assert_repeated_union(sites, records, sources)
+                    errors = self.assert_repeated_union(sites, records, sources)
+                    self.assertEqual(errors, ['repeated owner-level contract lacks local obligations: '
+                                              + ', '.join(sorted(site.key for site in sites))])
 
     def test_third_site_binding_references_preserve_distinct_obligations(self):
         from itertools import permutations
