@@ -966,13 +966,286 @@ holds the separate passing and partial area receipts.
 | E04 | Separate editor correctness owner; F34; merged in [PR #4087](https://github.com/sifr-lang/sifr/pull/4087), receipt above. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a-H01d and H01f-H01h merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), [PR #4104](https://github.com/sifr-lang/sifr/pull/4104), [PR #4107](https://github.com/sifr-lang/sifr/pull/4107), and [PR #4110](https://github.com/sifr-lang/sifr/pull/4110), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
 | H02/F29 | **Closed / reviewed integrated delivery** in [PR #4183](https://github.com/sifr-lang/sifr/pull/4183), with the final receipt below. Typed lowering and unsafe bridge owners; historically split into H02a0, H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02h below. H02a stopped at needs-new-scope in [PR #4115](https://github.com/sifr-lang/sifr/pull/4115); H02a0 merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118), H02a1 merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120), H02b merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122), and H02c merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124), with bounded statement-only admission repair merged in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142) and condition-method admission repair merged in [PR #4159](https://github.com/sifr-lang/sifr/pull/4159); H02d stopped needs-new-scope in [PR #4127](https://github.com/sifr-lang/sifr/pull/4127); H02d0 merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130); H02d1 merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); H02e merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); H02f merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136); H02g merged in [PR #4138](https://github.com/sifr-lang/sifr/pull/4138); H02h0-H02h5 have merged; the final integration passes all retained named acceptance below. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. Complete only after the predecessor items and H02h0-H02h5 pass their named acceptance and merge. |
-| H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
+| H03/F30 | Scope defined below as H03a-H03f; implementation open after merged H02h5. | Source-bound normalized complexity, fan-out, API-growth and concentration ratchets; current codegen/lowering API and dead-code dispositions; live flow semantics and governed resource evidence. Removal requires a separately defined exact-symbol child. |
 | D01a | Diagnostic and verification registry prerequisite; non-codegen F32; merged in [PR #3936](https://github.com/sifr-lang/sifr/pull/3936), receipt below. | Active code identity, owner-module and fixture references, related-span JSON, verification mutation inventory and negative drift tests. Do not change codegen diagnostics or historical numeric codes. |
 | D01b | Documentation owner; F31 and final current maps; open after structural delivery. | Alias/target-aware maps, current API/path/link checks, active-named release-record status and links; historical receipts preserved. |
 | D01c | Diagnostic registry completeness owner; residual non-codegen F32 follow-up, open after structural delivery. | Reconcile declared owner modules with actual emitters and replace bare-file representative references where a case-level reference exists; retain D01a negative guardrails. |
 | Q01 | Final integration qualifier; all retained criteria; open after required owner merges. | Exact-candidate full merge profile, companion freshness, compatible performance reference and owner handoffs; whole-phase review and separate docs-only closure. |
 
 Rows crossing packages specify a contract handoff; delivery splits at package ownership boundaries. Do not use this record to absorb another active issue.
+
+### H03/F30 current-main scope definition (2026-09-30)
+
+**State: scope defined; H03 implementation and qualification remain open.**
+This definition inspects main `ec93f2b5a37518c0ad4b6b64110d86002091a9d7`,
+which contains H02h5 implementation #4183 and receipt #4184. It retains F30
+from the pinned recommendations identified in the Authority section. Historical
+M12/#3564 and M12G/#3572 provide scenarios and design context only. Their code,
+baselines, counts, tests and reviews are not current-main evidence.
+
+#### Current source findings and boundaries
+
+- `scripts/check_hir_maintainability_guardrails.py` checks banned monoliths and
+  checklist text; the driver companion also checks entrypoint shape. The
+  repository-wide file-size guard enforces 900 physical lines. These guards
+  remain required, but none currently ratchets normalized function complexity,
+  module fan-out, resolved public API growth or near-limit concentration.
+- `sifr_codegen/src/lib.rs` still has crate-wide `allow(dead_code)` and wildcard
+  reexports from implementation modules. This establishes an evidence gap; it
+  does not prove that any particular exported or private symbol is unused.
+  Current explicit Python/Rust plans, canonicalizers and hidden identity hooks
+  have their own callers and must be discovered before visibility changes.
+- `sifr_lowering/src/hir_nodes.rs` already forwards the HIR owned by `sifr_ir`.
+  `sifr_lowering/src/lib.rs` explicitly exports lowering entrypoints, declaration
+  contracts and scope types alongside wildcard HIR reexports and public CFG/flow
+  modules. Do not replay the historical lowering-export move or create a second
+  HIR owner. Typed-intrinsic ownership remains with the current source crates.
+- `sifr_lowering/src/lower/narrowing.rs::apply_narrowing` consumes
+  `flow_graph::narrowing_effects_for_condition` to obtain narrowed types.
+  `mod_context.rs` records narrowing, clear, move, reset and borrow effects;
+  `mod_impl_result.rs` builds the module graph. `sifr_ir::LoweringResult` carries
+  it, and `sifr_frontend::FrontendProduct` retains each module graph.
+  Fingerprints include effect payloads and frontend cache keys bind flow policy.
+  This is live behavior. A graph-removal objective is not authorized by F30.
+- C01's 200-function retained-allocation receipt is useful prior evidence for
+  that fixture, not a current peak-RSS measurement or proof that removing flow
+  is safe. The existing flow document describes companion graph semantics;
+  D01b owns general current documentation/maps, and D01c owns residual registry
+  completeness. H03 may update only documentation of its actual metric/API/flow
+  contracts and the narrowly required registration of its new checks.
+
+All paths above are under `crates/` unless prefixed otherwise. The scope owner
+changes this canonical phase Markdown only. No compiler source, Cargo input,
+lock, fixture, registry or historical receipt changes belong to this definition.
+No compiler test, Cargo build or performance measurement is claimed here.
+
+#### Bounded items and execution order
+
+| ID | Dependency / status | Source ownership and deliverable |
+| --- | --- | --- |
+| H03a | Merged H02h5; ready after this definition merges. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
+| H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
+| H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
+| H03d | H03c and C01; waiting. | Lowering/IR flow semantics: executable independent narrowing equivalence, graph/ownership regression evidence and a complete producer/consumer decision table. Retain production graph behavior. |
+| H03e | H03d and V01 reference admission; waiting. | Frontend/performance evidence: reproducible retained-allocation and governed warm resource measurements for current graph retention, with a documented retain/change decision. No production graph change. |
+| H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
+
+Execute **H03a, H03b, H03c, H03d, H03e, then H03f**, one independently owned
+session and merged item at a time. Evidence items are substantive acceptance,
+not permission to perform a later cleanup. At the H03b/H03c/H03e handoff, any
+proposed compiler change requires a documentation-only scope checkpoint that
+names exact source symbols/paths, consumers, equivalence obligations, tests and
+dependencies before assigning a new H03 child. Proposed codegen, lowering/IR and
+frontend changes have separate owners and cannot be bundled into the evidence
+items. If no change is justified, record the positive retention evidence and
+continue. An unresolved required proof keeps its item open; it cannot become an
+exception or a completion claim. Stop if a dependency is externally blocked.
+
+#### H03a normalized ratchet contract
+
+Owned production/test source partitions comprise all maintained Rust files and
+manifest-declared targets of `sifr_lowering` and `sifr_codegen`. Discover roots
+from their current manifests and module graph, including alias imports,
+`#[path]`, feature/cfg branches, inline modules, impl/trait members and macro
+invocations. Scan the structural union and label configurations; do not silently
+drop an unexpanded/unsupported construct. Generated/external exclusions follow
+the existing file-size rules and are recorded explicitly. Workspace manifests
+and consumers may be read for origin/alias resolution, with no authority to
+modify them. Other compiler crates retain their own maintainability owners.
+
+Use normalized, literal-preserving Rust token spans and qualified declaration
+identity (package, module, impl/trait receiver, item kind/name and disambiguator).
+Source line is diagnostic location only. Comments and formatting cannot change
+semantic metrics or fingerprints. A moved/reexported declaration retains an
+explicit old-to-new identity disposition; ordinal or whole-file hashes alone
+cannot authorize it. The existing `rust_policy_sites.py` lexical scanner can
+provide tokens; it remains discovery evidence, never a Rust resolution or
+dead-code proof. Unsupported resolution must fail or enter an explicit owned
+unresolved record that prevents acceptance of the affected surface.
+
+The versioned schema must define and test these metrics, with per-site and
+per-package production/test results and deterministic ordering:
+
+- Complexity: normalized function body token size, decision/branch count and
+  maximum control nesting; literals/comments containing control keywords do
+  not count as branches. Include closures and match arms by defined ownership.
+- Fan-out: distinct resolved module/package dependencies at import, qualified
+  reference and call sites, including aliases and reexports. Bind normalized
+  edges and callsite provenance; unresolved dynamic/macro edges are explicit.
+- API growth: externally reachable declarations, methods, fields and variants,
+  public module paths and reexports resolved to declaration origins. Distinguish
+  package-public, crate-private, feature-specific and test-only surfaces; a
+  wildcard, alias or signature expansion cannot hide a new reachable item.
+- Concentration: physical-file occupancy of the 900-line cap, the exact set and
+  count at or above 810 lines, and normalized production-token mass in those
+  files per package. Keep the absolute mass and fraction together so new small
+  files cannot dilute a regression. Separate test partitions. Cosmetic padding
+  still obeys the physical cap; formatting alone does not alter token metrics.
+
+Ratchet each existing site's metrics and each package aggregate independently;
+new files/functions/edges/API paths are discovered and require reviewed owner
+admission instead of inheriting a broad baseline. Decreases can tighten the
+baseline. An increase cannot be hidden by unrelated decreases, a rename/split,
+larger denominator or automatic baseline refresh. Initial ceilings come from
+fresh source evidence at the item candidate, not historical counts. Retained
+high-complexity/export/macro sites need finite owned records: exact identity,
+token fingerprint/configuration, metric and bound, rationale, acceptance owner
+and review reference. Reject missing, duplicate, stale and unused records. Such
+records describe justified retained design; they do not waive assertions,
+authorize arbitrary future growth or relax the 900-line limit.
+
+New exact acceptance (reserved, not present or passing at this scope checkpoint):
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_policy_tests.MetricTests`.
+Require these individually executable cases: `test_formatting_and_comments_preserve_normalized_sites`,
+`test_control_metrics_ignore_literals_and_count_nested_branches`,
+`test_alias_reexport_and_qualified_calls_bind_fanout`,
+`test_manifest_targets_cfg_and_new_files_are_discovered`,
+`test_wildcard_export_and_signature_growth_are_visible`,
+`test_growth_cannot_be_offset_by_split_or_denominator`, and
+`test_owned_exceptions_reject_missing_duplicate_stale_and_unused_records`.
+Each exact Python case uses that class-qualified name appended to the command.
+Run the complete class and the unchanged file-size/lowering/codegen-relevant
+dependency-direction guard self-tests. No Cargo test is needed for tooling-only
+implementation that leaves compiler inputs unchanged.
+
+#### H03b/H03c API, fan-out and dead-code acceptance
+
+H03b owns `crates/sifr_codegen/src/` declarations/exports and its evidence
+segment; H03c owns `crates/sifr_lowering/src/` exports and its segment. The
+`sifr_ir` declaration owner, consumer crates and current intrinsic manifest
+are read-only dependencies. Evidence must enumerate exact origin identity,
+reachable public paths, signature/visibility/configuration fingerprint,
+actual consumer symbols/targets, fan-out edges and retained rationale.
+Resolve wildcard and renamed imports transitively; account for tests,
+examples/bins, features, trait dispatch, macro-generated uses and hidden hooks.
+Zero text matches and a compiler warning are insufficient dead-code proofs.
+
+For codegen's blanket allowance, inventory the declarations it masks using
+the current package/target/configuration matrix and compiler diagnostics, then
+adjudicate each with source resolution. Record externally callable contracts
+separately from private code. Every proposed removal must prove no required
+public contract, generated-text producer, side effect, ownership/lifetime,
+validation, error or registration role. A no-op claim needs executable behavior
+equivalence at its callers. Preserve useful strict-decline and fallible public
+generation behavior. The evidence cannot preapprove blanket allowance removal,
+mass privatization or deletion of an entire module. H03c must prove current
+HIR reexports and retained-intrinsic declarations belong to their current
+owners before proposing any API change; the old M12G export list is not an input.
+
+Reserved exact commands:
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_api_tests.CodegenApiTests`
+and `PYTHONPATH=scripts python3 -m unittest -f maintainability_api_tests.LoweringApiTests`,
+respectively. Codegen cases: `test_current_public_closure_matches_declaration_origins`,
+`test_new_wildcard_and_alias_exports_fail_admission`,
+`test_dead_code_disposition_requires_configured_consumers_and_behavior_proof`.
+Lowering cases: `test_hir_reexports_resolve_to_ir_owner`,
+`test_cfg_flow_scope_and_intrinsic_consumers_have_exact_owners`,
+`test_signature_or_visibility_growth_invalidates_owned_record`.
+Run each exact case and its complete class. For H03b diagnostics, run
+`cargo check -p sifr_codegen --all-targets --locked` with explicit configuration
+receipts and an owned temporary diagnostic variant without the blanket allowance;
+do not commit that variant or treat default-feature warnings as exhaustive.
+H03c runs `cargo check -p sifr_lowering --all-targets --locked` and the unchanged
+dependency-direction/intrinsic guard selections. Neither item runs broad E2E
+or edits compiler production behavior.
+
+#### H03d live flow semantics acceptance
+
+Own new tests beside lowering's flow/narrowing implementation and `sifr_ir`
+graph tests. Read frontend/driver/analysis consumers and cache identities without
+changing their production code. Cover both branch polarities for None,
+isinstance, equality, truthiness, Not/And/Or and union/generic/alias types.
+The independent oracle is the type-system narrowing contract and expected HIR,
+diagnostics and ownership state; comparing two calls to the same graph helper
+is not equivalence evidence. Test nested branch restoration, reassignment and
+mutation invalidation, move/reset/borrow, return/raise/unreachable and loop-else
+frontiers. Trace text alone is insufficient when graph edges/types are asserted.
+Compare stable fingerprints with altered payloads as well as identical input.
+Keep each live producer/consumer and cache-policy role in the decision table.
+
+Reserved exact cases in `flow_graph::h03_semantics_tests` (new module):
+`narrowing_matches_independent_type_contract`,
+`branch_restore_reassignment_and_mutation_preserve_facts`,
+`ownership_exit_and_loop_frontiers_preserve_graph_contract`.
+Run each with `cargo test -p sifr_lowering --lib <full-case-name> -- --exact`.
+Retained exact regression commands:
+`cargo test -p sifr_lowering --lib flow_graph::tests:: --` (all eight current cases),
+`cargo test -p sifr_frontend --lib query_diagnostics_equivalence_tests::successful_product_preserves_exports_flow_and_analysis_diagnostics -- --exact`,
+and `cargo test -p sifr_frontend --lib cache_keys::tests::lint_format_package_symbol_and_flow_keys_include_family_inputs -- --exact`.
+Resolve names/counts before claiming a pass. This acceptance supplies current
+retention/equivalence evidence; it does not authorize graph removal.
+
+#### H03e current resource evidence and decision
+
+Own test-only measurement helpers in `sifr_frontend`, a bounded performance-area
+adapter/corpus and the flow decision record. Use deterministic small, C01-sized
+200-function and connected 25-module inputs with loops, branches, mutation and
+ownership effects. Report HIR and graph node/edge/effect counts, retained graph
+bytes, total product retained bytes and release-to-zero separately from peak
+allocation/RSS and elapsed lowering/query time. Compare current graph-retaining
+product with a test-only graph-discarded measurement after semantic work, and
+clearly label that measurement as retention cost only. It cannot demonstrate
+equivalence of a compiler that never computes graph-backed narrowing.
+
+Reserved exact cases: `frontend_product_resource_tests::h03_graph_retention_is_attributed_and_released`
+and `frontend_product_resource_tests::h03_multimodule_flow_retention_preserves_product`,
+each via `cargo test -p sifr_frontend --lib <full-case-name> -- --exact`.
+Reserve performance suite `flow-retention`, cases `small`, `functions-200`,
+`modules-25`, and exact adapter command
+`python3 verification/areas/performance/runner.py --suite flow-retention`.
+All selected assertions and governed samples must execute; no fixed counters.
+The adapter validates corpus/report identity, semantic projections and the
+allocation measurement contract before accepting resource results.
+
+Performance conclusions require live compatible selected-reference admission
+under V01's actual host/toolchain/configuration/governor contract. Add a governed
+case only through the existing performance owner's approval/reference procedure;
+do not create candidate-derived reference data or transfer old budgets. Warm
+compatible preparation precedes measured runs. Record host/cache state,
+configuration, corpus/sample identities, raw report digest and limitations.
+Inspect disk and target reserve without touching another owner's warm target.
+A missing admitted case/reference or external resource prerequisite blocks the
+measurement item and remains failed/blocked evidence. Functional allocation
+tests alone do not qualify timing/RSS. Record **retain** unless both semantic
+equivalence and governed resource evidence justify a specifically scoped change.
+
+#### H03f live integration and closure acceptance
+
+Own only the H03 guard entrypoint, normalized baseline/exception segments,
+`verification/policy/guardrails.json`, required profiles/schema, and the exact
+developer-tooling suite/coverage rows for this new guard. Do not repair unrelated
+registry drift, H02 follow-ups or D01 maps. The live command must rediscover
+current owned source, validate schema before comparison, and reject missing
+segments, unseen sites, unsupported resolution and stale records before success.
+Register a blocking `compiler-maintainability` live check plus self-test in
+create-pr, merge, nightly and release; retain existing size/shape guards.
+
+Reserved commands: `python3 scripts/check_compiler_maintainability.py`,
+`python3 scripts/check_compiler_maintainability.py --self-test`, and
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_integration_tests.IntegrationTests`.
+Exact integration cases: `test_required_profiles_and_area_select_live_ratchets`,
+`test_missing_segment_and_new_source_fail_live_command`,
+`test_cold_checkout_requires_no_git_history_or_compiler_cache`.
+Run each individually, their complete class, H03a-H03c Python classes and the
+registered `developer_tooling/compiler-maintainability` suite through
+`python3 verification/areas/developer_tooling/runner.py --suite compiler-maintainability`.
+Profile/schema/self-test/coverage declarations must agree, and full area plus
+explicit suite selection must not skip or duplicate the assertions. This item
+does not run the Q01 full gate or claim whole-phase closure.
+
+#### Scope-checkpoint validation and handoff
+
+This documentation-only definition requires documentation structure,
+900-line guardrail, single-path scope and `git diff --check` validation. Reserved
+tests above are future acceptance, not tests run by this owner. Intermediate
+implementation items retain named acceptance, focused regressions and scoped
+Opus review under the approved phase policy. Q01 owns final exact-candidate
+full merge qualification; D01b/D01c remain later owners. Historical failed
+reference/CI/gate evidence and H02-owned follow-ups stay preserved.
+
+**Next action after the scope merge: separately assign H03a only.** This owner
+stops before any H03 implementation, broad qualification or whole-phase closure.
+
 
 ### H02/F29 typed lowering and unsafe bridge scope split (2026-09-29)
 
@@ -3706,7 +3979,7 @@ The unmerged [V03b draft PR #3928](https://github.com/sifr-lang/sifr/pull/3928) 
 4. X02 with generated Rust owner after X01, updating diagnostics/fixtures/materialization together.
 5. C01, then C02a0 metadata production/storage, C02a1 metadata consumer/stdlib, C02b Python authoring, C02c SQL editor, C02d preview/editor checks, and C02e final boundary guard in that order.
 6. E01a external generations, then E01b watcher authority, then E01c verified Python fast-hit reorder and publication. E02 remains separate after C01; E03 follows E01c and E02. E04 independently completes before editor closure.
-7. H01, then H02a0, H02a1, H02b, H02c, atomic H02d0, runtime-only H02d1, H02e-H02g and the H02h0-H02h5 formal rescope in their recorded dependency order, H03, D01b current documentation and D01c residual registry completion.
+7. H01, then H02a0, H02a1, H02b, H02c, atomic H02d0, runtime-only H02d1, H02e-H02g and the H02h0-H02h5 formal rescope in their recorded dependency order, H03a normalized ratchets, H03b codegen API/dead-code evidence, H03c lowering API evidence, H03d flow semantics, H03e governed flow resources, any separately scoped proven cleanup, then H03f live integration; D01b current documentation and D01c residual registry completion.
 8. Q01 exact-candidate integration, owner handoff audit, whole-phase review and closure. Release qualification only on an actual request.
 
 The 2026-09-23 assignment prospectively approves intermediate items with named acceptance tests, focused regressions and scoped Opus review, without per-item create-PR/full merge gates. Q01 runs one full merge profile on final merged work; repair the first in-scope cause, rerun failed/affected checks and the full gate until it passes. The whole-phase closer edits docs only and returns needs-implementation for defects. Other owners retain their own recorded rules.
