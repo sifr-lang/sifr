@@ -1000,7 +1000,7 @@ regressions, scoped review and merge receipt before a dependent item begins.
 | H02e / `sifr_runtime::python::buffer_ops` | Merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); receipt below. After merged H02d1 (and its H02d0 prerequisite). Own `Py_buffer` acquisition/release, shape/stride/bounds/alignment, writable alias admission, indirect access and exporter lifetime. Document unsafe pointer/read/write and `Send` contracts; reject conflicting aliases and malformed layouts before access. | `cargo test -p sifr_runtime --features python --lib python::buffer_ops::h02_contract_tests::layout_bounds_and_alias_admission -- --exact`; `cargo test -p sifr_runtime --features python --lib python::buffer_ops::h02_contract_tests::all_release_paths_are_exact_once -- --exact`; focused existing `python::buffer_ops::tests`, `python::buffer_ops::release_evidence_tests` and `python::buffer_ops::typed_access_evidence_tests`. Include negative strides, indirect pointers, shared storage, failure, explicit release and drop. |
 | H02f / `sifr_runtime::python::arrow_ops` | Merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136), receipt below; after merged H02d1 (and H02d0); independent of H02e. Own Arrow C Data/Stream/Device ABI layout, capsule identity, pointer lifetime, alias/transfer rules and release callbacks. Validate nullable callbacks and malformed capsules before dereference; distinguish borrowed observation from consumed ownership and prove exact-once release. | `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once -- --exact`; focused existing `python::arrow_ops::tests`, including malformed capsule, full/partial/failed consumption and stream/device release. |
 | H02g / `sifr_runtime::python::dlpack_ops` | Merged in [PR #4138](https://github.com/sifr-lang/sifr/pull/4138), receipt below; after merged H02d1 (and H02d0); independent of H02e-H02f. Own legacy/versioned ABI layout, capsule one-shot consumption, device/stream validity, tensor lifetime, deleter transfer and exact-once release on rejection/reset/drop. Do not change declaration certification policy. | `cargo test -p sifr_runtime --features python --lib python::dlpack_ops::h02_contract_tests::legacy_versioned_layout_and_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::dlpack_ops::h02_contract_tests::rejection_and_reset_release_exactly_once -- --exact`; focused existing `python::dlpack_ops::declaration_tests`. |
-| H02h / method and unsafe policy integration | **Blocked / needs-implementation**: draft [PR #4140](https://github.com/sifr-lang/sifr/pull/4140) is unmerged; scoped Opus review is NOT SATISFIED. The H02c statement-only handoff is repaired in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142); remaining H02h policy defects are recorded below. After merged H02a0, H02a1, H02b, H02c, H02d0, H02d1, H02e, H02f and H02g. Record semantic site classifications and local unsafe contracts with normalized site fingerprints, not per-file counts. Detect changed/new/stale dispatch under renamed bindings; reject a second language-semantics owner, broad item-level unsafe allowances and operations without local contracts. Mask strings/comments/characters without hiding Rust lifetimes; self-tests work in a cold checkout. Assign SQL, cache, driver and generated-code sites to existing owners, without editing those packages. A static scan does not prove runtime safety. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; `python3 scripts/check_unsafe_abi_contracts.py --self-test`; `python3 scripts/check_unsafe_abi_contracts.py`; exact H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g named cases and focused list-method/Python bridge regressions on the integrated candidate. Negative fixtures cover renamed dispatch, second owner, stale fingerprint, broad allowance, missing contract and character-literal masking. |
+| H02h / method and unsafe policy integration | **Blocked / needs-adjudication**: remediation draft [PR #4144](https://github.com/sifr-lang/sifr/pull/4144) is unmerged and its scoped Opus review repeats the unsafe-locality and semantic-classification blockers; receipt below. Original draft [PR #4140](https://github.com/sifr-lang/sifr/pull/4140) is unmerged; scoped Opus review is NOT SATISFIED. The H02c statement-only handoff is repaired in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142); remaining H02h policy defects are recorded below. After merged H02a0, H02a1, H02b, H02c, H02d0, H02d1, H02e, H02f and H02g. Record semantic site classifications and local unsafe contracts with normalized site fingerprints, not per-file counts. Detect changed/new/stale dispatch under renamed bindings; reject a second language-semantics owner, broad item-level unsafe allowances and operations without local contracts. Mask strings/comments/characters without hiding Rust lifetimes; self-tests work in a cold checkout. Assign SQL, cache, driver and generated-code sites to existing owners, without editing those packages. A static scan does not prove runtime safety. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; `python3 scripts/check_unsafe_abi_contracts.py --self-test`; `python3 scripts/check_unsafe_abi_contracts.py`; exact H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g named cases and focused list-method/Python bridge regressions on the integrated candidate. Negative fixtures cover renamed dispatch, second owner, stale fingerprint, broad allowance, missing contract and character-literal masking. |
 
 H02d0 is the explicit exception to splitting delivery at a package boundary:
 the runtime API and the generated caller/teardown proof are one atomic
@@ -2156,6 +2156,115 @@ This session owns worktree
 temporary paths. The bounded H02c repair has no current blocker. Next action is
 separately assigned H02h policy remediation on the integrated base. This session
 stops before that batch; H02/F29, H02h and whole-phase closure are not claimed.
+
+### H02h remediation review blocked receipt (2026-09-30)
+
+H02h is **open / needs-adjudication**. Draft
+[PR #4144](https://github.com/sifr-lang/sifr/pull/4144) preserves candidate
+`aaa20a85bce425aa88f7e2704027b7c4f9502e86` against integrated base
+`c53b5dbc442e255066ba55f0d1860aa03850ec07`, which already includes the merged
+H02c statement-only admission repair. The draft is unmerged and has no scoped
+review approval. It supersedes neither the historical NOT SATISFIED evidence
+for draft #4140 nor its blocker receipt #4141; both remain preserved. No Rust
+package source was changed by this attempt.
+
+Read-only scoped Opus 5.5 returned **NOT SATISFIED**. Response SHA-256:
+`1b15f5017d4033e6c86d273fe526a697e2539e41edaaf2398f018219bedd76f7`.
+The response is `review/opus-5-5.md` under the candidate evidence directory
+below. Two original findings recur:
+
+1. **Unsafe operation contracts still lack local obligations.** The inventory
+   appends normalized operation text and SAFETY evidence to repeated templates,
+   while `check_unsafe_abi_contracts.py:143-150` only removes the previous
+   scope/ordinal prefix before checking duplicates. The reviewer counted 353/366
+   records with an `Admitted operands/effect` suffix and 311 with the exact
+   operation text at the end of the alias field. Removing operation/evidence
+   suffixes leaves 156 distinct contract templates; one covers 38 cache, driver
+   and SQL operations, and shared lifetime/alias/ownership sentences cover
+   94-98 sites. This fails the original local four-field contract criterion.
+   Some contracts are false: `buffer_ops/raw.rs::release_raw::unsafe-block::2`
+   describes `PyBuffer_Release` as borrowing rather than consuming release;
+   `callbacks/asyncio.rs::build_asyncio_callback::unsafe-block::1` omits the
+   lifetime-erasure/revocation obligation of `erase_target_lifetime`; and the
+   Windows cache `test_grant_world` blocks incorrectly require Python attachment.
+   Required correction: author actual per-operation release/transfer,
+   lifetime-erasure/revocation and pointer read/write/alias obligations; normalize
+   embedded operation/evidence suffixes as well as prefixes before the duplicate
+   check; add a negative self-test for the suffix evasion.
+2. **Method classifications still hide actual site roles.** All 1,295
+   `user-protocol-dispatch` records retain one blanket semantic sentence. That
+   label covers 586 generated-Rust canonicalizer sites and 44 IR optimization
+   sites that consume syntax/IR. It also covers builtin-name specializations
+   outside the 18 registered constituents: `checked_place.rs:334-337`,
+   `try_lower_nonempty_pop_tail_for_ir` (`pop`/`popleft`);
+   `intrinsic_method_emitters/narrowing_helpers.rs:14`,
+   `adapt_owned_mapping_default` (`get`/`pop`/`remove`); and the narrowable-pop
+   helpers at `narrowing_helpers.rs:63-68` and in
+   `stmt_support_emitter/expr_call_metadata.rs`. Required correction: classify
+   generated-Rust/IR rewrites as Rust-IR consumption; truthfully classify these
+   builtin specializations as registered constituents or contextual Rust
+   adaptations with their actual admission relationship; replace the blanket
+   sentence with a site-specific semantic contract.
+
+These repeat original findings (4) and (3). The
+`.cursor/skills/phase-closure-loop/SKILL.md` rule says, "If the same finding returns
+twice, stop and request adjudication." This owner stopped implementation and
+review, preserved the exact draft and logs, and did not perform another repair
+or review. A separately assigned scope adjudication must decide the next bounded
+implementation action. No H02c repair, H02h merge, H02/F29 closure, Q01
+qualification or H03 work is claimed.
+
+Completed exact-candidate validation is partial: the four prescribed script
+commands passed (6,248 dispatch sites, 366 unsafe records, 18 constituent
+nodes), method self-tests passed 13 cases, unsafe self-tests passed 12 cases,
+and the separate scripts-only cold-checkout test passed. The first three named
+Cargo cases each resolved and executed 1/1:
+`method_authority_tests::carrier_preserves_receiver_and_source` in `sifr_ir`,
+`metadata::tests::h02a0_authority_record_roundtrip` and
+`metadata::tests::h02a0_old_version_and_invalid_authority_reject` in
+`sifr_sysroot`. Eleven commands completed with exit 0. The selected run was
+terminated cleanly while resolving
+`sifr_compiler_services::metadata::tests::h02a0_hir_authority_roundtrip`; that
+resolution and all later named/focused selections and the exact list E2E remain
+**incomplete**, not passes. No broad local gate was run. Precommit file-size and
+diff checks passed; the documentation-only record runs its relevant checks.
+
+Candidate-keyed raw logs, exact command results, review prompt/response and the
+explicit cancellation receipt are under
+`/data/sifr-architecture-h02h-remediation-evidence-20260930/aaa20a85bce425aa88f7e2704027b7c4f9502e86/`
+on `yaser5@192.168.1.134`. Results SHA-256:
+`ba5be1e3934424ba004dbde9c30a631ddd4b006871632045dca5f863825f392c`.
+`stopped-validation.json` records the completed commands, three executed named
+cases and terminated owned process tree; no final integrated manifest or
+selection pass exists. The validation script and preparation artifacts remain
+outside Git. The inactive H02c target was exclusively adopted after matching
+lock/toolchain/configuration and handle/process ownership checks. Rust/Cargo
+1.98.1, selected CPython 3.14.7 and its library, and pinned Ruff/LeetCode inputs
+were retained. The adopted target remains warm and inactive at
+`/data/sifr-architecture-h02h-remediation-20260930/target`; no cleanup or
+host-sensitive performance pass occurred.
+
+The reviewer also recorded follow-ups: comma-less arms beginning with
+`if`/`match`/`unsafe`/`loop` remain undiscovered, although the required rustfmt
+check normalizes the demonstrated forms; `if let`/`.eq`/name-table dispatch is
+outside the documented literal-match/comparison scan; source SAFETY extraction
+can truncate multi-line justifications or include a neighbouring operation's
+comment; and the guardrails JSON incidentally reformats an unrelated argument
+list. These are preserved review findings, not new completed work. They must
+be considered by the adjudicating owner without silently expanding H02 scope.
+
+**V01/Q01-owned external prerequisite:** GitHub's broad create-PR job
+`109756558128` for PR #4144 failed at `performance_reference_admission` because
+`SIFR_PERFORMANCE_REFERENCE` was unset. Raw `ci-create-pr.log` SHA-256:
+`50a24170c4d521f767ab462e104f9b49f040766ae96403d1b87453bb0203e3e3`.
+That remains a failed external prerequisite, not an H02h acceptance failure or
+passing CI claim. The assigned intermediate policy defers full integration
+qualification; this attempt does not absorb V01/Q01 work.
+
+Next action: separately assign one owner to adjudicate the repeated local
+contract and semantic-classification findings, then determine the bounded
+H02h implementation scope. This session stops with **needs-adjudication** and
+does not start H03.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
