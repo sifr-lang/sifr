@@ -1023,14 +1023,16 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 | ID | Dependency / status | Source ownership and deliverable |
 | --- | --- | --- |
-| H03a | Merged H02h5; **needs-new-scope**, semantic-input readiness handoff below; acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
+| H03a0 | Merged H02h5 and readiness #4187/#4188; semantic-input scope checkpoint below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
+| H03a1 | H03a0; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
+| H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
 | H03d | H03c and C01; waiting. | Lowering/IR flow semantics: executable independent narrowing equivalence, graph/ownership regression evidence and a complete producer/consumer decision table. Retain production graph behavior. |
 | H03e | H03d and V01 reference admission; waiting. | Frontend/performance evidence: reproducible retained-allocation and governed warm resource measurements for current graph retention, with a documented retain/change decision. No production graph change. |
 | H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
 
-Execute **H03a, H03b, H03c, H03d, H03e, then H03f**, one independently owned
+Execute **H03a0, H03a1, H03a, H03b, H03c, H03d, H03e, then H03f**, one independently owned
 session and merged item at a time. Evidence items are substantive acceptance,
 not permission to perform a later cleanup. At the H03b/H03c/H03e handoff, any
 proposed compiler change requires a documentation-only scope checkpoint that
@@ -6868,3 +6870,250 @@ only and no repeat external review.
 **Next action: a separate scope owner defines the semantic-input prerequisite
 recorded above.** H03a acceptance and dependent H03b-H03f remain open; this owner
 stops before the next batch.
+
+
+### H03a0 governed semantic-input scope checkpoint (2026-09-30)
+
+**State: scope defined; H03a1 adapter and H03a metric acceptance remain open.**
+This docs-only checkpoint follows #4187/#4188 on exact main
+`5139b7db37f99c6cdd9385d618d95662bae51626`. It changes only this canonical
+phase. H03a0 defines the input prerequisite; H03a1 implements it in a separate
+session and merges before H03a resumes. The original seven MetricTests and
+H03b-H03f acceptance above remain binding. No resolver installation, compilation,
+semantic export, admitted baseline, compiler test or implementation review is
+claimed here.
+
+#### Selected producer and bounded adapter ownership
+
+Select the Rust semantic model from **rust-lang/rust-analyzer source commit
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`**, not an editor navigation response
+or a floating binary. The official upstream manifest requires Rust 1.98 and
+edition 2024, compatible by declared version with this repository's pinned
+Rust/Cargo 1.98.1. Read-only inspection of this exact source found:
+
+- `hir::Semantics::type_of_expr`, `type_of_binding_in_pat`,
+  `resolve_expr_as_callable`, `resolve_method_call`, and
+  `resolve_trait_impl_method` for inferred receivers, callable identity and
+  trait/implementation origins; `Type::as_dyn_trait` and `contains_unknown`
+  distinguish known dynamic dispatch from failed inference.
+- Module scope/declaration/impl enumeration, resolved visibility, parameter and
+  return types, fields and variants provide semantic API traversal. Declaration
+  scope and export binding visibility must both be checked: a declaration's
+  visibility alone does not describe the reachability of its reexport.
+- Macro/derive expansion and source mapping are available. In particular,
+  `original_range` substitutes the macro invocation range when exact mapping
+  fails; H03a1 must distinguish that coarse anchor from an exact source span.
+- `load-cargo`/`project-model` load Cargo's graph, sysroot, build outputs and
+  proc-macro server. Their loaders can log build/proc-macro errors and continue;
+  a loaded database alone is therefore insufficient admission evidence.
+
+These are capability observations, not proof that every Sifr surface resolves.
+The exact source links are
+[semantic queries](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs),
+[declaration/type model](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/lib.rs), and
+[Cargo loader](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/load-cargo/src/lib.rs).
+Upstream Cargo.toml and Cargo.lock SHA-256 values are
+`95340a77280f4780899c94559d6a4c6207a378ae3ad4f95df787f0636b3de485` and
+`6497b191fc31008c70214d1360893919a519095ec1b90c9ffaa667e7476d46a6`.
+No automatic upstream upgrade or alternative lexical resolver is admitted.
+A producer incompatibility needs an owned scope adjudication before substitution.
+
+**H03a1 owner:** verification tooling only. Add a small standalone Rust helper
+under `verification/tools/maintainability_semantic_input/`, with its own isolated
+Cargo workspace, manifest and tracked lockfile; pin all rust-analyzer source
+crates to that one commit. Add `scripts/maintainability_semantic_input.py`,
+`scripts/maintainability_semantic_input_tests.py`, a versioned semantic-input
+schema and bounded Rust fixture inputs under the same verification-tool directory.
+A receipt must bind the resulting helper lock's complete graph to the inspected
+upstream source/lock, explaining any adapter-only dependencies. The root
+Cargo.toml/Cargo.lock and compiler crate inputs remain read-only. Do not vendor
+or modify resolver sources, extend compiler APIs, add metric ceilings/exceptions,
+change flow behavior or register broad verification profiles in this prerequisite.
+H03a owns normalized metrics/baselines; H03f owns blocking policy registration.
+
+Acquiring the pinned resolver source, exact 1.98.1 `rust-src`, and its matching
+`rust-analyzer-proc-macro-srv` is explicitly within the later H03a1 scope. Use
+the selected toolchain's rust-analyzer component if it supplies that server;
+absence or protocol mismatch blocks admission and requires scope adjudication,
+with no silent disabled-macro mode. The current host has neither rust-src nor
+rust-analyzer installed; this checkpoint acquires neither. Record source archive
+or Git commit/tree identity, helper executable digest, server digest/protocol,
+Rust/Cargo full version/commit/host and sysroot source digest before use.
+
+Before tool acquisition or builds, H03a1 must inspect its own target, free disk,
+available RAM and active ownership. Initial planned disk reserve is **12 GiB
+free** (8 GiB estimated acquisition/build scratch plus 4 GiB retained reserve),
+with **8 GiB available RAM** (6 GiB estimated operation plus 2 GiB reserve),
+maximum two Cargo jobs, one semantic worker and one proc-macro process. These
+are prospective resource estimates, not measured producer requirements or
+performance qualification; revise estimates explicitly from operation evidence
+before starting if insufficient. The initial read-only preflight saw 5.4 GiB disk free. The coordinating owner
+then reclaimed its separately owned obsolete inactive C02a1 target, after
+process/handle checks, and reported 40,485,814,272 bytes available (about
+37.7 GiB); its cleanup evidence is `/tmp/sifr-architecture-storage.u5Ec2y`.
+This does not replace H03a1's fresh disk/RAM/ownership preflight. No shared
+artifact cleanup is authorized. Stop H03a1 for a resource blocker if its owned
+inactive cleanup cannot supply the planned reserve. Docs-only H03a0 requires
+no Cargo target and has no such build blocker.
+
+#### Input identity, configuration union and completion contract
+
+Use a versioned `sifr-maintainability-semantic-input-v1` export. Its receipt binds
+candidate SHA/tree, all read source content, manifests, root Cargo.lock including
+package source/checksum/aliases and patches, pinned submodule Git identities,
+Cargo configuration, target specs, features, cfg values, build-script environment,
+build-output contents and proc-macro artifacts to each analysis context. Capture
+all filesystem/environment inputs read by build scripts; an untracked input or
+an inability to establish its dependency set is unsupported, not fresh evidence.
+The exact installed compiler commit is
+`48a229ceaefd4985c50990b14116b6d856af0985`; Cargo reports commit `797e8a9bc`.
+Validate full identities against selected toolchain inputs rather than inferring
+compatibility from the version label. Sysroot/dependency source has origin
+identity even though it is excluded from these packages' maintainability budgets.
+
+Discover both owned package manifests' explicit and implicit lib/build/bin/test/
+example/bench roots, their full Rust module/include graph and all maintained Rust
+files. `build.rs` belongs to production; unit/integration/test-only include bodies
+belong to tests, with shared declarations retaining context labels. Data-only
+`include_str!`/`include_bytes!` is an input dependency, not Rust declarations.
+Every owned file/root/macro invocation needs a disposition. An unconnected new
+Rust file or unknown manifest target is an admission failure, not an exclusion.
+Generated/external source exclusions retain the existing rules and source owners;
+reachable generated declarations/calls still enter semantic/API evidence.
+
+The initial admitted target contexts are **x86_64-unknown-linux-gnu** and
+**x86_64-pc-windows-msvc**, using real selected-toolchain target cfg values and
+sysroot source, each with production `test=false` and test `test=true` contexts.
+Host build scripts/proc-macros retain their Linux host context separately from
+the Windows analyzed target. Target linking or native execution is not required.
+Current owned manifests have no feature tables; their maintained cfg branches
+include `test` and the Unix-only IPC fixture in
+`lower/ipc_schema_extraction.rs`. Linux/Windows cover its true/false branches.
+This read-only observation is not structural-union proof: H03a1 must emit a
+parsed predicate/target/feature coverage ledger from the actual candidate,
+including `cfg_attr`, `#[path]`, inline modules and code-bearing includes.
+
+For every owned conditional, require a valid Cargo/target context realizing
+each satisfiable branch; document unsatisfiability under actual target/feature
+constraints when relevant. Newly found features/configurations need finite
+explicit context admission before acceptance. Enumerate package features,
+`required-features`, dev/build dependency features and build-script cfg outputs;
+record dependency feature unification per context. Never use arbitrary all-cfg
+activation or host-default/all-features alone as a union proof. A missing target
+source, mutually exclusive feature misconfiguration, uncovered satisfiable branch,
+or unsupported predicate leaves the affected package unaccepted. External packages
+are read in each required context for declaration resolution; this does not
+create maintainability ratchets for them or authorize changing their contracts.
+
+Admission must audit module/discovery completeness, expansion/loading errors,
+inference unknowns and required-reference resolution explicitly. Warnings alone
+are not completeness evidence, and loading must not ignore error returns/logs.
+Every export has deterministic ordering and one explicit disposition per required
+site: resolved, known dynamic/generic/function-pointer dispatch, or unsupported.
+A known indirect call binds its inferred callable/signature and available trait
+origin; it makes no concrete implementation claim. An unsupported record retains
+source/configuration/reason and causes nonzero status for the affected package,
+with no consumable accepted export for that package. An owned exception cannot
+waive unsupported/missing semantic input. Do not persist partial output as a pass.
+
+#### Semantic records and provenance
+
+Each declaration binds package ID/source/checksum, namespace, target context,
+module path, item kind/name and impl/trait receiver/generic identity. Anonymous
+or macro-generated items need a stable structural disambiguator and expansion
+chain. Database IDs, source lines, ordinals and whole-file hashes alone are not
+persistent origin identity. Preserve both canonical origin and each exposed
+alias/reexport path, visibility and cfg predicate. Move/rename dispositions remain
+H03a's reviewed obligation; the adapter must expose enough origin/fingerprint
+information to check them.
+
+Calls bind enclosing declaration/closure, literal-preserving normalized token
+interval and structural call position, diagnostic source range, receiver type
+before/after adjustments, callable signature, declaration module/package and
+trait origin. Nested/chained calls receive separate records. Resolve static impl
+origins when supported; trait-object calls bind the static trait declaration and
+an explicit dynamic disposition, never a guessed concrete impl. Generic bound and
+function-pointer calls likewise preserve known signatures and indirect status.
+Distinct direct declaration, trait declaration and dynamic disposition must not
+be collapsed by a shared method name. Import and qualified-reference edges bind
+transitive aliases/reexports, even when the local spelling omits the origin.
+
+Traverse externally reachable module bindings, methods, fields, variants and
+signature types/generic bounds/associated types recursively with cycle detection.
+Keep package-public, crate-private, test-only and context-specific exposure
+separate. Include dependency-owned declarations reachable through lowering's
+`sifr_ir::hir_nodes::*` and codegen's rust_ir derives, while charging each owned
+metric only to its existing owner. Reading external signatures does not transfer
+their complexity/concentration budgets. Downstream caller/dead-code dispositions
+remain H03b/H03c work, not H03a1 acceptance.
+
+Expand declarative, builtin, attribute and derive macros with exact locked inputs.
+Keep macro definition package, invocation owner, expansion token fingerprint,
+generated declaration/member/call origin and original-source mapping quality.
+An exact `original_range_opt` mapping and a generated span anchored to invocation
+plus expansion structure are distinct valid provenance kinds; do not label a
+coarse macro range as an exact handwritten callsite. If the selected producer
+cannot recover the required generated origin/structure or expansion fails, retain
+unsupported evidence and fail the affected surface. Rust code text emitted by
+Sifr into a string is data in this metric, not an additional compiled Rust crate.
+
+Before consuming or reusing an export, compare every bound source/config/tool/
+artifact input, not merely candidate SHA. Detect missing files, drifted lock or
+submodule, changed build output/environment, different target/features/server,
+truncated/duplicate records and schema mismatches. Repeated captures of unchanged
+inputs must normalize identically even at different checkout/temp paths. A stale
+export is rejected; regeneration does not auto-admit metric baseline growth.
+
+#### H03a1 exact acceptance and H03a resumption
+
+Build only the verification helper with
+`cargo build --locked --manifest-path verification/tools/maintainability_semantic_input/Cargo.toml`.
+Dependency build-script/proc-macro preparation needed by the semantic loader is
+allowed, bound to the selected packages/contexts and recorded in its input receipt;
+it is not a workspace compiler test/gate. Do not install an editor/LSP service.
+Run the following five reserved cases individually with
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_semantic_input_tests.SemanticInputTests.<case>`
+and then the full
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_semantic_input_tests.SemanticInputTests`:
+
+| Exact case | Required positive and negative assertions using the actual producer |
+| --- | --- |
+| `test_trait_receiver_and_chained_calls_bind_origins` | Infer closure receivers and separate nested calls; prove distinct local/external/trait origins for ToTokens/to_string and flow_facts/map/reachable_return_types/to_vec. Same-spelled local methods must not inherit trait/import origin; unresolved receiver declines. |
+| `test_dynamic_trait_edges_remain_explicit` | Resolve ExternalDefinitionProvider::prepare's static trait origin with dynamic receiver status; compare static implementation, generic bound and function-pointer calls. Reject forged concrete dynamic target and missing known callable/trait signature. |
+| `test_transitive_wildcard_and_signature_members_bind_origins` | Traverse alias/wildcard chains into dependency-owned declarations, methods/fields/variants/signature/generic-bound types with cycle handling. New reachable members produce records; private bindings and same-named unrelated declarations cannot masquerade as public origins. |
+| `test_macro_derive_and_cfg_targets_have_owned_dispositions` | Expand builtin/declarative/attribute/derive fixture output with owned generated identities and exact/coarse mapping kinds. Exercise production/test, Linux/Windows, fixture feature branches, required-features target, path modules and code/data includes. Removing a context or disabling proc macros fails completeness; an uncovered new branch/file fails. |
+| `test_stale_missing_and_unsupported_semantic_inputs_fail_closed` | Accept repeated unchanged captures across checkout paths; reject changed source/lock/config/features/target/sysroot/build input/server identity, incomplete or duplicate schema records and helper/source-pin mismatch. Corrupt/missing tool inputs or unsupported inference/expansion yields affected-package failure with no accepted partial export. |
+
+Fixtures must invoke the pinned helper, not replace resolution with handcrafted
+JSON or lexical name matches. Record each case's resolved count/executed assertions
+(1/1 individually, 5/5 full class). Include fixture-owned transitive packages and
+procedural macros in their locked graph so fresh acquisition and expansion are
+exercised reproducibly. Test both true/false supported cfg branches, visibility
+at the reexport binding, and coarse generated-span provenance explicitly.
+
+Also execute the reserved live command
+`PYTHONPATH=scripts python3 scripts/maintainability_semantic_input.py --check --packages sifr_lowering sifr_codegen --output-dir <owned-outside-git-directory>`.
+It must cover the full admitted structural union, both build scripts, code-bearing
+includes, the handoff's exact current-source counterexamples and all reachable
+external origins, with zero unsupported required surfaces and a complete fresh
+input/coverage receipt. Capture it twice with unchanged inputs and compare normalized
+exports; validate rejection after a bounded source/config mutation in an owned
+fixture checkout. No new compiler mutation belongs to that check. A passing
+fixture class with unresolved live surfaces does not close H03a1.
+
+H03a1 runs documentation, file-size, diff/scope checks and scoped read-only Opus
+review on its exact final candidate. Preserve failures outside Git, publish the
+producer/configuration/coverage/export digests keyed by candidate, merge and
+record its own receipt. If the producer cannot admit a required current surface,
+stop **needs-new-scope** with its exact declaration/call/configuration and missing
+capability; do not change the resolver, waive the surface or resume H03a.
+
+Only merged H03a1 acceptance unlocks H03a's original normalized metrics/schema/
+baselines/owned records. H03a must run every original MetricTests case, the full
+class and the named unchanged guard self-tests above; semantic-input fixtures do
+not replace those tests. H03b-H03f retain their order after H03a. Q01 still owns
+the phase-end full merge profile and whole-phase review. This scope checkpoint
+qualifies no integration/performance/release evidence.
+
+**Next action: separately assign H03a1 only after this scope checkpoint merges.**
+This H03a0 owner stops before acquisition, adapter implementation or H03a metrics.
