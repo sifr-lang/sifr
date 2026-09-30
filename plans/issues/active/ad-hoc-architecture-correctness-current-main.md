@@ -965,7 +965,7 @@ holds the separate passing and partial area receipts.
 | E03 | LSP performance owner; F23; merged in [PR #4085](https://github.com/sifr-lang/sifr/pull/4085), receipt above. | Actual Python declaration cache deltas in 25 connected modules: cold, unchanged, private/API edit, external change and cancellation/recovery. |
 | E04 | Separate editor correctness owner; F34; merged in [PR #4087](https://github.com/sifr-lang/sifr/pull/4087), receipt above. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a-H01d and H01f-H01h merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), [PR #4104](https://github.com/sifr-lang/sifr/pull/4104), [PR #4107](https://github.com/sifr-lang/sifr/pull/4107), and [PR #4110](https://github.com/sifr-lang/sifr/pull/4110), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
-| H02/F29 | Typed lowering and unsafe bridge owners; needs-new-scope, split into H02a0, H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02h below. H02a stopped at needs-new-scope in [PR #4115](https://github.com/sifr-lang/sifr/pull/4115); H02a0 merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118), H02a1 merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120), H02b merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122), and H02c merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124); H02d stopped needs-new-scope in [PR #4127](https://github.com/sifr-lang/sifr/pull/4127); H02d0 merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130); H02d1 merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); H02e merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); H02f-H02h remain open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. Complete only after all ten bounded items pass their named acceptance and merge. |
+| H02/F29 | Typed lowering and unsafe bridge owners; needs-new-scope, split into H02a0, H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02h below. H02a stopped at needs-new-scope in [PR #4115](https://github.com/sifr-lang/sifr/pull/4115); H02a0 merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118), H02a1 merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120), H02b merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122), and H02c merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124); H02d stopped needs-new-scope in [PR #4127](https://github.com/sifr-lang/sifr/pull/4127); H02d0 merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130); H02d1 merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); H02e merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); H02f merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136); H02g-H02h remain open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. Complete only after all ten bounded items pass their named acceptance and merge. |
 | H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
 | D01a | Diagnostic and verification registry prerequisite; non-codegen F32; merged in [PR #3936](https://github.com/sifr-lang/sifr/pull/3936), receipt below. | Active code identity, owner-module and fixture references, related-span JSON, verification mutation inventory and negative drift tests. Do not change codegen diagnostics or historical numeric codes. |
 | D01b | Documentation owner; F31 and final current maps; open after structural delivery. | Alias/target-aware maps, current API/path/link checks, active-named release-record status and links; historical receipts preserved. |
@@ -998,7 +998,7 @@ regressions, scoped review and merge receipt before a dependent item begins.
 | H02d0 / callback runtime API and generated caller contract | Merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130) after H02a1; receipt below. No additional semantic dependency on H02b/H02c; the current base already includes their merges. One atomic, independently compiling handoff across `sifr_runtime::python::callbacks` (construction, admission, lifetime and teardown authority) and `sifr_codegen` (only the matching generated constructor/cleanup callers). Replace the safe lifetime-erased borrowed facade with a safe structural scope that survives forgetting exposed handles and drains on cancellation, or a narrow unsafe borrowed-construction contract used by compiler-generated scope glue with proved teardown. Keep owned `'static` callbacks safe. Prove borrowed captures stay live through all admitted decoding, execution and polling; normal return, conversion/setup error, escaped shell, early drop, cancellation, reentrant close and exact-once release must terminate safely. A cancelled closer must transfer or finish close authority so later closers terminate and captures release once. No compatibility facade, unrelated runtime-core audit, Buffer/Arrow/DLPack change, bridge-module change or X02 generated-Rust safety rewrite. | Add and run `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::borrowed_callback_lifetime_and_thread_owner -- --exact`; `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::close_cancel_reentrancy_releases_once -- --exact`; `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::borrowed_callback_forget_and_escape_is_rejected_or_drained -- --exact`; `cargo test -p sifr_runtime --features python --lib python::callbacks::h02_contract_tests::cancelled_closer_handoff_releases_once -- --exact`. Run the three exact existing codegen caller cases and the focused runtime/codegen selections below. Require a compile-fail or structurally safe forget/escape proof, a cancelled-closer handoff regression, local thread/lifetime/alias/ownership contracts for changed unsafe boundaries, and independently compiling runtime plus generated callers. |
 | H02d1 / `sifr_runtime::python` CPython core and remaining callback audit | Merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); receipt below; after merged H02d0, runtime-only. Finish the original initialization/GIL/foreign-object and callback-state audit against the repaired lifetime API: initialization/error state, GIL attachment/detachment, foreign-thread entry, object/refcount lifetime, `Send`/`Sync`, registration, in-flight close/cancel/reentrancy and capture release. Give each remaining owned unsafe boundary a local thread, lifetime, alias and ownership contract; narrow broad allowances to a function or cohesive ABI module. Reuse H02d0's established callback contract; do not reopen its codegen handoff or take buffer, Arrow, DLPack, bridge modules or X02. If another package contract must change, stop needs-new-scope. | Add and run `cargo test -p sifr_runtime --features python --lib python::h02_contract_tests::initialization_and_gil_entry_contract -- --exact`; `cargo test -p sifr_runtime --features python --lib python::h02_contract_tests::foreign_object_thread_lifetime_and_release_contract -- --exact`. Run `cargo test -p sifr_runtime --features python --lib python::tests::` and `cargo test -p sifr_runtime --features python --lib python::config_verify::tests::`, the four callback selections below, and all four exact H02d0 runtime cases on the final H02d1 candidate. Assert repeated/conflicting initialization, uninitialized and foreign-thread GIL entry, detached-thread release draining, no premature release or access after semantic close, and exact-once final release. |
 | H02e / `sifr_runtime::python::buffer_ops` | Merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); receipt below. After merged H02d1 (and its H02d0 prerequisite). Own `Py_buffer` acquisition/release, shape/stride/bounds/alignment, writable alias admission, indirect access and exporter lifetime. Document unsafe pointer/read/write and `Send` contracts; reject conflicting aliases and malformed layouts before access. | `cargo test -p sifr_runtime --features python --lib python::buffer_ops::h02_contract_tests::layout_bounds_and_alias_admission -- --exact`; `cargo test -p sifr_runtime --features python --lib python::buffer_ops::h02_contract_tests::all_release_paths_are_exact_once -- --exact`; focused existing `python::buffer_ops::tests`, `python::buffer_ops::release_evidence_tests` and `python::buffer_ops::typed_access_evidence_tests`. Include negative strides, indirect pointers, shared storage, failure, explicit release and drop. |
-| H02f / `sifr_runtime::python::arrow_ops` | After merged H02d1 (and H02d0); independent of H02e. Own Arrow C Data/Stream/Device ABI layout, capsule identity, pointer lifetime, alias/transfer rules and release callbacks. Validate nullable callbacks and malformed capsules before dereference; distinguish borrowed observation from consumed ownership and prove exact-once release. | `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once -- --exact`; focused existing `python::arrow_ops::tests`, including malformed capsule, full/partial/failed consumption and stream/device release. |
+| H02f / `sifr_runtime::python::arrow_ops` | Merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136), receipt below; after merged H02d1 (and H02d0); independent of H02e. Own Arrow C Data/Stream/Device ABI layout, capsule identity, pointer lifetime, alias/transfer rules and release callbacks. Validate nullable callbacks and malformed capsules before dereference; distinguish borrowed observation from consumed ownership and prove exact-once release. | `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once -- --exact`; focused existing `python::arrow_ops::tests`, including malformed capsule, full/partial/failed consumption and stream/device release. |
 | H02g / `sifr_runtime::python::dlpack_ops` | After merged H02d1 (and H02d0); independent of H02e-H02f. Own legacy/versioned ABI layout, capsule one-shot consumption, device/stream validity, tensor lifetime, deleter transfer and exact-once release on rejection/reset/drop. Do not change declaration certification policy. | `cargo test -p sifr_runtime --features python --lib python::dlpack_ops::h02_contract_tests::legacy_versioned_layout_and_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::dlpack_ops::h02_contract_tests::rejection_and_reset_release_exactly_once -- --exact`; focused existing `python::dlpack_ops::declaration_tests`. |
 | H02h / method and unsafe policy integration | After merged H02a0, H02a1, H02b, H02c, H02d0, H02d1, H02e, H02f and H02g. Record semantic site classifications and local unsafe contracts with normalized site fingerprints, not per-file counts. Detect changed/new/stale dispatch under renamed bindings; reject a second language-semantics owner, broad item-level unsafe allowances and operations without local contracts. Mask strings/comments/characters without hiding Rust lifetimes; self-tests work in a cold checkout. Assign SQL, cache, driver and generated-code sites to existing owners, without editing those packages. A static scan does not prove runtime safety. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; `python3 scripts/check_unsafe_abi_contracts.py --self-test`; `python3 scripts/check_unsafe_abi_contracts.py`; exact H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g named cases and focused list-method/Python bridge regressions on the integrated candidate. Negative fixtures cover renamed dispatch, second owner, stale fingerprint, broad allowance, missing contract and character-literal masking. |
 
@@ -1740,6 +1740,116 @@ This session owns worktree
 `codex/architecture-h02e-record-20260930`, its adopted target and temporary paths.
 H02e has no current blocker. H02f-H02h and whole H02 remain open. The exact next
 action is separately assigned H02f; this session stops without starting it.
+
+
+### H02f Arrow ABI and capsule transfer delivery (2026-09-30)
+
+H02f merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136) as
+e815a2d20779b1426ad94c9055cb4688d1561510, from exact tested and reviewed
+candidate 145cb24d9996400811e2180110463d2efbdcd423 (base
+63f98710f8e0e605513702f167f68f79d15c2fe4, tree
+7a6fa8ab816c7fc640e8920dcb7c9b74d14e50d6).
+Only sifr_runtime::python::arrow_ops and its owned ABI/transfer/test modules
+changed. Declaration certification, buffers, callbacks and DLPack remain under
+their separate owners.
+
+Acquisition captures immutable capsule payload identities. Transfer admission
+and finalization check those identities before ABI inspection; admission also
+revalidates names, destructors, required nullable callback fields and live release
+state. ABI inspection copies header values without references whose lifetimes
+escape the live capsule. Native producers still own the allocation-validity and
+protocol-serialization obligation: names/destructors cannot prove an arbitrary
+native address safe, and the bridge does not dereference child/buffer pointers.
+Negative array metadata rejects excessive null counts and length/offset overflow.
+Borrowed metadata observations retain capsules without conferring transfer
+authority. Prepared arguments and requested schemas share exclusive payload
+admission while their Sifr transfer entries are live. A declined admission closes
+the supplied handle and releases its references; it is not a nondestructive
+probe. Finalization and drop revoke retained argument shells, and paired
+schema/data finalization distinguishes full, partial and unconsumed ownership.
+Reset drops capsules outside the store mutex, allowing destructor reentry.
+
+The exact candidate passed **14/14 selected assertion-case executions** with
+**14 unique resolved names**. Both reserved cases each resolved and ran 1/1:
+
+- cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer -- --exact
+- cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once -- --exact
+
+The nine assertion-exercising existing python::arrow_ops::tests cases and
+three python::arrow_ops::abi::tests cases also each ran individually with the
+same crate/features/library selection and -- --exact. Selection resolved
+nonzero names before execution and stopped on the first failing command.
+The opt-in real_pyarrow_requested_schema_is_a_one_shot_transfer case was
+explicitly excluded because its external producer was not configured; its
+conditional no-op is not acceptance and no real-PyArrow qualification is claimed.
+
+New coverage checks every field offset, size and alignment of C Data, Stream,
+Device Array and Device Stream headers on the qualified 64-bit host against
+Apache Arrow's apache-arrow-22.0.0 cpp/src/arrow/c/abi.h. No 32-bit ABI
+qualification is claimed. It exercises overlapping transfer rejection, pointer
+identity mutation before admission, revoked retained shells, consumed borrowed
+observations, invalid shape/release metadata, device full/partial/drop paths,
+stream/schema/chunk callbacks and independent output releases, failure before
+nullable last-error observation, every missing required stream callback, and
+explicit/consumed/unconsumed/failed-consumer/drop/reset cleanup. Existing focused
+cases retain malformed-name/destructor rejection, paired full/partial/failed
+consumption, one-shot proxies and requested-schema behavior.
+
+Resolved names, exact commands, case counts, timing, source/configuration digests
+and raw-log hashes are outside the Git tree at
+/data/sifr-architecture-h02f-evidence-20260930/145cb24d9996400811e2180110463d2efbdcd423/.
+Its selection SHA-256 is
+f599dabb9dc2a42158d4e6ad10500bf054d3e68d59141b6a2b71bf3994300c5d.
+Rust/Cargo 1.98.1 and existing canonical CPython 3.14.7 were pinned; the selected
+libpython3.14.so.1.0 SHA-256 is
+6e2c606e547bd30b42062269747658ab009a181c6fd8541b311c5562bfbce8a3.
+After confirming the H02e target was inactive with no Cargo/rustc process, its
+compatible target moved into this session's worktree for exclusive warm reuse.
+Lockfile, workspace/runtime manifests and Cargo configuration matched. About
+11 GiB was free before the operation and 9.7 GiB afterward; no target was cleaned
+and timings are not performance qualification. Formatting, HIR maintainability,
+committed diff and the 900-line guardrail passed (4,295 source files).
+
+Scoped read-only Claude Opus 5.5 review returned **SATISFIED** with no blocking
+findings on the exact candidate. The external review/opus-5-5.md response has
+SHA-256 6fdaae683b0c62d190820af1f9f76d6eb7133873c6bad9ce50a01594f3894a3a.
+Its nonblocking follow-ups are preserved for explicit later scope adjudication:
+early errors skip the usual pending-release drain even though resources still
+drop under attachment; and a pre-existing external callee can retain an
+unconsumed exported capsule beyond the Sifr entry's transfer lease, allowing a
+later borrowed alias to be admitted. This item proves its live-entry admission
+boundary and does not claim to resolve external capsule retention policy.
+The review's declined-handle and 64-bit evidence wording suggestions are
+incorporated above. No follow-up implementation began.
+
+Historical working/arrow-initial.log (SHA-256
+01de91b7f4637e4e83e4c380ab24d1180643ea3f9287324f01d0c63633f7cc28)
+preserves a new-test counter expectation failure after two added release
+scenarios; the corrected final selection passed separately. The host's first
+HTTPS push attempt lacked noninteractive credentials; the authenticated local
+connection then pushed the exact branch without changing the candidate.
+These are historical failures, not passing validation.
+
+PR #4136's automatic local-first-create-pr job (run 36656380354, job
+109701513510) failed before assertions in V01
+performance_reference_admission because no SIFR_PERFORMANCE_REFERENCE was
+selected. Its external raw job log has SHA-256
+fd01f10acc8443e71aba7d1682561cadb0e8a7d16f026abf78a40e7279627bc0.
+V01/Q01 retains ownership of this preserved out-of-scope CI prerequisite;
+it is not a passing profile or H02f acceptance failure. The PR merged normally
+with the exact approved head, without an admin bypass.
+
+The assigned intermediate policy required named/focused tests and scoped review;
+create-PR/full merge profiles were not run locally. Q01 owns final integration
+qualification. This receipt-only update requires documentation checks and no
+repeat implementation validation or external review.
+
+This session owns worktree
+/data/sifr-architecture-h02f-arrow-contract-20260930, implementation branch
+codex/architecture-h02f-arrow-contract-20260930, record branch
+codex/architecture-h02f-record-20260930, its adopted target and temporary paths.
+H02f has no current blocker. H02g-H02h and whole H02 remain open. The exact next
+action is separately assigned H02g; this session stops without starting it.
 
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
