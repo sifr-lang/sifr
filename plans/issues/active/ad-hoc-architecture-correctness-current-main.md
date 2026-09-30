@@ -2375,8 +2375,8 @@ missing-segment default, temporary exemption or fallback is allowed.
 
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
-| **H02h0 / policy scanner and validator foundation** | **Open / needs-new-scope after H02h0r**: the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152) found a new binding-preservation regression; blocked receipt below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
-| **H02h1 / semantic method policy authoring** | After H02h0. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
+| **H02h0 / policy scanner and validator foundation** | **Open / correction H02h0r1 ready** under the preservation rescope below: the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152) found a new binding-preservation regression; blocked receipt below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
+| **H02h1 / semantic method policy authoring** | After H02h0, including the reviewed H02h0r1 foundation merge. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
 | **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
@@ -2856,6 +2856,151 @@ diff plus phase-only scope checks passed. Candidate-keyed documentation results
 and logs are preserved in the same external evidence root. No additional external
 review or Cargo execution was run. The pinned editor integration and nested VS Code
 submodules were proactively initialized for its documentation input.
+
+### H02h0r preservation rescope and bounded correction (2026-09-30)
+
+**Decision: authorize H02h0r1 only; H02h0 remains open.** This docs-only
+scope decision starts from blocked receipt main
+`6ff942629d8dbd72a6054cf3c4a6801457e3ded8`. Both #4152 reviews above
+remain NOT SATISFIED, both implementation candidates remain unmerged, and
+#4148/#4144/#4140 drafts and historical failed evidence remain unchanged.
+This resolves the second-review stop into a new correction item with one
+initial scoped review and the closure skill's bounded remediation rules; it
+is not a third remediation review of #4152. No implementation acceptance is
+claimed by this decision.
+
+#### Determinate comparison and preservation semantics
+
+Choose exact-raw duplicate detection plus symmetric comparison scoped to the
+two records being compared. Exact-raw detection alone is insufficient: the
+existing one-word/ordinal collision negatives also append different actual
+site keys or fingerprint prefixes to the identical base sentence. Pair-scoped
+normalization must reject those variants too. Whole-union binding removal is
+rejected because an unrelated discovered site cannot redefine another
+record's substantive prose.
+
+1. Independently discover the entire selected source union, including all
+   selected files and owner segments. Validate each record's source binding,
+   operation family, structured rules and proofs under the existing contract.
+   Evaluate every unordered pair of valid four-field contract records in that
+   union; file, owner and segment boundaries do not partition comparison.
+2. For a pair A/B, compare the exact raw four-field tuples first. Equality
+   makes that pair repeated even if single-site normalization would remove a
+   common word or integer from only one record. Otherwise normalize both
+   tuples with the same binding set containing **A and B only**, using the
+   established complete-span, maximal-token and punctuation rules above.
+   Equality of those normalized tuples also makes that pair repeated. Never
+   normalize against a third site, the selected union, or a repetition group.
+   Neither comparison rewrites records, structured rules, proofs or source.
+3. In this bounded equivalence check, complete copies of either compared
+   site's key/path/scope/kind/ordinal/line/fingerprint/operation/local SAFETY
+   evidence are binding metadata. This includes an unlabelled number equal
+   to A or B's ordinal/line and a complete hex token that is a prefix of A or
+   B's fingerprint. Existing labelled metadata presentations remain metadata.
+   Their presence cannot distinguish that pair's obligations. A value not
+   matching either compared site's discovered binding remains meaningful,
+   even when it is another selected site's ordinal, line, scope or path.
+   For example, distinct contracts for A/B mentioning a third site's actual
+   3-frame limit or writer path retain that exact difference. A reference to
+   A/B's own scope/path or number is not a distinction for this comparison;
+   a different semantic obligation must survive those two binding removals.
+   This is an explicit lexical rule, not a prose-intent heuristic. Later
+   operation-family/source review still decides whether an obligation is true.
+4. Preserve the punctuation boundary repair: sentence `.`, `:` and `,`
+   followed by whitespace/end permit complete binding removal; identifier,
+   extension and path continuations remain protected. Preserve numbers such
+   as `4096` when unequal to A/B's ordinal/line, `buffer4096`, a different
+   complete path, `<path>.bak`, unrelated maximal hex tokens and non-kind
+   identifiers. Preserve previously reviewed complete local SAFETY ownership.
+5. Repeated pairs are edges between records; their connected components with
+   at least two records are repetition groups. This makes grouping explicit
+   even when pair equivalence is not transitive. Construct the same groups
+   regardless of discovery/record/segment order. Do not expand a pair's
+   normalization binding set to its connected component. Reuse the exact
+   reviewed-sharing exception on each complete group: one common
+   `contract_ref`, a shared definition with nonempty review rationale, exact
+   raw contract agreement, and exactly the group's site-to-fingerprint map.
+   Missing/extra/changed/new bindings fail. No weaker edge-only exception or
+   implicit transitive approval is allowed. An unreviewed repeated pair
+   always produces the repeated-contract diagnostic, including across files
+   and segments; an unrelated third record cannot erase a legitimate
+   distinction between A/B.
+
+#### H02h0r1 scope, dependencies and exact acceptance
+
+| Item / owner | Dependency and bounded implementation | Exact named acceptance |
+| --- | --- | --- |
+| **H02h0r1 / pair comparison preservation correction** | First on current main after this rescope. Reimplement the necessary nine unmerged foundation paths from #4152 candidate `d11af9a622873ebbeee01f57bf52e4cbadbc0b14`; retain the seven prerequisite paths and reviewed comment-ownership/punctuation behavior. Correct only repeated-contract comparison/grouping in `scripts/unsafe_policy_contracts.py` and focused fixtures in `scripts/test_architecture_policy_guards.py`. Carry the existing scanner, pure validators, schema/segment interfaces and cold self-tests. No live inventory, production profile, new ABI/schema family or Rust/generated-runtime change. | All three new exact cases below, all four H02h0r cases and six original H02h0 cases listed above, existing `MethodTests`, `UnsafeTests`, `ColdCheckoutTests`, both script self-tests, scripts-only cold mutation probes, file-size and diff checks. |
+
+Use each exact fail-fast command separately; these new names are reserved
+implementation requirements and have not run in this docs-only adjudication:
+
+- `PYTHONPATH=scripts python3 -m unittest -f test_architecture_policy_guards.PolicyFoundationTests.test_pair_scoped_comparison_rejects_binding_collision_templates`
+- `PYTHONPATH=scripts python3 -m unittest -f test_architecture_policy_guards.PolicyFoundationTests.test_third_site_binding_references_preserve_distinct_obligations`
+- `PYTHONPATH=scripts python3 -m unittest -f test_architecture_policy_guards.PolicyFoundationTests.test_pair_repetition_groups_keep_exact_reviewed_sharing`
+
+The first case discovers genuine source sites with exactly one fingerprint
+beginning with `a` and distinct ordinals/lines. Identical raw four-field
+contracts containing `a` or a number matching only one compared site fail.
+Repeat with different own-site keys and fingerprint-prefix suffixes, and
+sentence-final key/path/path:line/scope/ordinal/line punctuation; each fails
+through the real validator with the repeated-contract diagnostic. Include
+cross-file/cross-segment pairs; source binding, family and proof checks must
+otherwise pass. Preserve all existing exact suffix/prefix/placement negatives.
+
+The second case must call the real validator with all three independently
+discovered sites and valid records present, not just the normalization helper.
+For each of ordinal, diagnostic line, complete scope and complete path, make
+the A/B contract tuples differ **solely** by that field's meaningful value:
+one equals the third site's discovered value, the other equals a distinct
+value belonging to neither A nor B. Neither value may be A/B's binding or
+fingerprint copy. Assert exact retention of both values in the pair comparison
+and zero validator errors. Give the third site an independently distinct
+valid contract so it cannot create another repeated pair. Repeat all four
+variants across files/segments and with permuted records/discovery/segments.
+Also retain the prior review's 2/3 frames, 52/153 bytes, release/drop scope
+and writer-path preservation examples when neither value belongs to the
+compared pair; use additional independently discovered reference sites when
+two distinct reference bindings are needed. These positives complement,
+rather than replace, the exact helper-preservation assertions and unchanged
+release-as-borrow negative in the earlier acceptance matrix.
+
+The third case constructs repeated pairs across segment/file boundaries and
+an A/B, B/C chain with no A/C edge, asserting the exact connected group and
+order independence without normalizing against C during A/B comparison.
+A reviewed exact-raw shared definition passes for its complete group; removing,
+changing or adding a binding, changing the common reference/rationale/raw
+contract, or discovering a new duplicate fails through the real validator.
+An unrelated third site's binding change cannot alter A/B's comparison result.
+These assertions must exercise the actual selected-union validator entrypoint
+and its reviewed-sharing checks; helper equality or count-only checks do not
+satisfy acceptance.
+
+Run each of the ten retained foundation cases explicitly using the command
+format above. The existing suites use the exact fail-fast selections already
+recorded, and the self-tests use
+`python3 scripts/check_method_dispatch_authority.py --self-test` and
+`python3 scripts/check_unsafe_abi_contracts.py --self-test`. Keep the genuinely
+scripts-only disabled-discovery/validation probes with no Cargo/Git/policy-tree
+dependency. Review the complete final foundation candidate, including all
+nine reimplemented paths, with the two #4152 findings/reviews and this exact
+comparison/grouping matrix. No prior failed candidate is an acceptance pass.
+
+H02h0r1 closes only after those focused checks and a scoped review cover the
+same final implementation candidate, it merges, and a docs-only receipt records
+that evidence. That reviewed foundation merge closes H02h0; H02h1 then becomes
+ready. H02h1-H02h5 and H03 remain waiting until that dependency is satisfied.
+H02h2-H02h4 still own source-proof/operation-family meaning review; known
+transmute, existence-only code proof and discovery follow-ups remain unchanged.
+The performance-reference blocker remains V01/Q01-owned. Intermediate
+create-PR/full merge gates remain deferred to Q01 under the assigned policy.
+
+**Next ready batch: separately assign H02h0r1 only** on current main, with both
+immutable #4152 reviews and this acceptance matrix. Stop after its reviewed
+merge and receipt or a recorded blocker; do not start H02h1 or H03. This scope
+decision itself runs only documentation structure, the file-size guardrail and
+diff/phase-scope checks. No implementation tests, Cargo, target adoption/cleanup,
+new Opus request or draft modification is authorized by this docs-only batch.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
