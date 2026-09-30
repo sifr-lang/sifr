@@ -1023,7 +1023,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 | ID | Dependency / status | Source ownership and deliverable |
 | --- | --- | --- |
-| H03a | Merged H02h5; ready after this definition merges. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
+| H03a | Merged H02h5; **needs-new-scope**, semantic-input readiness handoff below; acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
 | H03d | H03c and C01; waiting. | Lowering/IR flow semantics: executable independent narrowing equivalence, graph/ownership regression evidence and a complete producer/consumer decision table. Retain production graph behavior. |
@@ -6741,3 +6741,98 @@ scope and diff checks only.
 
 **Next action: separately assign H03a only.** This scope owner has no blocker
 and stops before compiler implementation, later evidence items or qualification.
+
+### H03a normalized-ratchet readiness handoff (2026-09-30)
+
+**State: needs-new-scope; H03a acceptance remains open.** Read-only inspection
+used current main `6c5f1b759ecc9d72c3b9343119b1f6dfa3a4262f`, after fetching
+the missing current remote object into the common object store. The owner created
+an isolated worktree and did not change compiler source, manifests, lockfiles,
+fixtures, metric tooling, baselines or exceptions. The H03a contract above remains
+binding; this handoff does not reduce semantic resolution to lexical inventory.
+
+**Current-source counterexamples and missing input authority:**
+
+- `crates/sifr_codegen/src/generated_rust_canonicalizer.rs:136` calls
+  `file.to_token_stream().to_string()`. The receiver comes from
+  `syn::parse_file` at line 134, while `quote::ToTokens` is imported at line 1.
+  Resolving the declaration origin/module of the trait method requires receiver
+  and trait resolution across locked external packages; token spelling does not
+  establish it. The outer `to_string` has its own origin and callsite provenance.
+- `crates/sifr_lowering/src/lower/function_flow.rs:6` chains
+  `flow_facts(stmts).map(|facts| facts.reachable_return_types().to_vec())`.
+  The closure binding's inferred receiver type and the returned slice determine
+  different local/external declaration origins. Assigning each call to the
+  enclosing file or to a textual import would lose the required fan-out evidence.
+- `crates/sifr_lowering/src/lower/external_defs.rs:291` invokes
+  `provider.prepare(modules)` through the stored provider; the trait declaration
+  is at line 69. Static trait origin and dynamic implementation edge are distinct
+  evidence. The required explicit dynamic disposition must not masquerade as a
+  resolved concrete implementation call.
+- `crates/sifr_lowering/src/lib.rs:23` exports `hir_nodes::*`, whose sole
+  declaration at `src/hir_nodes.rs:1` reexports `sifr_ir::hir_nodes::*`.
+  The external API closure includes dependency-owned declarations and their
+  signatures/members. `crates/sifr_codegen/src/lib.rs:197` exports
+  `rust_ir::*`; `src/rust_ir.rs:3` derives public types' trait implementations.
+  A semantic input contract must state how macro/derive expansion and generated
+  members enter API/discovery evidence while retaining source ownership.
+
+`scripts/rust_policy_sites.py` explicitly provides lexical discovery, not Rust
+resolution; `Source` identifies functions by flat name/ordinal and lacks a
+module/import/type graph. Its tokens/fingerprints remain useful normalization
+inputs. `scripts/check_source_crate_dependency_direction.py:253` binds manifest
+aliases to packages, and lines 309/331 collect files and textual crate references;
+it does not resolve declaration or call origins. Codegen's generated-source
+syntax helpers do not supply a maintained workspace semantic graph:
+`generated_rust_canonicalizer/item_dependencies.rs:24` reduces an impl receiver
+to its last path segment. Reusing those helpers as a resolver would be unsound.
+The inspected host has no installed `rust-analyzer` or `rust-src` component and
+no existing standalone semantic adapter in the inspected policy tooling.
+Installing/configuring a new semantic pipeline requires a governed prerequisite;
+tool absence alone is not a claim that resolution is impossible.
+
+**Minimal proposed prerequisites, for a separate scope owner to define:**
+
+1. A bounded semantic-input contract checkpoint: select the resolver and exact
+   toolchain/locked dependency inputs; name supported targets/configurations,
+   macro expansion and external/source ownership, dynamic-edge classification,
+   and fail-closed unsupported cases. Define deterministic declaration origins,
+   receiver/trait identity, signature/member closure, normalized callsite spans,
+   source/configuration freshness and import/reexport provenance. Workspace
+   dependencies may be read without transferring their maintainability budgets.
+2. A separately owned verification adapter implementing that admitted contract,
+   then H03a's normalized metric/schema/baseline work. The adapter must cover the
+   maintained manifest/module structural union, including test/feature branches,
+   and retain unsupported records as failed affected-surface acceptance. A
+   current-host default configuration cannot stand in for structural-union proof.
+
+Proposed exact adapter cases, **reserved and not present/passing**, are
+`SemanticInputTests.test_trait_receiver_and_chained_calls_bind_origins`,
+`test_dynamic_trait_edges_remain_explicit`,
+`test_transitive_wildcard_and_signature_members_bind_origins`,
+`test_macro_derive_and_cfg_targets_have_owned_dispositions`, and
+`test_stale_missing_and_unsupported_semantic_inputs_fail_closed`, under
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_semantic_input_tests.SemanticInputTests`.
+Run every case individually and the complete class after scope admission.
+These proposals do not replace or mark passed any of H03a's seven MetricTests.
+
+The source audit remains outside Git at
+`/data/sifr-architecture-h03a-evidence-20260930/source-audit.json` on
+`yaser5@192.168.1.134` (SHA-256
+`f3ef853ed115e9416edf73237fab01b5c20de9ee08f19ed926b03e8f1062f6f5`).
+It binds inspected source/manifests and installed components to the exact base;
+it is lexical/read-only provenance, not a resolved metric baseline or review.
+The initial documentation structure command failed because the isolated checkout
+lacked the pinned nested editor input; initializing editor_integrations and its
+vscode child restored that input without changing gitlinks. This failed attempt
+is preserved in the external evidence. This documentation-only handoff requires
+documentation structure, diff/scope and file-size checks only. The documentation
+structure command and file-size guard passed (4,317 maintained files); the
+single-path diff and whitespace checks passed. Raw successful logs have SHA-256
+\`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0\` and
+\`5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a\`, respectively.
+No implementation review, Cargo gate or H03a acceptance pass is claimed. Historical failures and reviews retain their original status.
+
+**Next action: separately assign the H03a semantic-input scope checkpoint.**
+H03b-H03f remain dependent on completed H03a and are not started. The current
+owner stops; unresolved surfaces cannot be waived through owned exceptions.
