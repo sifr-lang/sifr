@@ -206,6 +206,23 @@
         "nightly": ["ecosystem_compatibility:oss-curated", "ecosystem_compatibility:ecosystem-broader"],
         "release": ["ecosystem_compatibility:oss-curated", "ecosystem_compatibility:ecosystem-broader"]
       }
+    },
+    {
+      "surface_id": "architecture_method_unsafe_policy",
+      "profiles": {
+        "create-pr": [
+          "developer_tooling:architecture-policy"
+        ],
+        "merge": [
+          "developer_tooling:architecture-policy"
+        ],
+        "nightly": [
+          "developer_tooling:architecture-policy"
+        ],
+        "release": [
+          "developer_tooling:architecture-policy"
+        ]
+      }
     }
   ]
 }

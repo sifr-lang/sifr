@@ -284,7 +284,9 @@
           "driver-maintainability",
           "verification-hardening-self-test",
           "verification-runner-foundation",
-          "hardening-determinism-scale"
+          "hardening-determinism-scale",
+          "method-dispatch-authority",
+          "unsafe-abi-contracts"
         ]
       }
     },

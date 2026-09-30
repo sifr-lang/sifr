@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import argparse
 import re
+from pathlib import Path
 import sys
 
 from unsafe_policy_contracts import validate_contracts
 from rust_policy_sites import Source, Site, code_tokens, item_header_end, read_inventory, reconcile, rust_sources
 
-INVENTORY = 'unsafe_abi_sites.json'
 CONTRACT_FIELDS = ('thread', 'lifetime', 'alias', 'ownership')
 OWNERS = {'H02d0', 'H02d1', 'H02e', 'H02f', 'H02g', 'Python-bridge-owner',
           'SQL-owner', 'cache-owner', 'driver-owner', 'X02', 'runtime-owner', 'test-owner'}
@@ -169,7 +169,27 @@ def main() -> int:
     if args.self_test:
         from test_architecture_policy_guards import run_unsafe_tests
         return run_unsafe_tests()
-    parser.error('live unsafe segments are not delivered by H02h0; use validate_segments')
+    from unsafe_policy_segments import SEGMENTS, read_segments, validate_segments
+    from architecture_policy_schema import validate_policy_schema
+    root = Path(__file__).resolve().parent.parent
+    try:
+        # Load and validate every required segment before scanning source. A
+        # missing partition must never masquerade as whole-tree coverage.
+        segments = read_segments(root)
+        for data in segments.values():
+            validate_policy_schema(root, data, 'unsafe_abi_segment.schema.json')
+        sources = list(rust_sources(root))
+        sites = [site for source in sources for site in discover(source)]
+        errors = validate_segments(sites, segments, sources=sources)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f'unsafe ABI inventory failed: {error}', file=sys.stderr)
+        return 1
+    if errors:
+        print('\n'.join(errors), file=sys.stderr)
+        return 1
+    print(f'unsafe ABI inventory passed: {len(sites)} sites, '
+          f'{len(SEGMENTS)} complete source partitions')
+    return 0
 
 
 

@@ -10,6 +10,18 @@
     "cargo_cache_setup": {
       "budget_ms": 300000,
       "enforcement": "advisory"
+    },
+    "guardrail_method_dispatch_authority": {
+      "budget_ms": 600000,
+      "enforcement": "blocking"
+    },
+    "guardrail_unsafe_abi_contracts": {
+      "budget_ms": 600000,
+      "enforcement": "blocking"
+    },
+    "area_developer_tooling": {
+      "budget_ms": 900000,
+      "enforcement": "blocking"
     }
   },
   "resource_policy": {
@@ -102,7 +114,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_contract",
         "package": "sifr_sql_contract",
@@ -118,7 +129,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_mysql",
         "package": "sifr_sql_mysql",
@@ -134,7 +144,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_sqlite",
         "package": "sifr_sql_sqlite",
@@ -150,7 +159,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_postgresql",
         "package": "sifr_sql_postgresql",
@@ -166,7 +174,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_diagnostics",
         "package": "sifr_diagnostics",
@@ -711,7 +718,8 @@
       "suites": [
         "full",
         "typescript-go-transfer",
-        "diagnostic-rules"
+        "diagnostic-rules",
+        "architecture-policy"
       ],
       "resource_classes": [
         "default-local"
@@ -878,7 +886,9 @@
     "driver-maintainability",
     "verification-hardening-self-test",
     "verification-runner-foundation",
-    "hardening-determinism-scale"
+    "hardening-determinism-scale",
+    "method-dispatch-authority",
+    "unsafe-abi-contracts"
   ],
   "retry_policy": {
     "max_attempts": 1,

@@ -70,18 +70,12 @@
           },
           "canonical_authority": {
             "type": "array",
-            "prefixItems": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "string",
-                "minLength": 1
-              }
-            ],
             "minItems": 2,
-            "maxItems": 2
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           },
           "admission_relationship": {
             "type": "string",
