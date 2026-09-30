@@ -11,6 +11,8 @@ import re
 
 from rust_policy_sites import Source, code_tokens, fingerprint
 
+from resource_policy_effects import RESOURCE_RULES, resource_operation_family
+
 FIELDS = ('thread', 'lifetime', 'alias', 'ownership')
 # Four operation-family obligations, in FIELDS order. Changes require affected
 # policy records and negative fixtures to be revalidated.
@@ -53,6 +55,7 @@ FAMILY_RULES = {
     'generated-rust': ('delegated-X02-thread', 'delegated-X02-lifetime',
                        'delegated-X02-alias', 'delegated-X02-owner'),
 }
+FAMILY_RULES.update(RESOURCE_RULES)
 
 
 def operation_family(site) -> str:
@@ -92,6 +95,9 @@ def operation_family(site) -> str:
         return 'windows-localfree'
     if site.kind == 'unsafe-impl' and identifiers & {'Send', 'Sync'}:
         return 'thread-marker'
+    resource_family = resource_operation_family(site)
+    if resource_family is not None:
+        return resource_family
     if site.kind == 'unsafe-declaration':
         return 'abi-declaration'
     # Preserve the stronger established release/erasure/ABI effects above.
@@ -261,7 +267,7 @@ def validate_contracts(sites, inventory, sources=(), *, compare_repeated=True) -
             # The operation alone cannot establish external capture lifetime,
             # revocation or thread admission. Require a source code reference.
             elif family in ('current-target-erasure', 'target-erasure', 'future-erasure', 'callback-erasure',
-                            'windows-security', 'windows-localfree') and not any(
+                            'windows-security', 'windows-localfree', *RESOURCE_RULES) and not any(
                     p.get('kind') == 'code' for p in proofs):
                 errors.append(f'{field} requires source admission/teardown proof: {site.key}')
     return errors + (validate_repeated_contracts(sites, inventory) if compare_repeated else [])
