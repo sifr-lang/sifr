@@ -1023,7 +1023,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 | ID | Dependency / status | Source ownership and deliverable |
 | --- | --- | --- |
-| H03a0 | Merged H02h5 and readiness #4187/#4188; semantic-input scope checkpoint below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
+| H03a0 | Merged H02h5 and readiness #4187/#4188; **closed**, scope #4189 and receipt below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
 | H03a1 | H03a0; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
@@ -7117,3 +7117,65 @@ qualifies no integration/performance/release evidence.
 
 **Next action: separately assign H03a1 only after this scope checkpoint merges.**
 This H03a0 owner stops before acquisition, adapter implementation or H03a metrics.
+
+
+### H03a0 semantic-input scope delivery receipt (2026-09-30)
+
+**State: docs-only H03a0 closed; H03a1 and H03a acceptance remain open.**
+The governed input contract above merged in
+[PR #4189](https://github.com/sifr-lang/sifr/pull/4189) as
+`5720c70a599b50bcba1925c28dec161e0d0763d6`, from final candidate
+`afefe53106697f01fd5ec22b47fdd258d7696b1a` on base
+`5139b7db37f99c6cdd9385d618d95662bae51626`. The merged tree matches
+candidate tree `037ce115f2edf27fe459cbafaf310bf0c95fa8ff`.
+
+Read-only current-source and exact official rust-analyzer inspection established
+the selected producer's declared toolchain compatibility and available semantic
+query/model/loader mechanisms. This supports the governed H03a1 assignment;
+it is not a semantic export or proof that every current surface resolves.
+H03a1 owns its isolated helper/source/lock, selected sysroot/proc-macro inputs,
+complete configuration ledger, five actual-producer SemanticInputTests and live
+fresh/completeness admission. H03a retains all seven original MetricTests,
+normalized baselines and reviewed retained records. H03b-H03f remain dependent
+and unstarted. No implementation, pipeline installation or compiler change
+occurred in this session.
+
+On the exact scope candidate, documentation structure passed (raw SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+the 900-line guard passed for 4,317 maintained files (raw SHA-256
+`5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a`),
+and committed whitespace, canonical-phase single-path and clean-tree checks
+passed. Scoped self-review checked achievable producer capabilities, explicit
+origin/dispatch/expansion dispositions, structural-union obligations, freshness,
+fail-closed unsupported surfaces, exact acceptance and ownership/dependency order.
+The explicitly docs-only scope required no external implementation review,
+Cargo/build, SemanticInputTests/MetricTests pass, broad gate or release evidence.
+No CI qualification is claimed; historical failed/incomplete evidence is preserved.
+
+Candidate-keyed raw logs, source audit and official-source receipt remain outside
+Git at
+`/data/sifr-architecture-h03a-semantic-input-scope-evidence-20260930/afefe53106697f01fd5ec22b47fdd258d7696b1a/`
+on `yaser5@192.168.1.134`. Candidate-validation manifest, source audit and
+resolver-source receipt SHA-256 values are
+`d2197163345858786134f2555d5a228d6ecc196e33886c6bd55ec979f391b547`,
+`2af2f8b6e6eaf84552e975211db74a8372566eea8965e91baaf34adb26e0fb23`, and
+`6c485f8e5b57220c6b2e5d0b4d4b173bea1bfb7685056c81278ee2d1fd0a8201`.
+The evidence retains the earlier docs candidate and initial storage observation;
+the final scope records the coordinator's subsequent owned cleanup separately.
+A 404 for upstream rust-toolchain.toml is recorded as file absence; upstream
+Cargo.toml supplies its declared MSRV. No missing component was installed.
+
+This owner used isolated worktree
+`/data/sifr-architecture-h03a-semantic-input-scope-20260930`, scope branch
+`codex/architecture-h03a-semantic-input-scope-20260930` and receipt branch
+`codex/architecture-h03a-semantic-input-scope-record-20260930`. Pinned editor
+submodules were initialized before documentation checks without changing gitlinks.
+Owned bundles and a temporary Mac bare relay verified exact candidate/tree before
+publication through authenticated GitHub CLI. Shared primary checkouts and warm
+Cargo targets were untouched. This receipt needs documentation, file-size,
+scope and diff checks only, with no repeated external review or broad validation.
+
+**Next action: separately assign H03a1 only.** H03a0 has no local blocker.
+Future producer acquisition and resource/input completeness remain mandatory
+H03a1 admission, and H03a metrics cannot resume before that item merges. This
+scope owner stops before the next batch.
