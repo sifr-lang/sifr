@@ -16,6 +16,7 @@ from rust_policy_sites import Source, code_tokens
 from architecture_policy_python_core_tests import UnsafePythonCoreTests
 from architecture_policy_python_resource_tests import UnsafePythonResourceTests
 from architecture_policy_external_tests import UnsafeExternalOwnerTests
+from architecture_policy_integration_tests import PolicyIntegrationTests
 
 
 from architecture_policy_test_fixtures import (
@@ -703,7 +704,8 @@ unsafe { read_other(x); }
             root = Path(temp) / 'scripts'
             root.mkdir()
             for name in ('architecture_policy_test_fixtures.py', 'architecture_policy_python_core_tests.py', 'architecture_policy_python_resource_tests.py',
-                         'architecture_policy_external_tests.py', 'external_policy_effects.py',
+                         'architecture_policy_external_tests.py', 'architecture_policy_integration_tests.py',
+                         'architecture_policy_schema.py', 'external_policy_effects.py',
                          'resource_policy_effects.py', 'rust_policy_sites.py', 'method_policy_constituents.py',
                          'method_policy_nodes.py', 'method_policy_semantics.py',
                          'unsafe_policy_contracts.py', 'unsafe_policy_segments.py',
@@ -739,7 +741,8 @@ class ColdCheckoutTests(unittest.TestCase):
             script_root = Path(temp) / 'scripts'
             script_root.mkdir()
             for name in ('architecture_policy_test_fixtures.py', 'architecture_policy_python_core_tests.py', 'architecture_policy_python_resource_tests.py',
-                         'architecture_policy_external_tests.py', 'external_policy_effects.py',
+                         'architecture_policy_external_tests.py', 'architecture_policy_integration_tests.py',
+                         'architecture_policy_schema.py', 'external_policy_effects.py',
                          'resource_policy_effects.py', 'rust_policy_sites.py', 'method_policy_constituents.py',
                          'method_policy_nodes.py', 'method_policy_semantics.py',
                          'unsafe_policy_contracts.py', 'unsafe_policy_segments.py',

@@ -387,6 +387,17 @@
       "nightly_release_suite": "cargo:all-targets-all-features",
       "regression_suite": "regression:fixedbugs",
       "reproduction_command": "cargo metadata --locked --no-deps --format-version 1"
+    },
+    {
+      "surface_id": "architecture_method_unsafe_policy",
+      "guarantee_id": "codegen-generated-rust-rule",
+      "support_status": "internal",
+      "owner": "compiler/codegen",
+      "status": "blocking",
+      "merge_suite": "developer_tooling:architecture-policy",
+      "nightly_release_suite": "developer_tooling:architecture-policy",
+      "regression_suite": "developer_tooling:architecture-policy",
+      "reproduction_command": "python3 verification/areas/developer_tooling/runner.py --suite architecture-policy"
     }
   ]
 }

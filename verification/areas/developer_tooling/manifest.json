@@ -153,6 +153,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "architecture-policy",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "architecture-policy",
+          "entry": "scripts/test_architecture_policy_guards.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

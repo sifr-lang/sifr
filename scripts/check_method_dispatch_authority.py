@@ -185,7 +185,10 @@ def main() -> int:
     try:
         sources = list(rust_sources(root))
         sites = [site for source in sources for site in discover(source)]
-        errors = validate(sites, read_inventory(root, INVENTORY), sources)
+        from architecture_policy_schema import validate_policy_schema
+        inventory = read_inventory(root, INVENTORY)
+        validate_policy_schema(root, inventory, 'method_dispatch_sites.schema.json')
+        errors = validate(sites, inventory, sources)
     except (OSError, ValueError, KeyError) as error:
         print(f'method authority inventory failed: {error}', file=sys.stderr)
         return 1

@@ -135,5 +135,32 @@ class AuditPathTests(unittest.TestCase):
                 self.assertEqual(taxonomy.run_self_test(quiet=True), 0)
 
 
+class AbiPolicyVocabularyTests(unittest.TestCase):
+    def test_actual_policy_identifiers_are_registered(self) -> None:
+        identifiers = (taxonomy.RULES_ALIAS + '_ref', taxonomy.RULES_ALIAS.upper() + '_FIELDS')
+        with tempfile.TemporaryDirectory(prefix='sifr-abi-vocabulary-') as temp:
+            root = Path(temp)
+            source = root / 'policy.json'
+            for identifier in identifiers:
+                with self.subTest(identifier=identifier):
+                    source.write_text('"' + identifier + '": "operation-specific-proof"\n')
+                    self.assertEqual(taxonomy.validate_text(source, audit_root=root), [])
+            taxonomy.check_abi_policy_identifiers(root)
+
+    def test_registered_identifier_cannot_hide_unrelated_delivery_labels(self) -> None:
+        identifiers = (taxonomy.RULES_ALIAS + '_ref', taxonomy.RULES_ALIAS.upper() + '_FIELDS')
+        labels = (taxonomy.RULES_ALIAS + '_plan', taxonomy.RULES_ALIAS + '_reference',
+                  taxonomy.RULES_ALIAS.upper() + '_FIELDS_EXTRA', taxonomy.DELIVERY_STAGE + ' 99',
+                  taxonomy.DELIVERY_STEP + ' 99', 'm' + '8_implementation')
+        with tempfile.TemporaryDirectory(prefix='sifr-abi-vocabulary-') as temp:
+            root = Path(temp)
+            source = root / 'policy.json'
+            for identifier in identifiers:
+                for label in labels:
+                    with self.subTest(identifier=identifier, label=label):
+                        source.write_text(identifier + ': local_proof; ' + label + '\n')
+                        self.assertTrue(taxonomy.validate_text(source, audit_root=root))
+
+
 if __name__ == "__main__":
     unittest.main()

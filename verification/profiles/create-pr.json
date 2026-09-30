@@ -92,7 +92,7 @@
       "enforcement": "blocking"
     },
     "area_developer_tooling": {
-      "budget_ms": 180000,
+      "budget_ms": 900000,
       "enforcement": "blocking"
     },
     "area_generated_code_quality": {
@@ -124,6 +124,14 @@
       "enforcement": "blocking"
     },
     "toolchain_e2e_pass": {
+      "budget_ms": 600000,
+      "enforcement": "blocking"
+    },
+    "guardrail_method_dispatch_authority": {
+      "budget_ms": 600000,
+      "enforcement": "blocking"
+    },
+    "guardrail_unsafe_abi_contracts": {
       "budget_ms": 600000,
       "enforcement": "blocking"
     }
@@ -771,7 +779,8 @@
         "static",
         "lsp-smoke",
         "typescript-go-transfer",
-        "diagnostic-rules"
+        "diagnostic-rules",
+        "architecture-policy"
       ],
       "resource_classes": [
         "default-local"
@@ -891,7 +900,9 @@
     "stdlib-bootstrap-ordering",
     "driver-maintainability",
     "verification-hardening-self-test",
-    "verification-runner-foundation"
+    "verification-runner-foundation",
+    "method-dispatch-authority",
+    "unsafe-abi-contracts"
   ],
   "retry_policy": {
     "max_attempts": 1,

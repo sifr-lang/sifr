@@ -244,6 +244,8 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
         "stdlib-manifest-schema",
         "stdlib-bootstrap-ordering",
         "driver-maintainability",
+        "method-dispatch-authority",
+        "unsafe-abi-contracts",
         "verification-hardening-self-test",
         "verification-runner-foundation",
     }
@@ -256,7 +258,7 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
             "complexity-resource",
             "module-inventory",
         },
-        "developer_tooling": {"typescript-go-transfer", "diagnostic-rules"},
+        "developer_tooling": {"typescript-go-transfer", "diagnostic-rules", "architecture-policy"},
         "package_management": {"guardrails", "offline-merge-smoke"},
         "performance": {"frontend-syntax-guardrails"},
     }
