@@ -5691,3 +5691,113 @@ execution are claimed. Prior failed and successful evidence is preserved.
 repair with the exact boundaries and acceptance above.** This adjudication owner
 stops after its documentation receipt; source implementation and H02h1 resumption
 were not started.
+
+
+### H02c scalar-deque result-representation repair delivery (2026-09-30)
+
+**Complete for the separately authorized representation repair.** Implementation
+[PR #4173](https://github.com/sifr-lang/sifr/pull/4173) merged as
+`f7741b9affbd73d3ddeacdf04e9ae7b8d029e1b6`, from reviewed candidate
+`42afc63370ff11ae3108324f7e9a454e9a523ce6` and base
+`319a220bded75f67fa47b0d784f2c32704d3666b`. Candidate and merged tree both equal
+`49158251fc5388c423c52f3269df865f1e35f58b`. This discharges the bounded source
+repair prerequisite imposed by the H02h1 scalar-deque representation scope
+adjudication above. H02h1 policy remains open and undelivered; H02h2-H02h5,
+H03 and phase closure remain waiting. This owner does not resume H02h1.
+
+The sole production change is in
+`stmt_support_emitter/expr_call_metadata.rs::compiler_verified_pop_lowers_as_option_for_ir`.
+For the retained narrowable deque pop shapes, the predicate now requires the
+resolved receiver's matching `Type::Class.methods` signature to declare an
+optional return. A scalar call HIR type, deque basename or authority tag alone
+cannot prove optional Rust representation. Existing canonical metadata supplies
+that proof, so no caller plumbing, HIR schema, frontend admission, registry,
+dispatch, Let-tail, mapping-default, policy, unsafe, runtime or X02 changes were
+needed. Source ranges and receiver/place conventions remain preserved.
+
+The final lexical relationship for the returning H02h1 owner is:
+`stmt_expr_wrappers_and_compare.rs` lowers both operands through
+`lower_stmt_expr_for_ir` before its two representation-predicate calls;
+`lower_stmt/condition_lowering.rs::try_lower_structured_compare_condition_expr`
+validates method operands through `try_lower_condition_operand_expr` before
+`condition_operand_lowers_as_option` invokes the predicate. Both consumers use
+the selected declaration's optional return representation through existing
+canonical class method metadata. Their admission boundaries and ordinary
+source-call dispatch are unchanged. The complete lexical references and source
+digests are preserved in this item's external evidence.
+
+**Named acceptance and focused checks:** all eighteen exact
+`method_authority_tests` selections required by the adjudication resolved one
+case each and passed their assertions on the final candidate. The new
+`scalar_deque_comparisons_preserve_declared_result_representation` case uses
+successfully parsed/lowered local scalar `pop()`, `pop(0)` and `popleft()`
+declarations with actual body analysis, `==`/`!=`, both operand orders, value and
+condition entries, and generated return/If source. It preserves the ordinary
+scalar call, admitted local declaration, scalar return metadata and argument
+borrow convention, with no injected `Some`, `is_some`, `is_none`, builtin
+removal, panic unwrap or expect. It makes no qualified-basename source claim.
+The retained `nonempty_pop_and_mapping_adaptation_preserve_authority` case
+proves that a real ordinary `deque.pop -> int | None` declaration stays optional
+while call HIR is scalar, and preserves its source call plus Option adaptation
+for both operators, operand orders and value/condition entries. Existing
+builtin, nonbuiltin, optional-call, Let-tail and mapping assertions remain.
+`narrowing_specializations_decline_unclassified_without_builtin_retry` retains
+its actual narrowed carriers, structural errors, nested receiver/argument and
+public entry coverage; metadata never bypasses typed admission.
+
+The bounded `lower_expr::option_compare_tests` selection resolved and passed
+33 cases; `lib_codegen_tests::structured_condition_codegen_tests` resolved and
+passed one. The unchanged exact H02 list E2E command, with the `create-pr`
+profile and `verification/areas/core_language/data/h02_method_e2e_manifest.json`,
+executed both `collection_cloning` and `list_append_extend_insert_registry`
+native fixtures: 2 passed, 0 failed, report signature `d2b5ed658a42c554`,
+0/2 fixture-group cache hits. The exclusively adopted inactive H02c worktree's
+warm target and existing runner preparation were reused. Free disk/target
+ownership were checked before Cargo work; no target was cleaned. Rustfmt,
+diff checks, the file-size guardrail (4,308 maintained files) and HIR
+maintainability passed. No new native scalar-deque execution is claimed.
+Broad create-PR/full merge gates remain with Q01 under the assigned
+intermediate-item policy; no release qualification is claimed.
+
+**Scoped review:** read-only Claude Opus 5.5 returned **SATISFIED**, with no
+blocking findings, on the exact candidate. Response SHA-256 is
+`1b5cd7b645f9a3c2f63f345116b60c19c049aa62edbf2e3ea0c005d1aa647cbd`.
+Its unreproduced forward-placeholder class-metadata suggestion is deferred to
+the separately assigned H02h1 inventory owner; it is not a reproduced defect
+or new requirement here. The existing H02a1 optional-length failure remains
+with its owner. The historical automatic CI initialization failure from #4168,
+caused by unset `SIFR_PERFORMANCE_REFERENCE`, remains V01/Q01 work; its preserved
+`ci-create-pr-failed.log` has SHA-256
+`64d1ca8380e49ec07082eb70d1b93755728a5ac44d94779e70a88361006e952a`.
+The #4173 workflow snapshot is retained separately; no CI pass is claimed and
+this owner does not wait for CI instead of local acceptance.
+
+Candidate, configuration/source/fixture identities, resolved names/counts,
+exact commands, raw logs, E2E manifest, representation/caller audit and review
+are retained outside Git under
+`/data/sifr-architecture-h02c-scalar-deque-evidence-20260930/` on
+`yaser5@192.168.1.134`. The candidate-keyed
+`42afc63370ff11ae3108324f7e9a454e9a523ce6/candidate-validation.json` has SHA-256
+`9c2d00cf60a8659674767fc17ac1ca5398aeddf1746ac0a2390d5b34cb5939f6`.
+Development failures (a boxed-type assertion, a scalar argument-borrow test
+expectation and a missing test-discovery delimiter) remain failed historical
+logs; their corrections passed on the final candidate. All prior handoffs,
+failed package-root invocations and passing dispatch evidence retain their
+original status. The source repair has no blocker.
+
+This documentation-only receipt changes only the canonical phase document
+and requires documentation structure, file-size and diff/scope checks. No
+second implementation review or broad gate is required. The owner exclusively
+adopted `/data/sifr-architecture-h02c-statement-admission-20260930` on its own
+implementation branch `codex/architecture-h02c-scalar-deque-result-20260930`,
+then its own receipt branch `codex/architecture-h02c-scalar-deque-record-20260930`.
+Publication used an owned bundle and local temporary bare relay through the
+authenticated Mac GitHub CLI; shared primary checkouts were not mutated.
+**Next action: separately assign H02h1 resumption on main containing #4173 and
+this receipt, carrying the final caller/representation relationship and deferred
+unreproduced metadata suggestion.** This H02c owner stops here.
+
+The receipt passed documentation structure (1 variant, 0 failures), the 900-line
+file-size guardrail (4,308 maintained files), and diff/scope checks. The canonical
+phase document is the sole tracked receipt change; exact commands and raw log
+digests are retained in `documentation-validation.json` outside Git.
