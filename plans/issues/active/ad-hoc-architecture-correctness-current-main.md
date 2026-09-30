@@ -1866,8 +1866,9 @@ Capsule acquisition checks the managed-header alignment and transfers the
 one-shot capsule to its used name before metadata inspection. The tracked owner
 therefore invokes the deleter once on metadata rejection and insertion failure,
 even while the exporter retains the capsule. Metadata inspection copies the C
-header and checks shape/stride nullness, alignment, addressable extent and element
-count overflow before constructing slices. Incompatible major versions read only
+header and checks shape/stride nullness, alignment and addressable extent before
+constructing slices, then validates element-count overflow. Incompatible major
+versions read only
 the version and stable-prefix deleter. Device admission supports the existing
 CPU/CUDA families, rejects negative ids and rechecks supplied stream metadata,
 including ambiguous CUDA token 0, before calling the producer.
