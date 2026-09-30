@@ -1,12 +1,10 @@
-#![allow(unsafe_code)]
-
 pub mod loader;
 
-use pyo3::{ffi, prelude::*};
-use std::ffi::{CStr, CString};
+use pyo3::prelude::*;
 use std::fmt;
-use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
+// Separate ABI owner; audited by its assigned H02 item.
+#[allow(unsafe_code)]
 mod arrow_ops;
 mod async_cancellation;
 mod async_context;
@@ -19,16 +17,24 @@ mod async_runtime;
 mod async_terminal;
 mod async_value;
 mod bridge_loader;
+// Separate ABI owner; audited by its assigned H02 item.
+#[allow(unsafe_code)]
 mod buffer_ops;
 mod call_depth;
 mod callback_ops;
 mod callbacks;
 mod config_verify;
+mod initialization;
+use initialization::initialize_cpython_with_config;
 mod context_ops;
 #[cfg(test)]
 mod context_ops_tests;
 mod coroutine_ops;
 mod declaration_object_bridge;
+#[cfg(test)]
+mod h02_contract_tests;
+// Separate ABI owner; audited by its assigned H02 item.
+#[allow(unsafe_code)]
 mod dlpack_ops;
 mod foreign_object;
 mod int_conversion;
@@ -299,6 +305,10 @@ pub fn initialize_runtime(
         }
     }
 
+    initialization::validate_config_input(&config)?;
+    // Once CPython initialization starts, its process environment cannot be
+    // replaced. A failed later verification leaves initialized=false and the
+    // selected identity pinned; repeated identical attempts remain retryable.
     state.config = Some(config.clone());
     initialize_cpython_with_config(&config)?;
     configure_interpreter(&config)?;
@@ -320,6 +330,9 @@ pub fn runtime_guard() -> Result<PythonRuntimeGuard, PythonRuntimeError> {
     Ok(PythonRuntimeGuard { _private: () })
 }
 
+// The higher-ranked Python token cannot escape this call. Every foreign thread
+// attaches through PyO3; detached callers only own Py references, and pending
+// decrefs drain while this thread is attached before any user operation.
 pub fn attach<F, R>(f: F) -> Result<R, PythonRuntimeError>
 where
     F: for<'py> FnOnce(Python<'py>) -> R,
@@ -377,190 +390,6 @@ fn configure_interpreter(config: &PythonRuntimeConfig) -> Result<(), PythonRunti
         }
         Ok(())
     })
-}
-
-fn initialize_cpython_with_config(config: &PythonRuntimeConfig) -> Result<(), PythonRuntimeError> {
-    if unsafe { ffi::Py_IsInitialized() } != 0 {
-        return Ok(());
-    }
-
-    let mut raw_config = MaybeUninit::<ffi::PyConfig>::uninit();
-    unsafe {
-        ffi::PyConfig_InitPythonConfig(raw_config.as_mut_ptr());
-    }
-    let mut raw_config = unsafe { raw_config.assume_init() };
-    raw_config.install_signal_handlers = 0;
-    raw_config.parse_argv = 0;
-    raw_config.use_environment = 0;
-    raw_config.user_site_directory = 0;
-    raw_config.write_bytecode = 0;
-    raw_config.module_search_paths_set = 1;
-
-    let configure_result = configure_raw_python_config(&mut raw_config, config);
-    let initialize_result = configure_result.and_then(|()| {
-        py_status_result(
-            unsafe { ffi::Py_InitializeFromConfig(&raw const raw_config) },
-            "initialize CPython",
-        )
-    });
-    unsafe {
-        ffi::PyConfig_Clear(&raw mut raw_config);
-    }
-    initialize_result?;
-    unsafe {
-        ffi::PyEval_SaveThread();
-    }
-    Ok(())
-}
-
-fn configure_raw_python_config(
-    raw_config: &mut ffi::PyConfig,
-    config: &PythonRuntimeConfig,
-) -> Result<(), PythonRuntimeError> {
-    let raw_config_ptr = std::ptr::from_mut(raw_config);
-    set_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.executable),
-        &config.executable,
-        "set Python executable",
-    )?;
-    set_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.base_executable),
-        &config.executable,
-        "set Python base executable",
-    )?;
-    set_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.program_name),
-        &config.interpreter,
-        "set Python program name",
-    )?;
-    set_optional_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.prefix),
-        &config.sys_prefix,
-        "set Python prefix",
-    )?;
-    set_optional_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.exec_prefix),
-        &config.sys_prefix,
-        "set Python exec prefix",
-    )?;
-    set_optional_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.base_prefix),
-        &config.sys_base_prefix,
-        "set Python base prefix",
-    )?;
-    set_optional_config_string(
-        raw_config_ptr,
-        std::ptr::addr_of_mut!(raw_config.base_exec_prefix),
-        &config.sys_base_prefix,
-        "set Python base exec prefix",
-    )?;
-    set_config_argv(raw_config, &config.interpreter)?;
-    for path in &config.sys_path {
-        append_module_search_path(raw_config, path)?;
-    }
-    Ok(())
-}
-
-fn set_optional_config_string(
-    raw_config: *mut ffi::PyConfig,
-    target: *mut *mut libc::wchar_t,
-    value: &str,
-    context: &'static str,
-) -> Result<(), PythonRuntimeError> {
-    if value.is_empty() {
-        return Ok(());
-    }
-    set_config_string(raw_config, target, value, context)
-}
-
-fn set_config_string(
-    raw_config: *mut ffi::PyConfig,
-    target: *mut *mut libc::wchar_t,
-    value: &str,
-    context: &'static str,
-) -> Result<(), PythonRuntimeError> {
-    let value = CString::new(value).map_err(|_| {
-        PythonRuntimeError::PythonOperationFailed(format!("{context}: value contains NUL byte"))
-    })?;
-    py_status_result(
-        unsafe { ffi::PyConfig_SetBytesString(raw_config, target, value.as_ptr()) },
-        context,
-    )
-}
-
-fn set_config_argv(
-    raw_config: &mut ffi::PyConfig,
-    interpreter: &str,
-) -> Result<(), PythonRuntimeError> {
-    let interpreter = CString::new(interpreter).map_err(|_| {
-        PythonRuntimeError::PythonOperationFailed(
-            "set Python argv: value contains NUL byte".to_string(),
-        )
-    })?;
-    let mut argv = [interpreter.as_ptr()];
-    py_status_result(
-        unsafe { ffi::PyConfig_SetBytesArgv(raw_config, 1, argv.as_mut_ptr()) },
-        "set Python argv",
-    )
-}
-
-fn append_module_search_path(
-    raw_config: &mut ffi::PyConfig,
-    path: &str,
-) -> Result<(), PythonRuntimeError> {
-    let wide = wide_string(path);
-    py_status_result(
-        unsafe {
-            ffi::PyWideStringList_Append(&raw mut raw_config.module_search_paths, wide.as_ptr())
-        },
-        "set Python module search path",
-    )
-}
-
-#[cfg(windows)]
-fn wide_string(value: &str) -> Vec<libc::wchar_t> {
-    use std::os::windows::ffi::OsStrExt;
-    std::ffi::OsStr::new(value)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-#[cfg(not(windows))]
-fn wide_string(value: &str) -> Vec<libc::wchar_t> {
-    value
-        .chars()
-        .map(|ch| ch as libc::wchar_t)
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-fn py_status_result(
-    status: ffi::PyStatus,
-    context: &'static str,
-) -> Result<(), PythonRuntimeError> {
-    if unsafe { ffi::PyStatus_Exception(status) } == 0 {
-        return Ok(());
-    }
-    Err(PythonRuntimeError::PythonOperationFailed(format!(
-        "{context}: {}",
-        py_status_message(status)
-    )))
-}
-
-fn py_status_message(status: ffi::PyStatus) -> String {
-    if status.err_msg.is_null() {
-        return format!("status exit code {}", status.exitcode);
-    }
-    unsafe { CStr::from_ptr(status.err_msg) }
-        .to_string_lossy()
-        .into_owned()
 }
 
 fn attach_initialized<F, R>(f: F) -> Result<R, PythonRuntimeError>

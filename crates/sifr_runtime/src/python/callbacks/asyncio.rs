@@ -124,6 +124,7 @@ where
 struct AsyncioTargetPtr(*const (dyn AsyncioTarget<'static> + 'static));
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+#[allow(unsafe_code)]
 unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> AsyncioTargetPtr {
     // SAFETY: the unsafe constructor requires a live wrapper; setup admission
     // excludes teardown, and wrapper Drop drains setup before dropping target.
@@ -136,10 +137,13 @@ unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> 
 }
 
 // SAFETY: AsyncioTarget is Send + Sync; shared setup admission protects lifetime.
+#[allow(unsafe_code)]
 unsafe impl Send for AsyncioTargetPtr {}
 // SAFETY: shared calls use Sync captures, and teardown drains admitted setup.
+#[allow(unsafe_code)]
 unsafe impl Sync for AsyncioTargetPtr {}
 
+#[allow(unsafe_code)]
 unsafe fn erase_future_lifetime(future: BoxCallbackFuture<'_>) -> BoxCallbackFuture<'static> {
     // SAFETY: every erased future/output enters the wrapper-owned revocation
     // registry before setup releases its lease; Drop destroys it under exclusion.
@@ -382,6 +386,7 @@ impl Drop for AsyncioCallback<'_> {
 /// Python/task entries; cancellation of that wait does not weaken Drop's proof.
 /// Send/Sync captures support shared foreign setup; all mutable access must use
 /// safe synchronization. Lifetime erasure grants no ownership or alias rights.
+#[allow(unsafe_code)]
 pub unsafe fn asyncio_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
     owner: CallbackOwnerState,
     _callback_id: u64,
@@ -415,6 +420,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(unsafe_code)]
 unsafe fn build_asyncio_callback<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
     owner: CallbackOwnerState,
     _callback_id: u64,
@@ -598,6 +604,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(unsafe_code)]
 pub fn asyncio_callback_with_owner<A, R, Decode, Handler, Encode, HandlerFuture>(
     owner: CallbackOwnerState,
     callback_id: u64,

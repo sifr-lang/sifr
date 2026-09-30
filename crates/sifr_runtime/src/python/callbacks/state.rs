@@ -1,7 +1,7 @@
 use super::super::PythonError;
 use super::{errors, registry};
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use tokio::sync::Notify;
@@ -48,6 +48,7 @@ pub(super) struct CallbackOwnerInner {
 struct OwnerData {
     status: CallbackOwnerStatus,
     active_calls: usize,
+    synchronous_entries: BTreeSet<u64>,
     next_sequence: u64,
     next_callback_id: u64,
     first_failure: Option<CallbackFailureEvidence>,
@@ -182,6 +183,7 @@ impl CallbackOwnerState {
             state: Mutex::new(OwnerData {
                 status: CallbackOwnerStatus::Open,
                 active_calls: 0,
+                synchronous_entries: BTreeSet::new(),
                 next_sequence: 0,
                 next_callback_id: 0,
                 first_failure: None,
@@ -248,7 +250,9 @@ impl CallbackOwnerState {
                 .active_calls
                 .checked_add(1)
                 .ok_or_else(|| errors::unavailable("active-call count"))?;
-            state.next_sequence
+            let sequence = state.next_sequence;
+            state.synchronous_entries.insert(sequence);
+            sequence
         };
         Ok(CallbackInvocationLease {
             owner: self.clone(),
@@ -286,6 +290,10 @@ impl CallbackOwnerState {
                 return Err(errors::unavailable("async callback entry identity"));
             }
             let cancel_now = state.status != CallbackOwnerStatus::Open;
+            // Setup holds synchronous admission until the async entry owns its
+            // future. A synchronous wrapper drain may then leave owned executor
+            // bookkeeping to the async wrapper without waiting on that executor.
+            state.synchronous_entries.remove(&entry_sequence);
             state.async_entries.insert(
                 entry_sequence,
                 AsyncEntry {
@@ -530,25 +538,7 @@ impl CallbackOwnerState {
             }
         }
         drop(state);
-        let releases = std::mem::take(
-            &mut *self
-                .inner
-                .releases
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner),
-        );
-        for release in releases {
-            release();
-        }
-        let mut state = lock_state(&self.inner);
-        state.captures_released = true;
-        state.status = CallbackOwnerStatus::Closed;
-        self.inner.changed.notify_all();
-        self.inner.async_changed.notify_waiters();
-        drop(state);
-        if self.inner.retained {
-            registry::unregister(self.inner.id);
-        }
+        self.finish_close();
         self.retained_failure_result(surface_retained_failure)
     }
 
@@ -608,6 +598,62 @@ impl CallbackOwnerState {
             }
             notified.await;
         }
+        self.finish_close();
+        self.retained_failure_result(surface_retained_failure)
+    }
+
+    // Borrowed synchronous wrappers need every admitted decoding/handler/encoding
+    // use to finish before freeing their target. They must not block the executor
+    // that owns a sibling asyncio entry's supervisor. Closing admission and
+    // draining synchronous setup/use establishes that local lifetime boundary;
+    // the last remaining owned lease completes the shared owner close.
+    pub(super) fn close_synchronous_call_scope(&self) -> Result<(), PythonError> {
+        self.require_call_scope()?;
+        self.reject_close_reentrancy()?;
+        let drain = || {
+            let mut state = lock_state(&self.inner);
+            if state.status == CallbackOwnerStatus::Open {
+                state.status = CallbackOwnerStatus::Closing;
+            }
+            let cancellations = pending_async_cancellations(&mut state);
+            drop(state);
+            invoke_cancellations(cancellations);
+            let mut state = lock_state(&self.inner);
+            while !state.synchronous_entries.is_empty() {
+                state = self
+                    .inner
+                    .changed
+                    .wait(state)
+                    .unwrap_or_else(std::sync::PoisonError::into_inner);
+            }
+            drop(state);
+            self.finish_call_scope_if_drained();
+        };
+        // A foreign invocation must reacquire Python entry to encode its output.
+        // Release any caller GIL while waiting for that synchronous invocation.
+        if pyo3::Python::try_attach(|py| py.detach(drain)).is_none() {
+            drain();
+        }
+        Ok(())
+    }
+
+    fn finish_call_scope_if_drained(&self) {
+        let mut state = lock_state(&self.inner);
+        if self.inner.retained
+            || state.status != CallbackOwnerStatus::Closing
+            || state.closer_active
+            || state.active_calls != 0
+            || !state.async_entries.is_empty()
+        {
+            return;
+        }
+        state.closer_active = true;
+        drop(state);
+        let _authority = CloseAuthority(self.clone());
+        self.finish_close();
+    }
+
+    fn finish_close(&self) {
         let releases = std::mem::take(
             &mut *self
                 .inner
@@ -615,9 +661,18 @@ impl CallbackOwnerState {
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner),
         );
+        // Capture destruction is a callback ownership operation too. Reentrant
+        // close must return an error instead of waiting on this closer itself.
+        ACTIVE_CALLBACKS.with(|active| active.borrow_mut().push((self.inner.id, 0)));
+        let _release_guard = CallbackInvocationPollGuard {
+            owner_id: self.inner.id,
+            callback_id: 0,
+            active: true,
+        };
         for release in releases {
             release();
         }
+        drop(_release_guard);
         let mut state = lock_state(&self.inner);
         state.captures_released = true;
         state.status = CallbackOwnerStatus::Closed;
@@ -627,7 +682,6 @@ impl CallbackOwnerState {
         if self.inner.retained {
             registry::unregister(self.inner.id);
         }
-        self.retained_failure_result(surface_retained_failure)
     }
 
     fn retained_failure_result(&self, surface: bool) -> Result<(), PythonError> {
@@ -686,10 +740,14 @@ impl Drop for CallbackInvocationLease {
         self.active = false;
         let mut state = lock_state(&self.owner.inner);
         state.active_calls = state.active_calls.saturating_sub(1);
+        state.synchronous_entries.remove(&self.entry_sequence);
+        self.owner.inner.changed.notify_all();
         if state.status == CallbackOwnerStatus::Closing && state.active_calls == 0 {
             self.owner.inner.changed.notify_all();
         }
         self.owner.inner.async_changed.notify_waiters();
+        drop(state);
+        self.owner.finish_call_scope_if_drained();
     }
 }
 
@@ -703,6 +761,8 @@ impl Drop for CallbackAsyncEntryLease {
         state.async_entries.remove(&self.entry_sequence);
         self.owner.inner.changed.notify_all();
         self.owner.inner.async_changed.notify_waiters();
+        drop(state);
+        self.owner.finish_call_scope_if_drained();
     }
 }
 

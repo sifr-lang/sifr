@@ -120,6 +120,7 @@ impl InvocationSlot {
 }
 
 #[cfg(test)]
+#[allow(unsafe_code)]
 pub(super) fn prove_queued_output_revocation() {
     use std::sync::atomic::{AtomicUsize, Ordering};
     struct BorrowedOutput<'a>(
