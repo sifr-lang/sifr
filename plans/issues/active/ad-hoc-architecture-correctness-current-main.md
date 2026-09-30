@@ -6691,3 +6691,53 @@ review or broad gate.
 
 **Next action: separately assign H03 only.** H02h5 has no local blocker. This owner
 stops before H03, Q01 full qualification or whole-phase closure.
+
+### H03/F30 scope-definition delivery receipt (2026-09-30)
+
+**State: docs-only scope checkpoint closed; H03a-H03f implementation remains open.**
+The bounded definition above merged in [PR #4185](https://github.com/sifr-lang/sifr/pull/4185)
+as `491aeb829e06531a7a5f6f21378889cc4616a5c6` from candidate
+`bc33185a58156409f6c2e05113767ee514a578f6`, on base
+`ec93f2b5a37518c0ad4b6b64110d86002091a9d7`. The merged tree matches
+candidate tree `7fcbd5a9f0f10ae6237a6aad2358408091ce40d3`.
+
+Fresh read-only inspection bound current source identities for live graph-backed
+narrowing, flow producer/consumer/cache roles, existing `sifr_ir` HIR ownership,
+codegen wildcard/explicit exports and the blanket dead-code allowance. The
+definition schedules independent H03a-H03f owners with normalized metric
+contracts, finite owned exception records, exact reserved acceptance commands,
+and semantic/resource evidence before any separately scoped compiler cleanup.
+It grants no unconditional graph deletion, broad privatization, historical
+baseline transplant or D01/Q01 implementation authority. Reserved testcase and
+suite names are future obligations, not current executable-pass evidence.
+
+The exact scope candidate passed
+`python3 verification/areas/documentation/check_structure.py` (raw SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+`python3 scripts/check_file_size_guardrails.py` (4,317 maintained files; raw
+SHA-256 `5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a`),
+committed diff, clean-tree and single-path checks. Source-audit SHA-256 is
+`fdedba2b9ef90eb744242b8b550d9a390455875ef3de2b6f4c2b0ef59cd13c07`;
+candidate-validation manifest SHA-256 is
+`9419d22373744ce593e250cdabd344b17e52b010055a89977fb6c319a6948506`.
+Raw evidence is outside Git at
+`/data/sifr-architecture-h03-scope-evidence-20260930/bc33185a58156409f6c2e05113767ee514a578f6/`
+on `yaser5@192.168.1.134`. The pinned recommendations digest matches the
+Authority section. Scoped self-review checked current sources, ownership,
+dependencies, acceptance and order; this explicitly docs-only scope assignment
+requires no external implementation review or Cargo/compiler tests.
+
+This owner used fresh isolated worktree
+`/data/sifr-architecture-h03-scope-20260930`, implementation branch
+`codex/architecture-h03-scope-20260930` and receipt branch
+`codex/architecture-h03-scope-record-20260930`. Pinned nested editor submodules
+were initialized before documentation validation without changing gitlinks.
+Publication used an owned bundle and temporary bare relay through the Mac's
+authenticated GitHub CLI; primary/shared checkouts and warm Cargo targets were
+untouched. No compiler build, native test, benchmark, broad gate, CI pass or
+release qualification is claimed. Existing failed/incomplete evidence retains
+its original status. This receipt runs relevant documentation, file-size,
+scope and diff checks only.
+
+**Next action: separately assign H03a only.** This scope owner has no blocker
+and stops before compiler implementation, later evidence items or qualification.
