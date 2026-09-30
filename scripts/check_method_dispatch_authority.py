@@ -23,6 +23,9 @@ CLASSES = {
     'user-protocol-dispatch': 'source-declaration-owner',
     'contextual-rust-adaptation': 'sifr_codegen',
     'rust-ir-consumption': 'sifr_codegen',
+    'source-shape-analysis': 'sifr_codegen',
+    'source-method-routing': 'sifr_codegen',
+    'compiler-policy': 'compiler-owner',
     'declaration-resolution': 'source-declaration-owner',
     'test-assertion': 'test-owner',
     'package-protocol': 'package-owner',
@@ -126,7 +129,7 @@ def discover(source: Source) -> list[Site]:
     return [source.site(kind, a, b) for kind, a, b in sorted(set(spans), key=lambda x: x[1])]
 
 
-def validate(sites: list[Site], inventory: dict) -> list[str]:
+def validate(sites: list[Site], inventory: dict, sources: list[Source] | None = None) -> list[str]:
     records = inventory['sites']
     errors = reconcile(sites, records)
     by_key = {s.key: s for s in sites}
@@ -160,6 +163,14 @@ def validate(sites: list[Site], inventory: dict) -> list[str]:
             errors.append(f'canonical registry classification changed: {key}')
         if (site.path, site.scope) == CONST_AUTHORITY and kind != 'compile-time-semantics':
             errors.append(f'constant evaluator classification changed: {key}')
+    if sources is not None:
+        from method_policy_semantics import validate_semantics
+        from method_policy_nodes import nodes
+        errors.extend(validate_semantics(sources, sites, inventory, sys.modules[__name__]))
+        try:
+            errors.extend(validate_relationships(sources, inventory, nodes()))
+        except ValueError as error:
+            errors.append(str(error))
     return errors
 
 
@@ -170,7 +181,20 @@ def main() -> int:
     if args.self_test:
         from test_architecture_policy_guards import run_method_tests
         return run_method_tests()
-    parser.error('live method inventory is not delivered by H02h0; use the pure validator')
+    root = Path(__file__).resolve().parent.parent
+    try:
+        sources = list(rust_sources(root))
+        sites = [site for source in sources for site in discover(source)]
+        errors = validate(sites, read_inventory(root, INVENTORY), sources)
+    except (OSError, ValueError, KeyError) as error:
+        print(f'method authority inventory failed: {error}', file=sys.stderr)
+        return 1
+    if errors:
+        print('\n'.join(errors), file=sys.stderr)
+        return 1
+    print(f'method authority inventory passed: {len(sites)} sites, '
+          f'{len(read_inventory(root, INVENTORY)["constituents"])} reviewed nodes')
+    return 0
 
 
 

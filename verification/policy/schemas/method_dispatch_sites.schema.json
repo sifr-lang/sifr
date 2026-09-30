@@ -1,11 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "H02h method policy interface v1",
+  "title": "Reviewed H02h1 semantic method policy v1",
   "type": "object",
   "required": [
     "schema_version",
     "sites",
-    "constituents"
+    "constituents",
+    "semantic_version"
   ],
   "properties": {
     "schema_version": {
@@ -20,7 +21,12 @@
           "fingerprint",
           "classification",
           "owner",
-          "contract"
+          "contract",
+          "operation",
+          "inputs",
+          "outputs",
+          "role",
+          "caller_admission_relationship"
         ],
         "properties": {
           "site": {
@@ -48,7 +54,10 @@
               "sql-protocol",
               "cache-protocol",
               "driver-protocol",
-              "generated-code"
+              "generated-code",
+              "source-shape-analysis",
+              "source-method-routing",
+              "compiler-policy"
             ]
           },
           "owner": {
@@ -77,6 +86,26 @@
           "admission_relationship": {
             "type": "string",
             "minLength": 1
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputs": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outputs": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "caller_admission_relationship": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "additionalProperties": false
@@ -91,7 +120,10 @@
           "scope",
           "relationship",
           "context_fingerprint",
-          "references"
+          "references",
+          "role",
+          "inputs",
+          "outputs"
         ],
         "properties": {
           "path": {
@@ -135,10 +167,25 @@
               },
               "additionalProperties": false
             }
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputs": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outputs": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "additionalProperties": false
       }
+    },
+    "semantic_version": {
+      "const": 1
     }
   },
   "additionalProperties": false

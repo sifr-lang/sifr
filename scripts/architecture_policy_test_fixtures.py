@@ -34,6 +34,117 @@ def unsafe_records(sites):
 
 
 class MethodTests(unittest.TestCase):
+    @staticmethod
+    def semantic_records(sources):
+        from method_policy_semantics import classification, detail
+        from method_policy_constituents import relationships
+        from method_policy_nodes import nodes
+        sites, records = [], []
+        for source in sources:
+            for site in methods.discover(source):
+                kind = classification(source, site, methods)
+                record = dict(site.record(), classification=kind, owner=methods.CLASSES[kind],
+                              **detail(source, site, kind))
+                if kind == 'language-emission-constituent':
+                    record.update(canonical_authority=list(methods.LANGUAGE_AUTHORITY),
+                                  admission_relationship=methods.CONSTITUENTS[(site.path, site.scope)])
+                sites.append(site)
+                records.append(record)
+        return sites, dict(sites=records, constituents=relationships(sources, nodes()))
+
+    @staticmethod
+    def bounded_nodes(adaptations=None):
+        from contextlib import ExitStack
+        from unittest.mock import patch
+        import method_policy_nodes as nodes
+        stack = ExitStack()
+        for mapping, values in ((nodes.CONSTITUENTS, {}), (nodes.ADAPTATIONS, adaptations or {}),
+                                (nodes.ANALYSES, {}), (nodes.ROUTERS, {})):
+            stack.enter_context(patch.dict(mapping, values, clear=True))
+        return stack
+
+    def test_generated_rust_and_ir_rewrites_cannot_be_protocol_dispatch(self):
+        with self.bounded_nodes():
+            for path in ('generated_rust_canonicalizer/rewrites.rs', 'ir_optimize/rewrites.rs'):
+                source = Source('crates/sifr_codegen/src/' + path,
+                    'fn rewrite(expr: &RustExpr) -> bool { matches!(expr, '
+                    'RustExpr::MethodCall { method, .. } if method == "clone") }')
+                sites, records = self.semantic_records([source])
+                self.assertGreater(len(sites), 0)
+                self.assertFalse(methods.validate(sites, records, [source]))
+                for record in records['sites']:
+                    record.update(classification='user-protocol-dispatch',
+                                  owner=methods.CLASSES['user-protocol-dispatch'])
+                self.assertTrue(any('actual semantic role' in e
+                                    for e in methods.validate(sites, records, [source])))
+
+    def test_builtin_specialization_cannot_hide_as_protocol_or_ir_consumer(self):
+        with self.bounded_nodes():
+            source = Source('crates/sifr_codegen/src/new_specialization.rs',
+                'fn hidden(expr: &HirExpr) -> RustExpr { if let HirExpr::MethodCall '
+                '{ method: renamed, .. } = expr { if renamed == "append" { '
+                'return RustExpr::MethodCall { method: "push", args: vec![] }; } } decline() }')
+            sites, records = self.semantic_records([source])
+            self.assertGreater(len(sites), 0)
+            for kind in ('user-protocol-dispatch', 'rust-ir-consumption', 'compiler-policy'):
+                mutated = copy.deepcopy(records)
+                for record in mutated['sites']:
+                    record.update(classification=kind, owner=methods.CLASSES[kind])
+                self.assertTrue(any('unregistered source-method specialization' in e
+                                    for e in methods.validate(sites, mutated, [source])))
+
+    def adaptation_fixture(self):
+        path = 'crates/sifr_codegen/src/intrinsic_method_emitters/narrowing_helpers.rs'
+        source = Source(path, 'fn adapt_owned_mapping_default(method: &str, args: &[HirExpr], '
+                        'lowered: &mut [RustExpr]) { if matches!(method, "get" | "pop" | "remove") '
+                        '{ coerce_owned(args, lowered); } } '
+                        'fn caller(expr: &HirExpr) { let path = source_method_path(expr)?; '
+                        'if path.is_builtin() { adapt_owned_mapping_default(method, args, lowered); } }')
+        key = (path, 'adapt_owned_mapping_default')
+        return source, {key: 'caller source_method_path -> is_builtin before owned default adaptation'}
+
+    def test_narrowing_and_mapping_helpers_require_actual_admission_relationships(self):
+        path = 'crates/sifr_codegen/src/stmt_support_emitter/expr_call_metadata.rs'
+        narrowing = Source(path, 'fn is_narrowable_pop_call_for_ir(method: &str, '
+                           'args: &[HirExpr]) -> bool { matches!((method, args), '
+                           '("pop", []) | ("popleft", [])) } '
+                           'fn comparison(expr: &HirExpr) -> bool { lower_stmt_expr_for_ir(expr)?; '
+                           'is_narrowable_pop_call_for_ir(method, args) }')
+        narrowing_graph = {(path, 'is_narrowable_pop_call_for_ir'):
+                           'argument shape predicate; comparison caller first lowers/admit operands'}
+        for source, graph in (self.adaptation_fixture(), (narrowing, narrowing_graph)):
+            with self.subTest(helper=next(iter(graph))[1]), self.bounded_nodes(graph):
+                sites, records = self.semantic_records([source])
+                self.assertFalse(methods.validate(sites, records, [source]))
+                for field in ('contract', 'caller_admission_relationship', 'inputs', 'outputs', 'role'):
+                    mutated = copy.deepcopy(records)
+                    mutated['sites'][0][field] = 'The selected declaration owns this closed protocol dispatch.'
+                    self.assertTrue(any('actual ' + field in e
+                                        for e in methods.validate(sites, mutated, [source])))
+                mutated = copy.deepcopy(records)
+                mutated['constituents'][0]['references'] = []
+                self.assertTrue(any('relationships changed' in e
+                                    for e in methods.validate(sites, mutated, [source])))
+
+    def test_new_or_changed_specialization_caller_invalidates_admission(self):
+        source, graph = self.adaptation_fixture()
+        with self.bounded_nodes(graph):
+            sites, records = self.semantic_records([source])
+            self.assertFalse(methods.validate(sites, records, [source]))
+            for text in (source.text.replace('if path.is_builtin()', 'if true'),
+                         source.text.replace('source_method_path(expr)?', 'invented_path(expr)'),
+                         source.text[:source.text.index('fn caller')],
+                         source.text + ' fn bypass() { adapt_owned_mapping_default(m, a, r); }',
+                         source.text + ' use self::adapt_owned_mapping_default as bypass;',
+                         source.text + ' macro_rules! bypass { () => { adapt_owned_mapping_default(m,a,r) } }'):
+                changed = Source(source.path, text)
+                # Re-author isolated site fingerprints so rejection must come
+                # from the independently retained caller/admission graph.
+                changed_sites, fresh = self.semantic_records([changed])
+                fresh['constituents'] = records['constituents']
+                self.assertTrue(any('relationships changed' in e
+                                    for e in methods.validate(changed_sites, fresh, [changed])))
+
     def setUp(self):
         self.path = 'crates/example/src/lib.rs'
         self.text = 'fn dispatch(renamed: &str) { match renamed { "append" => emit(), _ => decline() } }'
