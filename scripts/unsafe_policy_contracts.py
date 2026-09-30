@@ -66,28 +66,6 @@ def operation_family(site) -> str:
         return 'generated-rust'
     if site.kind == 'unsafe-allowance':
         return 'unsafe-allowance'
-    for name, family in {
-        'PyConfig_Clear': 'cpython-config-clear',
-        'PyConfig_InitPythonConfig': 'cpython-config-init',
-        'PyConfig_SetBytesString': 'cpython-config-copy',
-        'PyConfig_SetBytesArgv': 'cpython-config-copy',
-        'PyWideStringList_Append': 'cpython-config-copy',
-        'Py_InitializeFromConfig': 'cpython-initialize',
-        'PyEval_SaveThread': 'cpython-detach',
-        'PyGILState_Check': 'cpython-observation',
-        'Py_IsInitialized': 'cpython-observation',
-        'PyStatus_Exception': 'cpython-observation',
-    }.items():
-        if name in identifiers:
-            return family
-    if {'assume_init', 'raw_config'} <= identifiers:
-        return 'cpython-config-move'
-    if 'current_callback_scoped_with_owner' in identifiers:
-        return 'current-target-erasure'
-    if 'asyncio_callback_scoped_with_owner' in identifiers:
-        return 'callback-erasure'
-    if 'foreign_callback_scoped_with_owner' in identifiers:
-        return 'target-erasure'
     if 'PyBuffer_Release' in identifiers:
         return 'exporter-release'
     target_erasure = bool(identifiers & {'erase_target_lifetime'})
@@ -116,6 +94,29 @@ def operation_family(site) -> str:
         return 'thread-marker'
     if site.kind == 'unsafe-declaration':
         return 'abi-declaration'
+    # Preserve the stronger established release/erasure/ABI effects above.
+    for name, family in {
+        'PyConfig_Clear': 'cpython-config-clear',
+        'PyConfig_InitPythonConfig': 'cpython-config-init',
+        'PyConfig_SetBytesString': 'cpython-config-copy',
+        'PyConfig_SetBytesArgv': 'cpython-config-copy',
+        'PyWideStringList_Append': 'cpython-config-copy',
+        'Py_InitializeFromConfig': 'cpython-initialize',
+        'PyEval_SaveThread': 'cpython-detach',
+        'PyGILState_Check': 'cpython-observation',
+        'Py_IsInitialized': 'cpython-observation',
+        'PyStatus_Exception': 'cpython-observation',
+    }.items():
+        if name in identifiers:
+            return family
+    if {'assume_init', 'raw_config'} <= identifiers:
+        return 'cpython-config-move'
+    if 'asyncio_callback_scoped_with_owner' in identifiers:
+        return 'callback-erasure'
+    if 'foreign_callback_scoped_with_owner' in identifiers:
+        return 'target-erasure'
+    if 'current_callback_scoped_with_owner' in identifiers:
+        return 'current-target-erasure'
     return 'raw-access'
 
 

@@ -3841,7 +3841,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "obligations": {
         "thread": {
@@ -3987,7 +3987,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "obligations": {
         "thread": {
@@ -4133,7 +4133,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "obligations": {
         "thread": {
@@ -4571,7 +4571,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "obligations": {
         "thread": {
@@ -4717,7 +4717,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "obligations": {
         "thread": {
@@ -4863,7 +4863,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "obligations": {
         "thread": {
@@ -5154,7 +5154,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "obligations": {
         "thread": {
@@ -5300,7 +5300,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "obligations": {
         "thread": {
@@ -5446,7 +5446,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "obligations": {
         "thread": {
@@ -6468,7 +6468,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "obligations": {
         "thread": {
@@ -6614,7 +6614,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "obligations": {
         "thread": {
@@ -6760,7 +6760,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "obligations": {
         "thread": {
@@ -7110,7 +7110,7 @@
       "source_evidence": "// SAFETY: private wrapper drains decoding before borrowed_decode_count ends.",
       "contract": {
         "thread": "This foreign fixture admits borrowed_decode_count on shared Send + Sync closure bounds; atomic or synchronized captures support worker entry.",
-        "lifetime": "The private foreign wrapper is declared after borrowed_decode_count and is explicitly dropped or drained while that storage remains live, including the fixture cancellation path.",
+        "lifetime": "The private foreign wrapper is declared after borrowed_decode_count and is explicitly dropped or drained while that storage remains live.",
         "alias": "The foreign handler cannot reach or forget its own wrapper. Owner admission spans borrowed access; close waits for detached decode/invoke/encode.",
         "ownership": "The fixture owns its foreign wrapper and releases it before checking borrowed_decode_count; escaped shells own handles only and cannot transfer the target or borrow lifetime."
       },
@@ -7283,7 +7283,7 @@
       "source_evidence": "// SAFETY: the private callback drops before total; it is never forgotten or\n// moved into a handler. Only its guarded Python shell escapes.",
       "contract": {
         "thread": "This current fixture admits total on the creator thread only; Cell state never crosses a foreign entry.",
-        "lifetime": "The private current wrapper is declared after total and is explicitly dropped or drained while that storage remains live, including the fixture cancellation path.",
+        "lifetime": "The private current wrapper is declared after total and is explicitly dropped or drained while that storage remains live.",
         "alias": "The current handler cannot reach or forget its own wrapper. Registry removal excludes later shared target calls.",
         "ownership": "The fixture owns its current wrapper and releases it before checking total; escaped shells own handles only and cannot transfer the target or borrow lifetime."
       },
@@ -8682,7 +8682,7 @@
       "source_evidence": "/* SAFETY: private wrapper drops before current_total and only shells escape. */",
       "contract": {
         "thread": "This current fixture admits current_total on the creator thread only; Cell state never crosses a foreign entry.",
-        "lifetime": "The private current wrapper is declared after current_total and is explicitly dropped or drained while that storage remains live, including the fixture cancellation path.",
+        "lifetime": "The private current wrapper is declared after current_total and is explicitly dropped or drained while that storage remains live.",
         "alias": "The current handler cannot reach or forget its own wrapper. Registry removal excludes later shared target calls.",
         "ownership": "The fixture owns its current wrapper and releases it before checking current_total; escaped shells own handles only and cannot transfer the target or borrow lifetime."
       },
@@ -8700,7 +8700,7 @@
               "kind": "code",
               "path": "crates/sifr_runtime/src/python/callbacks/tests.rs",
               "scope": "call_scoped_callbacks_accept_borrowed_handler_state",
-              "quote": "callback.close_call_scope().expect(\"callback should close\");",
+              "quote": "callback.close().expect(\"callback should close\");",
               "context_fingerprint": "a9a2b8117e3d4b69e28990b9b331c5bc8d3a19399278ba6e7fa644f7bcee839a"
             },
             {
@@ -8739,7 +8739,7 @@
               "kind": "code",
               "path": "crates/sifr_runtime/src/python/callbacks/tests.rs",
               "scope": "call_scoped_callbacks_accept_borrowed_handler_state",
-              "quote": "callback.close_call_scope().expect(\"callback should close\");",
+              "quote": "callback.close().expect(\"callback should close\");",
               "context_fingerprint": "a9a2b8117e3d4b69e28990b9b331c5bc8d3a19399278ba6e7fa644f7bcee839a"
             },
             {
@@ -8778,7 +8778,7 @@
               "kind": "code",
               "path": "crates/sifr_runtime/src/python/callbacks/tests.rs",
               "scope": "call_scoped_callbacks_accept_borrowed_handler_state",
-              "quote": "callback.close_call_scope().expect(\"callback should close\");",
+              "quote": "callback.close().expect(\"callback should close\");",
               "context_fingerprint": "a9a2b8117e3d4b69e28990b9b331c5bc8d3a19399278ba6e7fa644f7bcee839a"
             },
             {
@@ -8817,7 +8817,7 @@
               "kind": "code",
               "path": "crates/sifr_runtime/src/python/callbacks/tests.rs",
               "scope": "call_scoped_callbacks_accept_borrowed_handler_state",
-              "quote": "callback.close_call_scope().expect(\"callback should close\");",
+              "quote": "callback.close().expect(\"callback should close\");",
               "context_fingerprint": "a9a2b8117e3d4b69e28990b9b331c5bc8d3a19399278ba6e7fa644f7bcee839a"
             },
             {
@@ -8855,7 +8855,7 @@
       "source_evidence": "/* SAFETY: private wrapper drains foreign calls before foreign_total ends. */",
       "contract": {
         "thread": "This foreign fixture admits foreign_total on shared Send + Sync closure bounds; atomic or synchronized captures support worker entry.",
-        "lifetime": "The private foreign wrapper is declared after foreign_total and is explicitly dropped or drained while that storage remains live, including the fixture cancellation path.",
+        "lifetime": "The private foreign wrapper is declared after foreign_total and is explicitly dropped or drained while that storage remains live.",
         "alias": "The foreign handler cannot reach or forget its own wrapper. Owner admission spans borrowed access; close waits for detached decode/invoke/encode.",
         "ownership": "The fixture owns its foreign wrapper and releases it before checking foreign_total; escaped shells own handles only and cannot transfer the target or borrow lifetime."
       },
@@ -9884,7 +9884,7 @@
       "operation_family": "unsafe-allowance",
       "source_evidence": "",
       "contract": {
-        "thread": "RuntimeState mutex serializes this cohesive PyConfig/initialization ABI module; initialization ends by releasing the initializing thread GIL for scoped PyO3 entry.",
+        "thread": "Production RuntimeState mutex serializes this cohesive PyConfig/initialization ABI module; initialization ends by releasing the initializing thread GIL for scoped PyO3 entry. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "The module owns initialized PyConfig storage until Clear on success and error; CPython persists for the process lifetime and copies argv/path inputs before Rust temporaries expire.",
         "alias": "Configuration field writes are exclusive to the stack owner; process initialization is serialized and later callers use Python tokens rather than retained mutable config pointers.",
         "ownership": "The module boundary covers config allocation/copy/clear and interpreter initialization only. Clear releases owned config strings once, while the process owns the interpreter and saved thread state."
@@ -9905,6 +9905,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -9973,9 +10022,9 @@
       "operation_family": "cpython-observation",
       "source_evidence": "// SAFETY: process-global observation under runtime initialization authority;\n// the runtime never finalizes CPython or mutates it concurrently here.",
       "contract": {
-        "thread": "Serialized runtime initialization may query process-global initialization before this module creates any interpreter state.",
+        "thread": "Serialized runtime initialization may query process-global initialization before this module creates any interpreter state. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "CPython process state remains available for the by-value Py_IsInitialized query; no interpreter pointer is retained.",
-        "alias": "This query observes global initialization without mutable object/config access, under the runtime initialization mutex.",
+        "alias": "This query observes global initialization without mutable object/config access, under the production RuntimeState guard or the direct bridge_loader test_guard.",
         "ownership": "The returned integer grants no CPython ownership and causes the already-initialized path to return before allocating a PyConfig."
       },
       "obligations": {
@@ -9994,6 +10043,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10030,6 +10128,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10062,7 +10209,7 @@
       "operation_family": "cpython-config-init",
       "source_evidence": "",
       "contract": {
-        "thread": "The initializing thread holds the runtime initialization authority while calling PyConfig_InitPythonConfig.",
+        "thread": "The initializing thread holds the runtime initialization authority while calling PyConfig_InitPythonConfig. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "MaybeUninit allocates aligned writable PyConfig storage that remains live until the resulting config is cleared.",
         "alias": "The uninitialized stack slot is exclusive; the API writes every field before Rust assumes initialization.",
         "ownership": "This call establishes ownership of a valid PyConfig and its allocated contents for the single later Clear."
@@ -10083,6 +10230,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10151,7 +10347,7 @@
       "operation_family": "cpython-config-move",
       "source_evidence": "",
       "contract": {
-        "thread": "The same serialized initializing thread moves the initialized PyConfig out of MaybeUninit.",
+        "thread": "The same serialized initializing thread moves the initialized PyConfig out of MaybeUninit. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "The preceding InitPythonConfig initializes every field before assume_init; the returned value owns its live configuration storage.",
         "alias": "Moving the initialized config uses the unique stack owner, with no concurrent or borrowed raw view retained.",
         "ownership": "assume_init transfers initialized config ownership to raw_config without freeing contents; the later Clear remains responsible for allocations."
@@ -10172,6 +10368,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10240,7 +10485,7 @@
       "operation_family": "cpython-initialize",
       "source_evidence": "",
       "contract": {
-        "thread": "Only the serialized initializing thread calls Py_InitializeFromConfig after configuration succeeds.",
+        "thread": "Only the serialized initializing thread calls Py_InitializeFromConfig after configuration succeeds. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "The fully configured PyConfig and copied strings stay live throughout initialization and are cleared only after its returned status.",
         "alias": "CPython reads the const config pointer under process initialization exclusion; it receives no mutable alias to the Rust stack owner.",
         "ownership": "Initialization borrows config storage while the process acquires the interpreter; Rust retains responsibility to Clear config contents even on API failure."
@@ -10261,6 +10506,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10329,7 +10623,7 @@
       "operation_family": "cpython-config-clear",
       "source_evidence": "",
       "contract": {
-        "thread": "The initializing thread clears its config under runtime initialization authority before any initialization status is propagated.",
+        "thread": "The initializing thread clears its config under runtime initialization authority before any initialization status is propagated. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "raw_config has been initialized and remains valid through Clear; both configure failure and initialization failure reach this cleanup.",
         "alias": "Only this exclusive stack owner clears the allocated config fields; no field pointer is used after this call.",
         "ownership": "PyConfig_Clear consumes its allocated strings/list contents exactly once; the Rust stack struct is not transferred or individually freed."
@@ -10350,6 +10644,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10418,7 +10761,7 @@
       "operation_family": "cpython-detach",
       "source_evidence": "// SAFETY: successful initialization attached this thread and owns its GIL;\n// detaching hands thread-state attachment to later scoped PyO3 entry.",
       "contract": {
-        "thread": "Successful Py_InitializeFromConfig attached the initializing thread and gave it the GIL; failed initialization returns before SaveThread.",
+        "thread": "Successful Py_InitializeFromConfig attached the initializing thread and gave it the GIL; failed initialization returns before SaveThread. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "The process-owned interpreter and current thread state remain allocated after releasing the attachment.",
         "alias": "SaveThread releases this thread GIL rather than exposing a mutable Python object alias; later access must reattach through PyO3.",
         "ownership": "CPython retains ownership of thread state; the ignored return value is not a Rust-owned allocation and no reference decref occurs."
@@ -10439,6 +10782,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10507,7 +10899,7 @@
       "operation_family": "cpython-config-copy",
       "source_evidence": "// SAFETY: both pointers refer to the same exclusive initialized PyConfig;\n// CPython copies value before the CString expires, replacing only its field.",
       "contract": {
-        "thread": "The serialized configuration owner invokes PyConfig_SetBytesString before runtime publication.",
+        "thread": "The serialized configuration owner invokes PyConfig_SetBytesString before runtime publication. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "CString rejects embedded NUL and stays live through the call; both raw_config and target point into the same initialized exclusive config.",
         "alias": "The API replaces only the selected config string field, without sharing a mutable config alias with another caller.",
         "ownership": "CPython copies the CString bytes into config-owned storage and replaces the previous field allocation; the Rust temporary is still dropped by Rust and Clear releases the copied field."
@@ -10535,6 +10927,55 @@
               "scope": "configure_raw_python_config",
               "quote": "let raw_config_ptr = std::ptr::from_mut(raw_config);",
               "context_fingerprint": "b8b857d8e424bea542fdbf3f4044b8686283c55f5e6c8b8505a02933c8225b85"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10624,7 +11065,7 @@
       "operation_family": "cpython-config-copy",
       "source_evidence": "",
       "contract": {
-        "thread": "The serialized initialization path configures argv before Python entry is published.",
+        "thread": "The serialized initialization path configures argv before Python entry is published. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "A one-element argv array and its NUL-terminated interpreter CString stay live through SetBytesArgv, together with the initialized config.",
         "alias": "The mutable argv pointer addresses exactly one stack element; config mutation uses its exclusive &mut PyConfig owner.",
         "ownership": "CPython copies argv into config-owned strings; Rust frees its temporary CString afterward and the single Clear owns release of the copied vector."
@@ -10652,6 +11093,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10741,7 +11231,7 @@
       "operation_family": "cpython-config-copy",
       "source_evidence": "",
       "contract": {
-        "thread": "The serialized config builder appends module search paths before initializing CPython.",
+        "thread": "The serialized config builder appends module search paths before initializing CPython. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "validate_config_input rejects NUL and wide_string builds terminated wchar storage alive through WideStringList_Append; config list storage remains initialized.",
         "alias": "The list field is accessed through an exclusive &mut PyConfig; the API copies the read-only wide buffer without retaining a mutable alias.",
         "ownership": "Append creates a config-owned path copy; the temporary wide Vec is Rust-owned and config Clear releases every appended path."
@@ -10776,6 +11266,55 @@
               "scope": "initialize_cpython_with_config",
               "quote": "unsafe {\n        ffi::PyConfig_Clear(&raw mut raw_config);\n    }\n    initialize_result?;",
               "context_fingerprint": "144165fdf61df4ecf4abbfaf047962894d79b72c124a167ecda3a5d046edf353"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10886,7 +11425,7 @@
       "operation_family": "cpython-observation",
       "source_evidence": "// SAFETY: PyStatus is a by-value status returned by these CPython APIs.",
       "contract": {
-        "thread": "The configuration/initialization thread observes a PyStatus returned by the corresponding CPython API; this status query needs no Python object GIL access.",
+        "thread": "The configuration/initialization thread observes a PyStatus returned by the corresponding CPython API; this status query needs no Python object GIL access. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "The by-value initialized PyStatus remains live for PyStatus_Exception and is copied into error reporting only afterward.",
         "alias": "Exception classification reads status fields without a pointer mutation or alias to config storage.",
         "ownership": "The returned integer borrows status data and transfers no allocation; callers remain responsible for config cleanup."
@@ -10907,6 +11446,55 @@
               "scope": "py_status_result",
               "quote": "if unsafe { ffi::PyStatus_Exception(status) } == 0 {\n        return Ok(());\n    }",
               "context_fingerprint": "7dade90daf1ea713b3b67a790afebedb32704cb4ab881556f1f156866075e03c"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -10975,7 +11563,7 @@
       "operation_family": "raw-access",
       "source_evidence": "// SAFETY: non-null err_msg is CPython-owned, static terminated error text;\n// copy it now without transferring ownership or admitting mutation.",
       "contract": {
-        "thread": "Error formatting runs on the serialized config thread and reads CPython static error text without accessing Python objects.",
+        "thread": "Error formatting runs on the serialized config thread and reads CPython static error text without accessing Python objects. Production holds initialize_runtime's RuntimeState guard; the two test-only direct bridge_loader callers instead hold test_guard.",
         "lifetime": "The preceding null check admits status.err_msg, whose CPython API contract is static terminated error text; CStr is copied into a Rust String immediately.",
         "alias": "from_ptr constructs a read-only byte view; neither status nor its error storage is mutated through this view.",
         "ownership": "CPython retains error-message ownership; to_string_lossy().into_owned() copies bytes and no free or decref is applied."
@@ -10996,6 +11584,55 @@
               "scope": "py_status_message",
               "quote": "if status.err_msg.is_null() {\n        return format!(\"status exit code {}\", status.exitcode);\n    }",
               "context_fingerprint": "e348cc3c6a5de6a8ba0b5c2e59e6d7fa970c2c1b30d4019695695c03f844218b"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "initialize_runtime",
+              "quote": "let mut state = runtime_state()?;",
+              "context_fingerprint": "5eee9a409cc060a1f015a12bdc13a3ac09ed338f2e8fb50da2fc2e367b66b948"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "runtime_state",
+              "quote": "RUNTIME_STATE\n        .lock()\n        .map_err(|_| PythonRuntimeError::StateUnavailable)",
+              "context_fingerprint": "bfa39dee0ce5e186f177fcac7a098aa1b7c1a1c8e4a46c5e173e72166a236c60"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python.rs",
+              "scope": "test_guard",
+              "quote": "match TEST_LOCK.lock() {\n        Ok(guard) => guard,\n        Err(poisoned) => poisoned.into_inner(),\n    }",
+              "context_fingerprint": "8bc89304c3311bed4a8f6d4b318a40b2a455914eeec9bba30bd66bd283e2dd9f"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "loader_is_hermetic_rewrites_imports_and_restores_first_position",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "ebc40607b327bdce86aed234f689d3d512ea86f52ed3543f15ea48425adaf1ba"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "let _guard = test_guard();",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_runtime/src/python/bridge_loader.rs",
+              "scope": "duplicate_embedded_module_names_are_rejected_before_installation",
+              "quote": "initialize_cpython_with_config(&config).expect(\"CPython should initialize\");",
+              "context_fingerprint": "11cbfda64b2066490b7ad43ddf3f44dd12eda520d0838bb31c8933d961e371a1"
             }
           ]
         },
@@ -11065,7 +11702,7 @@
       "source_evidence": "",
       "contract": {
         "thread": "The Unix validation entry inspects the linked CPython library on the initializing caller before accepting runtime deployment identity.",
-        "lifetime": "The linked Py_GetVersion symbol and loader-owned filename remain live while canonicalization and digest comparison resolve the selected shared library.",
+        "lifetime": "The linked Py_GetVersion symbol is process-live. loaded_library immediately copies the loader-owned terminated filename into a Rust String before canonicalization and library digest comparison.",
         "alias": "This function admits only read-only loader/path inspection; it neither invokes Python objects nor permits aliasing mutable loader storage.",
         "ownership": "The validation allowance owns filesystem bytes and Rust paths only. Loaded library ownership stays with the process loader and its filename is copied."
       },
@@ -11513,7 +12150,7 @@
         "thread": "Only the creator thread resolves CURRENT_TARGETS; CurrentCallback carries PhantomData<Rc<()>> and cannot move to a foreign thread.",
         "lifetime": "The boxed CurrentTarget and its borrowed handler captures remain live through owner close and removal of the thread-local token; the private caller drops the wrapper before its captures.",
         "alias": "Erasure preserves the shared Fn pointer. The RefCell registry borrow ends before invoking user code; no exclusive access is manufactured and reentrant wrapper destruction is forbidden to borrowed callers.",
-        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and drops that Box after admitted calls drain; escaped shells retain a token without owning the target."
+        "ownership": "CurrentCallback owns the stable Box, removes its token during close, and normally drops that Box after admitted calls drain; on a rejected reentrant ownership violation, Drop leaks it rather than freeing the executing target; escaped shells retain a token without owning the target."
       },
       "bindings": {
         "crates/sifr_runtime/src/python/callbacks/current.rs::<module>::unsafe-allowance::1": "d6c07ddc41cfc147b8dc3cbb26ec63b9e5052e8155471731815d4aac81bff2fc",
@@ -11543,7 +12180,7 @@
         "thread": "ForeignTarget requires Send + Sync; Decode, Handler and Encode share synchronized captures, while A and R are Send across detached execution.",
         "lifetime": "The stable boxed ForeignTarget and all borrowed captures outlive every accepted decode, detached invocation and result encoding; close_synchronous_call_scope waits for those leases before wrapper target destruction.",
         "alias": "Target conversion preserves a shared trait-object pointer. Shell owner admission excludes teardown throughout prepare/invoke/encode, and mutable capture state must synchronize itself.",
-        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; its Drop closes and drains the owner before target release, and escaped shells acquire no ownership."
+        "ownership": "ForeignCallback retains sole Box ownership for the borrowed route; valid scoped callers close and drain the owner before target release; a rejected reentrant ownership violation can leak the Box instead of freeing an executing target, and escaped shells acquire no ownership."
       },
       "bindings": {
         "crates/sifr_runtime/src/python/callbacks/foreign.rs::<module>::unsafe-allowance::1": "16754526dbca3765ebeefa3700327d32515df69329b9df50131a2f50290ade06",

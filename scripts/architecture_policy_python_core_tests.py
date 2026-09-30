@@ -111,3 +111,51 @@ class UnsafePythonCoreTests(unittest.TestCase):
         errors = unsafe.validate(sites, {'sites': records}, sources=self.sources)
         self.assertTrue(any('repeated owner-level contract lacks local obligations' in e for e in errors))
         self.assertFalse(any('fingerprint' in e or 'stale local' in e for e in errors))
+
+    def test_cpython_refinements_preserve_existing_release_and_erasure_effects(self):
+        from architecture_policy_test_fixtures import unsafe_records
+        from unsafe_policy_contracts import proof_reference
+        cases = [
+            ('PyGILState_Check(); PyBuffer_Release(view);', 'exporter-release'),
+            ("PyGILState_Check(); std::mem::transmute::<BoxCallbackFuture<'a>, BoxCallbackFuture<'static>>(future);",
+             'future-erasure'),
+            ('PyGILState_Check(); erase_target_lifetime(target);', 'target-erasure'),
+            ('PyGILState_Check(); build_asyncio_callback(owner, id, args);', 'callback-erasure'),
+        ]
+        for body, family in cases:
+            with self.subTest(family=family):
+                source = Source('crates/sifr_runtime/src/python/callbacks/mixed_fixture.rs',
+                                'fn mixed() { unsafe { ' + body + ' } }')
+                sites = unsafe.discover(source)
+                self.assertEqual([operation_family(s) for s in sites], [family])
+                records = unsafe_records(sites)
+                for obligation in records['sites'][0]['obligations'].values():
+                    obligation['proofs'].append(proof_reference(source, 'mixed', body))
+                self.assertEqual(unsafe.validate(sites, records, sources=[source]), [])
+                # Adding an observation cannot turn consuming release or erased
+                # capture ownership into the weaker borrow-only effect.
+                records['sites'][0]['obligations']['ownership']['rule'] = 'borrow-only'
+                self.assertTrue(any('invalid ownership obligation' in e for e in
+                                    unsafe.validate(sites, records, sources=[source])))
+
+    def test_fixture_teardown_and_initialization_proofs_bind_the_actual_callers(self):
+        current = next(r for r in self.inventory['sites'] if r['site'].endswith(
+            'callbacks/tests.rs::call_scoped_callbacks_accept_borrowed_handler_state::unsafe-block::1'))
+        for obligation in current['obligations'].values():
+            local = [p for p in obligation['proofs'] if
+                     p.get('scope') == 'call_scoped_callbacks_accept_borrowed_handler_state']
+            self.assertEqual([p['quote'] for p in local],
+                             ['callback.close().expect("callback should close");'])
+        required = {'initialize_runtime', 'runtime_state', 'test_guard',
+                    'loader_is_hermetic_rewrites_imports_and_restores_first_position',
+                    'duplicate_embedded_module_names_are_rejected_before_installation'}
+        for record in self.inventory['sites']:
+            if '/initialization.rs::' in record['site']:
+                self.assertTrue(required <= {p.get('scope') for p in
+                                record['obligations']['thread']['proofs'] if p['kind'] == 'code'})
+                self.assertIn('test_guard', record['contract']['thread'])
+            if any(scope in record['site'] for scope in
+                   ('call_scope_close_drains_borrowed_target_while_decoding',
+                    'borrowed_callback_lifetime_and_thread_owner',
+                    'call_scoped_callbacks_accept_borrowed_handler_state')):
+                self.assertNotIn('fixture cancellation path', record['contract']['lifetime'])
