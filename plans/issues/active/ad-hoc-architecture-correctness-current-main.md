@@ -965,7 +965,7 @@ holds the separate passing and partial area receipts.
 | E03 | LSP performance owner; F23; merged in [PR #4085](https://github.com/sifr-lang/sifr/pull/4085), receipt above. | Actual Python declaration cache deltas in 25 connected modules: cold, unchanged, private/API edit, external change and cancellation/recovery. |
 | E04 | Separate editor correctness owner; F34; merged in [PR #4087](https://github.com/sifr-lang/sifr/pull/4087), receipt above. | Real type symbols and nonempty hierarchy edges, lowercase names, uppercase non-types, imported bases and edits; otherwise reconcile advertised capability/docs explicitly. |
 | H01/F28 | Fuzz/property owner; needs-new-scope, split into H01a-H01i below; H01a-H01d and H01f-H01h merged in [PR #4090](https://github.com/sifr-lang/sifr/pull/4090), [PR #4093](https://github.com/sifr-lang/sifr/pull/4093), [PR #4096](https://github.com/sifr-lang/sifr/pull/4096), [PR #4100](https://github.com/sifr-lang/sifr/pull/4100), [PR #4104](https://github.com/sifr-lang/sifr/pull/4104), [PR #4107](https://github.com/sifr-lang/sifr/pull/4107), and [PR #4110](https://github.com/sifr-lang/sifr/pull/4110), receipts below. Whole H01 qualification remains open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. Complete only after all nine bounded items pass their named acceptance and merge. |
-| H02/F29 | Typed lowering and unsafe bridge owners; needs-new-scope, split into H02a0, H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02h below. H02a stopped at needs-new-scope in [PR #4115](https://github.com/sifr-lang/sifr/pull/4115); H02a0 merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118), H02a1 merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120), H02b merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122), and H02c merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124), with bounded statement-only admission repair merged in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142); H02d stopped needs-new-scope in [PR #4127](https://github.com/sifr-lang/sifr/pull/4127); H02d0 merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130); H02d1 merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); H02e merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); H02f merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136); H02g merged in [PR #4138](https://github.com/sifr-lang/sifr/pull/4138); H02h remains open and is formally split into H02h0-H02h5 below. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. Complete only after the predecessor items and H02h0-H02h5 pass their named acceptance and merge. |
+| H02/F29 | Typed lowering and unsafe bridge owners; needs-new-scope, split into H02a0, H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02h below. H02a stopped at needs-new-scope in [PR #4115](https://github.com/sifr-lang/sifr/pull/4115); H02a0 merged in [PR #4118](https://github.com/sifr-lang/sifr/pull/4118), H02a1 merged in [PR #4120](https://github.com/sifr-lang/sifr/pull/4120), H02b merged in [PR #4122](https://github.com/sifr-lang/sifr/pull/4122), and H02c merged in [PR #4124](https://github.com/sifr-lang/sifr/pull/4124), with bounded statement-only admission repair merged in [PR #4142](https://github.com/sifr-lang/sifr/pull/4142) and condition-method admission repair merged in [PR #4159](https://github.com/sifr-lang/sifr/pull/4159); H02d stopped needs-new-scope in [PR #4127](https://github.com/sifr-lang/sifr/pull/4127); H02d0 merged in [PR #4130](https://github.com/sifr-lang/sifr/pull/4130); H02d1 merged in [PR #4132](https://github.com/sifr-lang/sifr/pull/4132); H02e merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); H02f merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136); H02g merged in [PR #4138](https://github.com/sifr-lang/sifr/pull/4138); H02h remains open and is formally split into H02h0-H02h5 below. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. Complete only after the predecessor items and H02h0-H02h5 pass their named acceptance and merge. |
 | H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
 | D01a | Diagnostic and verification registry prerequisite; non-codegen F32; merged in [PR #3936](https://github.com/sifr-lang/sifr/pull/3936), receipt below. | Active code identity, owner-module and fixture references, related-span JSON, verification mutation inventory and negative drift tests. Do not change codegen diagnostics or historical numeric codes. |
 | D01b | Documentation owner; F31 and final current maps; open after structural delivery. | Alias/target-aware maps, current API/path/link checks, active-named release-record status and links; historical receipts preserved. |
@@ -4370,3 +4370,151 @@ remain preserved. This record-only handoff requires documentation structure,
 file-size and diff checks; no broad gate or external implementation review is
 claimed. **Next action: separately assign only the bounded H02c condition-method
 admission repair, then resume H02h1 after its reviewed merge.**
+
+### H02c condition-method admission repair (2026-09-30)
+
+[PR #4159](https://github.com/sifr-lang/sifr/pull/4159) merged as
+`71293ed6fcde13259984bdf4b5b525cf64c68b7f` from exact tested/reviewed candidate
+`8c455f307becdd0c7f3a78934647588f88c75af0`, base
+`f7c1fb0f218f249ed929f32ce4222173b763da30`, tree
+`84ee9b09d4628a8eadcad96590676c5fde6687a7`. This closes only the bounded
+condition-method source repair handed back by H02h1 above. H02h1's complete
+policy authoring remains separately owned; H02h/H02/F29 remain open.
+
+Structured numeric method truthiness now consumes the ordinary admitted method
+expression before comparing its actual return value with zero. Simple length
+truthiness and comparison operands require typed builtin admission before
+registry lowering; proven nominal, imported, protocol and RustAdapted calls
+decline to the structured authority without a builtin spelling retry. Indexed
+list/dict comparison operands retain borrowed checked reads and optional mapping.
+Unicode string length follows its ordinary character semantics, and simple string
+truthiness defers to the emitter's character-cache context. The shared length
+registry rejects unsupported receivers, including the checked-read witness
+shortcut: presence evidence cannot establish method availability. Its support
+predicate lives in the existing dispatch module to keep the registry under 900
+lines. No live method/unsafe inventory, schema or bridge contract changed.
+
+The final candidate passed **40/40 codegen test-case executions**, with **40 unique
+resolved names**. Both reserved exact cases,
+`method_authority_tests::condition_specializations_decline_unclassified_without_builtin_retry`
+and
+`method_authority_tests::condition_comparison_and_truthiness_preserve_authority`,
+resolved and executed 1/1. They exercise If/While/Assert, nested statements,
+positive/negated truthiness, comparisons and list/dict indexed comparison
+receivers; rejection covers Unclassified, invalid module/symbol identity and
+unsupported builtin receivers. Added indexed numeric truthiness cases retain
+the original simple receiver boundary and checked-read emission. Positive
+coverage retains all five nonbuiltin
+authority kinds, nominal receivers, int/float/optional numeric returns, Unicode
+string length/cache context and shared/mutable checked field places, compared
+with the ordinary admitted method path.
+
+The seven retained exact authority/statement-admission cases each passed 1/1;
+`methods::tests` passed 12/12, fifteen affected condition/comparison/checked-read/
+string-cache exact regressions each passed 1/1, and
+`lib_codegen_tests::length_alias_codegen_tests` passed 4/4. Each selection uses
+`cargo test --locked -p sifr_codegen --lib`; exact cases use `-- --exact` and
+resolved names are recorded before assertion execution.
+
+The prescribed H02-owned E2E selection passed 2/2 fixtures
+(`list_append_extend_insert_registry`, `collection_cloning`) and the harness 1/1,
+through
+`verification/runner/e2e/run_e2e_pass.sh --profile create-pr --fixture-manifest verification/areas/core_language/data/h02_method_e2e_manifest.json`.
+The final compiler emitted matching native groups, which were reused
+(`cache_hits=2/2`); the selected assertions executed again. Compile took 9,713 ms,
+build 0 ms and run 200 ms; report signature `d2b5ed658a42c554`.
+Raw E2E-log SHA-256:
+`6b7a4ce32e896f068fe7c024b4431ffb37c292b4efbe197bbe379e8e29f3ae6b`.
+Formatting, HIR maintainability, the 900-line file-size guardrail and diff check
+passed. No performance qualification or broad create-PR/merge pass is claimed;
+Q01 retains final integration under the approved intermediate policy.
+
+Exact commands, resolved names, counts, input/configuration/submodule digests,
+raw logs and review remain outside the reviewed tree at
+`/data/sifr-architecture-h02c-condition-evidence-20260930/8c455f307becdd0c7f3a78934647588f88c75af0/`
+on `yaser5@192.168.1.134`. Manifest SHA-256: `5974280dae9fd06378da2c091b672e3e934a7e9b9ef7e6656b6194643c42a92f`;
+selection SHA-256:
+`198bb7a4545b212de92d52f62e49ed4671b67e00bc8f7ac753c592fab3a912c7`.
+Rust/Cargo 1.98.1 and the pinned Ruff/editor/LeetCode inputs were used. This owner
+exclusively adopted the completed, clean/inactive statement-admission worktree
+under a new branch and its offered inactive target after checking writers and
+disk pressure. The current lock/workspace/Cargo configuration matches the
+former target owner; Cargo rebuilt candidate-bound compiler artifacts while
+compatible caches remained warm. About 12 GiB was free at adoption and 15 GiB
+after the initial E2E and about 17 GiB at final validation; no target was manually
+cleaned. Build/fixture timings are functional
+observations only.
+
+Scoped read-only Opus 5.5 review returned **SATISFIED**, no blocking findings,
+on the exact final candidate. Response SHA-256: `a4b38c72f535f053d54e31da3111ee2c9454d39ab1798a786a0990f921d0e5ad`.
+The initial scoped review of `3a64389af39816b37fb91949ff52839819c9f160` returned
+**NOT SATISFIED**: broadening simple numeric-truthiness receiver lowering admitted
+nonoptional dictionary indexes, allowing an Option length call or tuple constant
+that dropped the checked read. The single remediation batch restored the base
+leaf receiver boundary and added dict-indexed dict/set/tuple/bytes cases for
+positive and negated If/While/Assert. The final evidence above reruns all selected
+assertions after that repair. The failed initial review is preserved outside the
+tree in the `3a64389af39816b37fb91949ff52839819c9f160/review/` sibling, response
+SHA-256 `50ec7b30a3efbad1a7c5df23d69ff07315156c456faf7ee594a079f9a41ad915`.
+
+**Separate codegen owner follow-ups, classified by the final review:**
+
+- Checked-place condition-read owner: `checked_place/condition_reads.rs:85-101`
+  lowers an entire guarded condition with `lower_stmt_expr_for_ir` and uses it
+  directly as the `is_some_and` body. Bare or negated numeric conditions such as
+  `d[k].len()` can leave a numeric body where Rust requires bool. Apply numeric
+  and collection truthiness inside that guarded body. The file is byte-identical
+  to the base and this route precedes numeric condition lowering there too;
+  the base simple path already declined these indexed receivers. Review therefore
+  classifies this as a pre-existing boolean-conversion defect independent of
+  method authority, outside this bounded source-admission repair.
+- Checked-place length owner: `string_char_cache.rs:115-143` emits
+  `SifrInt::from(witness.len())` for every non-string checked payload, including
+  tuples, which have no Rust `len` method. Delegate non-string payloads to the
+  ordinary method registry, which represents tuple length as a constant. This
+  unchanged source path was reached on the base too; review classifies it as
+  pre-existing and separately owned.
+- Delegated Newtype method owner: builtin `len` on a Newtype wrapping a list now
+  structurally declines. The former wildcard emitted a Rust `.len()` on a
+  Newtype struct without delegated codegen/Deref and already failed rustc.
+  Any delegation route requires separately scoped codegen work.
+- Suggested emitter-state audit: a numeric method returning `Ok(None)` from
+  `lower_stmt_expr_for_ir` can be lowered again by the existing later fallback.
+  Confirm that a declined ordinary emitter does not retain state changes.
+
+The added indexed-truthiness assertions prove simple-path decline and emitted
+`get`/`is_some_and` read structure only. They do **not** compile or execute the
+indexed numeric/tuple output, and the two native E2E fixtures do not cover those
+conditions. The source-only pre-existing comparison is retained in
+`indexed-truthiness-preexisting-source.json`; no executable coverage is claimed.
+The actual-return/truthiness criterion was explicitly included in remediation
+review, which assigned the above defects to their separate codegen owners.
+
+Historical development failures remain preserved: the initial direct-HIR
+rejection run exposed unsupported indexed length emission through a checked
+witness; it was corrected before the passing candidate. The intermediate
+`712f1f99b7744598b0b63d4129ecb24b252b53cb` candidate passed its focused assertions
+but failed the file-size guardrail at 914 lines in `methods/mod.rs`; moving the
+support predicate to dispatch corrected it. Neither failed result is acceptance.
+The initial reproduction is recorded in `historical-initial-failure.md`, the
+initial preserve run in `initial-preserve.log`, and the failed intermediate
+candidate's raw logs/results remain in its sibling evidence directory.
+
+**V01/Q01 infrastructure follow-up:** the automatic
+[local-first create-PR job](https://github.com/sifr-lang/sifr/actions/runs/36708158315/job/109863269535)
+failed before validation setup at `performance_reference_admission` because
+`SIFR_PERFORMANCE_REFERENCE` is unset. This is the existing phase admission
+blocker, not passing CI evidence or an H02c regression. The first-candidate and
+final-candidate normalized/raw logs are
+preserved in their candidate directories. The unchanged LSP build warning for
+`external_inputs.rs::generation` remains outside this repair; it did not fail
+the E2E run.
+
+The initial docs command passed its selected structure assertions but then
+rejected an external result-JSON path while displaying the result; that failed
+invocation remains preserved. The command was corrected to use an owned path
+under `target/verification/` and rerun. This docs-only receipt passed
+documentation structure, file-size and diff/scope checks. No additional Cargo gate or external implementation review is required
+for the record update. **Next ready batch: separately assign H02h1 only** to
+resume complete policy authoring on this reviewed repair. H02h2-H02h5 and H03
+remain waiting. This owner stops after the receipt; no H02h1 work was started.
