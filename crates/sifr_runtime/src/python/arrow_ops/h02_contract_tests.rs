@@ -72,6 +72,18 @@ unsafe extern "C" fn get_next(
     unsafe { output.write(array()) };
     0
 }
+unsafe extern "C" fn failed_next(
+    _stream: *mut abi::ArrowArrayStream,
+    _output: *mut abi::ArrowArray,
+) -> i32 {
+    22
+}
+unsafe extern "C" fn failed_device_next(
+    _stream: *mut abi::ArrowDeviceArrayStream,
+    _output: *mut abi::ArrowDeviceArray,
+) -> i32 {
+    22
+}
 unsafe extern "C" fn last_error(_stream: *mut abi::ArrowArrayStream) -> *const std::ffi::c_char {
     std::ptr::null()
 }
@@ -214,6 +226,7 @@ fn handle(metadata: &PythonArrowCapsuleMetadata) -> ArrowHandle {
     (metadata.handle, metadata.token)
 }
 fn assert_layout() {
+    // Layout source: apache/arrow apache-arrow-22.0.0 cpp/src/arrow/c/abi.h.
     // Arrow C headers on the qualified 64-bit host: every field offset is checked,
     // including nullable function-pointer representation and device-stream padding.
     #[cfg(target_pointer_width = "64")]
@@ -520,6 +533,14 @@ fn stream_callbacks_release_exactly_once() {
                                 ((*stream).get_next.expect("next"))(stream, &mut output_array),
                                 0
                             );
+                            (*stream).get_next = Some(failed_next);
+                            assert_eq!(
+                                ((*stream).get_next.expect("failed next"))(
+                                    stream,
+                                    &mut output_array
+                                ),
+                                22
+                            );
                             assert!(((*stream).get_last_error.expect("error"))(stream).is_null());
                             ((*stream).release.expect("release"))(stream);
                             release_array(&mut output_array);
@@ -532,6 +553,14 @@ fn stream_callbacks_release_exactly_once() {
                             assert_eq!(
                                 ((*stream).get_next.expect("next"))(stream, &mut output_device),
                                 0
+                            );
+                            (*stream).get_next = Some(failed_device_next);
+                            assert_eq!(
+                                ((*stream).get_next.expect("failed next"))(
+                                    stream,
+                                    &mut output_device
+                                ),
+                                22
                             );
                             assert!(((*stream).get_last_error.expect("error"))(stream).is_null());
                             ((*stream).release.expect("release"))(stream);
