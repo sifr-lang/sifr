@@ -120,18 +120,15 @@ def valid_proof(proof, site, sources) -> bool:
                     for i in range(len(actual) - len(quoted) + 1)) == 1)
 
 
-def normalized_obligations(contract, site, record) -> tuple:
-    """Compare prose after removing discovered bindings, never authored meaning.
-
-    Gather complete spans against the original text before removing any of
-    them. In particular, a scope inside a key cannot destroy the key match.
-    Inventory values are checked separately and cannot influence this key.
-    """
+def _binding_patterns(site) -> list[str]:
     boundary = r'[\w/.:#-]'
+    # Sentence punctuation is a boundary; a path extension/component or an
+    # identifier suffix is not. Keep the punctuation in the remaining prose.
+    ending = rf'(?:(?!{boundary})|(?=[.:,](?:\s|$)))'
     patterns = [
-        rf'(?<!{boundary}){re.escape(site.key)}(?!{boundary})',
-        rf'(?<!{boundary}){re.escape(site.path)}(?::{site.line})?(?!{boundary})',
-        rf'(?<!{boundary}){re.escape(site.scope)}(?!{boundary})',
+        rf'(?<!{boundary}){re.escape(site.key)}{ending}',
+        rf'(?<!{boundary}){re.escape(site.path)}(?::{site.line})?{ending}',
+        rf'(?<!{boundary}){re.escape(site.scope)}{ending}',
     ]
     kind = r'[ _-]'.join(re.escape(part) for part in site.kind.split('-'))
     patterns += [
@@ -139,7 +136,7 @@ def normalized_obligations(contract, site, record) -> tuple:
         r'\b(?:site|ordinal|line)\s*[:=]?\s*#?\s*\d+\b',
         r'(?<!\w)#\s*\d+\b',
         r'\(\s*\d+\s*\)',
-        rf'(?<![\w/.:#-])(?:{site.ordinal}|{site.line})(?![\w/.:#-])',
+        rf'(?<!{boundary})(?:{site.ordinal}|{site.line}){ending}',
     ]
     operation = r'\s*'.join(re.escape(t.value) for t in code_tokens(site.text))
     if operation:
@@ -150,6 +147,22 @@ def normalized_obligations(contract, site, record) -> tuple:
                   .removesuffix('*/').strip() for line in site.source_evidence.splitlines()]
         patterns += [r'(?<!\w)' + r'\s*'.join(re.escape(word) for word in body.split())
                      + r'(?!\w)' for body in bodies if body]
+    return patterns
+
+
+def normalized_obligations(contract, site, record, *, comparison_sites=None) -> tuple:
+    """Compare prose after removing discovered bindings, never authored meaning.
+
+    Gather complete spans against the original text before removing any of
+    them. In particular, a scope inside a key cannot destroy the key match.
+    Inventory values are checked separately and cannot influence this key.
+    Repetition uses the same selected source union for every record: a word
+    matching only one fingerprint or scope must not make identical prose differ.
+    The default single-site form remains useful for exact preservation checks.
+    """
+    binding_sites = tuple(comparison_sites) if comparison_sites is not None else (site,)
+    patterns = set(pattern for binding in binding_sites for pattern in _binding_patterns(binding))
+    fingerprints = {binding.fingerprint.lower() for binding in binding_sites}
     values = []
     for field in FIELDS:
         text = contract[field]
@@ -157,7 +170,8 @@ def normalized_obligations(contract, site, record) -> tuple:
         # A maximal hex token must itself be a prefix; matching part of a
         # different hash or digits inside an identifier is not metadata.
         spans += [match.span() for match in re.finditer(r'(?<![\w/])[0-9a-fA-F]+(?![\w/])', text)
-                  if len(match[0]) <= 64 and site.fingerprint.lower().startswith(match[0].lower())]
+                  if len(match[0]) <= 64 and any(value.startswith(match[0].lower())
+                                               for value in fingerprints)]
         expanded = []
         for start, end in spans:
             label = re.search(r'\b(?:site|path|operation|source_evidence|evidence|scope|'
@@ -221,7 +235,7 @@ def validate_repeated_contracts(sites, inventory) -> list[str]:
         contract = record.get('contract')
         if site and isinstance(contract, dict) and all(
                 isinstance(contract.get(k), str) for k in FIELDS):
-            repeated[normalized_obligations(contract, site, record)].append(record)
+            repeated[normalized_obligations(contract, site, record, comparison_sites=sites)].append(record)
     for group in repeated.values():
         if len(group) < 2:
             continue

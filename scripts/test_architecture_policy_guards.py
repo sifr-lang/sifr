@@ -309,6 +309,14 @@ unsafe { read(z); }
             'bare-line': lambda s: str(s.line),
             'path': lambda s: s.path,
             'path-line': lambda s: f'{s.path}:{s.line}',
+            'key-period': lambda s: s.key + '.',
+            'path-period': lambda s: s.path + '.',
+            'path-line-period': lambda s: f'{s.path}:{s.line}.',
+            'scope-period': lambda s: s.scope + '.',
+            'bare-ordinal-period': lambda s: f'{s.ordinal}.',
+            'bare-ordinal-colon': lambda s: f'{s.ordinal}:',
+            'bare-line-period': lambda s: f'{s.line}.',
+            'bare-line-colon': lambda s: f'{s.line}:',
         }
         for length in (1, 6, 12, 63, 64):
             for uppercase in (False, True):
@@ -337,6 +345,22 @@ unsafe { read(z); }
                             errors = unsafe.validate(sites, records, sources=sources)
                             self.assertTrue(any('repeated owner-level' in e for e in errors), errors)
                             self.assertTrue(all('repeated owner-level' in e for e in errors), errors)
+        # Exact identical prose cannot diverge when a meaningful word/number
+        # happens to be metadata for only one discovered site. The same must
+        # hold after adding distinct actual bindings to that shared template.
+        sites = unsafe.discover(Source('crates/example/src/lib.rs',
+            'fn reads() { let seed = 20; unsafe { read(first); } unsafe { read(second); } }'))
+        self.assertTrue(sites[0].fingerprint.startswith('a'))
+        self.assertFalse(sites[1].fingerprint.startswith('a'))
+        self.assertEqual([s.ordinal for s in sites], [1, 2])
+        self.assertEqual([s.line for s in sites], [1, 1])
+        for prose in ('Owner keeps a lease on the allocation.', 'Owner keeps 2 leases on the allocation.'):
+            for suffix_for in (lambda s: '', lambda s: s.key, lambda s: s.fingerprint[:12]):
+                with self.subTest(prose=prose, suffix=suffix_for(sites[0])):
+                    records = unsafe_records(sites)
+                    for site, record in zip(sites, records['sites']):
+                        record['contract'] = dict.fromkeys(unsafe.CONTRACT_FIELDS, prose + ' ' + suffix_for(site))
+                    self.assertTrue(any('repeated owner-level' in e for e in unsafe.validate(sites, records)))
 
     def test_binding_normalization_preserves_semantic_obligations(self):
         from unsafe_policy_contracts import normalized_obligations
@@ -355,7 +379,8 @@ unsafe { read(z); }
         other_hash = ('0' if site.fingerprint[0] != '0' else '1') + site.fingerprint[1:]
         preserved = ('4096', 'buffer4096', 'different/reads/file.rs', other_hash,
                      site.fingerprint + '0', 'unsafe_blockish', 'prereads',
-                     site.path.upper(), site.path + '/different.rs')
+                     site.path.upper(), site.path + '/different.rs', site.path + '.bak',
+                     site.path + 'X', 'different/1.rs', 'different/a/file.rs')
         for text in preserved:
             with self.subTest(text=text):
                 contract = dict.fromkeys(unsafe.CONTRACT_FIELDS, text)
