@@ -59,6 +59,14 @@
           },
           "operation_family": {
             "enum": [
+              "current-target-erasure",
+              "cpython-config-clear",
+              "cpython-config-init",
+              "cpython-config-move",
+              "cpython-config-copy",
+              "cpython-initialize",
+              "cpython-detach",
+              "cpython-observation",
               "raw-access",
               "exporter-release",
               "target-erasure",
@@ -123,10 +131,14 @@
                       "abi-caller-thread",
                       "bounded-allowance-thread",
                       "caller-thread",
+                      "cpython-api-caller",
+                      "creator-thread-admission",
                       "delegated-X02-thread",
+                      "initializing-thread-holds-gil",
                       "send-future-under-admission",
                       "send-sync-capture-admission",
                       "send-sync-type-invariant",
+                      "serialized-initialization",
                       "supported-gil",
                       "windows-api-thread"
                     ]
@@ -216,14 +228,22 @@
                       "abi-arguments-live",
                       "allocation-live",
                       "bounded-allowance-lifetime",
+                      "capture-live-through-registry-drain",
                       "capture-live-through-setup-drain",
                       "captures-live-through-revocation",
                       "captures-live-through-setup-drain-and-revocation",
+                      "config-and-input-live-through-copy",
+                      "configured-storage-live-through-init",
                       "delegated-X02-lifetime",
                       "descriptor-live-through-acl-use",
                       "export-pinned-through-release",
+                      "initialized-config-storage",
+                      "initialized-config-through-clear",
                       "local-allocation-live-through-free",
-                      "transferred-storage-live"
+                      "observed-state-live",
+                      "process-thread-state-live",
+                      "transferred-storage-live",
+                      "writable-config-storage"
                     ]
                   },
                   "proofs": {
@@ -314,11 +334,19 @@
                       "bounded-allowance-alias",
                       "delegated-X02-alias",
                       "descriptor-dacl-borrow",
+                      "exclusive-config-clear",
+                      "exclusive-config-field-write",
+                      "exclusive-config-initialization",
                       "exclusive-exact-once-free",
+                      "exclusive-initialized-config-move",
+                      "observe-without-data-alias",
+                      "process-init-exclusive",
+                      "release-current-attachment",
                       "revocation-excludes-poll-and-drop",
                       "serialized-exclusive-release",
                       "shared-access-synchronized",
-                      "stable-target-under-admission"
+                      "stable-target-under-admission",
+                      "thread-local-shared-target"
                     ]
                   },
                   "proofs": {
@@ -404,15 +432,22 @@
                   "rule": {
                     "enum": [
                       "abi-transfer-explicit",
+                      "borrow-config-process-owns-interpreter",
                       "borrow-only",
                       "bounded-allowance-owner",
+                      "config-owns-copied-input",
+                      "consume-config-allocations-once",
                       "consume-export-once",
                       "delegated-X02-owner",
+                      "initialize-config-owner",
+                      "interpreter-keeps-thread-state",
                       "localfree-owned-allocation-once",
                       "localfree-owned-descriptor-once",
+                      "transfer-initialized-config-owner",
                       "transfer-owner-not-attachment",
                       "wrapper-drains-target-and-revokes-futures",
                       "wrapper-owns-target-until-drained",
+                      "wrapper-removes-target-before-capture-end",
                       "wrapper-revokes-before-capture-end"
                     ]
                   },
