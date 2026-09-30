@@ -139,28 +139,10 @@ impl RustEmitter {
             }));
         }
 
-        match expr {
-            HirExpr::MethodCall {
-                object,
-                method,
-                args,
-                receiver_convention,
-                receiver_target,
-                mutable_arg_places,
-                ..
-            } => self.try_lower_registry_discarded_method_call_expr(
-                object,
-                method,
-                args,
-                crate::place_emitter::MethodCallPlaces::new(
-                    *receiver_convention,
-                    receiver_target.as_ref(),
-                    mutable_arg_places,
-                ),
-                expr.ty(),
-            ),
-            _ => Ok(None),
+        if matches!(expr, HirExpr::MethodCall { .. }) {
+            return self.lower_source_method_expr_for_ir(expr, true);
         }
+        Ok(None)
     }
 
     pub(crate) fn lower_print_call_expr_for_ir(

@@ -247,3 +247,169 @@ fn nested_builtin_declines_preserve_structural_errors() {
             .contains("unclassified source method")
     );
 }
+
+#[derive(Clone, Copy)]
+enum StatementMethodConsumer {
+    StatementOnly,
+    StructuredStatement,
+    NestedBlock,
+    Class,
+}
+
+fn statement_method_output(
+    consumer: StatementMethodConsumer,
+    expr: &HirExpr,
+) -> Result<String, String> {
+    let mut emitter = RustEmitter::new();
+    match consumer {
+        StatementMethodConsumer::StatementOnly => emitter
+            .try_lower_stmt_expr_statement_only(expr)
+            .map_err(|error| error.message)
+            .map(|lowered| render_expr(&lowered.expect("admitted statement method"))),
+        StatementMethodConsumer::StructuredStatement => {
+            let stmt = sifr_ir::HirStmt::Expr { expr: expr.clone() };
+            let mut result = Ok(false);
+            let captured = emitter.capture_structured_stmts(|inner| {
+                result = inner.try_lower_structured_stmt_with_following(&stmt, None);
+            });
+            assert!(result.map_err(|error| error.message)?);
+            let [crate::RustStmt::Expr(lowered)] = captured.as_slice() else {
+                panic!("expected one statement expression: {captured:?}");
+            };
+            Ok(render_expr(lowered))
+        }
+        StatementMethodConsumer::NestedBlock => {
+            let stmt = sifr_ir::HirStmt::If {
+                condition: HirExpr::BoolLiteral(true),
+                then_body: vec![sifr_ir::HirStmt::Expr { expr: expr.clone() }],
+                elif_clauses: Vec::new(),
+                else_body: None,
+            };
+            let lowered = emitter
+                .try_lower_stmt_block_for_ir(&[stmt])
+                .map_err(|error| error.message)?
+                .expect("admitted nested method");
+            let [crate::RustStmt::If { then_body, .. }] = lowered.as_slice() else {
+                panic!("expected nested if: {lowered:?}");
+            };
+            let [crate::RustStmt::Expr(lowered)] = then_body.as_slice() else {
+                panic!("expected one nested expression: {then_body:?}");
+            };
+            Ok(render_expr(lowered))
+        }
+        StatementMethodConsumer::Class => {
+            // The existing strict class boundary surfaces structural errors as
+            // compiler diagnostics via panic; it must not emit a builtin retry.
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                emitter.lower_class_expr_strict(expr, "method authority regression")
+            }))
+            .map(|lowered| render_expr(&lowered))
+            .map_err(|payload| {
+                if let Some(message) = payload.downcast_ref::<String>() {
+                    message.clone()
+                } else if let Some(message) = payload.downcast_ref::<&str>() {
+                    (*message).to_string()
+                } else {
+                    panic!("class error must retain its diagnostic");
+                }
+            })
+        }
+    }
+}
+
+fn assert_statement_method_admission(consumer: StatementMethodConsumer) {
+    let list_ty = Type::List(Box::new(Type::Int));
+    let accepted = builtin(list_ty.clone(), "append", vec![HirExpr::IntLiteral(1)]);
+    assert_eq!(
+        statement_method_output(consumer, &accepted).unwrap(),
+        "value.push(SifrInt::from_i64(1))"
+    );
+    assert_eq!(
+        statement_method_output(consumer, &builtin(list_ty.clone(), "cloned", vec![])).unwrap(),
+        "value.clone()"
+    );
+    for expr in [
+        builtin(list_ty.clone(), "invented", vec![]),
+        builtin(list_ty.clone(), "append", vec![]),
+        builtin(list_ty.clone(), "cloned", vec![HirExpr::IntLiteral(1)]),
+    ] {
+        let HirExpr::MethodCall { method, .. } = &expr else {
+            unreachable!()
+        };
+        assert!(
+            statement_method_output(consumer, &expr)
+                .unwrap_err()
+                .contains(&format!("builtin method '{method}' is unsupported"))
+        );
+    }
+    for (authority, diagnostic) in [
+        (MethodAuthority::Unclassified, "unclassified source method"),
+        (
+            MethodAuthority::BuiltinIntrinsic {
+                declaration: identity("invalid.builtin", "append"),
+            },
+            "invalid builtin method authority",
+        ),
+        (
+            MethodAuthority::Imported {
+                declaration: identity("user", "other"),
+            },
+            "invalid user or protocol method authority",
+        ),
+    ] {
+        let expr = call(
+            list_ty.clone(),
+            "append",
+            authority,
+            vec![HirExpr::IntLiteral(1)],
+        );
+        assert!(
+            statement_method_output(consumer, &expr)
+                .unwrap_err()
+                .contains(diagnostic)
+        );
+    }
+    // A builtin-shaped receiver and spelling cannot override a proven
+    // nonbuiltin carrier: all five authorities retain `.append`, never `.push`.
+    for authority in [
+        MethodAuthority::LocalNominal {
+            declaration: identity("user", "append"),
+        },
+        MethodAuthority::InheritedNominal {
+            declaration: identity("user", "append"),
+        },
+        MethodAuthority::Imported {
+            declaration: identity("user", "append"),
+        },
+        MethodAuthority::Protocol {
+            declaration: identity("user", "append"),
+        },
+        contextual_authority("append"),
+    ] {
+        let expr = call(
+            list_ty.clone(),
+            "append",
+            authority,
+            vec![HirExpr::IntLiteral(1)],
+        );
+        let emitted = statement_method_output(consumer, &expr).unwrap();
+        assert_eq!(emitted, "value.append(SifrInt::from_i64(1))");
+        assert!(!emitted.contains(".push("));
+    }
+}
+
+#[test]
+fn statement_only_method_admission_and_strict_decline() {
+    assert_statement_method_admission(StatementMethodConsumer::StatementOnly);
+    assert_statement_method_admission(StatementMethodConsumer::StructuredStatement);
+}
+
+#[test]
+fn nested_statement_method_admission_and_strict_decline() {
+    assert_statement_method_admission(StatementMethodConsumer::NestedBlock);
+}
+
+#[test]
+fn class_statement_method_admission_and_strict_decline() {
+    assert_statement_method_admission(StatementMethodConsumer::Class);
+}

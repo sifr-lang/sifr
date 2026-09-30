@@ -19,7 +19,7 @@ fn is_imported_project_call_for_ir(
 }
 
 macro_rules! stmt_expr_method_call {
-    ($emitter:ident, $expr:ident) => {{
+    ($emitter:ident, $expr:ident, $discard_result:ident) => {{
         if let HirExpr::MethodCall {
             object,
             method,
@@ -216,17 +216,28 @@ macro_rules! stmt_expr_method_call {
                         )],
                     }));
                 }
-                let lowered_registry = $emitter.try_lower_registry_method_call_expr(
-                    object,
-                    method,
-                    args,
-                    crate::place_emitter::MethodCallPlaces::new(
-                        *receiver_convention,
-                        receiver_target.as_ref(),
-                        mutable_arg_places,
-                    ),
-                    $expr.ty(),
-                )?;
+                let places = crate::place_emitter::MethodCallPlaces::new(
+                    *receiver_convention,
+                    receiver_target.as_ref(),
+                    mutable_arg_places,
+                );
+                let lowered_registry = if $discard_result {
+                    $emitter.try_lower_registry_discarded_method_call_expr(
+                        object,
+                        method,
+                        args,
+                        places,
+                        $expr.ty(),
+                    )?
+                } else {
+                    $emitter.try_lower_registry_method_call_expr(
+                        object,
+                        method,
+                        args,
+                        places,
+                        $expr.ty(),
+                    )?
+                };
                 if let Some(lowered_registry) = lowered_registry {
                     return Ok(Some(lowered_registry));
                 }
@@ -460,6 +471,17 @@ macro_rules! stmt_expr_question_mark {
 }
 
 impl RustEmitter {
+    // Statement and value consumers share typed admission and strict decline.
+    // Discarding a result only changes the admitted registry's storage policy.
+    pub(crate) fn lower_source_method_expr_for_ir(
+        &mut self,
+        expr: &HirExpr,
+        discard_result: bool,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        stmt_expr_method_call!(self, expr, discard_result);
+        Ok(None)
+    }
+
     pub(crate) fn lower_stmt_expr_for_ir(
         &mut self,
         expr: &HirExpr,
@@ -492,7 +514,9 @@ impl RustEmitter {
         stmt_expr_await_and_registry!(self, expr);
         stmt_expr_constructor!(self, expr);
         stmt_expr_literals_and_calls!(self, expr);
-        stmt_expr_method_call!(self, expr);
+        if matches!(expr, HirExpr::MethodCall { .. }) {
+            return self.lower_source_method_expr_for_ir(expr, false);
+        }
         stmt_expr_question_mark!(self, expr);
         stmt_expr_slice!(self, expr);
         stmt_expr_wrappers_range_index!(self, expr);
