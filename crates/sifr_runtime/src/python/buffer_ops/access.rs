@@ -112,17 +112,21 @@ pub fn copy_buffer_u8(buffer: BufferHandle) -> Result<Vec<u8>, PythonError> {
     })
 }
 
+#[allow(unsafe_code)]
 fn read_typed<T: Copy>(buffer: &OwnedPyBuffer, index: i64) -> Result<T, BufferAccessError> {
     let index = checked_index(index, buffer.item_count())?;
     let pointer = buffer
         .item_ptr(index)
         .ok_or(BufferAccessError::Index("buffer index is out of bounds"))?;
     // SAFETY: acquisition validated the element format and width. The pointer
-    // addresses one logical element and unaligned access handles arbitrary
-    // valid PEP 3118 strides.
+    // addresses one admitted logical element, pinned by the live exporter.
+    // The caller holds the GIL and tracked-buffer mutex; only Copy primitives
+    // with all bit patterns valid reach this private helper. Unaligned element
+    // loads permit arbitrary accepted PEP 3118 strides without Rust references.
     Ok(unsafe { ptr::read_unaligned(pointer.cast::<T>()) })
 }
 
+#[allow(unsafe_code)]
 fn write_typed<T: Copy>(
     buffer: &OwnedPyBuffer,
     index: i64,
@@ -134,7 +138,9 @@ fn write_typed<T: Copy>(
         .ok_or(BufferAccessError::Index("buffer index is out of bounds"))?;
     // SAFETY: write admission is checked against both the declaration and the
     // exporter request. Format/width validation and unaligned writes make this
-    // valid for arbitrary accepted strides.
+    // valid for arbitrary accepted strides. The GIL and tracked-buffer mutex
+    // serialize access; the admitted address snapshot excludes other runtime
+    // writers/readers. No Rust reference is formed to foreign storage.
     unsafe { ptr::write_unaligned(pointer.cast::<T>(), value) };
     Ok(())
 }
@@ -154,6 +160,7 @@ fn copy_typed_slice<T: Copy>(
     copy_typed_range(buffer, start, end)
 }
 
+#[allow(unsafe_code)]
 fn copy_typed_range<T: Copy>(
     buffer: &OwnedPyBuffer,
     start: usize,

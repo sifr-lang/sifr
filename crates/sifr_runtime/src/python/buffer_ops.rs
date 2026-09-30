@@ -7,7 +7,12 @@ use std::hash::BuildHasher;
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 
 mod access;
+// Cohesive CPython buffer ABI owner: pinned export acquisition/metadata/release.
+#[allow(unsafe_code)]
 mod raw;
+// Cohesive PEP 3118 address owner: checked traversal and pointer-slot reads.
+#[allow(unsafe_code)]
+mod layout;
 pub use access::*;
 use raw::{BufferFootprint, OwnedPyBuffer, ValidatedBuffer};
 
@@ -152,7 +157,7 @@ pub fn acquire_buffer(
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         let object = object.bind(py);
-        let buffer =
+        let mut buffer =
             OwnedPyBuffer::acquire(py, object, request.access == PythonBufferAccess::Write)
                 .map_err(|error| {
                     PythonError::from_pyerr(
@@ -586,8 +591,14 @@ fn buffer_store() -> Result<MutexGuard<'static, BufferStore>, PythonError> {
 }
 
 #[cfg(test)]
+#[allow(unsafe_code)]
+mod h02_contract_tests;
+#[cfg(test)]
+#[allow(unsafe_code)]
 mod release_evidence_tests;
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod tests;
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod typed_access_evidence_tests;

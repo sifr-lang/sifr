@@ -1,4 +1,5 @@
 use super::PythonBufferElement;
+use super::layout::{ElementAddresses, is_contiguous, snapshot_addresses};
 use pyo3::exceptions::PyBufferError;
 use pyo3::ffi;
 use pyo3::types::PyAny;
@@ -33,6 +34,7 @@ struct RawBuffer(ffi::Py_buffer, PhantomPinned);
 /// access and release operations attach to the interpreter before touching it.
 pub(super) struct OwnedPyBuffer {
     raw: Pin<Box<RawBuffer>>,
+    addresses: Option<ElementAddresses>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -41,8 +43,14 @@ pub(super) enum BufferFootprint {
     Direct { ranges: Vec<Range<usize>> },
 }
 
-// SAFETY: This matches PyO3's `PyUntypedBuffer` guarantees. The pointer is
-// never dereferenced without attaching to the supported GIL-bound interpreter.
+// SAFETY: This owner transfers an export, never a Python attachment token.
+// Supported CPython has a process-lifetime GIL; all acquisition, metadata reads,
+// address traversal, element access and release hold it. TrackedBuffer's mutex
+// serializes same-handle access/release and admission excludes conflicting Sifr
+// storage views. The strong raw.obj export reference pins metadata, pointer slots
+// and addressed allocations through release. Foreign exporters must uphold the
+// CPython protocol allocation/lifetime contract; arbitrary dangling native
+// pointers cannot be proven valid by inspecting a Py_buffer. No Sync is exposed.
 unsafe impl Send for OwnedPyBuffer {}
 
 impl OwnedPyBuffer {
@@ -74,7 +82,10 @@ impl OwnedPyBuffer {
                 "exporter returned a successful buffer without an owner",
             ));
         }
-        Ok(Self { raw })
+        Ok(Self {
+            raw,
+            addresses: None,
+        })
     }
 
     pub(super) fn validate(&self, element: PythonBufferElement) -> Result<ValidatedBuffer, String> {
@@ -103,6 +114,8 @@ impl OwnedPyBuffer {
         validate_byte_length(item_count, item_size, len_bytes)?;
         validate_format(raw, element, item_size)?;
 
+        let c_contiguous = is_contiguous(&shape, &strides, &suboffsets, item_size, false)?;
+        let f_contiguous = is_contiguous(&shape, &strides, &suboffsets, item_size, true)?;
         Ok(ValidatedBuffer {
             len_bytes,
             item_size,
@@ -111,115 +124,35 @@ impl OwnedPyBuffer {
             strides,
             suboffsets,
             readonly: raw.readonly != 0,
-            c_contiguous: self.is_contiguous(b'C'),
-            f_contiguous: self.is_contiguous(b'F'),
+            c_contiguous,
+            f_contiguous,
             format: format_string(raw)?,
         })
     }
 
     pub(super) fn item_count(&self) -> usize {
-        let raw = self.raw();
-        usize::try_from(raw.len)
-            .ok()
-            .zip(usize::try_from(raw.itemsize).ok())
-            .and_then(|(len, size)| len.checked_div(size))
-            .unwrap_or(0)
+        self.addresses.as_ref().map_or(0, ElementAddresses::len)
     }
 
-    pub(super) fn footprint(&self, validated: &ValidatedBuffer) -> Result<BufferFootprint, String> {
-        if validated.len_bytes == 0 || validated.shape.contains(&0) {
-            return Ok(BufferFootprint::Empty);
-        }
-        if validated.c_contiguous || validated.f_contiguous {
-            let start = self.raw().buf as usize;
-            let end = start
-                .checked_add(validated.len_bytes)
-                .ok_or_else(|| "buffer footprint address overflows".to_string())?;
-            return Ok(BufferFootprint::Direct {
-                ranges: vec![start..end],
-            });
-        }
-
-        // `PyBuffer_GetPointer` follows both direct strides and indirect
-        // suboffsets, so the resulting ranges describe the actual logical
-        // items rather than an exporter-wide approximation.
-        let item_count = validated.len_bytes / validated.item_size;
-        let mut ranges = Vec::new();
-        ranges
-            .try_reserve_exact(item_count)
-            .map_err(|_| "buffer footprint is too large to track safely".to_string())?;
-        for index in 0..item_count {
-            let start = self
-                .item_ptr(index)
-                .map(|pointer| pointer as usize)
-                .ok_or_else(|| {
-                    "buffer footprint contains an invalid logical address".to_string()
-                })?;
-            let end = start
-                .checked_add(validated.item_size)
-                .ok_or_else(|| "buffer footprint address overflows".to_string())?;
-            ranges.push(start..end);
-        }
-        ranges.sort_unstable_by_key(|range| range.start);
-        let mut merged: Vec<Range<usize>> = Vec::new();
-        merged
-            .try_reserve_exact(ranges.len())
-            .map_err(|_| "buffer footprint is too large to merge safely".to_string())?;
-        for range in ranges {
-            if let Some(previous) = merged.last_mut() {
-                if range.start <= previous.end {
-                    previous.end = previous.end.max(range.end);
-                    continue;
-                }
-            }
-            merged.push(range);
-        }
-        Ok(BufferFootprint::Direct { ranges: merged })
+    pub(super) fn footprint(
+        &mut self,
+        validated: &ValidatedBuffer,
+    ) -> Result<BufferFootprint, String> {
+        let addresses = snapshot_addresses(self.raw().buf, validated)?;
+        let footprint = addresses.footprint(validated.item_size)?;
+        // Pin exactly the resolved logical addresses used by admission. Access
+        // never re-follows exporter metadata/indirect slots after admitting a
+        // different footprint. The export owns every addressed allocation.
+        self.addresses = Some(addresses);
+        Ok(footprint)
     }
 
     pub(super) fn item_ptr(&self, flat_index: usize) -> Option<*mut core::ffi::c_void> {
-        let raw = self.raw();
-        let dimensions = usize::try_from(raw.ndim).ok()?;
-        if flat_index >= self.item_count() {
-            return None;
-        }
-        if dimensions == 0 {
-            return (!raw.buf.is_null()).then_some(raw.buf);
-        }
-        if raw.shape.is_null() {
-            return None;
-        }
-        // SAFETY: acquisition validation requires `shape` to contain `ndim`
-        // non-negative entries, and the owned view remains live.
-        let shape = unsafe { slice::from_raw_parts(raw.shape, dimensions) };
-        let mut remaining = flat_index;
-        let mut indices = vec![0_isize; dimensions];
-        for dimension in (0..dimensions).rev() {
-            let size = usize::try_from(shape[dimension]).ok()?;
-            if size == 0 {
-                return None;
-            }
-            indices[dimension] = isize::try_from(remaining % size).ok()?;
-            remaining /= size;
-        }
-        // SAFETY: the indices vector has exactly `ndim` entries, each within
-        // the validated shape. CPython handles strides and suboffsets.
-        let pointer = unsafe {
-            ffi::PyBuffer_GetPointer(ptr::from_ref(raw).cast_mut(), indices.as_mut_ptr())
-        };
-        (!pointer.is_null()).then_some(pointer)
+        self.addresses.as_ref()?.get(flat_index)
     }
 
     pub(super) fn release(mut self, _py: Python<'_>) {
         self.release_raw();
-    }
-
-    fn is_contiguous(&self, order: u8) -> bool {
-        let Ok(order) = core::ffi::c_char::try_from(order) else {
-            return false;
-        };
-        // SAFETY: the view is live and the call only inspects its metadata.
-        unsafe { ffi::PyBuffer_IsContiguous(self.raw(), order) != 0 }
     }
 
     fn raw(&self) -> &ffi::Py_buffer {
@@ -227,8 +160,11 @@ impl OwnedPyBuffer {
     }
 
     fn release_raw(&mut self) {
-        // SAFETY: this is the sole owner of the pinned `Py_buffer`; `obj` is
-        // cleared after release so Drop cannot release it twice.
+        // SAFETY: release(py) or Drop's try_attach holds the supported GIL.
+        // This is the sole owner of the pinned view and transferred raw.obj
+        // reference; snapshots serialize release through TrackedBuffer's mutex.
+        // PyBuffer_Release invokes exporter cleanup then decrefs that reference.
+        // Clearing obj makes the subsequent Drop inert, including explicit release.
         let raw = unsafe { &mut raw_mut(self.raw.as_mut()).0 };
         if !raw.obj.is_null() {
             unsafe { ffi::PyBuffer_Release(raw) };
@@ -267,7 +203,20 @@ fn metadata_vectors(raw: &ffi::Py_buffer, dimensions: usize) -> Result<MetadataV
     if raw.shape.is_null() || raw.strides.is_null() {
         return Err("exporter returned null shape or strides metadata".to_string());
     }
-    // SAFETY: the FULL/FULL_RO request requires vectors with `ndim` entries.
+    for pointer in [raw.shape, raw.strides, raw.suboffsets] {
+        if !pointer.is_null() && !(pointer as usize).is_multiple_of(std::mem::align_of::<isize>()) {
+            return Err("exporter returned misaligned metadata vectors".to_string());
+        }
+        if !pointer.is_null() {
+            (pointer as usize)
+                .checked_add(dimensions * size_of::<isize>())
+                .ok_or_else(|| "metadata vector address overflows".to_string())?;
+        }
+    }
+    // SAFETY: FULL/FULL_RO supplies `ndim` initialized entries, kept alive by
+    // raw.obj. The dimension limit, alignment and address extent were checked;
+    // the attached caller holds the GIL. Native exporter allocation validity is
+    // the CPython ABI obligation, not derivable from raw pointer values.
     let shape_raw = unsafe { slice::from_raw_parts(raw.shape, dimensions) };
     let strides = unsafe { slice::from_raw_parts(raw.strides, dimensions) }.to_vec();
     let shape = shape_raw
@@ -516,6 +465,7 @@ mod tests {
 
         let buffer = OwnedPyBuffer {
             raw: Box::pin(RawBuffer(raw, PhantomPinned)),
+            addresses: None,
         };
         let error = buffer
             .validate(PythonBufferElement::U8)
