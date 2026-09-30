@@ -2460,7 +2460,40 @@ worktree from current main. Each successor stops after its own reviewed merge
 and receipt. If a source defect blocks a child, record the exact source owner
 and stop that dependent work. H03 remains unstarted. This adjudication itself
 requires only documentation structure, file-size guardrail and diff checks;
-its merge receipt will record the PR, candidate, merge SHA and raw evidence.
+the merge receipt follows.
+
+#### Scope adjudication merge receipt
+
+The docs-only formal rescope merged in
+[PR #4146](https://github.com/sifr-lang/sifr/pull/4146) as
+`a11c648aeb95ce54a78d9b92f3ad47bef59bf041`, from candidate
+`3657d17b6331c7dbdc02c3839998df8eb139f475` (base
+`fe6145b863a692993d5e52dd4a4a3480b23de539`, tree
+`a9373c442e84fce1dfc781ddda694fb331ac22eb`). GitHub's published head/tree
+matched the execution-host candidate. Only this phase Markdown changed.
+
+On that exact candidate, documentation structure passed 1 variant / 0 failures,
+the 900-line file-size guardrail passed 4,296 files, and diff plus phase-scope
+consistency checks passed. The initial documentation failure from missing pinned
+`editor_integrations/vscode/package.json` is preserved in
+`setup/documentation-uninitialized-editor.json`; initializing the pinned recursive
+editor submodules restored the declared input and the exact check passed.
+Raw results, manifest and logs are under
+`/data/sifr-architecture-h02h-adjudication-evidence-20260930/3657d17b6331c7dbdc02c3839998df8eb139f475/`
+on `yaser5@192.168.1.134`. Results SHA-256:
+`745671a5b2e82d0813e271cc11e163fc24ed0bcfe7c6241707af489c78acd5f2`;
+documentation result SHA-256:
+`eb86e746b7de169cc27940b71ed2add5d5d28809d28334a540ed8f7540b67339`.
+
+No external review or Cargo/Sifr gate was rerun for this documentation-only
+adjudication or its receipt. Both NOT SATISFIED reviews, both open unmerged drafts
+and incomplete integrated validation remain unchanged. The local authenticated
+GitHub relay published the exact remote commit without copying credentials or
+changing the shared checkout; the remote HTTPS push failure is a resolved
+publishing setup issue, not an acceptance pass. This adjudication has no current
+blocker. H02h's implementation omissions remain assigned to H02h0-H02h5, and
+H02h/H02/F29 remain open. Next action: separately assign **H02h0 only** on current
+main. This owner stops without starting that batch or H03.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
