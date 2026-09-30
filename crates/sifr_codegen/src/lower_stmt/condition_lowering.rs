@@ -187,72 +187,44 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
         }
     }
 
-    match expr {
-        HirExpr::Name { name, ty, .. } => Some(RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident(name.clone())),
-            op: "!=".to_string(),
-            right: Box::new(zero_literal_for_type(ty)?),
-        }),
+    let (operand, op) = match expr {
+        HirExpr::UnaryOp { op, operand, .. } if op == "not" => (operand.as_ref(), "=="),
+        _ => (expr, "!="),
+    };
+    let zero = zero_literal_for_type(operand.ty())?;
+    let lhs = match operand {
+        HirExpr::Name { name, .. } => RustExpr::Ident(name.clone()),
         HirExpr::MethodCall {
             object,
             method,
             args,
-            ty,
             ..
         } if method == "len" && args.is_empty() => {
-            let receiver = try_lower_leaf_expr(object.as_ref())?;
-            let lhs = RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "SifrInt".to_string(),
-                    "from".to_string(),
-                ])),
-                args: vec![RustExpr::MethodCall {
-                    receiver: Box::new(receiver),
-                    method: "len".to_string(),
-                    args: vec![],
-                }],
-            };
-            Some(RustExpr::BinOp {
-                left: Box::new(lhs),
-                op: "!=".to_string(),
-                right: Box::new(zero_literal_for_type(ty)?),
-            })
-        }
-        HirExpr::UnaryOp { op, operand, .. } if op == "not" => match operand.as_ref() {
-            HirExpr::Name { name, ty, .. } => Some(RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident(name.clone())),
-                op: "==".to_string(),
-                right: Box::new(zero_literal_for_type(ty)?),
-            }),
-            HirExpr::MethodCall {
-                object,
-                method,
-                args,
-                ty,
-                ..
-            } if method == "len" && args.is_empty() => {
-                let receiver = try_lower_leaf_expr(object.as_ref())?;
-                let lhs = RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "SifrInt".to_string(),
-                        "from".to_string(),
-                    ])),
-                    args: vec![RustExpr::MethodCall {
-                        receiver: Box::new(receiver),
-                        method: "len".to_string(),
-                        args: vec![],
-                    }],
-                };
-                Some(RustExpr::BinOp {
-                    left: Box::new(lhs),
-                    op: "==".to_string(),
-                    right: Box::new(zero_literal_for_type(ty)?),
-                })
+            if !crate::method_call_emitter::source_method_path(operand)
+                .ok()?
+                .is_builtin()
+            {
+                return None;
             }
-            _ => None,
-        },
-        _ => None,
-    }
+            // String length requires the emitter's character-cache context.
+            if matches!(
+                resolve_alias_type(object.ty()),
+                Type::Str | Type::LiteralStr(_)
+            ) {
+                return None;
+            }
+            // Contextual and nominal calls decline to the structured owner.
+            // Registry lowering preserves list and Unicode string semantics.
+            crate::methods::lower_method(object.ty(), method, &try_lower_leaf_expr(object)?, &[])?
+                .expr
+        }
+        _ => return None,
+    };
+    Some(RustExpr::BinOp {
+        left: Box::new(lhs),
+        op: op.to_string(),
+        right: Box::new(zero),
+    })
 }
 
 pub(crate) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
@@ -272,6 +244,12 @@ pub(crate) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Opt
         return None;
     }
     let rhs_expr = comparators.first()?;
+    // Even constant None comparisons must not consume an unadmitted method.
+    for operand in [left.as_ref(), rhs_expr] {
+        if matches!(operand, HirExpr::MethodCall { .. }) {
+            try_lower_condition_operand_expr(operand)?;
+        }
+    }
     let lowered_op = match ops[0].as_str() {
         "==" | "!=" | "<" | "<=" | ">" | ">=" => ops[0].as_str(),
         "is" => "==",
@@ -434,6 +412,12 @@ pub(super) fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExp
             args,
             ..
         } if method == "len" && args.is_empty() => {
+            if !crate::method_call_emitter::source_method_path(expr)
+                .ok()?
+                .is_builtin()
+            {
+                return None;
+            }
             if let HirExpr::Index {
                 object: collection,
                 index,
@@ -466,19 +450,15 @@ pub(super) fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExp
                             name: "__sifr_condition_collection".to_string(),
                             ty: RustType::Named("_".to_string()),
                         }],
-                        body: Box::new(RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "SifrInt".to_string(),
-                                "from".to_string(),
-                            ])),
-                            args: vec![RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident(
-                                    "__sifr_condition_collection".to_string(),
-                                )),
-                                method: "len".to_string(),
-                                args: Vec::new(),
-                            }],
-                        }),
+                        body: Box::new(
+                            crate::methods::lower_method(
+                                object.ty(),
+                                method,
+                                &RustExpr::Ident("__sifr_condition_collection".to_string()),
+                                &[],
+                            )?
+                            .expr,
+                        ),
                         is_move: false,
                     }],
                 });
@@ -489,17 +469,15 @@ pub(super) fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExp
             ) {
                 return None;
             }
-            Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "SifrInt".to_string(),
-                    "from".to_string(),
-                ])),
-                args: vec![RustExpr::MethodCall {
-                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                    method: "len".to_string(),
-                    args: vec![],
-                }],
-            })
+            Some(
+                crate::methods::lower_method(
+                    object.ty(),
+                    method,
+                    &try_lower_leaf_or_name_expr(object)?,
+                    &[],
+                )?
+                .expr,
+            )
         }
         HirExpr::Index {
             object, index, ty, ..

@@ -18,7 +18,7 @@ use sifr_type_system::Type;
 
 pub(crate) use dispatch::{
     LoweredMethod, is_in_place_collection_method, lower_method, lower_method_with_context,
-    lower_method_with_discard_context,
+    lower_method_with_discard_context, supports_builtin_len,
 };
 
 fn lower_method_impl(
@@ -29,19 +29,24 @@ fn lower_method_impl(
     is_deque_data_field: bool,
     discard_result: bool,
 ) -> Option<LoweredMethod> {
+    if method == "len" && !supports_builtin_len(object_ty) {
+        return None;
+    }
     let resolved_object_ty = object_ty.resolve_alias();
     let expr = match (resolved_object_ty, method) {
         (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), args),
         (Type::Tuple(elems), "count") => common::lower_tuple_count(elems.len(), object, args),
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
-        (Type::Str, "len") => common::lower_string_char_len(object, args),
+        (Type::Str | Type::LiteralStr(_), "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(ty, object, args),
         (Type::Class { .. }, "len") if args.is_empty() => Some(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
             method: "len".to_string(),
             args: Vec::new(),
         }),
-        (_, "len") => common::lower_len(object, args),
+        (Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Bytes, "len") => {
+            common::lower_len(object, args)
+        }
         (ty, "clone") if ty.supports_derived_clone() && args.is_empty() => {
             Some(RustExpr::MethodCall {
                 receiver: Box::new(object.clone()),
