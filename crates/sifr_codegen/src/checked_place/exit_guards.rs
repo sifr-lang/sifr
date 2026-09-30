@@ -59,6 +59,35 @@ impl RustEmitter {
             || (is_position(left) && is_length(&comparators[0]))
     }
 
+    // Shape analysis is not dispatch authority. Before a source length call
+    // contributes a replacement proof, admit it through the same typed boundary
+    // as ordinary method lowering. Check all matching carriers even when one
+    // declines, so malformed authority cannot hide behind a nonbuiltin call.
+    fn admits_exit_guard_lengths(
+        condition: &crate::HirExpr,
+        object: &crate::HirExpr,
+    ) -> Result<bool, crate::CodegenError> {
+        let object_token = checked_place_expr_token(object);
+        let mut admitted = true;
+        let mut error = None;
+        crate::hir_analysis::traversal::walk_expr(condition, &mut |candidate| {
+            if matches!(candidate, crate::HirExpr::MethodCall {
+                object: length_object, method, args, ..
+            } if method == "len" && args.is_empty()
+                && checked_place_expr_token(length_object) == object_token)
+            {
+                match crate::method_call_emitter::source_method_path(candidate) {
+                    Ok(path) => admitted &= path.is_builtin(),
+                    Err(failure) => error = Some(failure),
+                }
+            }
+        });
+        match error {
+            Some(error) => Err(error),
+            None => Ok(admitted),
+        }
+    }
+
     pub(crate) fn try_lower_checked_sequence_exit_guards_for_ir(
         &mut self,
         stmt: &crate::HirStmt,
@@ -131,6 +160,9 @@ impl RustEmitter {
                 ) || prefix_proves_exact_length)
             {
                 continue;
+            }
+            if !Self::admits_exit_guard_lengths(condition, object)? {
+                return Ok(None);
             }
             let Some(mut guard) = self.checked_sequence_read_guard_for_ir(&read)? else {
                 continue;
