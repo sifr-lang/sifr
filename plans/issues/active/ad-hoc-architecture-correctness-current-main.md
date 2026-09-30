@@ -1000,7 +1000,7 @@ regressions, scoped review and merge receipt before a dependent item begins.
 | H02e / `sifr_runtime::python::buffer_ops` | Merged in [PR #4134](https://github.com/sifr-lang/sifr/pull/4134); receipt below. After merged H02d1 (and its H02d0 prerequisite). Own `Py_buffer` acquisition/release, shape/stride/bounds/alignment, writable alias admission, indirect access and exporter lifetime. Document unsafe pointer/read/write and `Send` contracts; reject conflicting aliases and malformed layouts before access. | `cargo test -p sifr_runtime --features python --lib python::buffer_ops::h02_contract_tests::layout_bounds_and_alias_admission -- --exact`; `cargo test -p sifr_runtime --features python --lib python::buffer_ops::h02_contract_tests::all_release_paths_are_exact_once -- --exact`; focused existing `python::buffer_ops::tests`, `python::buffer_ops::release_evidence_tests` and `python::buffer_ops::typed_access_evidence_tests`. Include negative strides, indirect pointers, shared storage, failure, explicit release and drop. |
 | H02f / `sifr_runtime::python::arrow_ops` | Merged in [PR #4136](https://github.com/sifr-lang/sifr/pull/4136), receipt below; after merged H02d1 (and H02d0); independent of H02e. Own Arrow C Data/Stream/Device ABI layout, capsule identity, pointer lifetime, alias/transfer rules and release callbacks. Validate nullable callbacks and malformed capsules before dereference; distinguish borrowed observation from consumed ownership and prove exact-once release. | `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once -- --exact`; focused existing `python::arrow_ops::tests`, including malformed capsule, full/partial/failed consumption and stream/device release. |
 | H02g / `sifr_runtime::python::dlpack_ops` | Merged in [PR #4138](https://github.com/sifr-lang/sifr/pull/4138), receipt below; after merged H02d1 (and H02d0); independent of H02e-H02f. Own legacy/versioned ABI layout, capsule one-shot consumption, device/stream validity, tensor lifetime, deleter transfer and exact-once release on rejection/reset/drop. Do not change declaration certification policy. | `cargo test -p sifr_runtime --features python --lib python::dlpack_ops::h02_contract_tests::legacy_versioned_layout_and_transfer -- --exact`; `cargo test -p sifr_runtime --features python --lib python::dlpack_ops::h02_contract_tests::rejection_and_reset_release_exactly_once -- --exact`; focused existing `python::dlpack_ops::declaration_tests`. |
-| H02h / method and unsafe policy integration | After merged H02a0, H02a1, H02b, H02c, H02d0, H02d1, H02e, H02f and H02g. Record semantic site classifications and local unsafe contracts with normalized site fingerprints, not per-file counts. Detect changed/new/stale dispatch under renamed bindings; reject a second language-semantics owner, broad item-level unsafe allowances and operations without local contracts. Mask strings/comments/characters without hiding Rust lifetimes; self-tests work in a cold checkout. Assign SQL, cache, driver and generated-code sites to existing owners, without editing those packages. A static scan does not prove runtime safety. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; `python3 scripts/check_unsafe_abi_contracts.py --self-test`; `python3 scripts/check_unsafe_abi_contracts.py`; exact H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g named cases and focused list-method/Python bridge regressions on the integrated candidate. Negative fixtures cover renamed dispatch, second owner, stale fingerprint, broad allowance, missing contract and character-literal masking. |
+| H02h / method and unsafe policy integration | **Blocked / needs-implementation**: draft [PR #4140](https://github.com/sifr-lang/sifr/pull/4140) is unmerged; scoped Opus review is NOT SATISFIED. The H02c statement-only authority handoff finding and remaining H02h policy defects are recorded below. After merged H02a0, H02a1, H02b, H02c, H02d0, H02d1, H02e, H02f and H02g. Record semantic site classifications and local unsafe contracts with normalized site fingerprints, not per-file counts. Detect changed/new/stale dispatch under renamed bindings; reject a second language-semantics owner, broad item-level unsafe allowances and operations without local contracts. Mask strings/comments/characters without hiding Rust lifetimes; self-tests work in a cold checkout. Assign SQL, cache, driver and generated-code sites to existing owners, without editing those packages. A static scan does not prove runtime safety. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; `python3 scripts/check_unsafe_abi_contracts.py --self-test`; `python3 scripts/check_unsafe_abi_contracts.py`; exact H02a0-H02a1, H02b-H02c, H02d0-H02d1 and H02e-H02g named cases and focused list-method/Python bridge regressions on the integrated candidate. Negative fixtures cover renamed dispatch, second owner, stale fingerprint, broad allowance, missing contract and character-literal masking. |
 
 H02d0 is the explicit exception to splitting delivery at a package boundary:
 the runtime API and the generated caller/teardown proof are one atomic
@@ -1963,6 +1963,103 @@ codex/architecture-h02g-record-20260930, its adopted target and temporary paths.
 H02g has no current blocker. H02h and whole H02 remain open. The exact next action
 is separately assigned H02h; this session stops without starting it.
 
+
+### H02h policy integration and H02c authority blocker (2026-09-30)
+
+H02h remains **open and blocked**. Draft
+[PR #4140](https://github.com/sifr-lang/sifr/pull/4140) contains policy candidate
+`d9cb4ca5df7fc5eb1669b8f934ec7d55cc46ab89` against merged base
+`d918ab496a6cc77778bd4fa0a1cba44dfbf265c4`. It has not merged and has no
+review approval. This receipt records the implementation-owner handoff;
+it does not close H02h, H02/F29 or qualify Q01.
+
+The exact candidate passed the four prescribed script commands (8 method and
+9 unsafe self-tests, 6,214 dispatch records and 366 unsafe records), the actual
+scripts-only cold checkout, 37 exact Cargo selections and 18 focused filters.
+The Cargo selections ran 268 cases covering 260 unique crate/test identities.
+The two selected list fixtures, `list_append_extend_insert_registry` and
+`collection_cloning`, passed through the existing E2E runner; both groups
+rebuilt and executed (`cache_hits=0/2`). Formatting, HIR maintainability,
+the 900-line file-size guardrail, diff check and verification runner self-test
+passed. These passes did not exercise the omissions found during review.
+
+Raw logs, exact commands, resolved case names/counts, toolchain/configuration
+and input identities are under
+`/data/sifr-architecture-h02h-evidence-20260930/d9cb4ca5df7fc5eb1669b8f934ec7d55cc46ab89/`
+on `yaser5@192.168.1.134`. Manifest SHA-256:
+`991fc8836b0dc41338664cda3be60dd89770fb87454fa019ddedf9a5d1152e3f`;
+results: `a24faaedd46974cbeb269452b1fe50a54b631f25ebf6a015ab98d66cbf676093`;
+selection: `41dc8cdfd776cc06012381236fc0cd6a95c3e3c24e1264931604dd8d2d287931`.
+Rust/Cargo 1.98.1, pinned Ruff/LeetCode inputs, and CPython 3.14.7 with its
+actual selected shared-library hash are recorded. Warm Cargo artifacts were
+retained; no performance pass is claimed.
+
+Read-only scoped Opus 5.5 review returned **NOT SATISFIED**. The response is
+`review/opus-5-5.md` beneath the candidate evidence directory (SHA-256
+`24c76fe195c592f8f995e2e4dcb4e7c2c886a2f0680712d55c29a014a5401d73`).
+It identified four in-scope policy defects: associated-type `=` in function
+headers loses enclosing context and macro sites lack context; comma-less block
+match arms can hide later literal patterns; actual builtin peer emitters are
+mislabelled as protocol/IR consumers; and unsafe contracts repeat owner-level
+templates rather than local operation obligations. Those defects remain open
+on the published candidate. Scanner/constituent remediation proposals and new
+focused fixture passes exist only in the session's temporary directory; they
+are not a reviewed implementation or acceptance evidence.
+
+**H02c owner: needs-implementation before H02h can establish the constituent
+registry.** Inspection of the existing codegen paths found an ungated entry:
+
+- `crates/sifr_codegen/src/stmt_support_emitter/print_calls.rs:142-161`,
+  `try_lower_stmt_expr_statement_only`, destructures `HirExpr::MethodCall`
+  with `..`, omitting the authority, then directly calls
+  `try_lower_registry_discarded_method_call_expr`.
+- `crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs:69-85`
+  enters `try_lower_registry_method_call_expr` or the unchecked builtin
+  specializations without `source_method_path` admission. The unchecked helper
+  emits builtin list/dict/set operations and calls the central methods registry.
+- `lib_emitter_structured_stmt.rs:501`,
+  `stmt_support_emitter/stmt_block.rs:576` and `class_method_emitter.rs:45`
+  invoke the statement-only path before the expression emitter's authority
+  check and return early on successful emission. There is no global codegen
+  unclassified-carrier validation that covers this entry.
+
+These sources are unchanged between the H02h base and candidate. The ordinary
+statement expression, nested block and class strict-expression paths can thus
+reach builtin emission before typed authority admission. H02h cannot truthfully
+record that route as an admitted constituent. H02c must make this entry consume
+the typed carrier before builtin emission, reject Unclassified structurally,
+and route proven nominal/imported/protocol/contextual methods through their
+authorized path. Add direct HIR regressions for statement-only, nested block
+and class emission with Unclassified, unsupported builtin and nonbuiltin
+authority; assert the diagnostic or selected behavior and absence of a second
+builtin fallback. The existing expression-path tests do not establish this
+statement-path criterion. This session did not edit Rust packages or start that
+repair batch.
+
+An explicitly registered constituent list remains a valid H02h approach after
+this handoff is repaired: each builtin specialization must name its actual
+typed admission and call relationships. Peer specializations need not be
+physically inside `methods::lower_method_impl`, and cannot be hidden by
+protocol/adaptation labels. Any route lacking that evidence must fail policy
+admission and return to H02c ownership.
+
+Historical setup/validation failures are retained under their original
+candidate evidence: missing pinned LeetCode input during initial preparation;
+the missing profile-schema enum on the intermediate candidate; and the
+foundation fixture's missing owned root `target` directory. Restoring declared
+inputs and the final candidate's schema/coverage wiring made the selected run
+pass; none of the incomplete runs is reclassified as a pass. GitHub's final
+create-PR job stopped at V01 `performance_reference_admission` because
+`SIFR_PERFORMANCE_REFERENCE` was unset (job 109725645646, raw log SHA-256
+`32edb48446922d5023a86776f614a7af6fca783948b5fd2a9e14e4758afbadc0`).
+That existing prerequisite remains V01/Q01-owned. The intermediate-item policy
+defers broad create-PR/merge qualification to Q01. No broad gate, implementation
+merge or release qualification is claimed.
+
+Next action: separately assign the bounded H02c statement-only admission
+repair; once merged, resume H02h's four review findings on the integrated base,
+run the affected exact/focused selections and scoped remediation review.
+H03 was not started.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
