@@ -2375,7 +2375,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
-| **H02h0 / policy scanner and validator foundation** | **Open / needs-adjudication** after repeated blocking findings on unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); blocked receipt below. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
+| **H02h0 / policy scanner and validator foundation** | **Open / H02h0r correction authorized** by the repeated-finding adjudication below after repeated blocking findings on unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); blocked receipt below. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
 | **H02h1 / semantic method policy authoring** | After H02h0. Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
@@ -2576,6 +2576,167 @@ could not read the uninitialized pinned editor package; restoring the declared
 editor integration and nested VS Code submodules supplied the required input,
 and their raw failures remain preserved in the evidence directory. No additional
 external review or Cargo gate was run for this record-only update.
+
+### H02h0 repeated-finding adjudication and bounded correction (2026-09-30)
+
+**Decision: both repeated findings are valid in-scope omissions; authorize
+H02h0r only.** This docs-only adjudication starts from merged blocked receipt
+`5d8beb0bb111139ea4616b2d3b9ca050982eb780` ([PR #4149](https://github.com/sifr-lang/sifr/pull/4149)).
+It read the handoff and both candidate-keyed reviews under
+`/data/sifr-architecture-h02h0-evidence-20260930/`, and inspected the failed
+foundation source without executing or modifying it. The six-case passes
+prove only their selected inputs. They do not waive the two omitted input
+classes or turn either **NOT SATISFIED** review into approval.
+
+H02h0 remains open, with its repeated-finding stop resolved into the bounded
+correction below. H02h1 waits for H02h0r's reviewed implementation merge and
+receipt. Preserve draft [PR #4148](https://github.com/sifr-lang/sifr/pull/4148),
+initial candidate `f3f64780faeb0dfa87aa2d337b480c45ffb2cabf`, remediation
+candidate `850fec7526d990615a20085219f75921e7e09e1a`, their reviews and raw
+assertion logs unchanged. Older drafts #4140/#4144 and their failed evidence
+also remain preserved. H02h0r is a new item with one new scoped review and
+the skill's bounded remediation rules, not a third remediation review of #4148.
+
+#### Binding metadata and semantic obligations
+
+The obligation's meaning comes from its operation-family rule, its four-field
+explanation and source proof. A path, scope, site kind, ordinal, diagnostic
+line, operation/fingerprint copy or copied SAFETY explanation identifies a
+source binding; it cannot supply a different thread, lifetime, alias or
+ownership obligation. Normalization is only the equivalence key for repeated
+four-field prose. It must not rewrite authored records, structured rules,
+source text, fingerprints or proof references, or infer that a remaining
+sentence proves safety. Family/rule validation, exact source binding and
+later source review remain separate requirements.
+
+The reviewer correctly identified that the existing string substitutions
+recognize particular spellings rather than the discovered site's binding
+values. Define the comparison deterministically for each of the four fields:
+
+1. Use the independently discovered `Site`, not untrusted inventory values,
+   for path, scope, kind, ordinal, line, operation and fingerprint. Identify
+   complete binding spans before deletion, longest spans first; deleting a
+   scope must not prevent removal of its enclosing key/path. Remove the exact
+   site key, complete path or path followed by its diagnostic `:line`, and
+   complete scope at lexical boundaries. Paths/scopes retain source case;
+   a proper substring inside another identifier or a different path is not a
+   match. Remove copies wherever they appear, not just a recognized prefix.
+2. Recognize the actual kind with space, hyphen or underscore separators
+   (`unsafe block`, `unsafe-block`, `unsafe_block`) at word boundaries.
+   `kind N`, `kind #N`, `site N`, `ordinal: N`, `ordinal=N`, `line N`, `#N`
+   and `(N)` are binding presentations. Labelled numeric metadata never makes
+   prose distinct, including the legacy enumerated-suffix fixtures. An
+   unlabelled standalone decimal integer is binding metadata when its value
+   equals the site's actual ordinal or line. Do not strip every integer or
+   digits within an identifier. Structured proof fields still require their
+   exact bindings; stripping prose is not acceptance of a mismatched binding.
+3. A complete hexadecimal token is a fingerprint copy if its entire value is
+   a prefix of the actual fingerprint, compared without hex case, with length
+   1 through 64 inclusive. Match the maximal token, not a matching substring
+   inside a longer unrelated token. Thus a 12-character prefix is metadata;
+   a different hash is not silently discarded. Short tokens that collide with
+   real words cannot distinguish otherwise identical templates; semantic
+   obligations must be expressed in the structured rule and meaningful prose.
+4. Retain the established removal of complete operation copies by Rust token
+   spelling despite whitespace differences, and SAFETY copies by full comment
+   text or delimiter-free comment bodies including continuation lines. These
+   copies come from discovered source; inventory disagreement must fail the
+   independent binding check. Remove only presentation labels/delimiters
+   attached to removed binding spans, then canonicalize whitespace. In
+   particular, parentheses around a removed ordinal, `:line` after a removed
+   path and `site`/`line` labels must not leave a distinguishing suffix. Keep
+   substantive prose, other numbers, other paths and unrelated hex tokens.
+5. Compare the resulting four-field tuple over the entire selected source
+   union, including different files and owner segments. A duplicate requires
+   the already specified explicit shared-contract definition, review rationale
+   and exact complete site-to-fingerprint bindings. Missing, extra, changed
+   or newly discovered bindings fail; adding a suffix is not a shared-contract
+   authorization. Do not change that reviewed-sharing exception.
+
+These are bounded lexical comparison semantics, not arbitrary natural-language
+paraphrase detection or new ABI classification. A `borrow-only` ownership rule
+still fails for exporter consumption, even if its explanation contains a path,
+number, operation or SAFETY quote. A genuinely different semantic explanation
+must survive the comparison and its structured rule/proof checks.
+
+#### Comment ownership before evidence binding
+
+The continuation finding is valid: checking only the last comment permits a
+previous statement's trailing SAFETY marker to enter the backwards run through
+an intervening standalone continuation. Ownership must be checked for every
+comment admitted to the run. An eligible leading comment starts on a physical
+line whose prefix contains only whitespace. A comment sharing that line with
+preceding code belongs to that code and terminates the backwards extension;
+neither its marker nor its continuation is inherited by the next operation.
+This applies to line and block comments. No character-distance heuristic or
+search for any nearby marker can substitute for that ownership check.
+
+Build the contiguous eligible leading-comment run without crossing code or a
+blank line. Keep the existing statement/block, match-arm `=>` and top-level
+argument/arm comma boundaries between the run and operation. Permit the
+existing same-expression prefixes (`let value =`, `Ok(`) and declaration
+attributes; do not borrow another statement/arm/argument's proof. Select a
+SAFETY/# Safety marker only inside this eligible run and retain its complete
+continuation. A fresh standalone marker after an excluded trailing comment
+may own the later operation; unmarked continuation alone may not. A function's
+`# Safety` documentation belongs to its declaration and cannot automatically
+approve an unsafe block inside its body.
+
+Evidence acceptance must resolve that ownership from source. For each rejected
+neighbor fixture, discovery must return empty `source_evidence`, and inserting
+its old trailing marker/continuation into either the record or a `kind=safety`
+proof must fail the actual validator. A matching operation fingerprint plus
+nonempty copied quote is insufficient. Positive fixtures must assert the exact
+complete text and pass the source-bound proof check, not merely find `SAFETY`.
+
+#### H02h0r scope and exact acceptance
+
+One correction item is sufficient: these are two bounded functions in the
+same source-binding foundation, with no new runtime mechanism or prerequisite
+between them. Re-splitting live inventory authoring into this item is not
+needed. A fresh owned worktree starts from current main and selectively
+reimplements the nine foundation paths from #4148 as the necessary unmerged
+prerequisite, retaining the previously repaired family discovery, whole-union
+comparison, lexical/context fingerprints, segment/schema interfaces and cold
+self-tests. The correction is confined to binding normalization in
+`scripts/unsafe_policy_contracts.py`, comment ownership in
+`scripts/rust_policy_sites.py`, and focused fixtures in
+`scripts/test_architecture_policy_guards.py`. Do not add a new schema/ABI family,
+change the existing rule/proof or reviewed-sharing requirements, author live
+inventories, wire production profiles, or modify Rust/generated-runtime source.
+Review the complete new foundation candidate, with the two prior blocking
+findings and their new acceptance matrix explicitly supplied to the reviewer.
+
+Use the exact fail-fast case command defined above, with class
+`PolicyFoundationTests`, for each of these new reserved cases:
+
+| Case | Exact positive and negative assertions |
+| --- | --- |
+| `test_actual_binding_values_cannot_distinguish_repeated_contracts` | Two independently discovered read sites in one scope have distinct actual ordinals/lines; two files supply distinct actual paths. Identical four-field templates must fail separately with space/hyphen/underscore kind plus ordinal, `site N`, bare `N`, `(N)`, `line L`, full path, path`:L`, and fingerprint prefixes of lengths 1, 6, 12, 63 and 64, including uppercase hex. Test each suffix alone, at the beginning/middle/end, and combined with copied scope/key, compact operation and delimiter-free multiline evidence. Require a repeated-contract diagnostic from the real validator, not only equality of a helper's output. |
+| `test_binding_normalization_preserves_semantic_obligations` | Otherwise valid records with substantively different lifetime/ownership explanations pass without a false duplicate. Exact normalization assertions retain decimal `4096` when it is neither fixture ordinal nor line, `buffer4096`, a different complete path, a non-prefix hex token, a longer hex token that merely begins with a prefix, and non-kind identifiers. The exporter-release `borrow-only` mutation fails with source/proof/fingerprint unchanged. Exact reviewed shared bindings pass across two segments; removing/changing/adding a binding fails. |
+| `test_safety_continuations_cannot_import_previous_statement_proof` | Discover `let a = g(); // SAFETY: previous statement proof.` followed by one and multiple standalone `// continued.` lines and `unsafe { other() };`; the later site has empty evidence. Repeat with a trailing `/* SAFETY: previous statement proof. */`, and a trailing marker after a previous match-arm expression/call argument. Inject each rejected quote into `source_evidence` and a safety proof and require validation failure. A same-line trailing marker without continuation, a previous safe statement, another match arm, another call argument and a blank-line-separated marker remain negative. |
+| `test_owned_safety_runs_bind_complete_local_proof` | A standalone SAFETY run with multiple continuation lines immediately before `let value = unsafe { read(x); };` passes with exact full text; a standalone block-comment run passes as well. A trailing marker for the prior statement followed by a fresh standalone SAFETY marker binds only the fresh run and passes, excluding the prior marker. `# Safety` plus declaration attributes binds the unsafe declaration, while its nested block remains unproved without its own local run. Mutating/removing that local marker or substituting another operation's quote fails the source-bound safety proof. |
+
+Also explicitly run all six original H02h0 cases named above, existing
+`MethodTests`, `UnsafeTests`, `ColdCheckoutTests`, and both script self-tests.
+Keep the genuinely scripts-only cold discovery/validation mutation probes;
+they must execute selected assertions with no Cargo/Git/policy-tree dependency.
+Run the file-size guardrail and diff check. New case names are prospective;
+this adjudication claims no implementation or assertion pass for them. The
+scoped reviewer must cover the same final implementation candidate and inspect
+the changed binding and ownership mechanisms, not just the matrix count.
+Intermediate create-PR/full merge gates remain deferred to Q01 under the
+assigned policy. H02h0 closes only after that candidate passes this focused
+acceptance and review, merges and receives a docs-only receipt; then H02h1 is
+ready. H02h2-H02h4 still own operation-family/source-proof meaning review,
+including the `transmute(target/future)` heuristic limitations already recorded.
+
+**Next ready batch: separately assign H02h0r only.** Supply this semantics and
+matrix, the immutable #4148 candidates/reviews and the recorded handoff to the
+new owner. Stop after its reviewed merge and receipt, or an owned blocker.
+H02h1-H02h5 and H03 remain waiting. This adjudication runs documentation
+structure, file-size and diff/scope checks only; no foundation assertions,
+Cargo gate, new Opus review, source mutation or draft change is claimed.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
 
