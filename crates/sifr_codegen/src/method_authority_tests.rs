@@ -793,3 +793,5 @@ fn condition_comparison_and_truthiness_preserve_authority() {
 }
 
 include!("method_authority_tests/checked_dict_keys.rs");
+
+include!("method_authority_tests/checked_sequence_exit.rs");
