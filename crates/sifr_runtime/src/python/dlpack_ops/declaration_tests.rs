@@ -17,8 +17,8 @@ use pyo3::types::{PyCapsule, PyDict};
 use std::ffi::{CStr, c_void};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-static LEGACY_RELEASES: AtomicUsize = AtomicUsize::new(0);
-static VERSIONED_RELEASES: AtomicUsize = AtomicUsize::new(0);
+pub(super) static LEGACY_RELEASES: AtomicUsize = AtomicUsize::new(0);
+pub(super) static VERSIONED_RELEASES: AtomicUsize = AtomicUsize::new(0);
 
 #[repr(C)]
 struct OwnedLegacy {
@@ -256,7 +256,7 @@ fn consumed_argument_transfers_deleter_ownership_exactly_once() {
 }
 
 #[test]
-fn attach_failure_leaves_the_deleter_with_the_capsule_owner() {
+fn stopped_runtime_finalization_cleans_capsule_once() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
     reset_releases();
@@ -275,17 +275,17 @@ fn attach_failure_leaves_the_deleter_with_the_capsule_owner() {
         .finish()
         .expect_err("a stopped runtime must reject finalization");
     assert!(error.message.contains("not been initialized"), "{error:?}");
-    // The producer-named capsule remains the sole owner. In particular, the
-    // rejected attach closure must not run the entry's parallel deleter.
-    assert_eq!(LEGACY_RELEASES.load(Ordering::SeqCst), 0);
+    // Semantic reset rejects ordinary work; structural cleanup still attaches
+    // to CPython and releases the unconsumed managed allocation exactly once.
+    assert_eq!(LEGACY_RELEASES.load(Ordering::SeqCst), 1);
 }
 
-fn reset_releases() {
+pub(super) fn reset_releases() {
     LEGACY_RELEASES.store(0, Ordering::SeqCst);
     VERSIONED_RELEASES.store(0, Ordering::SeqCst);
 }
 
-fn exporter(
+pub(super) fn exporter(
     capsule: Result<Py<PyAny>, PythonError>,
     device_type: i32,
     device_id: i32,
@@ -383,7 +383,7 @@ fn tuple_object(value: (i64, i64, i64)) -> Result<ObjectHandle, PythonError> {
     .map_err(PythonError::runtime)?
 }
 
-fn attribute_i64(object: &ObjectHandle, name: &str) -> i64 {
+pub(super) fn attribute_i64(object: &ObjectHandle, name: &str) -> i64 {
     super::super::attach(|py| {
         clone_handle(py, object)?
             .bind(py)
@@ -414,7 +414,7 @@ fn mark_argument_consumed(object: &ObjectHandle) -> *mut c_void {
     .expect("argument should be consumable")
 }
 
-fn legacy_capsule(device_type: i32, device_id: i32) -> Result<Py<PyAny>, PythonError> {
+pub(super) fn legacy_capsule(device_type: i32, device_id: i32) -> Result<Py<PyAny>, PythonError> {
     super::super::attach(|py| {
         let mut owned = Box::new(OwnedLegacy {
             managed: DLManagedTensor {
@@ -442,7 +442,7 @@ fn legacy_capsule(device_type: i32, device_id: i32) -> Result<Py<PyAny>, PythonE
     .map_err(PythonError::runtime)?
 }
 
-fn versioned_capsule(
+pub(super) fn versioned_capsule(
     flags: u64,
     version_major: u32,
     version_minor: u32,

@@ -8,10 +8,16 @@ use std::ffi::CStr;
 use std::hash::BuildHasher;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
+// Cohesive DLPack C ABI owner; contracts are local to its raw operations.
+#[allow(unsafe_code)]
 mod abi;
 mod argument;
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod declaration_tests;
+#[cfg(test)]
+#[allow(unsafe_code)]
+mod h02_contract_tests;
 
 pub use argument::{PythonDlpackArgument, prepare_dlpack_argument};
 
@@ -82,10 +88,15 @@ struct TrackedDlpackTensor {
 }
 
 impl Drop for TrackedDlpackTensor {
+    #[allow(unsafe_code)]
     fn drop(&mut self) {
         if !self.released {
-            unsafe { self.tensor.release() };
             self.released = true;
+            // SAFETY: the used capsule and producer pin retain the unique live
+            // managed header. No metadata access follows release. A detached
+            // drop attaches independently of Sifr's semantic reset; finalization
+            // cannot safely run foreign callbacks if CPython is unavailable.
+            let _released = Python::try_attach(|_py| unsafe { self.tensor.release() });
         }
         if self.counted {
             let _ignored = super::update_object_count(-1);
@@ -249,20 +260,24 @@ pub fn dlpack_stream(
 }
 
 pub fn release_dlpack((handle, token): DlpackHandle) -> Result<(), PythonError> {
-    let entry = {
-        let mut store = dlpack_store()?;
-        if store
-            .tensors
-            .get(&handle)
-            .is_some_and(|entry| entry.token == token)
-        {
-            store.tensors.remove(&handle)
-        } else {
-            return Err(closed_error(handle));
-        }
-    };
-    super::attach(|_py| drop(entry)).map_err(PythonError::runtime)?;
-    Ok(())
+    super::attach(|_py| {
+        let entry = {
+            let mut store = dlpack_store()?;
+            if store
+                .tensors
+                .get(&handle)
+                .is_some_and(|entry| entry.token == token)
+            {
+                store.tensors.remove(&handle)
+            } else {
+                return Err(closed_error(handle));
+            }
+        };
+        // Foreign deleters may reenter the store; never release under its mutex.
+        drop(entry);
+        Ok(())
+    })
+    .map_err(PythonError::runtime)?
 }
 
 pub fn dlpack_shape(handle: DlpackHandle) -> Result<Vec<i64>, PythonError> {
@@ -273,6 +288,7 @@ pub fn dlpack_strides(handle: DlpackHandle) -> Result<Vec<i64>, PythonError> {
     dlpack_metadata(handle).map(|(_, strides)| strides)
 }
 
+#[allow(unsafe_code)]
 fn consume_capsule(
     py: Python<'_>,
     owner: Py<PyAny>,
@@ -292,7 +308,9 @@ fn consume_capsule(
         .pointer_checked(Some(actual_name))
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "__dlpack__"))?;
     let tensor = ManagedTensor::from_capsule_name(pointer.as_ptr(), actual_name)?;
-    let metadata = metadata_for_managed_tensor(tensor)?;
+    // SAFETY: this live, named capsule owns the producer's managed allocation.
+    // Rename while attached before inspection: the guard below becomes the sole
+    // deleter owner, including malformed metadata and insertion failures.
     let rename_result =
         unsafe { ffi::PyCapsule_SetName(capsule.as_ptr(), tensor.used_capsule_name().as_ptr()) };
     if rename_result != 0 {
@@ -303,16 +321,15 @@ fn consume_capsule(
             "mark DLPack capsule consumed",
         ));
     }
-    store_tensor(
-        TrackedDlpackTensor {
-            tensor,
-            released: false,
-            counted: false,
-            _owner: owner,
-            _capsule: capsule.clone().into_any().unbind(),
-        },
-        metadata,
-    )
+    let tracked = TrackedDlpackTensor {
+        tensor,
+        released: false,
+        counted: false,
+        _owner: owner,
+        _capsule: capsule.clone().into_any().unbind(),
+    };
+    let metadata = metadata_for_managed_tensor(tensor)?;
+    store_tensor(tracked, metadata)
 }
 
 fn dlpack_device(py: Python<'_>, object: &Bound<'_, PyAny>) -> Result<DLDevice, PythonError> {
@@ -375,14 +392,17 @@ fn dlpack_metadata(handle: DlpackHandle) -> Result<(Vec<i64>, Vec<i64>), PythonE
         .ok_or_else(|| closed_error(handle.0))
 }
 
+#[allow(unsafe_code)]
 fn capsule_name<'a>(
     capsule: &'a Bound<'_, PyCapsule>,
     context: &'static str,
 ) -> Result<&'a CStr, PythonError> {
+    // SAFETY: the attached bound capsule pins the immutable C name through this read.
     let actual_name = unsafe { ffi::PyCapsule_GetName(capsule.as_ptr()) };
     if actual_name.is_null() {
         return Err(dlpack_error(format!("{context} capsule has no name")));
     }
+    // SAFETY: CPython capsule names are NUL terminated and retained by the capsule.
     Ok(unsafe { CStr::from_ptr(actual_name) })
 }
 
@@ -392,6 +412,9 @@ fn validate_device_policy(
     stream: Option<&PythonDlpackStreamMetadata>,
 ) -> Result<(), PythonError> {
     let expected_code = device_code(expected)?;
+    if !matches!(device.device_type, DEVICE_CPU | DEVICE_CUDA) || device.device_id < 0 {
+        return Err(unsupported_device_error(device));
+    }
     if expected != "any" && device.device_type != expected_code {
         return Err(unsupported_device_error(device));
     }
@@ -401,6 +424,16 @@ fn validate_device_policy(
         ));
     }
     if let Some(stream) = stream {
+        if stream.device_id < 0 || stream.stream_token < 0 {
+            return Err(dlpack_error(
+                "DLPack stream device id and token must be non-negative",
+            ));
+        }
+        if device.device_type == DEVICE_CUDA && stream.stream_token == 0 {
+            return Err(dlpack_error(
+                "CUDA DLPack stream token 0 is ambiguous and unsupported",
+            ));
+        }
         if stream.device_type != i64::from(device.device_type)
             || stream.device_id != i64::from(device.device_id)
         {
@@ -518,12 +551,17 @@ fn dlpack_store() -> Result<MutexGuard<'static, DlpackStore>, PythonError> {
 
 #[cfg(test)]
 pub(super) fn reset_dlpack_store_for_tests() {
-    if let Ok(mut store) = DLPACK_STORE.lock() {
-        *store = DlpackStore::default();
-    }
+    let entries = DLPACK_STORE.lock().ok().map(|mut store| {
+        // Preserve monotonically advancing identities so reset cannot revive
+        // stale handles after reinitialization.
+        std::mem::take(&mut store.tensors)
+    });
+    // Drop outside the lock; each tensor attaches for its foreign deleter.
+    drop(entries);
 }
 
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod tests {
     use super::*;
     use crate::python::{

@@ -29,12 +29,10 @@ mod context_ops;
 mod context_ops_tests;
 mod coroutine_ops;
 mod declaration_object_bridge;
-#[cfg(test)]
-mod h02_contract_tests;
-// Separate ABI owner; audited by its assigned H02 item.
-#[allow(unsafe_code)]
 mod dlpack_ops;
 mod foreign_object;
+#[cfg(test)]
+mod h02_contract_tests;
 mod int_conversion;
 mod object_ops;
 #[cfg(test)]
