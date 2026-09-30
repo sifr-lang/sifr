@@ -2848,9 +2848,11 @@ limitations. The missing `SIFR_PERFORMANCE_REFERENCE` CI admission failure
 remains V01/Q01-owned; no passing local broad gate is claimed. Intermediate
 create-PR/full merge gates remain deferred to Q01 under the assigned policy.
 
-This blocked receipt changes only this phase Markdown. It requires documentation
-structure, file-size and diff/scope checks only, with no additional external
-review or Cargo execution. The pinned editor integration and nested VS Code
+This blocked receipt changes only this phase Markdown. Documentation structure
+passed 1 variant / 0 failures, the file-size guardrail passed 4,296 files, and
+diff plus phase-only scope checks passed. Candidate-keyed documentation results
+and logs are preserved in the same external evidence root. No additional external
+review or Cargo execution was run. The pinned editor integration and nested VS Code
 submodules were proactively initialized for its documentation input.
 
 ### H02d callback lifetime boundary: needs-new-scope (2026-09-30)
