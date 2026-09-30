@@ -1024,7 +1024,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | ID | Dependency / status | Source ownership and deliverable |
 | --- | --- | --- |
 | H03a0 | Merged H02h5 and readiness #4187/#4188; **closed**, scope #4189 and receipt below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
-| H03a1 | H03a0; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
+| H03a1 | H03a0 merged; needs-new-scope (builtin derive bodies; record below). | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
@@ -7179,3 +7179,106 @@ scope and diff checks only, with no repeated external review or broad validation
 Future producer acquisition and resource/input completeness remain mandatory
 H03a1 admission, and H03a metrics cannot resume before that item merges. This
 scope owner stops before the next batch.
+
+### H03a1 builtin derive semantic-body admission blocker (2026-10-01)
+
+Recorded in [PR #4191](https://github.com/sifr-lang/sifr/pull/4191).
+
+**State: needs-new-scope; H03a1 acceptance remains open.** On compiler-input
+base `8e731c052125a40ee724bbcb955f74b4ec10ae6e`, the pinned
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4` producer could not expose the
+required generated syntax and semantic call bodies for current builtin derives.
+No semantic adapter, schema, accepted export, metric baseline or compiler change
+is delivered by this record. H03a cannot resume; its dependent items remain
+unstarted.
+
+The concrete live surface is `sifr_codegen::rust_ir::RustFile` at
+`crates/sifr_codegen/src/rust_ir.rs:3`, in the Linux production context
+(`x86_64-unknown-linux-gnu`, `test=false`, the owned package's default feature
+selection). Its `#[derive(Debug, Clone, PartialEq)]` resolves all three macro
+origins, but `Semantics::expand_derive_macro` returns no expansion syntax for
+any of them. Across the same file, all **39 builtin derive invocations on 13
+active declarations** return that disposition. The synthesized `RustFile`
+methods `Debug::fmt`, `Clone::clone` and `PartialEq::eq` advertise bodies,
+but each exposes empty HIR and zero inferred expression records. Therefore
+generated calls and their expansion-token/provenance records cannot be recovered
+from this loaded semantic graph. This fails H03a1's macro/generated-call contract
+and the positive builtin-derive assertion reserved in
+`test_macro_derive_and_cfg_targets_have_owned_dispositions`.
+
+This is the producer's deliberate builtin-derive representation:
+[its builtin derive model](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-def/src/builtin_derive.rs#L1),
+[the production fast-path switch](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-def/src/nameres.rs#L90),
+[the expansion query](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs#L654)
+and [body access](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/lib.rs#L1399)
+show the omitted expansion/body path. The disabling switch is crate-private and
+available only in upstream test builds; production returns `true`. A
+[separate builtin token generator](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/builtin/derive_macro.rs#L30)
+exists, but its output is not a body declaration in this loaded graph.
+[Function source access](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/has_source.rs#L161)
+falls back to the static trait method; `source_with_range` instead supplies the
+derive invocation anchor with no generated syntax node. Treating that fallback
+as a generated implementation body would misstate its origin.
+
+A bounded fixture used the actual locked helper and the same three derives,
+plus a handwritten `RustFile::handwritten` method. The handwritten method
+exposed its syntax node, HIR body and four expression records. All three
+generated methods again had no syntax node or HIR/expression body.
+**30 diagnostic-control assertions passed**; both the live and fixture probes
+exited **2** for unsupported builtin expansions. These are blocker reproductions,
+not passing SemanticInputTests or admitted live captures. The five reserved
+individual cases, full class, complete Linux/Windows production/test union,
+twice-unchanged export comparison and freshness-mutation acceptance remain
+unrun and unqualified because the required producer surface is unsupported.
+
+The fresh owned preflight observed 40,485,343,232 free disk bytes and
+10,915,086,336 available RAM, with no active Cargo, semantic-worker or
+proc-macro processes and no pre-existing owned target. The declared 12 GiB disk
+and 8 GiB RAM reserves were sufficient; two Cargo jobs, one semantic worker and
+one proc-macro server were used. Shared targets and other sessions' artifacts
+were untouched. The exact 1.98.1 rust-src and rust-analyzer components were
+acquired. Rust compiler commit `48a229ceaefd4985c50990b14116b6d856af0985`
+and Cargo commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d` match the
+selected toolchain. The server's JSON API handshake reports **6**, matching the
+pinned producer; server SHA-256 is
+`98f6311d05a2f4b9132dbdeeefed058204374587f5efcf869db0a94025c3fc2a`.
+Sysroot source digest is
+`022d8a071204673d370771be04904f302fbebd7e7dada0aa8918f74512bac507`.
+Resolver commit/tree and upstream manifest/lock digests match H03a0.
+The isolated helper's 188-package locked graph retains the selected upstream
+package versions, source identities and checksums; its only new package is the
+adapter root. The `cargo build --locked --manifest-path
+verification/tools/maintainability_semantic_input/Cargo.toml` builds passed.
+
+Raw evidence and the unmerged helper/fixture prototypes are preserved outside
+Git at
+`/data/sifr-architecture-h03a1-semantic-input-evidence-20260930/` on
+`yaser5@192.168.1.134`. Live JSONL/log SHA-256 values are
+`120bdf209a487069d623643cf190854f65ff91c7f1a14984b53642eb0f5b8ceb`
+and `aec5ba329bcf18d73c5fcf838a9e0a1a9b204c6b5125ab932008436c383ca9cf`.
+Fixture JSONL/assertion-log digests are
+`1a98e2eb52c666a9801a44b8de54c6e804d8af5ba202a1188b2fa9129708e0bc`
+and `03ba2d5a18a4f1365a8c89f490c723995e8cdf366eda9f3711933401ba1a2098`.
+The acquisition receipt and source audit digests are
+`2433a85a87e7e743a4276baa9723e45b797aac1737a2e707704c964c9c0ed417`
+and `d19109a6b6d1bfcc7c8c04c548b31c6ef0fa4865f5cb4b80736d3638a3ad8af4`.
+
+Earlier nonpassing attempts remain separate: the first loader preparation added
+upstream's default `--workspace` despite package extra arguments and was
+interrupted, then replaced with the supported explicit selected-package build
+command; the first scoped receiver probe failed because the prototype omitted
+upstream's attached-database context, which was corrected; the corrected receiver
+scan was interrupted after the builtin capability gap was identified. One
+diagnostic-probe compilation failed on an unsupported Debug formatter and was
+corrected. The initial documentation check lacked the pinned nested editor
+input; exact editor gitlinks were initialized before rerunning that check.
+None supplies live admission, performance, integration or CI-pass
+evidence. The historical external CI performance-reference failure remains
+separate. This record requires documentation, file-size, scope and diff checks
+only; no implementation is proposed for review or merge.
+
+**Next action: separately adjudicate the builtin generated-body/call capability
+and assign a governed H03a1 resumption.** Options require explicit investigation
+and approval before adopting a producer change or a synthetic expansion-analysis
+path. Do not waive builtin derives, infer generated calls from names or templates,
+modify resolver/compiler sources, or resume H03a metrics under this blocker.
