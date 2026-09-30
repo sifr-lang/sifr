@@ -15,6 +15,22 @@ FIELDS = ('thread', 'lifetime', 'alias', 'ownership')
 # Four operation-family obligations, in FIELDS order. Changes require affected
 # policy records and negative fixtures to be revalidated.
 FAMILY_RULES = {
+    'current-target-erasure': ('creator-thread-admission', 'capture-live-through-registry-drain',
+                               'thread-local-shared-target', 'wrapper-removes-target-before-capture-end'),
+    'cpython-config-clear': ('serialized-initialization', 'initialized-config-through-clear',
+                             'exclusive-config-clear', 'consume-config-allocations-once'),
+    'cpython-config-init': ('serialized-initialization', 'writable-config-storage',
+                            'exclusive-config-initialization', 'initialize-config-owner'),
+    'cpython-config-move': ('serialized-initialization', 'initialized-config-storage',
+                            'exclusive-initialized-config-move', 'transfer-initialized-config-owner'),
+    'cpython-config-copy': ('serialized-initialization', 'config-and-input-live-through-copy',
+                            'exclusive-config-field-write', 'config-owns-copied-input'),
+    'cpython-initialize': ('serialized-initialization', 'configured-storage-live-through-init',
+                           'process-init-exclusive', 'borrow-config-process-owns-interpreter'),
+    'cpython-detach': ('initializing-thread-holds-gil', 'process-thread-state-live',
+                       'release-current-attachment', 'interpreter-keeps-thread-state'),
+    'cpython-observation': ('cpython-api-caller', 'observed-state-live',
+                            'observe-without-data-alias', 'borrow-only'),
     'raw-access': ('caller-thread', 'allocation-live', 'access-admitted', 'borrow-only'),
     'exporter-release': ('supported-gil', 'export-pinned-through-release',
                          'serialized-exclusive-release', 'consume-export-once'),
@@ -50,6 +66,28 @@ def operation_family(site) -> str:
         return 'generated-rust'
     if site.kind == 'unsafe-allowance':
         return 'unsafe-allowance'
+    for name, family in {
+        'PyConfig_Clear': 'cpython-config-clear',
+        'PyConfig_InitPythonConfig': 'cpython-config-init',
+        'PyConfig_SetBytesString': 'cpython-config-copy',
+        'PyConfig_SetBytesArgv': 'cpython-config-copy',
+        'PyWideStringList_Append': 'cpython-config-copy',
+        'Py_InitializeFromConfig': 'cpython-initialize',
+        'PyEval_SaveThread': 'cpython-detach',
+        'PyGILState_Check': 'cpython-observation',
+        'Py_IsInitialized': 'cpython-observation',
+        'PyStatus_Exception': 'cpython-observation',
+    }.items():
+        if name in identifiers:
+            return family
+    if {'assume_init', 'raw_config'} <= identifiers:
+        return 'cpython-config-move'
+    if 'current_callback_scoped_with_owner' in identifiers:
+        return 'current-target-erasure'
+    if 'asyncio_callback_scoped_with_owner' in identifiers:
+        return 'callback-erasure'
+    if 'foreign_callback_scoped_with_owner' in identifiers:
+        return 'target-erasure'
     if 'PyBuffer_Release' in identifiers:
         return 'exporter-release'
     target_erasure = bool(identifiers & {'erase_target_lifetime'})
@@ -63,6 +101,9 @@ def operation_family(site) -> str:
     if future_erasure:
         return 'future-erasure'
     if target_erasure:
+        if (identifiers & {'CurrentTarget', 'CurrentTargetPtr'}
+                or site.path.endswith('/callbacks/current.rs')):
+            return 'current-target-erasure'
         return 'target-erasure'
     if identifiers & {'GetNamedSecurityInfoW', 'SetNamedSecurityInfoW',
                       'ConvertStringSecurityDescriptorToSecurityDescriptorW',
@@ -218,7 +259,7 @@ def validate_contracts(sites, inventory, sources=(), *, compare_repeated=True) -
                 errors.append(f'invalid {field} obligation/proof ({rule}): {site.key}')
             # The operation alone cannot establish external capture lifetime,
             # revocation or thread admission. Require a source code reference.
-            elif family in ('target-erasure', 'future-erasure', 'callback-erasure',
+            elif family in ('current-target-erasure', 'target-erasure', 'future-erasure', 'callback-erasure',
                             'windows-security', 'windows-localfree') and not any(
                     p.get('kind') == 'code' for p in proofs):
                 errors.append(f'{field} requires source admission/teardown proof: {site.key}')
