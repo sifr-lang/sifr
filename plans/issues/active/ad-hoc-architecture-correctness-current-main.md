@@ -2376,7 +2376,7 @@ missing-segment default, temporary exemption or fallback is allowed.
 | Item / owner | Dependency and bounded implementation | Exact named acceptance |
 | --- | --- | --- |
 | **H02h0 / policy scanner and validator foundation** | **Closed / reviewed foundation merged** in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156) under H02h0r1; merge receipt below. The preservation rescope corrected the binding-preservation regression found by the second scoped review of unmerged [PR #4152](https://github.com/sifr-lang/sifr/pull/4152); its blocked receipt remains below. The preceding repeated-finding adjudication authorized H02h0r after unmerged [PR #4148](https://github.com/sifr-lang/sifr/pull/4148); its failed evidence remains preserved. First after the merged H02 predecessors, on current main. Implement shared Rust lexical/context discovery and pure method/unsafe validators plus explicit schema/segment interfaces. Preserve the repaired associated-type function headers, macro contexts, normal comma-less block arms, literal/character/lifetime masking, changed-body and changed-admission fingerprints. Normalize away scope/ordinal, copied operation text and copied evidence text before repeated-contract comparison. Bind full adjacent SAFETY/# Safety explanations to the correct operation, including continuation lines; a neighboring comment is not local proof. Represent operation-family obligations and source proof references explicitly enough to reject the exact release/erasure/thread mutations below; arbitrary nonempty prose and keyword matching are not proof. No authored live site inventory or production profile wiring yet. | Run the existing `MethodTests`, `UnsafeTests` and `ColdCheckoutTests` suites, plus all six new `PolicyFoundationTests` cases listed below. Self-tests must run with only copied scripts in a genuinely cold directory. |
-| **H02h1 / semantic method policy authoring** | **Open / ready for separately assigned resumption** after reviewed H02c checked-dictionary keys repair [PR #4162](https://github.com/sifr-lang/sifr/pull/4162), receipt below; no policy implementation delivered. After H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
+| **H02h1 / semantic method policy authoring** | **Open / needs-implementation handoff to H02c** after the checked-sequence exit-guard audit below, on merged checked-dictionary keys repair [PR #4162](https://github.com/sifr-lang/sifr/pull/4162); no policy implementation delivered. After H02h0, including the reviewed H02h0r1 foundation merge in [PR #4156](https://github.com/sifr-lang/sifr/pull/4156). Own the complete method dispatch inventory and constituent/adaptation graph. Reclassify canonicalizer/optimizer sites and audit every builtin-name specialization, not just the rejected 18 nodes. Each site records its actual role, inputs, outputs and caller/admission relationship. Publish the method guard's live current-tree inventory and its schema; defer whole-profile integration to H02h5. Stop for an H02c handoff if an actual ungated source route appears. | `python3 scripts/check_method_dispatch_authority.py --self-test`; `python3 scripts/check_method_dispatch_authority.py`; the four new `MethodTests` cases below; all existing `MethodTests` and `ColdCheckoutTests`. Read-only call-chain audit accompanies the exact candidate. No Cargo acceptance is claimed by this policy-only child. |
 | **H02h2 / callback and CPython core contract authoring** | After H02h1. Author only the H02d0/H02d1 callback, initialization/GIL, foreign-object and refcount records in `python_core.json`. Distinguish erased target/future lifetime, admission/drain/revocation, Send/Sync, borrowed observation and consuming release. Each block/declaration/impl/allowance names the actual operation's four obligations and proof, not an owner template with suffixes. Validate this exact partition against discovered source sites using the foundation validator. | All three new `UnsafePythonCoreTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The core-segment case must discover current core/callback sources and require exact site coverage, operation/fingerprint/proof agreement and locally authored obligations. |
 | **H02h3 / Buffer, Arrow and DLPack contract authoring** | After H02h2. Author only H02e/H02f/H02g records in `python_resources.json`. Distinguish view reads/writes, exporter pinning, pointer bounds/alignment/alias, nullable callbacks, capsule observation/consumption, release/deleter transfer and exact-once ownership. Reuse predecessor source evidence without claiming a new runtime audit; do not alter certification or ABI source. | All three new `UnsafePythonResourceTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The resource-segment case discovers the exact resource sources and requires complete local coverage; release-as-borrow is a failing negative mutation despite unchanged operation/evidence fingerprints. |
 | **H02h4 / remaining unsafe owner records** | After H02h3. Author all remaining current first-party records in `external.json`, retaining existing SQL, cache, driver, Python bridge, runtime/test and X02 ownership. Windows descriptor/ACL operations receive Windows contracts. Generated Rust text remains delegated to X02, not accepted as native ABI proof. Discover the union and reject missing, duplicate, new, stale or re-owned sites. Source defects go to the owning issue; this child cannot patch those packages. | All three new `UnsafeExternalOwnerTests` cases below plus existing `UnsafeTests` and `ColdCheckoutTests`. The union case independently discovers the full current tree and verifies every segment and operation; no historical 366-site count substitutes for exact coverage. |
@@ -4755,3 +4755,178 @@ record update.
 **Next action: separately assign H02h1 only** to resume complete policy authoring
 on this reviewed keys-admission repair. H02h2-H02h5 and H03 remain waiting. This
 H02c owner stops after the docs-only receipt; no H02h1 work was started.
+
+
+### H02h1 checked-sequence exit-guard admission handoff (2026-09-30)
+
+**State: H02h1 stopped at needs-implementation; H02c owns this bounded source
+repair.** The read-only audit starts from main
+`399af5f83080c390d3446a0917bb1c0e06e76b54`, after reviewed checked-dictionary keys
+repair [PR #4162](https://github.com/sifr-lang/sifr/pull/4162) and its receipt
+[PR #4163](https://github.com/sifr-lang/sifr/pull/4163). The source audit confirmed
+a different terminal consumer that can remove a source `len` method without
+admission. H02h1 cannot classify that route as an admitted constituent or a
+representation adaptation. H02h1 remains open; H02h2-H02h5 wait. Prior foundation
+and H02c evidence retain their exact tested scopes.
+
+#### Concrete successful call shape and source proof
+
+The existing `minimum_length_exit_guard_witnesses_each_literal_read` fixture in
+`crates/sifr_codegen/src/lib_codegen_tests/checked_place_read_codegen_tests.rs:133`
+authors this accepted source shape and asserts three checked `let Some` reads:
+
+```sifr
+def first_three(values: list[int]) -> int:
+    if len(values) < 3:
+        return 0
+    return values[0] + values[1] + values[2]
+```
+
+This audit did not rerun that fixture or claim executable reproduction. Its
+source assertions identify the actual optimization shape. Construct its typed
+HIR and prepare `BodyAnalysis` from the same real function body; then change only
+the condition's `HirExpr::MethodCall` authority. For the first following read,
+index `0 < 3` satisfies `condition_excludes_checked_sequence_read`; the same is
+true for indexes 1 and 2. `condition_only_excludes_checked_sequence_read` returns
+the same result for this single comparison. Both predicates inspect method name,
+arguments and collection identity, and ignore method authority.
+
+The complete source path on this base is:
+
+- `stmt_support_emitter/stmt_block_helpers.rs:513` enters
+  `try_lower_stmt_block_for_ir`, whose inner loop in `stmt_block.rs:33` calls
+  `try_lower_checked_sequence_exit_guards_for_ir` with the following statements.
+  The scoped wrapper delegates to that same entry; neither admits source methods.
+- `checked_place/exit_guards.rs:64` requires an exiting If with no elif/else,
+  discovers proven following reads from `BodyAnalysis`, and recognizes the
+  condition through `checked_place.rs:90` and `:187`. For the concrete comparison,
+  `condition_fully_replaced` remains true at `exit_guards.rs:157`.
+- `checked_place.rs:775` lowers the receiver and index of each sequence read,
+  producing a checked `get` option. It does not lower the source length call.
+  List, bytes and string receivers are supported by this terminal read helper.
+- `exit_guards.rs:176` calls `lower_condition_expr_for_ir` only when
+  `condition_fully_replaced` is false. The successful replacement path emits
+  `RustStmt::LetElse`, installs read witnesses, and returns Some without passing
+  the source length call through `source_method_path` or a method registry.
+- `checked_place.rs:834` exposes the same terminal consumer through
+  `try_capture_checked_place_control_stmt`; the public structured statement
+  path `lib_emitter_structured_stmt.rs:8` returns early after that capture at
+  line 34. There is no independent source-method admission before this return.
+
+Therefore the fully replaced route is independent of whether the recognized
+length carrier has `Unclassified`, a mismatched builtin declaration, matching
+user/protocol authority or `RustAdapted` authority. Only the admitted builtin
+case can legitimately select this builtin replacement. This is a source-level
+call-shape proof on unchanged Rust, not new runtime/codegen test evidence.
+
+The second replacement variant is also in this same terminal consumer:
+`existing_prefix_witness_excludes_read` at `exit_guards.rs:11` recognizes a
+source `len(values) == n` after a prior witness for `values[n - 1]` and can fully
+replace that condition for a following `values[n]` read. Its length predicate
+at line 52 also ignores authority. The bounded repair must cover that variant,
+compound fully replaced `or` conditions, and the partial-replacement branch.
+
+#### Read-only audit of the other consumers
+
+`condition_excludes_checked_sequence_read` and
+`condition_only_excludes_checked_sequence_read` have no nonrecursive consumer
+outside this exit-guard implementation. `existing_prefix_witness_excludes_read`
+is local to it. `condition_supports_checked_sequence_read` has four consumers:
+checked If expressions (`checked_place.rs:372`), checked statement Ifs
+(`checked_place/control_flow.rs:483`), checked while-loop guard collection
+(`control_flow.rs:560`), and class-method body-analysis selection
+(`class_method_emitter.rs:708`). The two checked If consumers always lower the
+original condition before successful output. Both while callers
+(`stmt_support_emitter/stmt_block.rs:704` and `loops_try_finally.rs:67`) lower
+that condition before collecting guards. Class selection chooses analysis only.
+No successful admission bypass was found in those consumers.
+
+The related `checked_sequence_for_guards_for_ir` length predicate selects
+read guards, while both for-loop callers retain iterator lowering.
+`exit_guard_aliases.rs::alias_value` recognizes `len(values) - 1` in following
+pure declarations; those declarations remain in the enclosing block and undergo
+ordinary lowering. `body_analysis/length_aliases.rs` records shape facts and
+does not emit source-method semantics. Those paths require preservation checks,
+not a claim that every name predicate itself is a semantic authority.
+
+#### Bounded H02c repair and exact prospective acceptance
+
+Separately assign only the source admission of the length calls consumed by
+checked-sequence exit-guard replacement, including its prefix-witness predicate.
+Use the existing typed source-method authority at the terminal optimization
+boundary before replacing a condition or installing replacement witnesses.
+Reject malformed authority structurally; matching user/protocol/contextual calls
+must retain ordinary dispatch with no builtin replacement or retry. Preserve
+admitted checked sequence behavior and failure-context decline. Do not add a
+second registry, fallback or compatibility path; do not change H02h policy,
+unsafe records, scanner discovery, Python runtime or X02 safety.
+
+Add and explicitly run each reserved exact case with
+`cargo test -p sifr_codegen --lib method_authority_tests::<case> -- --exact`:
+
+- `checked_sequence_exit_guards_reject_unclassified_and_mismatched_authority`:
+  real function body analysis, malformed module/symbol/authority, and nonzero
+  direct exit-consumer, statement block, scoped/nested block, capture and public
+  structured-statement entries. Cover complete replacement, partial replacement,
+  compound-or and prefix-witness forms; assert structural errors and no emitted
+  builtin output or committed replacement witness on rejected admission.
+- `checked_sequence_exit_guards_preserve_nonbuiltin_authority_without_retry`:
+  matching protocol/local/inherited/imported and Rust-adapted length carriers
+  decline the builtin replacement and reach ordinary method lowering. Verify
+  no removed condition, no builtin checked-read substitution on its behalf and
+  no second builtin registry retry at every applicable successful public entry.
+- `checked_sequence_exit_guards_preserve_admitted_read_and_prefix_behavior`:
+  admitted list/bytes/string shapes and prepared prefix witnesses retain checked
+  reads, early returns, original source ownership/ranges and compound/partial
+  conditions. Preserve truthiness without a method call, stable length aliases,
+  endpoint aliases, checked If/while/for consumers and active Index failure
+  contexts. Require builtin positive controls proving each replacement variant
+  is actually selected before accepting its rejection/preservation assertions.
+
+Rerun these twelve retained exact `method_authority_tests` cases, each with
+`cargo test -p sifr_codegen --lib method_authority_tests::<case> -- --exact`:
+`typed_builtin_dispatch_and_strict_decline`, `user_protocol_and_contextual_paths`,
+`list_append_cloned_decline_regression`,
+`nested_builtin_declines_preserve_structural_errors`,
+`statement_only_method_admission_and_strict_decline`,
+`nested_statement_method_admission_and_strict_decline`,
+`class_statement_method_admission_and_strict_decline`,
+`condition_specializations_decline_unclassified_without_builtin_retry`,
+`condition_comparison_and_truthiness_preserve_authority`,
+`checked_dict_keys_guards_reject_unclassified_and_mismatched_authority`,
+`checked_dict_keys_guards_preserve_nonbuiltin_authority_without_retry`, and
+`checked_dict_keys_guards_preserve_admitted_if_and_exit_behavior`.
+Run the focused `lib_codegen_tests::checked_place_read_codegen_tests` and
+`lib_codegen_tests::class_method_checked_place_codegen_tests` selections with
+resolved nonzero names/counts, existing `methods::tests` and emitted-Rust quality
+selections, and the unchanged exact two-fixture H02 list E2E command:
+`verification/runner/e2e/run_e2e_pass.sh --profile create-pr --fixture-manifest verification/areas/core_language/data/h02_method_e2e_manifest.json`.
+Use a compatible warm owned target and existing runner preparation; inspect
+space/ownership before Cargo work. Intermediate broad gates remain with Q01.
+
+#### Handoff evidence and stopping boundary
+
+The session-owned branch is `codex/architecture-h02h1-after-keys-20260930` in
+`/data/sifr-architecture-h02h1-after-keys-20260930` on
+`yaser5@192.168.1.134`. Read-only source digests and the audit scope are retained
+outside Git in
+`/data/sifr-architecture-h02h1-after-keys-evidence-20260930/source-audit.json`.
+No Cargo target was adopted, built or cleaned. The lexical survey found 6,245
+sites; this is discovery context, not a complete reviewed method inventory or
+acceptance threshold. No policy implementation, runtime qualification or scoped
+implementation approval is claimed. Existing stopped drafts remain untouched.
+
+This docs-only handoff requires documentation structure, file-size and
+canonical-phase-only diff checks. The assigned source repair needs targeted
+acceptance and scoped review before its implementation merge. **Next action:
+separately assign only this bounded H02c checked-sequence exit-guard admission
+repair, then resume H02h1 after its reviewed merge.** Stop this owner here.
+
+Documentation structure passed 1 variant / 0 failures, the file-size guardrail
+passed 4,305 maintained files, and diff/scope checks confirmed this canonical
+phase document is the only changed path. Raw logs and command/digest records
+remain in the evidence directory above. The initial documentation run failed
+because this fresh worktree lacked the pinned nested editor submodule; its
+failed log is preserved as `docs-structure-initial.log`, and the rerun passed
+after initializing the unchanged recorded editor pins. No broad gate or external
+implementation review is claimed for this record-only handoff.
