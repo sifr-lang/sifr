@@ -7282,3 +7282,217 @@ and assign a governed H03a1 resumption.** Options require explicit investigation
 and approval before adopting a producer change or a synthetic expansion-analysis
 path. Do not waive builtin derives, infer generated calls from names or templates,
 modify resolver/compiler sources, or resume H03a metrics under this blocker.
+
+### H03a1s builtin generated-body scope adjudication (2026-10-01)
+
+**State: scope defined; producer capability and H03a1 acceptance remain open.**
+This documentation-only item follows the merged #4191 blocker on base
+`c2140cf6cbcfa21d431adb878bfbe508e98e8179`. It authorizes a bounded,
+source-supported capability prerequisite, **H03a1p**, before a separately
+assigned H03a1 adapter resumption. It admits no semantic export or metrics.
+H03a0's completeness, provenance, selected-package contexts, build-input freshness,
+external-origin closure and fail-closed requirements remain binding. All five
+actual-producer SemanticInputTests and all seven later MetricTests remain required.
+The #4191 reproductions retain their failing/unqualified status.
+
+#### Decision and considered producer paths
+
+The current rust-analyzer producer remains pinned to
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4` (tree
+`0081a116ddfb9f5c3673eba97df030bea907106f`). Its production builtin fast path
+has no exposed body/expansion switch. Neither a source fallback to a trait method
+nor an empty body supplies generated implementation calls. Testing-only switches,
+resolver patches, compiler-source changes and omitting builtin derives are rejected.
+No floating producer or unexamined newer release is selected.
+
+Calling its official `BuiltinDeriveExpander` and loading the tokens in a shadow
+crate is also rejected as the admission path. Source inspection found actual
+semantic differences, beyond missing graph insertion:
+
+- The producer's [Clone generator](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/builtin/derive_macro.rs#L679)
+  emits field `.clone()` calls. The matching compiler's
+  [Clone generator](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/clone.rs#L190)
+  emits qualified `Clone::clone` calls and has Copy-dependent and auxiliary-impl
+  paths. A same-named inherent method can change shadow-crate method resolution.
+- The producer's [Debug generator](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/builtin/derive_macro.rs#L799)
+  uses `debug_struct`/`debug_tuple`, `field` and `finish`. The compiler's
+  [Debug generator](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/debug.rs#L115)
+  selects specialized formatter helpers by field shape/count. The call graph
+  differs even when both produce equivalent formatted output.
+- The producer's [PartialEq generator](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/builtin/derive_macro.rs#L935)
+  emits field `.eq()` calls; the compiler's
+  [PartialEq generator](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/cmp/partial_eq.rs#L118)
+  emits comparisons with type-resolved operator edges and a discriminant path.
+  A literal Call/MethodCall-only visitor would omit required semantic edges.
+
+These are exact-source findings, not executable counterexample passes. Rewriting
+those templates or adding inferred missing calls would manufacture semantic
+records. Expanded-text-only rustc output likewise lacks typed callable identity;
+compiling that text again would discard expansion hygiene/provenance. Neither
+route satisfies the contract.
+
+Select an **additional authoritative builtin-body producer** from the repository's
+exact Rust **1.98.1** compiler commit
+`48a229ceaefd4985c50990b14116b6d856af0985`, via a small `rustc_driver`
+verification companion. Keep the selected rust-analyzer helper for its existing
+resolution/API work. The companion supplies actual compiler-expanded builtin
+syntax and typed bodies/calls; it does not replace other semantic inputs silently.
+This is an explicit producer extension to H03a0, limited to the omitted builtin
+surface and the common declarations/signatures needed to validate its join.
+
+Pinned official source exposes [after_expansion/after_analysis callbacks](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_driver_impl/src/lib.rs#L132),
+[expanded AST access before lowering](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_driver_impl/src/pretty.rs#L209),
+[HIR body ownership](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/hir/map.rs#L288),
+[type-dependent target and receiver adjustment queries](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/ty/typeck_results.rs#L278),
+and [expansion hygiene data](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_span/src/hygiene.rs).
+This supports a credible capability implementation; it does not prove that the
+component links, all mapping joins work, or the live union is admitted.
+
+#### H03a1p owner, exact inputs and transformations
+
+**Dependency order:** H03a0 and H03a1s closed -> H03a1p capability delivery ->
+H03a1 complete adapter acceptance -> H03a metrics -> H03b-H03f -> Q01.
+H03a1p closes only the builtin capability prerequisite. It cannot unlock H03a.
+No H03a1 adapter implementation is delivered by H03a1s.
+
+Assign one verification-tooling owner, using its own branch, worktree, index,
+temporary directory and target. Allowed tracked paths are a standalone isolated
+helper under `verification/tools/maintainability_builtin_input/` (manifest, own
+lockfile, source, versioned capability schema and bounded fixtures),
+`scripts/maintainability_builtin_input.py`,
+`scripts/maintainability_builtin_input_tests.py`, and this phase's delivery receipt.
+The compiler crates, root Cargo manifest/lock, resolver/compiler sources, metrics,
+baselines, public APIs and verification-profile registration remain read-only.
+The quarantined #4191 prototypes are evidence, not an accepted implementation.
+
+Acquire the exact host `rustc-dev` component for
+`1.98.1-x86_64-unknown-linux-gnu` and any required matching rustc runtime libraries
+through the selected toolchain's official component manifest. The installed
+component inventory lists that component as available but uninstalled. Bind its
+manifest URL/digest, archive digest, installed file inventory/digests, compiler
+commit/host and dynamic libraries; missing/unavailable/mismatched inputs block.
+Use prebuilt components; do not rebuild Rust or install nightly. The source links
+above bind the API audit to the same compiler commit. Cargo remains exact commit
+`797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`; retain the H03a0/H03a1 server API
+6/digest and sysroot source digest. Revalidate these identities before reuse.
+
+Building the rustc-private companion may use
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input` for that helper's exact crate
+name only, with `#![feature(rustc_private)]`; record this explicit build setting.
+Do not set a global bootstrap value, pass it into analyzed Cargo packages, enable
+new source features or change the compiler being analyzed. Bind the companion
+executable/dynamic-library digests and isolated helper lock graph. An unsupported
+stable-component interface is a capability blocker, with no alternative tool.
+
+For live admission, use Cargo's exact locked selected-package/target invocations
+and extern metadata through an instrumented compiler wrapper. Analyze original
+inputs without shadow source edits. The wrapper may collect semantic data and
+stop selected analysis after successful type checking; it must not suppress an
+error or pretend a stopped invocation produced a usable compilation artifact.
+Keep capability evidence separate from Cargo artifact success and use the existing
+runner's compatible preparation where available. Preparation is selected-package
+semantic loading, not a workspace compiler test/gate; no native target linking is
+required. All build-script/filesystem/environment inputs remain covered by the
+existing receipt obligations. Missing Windows metadata or preparation is a failed
+context, not permission to use Linux facts for Windows.
+
+At `after_expansion`, capture builtin-generated AST structure, normalized
+literal-preserving tokens, spans/hygiene and full parent expansion chains while
+the expanded AST is available. At `after_analysis`, enumerate the corresponding
+actual HIR body owners and resolved calls, including overloaded operators;
+retain builtin scalar operators as explicit non-call semantic operations. Preserve
+receiver types/adjustments, generic arguments, callable signatures, trait origin,
+static/dynamic/generic dispositions and auxiliary generated declarations. Never
+infer a concrete generic/dynamic implementation. Optimized MIR is not source
+callsite authority. Bodyless marker impls require an explicit proven bodyless
+record; zero expressions alone cannot establish one.
+
+Allowed transformations are serialization, literal-preserving normalization,
+checkout-independent path canonicalization and verified AST-to-HIR structural
+mapping/desugaring classification. No call insertion, template substitution,
+method spelling-based resolution, synthetic impl body or hygiene rewrite is
+allowed. Macro identity comes from resolved producer/expansion data, not the
+`Debug`/`Clone`/`PartialEq` spelling. Source numeric NodeId/HirId/DefId/ExpnId values
+are capture-local join aids only. Persistent identity binds owning Cargo package,
+target/context, ADT/module/impl/trait signature, resolved builtin macro identity,
+parent expansion path and a structural declaration/call disambiguator.
+
+#### Mapping, equivalence and fail-closed admission
+
+Join companion and rust-analyzer declarations using canonical package/module,
+ADT/trait/impl identity and normalized signatures/generics/visibility/cfg; verify
+one-to-one common-member correspondence and record all compiler-only auxiliary
+members explicitly. The builtin body authority is the compiler; no equality to
+the inaccurate rust-analyzer token template is required or claimed. Common source
+and signature facts must agree. A conflict, unknown type, duplicate owner, missing
+required body, unaccounted auxiliary item or ambiguous join rejects the affected
+surface. Preserve external package ownership and budget exclusions.
+
+Calls must join actual expanded syntax to typed HIR by verified owner and structure,
+with explicit many-to-one/desugaring cases and token intervals. An invocation or
+field span is a coarse generated anchor unless exact original syntax mapping is
+proved. Keep invocation ownership, macro definition origin, expansion token digest,
+generated structural position and mapping quality distinct. A body token digest
+without its typed call records is incomplete. Reachable dependency-owned builtin
+members require the same authority and exact selected Cargo context; analyzing
+only the owned file cannot discharge external-origin completeness.
+
+Missing component/API/body/expansion/tokens/source origin, unreadable dependency
+inputs, compiler errors, failed mapping, stale producer/configuration, an uncovered
+context or truncated/duplicate records must return nonzero and preserve unsupported
+reason/provenance outside the accepted export. Fail the whole affected package;
+no partial pass, fallback to RA's empty bodies, or exception waiver. A new derive
+kind/shape discovered outside the proven capability set also blocks acceptance
+until supported with the same tests and source authority.
+
+#### Exact bounded H03a1p acceptance and resource plan
+
+Build only this isolated companion:
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Run each reserved case individually with
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinCapabilityTests.<case>`,
+then the complete `BuiltinCapabilityTests` class. The five cases are **reserved,
+not implemented or passed by this scope record**:
+
+| Exact case | Actual-producer positive and negative assertions |
+| --- | --- |
+| `test_builtin_bodies_calls_and_auxiliary_origins` | Real struct/tuple/unit/enum Debug, Clone and PartialEq output; typed direct and operator edges, Copy-sensitive clone and auxiliary impl disposition. Include a locked external field type and repeated same-named ADTs. Reject empty required bodies and invented direct targets; marker/bodyless output needs explicit evidence. |
+| `test_hygiene_and_same_spelled_methods_preserve_trait_origin` | A field with distinct inherent clone/eq and trait implementations binds compiler derive calls to trait authority; a locally defined same-spelled macro is classified by its resolved identity. Reject the official RA shadow-template call graph and name-only classification. |
+| `test_expansion_ast_hir_mapping_is_owned_and_complete` | Nested macro-generated ADT, tuple/record/enum members and repeated generated calls retain expansion-chain/token structure and exact/coarse kinds; unchanged capture in a different checkout normalizes equally. Reject swapped owners, forged exact mapping, dropped/duplicate calls and ambiguous structural joins. |
+| `test_component_context_and_input_drift_fail_closed` | Exact selected inputs and known fixture contexts pass; wrong/missing rustc-dev/runtime/commit, source/extern/config/context drift, missing expansion or failed type checking reject with no accepted partial package. Demonstrate bootstrap is limited to helper build. |
+| `test_live_rust_ir_builtin_surface_has_complete_dispositions` | Original live Linux production rust_ir.rs: all 39 builtin invocations on 13 declarations, RustFile fmt/clone/eq typed bodies/calls and auxiliary members, plus a common declaration/signature join to pinned RA. Remove one required invocation/body/call record and reject. If current source changed, enumerate and prove its full actual count; never force historical counts. |
+
+Record resolved counts and executed assertions: 1/1 for each individual case and
+5/5 for the class. Fixture tests invoke the companion/locked producer; fabricated
+JSON may corrupt an actual capture for negative tests but cannot supply positives.
+Publish exact tool/input/configuration/token/body/join digests and raw failed and
+successful logs outside Git keyed by the final candidate. Run relevant docs,
+900-line guard, scope/diff checks and scoped read-only Opus implementation review;
+merge H03a1p and record its receipt. Stop at any missing capability with exact
+source/context and evidence. Do not implement the full semantic adapter in that
+same batch.
+
+The next owner must inspect free disk/RAM, process/target ownership and component
+archive sizes before acquisition. Prospective reserve is **20 GiB free disk**
+(8 GiB component/extraction scratch, 8 GiB helper plus selected preparation,
+4 GiB retained) and **8 GiB available RAM**, max two Cargo jobs and one active
+semantic producer/server at a time. Run compiler and RA captures sequentially;
+reuse compatible completed artifacts only after ownership, process and tool/input
+checks. Revise estimates explicitly from actual manifest/artifact sizes before
+operation. No pressure cleanup of shared targets is allowed; insufficient owned
+reserve is a recorded resource blocker. This scope ran no Cargo feasibility probe,
+installed no component and makes no measured runtime/storage qualification claim.
+
+After H03a1p merges, **separately assign H03a1** to integrate this builtin authority
+within its original helper/schema/receipt boundary. All original five
+SemanticInputTests individually and full class, full Linux/Windows production/test
+structural union, both build scripts, includes, external closure, twice-unchanged
+live export comparison and bounded freshness mutation remain mandatory. Extend the
+receipt to both pinned producers and their verified join. Only that complete merged
+H03a1 acceptance unlocks H03a's seven original MetricTests and metrics. Q01 retains
+the final full merge profile and whole-phase review; historical CI performance
+reference failures retain their existing status.
+
+**Next action: separately assign H03a1p only.** This scope owner stops after the
+documentation merge/receipt. Source-inspection-supported implementability is not
+actual-producer capability acceptance, live union admission or H03a1 completion.
