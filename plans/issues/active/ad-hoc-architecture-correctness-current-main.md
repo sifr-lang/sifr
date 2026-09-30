@@ -2767,6 +2767,8 @@ failed, and no implementation defect is waived.
 
 ### H02h0r bounded foundation correction: needs-new-scope (2026-09-30)
 
+Docs-only blocked receipt: [PR #4153](https://github.com/sifr-lang/sifr/pull/4153).
+
 **State: open / needs-new-scope; no implementation merge.** This owner started
 from scope receipt `ba8cbc578ce50dad14903c9342175c24c60e3436` in its own
 worktree `/data/sifr-architecture-h02h0r-binding-correction-20260930` on
