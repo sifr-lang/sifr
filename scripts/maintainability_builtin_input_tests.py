@@ -456,7 +456,7 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
         receipt["capture_digest"]=builtin.digest(builtin.encoded(value))
         self.require(receipt["capture_digest"]==builtin.digest(builtin.encoded(value)),"recomputed projection integrity")
         self.assertions+=1
-        with self.assertRaisesRegex(builtin.Unsupported,"independent inventory|declaration|invocation|consumer|publication|correspondence|substitution|Dynamic|existential|trait-object|schema") as caught:
+        with self.assertRaisesRegex(builtin.Unsupported,"independent inventory|declaration|invocation|consumer|publication|correspondence|substitution|Dynamic|existential|trait-object|schema|identity|owner") as caught:
             builtin.validate_join(value,projection,authority,receipt=receipt,input_identity=receipt["inputs"])
         (self.evidence/(label+".json")).write_bytes(builtin.encoded({"capture":value,"common":projection,"receipt":receipt,"intact_authority_digest":builtin.digest(builtin.encoded(authority)),"semantic_rejection":str(caught.exception)}))
 
