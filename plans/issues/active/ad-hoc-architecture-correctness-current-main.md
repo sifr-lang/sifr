@@ -1024,7 +1024,11 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | ID | Dependency / status | Source ownership and deliverable |
 | --- | --- | --- |
 | H03a0 | Merged H02h5 and readiness #4187/#4188; **closed**, scope #4189 and receipt below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
-| H03a1 | H03a0 merged; needs-new-scope (builtin derive bodies; record below). | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
+| H03a1s | H03a0 and #4191 blocker; **closed**, scope #4192 and receipt below. | Docs only: pinned compiler builtin capability prerequisite. |
+| H03a1p | H03a1s closed; **unaccepted**, #4194 draft and #4195 blocker receipt. | Original builtin capability; repeated completeness defect requires H03a1pr. |
+| H03a1pi | H03a1p repeated finding; documentation scope defined below. | Docs only: independent inventory adjudication; no capability acceptance. |
+| H03a1pr | Merged H03a1pi; waiting, separately assigned. | Bounded inventory repair plus complete carried H03a1p requalification/review. |
+| H03a1 | H03a0 and repaired H03a1p merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
@@ -1032,7 +1036,8 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03e | H03d and V01 reference admission; waiting. | Frontend/performance evidence: reproducible retained-allocation and governed warm resource measurements for current graph retention, with a documented retain/change decision. No production graph change. |
 | H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
 
-Execute **H03a0, H03a1, H03a, H03b, H03c, H03d, H03e, then H03f**, one independently owned
+Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1, H03a,
+H03b, H03c, H03d, H03e, then H03f**, one independently owned
 session and merged item at a time. Evidence items are substantive acceptance,
 not permission to perform a later cleanup. At the H03b/H03c/H03e handoff, any
 proposed compiler change requires a documentation-only scope checkpoint that
@@ -7669,3 +7674,230 @@ an independently enumerated owner inventory repair.** H03a1p and H03a1 remain
 unaccepted. The original five SemanticInputTests, full context/input/external
 closure and all seven later MetricTests remain mandatory; metrics cannot resume.
 This owner stops after the documentation blocker receipt.
+
+### H03a1pi independent owner inventory scope adjudication (2026-10-01)
+
+**State: documentation scope defined; H03a1p remains unaccepted.** This separate
+adjudication follows #4195 on main `67497f4d6ccfe943a4cd8a4accc437c31b1af538`.
+H03a1pi is documentation only. It authorizes one subsequent bounded repair,
+**H03a1pr**, and does not restart the stopped #4194 repair/review loop. The two
+NOT SATISFIED reviews and coordinated-removal reproductions above remain failing
+historical evidence. H03a0 and H03a1s remain closed; H03a1 and H03a remain dependent.
+
+#### Decision, dependency and carried candidate
+
+Accept the repeated finding as an in-scope completeness omission. The saved AST
+ledger checks consistency between two AST projections. It does not independently
+establish which compiler impls exist. Neither a third copy of that list, a
+receiver/macro set, fixed historical counts, nor an RA method conditional on a
+surviving compiler impl discharges owner completeness.
+
+Dependency order is **closed H03a0/H03a1s -> merged H03a1pi -> H03a1pr repaired
+complete H03a1p capability -> separately assigned H03a1 adapter -> H03a metrics
+-> H03b-H03f -> Q01**. H03a1pr may close H03a1p only after its complete carried
+implementation meets the original and additional criteria. H03a1pi cannot do so.
+
+Start H03a1pr in an owned checkout from current main and deliberately carry the
+complete unmerged #4194 candidate `4eed8ff1894091249a65ec101d992698762f2158`
+(original base `219101aa767a6a83c76fdb527ed86b248f827340`). Preserve #4194 as the
+unaccepted draft and preserve its branches, source, evidence and compatible cache.
+Publish a separate repair PR whose main-to-candidate diff includes the carried
+implementation. Its scoped Opus review must review that **complete implementation**,
+not only the inventory delta, with both prior reports and reproductions supplied.
+Reconcile any intervening in-scope base changes before testing/review; stop on an
+externally owned conflict. No merge or blessing of #4194 is implied.
+
+#### Exact tracked ownership
+
+The H03a1pr owner may change only:
+
+- `verification/tools/maintainability_builtin_input/`: existing isolated manifest,
+  lock, `build.rs`, `src/main.rs`, `src/expanded.rs`, `src/typed.rs`,
+  `src/identity.rs`, `src/bin/ra_common.rs`, `src/bin/ra_common/ra_types.rs`,
+  `schema/capability-v1.json` and bounded existing fixture packages `fixture_root`
+  and `field_origin`; add `src/inventory.rs` for the independent enumeration and
+  its reconciliation responsibility, plus bounded modules within this helper
+  when the 900-line guard requires a responsibility split.
+- `scripts/maintainability_builtin_input.py` and
+  `scripts/maintainability_builtin_input_tests.py`: inventory transport/admission,
+  invocation-owned common join and actual-producer regression assertions.
+- This canonical phase Markdown for the delivery receipt.
+
+Preserve the helper's isolated workspace and exact locked RA source graph. No
+additional package/provider is selected. Root Cargo manifest/lock, compiler
+crates, compiler/resolver source, public APIs, metrics/baselines, broad profiles
+and `maintainability_semantic_input` adapter implementation remain read-only.
+Fixture changes may expose inventory/ownership defects, not change compiler
+behavior. A new unsupported producer shape needs a separate scope decision.
+
+#### Pinned source feasibility and independent enumeration
+
+Use the existing official compiler **1.98.1**, commit
+`48a229ceaefd4985c50990b14116b6d856af0985`, and RA commit
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`; matching rustc-dev, runtime,
+rust-src and API 6 proc-macro server remain mandatory identity-bound inputs.
+Read-only inspection of the official installed rustc-dev source establishes these
+available APIs, without a build/probe or a claim of repaired capability:
+
+- [`hir::ModuleItems`](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/hir/mod.rs)
+  exposes `free_items()` including impl blocks, `impl_items()` including associated
+  items, and `definitions()`. The crate item collector walks nested items,
+  including items within bodies; a body-owner-only walk misses bodyless markers.
+- [`TyCtxt::hir_crate_items`](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/hir/map.rs#L1303)
+  constructs the crate-wide collection from HIR. `hir_item`,
+  `hir_node_by_def_id`, `hir_span` and local definition identity allow owner
+  inspection without consulting the saved expanded AST.
+- [`TyCtxt::iter_local_def_id`](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/ty/context.rs#L1354)
+  depends on successful analysis and enumerates compiler definitions. It is an
+  available cross-check, not a requirement to generate a third AST projection.
+- [Compiler queries](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/queries.rs)
+  expose `all_local_trait_impls`, `expn_that_defined`, `associated_items`,
+  `impl_trait_ref`, `type_of` and signature/generic queries. The
+  [local providers](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/hir/mod.rs#L494)
+  derive trait impl and defining expansion facts from compiler resolver tables.
+  `associated_items(...).in_definition_order()` supplies each impl's actual
+  method/associated-item membership independently of AST declarations.
+- [`ExpnData`](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_span/src/hygiene.rs#L969)
+  retains parent expansion, resolved `macro_def_id`, definition/call spans and
+  macro kind. Builtin authority must use that resolved definition and compiler
+  builtin attribute, not a macro name. The pinned
+  [PartialEq generator](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/cmp/partial_eq.rs)
+  and [Clone generator](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/clone.rs)
+  explain marker/auxiliary output; their templates do not replace enumeration.
+
+At `after_analysis`, enumerate **all local HIR impl owners first**, from
+`tcx.hir_crate_items(()).free_items()` and compiler `DefKind::Impl`/HIR item facts.
+For each impl, independently inspect defining expansion and its full parent
+chain, actual receiver/ADT, trait, owning module/package and selected source/context.
+Give every considered impl an explicit selected/nonselected/unsupported disposition;
+retain evidence of the preselection universe and reasons. Do not seed, intersect,
+pre-filter or gate this traversal on `Capture.ast`, `expanded_owner_ledger`,
+serialized declarations, receiver names or RA member availability. Selection may
+share canonical normalization code, but its membership must come from these
+compiler facts and the same selected Cargo source/context contract. An unknown
+expansion/source owner is unsupported, not silently omitted.
+
+For selected resolved builtin derives, record every actual impl, including
+StructuralPartialEq and Copy-sensitive TrivialClone auxiliaries with zero members.
+Enumerate each impl's associated items independently; use compiler parent links,
+DefKind, type/signature/generic/visibility queries and body existence to record
+methods, associated items and explicit bodyless disposition. Cross-check selected
+trait impl membership with `all_local_trait_impls(())`; account for any HIR/type
+inventory discrepancy explicitly and fail admission. No marker/auxiliary trait
+name allowlist may silently discard an unfamiliar generated owner.
+
+The expected authority is this successful, complete **compiler enumeration before
+AST/declaration export projection**, bound to the producer executable, compiler,
+input/context and expansion provenance. Persist it as a separately identified
+inventory artifact/digest in the receipt and reconcile in the producer before
+publishing accepted output. The consumer must require that bound authority;
+absence, stale context, changed artifact or mismatched ownership rejects. A mutable
+export's recomputed self-digest cannot establish its own expected inventory.
+Tests hold the unmodified actual-producer inventory as the expected input while
+corrupting export projections; also exercise producer reconciliation with a
+bounded omitted AST projection. A self-consistent edited receipt is not a fresh
+compiler run and cannot admit replacement expected evidence.
+
+#### One-to-one AST and RA obligations
+
+Reconcile independent HIR/ty impl plus member inventory, saved expanded AST
+owners and declaration records one-to-one, with complete cardinalities, parent
+links and explicit body/bodyless/auxiliary dispositions. Missing, extra,
+duplicate, swapped or ambiguous owners reject, even when tokens and both AST
+lists agree. Keep capture-local IDs only for joins; persistent identities retain
+package/context, ADT/module/trait/impl signature, resolved builtin macro,
+invocation expansion path and structural disambiguator. Counts and raw numeric
+IDs are evidence, not origin identity.
+
+Retain each RA builtin invocation as a distinct source/expansion-owned obligation,
+using pinned `Semantics::resolve_derive_macro`, ADT/module origin, actual target/cfg
+and structural invocation identity. Join the compiler's complete generated owner
+**multiset** to each invocation, preserving all primary, marker and auxiliary
+impls. A receiver/macro set may summarize a report but cannot prove this join.
+Common RA methods must be obligated by the resolved invocation before checking
+compiler members. Missing fmt/clone/eq or its entire common impl rejects even if a
+marker/auxiliary survives, and even if the compiler receiver/macro pair disappears.
+RA-only template artifacts are not compiler body authority; classify any supported
+common-model difference explicitly under the existing signature contract.
+
+Retain the corrected callable catalog checks, recomputed-negative digests, actual
+HIR member ledger, output redirection and receipt disclosures. Preserve literal
+normalization, resolved macro origins, hygiene/parent chains, exact/coarse mapping
+quality, typed call/operator catalog, receiver adjustments, signatures,
+static/dynamic/generic dispositions and component/context/input freshness. The
+inventory repair cannot weaken or casually replace those corrected checks.
+
+#### Exact H03a1pr acceptance
+
+Build only the existing isolated helper, with maximum two Cargo jobs:
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Bootstrap remains the exact helper crate setting and must not enter analyzed
+package invocations. Revalidate the full locked graph and acquired component/runtime/
+source/server identities. Reuse compatible owned preparation/target artifacts only
+after fresh input and ownership checks; retain historical failures separately.
+
+Run all original five `BuiltinCapabilityTests` cases individually with
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinCapabilityTests.<case>`,
+then `PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinCapabilityTests`.
+Their exact names and all existing positive/negative obligations above remain
+binding. Do not replace them with the new reserved tests below. Report each case
+1/1, the original class 5/5, and executed assertion counts.
+
+Reserve this additional class in the same existing Python test module:
+
+| Exact `BuiltinInventoryTests` case | Required actual-producer assertions |
+| --- | --- |
+| `test_hir_ty_owner_inventory_is_independent_of_ast_projection` | Fixture struct/tuple/unit/enum, nested expansion, repeated same-named ADTs and Copy-sensitive clone positives enumerate impls/members/markers/auxiliaries from compiler facts. Positive inventory matches complete AST and RA invocation ownership. Before producer reconciliation, omit the AST projection of an actual impl and reject against retained compiler enumeration. Empty/missing inventory, duplicate owner/member/invocation, swapped parent/receiver/invocation/context and unknown provenance reject. |
+| `test_coordinated_fixture_owner_removals_fail_semantic_admission` | From an actual fixture capture, delete both `declarations` and `expanded_owner_ledger` entries for Record PartialEq plus eq, Record StructuralPartialEq, and CopySensitive TrivialClone; separately remove every primary impl and its methods while retaining auxiliaries, every marker, every auxiliary, one method, and all generated owners for one invocation. Keep actual expected inventory intact; recompute export integrity digests and assert the specific inventory/semantic failure after integrity validation executes. Missing or truncated expected authority rejects independently. |
+| `test_ra_invocation_owned_common_members_fail_without_compiler_impl` | Actual pinned RA and compiler fixture captures pass with all common signatures. Remove the whole common PartialEq impl plus eq (retaining marker), remove the whole Clone/Debug impl plus member, remove a common method alone and remove every compiler owner for its invocation; the invocation-owned join rejects all. Exercise duplicate and swapped RA invocation/common-member ownership and same-spelled local macro/method isolation. |
+| `test_coordinated_live_owner_removals_fail_semantic_admission` | Fresh original Linux production rust_ir.rs capture rediscovers all current invocations/receivers/declarations/typed sites and validates complete independent owner inventory and common join. Delete Visibility PartialEq plus eq from both AST lists; delete all StructuralPartialEq markers; delete all primary impls/methods, all markers, all actual auxiliaries when present, and all output for one invocation. Recompute integrity and prove semantic inventory/common-join rejection against authentic expected authority. No fixture-only pass substitutes for live coverage. |
+
+Run each new case individually with
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinInventoryTests.<case>`,
+then `PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinInventoryTests`;
+report 1/1 individually, 4/4 for the class and executed assertions. Positives use
+real pinned producers. Negative corruption may edit their output copies, but
+must recompute the integrity digest and prove the semantic path ran; stale digest
+rejection is not a completeness test. When a live shape has no auxiliary output,
+report actual absence from compiler inventory and use CopySensitive fixture
+auxiliaries for the removal assertion. Do not invent output to satisfy a test.
+
+The last unaccepted live evidence was 39 invokes/13 receivers/91 declarations/728
+sites. Rediscover these from actual candidate source and report changes; historical
+counts are never a forced expected baseline. Publish source/configuration/tool,
+AST, independent inventory, typed calls/catalog and RA join digests plus raw logs
+outside Git keyed by final candidate SHA. Include all coordinated mutation receipts
+and semantic rejection reasons. Run documentation, file-size, scope/diff and
+clean-tree checks and the complete carried-implementation scoped Opus review.
+Only matching final candidate validation and SATISFIED review permit the repair
+PR merge and H03a1p delivery receipt. The intermediate assignment skips broad
+create-PR/full merge gates; Q01 retains final integration qualification.
+
+#### Resources, preserved dependencies and handoff
+
+No feasibility build is necessary for this scope: the exact compiler source
+exposes the independent enumeration and the existing companion already reaches
+after-analysis. These are source-supported implementation directions, not a
+capability pass. Before any subsequent build/capture, inspect free disk/RAM,
+owned target/evidence and active producers/processes; use the original 20 GiB disk/
+8 GiB RAM prospective plan, or explicitly revise it from actual reused-artifact
+sizes. Maximum two Cargo jobs and one producer/server; compiler and RA runs are
+sequential. Preserve the inactive previous owner's compatible target and logs;
+reuse requires ownership transfer/checks, not permission to mutate its source or
+index. No shared/SQL/other-session cleanup is allowed. Insufficient safe reserve
+or a genuinely missing pinned API/input is a concrete blocker and stops the item.
+
+After repaired H03a1p merges, separately assign H03a1. All five original
+SemanticInputTests individually and class, full Linux/Windows production/test
+context union, both build scripts/includes, external closure, twice-unchanged
+captures and bounded freshness mutations remain mandatory. All seven original
+MetricTests and H03b-H03f criteria are unchanged. Invocation-store reuse provenance
+and new desugaring shapes remain explicitly owned by H03a1; no stale invocation
+may be admitted as fresh capability evidence. Historical missing
+SIFR_PERFORMANCE_REFERENCE CI failure remains external unqualified evidence.
+
+**Next action: separately assign H03a1pr after this documentation adjudication
+merges.** This owner stops after documentation validation, publication, merge
+and receipt. It performs no repair, full adapter, metrics or external
+implementation review. There is no source-feasibility blocker identified; actual
+repair/capability acceptance remains open.
