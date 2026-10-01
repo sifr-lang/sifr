@@ -1025,10 +1025,12 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | --- | --- | --- |
 | H03a0 | Merged H02h5 and readiness #4187/#4188; **closed**, scope #4189 and receipt below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
 | H03a1s | H03a0 and #4191 blocker; **closed**, scope #4192 and receipt below. | Docs only: pinned compiler builtin capability prerequisite. |
-| H03a1p | H03a1s closed; **unaccepted**, #4194 draft and #4195 blocker receipt. | Original builtin capability; repeated completeness defect requires H03a1pr. |
+| H03a1p | H03a1s closed; **closed within its proven surface**, repaired #4198 and receipt #4199. | Original Debug/Clone/PartialEq/Copy capability; #4194 remains an unaccepted historical draft. Additional kinds/generics require H03a1pe. |
 | H03a1pi | H03a1p repeated finding; **closed**, scope #4196 and receipt below. | Docs only: independent inventory adjudication; no capability acceptance. |
-| H03a1pr | Merged H03a1pi; waiting, separately assigned. | Bounded inventory repair plus complete carried H03a1p requalification/review. |
-| H03a1 | H03a0 and repaired H03a1p merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
+| H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
+| H03a1pes | H03a1pr and combined #4200 gap; scope defined below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
+| H03a1pe | Merged H03a1pes; waiting, separately assigned. | One verification-only extension for Eq/Ord/PartialOrd/Default/Hash, lifetime correspondence and method generic constraints; four Linux owned contexts and bounded fixtures. |
+| H03a1 | H03a0, repaired H03a1p and H03a1pe merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
@@ -1036,7 +1038,8 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03e | H03d and V01 reference admission; waiting. | Frontend/performance evidence: reproducible retained-allocation and governed warm resource measurements for current graph retention, with a documented retain/change decision. No production graph change. |
 | H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
 
-Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1, H03a,
+Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
+H03a1pe, H03a1, H03a,
 H03b, H03c, H03d, H03e, then H03f**, one independently owned
 session and merged item at a time. Evidence items are substantive acceptance,
 not permission to perform a later cleanup. At the H03b/H03c/H03e handoff, any
@@ -8160,3 +8163,290 @@ claimed. Historical #4191/#4194 failures and #4198's accepted bounded evidence
 retain their status. **Next action: separately adjudicate the combined builtin
 kind/generic admission extension, qualify it, then assign H03a1 resumption.**
 This owner stops after publishing the documentation record.
+
+
+### H03a1pes combined builtin kind/generic scope adjudication (2026-10-01)
+
+**State: scope defined; H03a1pe extended capability and H03a1 acceptance remain open.**
+This documentation-only adjudication reads fresh main
+`d697dcc932fde39564a3167c1d3dd2c7e7a63305`, containing [PR #4200](https://github.com/sifr-lang/sifr/pull/4200).
+It closes the combined scope decision only. H03a1pr/#4198 and its #4199 receipt
+remain accepted for their qualified narrow surface; #4191/#4194 failures, both
+NOT SATISFIED reviews and all diagnostic/setup failures retain their status.
+No previously unsupported kind, lifetime or constraint becomes admitted here.
+
+#### Combined decision, dependencies and tracked boundary
+
+Define **one next implementation item, H03a1pe**, dependent on merged H03a1pes
+and accepted H03a1pr/H03a1p. It extends the existing verification companion,
+pinned RA common join, capability schema and actual-producer fixtures for the
+five additional resolved builtin kinds plus the associated receiver/signature/
+constraint gap. Do not split this into derive-at-a-time adjudications. H03a1
+resumption depends on merged H03a1pe and retains its complete original contract.
+Only full merged H03a1 acceptance unlocks H03a's metrics.
+
+One separately assigned session owns the implementation worktree, branch, index,
+helper target and temporary/evidence paths. Allowed tracked changes are:
+
+- `verification/tools/maintainability_builtin_input/`: isolated manifest/lock,
+  source, versioned schema and bounded fixture packages. Keep the current graph
+  and pins; responsible source splits within this directory may satisfy the
+  900-line limit. No new producer/dependency or lock change is indicated.
+- `scripts/maintainability_builtin_input.py` and
+  `scripts/maintainability_builtin_input_tests.py`: exact selected-context
+  capture/receipt, authenticated admission, canonical correspondence and tests.
+- This canonical phase Markdown for the bounded delivery/stop receipt.
+
+Compiler crates, root Cargo manifest/lock, compiler/RA sources, other targets,
+`maintainability_semantic_input` implementation, metrics/baselines, public APIs,
+broad profiles and unrelated documentation remain read-only. No producer upgrade,
+lexical/name-based or generated-template fallback, shadow crate, lifetime erasure,
+unproven admission or compiler-source mutation is authorized. Schema evolution
+must reject obsolete/incomplete captures; no compatibility path is requested.
+
+#### Exact observed current shapes
+
+The four #4200 Linux inventories and their body/site counts remain diagnostic
+observations, not accepted exports or fixed baselines. They establish these
+resolved macro identities in addition to the accepted Debug/Clone/PartialEq/Copy:
+
+| Resolved additional macro | Required current output/disposition |
+| --- | --- |
+| `core::cmp::Eq` | Actual primary impl and `assert_fields_are_eq` method, including its body and field-type assertion dependencies. RA's builtin Eq method set is empty; the compiler-only method must have explicit owned correspondence/disposition, never a bodyless-marker classification or silent omission. |
+| `core::cmp::Ord` | Actual `cmp` bodies, overloaded/direct comparison edges and resolved `core::cmp::Ordering` signature; record/tuple/enum and fieldless shapes. |
+| `core::cmp::PartialOrd` | Actual `partial_cmp` bodies/edges and resolved `core::option::Option<core::cmp::Ordering>` signature, including the receiver/Rhs identity. |
+| `core::default::Default` | Actual field default calls for records/tuples, unit construction and enum default-unit-variant selection with the real `#[default]` attribute. Distinguish actual generic bounds of record and enum output. |
+| `core::hash::macros::Hash` | Actual `hash<__H: core::hash::Hasher>` method, mutable state parameter, unit result, field/discriminant calls and static/generic dispatch. Preserve method-own `__H` and Hasher/Sized obligations separately from impl/receiver generics. |
+
+Retain #4200's exact examples at `lib_modules_and_codegen.rs:21,97`,
+`context.rs:20`, `builtin_errors.rs:4`,
+`generated_rust_canonicalizer/method_demand.rs:7`, `runtime_need_state.rs:8`
+and lowering `scope.rs:11,18`. Fresh captures must enumerate all actual field,
+variant, member and auxiliary output; these examples do not bound the inventory.
+
+A read-only audit of the four raw captures confirms **44 codegen and 14 lowering
+unsupported canonical owners per production/test context**. They cover eleven
+codegen receiver identities: `checked_place_mutation::ProjectionFailure`,
+`generated_rust_canonicalizer::api_cleanup::ApiContext`,
+`lower_stmt::candidate_and_validation::{SimpleStmtLoweringCtx,SimpleStmtBindings}`,
+`lower_stmt::loop_lowering::SimpleForStmtParts`, `place_emitter::MethodCallPlaces`,
+`python_arrow_codegen::ArgumentPreparation`, `python_dlpack_codegen::ArgumentPreparation`,
+`python_zero_copy_arguments::ArgumentPreparation`,
+`rust_interop_bridge_callback_contract::CallbackSignature` and
+`stdlib_interop_demand::SelectedDeclarations`. The four lowering identities are
+`lower::expressions::method_type_objects::ClassMethodSurface`,
+`lower::method_receiver_places::ReceiverOverlap`,
+`lower::nested_function_inference::state_collection::LocalFunctionState` and
+`lower::rust_interop_structural::StructuralFunctionContract`.
+
+Each current receiver declares one lifetime (`'context` for ApiContext, `'a` for
+the others). Their existing recorded impl-predicate lists are empty; this says
+nothing about predicates the current serializer omits or method-own constraints.
+Clone/Copy, TrivialClone auxiliary impls and a Default shape occur among these
+owners. References to the receiver in Clone/ordering/hash signatures also carry
+compiler-bound method lifetimes. Current Hash records query impl generics only,
+so their empty generic lists omit the actual generated Hasher parameter. Do not
+accept those empty lists. No const generic impl parameter was observed; const
+admission is outside this item and must fail explicitly if encountered.
+
+#### Pinned public APIs and lossless authority boundary
+
+Retain Rust 1.98.1 commit `48a229ceaefd4985c50990b14116b6d856af0985`, Cargo
+commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`, RA commit
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`, matching official rustc-dev/runtime/
+rust-src and the authenticated API 6 server. Revalidate their full source, locked
+graph, executable/runtime and input identities before reuse.
+
+The compiler's public pinned [generic-argument API](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/ty/generic_args.rs)
+retains tagged lifetime/type/const arguments. Its [generics/predicates](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/ty/generics.rs)
+retain parameter kind/index, parent/own ownership and predicates. The pinned
+[region kinds](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_type_ir/src/region_kind.rs)
+and [clause kinds](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_type_ir/src/predicate_kind.rs)
+distinguish early/bound/late/static regions, region-outlives, type-outlives and
+trait predicates. Preserve reference regions and function binder variables/depth;
+`skip_binder()` without carrying its binder is insufficient. Query each actual
+method's own generics/predicates as well as inherited impl facts. Compiler local
+IDs are capture aids; canonical identities bind owner, parameter kind/position
+and binder structure. A display string or parameter spelling is not authority.
+
+The pinned [RA public HIR APIs](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/lib.rs)
+have concrete limits: `Type::type_arguments()` excludes lifetimes;
+`Type::as_reference()` returns no region; `Type::generic_parameters()` obtains
+only the first ADT lifetime; builtin `GenericDef::params()` returns empty;
+`Function::assoc_fn_params()`/`ret_type()` instantiate bound regions with erased
+regions. None supplies independent generated lifetime inference.
+
+Public `GenericDef::Adt(...).params()/lifetime_params()` and
+`GenericDef::Function(resolved_trait_method).params()` expose real declaration
+parameters. [Semantics](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs)
+provides `source`, `to_def`, `resolve_lifetime_param`, `resolve_type`,
+`resolve_trait`/`resolve_path` and resolved derive invocations.
+[HasSource](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/has_source.rs)
+provides ADT/lifetime/trait-method source; a builtin Function source is the trait
+method, not generated impl syntax. The official syntax AST exposes lifetime
+arguments, reference lifetime positions, type bounds, where predicates and
+binder syntax. RA-resolved ADT/trait identities and their owned declaration
+syntax can therefore corroborate source parameter/constraint/signature facts.
+This is source-correspondence capability, not generated lifetime inference.
+
+Preserve H03a1's canonical identity, signature and bound agreement requirement.
+Establish a lossless, explicitly labelled bridge with all of these checks:
+
+1. Bind each RA declaration/lifetime/trait-method origin to the same original
+   compiler declaration and exact package/module/source/context. Resolve every
+   named lifetime to its owning declaration and every bound path to its actual
+   trait/type identity. Retain explicit `'static`, elided and placeholder syntax
+   as distinct source dispositions; no guessed lifetime resolution is allowed.
+2. Compare RA-resolved declaration facts with compiler semantic facts for those
+   original ADT/trait declarations. Preserve ordered lifetime/type arguments,
+   explicit outlives/trait constraints and method parameter ownership. Syntax
+   counts or matching text alone cannot establish this semantic correspondence.
+3. Bind original compiler declarations to each actual generated impl/method by
+   expansion ownership and compiler type/generic/predicate queries. Preserve
+   all inferred/generated regions, inherited versus own constraints and typed
+   call substitutions. Record the compiler-proved trait-method/Self/receiver
+   substitution and binder relation, including alpha-renamed Hash `__H` versus
+   the actual trait method parameter. Do not reconstruct generated facts from
+   the RA trait declaration or a derive template.
+4. Require the complete canonical bridge and full common signature/bound agreement,
+   including every compiler-only fact's explicit origin/disposition. Report which
+   facts have RA semantic corroboration, RA declaration/source correspondence,
+   or compiler-generated authority. Keep all generated facts lossless even where
+   RA lacks an inference API. A conflict, unknown region, ambiguous binding or
+   unproved generated-to-declaration relation fails the affected package.
+
+This direction is supported by pinned source inspection; no actual producer
+probe or capability pass is claimed. Source syntax alone cannot admit generated
+semantic facts. **If lossless correspondence cannot be established for any
+required current shape through these public pinned APIs, stop needs-new-scope**
+with exact owner/configuration/fact and evidence. Do not weaken the join or claim
+RA generated inference to close H03a1pe.
+
+#### Required ownership, integrity and publication invariants
+
+Keep the authentic caller-held successful compiler inventory separate from
+mutable projections and receipts. Enumerate the full independent HIR impl
+universe before AST/receiver/RA selection, reconcile its complete associated
+members and semantic generic/constraint facts, cross-check local trait impls,
+and bind one-to-one actual AST declarations/bodies/typed sites. Invocation-owned
+primary/marker/auxiliary multisets, resolved callable catalog, literal-preserving
+body/site mapping, hygiene and parent expansion chains remain mandatory.
+
+Bind RA source ranges and attribute plus derive ordinals to the compiler's actual
+invocation callsites and generated owner, including repeated/same-named derives
+and nested expansions. Preserve exact versus coarse mapping quality. Reject
+publication whenever the omitted-AST hook is set. Route every accepted consumer
+path through authenticated `verify_capture` with intact caller-held inventory
+before low-level mapping/join validators. No recomputed receipt/export digest,
+replacement inventory or source-spelling match can authorize omissions.
+
+Extend the independently authenticated semantic authority enough to detect
+coordinated deletion/substitution of lifetime arguments, binders, outlives clauses,
+method parameters/Hasher bounds and callable signatures across export and common
+projections. Negatives recompute integrity first and must reach a specific
+semantic rejection against intact original authority. Keep omission rejection
+independent of RA member availability, including Eq's compiler-only method and
+bodyless Copy/StructuralPartialEq/TrivialClone output when actually present.
+
+#### Exact H03a1pe acceptance and context selection
+
+Build only the isolated helper with this locked command, with an exclusively
+owned `CARGO_TARGET_DIR`, `CARGO_BUILD_JOBS=2` and explicit build-only bootstrap:
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Never pass bootstrap into analyzed packages. Record real locked selected Cargo
+preparation/artifact success separately from standalone after-analysis captures.
+
+Reserve the following four **new, not implemented or passed here** cases in
+`maintainability_builtin_input_tests.BuiltinExtensionTests`:
+
+| Exact case | Actual-producer positive and negative assertions |
+| --- | --- |
+| `test_default_eq_hash_ordering_bodies_and_members` | Real record/tuple/unit/enum fixtures for all five kinds, default unit-variant attribute, Eq assertion member/type obligations, Ordering/Option signatures and Hash field/discriminant generic calls; complete owned primary/marker/auxiliary multisets and catalog. Reject missing method/body/field-type dependency, invented target, same-spelled inherent/trait confusion and falsely bodyless Eq. |
+| `test_lifetime_receiver_and_method_generics_preserve_constraints` | Real single-lifetime receiver and Clone/Copy/Default plus minimally bounded two-lifetime/type fixtures with explicit region-outlives/type-outlives constraints; static versus parameter references and compiler-bound method references. Prove ordered binding/parent-own separation and the lossless bridge, including method Hasher/Sized and verified alpha-renaming. Reject lifetime erasure, swapped binders/arguments, static/parameter substitution, missing/changed outlives and wrong method-owner/trait/Hasher bound after recomputing integrity. |
+| `test_extended_inventory_owner_and_constraint_removals_fail_closed` | Coordinately remove whole extended-kind invocation/impl, Eq assertion member, lifetime-bearing Clone/Copy/auxiliary owner, signature binder/constraint or Hash method generic/bound from export/common projections; recompute export/receipt integrity and retain authentic caller authority. Assert semantic failure, including replaced authority, omitted-AST publication, callsite/ordinal swap and direct unauthenticated join/publication paths. Include real fixture and live removals. |
+| `test_live_owned_derive_inventory_has_complete_dispositions` | Fresh complete original codegen and lowering Linux production/test captures: all nine kinds, all lifetime shapes, actual independent HIR universes, complete common/auxiliary joins and constraints with zero required unsupported facts. Rediscover #4200 counts instead of forcing them. Remove a required invocation/member/generic/call or selected context and reject. Repeat unchanged inputs across checkout paths and reject bounded source/config/extern/tool/context drift. |
+
+For each of those four cases, run exactly
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinExtensionTests.<case>`;
+then run exactly
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinExtensionTests`.
+Report 1/1 per individual case, 4/4 class and executed assertions.
+
+Retain all original cases and their assertions; run each individually with
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.<class>.<case>`,
+then each full class with the same command omitting `.<case>`:
+
+| Class | Exact retained cases |
+| --- | --- |
+| `BuiltinCapabilityTests` (5/5) | `test_builtin_bodies_calls_and_auxiliary_origins`; `test_hygiene_and_same_spelled_methods_preserve_trait_origin`; `test_expansion_ast_hir_mapping_is_owned_and_complete`; `test_component_context_and_input_drift_fail_closed`; `test_live_rust_ir_builtin_surface_has_complete_dispositions`. |
+| `BuiltinInventoryTests` (4/4) | `test_hir_ty_owner_inventory_is_independent_of_ast_projection`; `test_coordinated_fixture_owner_removals_fail_semantic_admission`; `test_ra_invocation_owned_common_members_fail_without_compiler_impl`; `test_coordinated_live_owner_removals_fail_semantic_admission`. |
+
+Exact new positive contexts are the bounded fixture package in Linux production
+and test modes, and **four whole-owned-package contexts**:
+`sifr_codegen` and `sifr_lowering`, each production and test, on
+`x86_64-unknown-linux-gnu`. Both producers use the same actual cfg/feature/test
+and selected original Cargo inputs; extend the existing hardcoded production/
+file-suffix selection only enough to express these contexts. Disable the
+`rust_analyzer` cfg as before. Use locked `cargo check --lib` production and
+`cargo check --tests` preparation, selecting exactly the original library or
+`--test` library invocation rather than conflating dependency/other targets.
+Bind test-only includes to exact gitlink/input bytes. No copied diagnostic export
+is a positive acceptance capture. Wrong/missing target/test/feature/cfg contexts
+must reject explicitly. Windows full-package qualification stays with H03a1;
+these Linux captures cannot admit Windows or imply structural-union completion.
+
+Record normalized source/config/tool/input/AST/independent-inventory/callable/
+constraint/common-join/multiset digests, actual counts, authority boundaries,
+raw successful/failed logs and semantic mutation receipts outside Git keyed by
+final candidate SHA. Reuse unchanged validated captures/prepared metadata only
+when candidate, configuration and all validation inputs still match; assertions
+still execute individually and by class. Run standalone helper formatting,
+documentation, 900-line file-size, scope/diff and clean-tree checks and scoped
+Opus review on the complete extension at the exact final candidate. Skip broad
+create-PR/full merge gates under the explicit intermediate policy; Q01 retains
+the final full merge profile. Merge and record the bounded receipt, then stop.
+
+#### Resource plan, stop rules and unchanged downstream acceptance
+
+This adjudication runs no Cargo operation, capability probe or cleanup. Read-only
+preflight found approximately 26 GiB free disk and 9.7 GiB available RAM; the
+previous target is inactive/preserved, not owned or mutated by this documentation
+session. The next implementation owner must recheck source/index/process/handles,
+component and target compatibility and obtain exclusive target ownership before
+reuse. Plan **12 GiB free disk** (up to 8 GiB helper/preparation/evidence growth
+and 4 GiB retained reserve) and **8 GiB available RAM**, maximum two Cargo jobs
+and one compiler producer/server at a time; compiler and RA captures run
+sequentially. Revise the estimate explicitly from actual sizes before a larger
+operation. Inspect timing/cache reports before rebuilding slow work. No arbitrary
+cleanup or mutation of shared archive, SQL, warm H02 or another session's artifacts
+is authorized. Insufficient safe reserve is a recorded resource blocker.
+
+A missing public API/input, lossless correspondence failure, new unsupported
+kind/constraint/region shape beyond this bounded contract or second mechanism-level
+review defect stops H03a1pe with concrete needs-new-scope evidence. Preserve partial
+and failed captures outside accepted exports. Do not absorb external failures.
+
+After H03a1pe merges, **separately assign H03a1 resumption**. Its original five
+SemanticInputTests individually/full class, full Linux/Windows production/test
+union, external reachable closure, both build scripts, code-bearing/read-input
+includes, original provenance/callsite/cfg/invocation-store freshness, twice
+unchanged live captures and bounded freshness mutations remain mandatory.
+H03a's seven original MetricTests and H03b-H03f/Q01 criteria are unchanged.
+This scope cannot close the complete adapter, metrics, final gate or whole phase.
+
+Source-audit evidence is at
+`/data/sifr-h03a1-builtin-extension-scope-evidence-20261001/` on
+`yaser5@192.168.1.134`. `source-audit.json` SHA-256 is
+`b2654144a90ba1e021bceb6abace972a210c9a7bc3ba44e5cb88b1ea708601e7`;
+`current-shapes.json` is
+`23bd886d913d217c773ed875294045a7c31a189453e733e8614faa96e31e6ee0`.
+The audit verifies cached RA files byte-for-byte against the pinned Git blobs,
+records exact official pinned compiler-source URLs/digests and binds the preserved
+#4200 summary digest `cefda4c3f3dd73f05070923ec7bee2cad268056914dda572b16c3ce56722dcfd`.
+This supports the bounded direction without claiming proven lossless admission.
+
+**Next action: separately assign H03a1pe only after this scope and its receipt
+merge.** This owner performs documentation checks and scoped self-review,
+publishes/merges the scope and separate record-only receipt, then stops.
+No implementation capability, actual-producer test, Windows, broad gate,
+performance, release or external implementation review pass is claimed here.
