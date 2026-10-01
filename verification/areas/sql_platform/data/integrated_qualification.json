@@ -1,6 +1,10 @@
 {
   "schema_version": 1,
-  "providers": ["mysql", "postgresql", "sqlite"],
+  "providers": [
+    "mysql",
+    "postgresql",
+    "sqlite"
+  ],
   "component_protocol_participants": [
     "sifr_compiler_component",
     "sifr_sql_mysql",
@@ -37,7 +41,14 @@
   "build_evidence": {
     "runner": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
     "suite": "build-qualification",
-    "workflow": ".github/workflows/local-first-validation.yml"
+    "workflow": ".github/workflows/local-first-validation.yml",
+    "native_executables": {
+      "sifr-sql-mysql": "sifr_sql_mysql_tools",
+      "sifr-sql-postgresql": "sifr_sql_postgresql_tools",
+      "sifr-sql-sqlite": "sifr_sql_sqlite_tools"
+    },
+    "native_claim": "linked-native-target-directories",
+    "cross_target_claim": "cross-target-check-only"
   },
   "banned_provider_dependencies": [
     "bb8",

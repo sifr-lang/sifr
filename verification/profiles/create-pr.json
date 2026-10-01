@@ -138,7 +138,8 @@
   },
   "resource_policy": {
     "classes": [
-      "default-local"
+      "default-local",
+      "long-running"
     ],
     "max_parallel": 2,
     "thermal_policy": "bounded-local-defaults",
@@ -870,7 +871,8 @@
         "mutation"
       ],
       "resource_classes": [
-        "default-local"
+        "default-local",
+        "long-running"
       ]
     },
     {

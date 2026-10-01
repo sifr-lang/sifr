@@ -864,7 +864,8 @@
         "mutation"
       ],
       "resource_classes": [
-        "default-local"
+        "default-local",
+        "long-running"
       ]
     }
   ],
