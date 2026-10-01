@@ -10,6 +10,134 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1pe observation-extension stop: generated Debug trait objects (2026-10-01)
+
+**State: H03a1pe blocked, needs-new-scope and unaccepted.** The combined
+implementation under the approved H03a1peo contract reached a new required
+non-region shape and stopped at its explicit failure boundary. The preserved
+[draft implementation #4213](https://github.com/sifr-lang/sifr/pull/4213) must
+not merge. No scoped Opus review, accepted whole-package export, H03a1 adapter
+pass, metric admission or phase closure is claimed. A separately assigned
+advisor/scope worker must adjudicate the bounded trait-object gap before another
+implementation assignment. The approved declaration/body observation contract
+below remains binding; a capability label cannot waive the missing facts.
+
+### Candidate, actual failure and retained evidence
+
+- Base: `ba3a259390d74c8a839f1c0b7037ef2398fab890` (#4212).
+- Preserved implementation candidate: `8bdbe4430c767477d454ab6af8fea38a395145dc`,
+  branch `codex/h03a1pe-observation-extension-20261001`, draft #4213.
+- Owned worktree: `/data/sifr-h03a1pe-observation-extension-20261001`.
+  Exclusively adopted compatible helper target:
+  `/data/sifr-h03a1p-builtin-capability-target-20261001`; preserve both.
+- Evidence root:
+  `/data/sifr-h03a1pe-observation-extension-evidence-20261001/candidates/8bdbe4430c767477d454ab6af8fea38a395145dc/`.
+  `commands.json`, exact-case logs and `unsupported-trait-object-stop.json`
+  retain the failed selection and semantic paths. Earlier two diagnostic passes
+  remain separate from this candidate qualification.
+
+The isolated locked helper build passed with two jobs and helper-only bootstrap.
+The fail-fast exact individual selections produced:
+
+| Exact extension case | Actual result |
+| --- | --- |
+| `test_default_eq_hash_ordering_bodies_and_members` | 1/1 pass, 58 assertions. |
+| `test_lifetime_receiver_and_method_generics_preserve_constraints` | 1/1 pass, 34 assertions. |
+| `test_extended_inventory_owner_and_constraint_removals_fail_closed` | 1/1 pass, 39 assertions. |
+| `test_live_owned_derive_inventory_has_complete_dispositions` | 0/1; error during fresh whole `sifr_codegen` Linux production semantic admission, before accepted export or RA whole-package join. |
+
+The remaining nine exact individual selections and all three complete classes
+were not run after this failure. They are required by any later resumed combined
+qualification. Formatting, Python syntax and the 900-line guard passed before
+qualification; no broad create-PR/full merge profile ran under the intermediate
+policy. Final record-only documentation/scope checks accompany the stop receipt.
+
+Actual original locked `cargo check --lib` preparation and after-analysis
+compiler capture reached 1,200 selected owners, 1,109 independent impl-universe
+entries, 2,047 typed sites and 886 body type dependencies. Fifteen existing
+`Debug::fmt` owners contain 68 unsupported trait-object type nodes. These counts
+are failed diagnostic observations, not admitted exports or baselines. The
+first owner is
+`<hir_analysis::queries::queries_impl::TypeVarOpRequirements as std::fmt::Debug>::fmt`,
+at `published_body/types/1/type/reference/slice/reference`. The raw compiler
+diagnostic is
+`dyn [Binder { value: Trait(std::fmt::Debug), bound_vars: [] }] + '{erased}`.
+The serializer reports `unsupported_type`; the supported-type check correctly
+rejects it. The diagnostic string supplies no supported canonical trait-object
+record or recovered region relation.
+
+Raw files are retained under the candidate evidence root at
+`prepared/a8348c3c74fed18101a318e3d7c23c49c2256f14bc8bcbcfeb8e2de62d439411/`:
+`raw-inventory.json` SHA-256
+`7ad86612f038ebd55919077473c36f75267bd79049f9c5aca0d610df6acf02c0`,
+and `raw.json` SHA-256
+`074738e96d19fc46e24935be6e52081a86d6778d331f54f030755fa940721e17`.
+That directory has no accepted `capture.json`. Preserve the original invocation
+store, preparation/analysis logs and all unsuccessful artifacts.
+
+### Source-backed gap and smallest proposed future scope
+
+The pinned [Debug derive source](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/debug.rs#L138)
+builds `values: &[&dyn Debug]` for its aggregate-field formatting path. The pinned
+[type definition](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_type_ir/src/ty_kind.rs#L244)
+represents this as `Dynamic(BoundExistentialPredicates, Region)`.
+[Existential predicates](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_type_ir/src/predicate.rs#L332)
+distinguish trait, projection and auto-trait facts. The candidate's structured
+type serializer has no `Dynamic` case. Consequently it does not retain the
+resolved principal trait identity, actual ordered arguments and existential
+predicate binder facts in a supported record, or structurally distinguish the
+object's published region from those non-region facts. This is a different gap
+from the four approved Default body-erasure observations.
+
+**Proposed scope only; no implementation authorization is added by this record:**
+adjudicate support for the actual generated aggregate Debug trait-object shape
+through the existing pinned compiler producer and schema. Preserve actual trait
+identity/ownership, arguments, binder facts, explicit projection/auto-trait
+presence or absence, and exact published `RegionKind`; reject other unsupported
+shapes. Retain independent original compiler authority and complete AST/HIR
+body/call/type-dependency correspondence. Keep producer pins, locked graphs,
+RA APIs, const-impl exclusions and consumer capability restrictions unchanged.
+RA declaration/source correspondence cannot stand in for missing compiler body
+semantics or infer erased object regions.
+
+A bounded future test proposal is to extend the same exact
+`BuiltinExtensionTests.test_default_eq_hash_ordering_bodies_and_members` with real
+record/tuple/enum Debug fixtures exercising the aggregate-field path, alongside
+the retained fieldless/fixed-arity paths. Require actual principal-trait,
+argument/binder, published-region, call/catalog and type-dependency observations.
+Extend `test_extended_inventory_owner_and_constraint_removals_fail_closed` with
+coordinated trait-object/type-dependency omission, changed principal trait,
+arguments/binders, forged named/static object regions and replacement-authority
+negatives, recomputing projection integrity against intact original authority.
+Retain lifetime-sensitive rejection in
+`test_lifetime_receiver_and_method_generics_preserve_constraints`. Finally rerun
+all thirteen exact individuals and all three classes, including fresh complete
+codegen/lowering Linux production/test contexts in
+`test_live_owned_derive_inventory_has_complete_dispositions`, before scoped
+review. This proposal admits no producer change, capability waiver, Windows/full
+adapter result, or acceptance of the preserved failed candidate.
+
+### Documentation stop receipt and automatic CI disclosure
+
+This docs-only stop receipt is [#4214](https://github.com/sifr-lang/sifr/pull/4214).
+Only this canonical Markdown and the current H03a1pe table row change. Relevant
+documentation, diff/scope, clean-tree and historical-preservation checks are
+retained outside Git under the evidence root's `stop-receipt/` directory keyed
+by the final record candidate. No external review or broad gate is required for
+this record-only update. The implementation candidate and failed evidence stay
+unaccepted and preserved; the worktree returns to the implementation branch for
+the separate scope handoff.
+
+The implementation PR's automatic
+[local-first-create-pr job](https://github.com/sifr-lang/sifr/actions/runs/36852761585/job/110338032282)
+failed in `performance_reference_admission` after 93 ms, before validation test
+setup: `SIFR_PERFORMANCE_REFERENCE` was unset. Its actual log is retained as
+`implementation-ci-job.log` under the implementation candidate evidence root.
+This infrastructure result supplies no test pass and does not alter the
+intermediate policy or the independently observed local semantic stop. Other
+automatic jobs were still running when this disclosure was captured; no overall
+CI pass is claimed.
+
 ## H03 approved prospective observation and resource sequencing amendment (2026-10-01)
 
 **H03a1peo: documentation amendment closed; H03a1pe implementation remains
@@ -1764,7 +1892,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1peo | User-approved Astra advisory and #4203-#4210; **closed**, #4211 and delivery receipt above. | Prospective observation contract and H03e preparation/qualification sequence; no capability or capture pass. |
 | H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
 | H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
-| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **ready for separate assignment** after amendment delivery. | One combined extension under the amended declaration/body observation and consumer capability contract; implementation remains unaccepted. |
+| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **blocked, needs-new-scope**, draft #4213 stopped on required generated Debug trait-object facts. | One combined extension under the amended declaration/body observation and consumer capability contract; implementation remains unaccepted. See the current stop record above; separate scope adjudication required. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
