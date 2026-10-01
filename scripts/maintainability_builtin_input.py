@@ -507,7 +507,10 @@ def validate_invocation_multisets(capture, common):
     return [{"invocation":obligations[key]["identity"],"compiler_output_multiset":sorted(owners)} for key,owners in sorted(outputs.items())]
 
 
-def verify_capture(capture, receipt, input_identity):
+def verify_capture(capture, receipt, input_identity, expected_inventory):
+    """Admission requires the authority held by the caller from the real compiler run."""
+    if expected_inventory is None:
+        raise Unsupported("missing independent inventory expected authority")
     if receipt["inputs"] != input_identity:
         raise Unsupported("source/extern/configuration/context drift")
     current_environment = {key:digest(value.encode()) for key,value in os.environ.items() if not key.startswith("SIFR_BUILTIN_")}
@@ -539,7 +542,10 @@ def verify_capture(capture, receipt, input_identity):
             raise Unsupported("helper executable/runtime drift")
     if digest(encoded(capture)) != receipt["capture_digest"]:
         raise Unsupported("producer evidence changed or truncated")
-    return validate_mapping(capture, read_inventory(receipt, input_identity))
+    inventory = read_inventory(receipt, input_identity)
+    if inventory != expected_inventory:
+        raise Unsupported("independent inventory replacement expected authority")
+    return validate_mapping(capture, expected_inventory)
 
 
 def compiler_wrapper():

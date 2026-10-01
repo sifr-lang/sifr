@@ -23,6 +23,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             builtin.TOOL / "fixtures", "builtin_fixture", "builtin_fixture",
             cls.evidence / "fixture", cls.helper, cls.target, cls.identity,
         )
+        cls.inventory = builtin.read_inventory(cls.fixture_receipt, cls.fixture_receipt["inputs"])
         environment = os.environ.copy()
         environment.pop("RUSTC_BOOTSTRAP", None)
         environment.update(cls.fixture_receipt["inputs"]["resolver_preparation_environment"])
@@ -32,8 +33,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         )
         cls.common = json.loads(common.stdout)
         (cls.evidence / "fixture-common.json").write_bytes(builtin.encoded(cls.common))
-        builtin.verify_capture(cls.fixture, cls.fixture_receipt, cls.fixture_receipt["inputs"])
-        cls.inventory = builtin.read_inventory(cls.fixture_receipt, cls.fixture_receipt["inputs"])
+        builtin.verify_capture(cls.fixture, cls.fixture_receipt, cls.fixture_receipt["inputs"], cls.inventory)
         cls.join = builtin.validate_join(cls.fixture, cls.common, cls.inventory)
         (cls.evidence / "fixture-join.json").write_bytes(builtin.encoded(cls.join))
         (cls.evidence / "fixture-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(cls.fixture,cls.common)))
@@ -48,12 +48,12 @@ class BuiltinCapabilityTests(unittest.TestCase):
         self.assertions += 1
         self.assertTrue(condition, reason)
 
-    def reject(self, value, label, *, receipt=None):
+    def reject(self, value, label, *, receipt=None, authority=None):
         self.assertions += 1
         evidence_receipt = copy.deepcopy(receipt or self.fixture_receipt)
         evidence_receipt["capture_digest"] = builtin.digest(builtin.encoded(value))
         with self.assertRaises(builtin.Unsupported):
-            builtin.verify_capture(value, evidence_receipt, evidence_receipt["inputs"])
+            builtin.verify_capture(value, evidence_receipt, (receipt or self.fixture_receipt)["inputs"], authority or self.inventory)
 
         (self.evidence / (label + ".json")).write_bytes(builtin.encoded(value))
 
@@ -142,7 +142,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             self.reject(corrupted, "negative-" + label)
 
     def test_component_context_and_input_drift_fail_closed(self):
-        self.require(builtin.verify_capture(self.fixture, self.fixture_receipt, self.fixture_receipt["inputs"])["invocations"] > 0, "exact known context admitted")
+        self.require(builtin.verify_capture(self.fixture, self.fixture_receipt, self.fixture_receipt["inputs"], self.inventory)["invocations"] > 0, "exact known context admitted")
         component = json.loads(self.receipt_path.read_text())
         for field, changed in (("rustc", "wrong commit"), ("inventory", {})):
             corrupted = copy.deepcopy(component)
@@ -157,7 +157,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             current[field] = changed
             self.assertions += 1
             with self.assertRaises(builtin.Unsupported):
-                builtin.verify_capture(self.fixture, self.fixture_receipt, current)
+                builtin.verify_capture(self.fixture, self.fixture_receipt, current, self.inventory)
         inputs = self.fixture_receipt["inputs"]
         for label, path in (
             ("source", builtin.TOOL / "fixtures/fixture_root/src/lib.rs"),
@@ -171,11 +171,11 @@ class BuiltinCapabilityTests(unittest.TestCase):
                 path.write_bytes(original + b"\n")
                 self.assertions += 1
                 with self.assertRaises(builtin.Unsupported):
-                    builtin.verify_capture(self.fixture, self.fixture_receipt, inputs)
+                    builtin.verify_capture(self.fixture, self.fixture_receipt, inputs, self.inventory)
             finally:
                 path.write_bytes(original)
                 os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
-            self.require(builtin.verify_capture(self.fixture, self.fixture_receipt, inputs)["invocations"] > 0, label + " exact restoration")
+            self.require(builtin.verify_capture(self.fixture, self.fixture_receipt, inputs, self.inventory)["invocations"] > 0, label + " exact restoration")
         environment = os.environ.copy()
         environment.pop("RUSTC_BOOTSTRAP", None)
         destination = self.evidence / "failed-typecheck.json"
@@ -195,8 +195,8 @@ class BuiltinCapabilityTests(unittest.TestCase):
         environment.pop("RUSTC_BOOTSTRAP", None)
         environment.update(receipt["inputs"]["resolver_preparation_environment"])
         common = json.loads(builtin.run([str(self.resolver), str(builtin.ROOT), "sifr_codegen", "crates/sifr_codegen/src/rust_ir.rs", str(self.evidence / "live/capture.json")], env=environment, log=self.evidence / "live-resolver.log").stdout)
-        builtin.verify_capture(live, receipt, receipt["inputs"])
         inventory = builtin.read_inventory(receipt, receipt["inputs"])
+        builtin.verify_capture(live, receipt, receipt["inputs"], inventory)
         joined = builtin.validate_join(live, common, inventory)
         self.require(len(joined) == len(common["common_members"]), "full actual common live surface joined")
         counts = builtin.validate_mapping(live, inventory)
@@ -213,13 +213,13 @@ class BuiltinCapabilityTests(unittest.TestCase):
         for owner in ("rust_ir::RustFile as std::fmt::Debug", "rust_ir::Visibility as std::cmp::PartialEq"):
             corrupted = copy.deepcopy(live)
             corrupted["declarations"] = [declaration for declaration in corrupted["declarations"] if not (owner in declaration["owner"] and declaration["owner_kind"] == "AssocFn")]
-            self.reject(corrupted, "negative-live-missing-" + owner.split("::")[1].split()[0], receipt=receipt)
+            self.reject(corrupted, "negative-live-missing-" + owner.split("::")[1].split()[0], receipt=receipt, authority=inventory)
             self.assertions += 1
             with self.assertRaises(builtin.Unsupported):
                 builtin.validate_join(corrupted, common, inventory)
         corrupted = copy.deepcopy(live)
         next(d for d in corrupted["declarations"] if d["typed_sites"])["typed_sites"].pop()
-        self.reject(corrupted, "negative-live-dropped-call", receipt=receipt)
+        self.reject(corrupted, "negative-live-dropped-call", receipt=receipt, authority=inventory)
 
 
 class BuiltinInventoryTests(unittest.TestCase):
@@ -237,13 +237,13 @@ class BuiltinInventoryTests(unittest.TestCase):
         self.require(bool(owners), "actual producer has mutation targets")
         return value
 
-    def semantic_reject(self, value, label, receipt=None):
+    def semantic_reject(self, value, label, receipt=None, authority=None):
         receipt = copy.deepcopy(receipt or self.fixture_receipt)
         receipt["capture_digest"] = builtin.digest(builtin.encoded(value))
         self.require(receipt["capture_digest"] == builtin.digest(builtin.encoded(value)), "integrity recomputed before semantic admission")
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "independent inventory") as caught:
-            builtin.verify_capture(value, receipt, receipt["inputs"])
+            builtin.verify_capture(value, receipt, receipt["inputs"], authority or self.inventory)
         (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"receipt":receipt,"semantic_rejection":str(caught.exception),"integrity_passed":True}))
 
     def common_reject(self, value, common, label, authority=None):
@@ -332,20 +332,35 @@ class BuiltinInventoryTests(unittest.TestCase):
                 path.write_bytes(changed)
                 self.assertions += 1
                 with self.assertRaisesRegex(builtin.Unsupported,"changed/truncated independent inventory"):
-                    builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"])
+                    builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"],self.inventory)
             forged = copy.deepcopy(self.fixture_receipt)
             forged["inventory_authority"]["digest"] = builtin.digest(path.read_bytes())
             forged["inputs"]["inventory_authority"] = forged["inventory_authority"]
             self.assertions += 1
             with self.assertRaisesRegex(builtin.Unsupported,"source/extern/configuration/context drift"):
-                builtin.verify_capture(self.fixture,forged,self.fixture_receipt["inputs"])
+                builtin.verify_capture(self.fixture,forged,self.fixture_receipt["inputs"],self.inventory)
+            replacement = copy.deepcopy(self.inventory)
+            removed = next(d["owner"] for d in replacement["inventory"]["owners"] if "Record as std::marker::StructuralPartialEq>" in d["owner"])
+            replacement["inventory"]["owners"] = [d for d in replacement["inventory"]["owners"] if d["owner"] != removed]
+            replacement["inventory"]["universe"] = [d for d in replacement["inventory"]["universe"] if d["owner"] != removed]
+            path.write_bytes(builtin.encoded(replacement))
+            forged = copy.deepcopy(self.fixture_receipt)
+            forged["inventory_authority"]["digest"] = builtin.digest(path.read_bytes())
+            forged["inputs"]["inventory_authority"] = forged["inventory_authority"]
+            value = self.remove_owners(self.fixture, lambda d: d["owner"] == removed)
+            value["inventory_digest"] = builtin.digest(builtin.encoded(replacement["inventory"]))
+            forged["capture_digest"] = builtin.digest(builtin.encoded(value))
+            self.assertions += 1
+            with self.assertRaisesRegex(builtin.Unsupported,"replacement expected authority") as caught:
+                builtin.verify_capture(value,forged,forged["inputs"],self.inventory)
+            (self.evidence / "self-consistent-replacement-receipt.json").write_bytes(builtin.encoded({"capture":value,"receipt":forged,"replacement":replacement,"semantic_rejection":str(caught.exception),"integrity_passed":True}))
             path.unlink()
             self.assertions += 1
             with self.assertRaisesRegex(builtin.Unsupported,"changed/truncated independent inventory"):
-                builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"])
+                builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"],self.inventory)
         finally:
             path.write_bytes(original)
-        self.require(bool(builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"])), "authentic authority restored")
+        self.require(bool(builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"],self.inventory)), "authentic authority restored")
 
     def test_ra_invocation_owned_common_members_fail_without_compiler_impl(self):
         self.require(len(self.join) == len([d for d in self.fixture["declarations"] if d["owner_kind"] == "AssocFn"]), "complete actual common signatures")
@@ -377,7 +392,7 @@ class BuiltinInventoryTests(unittest.TestCase):
         environment.update(receipt["inputs"]["resolver_preparation_environment"])
         common = json.loads(builtin.run([str(self.resolver),str(builtin.ROOT),"sifr_codegen","crates/sifr_codegen/src/rust_ir.rs",str(self.evidence / "live/capture.json")],env=environment,log=self.evidence / "live-resolver.log").stdout)
         authority = builtin.read_inventory(receipt,receipt["inputs"])
-        self.require(bool(builtin.verify_capture(live,receipt,receipt["inputs"])), "actual original live inventory admission")
+        self.require(bool(builtin.verify_capture(live,receipt,receipt["inputs"],authority)), "actual original live inventory admission")
         join = builtin.validate_join(live,common,authority)
         self.require(len(join) == len(common["common_members"]), "all actual live common methods joined")
         primary = {d["owner"] for d in live["declarations"] if d["owner_kind"].startswith("Impl") and d["trait_identity"] == builtin.COMMON_DERIVES[d["expansion_chain"][0]["macro_identity"]][0]}
@@ -389,13 +404,13 @@ class BuiltinInventoryTests(unittest.TestCase):
             ("one-invocation-all-owners",lambda d: d["expansion_chain"] == chain),
         ):
             value = self.remove_owners(live,selected)
-            self.semantic_reject(value,"coordinated-live-" + label,receipt)
+            self.semantic_reject(value,"coordinated-live-" + label,receipt,authority)
             if label != "all-StructuralPartialEq":
                 self.common_reject(value,common,"common-live-" + label,authority)
         auxiliaries = [d for d in authority["inventory"]["owners"] if "TrivialClone>" in d["owner"]]
         if auxiliaries:
             value = self.remove_owners(live,lambda d: "TrivialClone>" in d["owner"])
-            self.semantic_reject(value,"coordinated-live-all-auxiliaries",receipt)
+            self.semantic_reject(value,"coordinated-live-all-auxiliaries",receipt,authority)
         else:
             self.require(not any("TrivialClone>" in d["owner"] for d in live["declarations"]), "actual live auxiliary absence agrees with compiler inventory")
         counts = builtin.validate_mapping(live,authority)
