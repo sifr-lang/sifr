@@ -10,6 +10,211 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03 approved prospective observation and resource sequencing amendment (2026-10-01)
+
+**H03a1peo: documentation amendment defined; H03a1pe implementation remains
+unaccepted.** This bounded amendment reads merged main
+`6086bb6cc93799c0ff012d682051ad0b3823a4f4`, including #4203-#4210. After the
+read-only Astra advisory, the user explicitly instructed, **“Go with that to
+continue until closing.”** That direct human authorization approves the
+prospective H03 observation contract and H03e preparation/qualification sequence
+below. It supplies no implementation, capability, performance or closure pass.
+The only tracked change in this batch is this canonical Markdown.
+
+This section controls current execution where the earlier H03a1pes combined
+extension contract, H03a1pers reservation, or V01 #4209/#4210 sequence conflicts
+with it. The #4203/#4204 lossless-correspondence stop and #4205/#4206 authority
+adjudication/receipts below are preserved byte-for-byte and remain valid under
+their original contract. The four authentic erased Default observations remain
+unchanged producer-loss evidence. Accepted #4198/#4199 Debug/Clone/PartialEq/Copy
+capability retains its narrow proven surface; no historical failure is
+reclassified as passing. F30's normalized complexity, fan-out, API growth,
+concentration, proven dead-code and retained-flow obligations remain intact.
+
+### H03a1pe amended observation contract and next implementation scope
+
+After this amendment and its delivery receipt merge, **separately assign one
+combined H03a1pe**. Dependencies are closed H03a1pes and accepted H03a1pr/H03a1p,
+plus merged H03a1peo. **H03a1pera and H03a1perp are prospectively deactivated as
+F30 blocking prerequisites.** Their old lossless-region reservation is history;
+full borrow-region analysis, if required for a future distinct purpose, needs
+its own analysis owner, scope and authority decision. No compiler fork, private
+API workaround, producer upgrade or additional producer is selected here.
+
+Preserve complete semantically identified **declaration** generics, signature
+lifetimes, reference regions, binders/depth, inherited versus method-own
+parameters, region/type outlives and trait bounds. Bind original RA declaration
+and source correspondence to original compiler declarations, then actual
+generated impl/method signatures and compiler-proved trait/Self/receiver
+substitution. Preserve method Hasher/Sized constraints and verified parameter
+alpha-renaming. Missing declaration facts cannot be replaced by body erasure,
+text spelling, position guesses, copied trait signatures or derive templates.
+These lossless declaration obligations in H03a1pes remain binding.
+
+For a **body-call** record, serialize exactly the published pinned compiler
+`RegionKind`, including genuine `ReErased`. Such erasure requires an explicit
+producer/stage disposition bound to the authentic successful capture and exact
+AST/HIR call owner, invocation and original typed call record. The pinned
+[writeback source](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_hir_typeck/src/writeback.rs#L979)
+explains erasure; it does not recover an erased relation. Never invent named or
+`'static` body regions, declaration/body equivalence or a borrow relation.
+Unknown erasure, ambiguous source/owner binding or unsupported required
+non-region facts still reject the affected surface. Authentic `ReErased` is a
+published observation with a bounded analysis capability, not a recovered
+lifetime. This changes only the combined H03a1pe requirements that formerly
+demanded recovery of erased body-call region relations or rejected genuine
+published body erasure; all declaration-region assertions remain required.
+
+The export and each consuming analysis must declare its required capabilities.
+Admit a body-erased record only when that consumer's required result cannot
+depend on the missing lifetime relation: for example call count or resolved
+module fan-out. Retain resolved callable, trait and available implementation
+identity, type and const arguments, receiver adjustments, full independent HIR
+owner/member inventory, one-to-one AST/body/site ownership, invocation multisets,
+resolved call catalog, literal-preserving tokens, expansion/hygiene/provenance,
+cfg/input/external closure and freshness. Existing unsupported const-generic
+impl shapes remain unsupported; no const-admission expansion is authorized.
+A body-erased record cannot prove ownership/lifetime equivalence, justify
+deletion, or authorize a lifetime-sensitive transformation. H03b/H03c must mark
+any such required proof unresolved and keep the declaration/behavior until a
+separately scoped proof is accepted. Capability labels cannot waive omitted
+facts, unknown types/callables or completeness failures.
+
+Allowed H03a1pe tracked paths remain exactly
+`verification/tools/maintainability_builtin_input/` (current isolated locked
+workspace, source, schema and bounded fixtures),
+`scripts/maintainability_builtin_input.py`,
+`scripts/maintainability_builtin_input_tests.py`, and this canonical Markdown.
+Keep Rust `48a229ceaefd4985c50990b14116b6d856af0985`, Cargo
+`797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`, RA
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`, matching official components,
+authenticated API 6 server and complete accepted locked graphs. Schema evolution
+rejects obsolete/incomplete captures; no compatibility or fallback path is
+requested. Full adapter, metrics/baselines, compiler sources/root Cargo inputs,
+other producers and broad profiles remain outside this item.
+
+Keep caller-held successful compiler authority independent of projections.
+Every consumer/publication path must authenticate `verify_capture` before
+mapping/join validation. Preserve independent preselection HIR inventory,
+complete owner/member/auxiliary multisets, exact callsite and attribute/derive
+ordinal ownership, and omitted-AST publication rejection. Recomputed integrity
+or replacement authority cannot authorize coordinated omissions.
+
+### Exact H03a1pe tests, contexts and failure boundary
+
+Run the existing isolated helper build with an exclusively owned compatible
+target, two Cargo jobs and build-only bootstrap:
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Bootstrap must never enter analyzed packages. Retain real locked selected Cargo
+preparation separately from standalone after-analysis captures.
+
+All four original **BuiltinExtensionTests** names remain exact; only their
+incompatible body-region assertions change prospectively:
+
+| Exact case | Amended required assertions, in addition to retained H03a1pes assertions |
+| --- | --- |
+| `test_default_eq_hash_ordering_bodies_and_members` | All five added kinds and real record/tuple/unit/enum shapes, Eq body/member/type dependencies, Hash method-own bounds, complete catalog/multisets. Preserve authentic published Default body erasure with exact producer/stage and call owner; reject invented named/static body regions and changed type/const call arguments. |
+| `test_lifetime_receiver_and_method_generics_preserve_constraints` | Complete original/generated declaration lifetime/signature/binder/outlives/trait facts and RA/compiler correspondence, static/parameter distinction, method ownership and alpha-renaming. Reject forged declaration erasure, changed declaration lifetimes/binders/constraints and invented body relations after integrity recomputation. Exercise consumer capability admission and lifetime-sensitive rejection for authentic body erasure. |
+| `test_extended_inventory_owner_and_constraint_removals_fail_closed` | Coordinated invocation/impl/member/signature/generic/constraint/call/owner removal from projections must reject against intact original authority after integrity recomputation. Preserve replaced-authority, omitted-AST, ordinal/callsite swap and unauthenticated publication negatives; body erasure never excuses missing calls/owners. |
+| `test_live_owned_derive_inventory_has_complete_dispositions` | Fresh full codegen/lowering Linux production/test inventories for all nine kinds and current lifetime shapes. Require no unsupported facts needed by each admitted consumer; explicitly label authentic body erasure and reject lifetime-sensitive consumption. Reject missing context/member/call, stale source/config/extern/tool/input and ambiguous erasure; unchanged captures normalize across checkout paths. |
+
+For each case run
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinExtensionTests.<case>`,
+then the complete class with the same command omitting `.<case>` (1/1 per
+individual, 4/4 class, actual assertion receipts). Retain all original assertions
+and exact individual/class commands for these original classes:
+
+| Class | Exact retained cases |
+| --- | --- |
+| `BuiltinCapabilityTests` (5/5) | `test_builtin_bodies_calls_and_auxiliary_origins`; `test_hygiene_and_same_spelled_methods_preserve_trait_origin`; `test_expansion_ast_hir_mapping_is_owned_and_complete`; `test_component_context_and_input_drift_fail_closed`; `test_live_rust_ir_builtin_surface_has_complete_dispositions`. |
+| `BuiltinInventoryTests` (4/4) | `test_hir_ty_owner_inventory_is_independent_of_ast_projection`; `test_coordinated_fixture_owner_removals_fail_semantic_admission`; `test_ra_invocation_owned_common_members_fail_without_compiler_impl`; `test_coordinated_live_owner_removals_fail_semantic_admission`. |
+
+Run each retained case via
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.<class>.<case>`
+and then each complete class. Use actual bounded fixtures in Linux production
+and test modes plus all four original `sifr_codegen`/`sifr_lowering` production/
+test contexts on `x86_64-unknown-linux-gnu`, selected original locked
+`cargo check --lib` / `cargo check --tests` invocations, matching cfg/features,
+disabled `rust_analyzer` cfg, exact test includes/gitlinks and inputs. Diagnostic
+exports cannot substitute for successful original captures. Linux extension
+acceptance cannot imply Windows or full adapter acceptance.
+
+Before later helper work, recheck ownership/process/open handles and complete
+input/component/target compatibility. Reserve **12 GiB free disk and 8 GiB
+available RAM**, at most two Cargo jobs and one sequential producer/server;
+inspect timing/cache reports before rebuilding. Accepted helper target
+`/data/sifr-h03a1p-builtin-capability-target-20261001` is inactive and preserved,
+not adopted by this amendment. No shared archive, SQL, warm H02 or other-session
+cleanup is authorized. Missing required declaration authority, ambiguous body
+owner/erasure provenance, new unsupported required shape or a second mechanism
+review defect stops the item with concrete evidence. Preserve all failed/partial
+captures outside accepted exports.
+
+After H03a1pe's complete thirteen-case extension, focused regressions, formatting,
+documentation/file-size/scope checks and scoped Opus review merge, **separately
+assign H03a1**. Its original five exact SemanticInputTests individually and by
+class, full Linux/Windows production/test structural union, both build scripts,
+includes, external closure, current-source counterexamples, authenticated
+provenance/input freshness and twice-unchanged captures remain binding. Apply
+the observation capability boundary consistently; no other H03a1 requirement is
+relaxed. All seven H03a MetricTests and H03b-H03f acceptance remain unchanged,
+except the prospective H03e delivery split below. Only merged full adapter
+acceptance unlocks H03a metrics; this amendment admits no adapter export.
+
+### H03e preparation before the final expanded V01 reference
+
+The existing 65-case manifest contains none of H03e's three reserved cases.
+Adding them changes both `reference_profiles.validate_manifest_binding`'s exact
+manifest digest and `reference_host.input_hash`. Thus #4209/#4210's proposed
+65-case v2 capture is **interim planning only**, prospectively superseded as the
+final H03/Q01 handoff. **Do not perform that 65-case capture now.** Complete H03d,
+then H03ep harness/corpus preparation, then obtain exact expanded-capture approval
+and merge its full governed V01 capture, then run H03eq measurement qualification,
+then H03f. Q01 runs its full merge profile only on the final implementation
+candidate after the remaining implementation/dispositions; the whole-phase
+closer requires that pass. Historical V01's 8 variants/10 cases remain valid for
+that candidate and cannot satisfy the new cases or current Q01 admission.
+
+H03ep and H03eq have the bounded ownership, exact tests and readiness/failure
+rules in the updated H03e contract below. H03ep may establish functional harness
+readiness at candidate and baseline, including allocation-accounting correctness,
+but cannot claim governed resource results. The external harness route is
+source-supported by the existing public E03 `compile_frontend_product` and
+`FrontendProduct::{hir_modules, flow_graphs, external_defs, compile_order}` at
+merged compiler `4b319c0f784c4c5e71d93621de8331d41f98e3fc`; buildability,
+allocation accounting and measurement validity remain **unproven**. Baseline
+compiler source/root Cargo inputs are immutable. Do not copy candidate frontend
+test helpers into E03 and call that a tooling overlay.
+
+The E03 merged baseline, actual kernel `7.0.0-34-generic`, `/data` ext4
+`/dev/sda1` target/temp storage and private `SIFR_CACHE_DIR` in #4209/#4210 remain
+a credible reference starting point. Their currently empty performance overlay
+must be replaced by an **exact newly pinned and reviewed performance-only
+overlay** containing the ready external harness/corpus/manifest. Record its
+source, locks/dependency graph, executable identity, final expanded manifest,
+input hash, sample counts and admission environment before requesting approval.
+The roughly **29 GiB** prior capture reserve is an initial estimate only;
+recheck owned sizes, new harness requirements, disk/RAM/process/handle state
+before preparation or capture. The prior owner cleanup receipt and preserved
+warm caches remain evidence; no cleanup occurs in this docs item.
+
+Direct approval of this contract/sequence does **not** approve the exact future
+expanded capture, new reference/baseline or derived budgets. The explicit
+capture requirement in `verification/areas/performance/data/references/README.md`
+remains pending until the harness and manifest are concrete and reviewable.
+Keep v1 immutable, preserve old-kernel/input Q01 failures, and never derive a
+candidate baseline or relabel a partial capture as qualified. Any absent baseline
+API, missing/unsupported allocation contract or nonreviewable overlay stops
+H03ep at a documentation readiness checkpoint **H03eps**, with exact paths,
+public API/input gap, tests and owner decision before further implementation;
+it supplies no authority to patch E03 or choose a compiler fallback.
+
+H01e's #4103 automatic content-review restriction and H01i dependency remain
+independent. External X02/Emitted Rust work remains with its owner. D01b/D01c,
+Q01 and whole-phase acceptance retain their dependencies. The exact next
+implementation assignment after this amendment/receipt is **H03a1pe only**;
+this documentation owner stops after checks, merge and its separate receipt.
+
 ## V01/F05 live selected-reference qualification (2026-09-28)
 
 On exact merged main `8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b`, the
@@ -1499,21 +1704,25 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
 | H03a1pes | H03a1pr and combined #4200 gap; **closed**, scope #4201 and receipt below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
 | H03a1pers | #4203/#4204 stop; **closed**, adjudication #4205 and receipt below. | No region producer adopted; precise authority blocker and inactive prerequisite reservation below. |
-| H03a1pera | H03a1pers; **blocked, inactive** pending externally owned compiler-interface/authority decision. | Docs only: source-supported public route or separately authorized external interface/pin ownership. |
-| H03a1perp | Merged H03a1pera mechanism decision required; **blocked, inactive**. | Reserved separate lossless region capability prerequisite; no ready implementation or admission. |
-| H03a1pe | Merged H03a1pes; **needs-new-scope**, required generated call-region correspondence unproved; stop record below. | Combined extension remains unaccepted. Fresh Default probes expose compiler-erased call substitutions; separately adjudicate their lossless authority mechanism before resumption. |
+| H03a1peo | User-approved Astra advisory and #4203-#4210; documentation amendment above. | Prospective observation contract and H03e preparation/qualification sequence; no capability or capture pass. |
+| H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
+| H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
+| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **ready for separate assignment** after amendment delivery. | One combined extension under the amended declaration/body observation and consumer capability contract; implementation remains unaccepted. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
 | H03d | H03c and C01; waiting. | Lowering/IR flow semantics: executable independent narrowing equivalence, graph/ownership regression evidence and a complete producer/consumer decision table. Retain production graph behavior. |
-| H03e | H03d and V01 reference admission; waiting. | Frontend/performance evidence: reproducible retained-allocation and governed warm resource measurements for current graph retention, with a documented retain/change decision. No production graph change. |
+| H03ep | H03d; waiting. | H03e preparation: candidate functional resource tests plus external performance-only harness/corpus/manifest readiness at candidate and immutable E03 baseline; no governed measurement qualification. |
+| H03eps | Conditional H03ep readiness failure only; inactive. | Docs-only exact public API/allocation/input/overlay gap adjudication before further implementation; no baseline compiler change or fallback authority. |
+| V01 expanded capture | Merged H03ep and explicit approval of exact reviewed overlay/expanded inputs; pending. | Full governed new-reference capture; #4209/#4210 65-case proposal is interim planning only. |
+| H03eq (completes H03e) | Merged H03ep, full expanded V01 capture and live admission; waiting. | Governed flow-retention samples and allocation/RSS/time evidence with documented retain/change decision. No production graph change. |
 | H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
-H03a1pers, then H03a1pera/H03a1perp only after explicit mechanism qualification,
-H03a1pe, H03a1, H03a,
-H03b, H03c, H03d, H03e, then H03f**, one independently owned
+H03a1pers, H03a1peo, H03a1pe, H03a1, H03a, H03b, H03c, H03d,
+H03ep (H03eps only on a concrete readiness failure), approved full expanded
+V01 capture, H03eq, then H03f**, one independently owned
 session and merged item at a time. Evidence items are substantive acceptance,
 not permission to perform a later cleanup. At the H03b/H03c/H03e handoff, any
 proposed compiler change requires a documentation-only scope checkpoint that
@@ -1658,39 +1867,134 @@ and `cargo test -p sifr_frontend --lib cache_keys::tests::lint_format_package_sy
 Resolve names/counts before claiming a pass. This acceptance supplies current
 retention/equivalence evidence; it does not authorize graph removal.
 
-#### H03e current resource evidence and decision
+#### H03e preparation, governed resource qualification and decision
 
-Own test-only measurement helpers in `sifr_frontend`, a bounded performance-area
-adapter/corpus and the flow decision record. Use deterministic small, C01-sized
-200-function and connected 25-module inputs with loops, branches, mutation and
-ownership effects. Report HIR and graph node/edge/effect counts, retained graph
-bytes, total product retained bytes and release-to-zero separately from peak
-allocation/RSS and elapsed lowering/query time. Compare current graph-retaining
-product with a test-only graph-discarded measurement after semantic work, and
-clearly label that measurement as retention cost only. It cannot demonstrate
-equivalence of a compiler that never computes graph-backed narrowing.
+**H03ep preparation**, after merged H03d, owns only new test-only
+`crates/sifr_frontend/src/frontend_product_resource_tests.rs` (responsibility
+splits beside it permitted) and its `#[cfg(test)]` registration in
+`crates/sifr_frontend/src/lib.rs`; an external isolated harness under
+`verification/areas/performance/flow_retention_harness/` (manifest, tracked lock,
+source and report schema); deterministic inputs under
+`verification/areas/performance/query_projects/flow_retention/`; the exact
+`flow_retention.py` adapter and `flow_retention_tests.py`; narrowly required
+`run_benchmarks.py` dispatch, `benchmark_manifest.py` validation,
+`benchmark_case_selftest.py` dispatch regressions, `reference_host.py` new
+harness/corpus input-identity collection, `runner.py` admission/selection, area
+`manifest.json` and `data/benchmark_manifest.json` rows; and this canonical
+Markdown for the readiness/decision receipt. Other performance selections,
+policy thresholds/profiles/references, production compiler behavior, root Cargo
+inputs and baseline compiler source are outside preparation scope. Supporting
+runner edits are limited to registering, preparing, dispatching and completely
+hashing the three new cases and external harness; no existing identity or
+admission requirement may be weakened.
 
-Reserved exact cases: `frontend_product_resource_tests::h03_graph_retention_is_attributed_and_released`
+The harness calls existing public `sifr_frontend::compile_frontend_product`
+using source-backed `FrontendProductInput` values and original source modules
+parsed through public `sifr_frontend::parse_source`, actual
+`sifr_lowering::ExternalDefs::default()`,
+`sifr_frontend::FrontendDiagnosticStyle::ModulePrefixed` and
+`sifr_lowering::LoweringOptions::default()`. These exports exist at E03 (the
+frontend reexports `graph_cache_and_queries::*`); graph `nodes()`, `edges()`
+and `effects()` are public at the existing `sifr_ir` owner. This binds a
+source-supported construction/counting route, not buildability or accounting.
+Revalidate parser/input/preparation APIs and the locked path dependency graph
+at both candidate and merged E03 baseline before coding;
+no private frontend test API or copied candidate helper may supply baseline
+capability. The performance-only overlay is the external harness/adapter/corpus/
+manifest, never frontend resource tests or compiler/root-Cargo edits. If this
+public construction cannot be concretely bound, stop H03ep **needs-readiness-
+scope** and assign docs-only H03eps with the exact gap before implementation.
+Source inspection supports this route; it is not build or measurement proof.
+
+Use actual deterministic cases `small`, `functions-200` and `modules-25`,
+with loops, branches, mutation and ownership effects; the 25 modules must form
+a connected import graph, not duplicated single-module runs. Report HIR and
+graph node/edge/effect counts, retained graph bytes, total product retained bytes
+and release-to-zero separately from peak allocation/RSS and elapsed lowering/
+query time. Counting allocation must account for retained backing capacities,
+shared values, measurement boundaries and release ownership without fixed
+counters or double counting. Compare the graph-retaining product with test-only
+graph discard **after semantic work**; preserve all non-graph product semantics.
+This comparison measures retention cost only and cannot prove equivalence of a
+compiler that never computes graph-backed narrowing.
+
+Retain original exact candidate cases
+`frontend_product_resource_tests::h03_graph_retention_is_attributed_and_released`
 and `frontend_product_resource_tests::h03_multimodule_flow_retention_preserves_product`,
 each via `cargo test -p sifr_frontend --lib <full-case-name> -- --exact`.
-Reserve performance suite `flow-retention`, cases `small`, `functions-200`,
-`modules-25`, and exact adapter command
-`python3 verification/areas/performance/runner.py --suite flow-retention`.
-All selected assertions and governed samples must execute; no fixed counters.
-The adapter validates corpus/report identity, semantic projections and the
-allocation measurement contract before accepting resource results.
+Build the external harness with
+`cargo build --locked --manifest-path verification/areas/performance/flow_retention_harness/Cargo.toml`
+and reserve exact new harness cases under `resource_tests`:
+`public_frontend_product_compiles_all_three_corpora`,
+`graph_discard_preserves_non_graph_product_semantics`,
+`retained_allocations_are_attributed_without_double_counting`, and
+`dropping_owned_product_releases_measured_allocations`.
+Run each with
+`cargo test --locked --manifest-path verification/areas/performance/flow_retention_harness/Cargo.toml --lib resource_tests::<case> -- --exact`,
+then
+`cargo test --locked --manifest-path verification/areas/performance/flow_retention_harness/Cargo.toml --lib resource_tests::`. The same external performance-only
+harness must build and run these functional assertions against immutable E03,
+with exact baseline/tooling-overlay receipts; no governed samples or baseline
+budgets are produced during preparation.
 
-Performance conclusions require live compatible selected-reference admission
-under V01's actual host/toolchain/configuration/governor contract. Add a governed
-case only through the existing performance owner's approval/reference procedure;
-do not create candidate-derived reference data or transfer old budgets. Warm
-compatible preparation precedes measured runs. Record host/cache state,
-configuration, corpus/sample identities, raw report digest and limitations.
-Inspect disk and target reserve without touching another owner's warm target.
-A missing admitted case/reference or external resource prerequisite blocks the
-measurement item and remains failed/blocked evidence. Functional allocation
-tests alone do not qualify timing/RSS. Record **retain** unless both semantic
-equivalence and governed resource evidence justify a specifically scoped change.
+Reserve new `flow_retention_tests.FlowRetentionTests` exact cases
+`test_actual_small_functions_200_and_connected_modules_25`,
+`test_report_binds_compiler_corpus_and_allocation_contract`,
+`test_missing_case_stale_input_and_forged_counts_fail_closed`, and
+`test_governed_suite_requires_complete_admitted_reference`.
+Run each via
+`PYTHONPATH=verification/areas/performance python3 -m unittest -f flow_retention_tests.FlowRetentionTests.<case>`
+and then the complete class. Positive fixtures execute the real external
+harness; negative report/identity mutations must reject. Policy negatives use
+controlled inputs, not new host measurements. Bind semantic projections,
+compiler/overlay/corpus/report identities and the allocation contract before
+accepting a report. Preserve existing reference-admission class regressions via
+`PYTHONPATH=verification/areas/performance python3 -m unittest -f reference_admission_tests`,
+plus
+`python3 verification/areas/performance/run_benchmarks.py --validate-only`,
+`python3 verification/areas/performance/run_benchmarks.py --self-test`, and
+`PYTHONPATH=verification/areas/performance python3 -m unittest -f reference_profile_tests.NamedReferenceTests.test_checker_manifest_cannot_weaken_reference`.
+The new adapter class must validate the exact area rows/dispatch and reject
+omitted, duplicate or unadmitted cases under full and explicit suite selection. Future test
+names are reserved here, not implemented or passed by this amendment.
+
+H03ep finishes with a reviewable exact tooling-only overlay and expanded
+manifest/input digest, actual cases/sample counts/timeouts/cache expectations,
+complete baseline/candidate locked graph and API receipts, functional tests,
+formatting/documentation/file-size/scope checks and scoped Opus review.
+Recheck owned disk/target reserve, RAM and active ownership before Cargo work;
+use at most two jobs, one sequential harness, warm compatible artifacts and
+existing selected-input preparation. Stop for absent public API/buildability,
+invalid allocation boundaries, insufficient owned resources or unexplained
+input/overlay drift. H03eps may define an exact subsequent readiness repair;
+it cannot waive assertions, authorize compiler API changes or approve capture.
+
+**V01 expanded capture** follows merged H03ep. Request explicit approval for
+that concrete reviewed E03 performance-only overlay, full expanded corpus,
+actual kernel/host, `/data` target/temp/private Sifr-cache environment and distinct
+immutable reference with measured baseline/derived budgets. Retain existing
+performance-owner capture/admission rules and sample/stability requirements;
+no candidate-derived reference, old-budget transfer or partial profile. The
+current 65-case v2 proposal cannot be the final reference for the expanded
+manifest. Do not execute capture before that exact approval.
+
+**H03eq qualification** follows merged H03ep and the approved, merged complete
+V01 reference. Own only the flow resource evidence/decision segment, narrowly
+required resource-report qualification corrections in the H03ep performance
+paths, and this canonical Markdown. Run both original candidate frontend
+resource tests above, all four harness and four adapter cases individually and
+by module/class with their exact preparation commands, then the governed
+`python3 verification/areas/performance/runner.py --suite flow-retention`.
+Every `small`, `functions-200` and `modules-25` assertion and governed sample
+must execute under live compatible selected-reference admission and the V01
+host/toolchain/configuration/governor contract. Functional allocation tests
+alone do not qualify timing/RSS. Record warm preparation/cache/host state,
+configuration, corpus/sample identities, raw report digests and limitations.
+Missing admitted cases, reference, allocation authority or resource prerequisites
+block qualification with preserved failed/blocked evidence. Record **retain**
+unless both semantic equivalence and governed resource evidence justify a
+separately defined exact compiler-change child. H03f waits for complete H03eq
+and disposition of any required child; Q01 remains the phase-end qualifier.
 
 #### H03f live integration and closure acceptance
 
@@ -8639,6 +8943,11 @@ This owner stops after publishing the documentation record.
 
 
 ### H03a1pes combined builtin kind/generic scope adjudication (2026-10-01)
+
+**Prospective contract precedence:** the approved H03a1peo amendment above now
+controls body-call observation/capability admission and prerequisite sequencing.
+The original scope below remains historical evidence; all other declaration,
+integrity, inventory, context and test requirements continue to bind.
 
 **State: scope defined; H03a1pe extended capability and H03a1 acceptance remain open.**
 This documentation-only adjudication reads fresh main
