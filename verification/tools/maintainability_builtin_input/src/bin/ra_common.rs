@@ -4,6 +4,8 @@ use syntax::{
     AstNode,
     ast::{HasAttrs, HasName},
 };
+#[path = "ra_common/declarations.rs"]
+mod declarations;
 #[path = "ra_common/ra_types.rs"]
 mod ra_types;
 use load_cargo::{LoadCargoConfig, ProcMacroServerChoice};
@@ -15,7 +17,7 @@ fn main() -> anyhow::Result<()> {
     let package = &args[2];
     let mut config = CargoConfig::default();
     config.sysroot = Some(RustLibSource::Discover);
-    config.set_test = false;
+    config.set_test = args.get(5).is_some_and(|s| s == "test");
     config.cfg_overrides.global =
         cfg::CfgDiff::new(vec![], vec![cfg::CfgAtom::Flag(hir::sym::rust_analyzer)]);
     config.target = Some("x86_64-unknown-linux-gnu".into());
@@ -23,7 +25,11 @@ fn main() -> anyhow::Result<()> {
         "cargo".into(),
         "check".into(),
         "--locked".into(),
-        "--lib".into(),
+        if config.set_test {
+            "--tests".into()
+        } else {
+            "--lib".into()
+        },
         "--message-format=json".into(),
         "-p".into(),
         package.clone(),
@@ -84,12 +90,18 @@ fn main() -> anyhow::Result<()> {
         let semantics = Semantics::new(&db);
         let mut records = vec![];
         let mut invocations = vec![];
+        let mut trait_methods = std::collections::BTreeMap::new();
         let mut selected_cfg = None;
         for (file, path) in files.iter() {
             let Some(path) = path.as_path() else { continue };
-            if !path.as_str().ends_with(&args[3]) {
+            if !(if args[3].ends_with('/') {
+                path.as_str().contains(&args[3])
+            } else {
+                path.as_str().ends_with(&args[3])
+            }) {
                 continue;
             }
+            let file_text = std::fs::read_to_string(path.as_str())?;
             let Some(krate) = semantics.first_crate(file) else {
                 continue;
             };
@@ -132,7 +144,7 @@ fn main() -> anyhow::Result<()> {
                             let origin =
                                 origin.ok_or_else(|| anyhow::anyhow!("unresolved common macro"))?;
                             if origin.builtin_derive_kind(&db).is_some() {
-                                invocations.push(json!({"module":ra_types::module(&db,module),"source_range":format!("{:?}",semantics.original_range(source.value.syntax()).range),"attribute_ordinal":attribute_ordinal,"derive_ordinal":derive_ordinal,"receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"macro":format!("{}::{}",ra_types::module(&db,origin.module(&db)),origin.name(&db).as_str()),"declaration_source":source.value.syntax().text().to_string(),"source_name":source.value.name().map(|n|n.text().to_string())}));
+                                invocations.push(json!({"invocation_site":if source.file_id.original_file(&db).file_id(&db)==file && !source.file_id.is_macro(){Some(declarations::invocation_site(&meta,derive_ordinal,&file_text,path.as_str())?)}else{None},"module":ra_types::module(&db,module),"source_range":format!("{:?}",semantics.original_range(source.value.syntax()).range),"attribute_ordinal":attribute_ordinal,"derive_ordinal":derive_ordinal,"receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"macro":format!("{}::{}",ra_types::module(&db,origin.module(&db)),origin.name(&db).as_str()),"declaration_facts":declarations::facts(&db,&semantics,hir::GenericDef::Adt(adt),source.value.syntax(),&format!("{}::{}",ra_types::module(&db,module),adt.name(&db).as_str()))?,"declaration_source":source.value.syntax().text().to_string(),"source_name":source.value.name().map(|n|n.text().to_string())}));
                             }
                         }
                     }
@@ -156,6 +168,43 @@ fn main() -> anyhow::Result<()> {
                     let Some(trait_) = implementation.trait_(&db) else {
                         continue;
                     };
+                    let receiver_identity = ra_types::canonical(&db, &receiver, &[])?;
+                    let trait_identity = format!(
+                        "{}::{}",
+                        ra_types::module(&db, trait_.module(&db)),
+                        trait_.name(&db).as_str()
+                    );
+                    let selected = invocations.iter().any(|i| {
+                        i["receiver"] == receiver_identity
+                            && ra_types::builtin_trait(i["macro"].as_str().unwrap_or(""))
+                                == Some(trait_identity.as_str())
+                    });
+                    if !selected {
+                        continue;
+                    }
+                    for item in trait_.items(&db) {
+                        if let hir::AssocItem::Function(original) = item {
+                            let source = semantics.source(original).ok_or_else(|| {
+                                anyhow::anyhow!("missing actual trait declaration source")
+                            })?;
+                            let identity = format!(
+                                "{}::{}::{}",
+                                ra_types::module(&db, trait_.module(&db)),
+                                trait_.name(&db).as_str(),
+                                original.name(&db).as_str()
+                            );
+                            trait_methods.insert(
+                                identity.clone(),
+                                declarations::facts(
+                                    &db,
+                                    &semantics,
+                                    hir::GenericDef::Function(original),
+                                    source.value.syntax(),
+                                    &identity,
+                                )?,
+                            );
+                        }
+                    }
                     anyhow::ensure!(!receiver.contains_unknown(), "unknown common receiver");
                     for item in implementation.items(&db) {
                         let hir::AssocItem::Function(function) = item else {
@@ -166,7 +215,26 @@ fn main() -> anyhow::Result<()> {
                         let substitution = ra_types::substitution(&db, implementation)?;
                         let generic_bounds = ra_types::bounds(&db, &receiver)?;
                         let signature = json!({"parameters":function.assoc_fn_params(&db).iter().map(|param|ra_types::canonical(&db,param.ty(),&substitution)).collect::<anyhow::Result<Vec<_>>>()?,"return":ra_types::canonical(&db,&function.ret_type(&db),&substitution)?,"variadic":function.is_varargs(&db),"unsafe":function.is_unsafe(&db)});
-                        records.push(json!({ "canonical_signature":signature,"generic_bounds":generic_bounds,"visibility":format!("{:?}",function.visibility(&db)),"module":ra_types::module(&db,module),"trait_identity":format!("{}::{}",ra_types::module(&db,trait_.module(&db)),trait_.name(&db).as_str()),"receiver_identity":ra_types::canonical(&db,&receiver,&[])?,"receiver": receiver.display(&db, krate.to_display_target(&db)).to_string(), "trait": trait_.name(&db).as_str(), "method": function.name(&db).as_str(), "signature": callable.display(&db, krate.to_display_target(&db)).to_string() }));
+                        let trait_source = semantics.source(function).ok_or_else(|| {
+                            anyhow::anyhow!("missing original trait method source")
+                        })?;
+                        let original_function =
+                            semantics.to_def(&trait_source.value).ok_or_else(|| {
+                                anyhow::anyhow!("unresolved original trait method declaration")
+                            })?;
+                        let trait_identity = format!(
+                            "{}::{}",
+                            ra_types::module(&db, trait_.module(&db)),
+                            trait_.name(&db).as_str()
+                        );
+                        let original_facts = declarations::facts(
+                            &db,
+                            &semantics,
+                            hir::GenericDef::Function(original_function),
+                            trait_source.value.syntax(),
+                            &format!("{}::{}", trait_identity, function.name(&db).as_str()),
+                        )?;
+                        records.push(json!({ "trait_declaration_facts":original_facts, "canonical_signature":signature,"generic_bounds":generic_bounds,"visibility":format!("{:?}",function.visibility(&db)),"module":ra_types::module(&db,module),"trait_identity":format!("{}::{}",ra_types::module(&db,trait_.module(&db)),trait_.name(&db).as_str()),"receiver_identity":ra_types::canonical(&db,&receiver,&[])?,"receiver": receiver.display(&db, krate.to_display_target(&db)).to_string(), "trait": trait_.name(&db).as_str(), "method": function.name(&db).as_str(), "signature": callable.display(&db, krate.to_display_target(&db)).to_string() }));
                     }
                 }
             }
@@ -190,6 +258,11 @@ fn main() -> anyhow::Result<()> {
                         Some("core::clone::Clone") => "core::clone::Clone",
                         Some("core::cmp::PartialEq") => "core::cmp::PartialEq",
                         Some("core::marker::Copy") => "core::marker::Copy",
+                        Some("core::cmp::Eq") => "core::cmp::Eq",
+                        Some("core::cmp::Ord") => "core::cmp::Ord",
+                        Some("core::cmp::PartialOrd") => "core::cmp::PartialOrd",
+                        Some("core::default::Default") => "core::default::Default",
+                        Some("core::hash::macros::Hash") => "core::hash::Hash",
                         _ => return false,
                     };
                     invocation["receiver"] == member["receiver_identity"]
@@ -208,7 +281,7 @@ fn main() -> anyhow::Result<()> {
         records.sort_by_cached_key(|r| r.to_string());
         println!(
             "{}",
-            json!({ "producer":"03fcb77246f2568adb0e9b2fa60d19c6cc1686f4", "cfg":selected_cfg,"common_members":records, "invocations":invocations })
+            json!({ "producer":"03fcb77246f2568adb0e9b2fa60d19c6cc1686f4", "cfg":selected_cfg,"common_members":records, "invocations":invocations,"trait_methods":trait_methods })
         );
         Ok::<_, anyhow::Error>(())
     })

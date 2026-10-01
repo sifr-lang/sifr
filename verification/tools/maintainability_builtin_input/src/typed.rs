@@ -9,7 +9,7 @@ use rustc_span::{
     hygiene::{ExpnId, ExpnKind, MacroKind},
 };
 use serde_json::{Value, json};
-fn span(tcx: TyCtxt<'_>, s: Span) -> Value {
+pub fn span(tcx: TyCtxt<'_>, s: Span) -> Value {
     let sm = tcx.sess.source_map();
     let lo = sm.lookup_char_pos(s.lo());
     let hi = sm.lookup_char_pos(s.hi());
@@ -25,7 +25,7 @@ pub fn expansion_chain(tcx: TyCtxt<'_>, mut exp: ExpnId) -> Vec<Value> {
         let builtin = data
             .macro_def_id
             .is_some_and(|def| rustc_hir::find_attr!(tcx, def, RustcBuiltinMacro { .. }));
-        result.push(json!({"kind":format!("{:?}",data.kind),"macro_identity":data.macro_def_id.map(|def|crate::identity::path(tcx,def)),"macro":data.macro_def_id.map(|def|tcx.def_path_str(def)),"builtin":builtin,"call_site":span(tcx,data.call_site),"definition_site":span(tcx,data.def_site)}));
+        result.push(json!({"kind":format!("{:?}",data.kind),"macro_identity":data.macro_def_id.map(|def|crate::identity::path(tcx,def)),"macro":data.macro_def_id.map(|def|tcx.def_path_str(def)),"builtin":builtin,"call_site_tokens":tcx.sess.source_map().span_to_snippet(data.call_site).ok().map(|s|crate::identity::tokens(&s)),"call_site":span(tcx,data.call_site),"definition_site":span(tcx,data.def_site)}));
         exp = data.parent;
     }
     result
@@ -59,10 +59,35 @@ struct Typed<'tcx> {
     tcx: TyCtxt<'tcx>,
     typeck: &'tcx ty::TypeckResults<'tcx>,
     nodes: Vec<Value>,
+    types: Vec<Value>,
     parent: Option<usize>,
     catalog: std::collections::BTreeMap<String, Value>,
 }
 impl<'tcx> Visitor<'tcx> for Typed<'tcx> {
+    fn visit_ty(&mut self, t: &'tcx hir::Ty<'tcx, hir::AmbigArg>) {
+        let resolution = match t.kind {
+            hir::TyKind::Path(hir::QPath::Resolved(_, p)) => Some(match p.res {
+                hir::def::Res::Def(kind, def) => {
+                    json!({"kind":format!("{kind:?}"),"identity":crate::identity::path(self.tcx,def)})
+                }
+                hir::def::Res::PrimTy(t) => json!({"primitive":format!("{t:?}")}),
+                hir::def::Res::SelfTyAlias {
+                    alias_to,
+                    is_trait_impl,
+                } => {
+                    json!({"self_alias":self.tcx.def_path_str(alias_to),"trait_implementation":is_trait_impl})
+                }
+                hir::def::Res::SelfTyParam { trait_ } => {
+                    json!({"self_trait":crate::identity::path(self.tcx,trait_)})
+                }
+                other => json!({"unsupported_resolution":format!("{other:?}")}),
+            }),
+            _ => None,
+        };
+        self.types.push(json!({"type":self.typeck.node_type_opt(t.hir_id).map(|t|crate::semantic::ty(self.tcx,t)),"resolution":resolution,"tokens":crate::identity::tokens(&rustc_hir_pretty::ty_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),t.as_unambig_ty()))}));
+        intravisit::walk_ty(self, t);
+    }
+
     fn visit_expr(&mut self, expr: &'tcx hir::Expr<'tcx>) {
         let mut target = None;
         let mut receiver = None;
@@ -150,26 +175,64 @@ impl<'tcx> Visitor<'tcx> for Typed<'tcx> {
                     }
                 }
             }
-            self.nodes.push(json!({"token_sequence":crate::identity::tokens(&rustc_hir_pretty::expr_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),expr)),"tokens":rustc_hir_pretty::expr_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),expr),"kind":kind,"ancestor":parent,"implementation":implementation.and_then(|instance|if let ty::InstanceKind::Item(def)=instance.def{Some(self.tcx.def_path_str(def))}else{None}),"instance_kind":implementation.map(|instance|match instance.def{ty::InstanceKind::Item(_)=>"static",ty::InstanceKind::Virtual(..)=>"dynamic",ty::InstanceKind::Intrinsic(..)=>"intrinsic",_=>"compiler-shim"}),"target":target.map(|def|self.tcx.def_path_str(def)),"target_origin_paths":target.filter(|def|!def.is_local()).map(|def|self.tcx.used_crate_source(def.krate).paths().map(|path|path.to_string_lossy().to_string()).collect::<Vec<_>>()),"implementation_origin_paths":implementation.and_then(|instance|if let ty::InstanceKind::Item(def)=instance.def{if !def.is_local(){Some(self.tcx.used_crate_source(def.krate).paths().map(|path|path.to_string_lossy().to_string()).collect::<Vec<_>>())}else{None}}else{None}),"signature":signature,"trait":trait_origin.map(|def|self.tcx.def_path_str(def)),"generics":args,"result_type":self.typeck.expr_ty(expr).to_string(),"receiver":receiver.map(|recv|self.typeck.expr_ty(recv).to_string()),"adjustments":receiver.map(|recv|self.typeck.expr_adjustments(recv).iter().map(|a|json!({"kind":format!("{:?}",a.kind),"target":a.target.to_string()})).collect::<Vec<_>>()),"span":span(self.tcx,expr.span),"expansion_chain":chain(self.tcx,expr.span),"disposition":if scalar {"scalar-operation"}else if matches!(implementation.map(|instance|instance.def),Some(ty::InstanceKind::Virtual(..))){"dynamic-trait-call"}else if target.is_some() && trait_origin.is_some() && implementation.is_none(){"generic-trait-call"}else if target.is_some(){"resolved-call"}else{"unsupported-call"}}));
+            self.nodes.push(json!({"token_sequence":crate::identity::tokens(&rustc_hir_pretty::expr_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),expr)),"tokens":rustc_hir_pretty::expr_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),expr),"kind":kind,"ancestor":parent,"implementation":implementation.and_then(|instance|if let ty::InstanceKind::Item(def)=instance.def{Some(self.tcx.def_path_str(def))}else{None}),"instance_kind":implementation.map(|instance|match instance.def{ty::InstanceKind::Item(_)=>"static",ty::InstanceKind::Virtual(..)=>"dynamic",ty::InstanceKind::Intrinsic(..)=>"intrinsic",_=>"compiler-shim"}),"target":target.map(|def|self.tcx.def_path_str(def)),"target_origin_paths":target.filter(|def|!def.is_local()).map(|def|self.tcx.used_crate_source(def.krate).paths().map(|path|path.to_string_lossy().to_string()).collect::<Vec<_>>()),"implementation_origin_paths":implementation.and_then(|instance|if let ty::InstanceKind::Item(def)=instance.def{if !def.is_local(){Some(self.tcx.used_crate_source(def.krate).paths().map(|path|path.to_string_lossy().to_string()).collect::<Vec<_>>())}else{None}}else{None}),"signature":signature,"trait":trait_origin.map(|def|self.tcx.def_path_str(def)),"generics":args,"published_arguments":generic_args.map(|a|crate::semantic::args(self.tcx,a)),"published_result":crate::semantic::ty(self.tcx,self.typeck.expr_ty(expr)),"published_receiver":receiver.map(|r|crate::semantic::ty(self.tcx,self.typeck.expr_ty(r))),"region_stage":"rustc-hir-typeck-writeback-after-analysis","result_type":self.typeck.expr_ty(expr).to_string(),"receiver":receiver.map(|recv|self.typeck.expr_ty(recv).to_string()),"adjustments":receiver.map(|recv|self.typeck.expr_adjustments(recv).iter().map(|a|json!({"kind":format!("{:?}",a.kind),"target":a.target.to_string(),"published_target":crate::semantic::ty(self.tcx,a.target)})).collect::<Vec<_>>()),"span":span(self.tcx,expr.span),"expansion_chain":chain(self.tcx,expr.span),"disposition":if scalar {"scalar-operation"}else if matches!(implementation.map(|instance|instance.def),Some(ty::InstanceKind::Virtual(..))){"dynamic-trait-call"}else if target.is_some() && trait_origin.is_some() && implementation.is_none(){"generic-trait-call"}else if target.is_some(){"resolved-call"}else{"unsupported-call"}}));
         }
         intravisit::walk_expr(self, expr);
         self.parent = parent;
     }
 }
+
+pub fn body(
+    tcx: TyCtxt<'_>,
+    did: hir::def_id::DefId,
+) -> (
+    Option<Vec<String>>,
+    Vec<Value>,
+    std::collections::BTreeMap<String, Value>,
+    Vec<Value>,
+) {
+    if let Some(body) = tcx.hir_maybe_body_owned_by(did.expect_local()) {
+        let tokens = Some(crate::identity::tokens(&rustc_hir_pretty::expr_to_string(
+            &(&tcx as &dyn hir::intravisit::HirTyCtxt),
+            body.value,
+        )));
+        let mut visitor = Typed {
+            tcx,
+            typeck: tcx.typeck(did.expect_local()),
+            nodes: vec![],
+            types: vec![],
+            parent: None,
+            catalog: Default::default(),
+        };
+        visitor.visit_body(body);
+        (tokens, visitor.nodes, visitor.catalog, visitor.types)
+    } else {
+        (None, vec![], Default::default(), vec![])
+    }
+}
+
 pub fn selected(tcx: TyCtxt<'_>, decl: &Declaration) -> bool {
     let expansion = decl.span.ctxt().outer_expn().expn_data();
     if !matches!(expansion.kind, ExpnKind::Macro(MacroKind::Derive, _)) {
         return false;
     }
+    selected_source(tcx, decl.span)
+}
+pub fn selected_source(tcx: TyCtxt<'_>, span: Span) -> bool {
+    let path = tcx
+        .sess
+        .source_map()
+        .lookup_char_pos(span.lo())
+        .file
+        .name
+        .prefer_local_unconditionally()
+        .to_string();
     std::env::var("SIFR_BUILTIN_SOURCE_SUFFIX").is_ok_and(|source| {
-        tcx.sess
-            .source_map()
-            .lookup_char_pos(decl.span.lo())
-            .file
-            .name
-            .prefer_local_unconditionally()
-            .to_string()
-            .ends_with(&source)
+        if source.ends_with('/') {
+            path.contains(&source)
+        } else {
+            path.ends_with(&source)
+        }
     })
 }
 pub fn capture(
@@ -180,25 +243,8 @@ pub fn capture(
     let mut catalog = std::collections::BTreeMap::new();
     for decl in ast.iter().filter(|decl| selected(tcx, decl)) {
         let did = decl.def.to_def_id();
-        let mut sites = vec![];
-        let mut body_tokens = None;
-        if let Some(bodyid) = tcx.hir_maybe_body_owned_by(decl.def) {
-            let body = bodyid;
-            body_tokens = Some(crate::identity::tokens(&rustc_hir_pretty::expr_to_string(
-                &(&tcx as &dyn hir::intravisit::HirTyCtxt),
-                body.value,
-            )));
-            let mut visitor = Typed {
-                tcx,
-                typeck: tcx.typeck(decl.def),
-                nodes: vec![],
-                parent: None,
-                catalog: Default::default(),
-            };
-            visitor.visit_body(body);
-            sites = visitor.nodes;
-            catalog.extend(visitor.catalog);
-        }
+        let (body_tokens, sites, body_catalog, body_types) = body(tcx, did);
+        catalog.extend(body_catalog);
         let ast_sites=decl.sites.iter().map(|site|json!({"kind":site.kind,"token_sequence":crate::identity::tokens(&site.tokens),"tokens":site.tokens,"ancestor":site.ancestor,"span":span(tcx,site.span),"expansion_chain":chain(tcx,site.span)})).collect::<Vec<_>>();
         let parent = tcx.parent(did);
         let implementation_owner = if matches!(tcx.def_kind(did), hir::def::DefKind::Impl { .. }) {
@@ -217,7 +263,7 @@ pub fn capture(
                 .skip_norm_wip()
                 .def_id,
         ));
-        records.push(json!({"structural_identity":tcx.def_path(did).to_string_no_crate_verbose(),"generic_bounds":crate::identity::bounds(tcx,implementation_owner),"generic_parameters":tcx.generics_of(implementation_owner).own_params.iter().map(|param|json!({"name":param.name.to_string(),"kind":format!("{:?}",param.kind)})).collect::<Vec<_>>(),"generic_predicates":tcx.predicates_of(implementation_owner).predicates.iter().map(|(predicate,_)|predicate.to_string()).collect::<Vec<_>>(),"receiver_identity":crate::identity::ty(tcx,receiver),"trait_identity":trait_identity,"visibility":match tcx.visibility(did){ty::Visibility::Public=>json!("Public"),ty::Visibility::Restricted(module)=>json!({"restricted_to":crate::identity::path(tcx,module)})},"canonical_signature":if matches!(tcx.def_kind(did),hir::def::DefKind::AssocFn){Some(crate::identity::signature(tcx,did))}else{None},"token_sequence":crate::identity::tokens(&decl.tokens),"owner":tcx.def_path_str(did),"owner_kind":format!("{:?}",tcx.def_kind(did)),"parent":tcx.def_path_str(parent),"trait":tcx.trait_of_assoc(did).map(|def|tcx.def_path_str(def)),"signature":if matches!(tcx.def_kind(did),hir::def::DefKind::Fn|hir::def::DefKind::AssocFn){Some(tcx.fn_sig(did).instantiate_identity().skip_norm_wip().to_string())}else{None},"tokens":decl.tokens,"ast_impl_member_count":decl.impl_member_count,"hir_members":if matches!(tcx.def_kind(did),hir::def::DefKind::Impl{..}){Some(tcx.associated_items(did).in_definition_order().map(|item|tcx.def_path_str(item.def_id)).collect::<Vec<_>>())}else{None},"hir_impl_member_count":if matches!(tcx.def_kind(did),hir::def::DefKind::Impl{..}){Some(tcx.associated_items(did).in_definition_order().count())}else{None},"ast_body_tokens":decl.body_tokens.as_ref().map(|text|crate::identity::tokens(text)),"hir_body_tokens":body_tokens,"ast_body":decl.body,"hir_body":tcx.hir_maybe_body_owned_by(decl.def).is_some(),"span":span(tcx,decl.span),"expansion_chain":chain(tcx,decl.span),"ast_sites":ast_sites,"typed_sites":sites}));
+        records.push(json!({"body_type_dependencies":body_types,"declaration_facts":crate::semantic::declaration(tcx,did,implementation_owner),"structural_identity":tcx.def_path(did).to_string_no_crate_verbose(),"generic_bounds":crate::identity::bounds(tcx,implementation_owner),"generic_parameters":tcx.generics_of(implementation_owner).own_params.iter().map(|param|json!({"name":param.name.to_string(),"kind":format!("{:?}",param.kind)})).collect::<Vec<_>>(),"generic_predicates":tcx.predicates_of(implementation_owner).predicates.iter().map(|(predicate,_)|predicate.to_string()).collect::<Vec<_>>(),"receiver_identity":crate::identity::ty(tcx,receiver),"trait_identity":trait_identity,"visibility":match tcx.visibility(did){ty::Visibility::Public=>json!("Public"),ty::Visibility::Restricted(module)=>json!({"restricted_to":crate::identity::path(tcx,module)})},"canonical_signature":if matches!(tcx.def_kind(did),hir::def::DefKind::AssocFn){Some(crate::identity::signature(tcx,did))}else{None},"token_sequence":crate::identity::tokens(&decl.tokens),"owner":tcx.def_path_str(did),"owner_kind":format!("{:?}",tcx.def_kind(did)),"parent":tcx.def_path_str(parent),"trait":tcx.trait_of_assoc(did).map(|def|tcx.def_path_str(def)),"signature":if matches!(tcx.def_kind(did),hir::def::DefKind::Fn|hir::def::DefKind::AssocFn){Some(tcx.fn_sig(did).instantiate_identity().skip_norm_wip().to_string())}else{None},"tokens":decl.tokens,"ast_impl_member_count":decl.impl_member_count,"hir_members":if matches!(tcx.def_kind(did),hir::def::DefKind::Impl{..}){Some(tcx.associated_items(did).in_definition_order().map(|item|tcx.def_path_str(item.def_id)).collect::<Vec<_>>())}else{None},"hir_impl_member_count":if matches!(tcx.def_kind(did),hir::def::DefKind::Impl{..}){Some(tcx.associated_items(did).in_definition_order().count())}else{None},"ast_body_tokens":decl.body_tokens.as_ref().map(|text|crate::identity::tokens(text)),"hir_body_tokens":body_tokens,"ast_body":decl.body,"hir_body":tcx.hir_maybe_body_owned_by(decl.def).is_some(),"span":span(tcx,decl.span),"expansion_chain":chain(tcx,decl.span),"ast_sites":ast_sites,"typed_sites":sites}));
     }
     (records, catalog)
 }

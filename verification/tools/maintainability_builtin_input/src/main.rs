@@ -8,9 +8,11 @@ extern crate rustc_interface;
 extern crate rustc_lexer;
 extern crate rustc_middle;
 extern crate rustc_span;
+extern crate rustc_type_ir;
 mod expanded;
 mod identity;
 mod inventory;
+mod semantic;
 mod typed;
 use rustc_driver::{Callbacks, Compilation};
 use rustc_interface::interface;
@@ -49,7 +51,7 @@ impl Callbacks for Capture {
         let other = typed::other_macros(tcx, &self.ast);
         let sources=tcx.sess.source_map().files().iter().filter_map(|file|file.src.as_ref().map(|src|json!({"file":file.name.prefer_local_unconditionally().to_string(),"text":src.as_str()}))).collect::<Vec<_>>();
         let path = std::env::var_os("SIFR_BUILTIN_CAPTURE").expect("explicit capture destination");
-        let bytes = serde_json::to_vec_pretty(&json!({"schema":"sifr-maintainability-builtin-capability-v1", "cfg":cfg,"lowering_erased_bound":tcx.lang_items().pointee_sized_trait().map(|def|identity::path(tcx,def)),"callable_catalog":catalog,"expanded_owner_ledger":expanded_owners,"declarations":result, "other_macro_declarations":other, "source_files":sources})).expect("JSON serialization");
+        let bytes = serde_json::to_vec_pretty(&json!({"schema":"sifr-maintainability-builtin-capability-v2", "cfg":cfg,"lowering_erased_bound":tcx.lang_items().pointee_sized_trait().map(|def|identity::path(tcx,def)),"callable_catalog":catalog,"expanded_owner_ledger":expanded_owners,"declarations":result, "other_macro_declarations":other, "source_files":sources})).expect("JSON serialization");
         std::fs::write(path, bytes).expect("write owned evidence");
         Compilation::Stop
     }
