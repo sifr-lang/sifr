@@ -1,0 +1,6 @@
+[package]
+name = "builtin_fixture"
+version = "0.1.0"
+edition = "2024"
+[dependencies]
+field_origin = { path = "../field_origin", version = "=0.1.0" }

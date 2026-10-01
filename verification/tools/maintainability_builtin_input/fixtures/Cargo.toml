@@ -1,0 +1,3 @@
+[workspace]
+members = ["fixture_root", "field_origin"]
+resolver = "3"
