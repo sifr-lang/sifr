@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -55,10 +56,12 @@ def cargo_metadata() -> dict[str, str]:
     return identities
 
 
-def cargo_run(command: list[str], target_dir: Path) -> list[dict[str, Any]]:
+def cargo_run(command: list[str], target_dir: Path,
+              settings: dict[str, str] | None = None) -> list[dict[str, Any]]:
     environment = os.environ.copy()
     environment.update(CARGO_INCREMENTAL="1", CARGO_NET_OFFLINE="true",
                        CARGO_TARGET_DIR=str(target_dir))
+    environment.update(settings or {})
     result = subprocess.run(command, cwd=REPO_ROOT, env=environment, text=True,
                             capture_output=True, check=False)
     if result.returncode:
@@ -112,12 +115,21 @@ def compare_hashes(first: dict[str, str], next_build: dict[str, str], mode: str)
         raise BuildError(f"{mode} SQL executable bytes differ: {', '.join(differing)}")
 
 
-def build_native(target: str, target_dir: Path, identities: dict[str, str]) -> dict[str, str]:
+def native_settings(first: Path, second: Path) -> dict[str, str]:
+    """Hold both path maps constant, including the product-identity inputs."""
+    encoded = os.environ.get("CARGO_ENCODED_RUSTFLAGS")
+    flags = encoded.split("\x1f") if encoded else shlex.split(os.environ.get("RUSTFLAGS", ""))
+    flags.extend(f"--remap-path-prefix={path}=/sifr-sql-build" for path in (first, second))
+    return {"CARGO_ENCODED_RUSTFLAGS": "\x1f".join(flags), "CARGO_PROFILE_DEV_DEBUG": "0"}
+
+
+def build_native(target: str, target_dir: Path, identities: dict[str, str],
+                 settings: dict[str, str]) -> dict[str, str]:
     command = ["cargo", "build", "--locked", "--offline", "--target", target,
                "--profile", "dev", "--message-format=json-render-diagnostics"]
     for name, package in TOOLS.items():
         command.extend(("-p", package, "--bin", name))
-    return selected_executables(cargo_run(command, target_dir), target_dir, target, identities)
+    return selected_executables(cargo_run(command, target_dir, settings), target_dir, target, identities)
 
 
 def check_cross_target(target: str, target_dir: Path) -> int:
@@ -160,8 +172,8 @@ def self_test() -> None:
                 mutations.append(label)
                 return
             raise BuildError(f"self-test accepted {label}")
-        changed = dict(expected)
-        changed["sifr-sql-mysql"] = "0" * 64
+        (owned / "sifr-sql-mysql").write_bytes(b"changed linked executable bytes")
+        changed = selected_executables(messages, target_dir, target, identities)
         rejects("changed-bytes", lambda: compare_hashes(expected, changed, "independent"))
         rejects("missing", lambda: selected_executables(messages[:-1], target_dir, target, identities))
         rejects("duplicate", lambda: selected_executables(messages + messages[:1], target_dir, target, identities))
@@ -202,17 +214,23 @@ def main() -> int:
                "rustc": subprocess.run(["rustc", "-vV"], text=True, capture_output=True,
                                         check=True).stdout.strip(),
                "cargo_incremental": "1", "cargo_net_offline": "true"}
-    with tempfile.TemporaryDirectory(prefix="candidate-a-", dir=parent) as first_dir:
-        first = Path(first_dir)
+    with tempfile.TemporaryDirectory(prefix="candidate-", dir=parent) as candidate_dir:
+        first = Path(candidate_dir) / "a"
+        second = Path(candidate_dir) / "b"
         if target == context["host"]:
             identities = cargo_metadata()
-            clean = build_native(target, first, identities)
-            reused = build_native(target, first, identities)
+            settings = native_settings(first, second)
+            print("SQL native qualification: clean A", file=sys.stderr, flush=True)
+            clean = build_native(target, first, identities, settings)
+            print("SQL native qualification: unchanged rebuild A", file=sys.stderr, flush=True)
+            reused = build_native(target, first, identities, settings)
             compare_hashes(clean, reused, "unchanged rebuild")
-            with tempfile.TemporaryDirectory(prefix="candidate-b-", dir=parent) as second_dir:
-                independent = build_native(target, Path(second_dir), identities)
+            shutil.rmtree(first)
+            print("SQL native qualification: independent clean B", file=sys.stderr, flush=True)
+            independent = build_native(target, second, identities, settings)
             compare_hashes(clean, independent, "independent clean rebuild")
             context.update(claim="linked-native-target-directories", executables=clean,
+                           native_settings=settings,
                            modes=["clean-a", "reused-a", "clean-b", "locked", "offline"])
         else:
             artifacts = check_cross_target(target, first)
