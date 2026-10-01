@@ -1,0 +1,21 @@
+[package]
+name = "sifr_maintainability_builtin_input"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+serde_json = "=1.0.150"
+anyhow = "=1.0.102"
+
+cfg = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4" }
+hir = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4" }
+load-cargo = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4" }
+project-model = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4" }
+syntax = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4" }
+vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4" }
+[profile.dev]
+debug = 0
+incremental = false
