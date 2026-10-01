@@ -546,6 +546,7 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
                         member["generic_bounds"].clear()
             self.mutation(change,label)
 
+        dynamic_acceptance.method_binders(self)
         dynamic_acceptance.source_binder_negative(self)
 
     def test_extended_inventory_owner_and_constraint_removals_fail_closed(self):

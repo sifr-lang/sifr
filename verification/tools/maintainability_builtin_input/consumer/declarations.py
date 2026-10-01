@@ -285,3 +285,20 @@ def invocation_correspondence(capture, common, inputs, b):
                 attribute=chain[1]["call_site"]
                 if site["attribute_start"]!=attribute["start"] or site["attribute_end"]!=attribute["end"]:
                     raise b.Unsupported("invocation attribute source ordinal conflict")
+
+
+
+def context_correspondence(capture, common, inputs, b):
+    context=common.get("context")
+    if not isinstance(context,dict) or set(context)!={"kind","root_file","package","crate"}:
+        raise b.Unsupported("missing selected RA semantic context correspondence")
+    if context["kind"]!="ra-semantic-selected-cargo-target-root" or context["package"]!=inputs["package"] or context["crate"]!=capture["context"]["crate"]:
+        raise b.Unsupported("selected RA crate/package context correspondence conflict")
+    sources=[a for a in inputs["invocation"]["args"] if a.endswith(".rs")]
+    if len(sources)!=1:
+        raise b.Unsupported("ambiguous original compiler root source correspondence")
+    source=Path(sources[0])
+    if not source.is_absolute():
+        source=Path(inputs["input_root"])/source
+    if Path(context["root_file"]).resolve()!=source.resolve():
+        raise b.Unsupported("selected RA target/compiler original root source correspondence conflict")

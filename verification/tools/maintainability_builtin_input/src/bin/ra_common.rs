@@ -42,6 +42,24 @@ fn main() -> anyhow::Result<()> {
         ProjectManifest::discover_single(&vfs::AbsPathBuf::assert_utf8(root.to_path_buf()))?;
     let mut workspace = ProjectWorkspace::load(manifest, &config, &|p| eprintln!("{p}"))?;
     let capture: serde_json::Value = serde_json::from_slice(&std::fs::read(&args[4])?)?;
+    let project_model::ProjectWorkspaceKind::Cargo { cargo, .. } = &workspace.kind else {
+        anyhow::bail!("missing selected Cargo workspace authority");
+    };
+    let selected_targets = cargo
+        .packages()
+        .filter(|p| cargo[*p].is_member && cargo[*p].name == *package)
+        .flat_map(|p| cargo[p].targets.iter().copied())
+        .filter(|t| {
+            matches!(cargo[*t].kind, project_model::TargetKind::Lib { .. })
+                && Some(cargo[*t].name.as_str()) == capture["context"]["crate"].as_str()
+        })
+        .map(|t| cargo[t].root.clone())
+        .collect::<Vec<_>>();
+    anyhow::ensure!(
+        selected_targets.len() == 1,
+        "ambiguous selected Cargo library target root"
+    );
+    let selected_root = selected_targets[0].clone();
     let mut actual_cfg = vec![];
     for atom in capture["cfg"]
         .as_array()
@@ -93,7 +111,37 @@ fn main() -> anyhow::Result<()> {
         let mut records = vec![];
         let mut invocations = vec![];
         let mut trait_methods = std::collections::BTreeMap::new();
-        let mut selected_cfg = None;
+        let root_files = files
+            .iter()
+            .filter_map(|(file, path)| {
+                (path.as_path() == Some(selected_root.as_path())).then_some(file)
+            })
+            .collect::<Vec<_>>();
+        anyhow::ensure!(
+            root_files.len() == 1,
+            "missing/ambiguous selected root file identity"
+        );
+        let crates = hir::Crate::all(&db)
+            .into_iter()
+            .filter(|c| c.root_file(&db) == root_files[0])
+            .collect::<Vec<_>>();
+        anyhow::ensure!(
+            crates.len() == 1 && crates[0].origin(&db).is_local(),
+            "missing/ambiguous selected semantic crate authority"
+        );
+        let krate = crates[0];
+        let mut selected_cfg = krate
+            .cfg(&db)
+            .into_iter()
+            .map(|atom| match atom {
+                cfg::CfgAtom::Flag(key) => json!({"key":key.as_str(),"value":null}),
+                cfg::CfgAtom::KeyValue { key, value } => {
+                    json!({"key":key.as_str(),"value":value.as_str()})
+                }
+            })
+            .collect::<Vec<_>>();
+        selected_cfg.sort_by_cached_key(|atom| atom.to_string());
+        let context = json!({"kind":"ra-semantic-selected-cargo-target-root","root_file":selected_root.as_str(),"package":package,"crate":capture["context"]["crate"]});
         for (file, path) in files.iter() {
             let Some(path) = path.as_path() else { continue };
             if !(if args[3].ends_with('/') {
@@ -104,21 +152,6 @@ fn main() -> anyhow::Result<()> {
                 continue;
             }
             let file_text = std::fs::read_to_string(path.as_str())?;
-            let Some(krate) = semantics.first_crate(file) else {
-                continue;
-            };
-            let mut cfg = krate
-                .cfg(&db)
-                .into_iter()
-                .map(|atom| match atom {
-                    cfg::CfgAtom::Flag(key) => json!({"key":key.as_str(),"value":null}),
-                    cfg::CfgAtom::KeyValue { key, value } => {
-                        json!({"key":key.as_str(),"value":value.as_str()})
-                    }
-                })
-                .collect::<Vec<_>>();
-            cfg.sort_by_cached_key(|atom| atom.to_string());
-            selected_cfg = Some(cfg);
             for module in krate.modules(&db) {
                 for definition in module.declarations(&db) {
                     let hir::ModuleDef::Adt(adt) = definition else {
@@ -360,7 +393,7 @@ fn main() -> anyhow::Result<()> {
         records.sort_by_cached_key(|r| r.to_string());
         println!(
             "{}",
-            json!({ "producer":"03fcb77246f2568adb0e9b2fa60d19c6cc1686f4", "cfg":selected_cfg,"common_members":records, "invocations":invocations,"trait_methods":trait_methods })
+            json!({ "producer":"03fcb77246f2568adb0e9b2fa60d19c6cc1686f4", "context":context,"cfg":selected_cfg,"common_members":records, "invocations":invocations,"trait_methods":trait_methods })
         );
         Ok::<_, anyhow::Error>(())
     })

@@ -148,3 +148,21 @@ def source_binder_negative(test):
     test.require("Error: unresolved declaration lifetime 'b in builtin_fixture::extension::ObjectShapes" in result.stderr and not result.stdout.strip(), "specific pinned RA source-authority rejection following compiler success")
     test.require(not any((output / name).exists() for name in ("successful.json", "common.json", "join.json")), "no successful combined receipt or accepted export/publication")
     (output / "rejection.json").write_bytes(b.encoded({"disposition": "compiler-only-source-authority-rejection", "compiler_capture_digest": receipt["capture_digest"], "binder_facts": fact, "resolver_returncode": result.returncode, "resolver_error": result.stderr, "combined_success": False}))
+
+
+
+def method_binders(test):
+    owner=next(d for d in test.extended["declarations"] if "TwoLifetimes" in d["owner"] and d["owner"].endswith("::hash"))
+    signature=owner["declaration_facts"]["signature"]
+    test.require(len(signature["binders"])==2 and all(v["kind"]=="region" for v in signature["binders"]), "genuine two generated-method reference binders")
+    for index,parameter in enumerate(signature["parameters"]):
+        region=parameter["region"]
+        test.require(region["kind"]=="ReBound" and region["depth"]=={"debruijn":0} and region["variable"]==index and region["origin"]==signature["binders"][index]["origin"], "actual generated-method binder depth/variable/original origin")
+    for label,field,value in (
+        ("valid-wrong-bound-depth","depth",{"debruijn":1}),
+        ("valid-wrong-bound-variable","variable",999),
+    ):
+        def change(c,common):
+            signature=next(d for d in c["declarations"] if d["owner"]==owner["owner"])["declaration_facts"]["signature"]
+            signature["parameters"][0]["region"][field]=value
+        test.mutation(change,label)

@@ -18,6 +18,8 @@ def positive(test):
         owners = [d for d in test.extended["declarations"] if d["receiver_identity"] == invocation["receiver"] and d["expansion_chain"][0]["macro_identity"] == invocation["macro"]]
         test.require(bool(owners) and all(sum(c["macro_identity"] == "core::macros::builtin::include" for c in d["expansion_chain"]) == 2 for d in owners), "original compiler nested include chain retained")
         test.require(all(d["expansion_chain"][0]["call_site"]["quality"] == "exact-source" for d in owners), "exact compiler derive source authority")
+    context = test.extended_common["context"]
+    test.require(context["kind"] == "ra-semantic-selected-cargo-target-root" and context["crate"] == "builtin_fixture", "selected semantic crate bound to actual Cargo target root")
     joined = b.validate_join(test.extended, test.extended_common, test.extended_authority, receipt=test.extended_receipt, input_identity=test.extended_receipt["inputs"])
     test.require(any("included_contracts::Included" in d["owner"] for d in joined), "actual included compiler/RA methods joined")
 
@@ -39,3 +41,12 @@ def negatives(test):
         ("attribute-ordinal", lambda i: i.update(attribute_ordinal=99)),
     ):
         test.mutation(lambda c, m, change=change: change(selected(m)), "included-source-" + name)
+    for name, change in (
+        ("omitted", lambda m: m.pop("context")),
+        ("empty", lambda m: m.update(context=None)),
+        ("package", lambda m: m["context"].update(package="wrong-package")),
+        ("crate", lambda m: m["context"].update(crate="wrong-crate")),
+        ("root", lambda m: m["context"].update(root_file="/forged/lib.rs")),
+        ("kind", lambda m: m["context"].update(kind="first-crate-fallback")),
+    ):
+        test.mutation(lambda c,m,change=change:change(m), "selected-semantic-context-" + name)

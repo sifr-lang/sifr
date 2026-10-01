@@ -451,6 +451,7 @@ def validate_common_obligations(capture, common):
 
 def _validate_join(capture, common, authority, *, receipt=None, input_identity=None, required=("call-count", "resolved-module-fanout", "declaration-signatures")):
     verify_capture(capture,receipt,input_identity,authority)
+    declaration_consumer.context_correspondence(capture,common,input_identity,sys.modules[__name__])
     declaration_consumer.capabilities(capture,required,sys.modules[__name__])
     declaration_consumer.invocation_correspondence(capture,common,input_identity,sys.modules[__name__])
     validate_common_obligations(capture, common)
