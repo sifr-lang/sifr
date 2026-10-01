@@ -1026,7 +1026,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a0 | Merged H02h5 and readiness #4187/#4188; **closed**, scope #4189 and receipt below. | Docs only: governed resolver/input contract and separately owned adapter prerequisite; no semantic production or metric pass. |
 | H03a1s | H03a0 and #4191 blocker; **closed**, scope #4192 and receipt below. | Docs only: pinned compiler builtin capability prerequisite. |
 | H03a1p | H03a1s closed; **unaccepted**, #4194 draft and #4195 blocker receipt. | Original builtin capability; repeated completeness defect requires H03a1pr. |
-| H03a1pi | H03a1p repeated finding; documentation scope defined below. | Docs only: independent inventory adjudication; no capability acceptance. |
+| H03a1pi | H03a1p repeated finding; **closed**, scope #4196 and receipt below. | Docs only: independent inventory adjudication; no capability acceptance. |
 | H03a1pr | Merged H03a1pi; waiting, separately assigned. | Bounded inventory repair plus complete carried H03a1p requalification/review. |
 | H03a1 | H03a0 and repaired H03a1p merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
@@ -7901,3 +7901,60 @@ merges.** This owner stops after documentation validation, publication, merge
 and receipt. It performs no repair, full adapter, metrics or external
 implementation review. There is no source-feasibility blocker identified; actual
 repair/capability acceptance remains open.
+
+### H03a1pi independent inventory scope delivery receipt (2026-10-01)
+
+**State: documentation-only H03a1pi closed; H03a1pr waiting and H03a1p unaccepted.**
+The scope merged in [PR #4196](https://github.com/sifr-lang/sifr/pull/4196) as
+`55f5b450ce93ab22a62240f0c2486f5b0d6465b5`, from final candidate
+`650dd18a9c9f77224ccbd40ca206d510514247c8` on base
+`67497f4d6ccfe943a4cd8a4accc437c31b1af538`. The merged tree equals candidate
+`767f6f225a4146d995404f815b2d4ffc5bc4e63a`.
+
+This adjudication accepts the repeated missing-owner finding and defines the
+separate H03a1pr repair. Eight exact official compiler component-source files
+support independent after-analysis HIR impl and type-associated membership
+inventory, one-to-one AST reconciliation and invocation-owned RA common-member
+obligations. It reserves four exact actual-producer inventory regression cases
+in addition to the original five BuiltinCapabilityTests. A new repair PR must
+review the full carried #4194 implementation. No feasibility build, compiler
+mutation, repaired producer, accepted semantic export or capability pass occurred.
+#4194 and both NOT SATISFIED reviews retain their unaccepted/failing status.
+
+On the final scope candidate, documentation structure and mutation checks passed
+(raw SHA-256 `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+the 900-line guard passed for 4,317 maintained files (raw SHA-256
+`5554142958fb6d01d49ccafcebc3f23177ed51fbfb8efcf79528af793bb9a79a`), and
+whitespace, canonical-only diff and clean-tree checks passed. Scoped documentation
+self-review was SATISFIED. The assigned documentation-only policy required no
+external implementation review or broad Cargo gate. No CI/integration/performance/
+release/whole-phase pass is claimed.
+
+Evidence remains outside Git on `yaser5@192.168.1.134` under
+`/data/sifr-h03a1p-inventory-adjudication-evidence-20261001/`, with
+`candidates/650dd18a9c9f77224ccbd40ca206d510514247c8/candidate-validation.json`
+SHA-256 `d134fd924e998091c5f65739241f05e281912d6e90835b8b69d0c59887caebc6`.
+`source-audit.json` has SHA-256
+`66e89b2f5135b8f84736b6ebbe595a60ecfc60d43b507dad56aaa15c455b5ef8`;
+`self-review.md` has SHA-256
+`d703c069e7e33c303de2aee79ea031c2000cd8dafac6dcaea6a2a90616537a69`.
+The first documentation invocation lacked the nested editor input; its failure
+is preserved as `initial-doc-input-failure.log`. Initialization of that exact
+nested gitlink in the owned checkout supplied the input and the rerun passed.
+The source audit verifies each inspected installed file against the previously
+acquired official rustc-dev component inventory. Historical implementation/CI
+failures remain preserved in their original evidence directories.
+
+The owner used `/data/sifr-h03a1p-inventory-adjudication-20261001`, branch
+`codex/h03a1p-inventory-adjudication-20261001` and a separate receipt branch,
+plus an isolated Mac bare bundle relay. Both shared primary checkouts and the
+previous owner's source/index/target/evidence were preserved. No Cargo operation,
+resource probe or cleanup ran. Receipt changes need relevant documentation and
+scope/diff/clean-tree checks only; no external review or broad gate is repeated.
+
+**Next action: separately assign H03a1pr only.** Carry and repair the complete
+quarantined implementation under the scope above, run the original five and new
+four cases individually and by class, review its complete implementation, merge
+and record its bounded result, then stop. Full H03a1 adapter acceptance and all
+seven H03a MetricTests remain dependent. There is no local documentation or
+source-feasibility blocker; H03a1p capability remains unproven.
