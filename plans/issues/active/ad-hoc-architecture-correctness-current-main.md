@@ -471,6 +471,75 @@ requires the qualifier's pass and the retained owner acceptances; its work is
 read-only review and closure documentation. This documentation owner stops after
 review, merge and a separate receipt; capture and Q01 require separate assignments.
 
+## V01 reference-repair plan delivery receipt (2026-10-01)
+
+**State: documentation plan delivered; explicit capture approval pending;
+Q01 and whole-phase closure remain blocked.**
+[PR #4209](https://github.com/sifr-lang/sifr/pull/4209) merged as
+`3244562887a46f0312f3a1d08a54234c76fad8b9` from final documentation candidate
+`757f545965683da54f226aafcfc61cbcdb85a58d` (base
+`6aafd4763507b3f23157d5f75f5342910c659388`). Only this canonical phase Markdown
+changed. The delivery closes preparation of the V01 reference-repair approval
+and handoff decision, not capture, reference admission or dependent qualification.
+
+`python3 verification/areas/documentation/check_structure.py`,
+`python3 scripts/check_file_size_guardrails.py` (**4,319 files**, limit 900),
+`git diff --check` and the canonical-path-only scope check passed on the final
+candidate. The initial documentation check failed because the isolated checkout
+lacked the pinned editor `package.json`; initializing the unchanged editor/nested
+VS Code submodules repaired the setup and the checks passed. No first-party
+source, Cargo lock, compiler/reference policy, fixture, existing profile or
+verification selection changed. No tests, Cargo preparation, admission probe,
+benchmark, reference capture or broad gate ran for this documentation item.
+
+Scoped read-only Opus review of initial candidate
+`dd2bfbac43a8819d5ae121dd41748b8b9960f568` returned **SATISFIED**, no blocking
+findings, response SHA-256
+`cc96428eb91d4eb8e1cba8239fb559aa91ad2b9d29b60ae70ca7157dedfbd026`.
+Its `origin/main` preparation and workspace-fixture wording suggestions were
+resolved. Subsequent documentation-only corrections incorporated the separately
+authorized C02b cleanup receipt, refreshed reserve arithmetic, and specified
+private sibling target/temp/Sifr-cache paths supported by the pinned compiler.
+They passed documentation checks and self-review under the assigned docs-only
+policy; external review was not duplicated. Final self-review SHA-256 is
+`d04e108e8ed5f5a1d8dcf61f69040082e73e986ef7ef5215d9dca4f57537fb6d`.
+
+External evidence on `yaser5@192.168.1.134` is
+`/data/sifr-architecture-v01-reference-plan-evidence-20261001/`:
+`proposal-inputs.json` binds the exact empty overlay, manifest/cases and initial
+resource observations; candidate-keyed directories bind the Opus response and
+final checks/self-review. Final documentation and file-size log SHA-256 values
+are `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`
+and `63cd754f846cf9db14c30892ab814715bbbe0bce2f4b0352b4d696b7fab62aa5`;
+final diff SHA-256 is
+`c73e76a8c5e579072365825c96072ca81e0fa83c466ba1a95cb8ccd8c5308453`.
+The copied `resource-cleanup-receipt/` preserves the orchestrator's original
+C02b ownership/process/handle proofs and result: **24,252,141,568 bytes**
+reclaimed, `/data` **48,601,337,856 bytes** free, and **17,462,824,960 bytes**
+above the initial 29 GiB capture estimate. Final pre-operation reserve admission
+still belongs to the future capture owner; no other cache was cleaned or adopted.
+
+This session owns checkout `/data/sifr-architecture-v01-reference-plan-20261001`,
+plan branch `codex/architecture-v01-reference-plan-20261001`, this separate
+receipt branch `codex/architecture-v01-reference-plan-receipt-20261001`, and an
+isolated Mac bare publication relay. Both primary checkouts, existing references,
+warm caches, source branches and evidence were preserved. No automatic CI
+qualification or full gate is inferred from this docs-only merge.
+
+**Exact next decision:** user/compiler-performance approval for full-corpus
+capture from merged E03 compiler `4b319c0f784c4c5e71d93621de8331d41f98e3fc`,
+empty tooling overlay, pinned manifest/input digests above, actual Linux kernel
+`7.0.0-34-generic`, and the proposed private `/data` target/temp/Sifr-cache paths,
+creating `linux-i7-4720hq-12gb-dev-v2-data` and its bundled baseline/derived
+budgets. The explicit requirement comes from the named-reference README and
+performance policy; the existing governor authorization and routine execution
+instruction do not supply that approval. Once directly approved, separately
+assign V01 capture with a fresh resource check, then Q01's exact-candidate
+`scripts/run_all_tests.sh` only after the merged compatible-reference handoff.
+H01e/H01i, H03a1pera/H03a1perp/H03a1pe and their H03/D01 dependencies, and
+external X02/Emitted Rust acceptances remain as recorded. This owner stops after
+this documentation receipt; no next batch or capture was started.
+
 ## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
 
 The Emitted-Rust final qualifier's exact-main
