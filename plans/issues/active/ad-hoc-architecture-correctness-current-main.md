@@ -157,6 +157,51 @@ and docs-only closure keep their separate owner and cannot start from this
 blocked admission. This worker changes only this phase record and stops;
 no next batch or implementation repair was started.
 
+## Q01 blocked qualification record delivery receipt (2026-10-01)
+
+**State: blocker record delivered; Q01 remains blocked.**
+[PR #4207](https://github.com/sifr-lang/sifr/pull/4207) merged as
+`30f45ff8322ce54a16c5f4feb40072066d1d3841` from documentation candidate
+`ada9969af322f23ea9924df474476f7e5956241d` (base and stopped qualification
+candidate `7525b770560e9f7534445a61666a461c50612d6e`, documentation tree
+`41f24a9ec38a0fd5ed5f762bb890d48bf43f7c1c`).
+
+The record passed `python3 verification/areas/documentation/check_structure.py`,
+`python3 scripts/check_hir_maintainability_guardrails.py`,
+`python3 scripts/check_file_size_guardrails.py` (4,319 files, limit 900 lines),
+and `git diff --check`. Their raw logs are outside Git in
+`/data/sifr-architecture-q01-final-qualification-evidence-20261001/`;
+documentation, HIR and file-size log SHA-256 values are respectively
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`,
+`0371f7ff0407b48ec3c2b827e55899ed48ef9f856b1b3562c29558d86f65f945`,
+and `63cd754f846cf9db14c30892ab814715bbbe0bce2f4b0352b4d696b7fab62aa5`.
+The only initialized submodule inputs were the unchanged pinned editor and
+nested VS Code commits. The first-party source, Cargo lock, reference,
+benchmark corpus and runner profile were unchanged. Their exact identity
+digests are preserved in the qualified-candidate evidence directory's
+`validation-inputs.json`.
+
+The worker owns
+`/data/sifr-architecture-q01-final-qualification-20261001`, implementation-free
+record branch `codex/architecture-q01-final-qualification-20261001` and this
+separate receipt branch `codex/architecture-q01-qualification-receipt-20261001`.
+Publication used an isolated authenticated Mac bare relay; both primary
+checkouts and the offered warm target were preserved. No implementation
+repair occurred, so no scoped implementation review was needed; the
+docs-only record/receipt require relevant documentation checks, not another
+broad gate or external review. No automatic CI qualification is inferred from
+the merge.
+
+**Next action:** the V01/compiler-performance owner resolves the live kernel
+and expanded corpus's governed compatible-reference prerequisite and the
+required storage reserve. Separately assign Q01 afterward to run the full
+merge profile on the then-current exact candidate. H01e/H01i,
+H03a1pera/H03a1perp/H03a1pe and their dependent H03 work, D01b/D01c, and
+external X02/retained Item 12 remain as recorded. This receipt closes delivery
+of the blocker record only. It supplies no full-gate or companion-freshness
+pass, Q01 acceptance, release qualification or whole-phase closure; the
+whole-phase closer is not admitted. This owner stops without a next batch.
+
 ## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
 
 The Emitted-Rust final qualifier's exact-main
