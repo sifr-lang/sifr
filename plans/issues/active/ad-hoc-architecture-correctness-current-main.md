@@ -12,7 +12,7 @@ The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/p
 
 ## H03a1pets trait-object scope adjudication (2026-10-01)
 
-**Current controlling state: H03a1pets documentation decision complete;
+**Current controlling state: H03a1pets documentation adjudication closed;
 H03a1pet ready for separate assignment after this scope and its delivery receipt
 merge; H03a1pe remains open and unaccepted.** This documentation-only decision
 reads fresh main `f0f06a0e9f33b11abb38bc5219704789667ba3f9` (#4214), the binding
@@ -239,6 +239,78 @@ Independent H01e automatic-review restriction/H01i, external-owner work, Q01
 integration and whole-phase closure retain their owners and status. This owner
 merges only this documentation scope and a separate receipt, then stops.
 **Documentation item blocker: none. Implementation acceptance: still open.**
+
+### H03a1pets trait-object scope delivery receipt (2026-10-01)
+
+**State: H03a1pets documentation adjudication closed; H03a1pet ready for separate
+implementation assignment after this receipt merges; H03a1pe still unaccepted.**
+[PR #4215](https://github.com/sifr-lang/sifr/pull/4215) merged as
+`e96f4a15ffe1e2af15437bd2743d9ca3313d89de`, from exact candidate
+`2a11d3f6d48370245037ad52ca24d12d39904d3c` on fresh base
+`f0f06a0e9f33b11abb38bc5219704789667ba3f9`. Its merged tree equals candidate tree
+`7a1f18904d3de11f7fe88060413a2be9564f5e32`. Only this canonical Markdown changed.
+
+The source-backed decision authorizes ordinary Dynamic support and complete
+body-observation coverage through the existing pinned helper, inside the binding
+approved H03a1peo contract. It retains actual existential order/kinds/binders,
+omitted Self, identity/associated-item trait ownership/external closure,
+arguments/projection terms, principal and explicit empty-state facts, and genuine
+object regions distinct from enclosing references. It requires real six-field
+Debug aggregate and other bounded existential fixtures, authority-bound semantic
+negatives and all thirteen original individual cases plus all three classes.
+No new producer, pin/lock/const-impl expansion or consumer permission is approved.
+A serializer-only success cannot close H03a1pe: H03a1pet must carry the entire
+unaccepted extension and complete all four original Linux contexts, focused
+checks, exact-candidate scoped review and merge.
+
+The read-only audit independently verified both authentic raw files' 68
+unsupported dyn-Debug nodes/15 owners and the 1,200-owner, 1,109-impl-universe,
+2,047-site, 886-type-dependency diagnostic counts. The first owner's exact path,
+raw digests and absence of accepted `capture.json` remain as recorded above.
+Failed draft #4213, head `8bdbe4430c767477d454ab6af8fea38a395145dc`, its clean stopped
+worktree, branch and inactive formerly exclusive target are preserved and must
+not merge. The three 58/34/39-assertion diagnostics, failed fourth case, unrun
+remaining selections/classes/review and unset-reference pre-assertion CI failure
+remain unsuccessful qualification evidence, with the CI issue in V01 ownership.
+
+Candidate-keyed documentation evidence on `yaser5@192.168.1.134` is at
+`/data/sifr-h03a1pets-trait-object-scope-evidence-20261001/candidates/2a11d3f6d48370245037ad52ca24d12d39904d3c/`.
+`qualification.json` SHA-256:
+`f1cb29b656d4edd1d45cbc011335d624b5a34c66606bcb0bdc94a78fe0730b6f`;
+`self-review.md` SHA-256:
+`496fc0b968ece1080704180bdf373e4dcc375e20cfc1dc94b7541f7e790432eb`.
+The source-audit digest is recorded above, and `source-inputs.json` retains exact
+pinned public source URLs/content digests. The exact documentation structure
+command and registered mutation harness passed; the 900-line guard passed for
+4,319 maintained files. Canonical-only scope, pinned source links/line anchors,
+whitespace, clean-tree, stopped-source/evidence immutability and historical
+byte-preservation checks passed. Scoped documentation self-review was
+**SATISFIED, no blockers**, for accuracy of the bounded adjudication only.
+
+Historical canonical receipts and the approved observation contract are entirely
+byte-preserved after removing the new controlling section and reversing only
+prospective execution table/sequence changes. This separate record updates the
+current state and delivery evidence only. Its relevant documentation, history,
+scope/diff/whitespace/clean-tree checks need no further external review or broad
+gate. No Cargo/build/compiler test, fresh producer, target adoption/cleanup,
+capability/adapter/Windows/metric/performance/release or phase pass occurred.
+
+The owner used `/data/sifr-h03a1pets-trait-object-scope-20261001`, branches
+`codex/h03a1pets-trait-object-scope-20261001` and
+`codex/h03a1pets-trait-object-scope-receipt-20261001`, and owned Mac bare relay
+`/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-h03a1pets-relay.w6120vj4/relay.git`.
+Only the exact editor/nested VS Code documentation gitlinks were initialized.
+Shared primary checkouts, prior worktrees, helper/targets and performance inputs
+were not modified. Outside-Git receipt evidence is keyed by its final candidate.
+
+**Next action: separately assign H03a1pet after this receipt merge.** It closes
+outstanding H03a1pe only after complete combined acceptance; H03a1/H03a/H03b-H03f
+and D01b/D01c remain dependency-blocked. H03a1pera/perp stay prospectively
+deactivated. Preserve H03ep -> exact expanded V01 approval/full governed capture
+-> H03eq; the 65-case planning capture was not performed. H01e's independent
+automatic-review restriction/H01i and all external/integration/closure owners
+remain unchanged. **Documentation blocker: none. Implementation qualification:
+unproven.** This owner stops after the receipt merge and starts no next batch.
 
 ## H03a1pe observation-extension stop: generated Debug trait objects (2026-10-01)
 
@@ -2122,7 +2194,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1peo | User-approved Astra advisory and #4203-#4210; **closed**, #4211 and delivery receipt above. | Prospective observation contract and H03e preparation/qualification sequence; no capability or capture pass. |
 | H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
 | H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
-| H03a1pets | Merged #4214 stop and approved H03a1peo #4211/#4212; **documentation decision complete**, delivery receipt pending. | Canonical-only trait-object scope adjudication above; no implementation or qualification pass. |
+| H03a1pets | Merged #4214 stop and approved H03a1peo #4211/#4212; **closed**, scope #4215 and delivery receipt above. | Canonical-only trait-object scope adjudication; no implementation or qualification pass. |
 | H03a1pet | Merged H03a1pets scope/receipt and H03a1peo, accepted H03a1pr/H03a1p and closed H03a1pes; **ready after documentation merges**. | One combined Dynamic/observation-coverage repair plus complete carried H03a1pe qualification/review/merge; serializer-only pass is insufficient. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **open and unaccepted**, failed #4213 preserved. | H03a1pet owns the outstanding combined extension under the approved observation contract; full original qualification/review/merge must close it before H03a1 adapter resumes. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
