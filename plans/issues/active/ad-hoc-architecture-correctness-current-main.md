@@ -8008,3 +8008,155 @@ H03a1 owns the review follow-ups: bind RA source ranges and attribute/derive ord
 The owner used `/data/sifr-h03a1pr-independent-inventory-20261001`, implementation branch `codex/h03a1pr-independent-inventory` and a separate receipt branch. After fresh clean/process/handle/input checks it assumed exclusive ownership of the compatible inactive prior target, preserving stopped source/index/branches/logs. Reserve remained about 30 GiB disk and 10 GiB available RAM before final qualification; no pressure cleanup occurred. Compiler/RA captures ran sequentially. Immutable component inputs were copied into owned evidence so drift-test temporary files stayed inside this session. Publication used an isolated authenticated Mac bare relay, preserving both primary checkouts.
 
 **Next action: separately assign H03a1 only.** Repaired H03a1p now supplies its accepted capability prerequisite. Full adapter acceptance must merge before H03a metrics start. This bounded owner stops after its documentation receipt; no next batch was started. **Current item blocker: none.**
+
+### H03a1 resumption: combined builtin admission gap (2026-10-01)
+
+**State: needs-new-scope; complete H03a1 adapter acceptance remains open.**
+The bounded resumption started from current main
+`e0227721596b4b7bc2d7367863c03407e57fe94c`, tree
+`19f9a0b969f8e9645bc039accf22376a19a61154`. H03a1pr's repaired H03a1p
+capability remains accepted within its proven surface. Its four admitted builtin
+identities do not discharge the additional current-source kinds and lifetime
+shapes discovered below. The coordinator directed this owner to finish bounded
+diagnostics, record the combined gap and stop for a separate scope adjudication.
+No semantic adapter implementation or expanded capability admission is delivered.
+
+Fresh official component/runtime/source/server and existing helper-build identity
+checks passed before diagnostic reuse. The unchanged accepted compiler companion
+analyzed original selected Cargo inputs with `SIFR_BUILTIN_SOURCE_SUFFIX` empty,
+which selects every local derive source for diagnostic enumeration. Its independent
+HIR/type impl universe and associated members still reconcile against the actual
+expanded AST before publishing raw diagnostic evidence. This setting does not
+extend the admitted macro set. Bootstrap did not enter analyzed invocations.
+Each selected preparation completed real locked Cargo artifacts; each standalone
+companion run exited zero after analysis without claiming its own Cargo artifact.
+
+Both owned packages require these nine resolved compiler macro identities:
+`core::fmt::macros::Debug`, `core::clone::Clone`, `core::cmp::PartialEq`,
+`core::marker::Copy`, **`core::cmp::Eq`, `core::cmp::Ord`,
+`core::cmp::PartialOrd`, `core::default::Default`, and
+`core::hash::macros::Hash`**. The last five are outside H03a1p's proven set.
+These identities come from actual compiler expansion metadata, rather than
+source spelling. All four Linux contexts rediscovered the complete local
+inventory; the counts below are observations, not forced baselines:
+
+| Package and actual Linux context | Invocations | Impl owners | All generated owners | Typed sites | HIR impl universe |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `sifr_codegen`, production | 556 | 693 | 1,200 | 2,047 | 1,109 |
+| `sifr_codegen`, tests | 573 | 715 | 1,234 | 2,063 | 1,140 |
+| `sifr_lowering`, production | 213 | 273 | 460 | 522 | 322 |
+| `sifr_lowering`, tests | 214 | 274 | 462 | 527 | 324 |
+
+The additional production invocations are respectively codegen/lowering:
+Eq **75/34**, Ord **12/2**, PartialOrd **12/2**, Default **85/14**, and
+Hash **3/4**. Tests add three codegen Default invocations and one lowering
+Default invocation; their other additional-kind counts are unchanged. Raw
+owners retain source call sites, receiver and generic identities, actual generated
+AST/body tokens, independent HIR members and typed calls/operators for every
+observed invocation. These are diagnostic inventories, not consumable accepted
+exports or a Linux/Windows structural-union receipt.
+
+Concrete current-source examples, all in Linux production and tests, are:
+
+- `crates/sifr_codegen/src/lib_modules_and_codegen.rs:21`: enum
+  `ProjectStructuralLayoutLocation` has an Eq impl and actual generated
+  `assert_fields_are_eq` member; line 97's record `LoweringStats` has Default
+  with actual field-default calls. `crates/sifr_codegen/src/context.rs:20`
+  adds the enum `ClassScope` Default shape with an explicit default unit variant.
+- `crates/sifr_codegen/src/builtin_errors.rs:4` and
+  `generated_rust_canonicalizer/method_demand.rs:7`: record receivers require
+  Ord/PartialOrd with actual comparison bodies and Ordering/Option signatures.
+- `crates/sifr_codegen/src/runtime_need_state.rs:8` and
+  `crates/sifr_lowering/src/scope.rs:11,18`: enum receivers require Hash's
+  generated generic `hash<__H>` method and its Hasher constraint. A future
+  extension must preserve method-level generic bounds as well as receiver bounds;
+  the current capability records derive impl generics only.
+- Already proven Clone/Copy kinds encounter a new generic shape at
+  `crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup.rs:292`
+  (`ApiContext<'context>`), `checked_place_mutation.rs:5`
+  (`ProjectionFailure<'a>`), and
+  `crates/sifr_lowering/src/lower/expressions/method_type_objects.rs:231`
+  (`ClassMethodSurface<'a>`). The real compiler records
+  `unsupported_generic` with `kind: Lifetime`. Current compiler/RA canonical
+  serializers also retain only type arguments, so lifetime arguments and their
+  constraints need explicit authority and correspondence before admission.
+
+There are **44 codegen and 14 lowering unsupported canonical owner records**
+in each production/test capture, all attributable to lifetime generic definitions.
+The impl inventory exposes lifetime and type generic kinds; no const generic
+impl parameter was observed in these four captures. Literal-preserving AST/HIR
+body-token comparisons and call/operator counts have zero mismatches throughout
+these diagnostics. This is evidence that the pinned compiler can expose these
+bodies, not evidence that signatures, macro invocation joins, freshness or every
+required generated edge have passed the extension's acceptance.
+
+A diagnostic consumer applied the existing serialization and metadata-owner
+binding, then ran schema and independent owner-inventory validation on actual
+captures before the low-level mapping check. The file-bounded capture rejected
+Eq with `unproven derive kind: <lib_modules_and_codegen::ProjectStructuralLayoutLocation as std::cmp::Eq> core::cmp::Eq`.
+Both whole-production captures rejected `unsupported canonical type/generic facts`.
+These are specific current admission gaps, not a compiler API impossibility or
+an authenticated `verify_capture` admission pass. The main adapter must still
+route accepted publication through that authenticated operation.
+
+**Smallest proposed follow-up, pending separate adjudication:** extend only the
+existing verification compiler companion, pinned RA join, schema and fixtures
+for these five actual builtin kinds, lifetime receiver arguments/constraints
+and generated method generic bounds. Preserve independent inventory,
+invocation-owned primary/marker/auxiliary multisets, typed callable catalog,
+source callsite/ordinal binding and every completeness negative. Establish Eq's
+actual assertion-member disposition, Hash's Hasher bound, Default record/enum
+bodies and Ord/PartialOrd signatures from both pinned producers; do not add name
+resolution templates or waive owners. Investigate pinned public API feasibility
+for lifetime correspondence before implementation. No producer upgrade or
+compiler/root-manifest change is indicated by these diagnostics.
+
+Proposed named actual-producer tests, **not reserved or passed by this record**,
+are `BuiltinExtensionTests.test_default_eq_hash_ordering_bodies_and_members`,
+`test_lifetime_receiver_and_method_generics_preserve_constraints`,
+`test_extended_inventory_owner_and_constraint_removals_fail_closed`, and
+`test_live_owned_derive_inventory_has_complete_dispositions`. They should cover
+real field/variant, lifetime and method-bound shapes, both package test selections,
+common-member and auxiliary obligations, coordinated semantic removals after
+integrity validation, unchanged-path normalization and stale input rejection.
+Carry the original five BuiltinCapabilityTests and four BuiltinInventoryTests
+unchanged. A separate scope must decide the exact cases and context qualification;
+this proposal authorizes no implementation. Full H03a1 subsequently retains its
+original five SemanticInputTests and all Linux/Windows, external closure,
+build-script/include, provenance and freshness obligations.
+
+Evidence is outside Git at
+`/data/sifr-h03a1-complete-semantic-adapter-evidence-20261001/` on
+`yaser5@192.168.1.134`. `diagnostic-summary.json` has SHA-256
+`cefda4c3f3dd73f05070923ec7bee2cad268056914dda572b16c3ce56722dcfd`;
+`admission-diagnostics.json` has SHA-256
+`e03136879abf3984c0a36053dedaa536afd0606a2e85ac4d3ce0c4c272f1cb20`;
+`fresh-tool-identity.json` has SHA-256
+`c0084f7b859efffc07c41e17ae86b6ebfb16004d7ff7eb79b76fa2e41b1933ea`.
+The summary binds each actual raw AST/capture, independent inventory, selected
+invocation and analysis-log digest. Original failed setup/consumer diagnostic
+attempts remain separate. The first codegen test preparation failed because its
+pinned LeetCode `include_str!` input was uninitialized; preparation of exact
+gitlink `cbe3a55465159ae9467a7a25cc89e0066ed84db2` supplied it and the repeated
+selection succeeded. Compiler logs retain the standalone replay's advisory
+jobserver warning: inherited Cargo descriptors are closed after preparation;
+no semantic/type-checking errors occurred and no accepted context is claimed.
+
+The owner used `/data/sifr-h03a1-complete-semantic-adapter-20261001`, branch
+`codex/h03a1-complete-semantic-adapter-20261001`, its own evidence paths and an
+isolated Mac bare bundle relay. After clean source/index, process/handle and
+configuration checks it adopted the inactive 2.6 GiB accepted target exclusively.
+Resource preflights observed about 29 GiB free disk/10 GiB available RAM initially,
+and 26 GiB/10 GiB after preparation. The measured revised diagnostic estimate
+allowed 2 GiB additional target/evidence plus 4 GiB retained reserve; original
+12 GiB disk/8 GiB RAM reserves remained available. Maximum two Cargo jobs and
+one compiler producer ran sequentially. Compatible caches, historical branches,
+review reports and both shared checkouts were preserved; no cleanup occurred.
+
+This record has documentation validation and scoped self-review only. No new
+helper build, SemanticInputTests, Windows capture, complete adapter receipt,
+MetricTests, full merge gate, CI, performance, release or phase-closure pass is
+claimed. Historical #4191/#4194 failures and #4198's accepted bounded evidence
+retain their status. **Next action: separately adjudicate the combined builtin
+kind/generic admission extension, qualify it, then assign H03a1 resumption.**
+This owner stops after publishing the documentation record.
