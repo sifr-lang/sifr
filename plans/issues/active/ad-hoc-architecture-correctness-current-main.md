@@ -7958,3 +7958,53 @@ four cases individually and by class, review its complete implementation, merge
 and record its bounded result, then stop. Full H03a1 adapter acceptance and all
 seven H03a MetricTests remain dependent. There is no local documentation or
 source-feasibility blocker; H03a1p capability remains unproven.
+
+### H03a1pr independent owner inventory delivery receipt (2026-10-01)
+
+**State: H03a1pr and the complete repaired H03a1p capability are closed. H03a1 adapter acceptance remains open.** The separate repair merged in [PR #4198](https://github.com/sifr-lang/sifr/pull/4198) as `9392d22f0c57c9485877fedbdc5f5c7d7e307213`, from candidate `6b78355f6eb6fc0c8e9519a605b00ac935653324` on base `6949812b1926ab64edcd2318037a9e3eb6d3b3a1`. The merged tree matches candidate tree `dabf4fdad8d9e78c22c15890c0567bb3fb57f21c`. The full unmerged #4194 implementation was deliberately carried and repaired under H03a1pi. [PR #4194](https://github.com/sifr-lang/sifr/pull/4194) remains an unaccepted draft; both NOT SATISFIED reviews, stopped branches, source and evidence retain their historical status.
+
+The compiler companion enumerates every local HIR impl before selection, independently of the saved AST, receiver names and RA availability. It records each compiler-derived origin/source/module/receiver/trait disposition, actual associated members and body existence, and cross-checks the complete local trait-impl universe. Compiler structural definition paths distinguish separate impls whose readable paths coincide. Selected impls, methods, bodyless markers and auxiliaries reconcile one-to-one with the saved AST before export. The separately persisted authority binds the successful producer run to its executable, full locked graph, compiler, source/context and expansion facts. Admission requires the original authority held by the caller and rejects a replacement even when receipt, artifact reference and export integrity are changed consistently.
+
+Resolved RA invocations retain source/ADT/module/cfg ownership and obligate common methods before compiler membership lookup. Their output multisets preserve primary, marker and auxiliary impls, including bodyless Copy invocations. The corrected callable catalog, HIR member ledgers, literal/hygiene/parent provenance, typed calls/operators, signatures/dispatch, output redirection and cfg disclosures remain intact. A capture-specific wrapper records a fresh selected Cargo invocation while retaining compatible dependency artifacts.
+
+The exact isolated locked build passed with `RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input` only for the helper and at most two Cargo jobs. Official archive, installed rustc-dev/runtime, rust-src, API 6 server, helper executables and complete locked graphs were revalidated against Rust 1.98.1 commit `48a229ceaefd4985c50990b14116b6d856af0985`, Cargo commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d` and RA commit `03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`. Bootstrap never entered analyzed package invocations. All exact cases passed individually with fail-fast selection, then both complete classes passed:
+
+| `BuiltinCapabilityTests` case | Individual | Assertions |
+| --- | --- | ---: |
+| `test_builtin_bodies_calls_and_auxiliary_origins` | 1/1 | 49 |
+| `test_hygiene_and_same_spelled_methods_preserve_trait_origin` | 1/1 | 8 |
+| `test_expansion_ast_hir_mapping_is_owned_and_complete` | 1/1 | 182 |
+| `test_component_context_and_input_drift_fail_closed` | 1/1 | 19 |
+| `test_live_rust_ir_builtin_surface_has_complete_dispositions` | 1/1 | 11 |
+
+The original class passed **5/5 with 269 assertions**.
+
+| `BuiltinInventoryTests` case | Individual | Assertions |
+| --- | --- | ---: |
+| `test_hir_ty_owner_inventory_is_independent_of_ast_projection` | 1/1 | 30 |
+| `test_coordinated_fixture_owner_removals_fail_semantic_admission` | 1/1 | 32 |
+| `test_ra_invocation_owned_common_members_fail_without_compiler_impl` | 1/1 | 23 |
+| `test_coordinated_live_owner_removals_fail_semantic_admission` | 1/1 | 18 |
+
+The additional class passed **4/4 with 103 assertions**. Coordinated negatives remove both export projections, recompute integrity and record specific semantic rejection against intact actual-producer authority. The omitted-AST producer probe fails before publishing a capture. Empty/truncated/duplicate/swapped/unknown authority and invocation cases reject, including a self-consistent replacement receipt/artifact. Opus independently reproduced all prior removals, fixture Copy omissions and removed RA invocation/member pairs.
+
+Both fresh classes rediscovered fixture **31 invocations / 10 receivers / 72 declarations / 58 typed sites** and original Linux production **39 / 13 / 91 / 728**. The compiler preselection universes contain **44 fixture impls** (including module-level and body-nested source impls) and **1,109 live impls**. Selected owner inventories contain 72 and 91 entries. Live inventory proves actual absence of TrivialClone output; CopySensitive fixture output supplies auxiliary-removal coverage. No historical count was forced.
+
+Standalone formatting, documentation links, the 900-line guard (4,319 maintained files), 19-path scope, whitespace and clean-tree checks passed. The complete main-to-candidate **Opus 5.5 review was SATISFIED with no blockers**, covering carried implementation and both prior reports. A record-only supplement records the clean-tree command/log and exact build environment omitted from the original summary; implementation and validation inputs are unchanged.
+
+Candidate-keyed evidence is on `yaser5@192.168.1.134` at `/data/sifr-h03a1pr-independent-inventory-evidence-20261001/candidates/6b78355f6eb6fc0c8e9519a605b00ac935653324/`. It includes commands/raw logs, both class corpora, authentic inventory artifacts, source/config/tool/AST/catalog/typed-site/common-join/multiset digests and coordinated mutation receipts:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `qualification.json` | `4c80e781c7cab6bdde2067f322de924d009ec9bc66c87cbc228eb7e09c8e0863` |
+| `review-initial.md` | `42618ef8266f5d8d82c6e5c6278926618fb9f12691c7231aacf72d085b4470db` |
+| `qualification-record-supplement.json` | `01f7a4b624e7b993735bbc780013fd1838e6be987bd96a55fe1eb3d7eb07c086` |
+| `ci-create-pr-failure.log` | `208569ca8862d4f3590697d4f164b2683bdb805812387d864d2abfc421bc77a9` |
+
+The new [CI create-PR job](https://github.com/sifr-lang/sifr/actions/runs/36812079791/job/110209119580) failed with the known external “performance qualification unavailable: select SIFR_PERFORMANCE_REFERENCE before validation setup” condition. Its log and the historical #4194 failure remain unqualified. The explicit intermediate policy required local focused acceptance and scoped review; create-PR/full merge profiles remain with Q01. This receipt claims no full gate, Windows union, performance, release, complete adapter, metrics or whole-phase acceptance.
+
+H03a1 owns the review follow-ups: bind RA source ranges and attribute/derive ordinals to compiler invocation call sites; reject publication whenever the omitted-AST hook is set; route admission through authenticated `verify_capture` before low-level mapping/join validators; preserve invocation-store provenance and add explicit desugaring dispositions when needed. Consistent quoted/plain owner sorting and long JSON expression cleanup remain tooling follow-ups. The original H03a1 union, freshness, external closure and five SemanticInputTests, all seven later MetricTests, and Q01 criteria remain mandatory.
+
+The owner used `/data/sifr-h03a1pr-independent-inventory-20261001`, implementation branch `codex/h03a1pr-independent-inventory` and a separate receipt branch. After fresh clean/process/handle/input checks it assumed exclusive ownership of the compatible inactive prior target, preserving stopped source/index/branches/logs. Reserve remained about 30 GiB disk and 10 GiB available RAM before final qualification; no pressure cleanup occurred. Compiler/RA captures ran sequentially. Immutable component inputs were copied into owned evidence so drift-test temporary files stayed inside this session. Publication used an isolated authenticated Mac bare relay, preserving both primary checkouts.
+
+**Next action: separately assign H03a1 only.** Repaired H03a1p now supplies its accepted capability prerequisite. Full adapter acceptance must merge before H03a metrics start. This bounded owner stops after its documentation receipt; no next batch was started. **Current item blocker: none.**
