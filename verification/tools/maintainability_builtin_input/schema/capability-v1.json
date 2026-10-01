@@ -9,7 +9,8 @@
     "declarations",
     "other_macro_declarations",
     "context",
-    "lowering_erased_bound"
+    "lowering_erased_bound",
+    "callable_catalog"
   ],
   "properties": {
     "schema": {
@@ -42,7 +43,8 @@
           "expansion_chain",
           "ast_sites",
           "typed_sites",
-          "declaration_disposition"
+          "declaration_disposition",
+          "hir_members"
         ],
         "properties": {
           "owner": {

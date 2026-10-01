@@ -185,12 +185,67 @@ def validate_schema(value):
     check(value, schema, "capture")
 
 
+def validate_resolution(site, catalog):
+    target, implementation = site["target"], site["implementation"]
+    disposition = site["disposition"]
+    if disposition == "scalar-operation":
+        if any(site[field] is not None for field in ("target", "trait", "signature", "implementation", "instance_kind", "target_owner", "implementation_owner")):
+            raise Unsupported("scalar operation has an invented callable disposition")
+        return
+    if target not in catalog:
+        raise Unsupported(f"invented/unregistered callable target: {target}")
+    descriptor = catalog[target]
+    for field in ("trait", "signature"):
+        if site[field] != descriptor[field]:
+            raise Unsupported(f"callable declaration {field} conflict: {target}")
+    if not site["target_owner"] or site["target_owner"] != descriptor["owner"]:
+        raise Unsupported(f"callable package ownership conflict: {target}")
+    trait_member = descriptor["kind"] in {"trait-member", "trait-implementation"}
+    if trait_member != (site["trait"] is not None):
+        raise Unsupported(f"trait-associated target lost resolved trait origin: {target}")
+    if implementation is not None:
+        if implementation not in catalog or site["instance_kind"] != "static":
+            raise Unsupported("invented or nonstatic concrete implementation")
+        concrete = catalog[implementation]
+        if not site["implementation_owner"] or site["implementation_owner"] != concrete["owner"]:
+            raise Unsupported("concrete implementation ownership conflict")
+        if concrete["trait"] != site["trait"]:
+            raise Unsupported("target and concrete implementation trait conflict")
+    elif site["implementation_owner"] is not None:
+        raise Unsupported("invented implementation ownership")
+    if disposition == "generic-trait-call":
+        if not trait_member or not site["generics"] or implementation is not None or site["instance_kind"] is not None:
+            raise Unsupported("invalid generic trait dispatch")
+    elif disposition == "dynamic-trait-call":
+        if not trait_member or implementation is not None or site["instance_kind"] != "dynamic":
+            raise Unsupported("invalid dynamic trait dispatch")
+    elif disposition == "resolved-call":
+        if site["instance_kind"] not in {"static", "intrinsic", "compiler-shim"} or (site["instance_kind"] == "static" and implementation is None):
+            raise Unsupported("unproved resolved/static call")
+    else:
+        raise Unsupported("unsupported callable disposition")
+
+
 def validate_mapping(capture):
     validate_schema(capture)
     if capture.get("schema") != SCHEMA:
         raise Unsupported("wrong capability schema")
     if any("unsupported" in encoded(declaration["canonical_signature"]).decode() or isinstance(declaration["generic_bounds"], dict) for declaration in capture["declarations"]):
         raise Unsupported("unsupported canonical type/generic facts")
+    catalog = capture["callable_catalog"]
+    for path, descriptor in catalog.items():
+        if descriptor["path"] != path or not descriptor["signature"] or not descriptor["owner"]:
+            raise Unsupported("invalid compiler callable declaration catalog")
+    declarations = capture["declarations"]
+    owners = {declaration["owner"] for declaration in declarations}
+    for declaration in declarations:
+        if declaration["owner_kind"] == "AssocFn":
+            if declaration["parent"] not in owners:
+                raise Unsupported("generated member has no actual impl owner")
+        else:
+            children = [child["owner"] for child in declarations if child["owner_kind"] == "AssocFn" and child["parent"] == declaration["owner"]]
+            if len(children) != declaration["hir_impl_member_count"] or sorted(children) != sorted(declaration["hir_members"]):
+                raise Unsupported(f"missing/unaccounted generated impl member: {declaration['owner']}")
     owners = set()
     invocations = {}
     for declaration in capture["declarations"]:
@@ -221,6 +276,7 @@ def validate_mapping(capture):
         if len(ast) != len(typed):
             raise Unsupported(f"dropped/duplicate call or operator: {owner}")
         for index, (syntax, resolved) in enumerate(zip(ast, typed)):
+            validate_resolution(resolved, catalog)
             for field in ("kind", "ancestor", "span", "expansion_chain", "token_sequence"):
                 if syntax[field] != resolved[field]:
                     raise Unsupported(f"ambiguous AST/HIR structural join: {owner} {index} {field}")
@@ -277,12 +333,15 @@ def validate_join(capture, common):
         if key in compiler:
             raise Unsupported("duplicate compiler common member")
         compiler[key] = declaration
+    builtin_impls = {encoded([declaration["receiver_identity"], declaration["trait_identity"]]) for declaration in capture["declarations"] if declaration["owner_kind"].startswith("Impl")}
     seen = set()
     joined = []
     for member in common["common_members"]:
         key = encoded([member["receiver_identity"], member["trait_identity"], member["method"]])
         # A resolver sees source implementations beyond this builtin-only surface.
         if key not in compiler:
+            if encoded([member["receiver_identity"], member["trait_identity"]]) in builtin_impls:
+                raise Unsupported("missing compiler common member/body record")
             continue
         if key in seen:
             raise Unsupported("ambiguous resolver common member")
@@ -469,11 +528,26 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     sysroot = Path(run(["rustc", "--print", "sysroot"]).stdout.strip())
     environment["SIFR_BUILTIN_CAPTURE"] = str(output / "raw.json")
     environment["SIFR_BUILTIN_SOURCE_SUFFIX"] = "crates/sifr_codegen/src/rust_ir.rs" if package == "sifr_codegen" else "fixture_root/src/lib.rs"
-    analysis = run([str(helper), *invocation["args"]], cwd=root, env=environment, log=output / "compiler-analysis.log")
+    analysis_args = invocation["args"].copy()
+    if "--out-dir" not in analysis_args:
+        raise Unsupported("original selected output context is unavailable")
+    analysis_output = output / "compiler-output"
+    analysis_output.mkdir()
+    analysis_args[analysis_args.index("--out-dir") + 1] = str(analysis_output)
+    analysis = run([str(helper), *analysis_args], cwd=root, env=environment, log=output / "compiler-analysis.log")
     if not (output / "raw.json").is_file():
         raise Unsupported("selected typechecking/expansion failed; no complete capture")
     # Rebind all original Rust inputs and actual externally prepared metadata.
     raw = json.loads((output / "raw.json").read_text())
+    for descriptor in raw["callable_catalog"].values():
+        paths = descriptor.pop("origin_paths")
+        if paths is None:
+            descriptor["owner"] = selected[0]["package_id"].replace("path+file://" + str(root), "checkout:")
+        else:
+            owners = {("sysroot:" + RUST_COMMIT) if Path(name).resolve().is_relative_to(sysroot) else artifact_owners.get(str(Path(name).resolve())) for name in paths}
+            if None in owners or len(owners) != 1 or any(str(Path(name).resolve()) not in prepared_files for name in paths):
+                raise Unsupported("unbound callable catalog origin")
+            descriptor["owner"] = owners.pop()
     for declaration in raw["declarations"]:
         for site in declaration["typed_sites"]:
             for field in ("target", "implementation"):
@@ -527,7 +601,7 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
             raise Unsupported(f"unaccounted generated auxiliary item: {declaration['owner']}")
     add_intervals(capture)
     counts = validate_mapping(capture)
-    receipt = {"timing_seconds": {"locked_preparation": result.elapsed_seconds, "metadata": metadata_result.elapsed_seconds, "compiler_analysis": analysis.elapsed_seconds, "total": time.monotonic() - started}, "inputs": config, "capture_digest": digest(encoded(capture)), "counts": counts, "preparation_cargo_artifact_success": True, "capture_cargo_artifact_success": False, "cargo_status": result.returncode, "capture_stopped_after_analysis": True}
+    receipt = {"timing_seconds": {"locked_preparation": result.elapsed_seconds, "metadata": metadata_result.elapsed_seconds, "compiler_analysis": analysis.elapsed_seconds, "total": time.monotonic() - started}, "inputs": config, "capture_digest": digest(encoded(capture)), "counts": counts, "preparation_cargo_artifact_success": True, "capture_cargo_artifact_success": False, "cargo_status": result.returncode, "capture_stopped_after_analysis": True, "cfg_relation": "actual compiler cfg applied via public resolver CfgOverrides, then correspondence verified", "preparation_reuse": "stored exact invocation reused only after current locked Cargo freshness and immutable input/metadata binding checks", "analysis_output_transform": "only --out-dir redirected to owned evidence; original Cargo args retained"}
     (output / "capture.json").write_bytes(encoded(capture))
     (output / "receipt.json").write_bytes(encoded(receipt))
     return capture, receipt

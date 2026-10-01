@@ -48,8 +48,11 @@ class BuiltinCapabilityTests(unittest.TestCase):
 
     def reject(self, value, label, *, receipt=None):
         self.assertions += 1
+        evidence_receipt = copy.deepcopy(receipt or self.fixture_receipt)
+        evidence_receipt["capture_digest"] = builtin.digest(builtin.encoded(value))
         with self.assertRaises(builtin.Unsupported):
-            builtin.verify_capture(value, receipt or self.fixture_receipt, self.fixture_receipt["inputs"])
+            builtin.verify_capture(value, evidence_receipt, evidence_receipt["inputs"])
+
         (self.evidence / (label + ".json")).write_bytes(builtin.encoded(value))
 
     def method(self, receiver, name):
@@ -75,6 +78,13 @@ class BuiltinCapabilityTests(unittest.TestCase):
         corrupted = copy.deepcopy(self.fixture)
         next(s for d in corrupted["declarations"] for s in d["typed_sites"] if s["target"])["target"] = "invented::direct_target"
         self.reject(corrupted, "negative-invented-target")
+        corrupted = copy.deepcopy(self.fixture)
+        corrupted["declarations"].remove(self.method("Record", "fmt"))
+        self.reject(corrupted, "negative-missing-Record-fmt")
+        self.assertions += 1
+        with self.assertRaises(builtin.Unsupported):
+            builtin.validate_join(corrupted, self.common)
+
 
     def test_hygiene_and_same_spelled_methods_preserve_trait_origin(self):
         cloned = self.method("ExternalFields", "clone")["typed_sites"]
@@ -187,17 +197,16 @@ class BuiltinCapabilityTests(unittest.TestCase):
         (self.evidence / "live-common.json").write_bytes(builtin.encoded(common))
         (self.evidence / "live-join.json").write_bytes(builtin.encoded(joined))
         print("actual live counts:", counts, "receiver_declarations:", len(receivers))
-        for field in ("declarations",):
+        for owner in ("rust_ir::RustFile as std::fmt::Debug", "rust_ir::Visibility as std::cmp::PartialEq"):
             corrupted = copy.deepcopy(live)
-            corrupted[field].pop()
+            corrupted["declarations"] = [declaration for declaration in corrupted["declarations"] if not (owner in declaration["owner"] and declaration["owner_kind"] == "AssocFn")]
+            self.reject(corrupted, "negative-live-missing-" + owner.split("::")[1].split()[0], receipt=receipt)
             self.assertions += 1
             with self.assertRaises(builtin.Unsupported):
-                builtin.verify_capture(corrupted, receipt, receipt["inputs"])
+                builtin.validate_join(corrupted, common)
         corrupted = copy.deepcopy(live)
         next(d for d in corrupted["declarations"] if d["typed_sites"])["typed_sites"].pop()
-        self.assertions += 1
-        with self.assertRaises(builtin.Unsupported):
-            builtin.verify_capture(corrupted, receipt, receipt["inputs"])
+        self.reject(corrupted, "negative-live-dropped-call", receipt=receipt)
 
 
 if __name__ == "__main__":
