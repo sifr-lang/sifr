@@ -1029,9 +1029,12 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pi | H03a1p repeated finding; **closed**, scope #4196 and receipt below. | Docs only: independent inventory adjudication; no capability acceptance. |
 | H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
 | H03a1pes | H03a1pr and combined #4200 gap; **closed**, scope #4201 and receipt below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
+| H03a1pers | #4203/#4204 stop; documentation adjudication complete, receipt pending. | No region producer adopted; precise authority blocker and inactive prerequisite reservation below. |
+| H03a1pera | H03a1pers; **blocked, inactive** pending externally owned compiler-interface/authority decision. | Docs only: source-supported public route or separately authorized external interface/pin ownership. |
+| H03a1perp | Merged H03a1pera mechanism decision required; **blocked, inactive**. | Reserved separate lossless region capability prerequisite; no ready implementation or admission. |
 | H03a1pe | Merged H03a1pes; **needs-new-scope**, required generated call-region correspondence unproved; stop record below. | Combined extension remains unaccepted. Fresh Default probes expose compiler-erased call substitutions; separately adjudicate their lossless authority mechanism before resumption. |
-| H03a1 | H03a0, repaired H03a1p and H03a1pe merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
-| H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
+| H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
+| H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
 | H03d | H03c and C01; waiting. | Lowering/IR flow semantics: executable independent narrowing equivalence, graph/ownership regression evidence and a complete producer/consumer decision table. Retain production graph behavior. |
@@ -1039,6 +1042,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
+H03a1pers, then H03a1pera/H03a1perp only after explicit mechanism qualification,
 H03a1pe, H03a1, H03a,
 H03b, H03c, H03d, H03e, then H03f**, one independently owned
 session and merged item at a time. Evidence items are substantive acceptance,
@@ -8680,3 +8684,190 @@ complete correspondence proofs, then explicitly reassign combined H03a1pe.**
 The owner stops after this receipt merge and has started no next batch.
 **Blocker: lossless current generated call-region correspondence is unproved in
 the approved producer boundary.**
+
+
+### H03a1pers compiler region authority adjudication (2026-10-01)
+
+**State: documentation decision complete; lossless authority remains blocked.**
+This separately assigned documentation item reads fresh main
+`82f9f894f8efde0881677dfa140b93378905a871`, including #4203/#4204, the #4201/#4202
+combined scope, H03a0/H03a1s and the independent H03a1pi/H03a1pr inventory proofs.
+Only this canonical Markdown changes. Accepted #4198/#4199 Debug/Clone/PartialEq/
+Copy capability is unchanged. H03a1pe's combined Eq/Ord/PartialOrd/Default/Hash,
+lifetime and method-generic extension remains unaccepted. The four fresh Default
+`ReErased` substitutions recorded above remain exact evidence of producer loss;
+they prove no relation to the generated signature's early `'a/#0`.
+
+#### Public mechanism audit and decision
+
+The audit reads official compiler sources at Rust 1.98.1 commit
+`48a229ceaefd4985c50990b14116b6d856af0985`. The compiler's locked
+`polonius-engine` 0.13.0 archive was verified against its exact checksum
+`c4e8e505342045d397d0b6674dcb82d6faf5cf40484d30eeb88fc82ef14e903f` before reading
+its complete public `AllFacts` fields. Source and archive digests, attempted
+source paths (including 404s), findings and the exact prior stop digest are
+preserved outside Git. This is source/API evidence, not a borrowck probe.
+
+| Audited public route | Actual facts and ownership | Remaining lossless obligation |
+| --- | --- | --- |
+| [Borrowck consumers](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/consumers.rs#L84) | `LocalDefId`-keyed body and promoted bodies, borrow set, solved region context, matching numeric MIR/Polonius regions and point/location table. The compiler clones MIR, rechecks it, then returns that same body with its facts. | No public declaration-parameter/binder-to-region definition map is included. Regenerated MIR region identities cannot be treated as recovered original typeck inference identities. |
+| [Polonius fact emission](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/polonius/legacy/mod.rs#L156) and exact `AllFacts` | Numeric universal origins; origin/loan pairs; known universal subset pairs; point-specific subset constraints; loan, variable, path and CFG relations. Placeholder loans are synthesized from borrow count plus universal index. | A placeholder loan is not a semantic lifetime declaration. Facts supply no parameter owner/index/binder record; subset emission also omits the original constraint category/cause and semantic declaration ownership. |
+| [Region inference queries](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/region_infer/mod.rs#L938) | Public `eval_equal`, `eval_outlives` and `constraint_sccs` operate on solved same-capture numeric regions. | `definitions` with origin/universe/external name, original outlives constraints, `to_region_vid` and universal mapping remain internal. Equality or SCC membership cannot independently name a declaration or prove the erased substitution's origin. |
+| [THIR scopes](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/thir.rs#L269) and [MIR scope construction](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_mir_build/src/builder/scope.rs#L1251) | THIR `Scope` carries exact HIR identity. The public `maximal_hir_to_mir_coverage` producer option selects the current HIR ID for scope creation; ordinary `lint_root` may collapse to an enclosing equivalent lint scope. MIR body owner, spans and typed `FnDef` operands are available. | Maximal coverage is a plausible public ownership aid requiring actual generated-call proof. THIR Call types still read erased TypeckResults. A coarse span or ordinary lint root alone cannot authenticate a unique HIR call. The option supplies no missing named-region definitions. |
+| [NLL MIR text](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/region_infer/dump_mir.rs#L20) and [Graphviz labels](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/region_infer/graphviz.rs#L33) | Text emits numeric region classifications, values and constraints. Graphs additionally print external lifetime names and named-placeholder spellings through `get_name`/`item_name`. | Those labels omit the semantic declaration ID, parameter index and binder identity. Reading a spelling from compiler output cannot establish the required named-origin relation. No diagnostic parser is adopted as semantic authority. |
+
+[NLL replacement](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/nll.rs#L52)
+first builds internal universal-region information and then
+[renumbers every remaining free MIR occurrence](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_borrowck/src/renumber.rs#L65)
+with a fresh existential variable. The original universal mapping is retained
+internally; it is not published in `AllFacts`. This explains why inspecting
+public numeric facts is useful but does not close the named authority gap.
+Declaration `fn_sig`/generics/predicates and RA-resolved source facts remain
+available under the prior scope. Combining those with regenerated MIR by
+parameter position, spelling or signature copying would supply the missing
+identity through unsupported reconstruction.
+
+**Decision: add no MIR/borrowck producer and admit no new generated region facts
+in this item.** None of the audited public routes establishes the complete
+original declaration -> generated signature/binder -> typed call substitution
+-> actual AST/HIR owner/constraints correspondence. This is a precise unsupported
+relation in these audited routes, not a global pinned-API impossibility claim.
+A numeric/pretty-output probe would not resolve that structural missing authority,
+so no build, component change, target adoption or diagnostic execution was needed.
+
+#### Smallest external authority decision and inactive reservation
+
+Reserve **H03a1pera**, a distinct documentation-only compiler-interface/authority
+decision, and **H03a1perp**, a separate bounded region capability prerequisite.
+Both are **blocked and inactive**, not ready implementation items. H03a1pera must
+first provide evidence of a public pinned mechanism preserving semantic named
+origins and constraint provenance, or obtain explicit authorization for a
+separately owned compiler-interface change and its exact pin. This record gives
+no permission for a compiler fork, API change, private-field workaround, producer
+upgrade or lossless-contract waiver. No upstream work or message is initiated.
+
+The smallest external interface requirement is a read-only, same-capture view
+binding each borrowck `RegionVid` to its compiler-defined origin, universe and
+external semantic region with owning declaration, tagged parameter index and
+binder identity, together with original outlives constraint locations/category/
+source ownership. Existing internal `RegionDefinition`, universal-region indices
+and original constraints identify the missing responsibilities; exporting their
+lossless semantics is externally owned compiler work, not Sifr serializer work.
+The decision must also prove exact generated MIR-location/HIR-call identity using
+the public maximal-coverage option or specify an owned compiler mapping. An
+exposed field list without provenance and actual ownership proof is insufficient.
+
+H03a1pera must explicitly decide whether independently regenerated borrowck
+regions may supply labelled compiler-generated call authority. It must preserve
+the original erased HIR/typeck observation and prove correspondence to the actual
+unchanged generated call; it cannot claim recovery of original pre-writeback
+inference IDs. If no supported mechanism or authorized external interface can
+meet all of those obligations, record that concrete dependency blocker and stop.
+Do not send H03a1pe into another unqualified implementation/review loop.
+
+The following H03a1perp reservation is a proof boundary for that later decision,
+not authorization to implement it now:
+
+- **Dependencies:** merged H03a1pers and separately merged H03a1pera with an
+  evidence-backed authority mechanism; retain accepted H03a1pr/H03a1p and closed
+  H03a1pes. H03a1pe resumes only after a fully accepted H03a1perp, as one combined
+  extension; no kind-by-kind admission.
+- **Prospective owned paths:** existing isolated
+  `verification/tools/maintainability_builtin_input/` manifest/lock, schema,
+  helper source and bounded fixtures; reserve `src/regions.rs` for region
+  authority, with responsibility-based splits under 900 lines when needed.
+  Existing `scripts/maintainability_builtin_input.py`,
+  `scripts/maintainability_builtin_input_tests.py` and this canonical Markdown
+  are the only other prospective tracked paths. Compiler/resolver sources,
+  root Cargo inputs, metric/baseline files, broad profiles and the full semantic
+  adapter remain outside this reservation. Any external interface/pin change
+  must receive its separate owner and scope in H03a1pera before this can activate.
+- **Pins and execution:** Rust `48a229ceaefd4985c50990b14116b6d856af0985`, Cargo
+  `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`, RA
+  `03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`, matching official rustc-dev/runtime/
+  rust-src and authenticated API 6 server, same locked graphs. A later altered
+  interface pin must be explicitly adjudicated. Keep the existing exact locked
+  helper build and helper-only bootstrap command from H03a1pes; bootstrap never
+  enters analyzed package invocations. Borrowck consumer interception must follow
+  the official query-override ownership example to avoid stolen MIR, without
+  mutating producer behavior or conflating preparation with standalone captures.
+- **Actual context acceptance:** bounded fixtures in Linux production/test modes;
+  fresh complete original `sifr_codegen` and `sifr_lowering`, each Linux
+  production/test, exact selected original library invocations and inputs. Prove
+  all four original erased Default sites individually, static versus parameter
+  references, single/two lifetime receivers, explicit region/type outlives and
+  method generic/binder cases. Prove source/signature semantic agreement and
+  each regenerated call's exact HIR/AST/expansion owner. No diagnostic capture
+  or copied signature is a positive proof; no Linux pass admits Windows.
+- **Authenticated authority:** capture region definitions/constraints and exact
+  call mapping from the successful producer independently of export/common
+  projections; bind compiler/executable/source/extern/cfg/target/test/build inputs
+  and canonical parameter/owner/binder facts. Preserve complete independent
+  preselection HIR owner/member inventory and all invocation/auxiliary multisets.
+  Retain caller-held original authority through `verify_capture` before admission;
+  a recomputed receipt or replacement inventory cannot authorize omissions.
+- **Reserved exact new tests**, not implemented or passed: in existing
+  `maintainability_builtin_input_tests.RegionAuthorityTests`,
+  `test_original_and_generated_region_owners_are_semantically_bound`,
+  `test_generated_call_regions_and_hir_owners_are_lossless`,
+  `test_coordinated_region_and_constraint_mutations_fail_closed`, and
+  `test_live_region_authority_is_complete_and_fresh`. Run each with
+  `PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.RegionAuthorityTests.<case>`
+  and then the full class, reporting 1/1 each, 4/4 class and actual assertions.
+  Negatives must recompute integrity and reject coordinated deletion/replacement
+  of region origins, lifetime/static substitution, swapped declaration/binder/
+  call/constraint ownership, changed outlives/method bounds, ambiguous maximal
+  coverage mapping, missing contexts, forged authority, omitted AST and bypassed
+  authenticated publication. Compare unchanged captures across paths and reject
+  bounded source/config/extern/component/input drift against intact authority.
+  Run affected original BuiltinCapabilityTests/BuiltinInventoryTests individually
+  and by class without dropping any original assertions. Region capability cannot
+  substitute for H03a1pes's original four BuiltinExtensionTests and complete
+  thirteen-case extension qualification.
+- **Resources and stop:** one exclusive worktree/branch/index/evidence root, fresh
+  process/open-handle/target/input ownership checks before any target reuse,
+  12 GiB free disk and 8 GiB available RAM, at most two Cargo jobs and one
+  sequential producer/server. No target is adopted here. Inspect timing/cache
+  reports before rebuilding; no shared archive/SQL/warm H02/other-session cleanup.
+  Missing semantic authority, ambiguous call identity, new unsupported required
+  shape, unavailable input/resource, or second mechanism-level review defect
+  stops the prerequisite. Preserve failed/partial diagnostics outside admitted
+  exports. No private API, positional/spelling reconstruction, erased lifetime
+  waiver, reduced join, inferred pass or external dependency repair is authorized.
+
+#### Dependency dispositions and validation
+
+H03a1pe remains **blocked, needs-new-scope and unaccepted** until the separate
+region prerequisite and combined extension qualify. Therefore H03a1 full adapter
+acceptance, H03a normalized metrics, and ordered H03b-H03f remain **open and
+dependency-blocked**. All original thirteen builtin cases, H03a1's five
+SemanticInputTests, complete Linux/Windows production/test structural union,
+external closure, both build scripts/includes, provenance/input freshness and
+unchanged repeated captures remain binding; all seven later MetricTests remain
+unpassed by this record. D01b and D01c retain **open-after-structural-delivery,
+dependency-blocked** dispositions; this item cannot finalize their current maps
+or residual registry completeness. The independent H01e automatic content-review
+restriction and H01i dependency remain unchanged. Q01's final integration gate
+and whole-phase review have their own owners; this scope claims neither.
+
+Evidence is on `yaser5@192.168.1.134` at
+`/data/sifr-h03a1-region-authority-scope-evidence-20261001/`.
+`source-audit.json` SHA-256 is
+`628feb3f9d9091ae7342ca21d5d1ac8951f33e5d4a628e393cf8d397c31de064`;
+`region-authority-adjudication.json` is
+`60b4eff85322a422ed89f93e268743532deb3f6c7c790a2c22c094a1eba2c8a4`.
+The prior #4203 report remains byte-identical at its recorded digest. Existing
+source/helper/target/evidence inputs are read-only; neither primary checkout is
+changed. Read-only preflight saw 25,688,698,880 disk bytes available and
+10,477,728 KiB available RAM. No cleanup, Cargo operation or external
+implementation review ran. Documentation structure/mutation, file-size,
+scope/whitespace/history and accurate scoped self-review qualify this decision
+only; no new capability, adapter, Windows, metrics, performance, release or
+whole-phase pass is claimed.
+
+**Next action: obtain the distinct externally owned compiler-interface/authority
+decision H03a1pera, then activate a source-supported H03a1perp only if its complete
+proof boundary is feasible.** This owner merges this documentation adjudication
+and a separate receipt, then stops. **Blocker: semantic named-region/binder and
+original constraint authority is not published by the audited public consumer
+routes; exact regenerated-to-generated-call correspondence is still unproved.**
