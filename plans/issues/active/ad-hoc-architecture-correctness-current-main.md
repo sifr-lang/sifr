@@ -115,6 +115,63 @@ owners remain unchanged. This owner records the documentation-only stop and
 stops; no next batch begins.
 
 
+### H03a1pet source-binder stop delivery receipt (2026-10-01)
+
+**State: H03a1pet needs-new-scope and unaccepted; H03a1pe remains unaccepted.**
+[Stop record #4218](https://github.com/sifr-lang/sifr/pull/4218) merged as
+`81843bf0c8a1ec063576d5b4d7367c0e92915fc6`, from exact documentation candidate
+`170851b4ec987ef468babcd1f65669df8ffe8f3e` on base
+`6418939546be1551c607ababd26c26f8280c9af4`. The merge and candidate trees both
+equal `eff3bab7b8c15004ed5e2189d0d6de377d4895e6`. Only this canonical Markdown
+changed: the new stop section and two current execution-status rows. Existing
+H03a1pets/H03a1peo contracts and all prior stop/receipt text remain intact.
+
+The complete donor extension is preserved with the partial Dynamic repair in
+**unaccepted do-not-merge [draft #4217](https://github.com/sifr-lang/sifr/pull/4217)**,
+head `fcca47cf1920edf44dffb231c41762a2ffd243a1`. The locked helper build succeeded,
+but the first named extension case failed during setup with zero selected tests
+or assertions. Its new real `ObjectShapes` higher-ranked object supplies genuine
+compiler binder facts and no original RA declaration binder identity through
+the pinned API. This is a required bounded fixture/source-authority gap. No
+actual-current-main codegen/lowering context reached the failure; no such owned
+surface is proven affected. All thirteen individuals, three classes and four
+full Linux contexts remain unqualified. Partial compiler captures, including
+the emitted fixture `capture.json`, are not accepted combined exports. There is
+no Opus approval or implementation merge. Donor #4213 remains unchanged.
+
+The stop record's exact documentation structure/registered mutation harness
+passed (log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+as did file-size guardrail for **4,319 files** (log
+`63cd754f846cf9db14c30892ab814715bbbe0bce2f4b0352b4d696b7fab62aa5`),
+historical-tail preservation except the two status rows, single-path scope,
+whitespace and clean-tree checks. Scoped documentation self-review was
+**SATISFIED**, no blockers (SHA-256
+`0476b7bad8af6759524c65f0dede178279b7120aaa0953c1f6f034e87177f9bb`).
+Raw checks and `qualification.json` are at
+`/data/sifr-h03a1pet-trait-object-repair-evidence-20261001/stop-record/170851b4ec987ef468babcd1f65669df8ffe8f3e/`.
+The exact source-binder report has SHA-256
+`aa40202df93603f3ac0faf6c8c33c4e1e8d331518ad43d746a99f665273ecfdb`.
+The docs-only stop/receipt requires relevant documentation checks and self-review;
+no implementation review or broad gate qualifies this failure record. Automatic
+GitHub jobs were still incomplete at merge; no overall CI pass is claimed.
+
+The owner used the isolated implementation and documentation worktrees recorded
+above, documentation branch `codex/h03a1pet-source-binder-stop-20261001`, separate
+receipt branch `codex/h03a1pet-source-binder-stop-receipt-20261001`, and owned Mac
+bare relay `/tmp/sifr-h03a1pet-relay.raP5Yr/relay.git`. Required gitlinks were
+initialized at exact pins, with no tracked gitlink changes. Both primary
+checkouts, donor worktree/history, other session targets, references and caches
+were preserved; no cleanup or additional diagnosis/implementation/test batch
+followed the binder stop.
+
+**Next action: separately assign the source/scope advisor described above.**
+Neither a supported-binder acceptance amendment nor a source-binder authority
+contract is selected by this receipt. H03a1pet/H03a1pe and their dependent work
+remain blocked. The unchanged H03ep/expanded V01/H03eq sequence, H01e/H01i and
+external/integration/whole-phase boundaries remain binding. This owner stops.
+
+
 ## H03a1pets trait-object scope adjudication (2026-10-01)
 
 **Current controlling state: H03a1pets documentation adjudication closed;
