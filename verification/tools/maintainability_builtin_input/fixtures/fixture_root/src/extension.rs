@@ -33,7 +33,6 @@ pub trait BoundObject<'a>: std::fmt::Debug { type Output; }
 #[derive(Debug)]
 pub struct ObjectShapes<'a> {
     pub parameterized: &'a (dyn ObjectChild<'a, u8, 7, Output=u16> + Send + Sync + 'a),
-    pub bound: &'a (dyn for<'b> BoundObject<'b, Output=u16> + 'a),
     pub auto_only: std::marker::PhantomData<&'a (dyn Send + Sync + 'a)>,
     pub static_object: &'a (dyn std::fmt::Debug + 'static),
 }

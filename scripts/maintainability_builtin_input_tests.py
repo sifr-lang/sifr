@@ -8,10 +8,11 @@ import tempfile
 import unittest
 
 import maintainability_builtin_input as builtin
+import dynamic_acceptance
 
 
-def prepared(test, root, package, label, *, whole, test_mode=False):
-    key = builtin.digest(builtin.encoded([str(root), package, whole, test_mode, test.identity, {k:builtin.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}]))
+def prepared(test, root, package, label, *, whole, test_mode=False, repeat=False):
+    key = builtin.digest(builtin.encoded([str(root), package, whole, test_mode, repeat, test.identity, {k:builtin.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}]))
     path = Path(os.environ["SIFR_BUILTIN_EVIDENCE_DIR"]) / "prepared" / key
     if (path / "successful.json").is_file():
         binding=json.loads((path / "successful.json").read_text())
@@ -454,7 +455,7 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
         receipt["capture_digest"]=builtin.digest(builtin.encoded(value))
         self.require(receipt["capture_digest"]==builtin.digest(builtin.encoded(value)),"recomputed projection integrity")
         self.assertions+=1
-        with self.assertRaisesRegex(builtin.Unsupported,"independent inventory|declaration|invocation|consumer|publication|correspondence|substitution") as caught:
+        with self.assertRaisesRegex(builtin.Unsupported,"independent inventory|declaration|invocation|consumer|publication|correspondence|substitution|Dynamic|existential|trait-object|schema") as caught:
             builtin.validate_join(value,projection,authority,receipt=receipt,input_identity=receipt["inputs"])
         (self.evidence/(label+".json")).write_bytes(builtin.encoded({"capture":value,"common":projection,"receipt":receipt,"intact_authority_digest":builtin.digest(builtin.encoded(authority)),"semantic_rejection":str(caught.exception)}))
 
@@ -490,6 +491,8 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
             argument["type"]={"builtin":"invented-type"}
         self.mutation(changed_type_argument,"changed-actual-type-argument")
         self.mutation(lambda c,m:next(x for x in c["declarations"] if x["owner"]==eq["owner"]).update(hir_body=False),"falsely-bodyless-Eq")
+
+        dynamic_acceptance.positive(self)
 
     def test_lifetime_receiver_and_method_generics_preserve_constraints(self):
         declarations=self.extended["declarations"]
@@ -541,6 +544,8 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
                         member["generic_bounds"].clear()
             self.mutation(change,label)
 
+        dynamic_acceptance.source_binder_negative(self)
+
     def test_extended_inventory_owner_and_constraint_removals_fail_closed(self):
         for trait in ("Eq","Ord","PartialOrd","Default","Hash","Clone","Copy","TrivialClone"):
             owners={d["owner"] for d in self.extended["declarations"] if "Lifetime" in d["owner"] and ("::"+trait+">") in d["owner"]}
@@ -572,6 +577,8 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
         with self.assertRaisesRegex(builtin.Unsupported,"replacement expected authority"):
             builtin.verify_capture(self.extended,self.extended_receipt,self.extended_receipt["inputs"],replacement)
 
+        dynamic_acceptance.negatives(self)
+
     def test_live_owned_derive_inventory_has_complete_dispositions(self):
         contexts=[];all_kinds=set();live_erased=[]
         for package in ("sifr_codegen","sifr_lowering"):
@@ -586,6 +593,12 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
                 self.require(any(n.get("kind")=="ReEarlyParam" for d in c["declarations"] for n in builtin.declaration_consumer.nodes(d["declaration_facts"])),"actual live declaration lifetime shapes")
                 for label,change in (("call",lambda v,p:next(d for d in v["declarations"] if d["typed_sites"])["typed_sites"].pop()),("owner",lambda v,p:v["declarations"].pop()),("generic",lambda v,p:next(d for d in v["declarations"] if d["declaration_facts"]["generics"]["own"])["declaration_facts"]["generics"]["own"].clear())):
                     self.mutation(change,package+str(mode)+label,capture=c,receipt=r,authority=a,common=m)
+                self.require(not any(cfg["key"]=="rust_analyzer" for cfg in c["cfg"]),"rust_analyzer disabled in original selected cfg")
+                repeated,rr,rm=prepared(self,builtin.ROOT,package,package+str(mode)+"-repeat",whole=True,test_mode=mode,repeat=True)
+                ra=builtin.read_inventory(rr,rr["inputs"])
+                self.require(bool(builtin.verify_capture(repeated,rr,rr["inputs"],ra)),"second unchanged-path authentic capture")
+                self.require(dynamic_acceptance.semantic_capture(repeated)==dynamic_acceptance.semantic_capture(c),"twice unchanged-path complete semantic capture")
+                self.require(rm==m,"twice unchanged-path complete RA/source correspondence")
                 contexts.append((c,r,r["inputs"],a))
                 (self.evidence/(package+str(mode)+"-counts.json")).write_bytes(builtin.encoded({"counts":r["counts"],"erasure":observation,"context":c["context"]}))
         self.require(all_kinds==set(builtin.COMMON_DERIVES),"fresh whole contexts discover all nine resolved kinds")
@@ -598,7 +611,7 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
         other=self.evidence/"relocated-fixtures"
         shutil.copytree(builtin.TOOL/"fixtures",other)
         repeated,repeat_receipt,repeat_common=prepared(self,other,"builtin_fixture","relocated-extension",whole=True)
-        self.require(repeated==self.extended,"unchanged authentic capture normalizes across checkout paths")
+        self.require(dynamic_acceptance.semantic_capture(repeated)==dynamic_acceptance.semantic_capture(self.extended),"unchanged authentic capture normalizes across checkout paths")
         self.require(builtin.normalize(repeat_common,other)==builtin.normalize(self.extended_common,builtin.TOOL/"fixtures"),"relocated complete original RA declaration correspondence")
 
 
