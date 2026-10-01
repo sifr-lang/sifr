@@ -10,6 +10,236 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1pets trait-object scope adjudication (2026-10-01)
+
+**Current controlling state: H03a1pets documentation decision complete;
+H03a1pet ready for separate assignment after this scope and its delivery receipt
+merge; H03a1pe remains open and unaccepted.** This documentation-only decision
+reads fresh main `f0f06a0e9f33b11abb38bc5219704789667ba3f9` (#4214), the binding
+approved H03a1peo amendment #4211/#4212, accepted H03a1pr/H03a1p #4198/#4199 and
+closed H03a1pes #4201/#4202. The user-authorized Astra/high read-only advisory
+recommended ordinary bounded support in the existing helper. The independent
+source audit below verifies that recommendation. No additional human approval
+is needed for this repair: it fulfills the approved observation contract with
+unchanged acceptance, pins and consumer permissions.
+
+This section and the current execution table control prospective execution.
+The entire historical #4198/#4199 and #4203-#4214 receipts, including the failed
+#4213 implementation and approved H03a1peo contract, remain unchanged. The stop
+record below remains valid failed evidence; its request for trait-object scope
+adjudication is discharged by this decision. **H03a1pera/H03a1perp remain
+prospectively deactivated as F30 prerequisites.** H03a1 full adapter remains
+blocked until the combined H03a1pet item closes the outstanding H03a1pe extension.
+
+### Source decision and preserved failed candidate
+
+Pinned [Debug derive](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/deriving/debug.rs#L84)
+uses fixed-arity formatting for at most five fields and the aggregate
+`debug_struct_fields_finish` / `debug_tuple_fields_finish` paths above five.
+Its aggregate path constructs a slice of references to `dyn Debug`. The pinned
+[type representation](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_type_ir/src/ty_kind.rs#L244)
+is `Dynamic(BoundExistentialPredicates, Region)`. The
+[existential predicate representation](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_type_ir/src/predicate.rs#L332)
+publishes trait, projection and auto-trait variants with structured definition,
+argument and term facts. Trait and projection arguments omit existential Self;
+adding a receiver or dummy Self would change the observed representation.
+The pinned [principal semantics](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/ty/predicate.rs#L259)
+explicitly permit auto-trait-only objects with no principal. Associated-item
+projection ownership is the actual declaring trait, not an inferred principal.
+
+At preserved head `8bdbe4430c767477d454ab6af8fea38a395145dc`,
+`src/semantic.rs` has no structured Dynamic branch. The candidate helper's
+`consumer/declarations.py::capabilities` scans published call arguments, results
+and receivers, but omits body type dependencies and adjustment targets. Its
+`validate_inventory_body` already compares projected declarations/body types,
+call sites and catalogs with independent compiler authority.
+`src/main.rs` obtains `inventory::capture` before consulting/reconciling the saved
+AST projection; preserve that independent enumeration. These helper paths are
+relative to `verification/tools/maintainability_builtin_input/`.
+
+Preserve draft [#4213](https://github.com/sifr-lang/sifr/pull/4213), head
+`8bdbe4430c767477d454ab6af8fea38a395145dc`, branch
+`codex/h03a1pe-observation-extension-20261001`, clean stopped worktree
+`/data/sifr-h03a1pe-observation-extension-20261001`, and its exclusively adopted,
+now inactive target `/data/sifr-h03a1p-builtin-capability-target-20261001`.
+**Do not merge #4213.** The next owner uses a fresh owned worktree/candidate and
+deliberately carries the entire unaccepted implementation, then repairs and
+qualifies it. A partial serializer cherry-pick cannot become accepted capability.
+
+The original handoff is
+`/data/sifr-h03a1pe-observation-extension-evidence-20261001/handoff.json`.
+The candidate directory retains `unsupported-trait-object-stop.json` and
+`prepared/a8348c3c74fed18101a318e3d7c23c49c2256f14bc8bcbcfeb8e2de62d439411/`:
+`raw-inventory.json` SHA-256
+`7ad86612f038ebd55919077473c36f75267bd79049f9c5aca0d610df6acf02c0` and
+`raw.json` SHA-256
+`074738e96d19fc46e24935be6e52081a86d6778d331f54f030755fa940721e17`.
+Independent read-only inspection confirms **68 unsupported dyn-Debug nodes across
+15 owners in each file**, 1,200 selected owners, 1,109 impl-universe entries,
+2,047 typed sites and 886 body type dependencies. First owner:
+`<hir_analysis::queries::queries_impl::TypeVarOpRequirements as std::fmt::Debug>::fmt`,
+path `published_body/types/1/type/reference/slice/reference`. No accepted
+`capture.json` exists there. The locked helper build and first three extension
+cases (58/34/39 assertions) remain diagnostic evidence; the fourth failed before
+the whole-package RA join. Remaining nine individuals, all complete classes and
+Opus review were unrun. The pre-assertion CI failure from unset
+`SIFR_PERFORMANCE_REFERENCE` remains a separate V01 infrastructure owner class,
+not a capability pass or substitute for the local semantic stop.
+
+### H03a1pet combined implementation scope and completion boundary
+
+**One item: bounded trait-object repair AND complete original H03a1pe
+qualification.** Dependencies are merged H03a1pets scope/receipt and the merged
+H03a1peo contract/receipt, with accepted H03a1pr/H03a1p and closed H03a1pes retained.
+Successful H03a1pet closes outstanding H03a1pe only after complete original
+qualification, scoped review and merge. Serializer-only success is insufficient.
+
+1. Extend the existing compiler helper to serialize the complete pinned
+   `Dynamic(BoundExistentialPredicates, Region)` representation over **existing
+   supported recursive facts**, exhaustively handling all three existential
+   predicate kinds. Retain compiler predicate order, kind and each predicate's
+   actual binder variables, including explicit empty binders; canonical resolved
+   trait/associated-item/auto-trait definition identity and authenticated crate/
+   external closure; the associated item's actual trait owner; ordered lifetime,
+   type and const arguments with their kinds; and projection term kind plus
+   recursive payload. Explicitly record existential Self as omitted: never
+   prepend the derived receiver or dummy Self. Retain the object published region
+   separately from enclosing reference regions. Principal presence/absence and
+   projection/auto-trait presence/absence must be explicit and unambiguous,
+   including legitimate auto-trait-only objects. Unsupported nested type, const
+   or binder facts still fail closed. No inferred named/static object region,
+   recovered erased relation or expanded const-generic impl support is authorized.
+2. Repair observation coverage in the same batch. Cover every relevant published
+   body semantic surface, including body type dependencies, call arguments/results/
+   receivers, adjustment targets and trait-object regions. Each erasure disposition
+   must bind authentic original capture, producer/stage, generated owner and
+   expansion invocation, the exact dependency ordinal **or** call/adjustment
+   ordinal, and nested semantic path. Body dependencies must not be mislabeled
+   as calls. Preserve genuine exact `RegionKind`; declaration erasure rejects.
+   Lifetime-sensitive, ownership-equivalence and deletion consumers remain
+   rejected/unresolved even when a lifetime-independent capability label is
+   present. Existing approved declaration generics/lifetimes/binders/depth,
+   outlives/trait/Self/source-correspondence/alpha facts remain binding.
+3. Extend existing inventory and projected body validation paths. Original
+   `inventory::capture` authority remains independent before AST projection
+   consultation; projected declarations/body types/sites/catalogs remain checked
+   against it. No additional producer or authority synthesized from projection is
+   allowed. Authenticate `verify_capture` before every mapping, join and
+   publication. Preserve exact original source/attribute/derive ordinals and
+   correspondence, owner/member/auxiliary multisets, body-call completeness,
+   catalogs, literal tokens, provenance, cfg and freshness. Coordinated omissions
+   with recomputed integrity must reject semantically against intact caller-held
+   original authority; replacement authority must reject. Unknown callee, type
+   or other required semantic facts can never be waived by body capability.
+4. Evolve schema and strict validation together; reject obsolete/incomplete
+   captures with no compatibility reader or missing-fact defaults. Allowed tracked
+   paths are exactly `verification/tools/maintainability_builtin_input/`,
+   `scripts/maintainability_builtin_input.py`,
+   `scripts/maintainability_builtin_input_tests.py`, and this canonical phase
+   receipt. Responsibility splits inside the helper directory are permitted with
+   complete identity binding; maintained source files stay below 900 lines.
+   Rust `48a229ceaefd4985c50990b14116b6d856af0985`, Cargo
+   `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`, RA
+   `03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`, API 6, official components and
+   locked graphs remain unchanged. No compiler/root Cargo/lock dependency/pin,
+   new producer, full adapter, metric, baseline or profile change belongs here.
+5. Extend the existing positive test with **six-field** record, tuple and enum
+   record/tuple variants to reach the actual pinned Debug aggregate path; retain
+   unit, fieldless and fixed-arity fixtures. Assert actual formatter callees,
+   complete catalogs/type dependencies, canonical principal, exact arguments/
+   binders and explicit empty projection/auto-trait facts, and authentic distinct
+   object/reference regions. Add bounded **real producer** fixtures for supported
+   nonempty existential arguments, projections and auto-trait variants; handwritten
+   JSON is not positive evidence. Preserve original/generated declaration lifetime
+   facts, genuine body-erasure consumer rejection and supported existential
+   binders. Distinguish object regions from enclosing reference regions.
+6. Add integrity-redigested negatives against intact original authority for
+   coordinated complete Dynamic/type-dependency omission; principal identity/
+   presence; argument kind/order; binder/depth; projection term/actual trait owner;
+   auto-trait membership; object-region changes; absent explicit-empty fields;
+   owner/path swaps; removed erasure dispositions; forged named/static body
+   regions or declaration erasure; and replacement authority. Assert **semantic
+   rejection**, not digest failure. Retain every original integrity/publication,
+   source/config/input/provenance and completeness negative.
+
+### Exact combined acceptance and stop rules
+
+Run all original cases individually, then all three complete classes; retain
+original assertions and augment within these exact names. Use fail-fast:
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.<Class>.<case>`.
+The complete-class command is the same command without `.<case>`.
+
+| Class | Exact case selection |
+| --- | --- |
+| BuiltinExtensionTests (4) | `test_default_eq_hash_ordering_bodies_and_members`; `test_lifetime_receiver_and_method_generics_preserve_constraints`; `test_extended_inventory_owner_and_constraint_removals_fail_closed`; `test_live_owned_derive_inventory_has_complete_dispositions`. |
+| BuiltinCapabilityTests (5) | `test_builtin_bodies_calls_and_auxiliary_origins`; `test_hygiene_and_same_spelled_methods_preserve_trait_origin`; `test_expansion_ast_hir_mapping_is_owned_and_complete`; `test_component_context_and_input_drift_fail_closed`; `test_live_rust_ir_builtin_surface_has_complete_dispositions`. |
+| BuiltinInventoryTests (4) | `test_hir_ty_owner_inventory_is_independent_of_ast_projection`; `test_coordinated_fixture_owner_removals_fail_semantic_admission`; `test_ra_invocation_owned_common_members_fail_without_compiler_impl`; `test_coordinated_live_owner_removals_fail_semantic_admission`. |
+
+Run the isolated locked helper build:
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Bootstrap is helper-build-only and never enters analyzed packages. Require fresh
+full `sifr_codegen`/`sifr_lowering` Linux production/test contexts for all nine
+builtin kinds, original selected locked `cargo check --lib` / `cargo check --tests`
+preparation, actual cfg/features with `rust_analyzer` disabled and exact test
+includes/gitlinks. Formerly failing Debug owners must have authentic structured
+facts and complete joins. Preserve unchanged-capture path normalization and
+stale source/config/tools/extern/build-input negatives. Historical diagnostic
+passes cannot qualify the final candidate. Windows and full adapter remain later
+H03a1 work, with all original five SemanticInputTests and complete structural
+union/external-closure/build-input obligations retained; seven MetricTests remain
+later H03a work.
+
+Run focused affected regressions, formatting, Python syntax, documentation,
+file-size, scope/diff/whitespace/clean-tree checks. Review the **complete exact
+candidate**, including carried unaccepted implementation, with scoped Opus 5.5
+under the then-current phase-closure-loop and talk-to-claude-opus skills before
+merge and a separate delivery receipt. Intermediate policy requires no full
+create-PR or merge profile. Source design is supported; helper buildability,
+admission of all four contexts and scoped Opus acceptance remain unproven.
+
+Reserve 12 GiB free disk and 8 GiB available RAM, at most two Cargo jobs and one
+sequential producer/server. Reuse warm cache only after fresh input, process,
+open-handle and target compatibility/ownership checks. Inspect timing/cache
+reports before any rebuild or broader run. No shared/other-session/SQL target
+cleanup or cold-cache performance claim is authorized.
+
+Stop **needs-new-scope** on a required recursive fact outside the declared
+Dynamic/existing-supported-fact boundary, ambiguous semantic/source/binder/body
+origin, another required unsupported type/callee, external failure, insufficient
+resources or the review skill's repeated-mechanism threshold. Preserve exact
+failed/partial evidence outside accepted exports. There is no body-capability
+exception for unsupported non-region facts and no fallback implementation.
+
+### Documentation item validation and handoff
+
+H03a1pets changes only this canonical Markdown. Run exactly
+`python3 verification/areas/documentation/check_structure.py`, including its
+registered documentation mutation checks, and
+`python3 scripts/check_file_size_guardrails.py`; relevant local-link, scope,
+historical byte-preservation, diff/whitespace and clean-tree checks; and an
+accurate scoped documentation self-review. Initialize only exact editor/nested
+VS Code gitlinks if required. This item runs no Cargo/build/compiler tests,
+fresh producer, target adoption/cleanup, external review or broad gate.
+
+Source evidence on `yaser5@192.168.1.134` is at
+`/data/sifr-h03a1pets-trait-object-scope-evidence-20261001/`.
+`source-audit.json` SHA-256:
+`3a1e354e81cf8165f72175861c20bd48bb17bc1578f28be75ab13390cfd66e0d`.
+`source-inputs.json` retains pinned-source URLs/digests; the failed candidate and
+raw evidence are read-only. Candidate-keyed command logs and scoped self-review
+qualify only documentation accuracy, never implementation/capability acceptance.
+Return H03a1pets/receipt ids, PRs, exact candidate/merge SHAs, evidence and blocker.
+
+**Next action: separately assign H03a1pet after merged H03a1pets scope and receipt,
+then resume H03a1 only after complete combined H03a1pe acceptance.**
+H03a1/H03a/H03b-H03f and D01b/D01c remain dependency-blocked. Keep
+**H03ep -> exact expanded V01 approval and full governed capture -> H03eq**;
+the 65-case #4209/#4210 planning proposal is not authorized capture work.
+Independent H01e automatic-review restriction/H01i, external-owner work, Q01
+integration and whole-phase closure retain their owners and status. This owner
+merges only this documentation scope and a separate receipt, then stops.
+**Documentation item blocker: none. Implementation acceptance: still open.**
+
 ## H03a1pe observation-extension stop: generated Debug trait objects (2026-10-01)
 
 **State: H03a1pe blocked, needs-new-scope and unaccepted.** The combined
@@ -1892,7 +2122,9 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1peo | User-approved Astra advisory and #4203-#4210; **closed**, #4211 and delivery receipt above. | Prospective observation contract and H03e preparation/qualification sequence; no capability or capture pass. |
 | H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
 | H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
-| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **blocked, needs-new-scope**, draft #4213 stopped on required generated Debug trait-object facts. | One combined extension under the amended declaration/body observation and consumer capability contract; implementation remains unaccepted. See the current stop record above; separate scope adjudication required. |
+| H03a1pets | Merged #4214 stop and approved H03a1peo #4211/#4212; **documentation decision complete**, delivery receipt pending. | Canonical-only trait-object scope adjudication above; no implementation or qualification pass. |
+| H03a1pet | Merged H03a1pets scope/receipt and H03a1peo, accepted H03a1pr/H03a1p and closed H03a1pes; **ready after documentation merges**. | One combined Dynamic/observation-coverage repair plus complete carried H03a1pe qualification/review/merge; serializer-only pass is insufficient. |
+| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **open and unaccepted**, failed #4213 preserved. | H03a1pet owns the outstanding combined extension under the approved observation contract; full original qualification/review/merge must close it before H03a1 adapter resumes. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
@@ -1905,7 +2137,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03f | H03a-H03e, plus disposition of any required cleanup child; waiting. | Verification policy integration: live source ratchets, their negative/cold tests and blocking profile/area registration. Refresh baselines only for explained merged changes; final H03 receipt. |
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
-H03a1pers, H03a1peo, H03a1pe, H03a1, H03a, H03b, H03c, H03d,
+H03a1pers, H03a1peo, H03a1pets, H03a1pet (closing H03a1pe), H03a1, H03a, H03b, H03c, H03d,
 H03ep (H03eps only on a concrete readiness failure), approved full expanded
 V01 capture, H03eq, then H03f**, one independently owned
 session and merged item at a time. Evidence items are substantive acceptance,
