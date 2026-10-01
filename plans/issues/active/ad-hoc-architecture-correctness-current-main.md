@@ -1028,7 +1028,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1p | H03a1s closed; **closed within its proven surface**, repaired #4198 and receipt #4199. | Original Debug/Clone/PartialEq/Copy capability; #4194 remains an unaccepted historical draft. Additional kinds/generics require H03a1pe. |
 | H03a1pi | H03a1p repeated finding; **closed**, scope #4196 and receipt below. | Docs only: independent inventory adjudication; no capability acceptance. |
 | H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
-| H03a1pes | H03a1pr and combined #4200 gap; scope defined below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
+| H03a1pes | H03a1pr and combined #4200 gap; **closed**, scope #4201 and receipt below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
 | H03a1pe | Merged H03a1pes; waiting, separately assigned. | One verification-only extension for Eq/Ord/PartialOrd/Default/Hash, lifetime correspondence and method generic constraints; four Linux owned contexts and bounded fixtures. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
@@ -8450,3 +8450,55 @@ merge.** This owner performs documentation checks and scoped self-review,
 publishes/merges the scope and separate record-only receipt, then stops.
 No implementation capability, actual-producer test, Windows, broad gate,
 performance, release or external implementation review pass is claimed here.
+
+
+### H03a1pes combined builtin extension scope delivery receipt (2026-10-01)
+
+**State: H03a1pes documentation adjudication closed; H03a1pe implementation and
+H03a1 full adapter acceptance remain open.** [PR #4201](https://github.com/sifr-lang/sifr/pull/4201)
+merged as `7e6c579c5c13b097fb6aaf3d7800a0f3117e1689`, from documentation candidate
+`efb0090351ee4adb3a3f8a100eb027df0dc51b56` on fresh base
+`d697dcc932fde39564a3167c1d3dd2c7e7a63305`. The merged tree exactly matches
+candidate tree `e5aad3e7e723eb26a8b956601ffaaed1e91df02c`.
+
+One bounded H03a1pe now owns the combined five-kind/lifetime/method-constraint
+extension. Its scope preserves full canonical identity/signature/bound agreement,
+discloses pinned RA lifetime/inference limits and requires an explicitly labelled
+lossless compiler-to-original-declaration/RA correspondence. Source syntax alone
+cannot admit generated semantics. Failed correspondence is a concrete stop,
+not permission to erase lifetimes or invent generated facts. The four new
+BuiltinExtensionTests, all five BuiltinCapabilityTests and all four
+BuiltinInventoryTests are reserved individually and by class. Fresh positives
+require Linux fixture production/tests and both original owned packages in
+production/tests; Windows remains required by full H03a1 acceptance.
+
+Documentation structure and its mutation harness, the 900-line guard for
+**4,319 maintained files**, whitespace/scope and clean-tree checks passed.
+Scoped documentation self-review is **SATISFIED with no blockers**. All
+H03a1s-and-later historical records were preserved byte-for-byte; accepted
+#4198/#4199 narrow capability and #4200 diagnostic-only status remain intact.
+Candidate-keyed evidence on `yaser5@192.168.1.134` is at
+`/data/sifr-h03a1-builtin-extension-scope-evidence-20261001/candidates/efb0090351ee4adb3a3f8a100eb027df0dc51b56/`.
+`qualification.json` has SHA-256
+`f1c6f41cf3a4aba87a6362347dfea5facc27536cc3b5bf7f1d4bf5e22c7f09cb`;
+`self-review.md` has SHA-256
+`6cdc1c646f6ea340230e7079c2d0673c35a03ff6efe39e3ac68baa855acb053b`.
+The source/shape audit digests are recorded above. Read-only public API inspection
+supports the implementation direction; it is not an actual-producer proof.
+
+The owner used `/data/sifr-h03a1-builtin-extension-scope-20261001`, branches
+`codex/h03a1-builtin-extension-scope-20261001` and
+`codex/h03a1-builtin-extension-scope-receipt-20261001`, its own outside-Git
+evidence and isolated Mac bare bundle relay. It initialized only the exact
+editor and nested VS Code gitlinks needed for documentation checking, preserving
+the index. Both primary checkouts and prior source/targets/evidence were untouched.
+No Cargo operation, capability probe or cleanup ran. This record-only receipt
+needs documentation/scope/diff/clean-tree checks; no external implementation
+review or broad gate is repeated. Automatic CI is not local qualification evidence.
+
+**Next action: separately assign H03a1pe only.** Full H03a1's original five
+SemanticInputTests, Linux/Windows union, external closure, build scripts/includes,
+input/provenance/freshness, twice unchanged captures, all seven later MetricTests
+and Q01 remain required. No implementation/capability/adapter/metric/Windows/gate/
+performance/release or whole-phase pass is claimed. This owner stops after the
+receipt merge. **Current documentation item blocker: none.**
