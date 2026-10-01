@@ -49,7 +49,7 @@ pub fn canonical(
     }
     if let Some(adt) = ty.as_adt() {
         return Ok(
-            json!({"adt":format!("{}::{}",module(db,adt.module(db)),adt.name(db).as_str()),"arguments":ty.type_arguments().map(|arg|canonical(db,&arg,substitution)).collect::<anyhow::Result<Vec<_>>>()?}),
+            json!({"adt":super::local_sources::canonical_adt(db,adt)?,"arguments":ty.type_arguments().map(|arg|canonical(db,&arg,substitution)).collect::<anyhow::Result<Vec<_>>>()?}),
         );
     }
     if ty.is_tuple() {

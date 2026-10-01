@@ -8,6 +8,8 @@ use syntax::{
 mod declarations;
 #[path = "ra_common/include_sources.rs"]
 mod include_sources;
+#[path = "ra_common/local_sources.rs"]
+mod local_sources;
 #[path = "ra_common/ra_types.rs"]
 mod ra_types;
 use load_cargo::{LoadCargoConfig, ProcMacroServerChoice};
@@ -152,7 +154,12 @@ fn main() -> anyhow::Result<()> {
                 continue;
             }
             let file_text = std::fs::read_to_string(path.as_str())?;
-            for module in krate.modules(&db) {
+            for module in local_sources::modules(
+                &semantics,
+                &db,
+                hir::EditionedFileId::new(&db, file, krate.edition(&db)),
+                krate,
+            ) {
                 for definition in module.declarations(&db) {
                     let hir::ModuleDef::Adt(adt) = definition else {
                         continue;
@@ -253,7 +260,7 @@ fn main() -> anyhow::Result<()> {
                                         serde_json::Value::Null,
                                     )
                                 };
-                                invocations.push(json!({"include_source_mapping":mapping,"invocation_site":site,"module":ra_types::module(&db,module),"source_range":range,"attribute_ordinal":attribute_ordinal,"derive_ordinal":derive_ordinal,"receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"macro":format!("{}::{}",ra_types::module(&db,origin.module(&db)),origin.name(&db).as_str()),"declaration_facts":declarations::facts(&db,&semantics,hir::GenericDef::Adt(adt),source.value.syntax(),&format!("{}::{}",ra_types::module(&db,module),adt.name(&db).as_str()))?,"declaration_source":text,"source_name":source.value.name().map(|n|n.text().to_string())}));
+                                invocations.push(json!({"include_source_mapping":mapping,"invocation_site":site,"module":ra_types::module(&db,module),"source_range":range,"attribute_ordinal":attribute_ordinal,"derive_ordinal":derive_ordinal,"receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"macro":format!("{}::{}",ra_types::module(&db,origin.module(&db)),origin.name(&db).as_str()),"declaration_facts":declarations::facts(&db,&semantics,hir::GenericDef::Adt(adt),source.value.syntax(),&local_sources::canonical_adt(&db,adt)?)?,"declaration_source":text,"source_name":source.value.name().map(|n|n.text().to_string())}));
                             }
                         }
                     }

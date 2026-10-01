@@ -38,3 +38,14 @@ pub struct ObjectShapes<'a> {
 }
 
 pub mod included_contracts { include!("included_contracts.rs"); }
+
+pub fn local_left() {
+    #[derive(Default)]
+    struct LocalShape { flag: bool }
+    let _ = LocalShape::default();
+}
+pub fn local_right() {
+    #[derive(Default)]
+    struct LocalShape { flag: bool }
+    let _ = LocalShape::default();
+}

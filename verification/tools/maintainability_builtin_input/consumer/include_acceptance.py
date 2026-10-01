@@ -20,6 +20,11 @@ def positive(test):
         test.require(all(d["expansion_chain"][0]["call_site"]["quality"] == "exact-source" for d in owners), "exact compiler derive source authority")
     context = test.extended_common["context"]
     test.require(context["kind"] == "ra-semantic-selected-cargo-target-root" and context["crate"] == "builtin_fixture", "selected semantic crate bound to actual Cargo target root")
+    locals=[i for i in test.extended_common["invocations"] if i["source_name"]=="LocalShape"]
+    test.require(len(locals)==3 and {i["receiver"]["adt"].rsplit("::",2)[-2] for i in locals}=={"local_left","local_right","construct"}, "three real same-spelled local ADTs retain resolved function ownership")
+    test.require(len({b.encoded(i["receiver"]) for i in locals})==3, "distinct function-local semantic receiver identities")
+    test.require(all(i["declaration_facts"]["identity"]==i["receiver"]["adt"] for i in locals), "actual local declaration source and canonical receiver identity")
+    test.require(sum(i["include_source_mapping"] is not None for i in locals)==1, "real method-local declaration through two include layers")
     joined = b.validate_join(test.extended, test.extended_common, test.extended_authority, receipt=test.extended_receipt, input_identity=test.extended_receipt["inputs"])
     test.require(any("included_contracts::Included" in d["owner"] for d in joined), "actual included compiler/RA methods joined")
 
@@ -50,3 +55,11 @@ def negatives(test):
         ("kind", lambda m: m["context"].update(kind="first-crate-fallback")),
     ):
         test.mutation(lambda c,m,change=change:change(m), "selected-semantic-context-" + name)
+    def swap_local(c,common):
+        originals=[i for i in common["invocations"] if i["source_name"]=="LocalShape"]
+        originals[0]["receiver"]=originals[1]["receiver"]
+    test.mutation(swap_local,"swapped-local-containing-function-receiver")
+    def swap_identity(c,common):
+        originals=[i for i in common["invocations"] if i["source_name"]=="LocalShape"]
+        originals[0]["declaration_facts"]["identity"]=originals[1]["declaration_facts"]["identity"]
+    test.mutation(swap_identity,"swapped-local-containing-function-source-owner")
