@@ -12,7 +12,7 @@ The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/p
 
 ## H03 approved prospective observation and resource sequencing amendment (2026-10-01)
 
-**H03a1peo: documentation amendment defined; H03a1pe implementation remains
+**H03a1peo: documentation amendment closed; H03a1pe implementation remains
 unaccepted.** This bounded amendment reads merged main
 `6086bb6cc93799c0ff012d682051ad0b3823a4f4`, including #4203-#4210. After the
 read-only Astra advisory, the user explicitly instructed, **“Go with that to
@@ -214,6 +214,63 @@ independent. External X02/Emitted Rust work remains with its owner. D01b/D01c,
 Q01 and whole-phase acceptance retain their dependencies. The exact next
 implementation assignment after this amendment/receipt is **H03a1pe only**;
 this documentation owner stops after checks, merge and its separate receipt.
+
+### H03a1peo approved contract and sequencing delivery receipt (2026-10-01)
+
+**State: H03a1peo documentation amendment closed; next H03a1pe ready for separate
+assignment, extended capability/full adapter still unaccepted.**
+[PR #4211](https://github.com/sifr-lang/sifr/pull/4211) merged as
+`c3dc87d8295071d2c98168a25f9856928cb56d64`, from exact candidate
+`94b9a0fb208dd6c11b689c9225a8a96be1b952de` on base
+`6086bb6cc93799c0ff012d682051ad0b3823a4f4`. The merged tree equals reviewed
+candidate tree `ab87b453b6dc16d7d7ad13920e40a9225b646d63`. Only this
+canonical Markdown changed; user-approved prospective authority and exact
+H03a1pe/H03ep/H03eq scopes/dependencies/tests are defined above.
+
+On that exact candidate, `python3 verification/areas/documentation/check_structure.py`
+and its registered mutation harness passed (raw log SHA-256
+`d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`),
+`python3 scripts/check_file_size_guardrails.py` passed for **4,319 files** at
+limit 900 (log `63cd754f846cf9db14c30892ab814715bbbe0bce2f4b0352b4d696b7fab62aa5`),
+and whitespace/single-path scope/clean-tree checks passed. Scoped documentation
+self-review was **SATISFIED**, no blockers (SHA-256
+`8f05eda983e21b890d5ca6d27096cf5c06497188a606b09dce3bf9d4df44d8e3`).
+Byte comparisons preserved the entire original #4203-#4206 tail (SHA-256
+`f0357bdf794bd472bfd390d6143506acff88f7c15f910d7503b688a7229d1c03`)
+and accepted #4198/#4199 receipt (SHA-256
+`2d147c76146ee40638931d7a2a9c00af8d4775012c70d702deba55ea2cae78c5`).
+The assigned documentation-only policy requires these checks and self-review;
+no external implementation review or broad gate is required for this batch or
+its separate record-only receipt.
+
+Candidate-keyed raw checks, diff, scope/history proof, self-review and
+`qualification.json` are outside Git on `yaser5@192.168.1.134` at
+`/data/sifr-architecture-h03-approved-contract-evidence-20261001/candidates/94b9a0fb208dd6c11b689c9225a8a96be1b952de/`.
+The owner used `/data/sifr-architecture-h03-approved-contract-20261001`, branches
+`codex/architecture-h03-approved-contract-20261001` and
+`codex/architecture-h03-approved-contract-receipt-20261001`, and its isolated Mac
+bare publication relay `/tmp/sifr-h03-approved-relay.3ak68P/relay.git`. Exact
+editor/nested VS Code gitlinks were initialized only for documentation input;
+both primary checkouts, old worktrees, compiler/RA sources, helper targets,
+references, warm caches and prior evidence were preserved. No Cargo operation,
+implementation test, probe, allocation/performance measurement, reference
+capture, target adoption or cleanup ran. Automatic GitHub checks were still
+in progress at merge; their state is not local or whole-phase qualification.
+
+**Exact next action: separately assign combined H03a1pe only**, using its amended
+body observation/consumer capability boundary, complete declaration contract,
+allowed paths, four extension plus five capability plus four inventory exact
+individual/class selections and resource preflight above. H03a1pera/H03a1perp
+are prospectively deactivated as F30 prerequisites; their historical needs-new-
+scope reports remain valid. H03a1's original full adapter/union/input obligations
+and H03a's seven MetricTests remain dependent and unpassed. H03b-H03d then lead
+to H03ep readiness, exact expanded V01 approval/full capture, H03eq governed
+qualification and H03f. The 65-case capture must not start now. Exact future
+expanded reference/budgets approval remains pending until its harness and
+manifest are reviewable; this amendment is not that approval. H01e/H01i,
+external X02, D01b/D01c, Q01 and whole-phase dependencies retain their owners.
+This owner stops after the separate receipt merge; no next batch began.
+**Current documentation item blocker: none.**
 
 ## V01/F05 live selected-reference qualification (2026-09-28)
 
@@ -1704,7 +1761,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
 | H03a1pes | H03a1pr and combined #4200 gap; **closed**, scope #4201 and receipt below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
 | H03a1pers | #4203/#4204 stop; **closed**, adjudication #4205 and receipt below. | No region producer adopted; precise authority blocker and inactive prerequisite reservation below. |
-| H03a1peo | User-approved Astra advisory and #4203-#4210; documentation amendment above. | Prospective observation contract and H03e preparation/qualification sequence; no capability or capture pass. |
+| H03a1peo | User-approved Astra advisory and #4203-#4210; **closed**, #4211 and delivery receipt above. | Prospective observation contract and H03e preparation/qualification sequence; no capability or capture pass. |
 | H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
 | H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **ready for separate assignment** after amendment delivery. | One combined extension under the amended declaration/body observation and consumer capability contract; implementation remains unaccepted. |
