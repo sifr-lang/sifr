@@ -81,7 +81,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         self.require(all(s["trait"] and s["trait"].endswith("::Clone") for s in cloned), "trait Clone authority rather than inherent clone")
         self.require(all(s["trait"] and s["trait"].endswith("::PartialEq") for s in compared if s["kind"] == "binary:Eq"), "trait equality authority")
         self.require(all(s["implementation"] and "field_origin::External" in s["implementation"] for s in cloned), "actual locked external impl")
-        self.require(all(s["implementation_owner"].endswith("#field_origin@0.1.0") for s in cloned), "actual external Cargo package/version preserved")
+        self.require(all(s["implementation_owner"] == "checkout:/field_origin#0.1.0" for s in cloned), "actual external Cargo package/version preserved")
         local = next(d for d in self.fixture["other_macro_declarations"] if d["owner"].endswith("LocallyGenerated"))
         self.require(local["expansion_chain"][0]["macro_identity"] == "builtin_fixture::Debug" and not local["expansion_chain"][0]["builtin"], "same-spelled macro resolved as local")
         debug = self.method("Record", "fmt")
