@@ -10,6 +10,34 @@ import unittest
 import maintainability_builtin_input as builtin
 
 
+def prepared(test, root, package, label, *, whole, test_mode=False):
+    key = builtin.digest(builtin.encoded([str(root), package, whole, test_mode, test.identity, {k:builtin.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}]))
+    path = Path(os.environ["SIFR_BUILTIN_EVIDENCE_DIR"]) / "prepared" / key
+    if (path / "successful.json").is_file():
+        binding=json.loads((path / "successful.json").read_text())
+        for name,sha in binding.items():
+            if builtin.digest((path/name).read_bytes())!=sha:
+                raise builtin.Unsupported("changed cached successful producer authority")
+        c=json.loads((path/"capture.json").read_text());r=json.loads((path/"receipt.json").read_text());a=builtin.read_inventory(r,r["inputs"])
+        builtin.verify_capture(c,r,r["inputs"],a)
+        common=json.loads((path/"common.json").read_text())
+        builtin.validate_join(c,common,a,receipt=r,input_identity=r["inputs"])
+        print("prepared cache HIT",label,r["timing_seconds"])
+        return c,r,common
+    c,r=builtin.capture_package(root,package,package,path,test.helper,test.target,test.identity,whole=whole,test=test_mode)
+    env=os.environ.copy();env.pop("RUSTC_BOOTSTRAP",None);env.update(r["inputs"]["resolver_preparation_environment"])
+    suffix=("fixture_root/src/" if package=="builtin_fixture" else f"crates/{package}/src/") if whole else "fixture_root/src/lib.rs" if package=="builtin_fixture" else "crates/sifr_codegen/src/rust_ir.rs"
+    command=[str(test.resolver),str(root),package,suffix,str(path/"capture.json")]
+    if test_mode:command.append("test")
+    result=builtin.run(command,env=env,log=path/"resolver.log")
+    common=json.loads(result.stdout);(path/"common.json").write_bytes(builtin.encoded(common))
+    a=builtin.read_inventory(r,r["inputs"]);join=builtin.validate_join(c,common,a,receipt=r,input_identity=r["inputs"])
+    (path/"join.json").write_bytes(builtin.encoded(join))
+    (path/"successful.json").write_bytes(builtin.encoded({name:builtin.digest((path/name).read_bytes()) for name in ("capture.json","receipt.json","inventory-authority.json","common.json","join.json")}))
+    print("prepared cache MISS",label,r["timing_seconds"],"resolver",result.elapsed_seconds)
+    return c,r,common
+
+
 class BuiltinCapabilityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -19,24 +47,12 @@ class BuiltinCapabilityTests(unittest.TestCase):
         cls.receipt_path = Path(os.environ["SIFR_BUILTIN_COMPONENT_RECEIPT"])
         cls.evidence = Path(tempfile.mkdtemp(prefix="acceptance-", dir=os.environ["SIFR_BUILTIN_EVIDENCE_DIR"]))
         cls.identity = builtin.tool_identity(cls.receipt_path, cls.target)
-        cls.fixture, cls.fixture_receipt = builtin.capture_package(
-            builtin.TOOL / "fixtures", "builtin_fixture", "builtin_fixture",
-            cls.evidence / "fixture", cls.helper, cls.target, cls.identity,
-        )
+        cls.fixture, cls.fixture_receipt, cls.common = prepared(cls, builtin.TOOL / "fixtures", "builtin_fixture", "fixture", whole=False)
         cls.inventory = builtin.read_inventory(cls.fixture_receipt, cls.fixture_receipt["inputs"])
-        environment = os.environ.copy()
-        environment.pop("RUSTC_BOOTSTRAP", None)
-        environment.update(cls.fixture_receipt["inputs"]["resolver_preparation_environment"])
-        common = builtin.run(
-            [str(cls.resolver), str(builtin.TOOL / "fixtures"), "builtin_fixture", "fixture_root/src/lib.rs", str(cls.evidence / "fixture/capture.json")],
-            env=environment, log=cls.evidence / "fixture-resolver.log",
-        )
-        cls.common = json.loads(common.stdout)
-        (cls.evidence / "fixture-common.json").write_bytes(builtin.encoded(cls.common))
         builtin.verify_capture(cls.fixture, cls.fixture_receipt, cls.fixture_receipt["inputs"], cls.inventory)
-        cls.join = builtin.validate_join(cls.fixture, cls.common, cls.inventory)
+        cls.join = builtin.validate_join(cls.fixture, cls.common, cls.inventory, receipt=cls.fixture_receipt, input_identity=cls.fixture_receipt["inputs"])
         (cls.evidence / "fixture-join.json").write_bytes(builtin.encoded(cls.join))
-        (cls.evidence / "fixture-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(cls.fixture,cls.common)))
+        (cls.evidence / "fixture-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(cls.fixture,cls.common, receipt=cls.fixture_receipt, input_identity=cls.fixture_receipt["inputs"], authority=cls.inventory)))
 
     def setUp(self):
         self.assertions = 0
@@ -82,7 +98,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         self.reject(corrupted, "negative-missing-entire-PartialEq-impl")
         self.assertions += 1
         with self.assertRaises(builtin.Unsupported):
-            builtin.validate_join(corrupted, self.common, self.inventory)
+            builtin.validate_join(corrupted, self.common, self.inventory, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
         corrupted = copy.deepcopy(self.fixture)
         corrupted["declarations"] = [d for d in corrupted["declarations"] if d["owner"] != marker["owner"]]
         self.reject(corrupted, "negative-missing-bodyless-marker")
@@ -94,7 +110,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         self.reject(corrupted, "negative-missing-Record-fmt")
         self.assertions += 1
         with self.assertRaises(builtin.Unsupported):
-            builtin.validate_join(corrupted, self.common, self.inventory)
+            builtin.validate_join(corrupted, self.common, self.inventory, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
 
 
     def test_hygiene_and_same_spelled_methods_preserve_trait_origin(self):
@@ -190,16 +206,12 @@ class BuiltinCapabilityTests(unittest.TestCase):
         self.reject(corrupted, "negative-missing-expansion")
 
     def test_live_rust_ir_builtin_surface_has_complete_dispositions(self):
-        live, receipt = builtin.capture_package(builtin.ROOT, "sifr_codegen", "sifr_codegen", self.evidence / "live", self.helper, self.target, self.identity)
-        environment = os.environ.copy()
-        environment.pop("RUSTC_BOOTSTRAP", None)
-        environment.update(receipt["inputs"]["resolver_preparation_environment"])
-        common = json.loads(builtin.run([str(self.resolver), str(builtin.ROOT), "sifr_codegen", "crates/sifr_codegen/src/rust_ir.rs", str(self.evidence / "live/capture.json")], env=environment, log=self.evidence / "live-resolver.log").stdout)
+        live, receipt, common = prepared(self,builtin.ROOT,"sifr_codegen","live",whole=False)
         inventory = builtin.read_inventory(receipt, receipt["inputs"])
         builtin.verify_capture(live, receipt, receipt["inputs"], inventory)
-        joined = builtin.validate_join(live, common, inventory)
+        joined = builtin.validate_join(live, common, inventory, receipt=receipt, input_identity=receipt["inputs"])
         self.require(len(joined) == len(common["common_members"]), "full actual common live surface joined")
-        counts = builtin.validate_mapping(live, inventory)
+        counts = builtin.validate_mapping(live, inventory, receipt=receipt, input_identity=receipt["inputs"])
         self.require(counts["invocations"] == len(common["invocations"]), "all actual live builtin invocations accounted for")
         receivers = {builtin.encoded(d["receiver_identity"]) for d in live["declarations"]}
         self.require(len(receivers) == len({builtin.encoded(i["receiver"]) for i in common["invocations"]}), "all actual declarations accounted for")
@@ -208,7 +220,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             self.require(declaration["ast_body"] and declaration["hir_body"] and declaration["typed_sites"], "RustFile." + name + " actual complete typed body")
         (self.evidence / "live-common.json").write_bytes(builtin.encoded(common))
         (self.evidence / "live-join.json").write_bytes(builtin.encoded(joined))
-        (self.evidence / "live-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(live,common)))
+        (self.evidence / "live-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(live,common, receipt=receipt, input_identity=receipt["inputs"], authority=inventory)))
         print("actual live counts:", counts, "receiver_declarations:", len(receivers))
         for owner in ("rust_ir::RustFile as std::fmt::Debug", "rust_ir::Visibility as std::cmp::PartialEq"):
             corrupted = copy.deepcopy(live)
@@ -216,7 +228,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             self.reject(corrupted, "negative-live-missing-" + owner.split("::")[1].split()[0], receipt=receipt, authority=inventory)
             self.assertions += 1
             with self.assertRaises(builtin.Unsupported):
-                builtin.validate_join(corrupted, common, inventory)
+                builtin.validate_join(corrupted, common, inventory, receipt=receipt, input_identity=receipt["inputs"])
         corrupted = copy.deepcopy(live)
         next(d for d in corrupted["declarations"] if d["typed_sites"])["typed_sites"].pop()
         self.reject(corrupted, "negative-live-dropped-call", receipt=receipt, authority=inventory)
@@ -247,15 +259,16 @@ class BuiltinInventoryTests(unittest.TestCase):
         (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"receipt":receipt,"semantic_rejection":str(caught.exception),"integrity_passed":True}))
 
     def common_reject(self, value, common, label, authority=None):
+        receipt = self._live_receipt if authority is not None else self.fixture_receipt
         self.assertions += 1
-        with self.assertRaisesRegex(builtin.Unsupported, "invocation|common-member") as caught:
-            builtin.validate_join(value, common, authority or self.inventory)
+        with self.assertRaisesRegex(builtin.Unsupported, "invocation|common-member|independent inventory") as caught:
+            builtin.validate_join(value, common, authority or self.inventory, receipt=receipt, input_identity=receipt["inputs"])
         (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"common":common,"semantic_rejection":str(caught.exception)}))
 
     def test_hir_ty_owner_inventory_is_independent_of_ast_projection(self):
         inventory = self.inventory["inventory"]
         self.require(any("local_owner" in d["structural_identity"] and d["disposition"] == "nonselected" for d in inventory["universe"]), "body-nested actual impl remains in universe")
-        self.require(len(builtin.validate_invocation_multisets(self.fixture,self.common)) == len(self.common["invocations"]), "all primary/marker/auxiliary invocation multisets persisted")
+        self.require(len(builtin.validate_invocation_multisets(self.fixture,self.common, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"], authority=self.inventory)) == len(self.common["invocations"]), "all primary/marker/auxiliary invocation multisets persisted")
         self.require(inventory["trait_impl_cross_check"], "actual HIR/type universe cross-check")
         self.require(len(inventory["owners"]) == len(self.fixture["declarations"]), "complete compiler owner/member inventory")
         self.require(len(inventory["universe"]) > len([d for d in inventory["owners"] if d["owner_kind"].startswith("Impl")]), "preselection retains source/nonselected impls")
@@ -294,16 +307,16 @@ class BuiltinInventoryTests(unittest.TestCase):
             value["inventory_digest"] = builtin.digest(builtin.encoded(authority["inventory"]))
             self.assertions += 1
             with self.assertRaisesRegex(builtin.Unsupported, "independent inventory"):
-                builtin.validate_mapping(value, authority)
+                builtin.validate_mapping(value, authority, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
             (self.evidence / (label + ".json")).write_bytes(builtin.encoded(authority))
         authority = copy.deepcopy(self.inventory)
         authority["context"]["target"] = "wrong-context"
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "independent inventory context"):
-            builtin.validate_mapping(self.fixture, authority)
+            builtin.validate_mapping(self.fixture, authority, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "missing independent inventory"):
-            builtin.validate_mapping(self.fixture, None)
+            builtin.validate_mapping(self.fixture, None, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "missing independent inventory expected authority"):
             builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"],None)
@@ -312,7 +325,7 @@ class BuiltinInventoryTests(unittest.TestCase):
         self.common_reject(self.fixture, common, "duplicate-invocation")
 
     def test_coordinated_fixture_owner_removals_fail_semantic_admission(self):
-        self.require(bool(builtin.validate_join(self.fixture,self.common,self.inventory)), "actual complete fixture join")
+        self.require(bool(builtin.validate_join(self.fixture,self.common,self.inventory, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])), "actual complete fixture join")
         primary = {d["owner"] for d in self.fixture["declarations"] if d["owner_kind"].startswith("Impl") and d["trait_identity"] == builtin.COMMON_DERIVES[d["expansion_chain"][0]["macro_identity"]][0]}
         first_invocation = self.fixture["declarations"][0]["expansion_chain"]
         for label, selected in (
@@ -389,14 +402,11 @@ class BuiltinInventoryTests(unittest.TestCase):
         self.require(all(s["trait"] and s["trait"].endswith("::Clone") for s in self.method("ExternalFields","clone")["typed_sites"]), "same-spelled inherent methods isolated")
 
     def test_coordinated_live_owner_removals_fail_semantic_admission(self):
-        live, receipt = builtin.capture_package(builtin.ROOT,"sifr_codegen","sifr_codegen",self.evidence / "live",self.helper,self.target,self.identity)
-        environment = os.environ.copy()
-        environment.pop("RUSTC_BOOTSTRAP",None)
-        environment.update(receipt["inputs"]["resolver_preparation_environment"])
-        common = json.loads(builtin.run([str(self.resolver),str(builtin.ROOT),"sifr_codegen","crates/sifr_codegen/src/rust_ir.rs",str(self.evidence / "live/capture.json")],env=environment,log=self.evidence / "live-resolver.log").stdout)
+        live, receipt, common = prepared(self,builtin.ROOT,"sifr_codegen","live",whole=False)
         authority = builtin.read_inventory(receipt,receipt["inputs"])
+        self._live_receipt = receipt
         self.require(bool(builtin.verify_capture(live,receipt,receipt["inputs"],authority)), "actual original live inventory admission")
-        join = builtin.validate_join(live,common,authority)
+        join = builtin.validate_join(live,common,authority, receipt=receipt, input_identity=receipt["inputs"])
         self.require(len(join) == len(common["common_members"]), "all actual live common methods joined")
         primary = {d["owner"] for d in live["declarations"] if d["owner_kind"].startswith("Impl") and d["trait_identity"] == builtin.COMMON_DERIVES[d["expansion_chain"][0]["macro_identity"]][0]}
         chain = live["declarations"][0]["expansion_chain"]
@@ -416,12 +426,180 @@ class BuiltinInventoryTests(unittest.TestCase):
             self.semantic_reject(value,"coordinated-live-all-auxiliaries",receipt,authority)
         else:
             self.require(not any("TrivialClone>" in d["owner"] for d in live["declarations"]), "actual live auxiliary absence agrees with compiler inventory")
-        counts = builtin.validate_mapping(live,authority)
+        counts = builtin.validate_mapping(live,authority, receipt=receipt, input_identity=receipt["inputs"])
         counts["receivers"] = len({builtin.encoded(i["receiver"]) for i in common["invocations"]})
         print("actual live inventory counts:",counts,"auxiliaries:",len(auxiliaries))
         (self.evidence / "live-common.json").write_bytes(builtin.encoded(common))
         (self.evidence / "live-join.json").write_bytes(builtin.encoded(join))
-        (self.evidence / "live-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(live,common)))
+        (self.evidence / "live-invocation-join.json").write_bytes(builtin.encoded(builtin.validate_invocation_multisets(live,common, receipt=receipt, input_identity=receipt["inputs"], authority=authority)))
+
+
+class BuiltinExtensionTests(BuiltinInventoryTests):
+    # Inherit assertion helpers, but keep this exact four-case acceptance class.
+    test_hir_ty_owner_inventory_is_independent_of_ast_projection = None
+    test_coordinated_fixture_owner_removals_fail_semantic_admission = None
+    test_ra_invocation_owned_common_members_fail_without_compiler_impl = None
+    test_coordinated_live_owner_removals_fail_semantic_admission = None
+
+    @classmethod
+    def setUpClass(cls):
+        BuiltinCapabilityTests.setUpClass.__func__(cls)
+        cls.extended,cls.extended_receipt,cls.extended_common=prepared(cls,builtin.TOOL/"fixtures","builtin_fixture","extension",whole=True)
+        cls.extended_authority=builtin.read_inventory(cls.extended_receipt,cls.extended_receipt["inputs"])
+
+    def mutation(self, change, label, *, capture=None, receipt=None, authority=None, common=None):
+        original=capture or self.extended;receipt=copy.deepcopy(receipt or self.extended_receipt);authority=authority or self.extended_authority
+        value=copy.deepcopy(original);projection=copy.deepcopy(common or self.extended_common)
+        change(value,projection)
+        receipt["capture_digest"]=builtin.digest(builtin.encoded(value))
+        self.require(receipt["capture_digest"]==builtin.digest(builtin.encoded(value)),"recomputed projection integrity")
+        self.assertions+=1
+        with self.assertRaisesRegex(builtin.Unsupported,"independent inventory|declaration|invocation|consumer|publication|correspondence|substitution") as caught:
+            builtin.validate_join(value,projection,authority,receipt=receipt,input_identity=receipt["inputs"])
+        (self.evidence/(label+".json")).write_bytes(builtin.encoded({"capture":value,"common":projection,"receipt":receipt,"intact_authority_digest":builtin.digest(builtin.encoded(authority)),"semantic_rejection":str(caught.exception)}))
+
+    def test_default_eq_hash_ordering_bodies_and_members(self):
+        d=self.extended["declarations"]
+        for shape in ("ExtendedRecord","ExtendedTuple","ExtendedUnit","ExtendedEnum"):
+            for trait,method in (("Eq","assert_fields_are_eq"),("Ord","cmp"),("PartialOrd","partial_cmp"),("Default","default"),("Hash","hash")):
+                member=next(x for x in d if shape+" as " in x["owner"] and x["owner"].endswith("::"+method))
+                self.require(member["ast_body"] and member["hir_body"],shape+" "+trait+" real body")
+                self.require(member["declaration_facts"]["trait_bridge"]["trait_method"].endswith("::"+method),"actual original trait method relation")
+        eq=next(x for x in d if "ExtendedRecord as " in x["owner"] and x["owner"].endswith("::assert_fields_are_eq"))
+        self.require("AssertParamIsEq" in eq["tokens"] and eq["body_type_dependencies"],"Eq actual field type dependencies")
+        joined=builtin.validate_join(self.extended,self.extended_common,self.extended_authority,receipt=self.extended_receipt,input_identity=self.extended_receipt["inputs"])
+        self.require(next(j for j in joined if j["owner"]==eq["owner"])["member_disposition"]=="compiler-only-owned-typed-member","Eq compiler-only generated signature has explicit correspondence")
+        self.mutation(lambda c,m:next(x for x in c["declarations"] if x["owner"]==eq["owner"])["body_type_dependencies"].clear(),"missing-Eq-type-dependencies")
+        default=next(x for x in d if "ExtendedEnum as " in x["owner"] and x["owner"].endswith("::default"))
+        self.require("Empty" in default["tokens"] and "#[default]" in next(i["declaration_source"] for i in self.extended_common["invocations"] if i["source_name"]=="ExtendedEnum"),"real default unit variant attribute")
+        sites=[s for x in d for s in x["typed_sites"]]
+        self.require(any(s["target"] and s["target"].endswith("Hash::hash") for s in sites),"resolved generic Hash field/discriminant calls")
+        self.require(len(builtin.validate_invocation_multisets(self.extended,self.extended_common,receipt=self.extended_receipt,input_identity=self.extended_receipt["inputs"],authority=self.extended_authority))==len(self.extended_common["invocations"]),"complete original owned multisets")
+        observation=builtin.consume(self.extended,self.extended_receipt,self.extended_receipt["inputs"],self.extended_authority,("call-count","resolved-module-fanout"))
+        self.require(bool(observation["body_erasure_observations"]),"authentic published body erasure labeled with call owner and stage")
+        for label,mutate in (("erased-static",lambda n:n.update(kind="ReStatic")),("erased-named",lambda n:n.update(kind="ReEarlyParam",index=0,name="'a"))):
+            def change(c,common):
+                node=next(n for x in c["declarations"] for s in x["typed_sites"] for n in builtin.declaration_consumer.nodes(s) if n.get("kind")=="ReErased");mutate(node)
+            self.mutation(change,label)
+        def changed_arguments(c,common):
+            site=next(s for x in c["declarations"] for s in x["typed_sites"] if s["published_arguments"])
+            site["published_arguments"].append({"const":{"kind":"Value(9)"}})
+        self.mutation(changed_arguments,"changed-type-const-arguments")
+        def changed_type_argument(c,common):
+            argument=next(n for d in c["declarations"] for s in d["typed_sites"] for n in s["published_arguments"] or [] if "type" in n)
+            argument["type"]={"builtin":"invented-type"}
+        self.mutation(changed_type_argument,"changed-actual-type-argument")
+        self.mutation(lambda c,m:next(x for x in c["declarations"] if x["owner"]==eq["owner"]).update(hir_body=False),"falsely-bodyless-Eq")
+
+    def test_lifetime_receiver_and_method_generics_preserve_constraints(self):
+        declarations=self.extended["declarations"]
+        owned=next(d for d in declarations if "TwoLifetimes" in d["owner"] and d["owner"].endswith("::hash"))
+        facts=owned["declaration_facts"]
+        self.require([p["kind"] for p in facts["generics"]["parent"]["own"]]==["lifetime","lifetime","type"],"ordered inherited lifetime/type parameters")
+        self.require(facts["generics"]["own"][0]["name"]=="__H","Hash method-own parameter")
+        predicates=list(builtin.declaration_consumer.nodes(facts["predicates"]))
+        self.require(any("region_outlives" in p for p in predicates) and any("type_outlives" in p for p in predicates),"region/type outlives facts")
+        self.require({p["trait"] for p in predicates if "trait" in p}.issuperset({"core::hash::Hasher","core::marker::Sized"}),"actual Hasher/Sized constraints")
+        self.require(any(n.get("kind")=="ReStatic" for n in builtin.declaration_consumer.nodes(facts["original"]["field_types"])),"static field distinguished")
+        self.require(any(n.get("kind")=="ReBound" for n in builtin.declaration_consumer.nodes(facts["signature"])),"bound method reference regions retained")
+        self.require(facts["signature"]["binders"],"method binder variables retained")
+        join=builtin.validate_join(self.extended,self.extended_common,self.extended_authority,receipt=self.extended_receipt,input_identity=self.extended_receipt["inputs"])
+        bridge=next(j["declaration_correspondence"] for j in join if j["owner"]==owned["owner"])
+        self.require(bridge["compiler_trait_substitution"]["alpha_parameters"][0]["trait_name"]=="H","verified H to __H alpha relation")
+        self.require(bridge["original_adt"]["kind"]=="ra-semantic-declaration-and-source-correspondence","RA authority labeled accurately")
+        for label,mutate in (("missing-ra-lifetime",lambda facts:facts["lifetimes"].pop()),("wrong-ra-lifetime-owner",lambda facts:next(n for n in facts["lifetimes"] if n["disposition"]["kind"]=="parameter")["disposition"].update(index=999))):
+            self.mutation(lambda c,m:mutate(next(i for i in m["invocations"] if i["source_name"]=="TwoLifetimes")["declaration_facts"]),label)
+        negative_root=self.evidence/"const-generic-fixture"
+        shutil.copytree(builtin.TOOL/"fixtures",negative_root)
+        source=negative_root/"fixture_root/src/lib.rs"
+        source.write_text(source.read_text()+"\n#[derive(Debug, Clone)] pub struct ConstGeneric<const N: usize> { pub items: [u8; N] }\n")
+        destination=self.evidence/"const-generic-capture"
+        self.assertions+=1
+        with self.assertRaisesRegex(builtin.Unsupported,"unsupported"):
+            builtin.capture_package(negative_root,"builtin_fixture","builtin_fixture",destination,self.helper,self.target,self.identity,whole=True)
+        self.require(not (destination/"capture.json").exists(),"unsupported const generic impl shape publishes no accepted export")
+        self.assertions+=1
+        with self.assertRaisesRegex(builtin.Unsupported,"capability unresolved"):
+            builtin.consume(self.extended,self.extended_receipt,self.extended_receipt["inputs"],self.extended_authority,("lifetime-sensitive",))
+        mutations=(
+            ("declaration-erasure",lambda f:next(n for n in builtin.declaration_consumer.nodes(f) if n.get("kind")=="ReEarlyParam").update(kind="ReErased")),
+            ("bound-depth",lambda f:next(n for n in builtin.declaration_consumer.nodes(f["signature"]) if n.get("kind")=="ReBound").update(depth="INNERMOST+1")),
+            ("static-param",lambda f:next(n for n in builtin.declaration_consumer.nodes(f["original"]) if n.get("kind")=="ReStatic").update(kind="ReEarlyParam",index=0,name="'a")),
+            ("missing-own-parameter",lambda f:f["generics"]["own"].clear()),
+            ("missing-own-Hasher",lambda f:f["predicates"]["own"].pop()),
+            ("missing-outlives",lambda f:f["predicates"]["parent"]["own"].clear()),
+            ("wrong-method-owner",lambda f:f["generics"].update(owner="wrong::owner")),
+            ("swapped-receiver-arguments",lambda f:f["receiver"]["arguments"].reverse()),
+            ("missing-binder",lambda f:f["signature"]["binders"].clear()),
+        )
+        for label,mutate in mutations:
+            def change(c,common):
+                mutate(next(d for d in c["declarations"] if d["owner"]==owned["owner"])["declaration_facts"])
+                for member in common["common_members"]:
+                    if member["method"]=="hash" and "TwoLifetimes" in member["receiver_identity"]["adt"]:
+                        member["trait_declaration_facts"]["parameters"].clear()
+                        member["generic_bounds"].clear()
+            self.mutation(change,label)
+
+    def test_extended_inventory_owner_and_constraint_removals_fail_closed(self):
+        for trait in ("Eq","Ord","PartialOrd","Default","Hash","Clone","Copy","TrivialClone"):
+            owners={d["owner"] for d in self.extended["declarations"] if "Lifetime" in d["owner"] and ("::"+trait+">") in d["owner"]}
+            self.require(bool(owners),"actual extended mutation owner "+trait)
+            def change(c,common):
+                c["declarations"]=[d for d in c["declarations"] if d["owner"] not in owners]
+                c["expanded_owner_ledger"]=[d for d in c["expanded_owner_ledger"] if d["owner"] not in owners]
+                common["common_members"]=[m for m in common["common_members"] if not (m["trait_identity"].endswith("::"+trait) and "Lifetime" in m["receiver_identity"]["adt"])]
+            self.mutation(change,"coordinated-extended-"+trait)
+        self.mutation(lambda c,m:next(d for d in c["declarations"] if d["typed_sites"])["typed_sites"].pop(),"missing-owned-call")
+        for hook in ("<absent as hook>",next(d["owner"] for d in self.extended["declarations"] if d["owner_kind"]=="AssocFn")):
+            old=os.environ.get("SIFR_BUILTIN_OMIT_AST_OWNER")
+            try:
+                os.environ["SIFR_BUILTIN_OMIT_AST_OWNER"]=hook
+                self.assertions+=1
+                with self.assertRaisesRegex(builtin.Unsupported,"omitted-AST"):
+                    builtin.validate_join(self.extended,self.extended_common,self.extended_authority,receipt=self.extended_receipt,input_identity=self.extended_receipt["inputs"])
+            finally:
+                if old is None:os.environ.pop("SIFR_BUILTIN_OMIT_AST_OWNER",None)
+                else:os.environ["SIFR_BUILTIN_OMIT_AST_OWNER"]=old
+        for operation in (lambda:builtin._validate_join(self.extended,self.extended_common,self.extended_authority),lambda:builtin.validate_join(self.extended,self.extended_common,self.extended_authority),lambda:builtin.validate_mapping(self.extended,self.extended_authority),lambda:builtin.validate_invocation_multisets(self.extended,self.extended_common)):
+            self.assertions+=1
+            with self.assertRaisesRegex(builtin.Unsupported,"unauthenticated"):operation()
+        for field in ("derive_ordinal","attribute_ordinal"):
+            self.mutation(lambda c,m:m["invocations"][0].update({field:999}),"swapped-"+field)
+        self.mutation(lambda c,m:next(d for d in c["declarations"] if d["owner_kind"]=="AssocFn")["expansion_chain"][0]["call_site"].update(start=[999,0]),"swapped-callsite")
+        replacement=copy.deepcopy(self.extended_authority);replacement["inventory"]["owners"].pop()
+        self.assertions+=1
+        with self.assertRaisesRegex(builtin.Unsupported,"replacement expected authority"):
+            builtin.verify_capture(self.extended,self.extended_receipt,self.extended_receipt["inputs"],replacement)
+
+    def test_live_owned_derive_inventory_has_complete_dispositions(self):
+        contexts=[];all_kinds=set();live_erased=[]
+        for package in ("sifr_codegen","sifr_lowering"):
+            for mode in (False,True):
+                c,r,m=prepared(self,builtin.ROOT,package,package+("-test" if mode else "-production"),whole=True,test_mode=mode)
+                a=builtin.read_inventory(r,r["inputs"])
+                self.require(r["preparation_cargo_artifact_success"] and not r["capture_cargo_artifact_success"],"actual locked selected original Cargo preparation")
+                self.require(c["context"]["test"]==mode and c["context"]["target"]=="x86_64-unknown-linux-gnu","exact original context")
+                all_kinds.update(d["expansion_chain"][0]["macro_identity"] for d in c["declarations"])
+                observation=builtin.consume(c,r,r["inputs"],a,("call-count","resolved-module-fanout"));live_erased.extend(observation["body_erasure_observations"])
+                self.require(len(builtin.validate_invocation_multisets(c,m,receipt=r,input_identity=r["inputs"],authority=a))==len(m["invocations"]),"all live invocation multisets")
+                self.require(any(n.get("kind")=="ReEarlyParam" for d in c["declarations"] for n in builtin.declaration_consumer.nodes(d["declaration_facts"])),"actual live declaration lifetime shapes")
+                for label,change in (("call",lambda v,p:next(d for d in v["declarations"] if d["typed_sites"])["typed_sites"].pop()),("owner",lambda v,p:v["declarations"].pop()),("generic",lambda v,p:next(d for d in v["declarations"] if d["declaration_facts"]["generics"]["own"])["declaration_facts"]["generics"]["own"].clear())):
+                    self.mutation(change,package+str(mode)+label,capture=c,receipt=r,authority=a,common=m)
+                contexts.append((c,r,r["inputs"],a))
+                (self.evidence/(package+str(mode)+"-counts.json")).write_bytes(builtin.encoded({"counts":r["counts"],"erasure":observation,"context":c["context"]}))
+        self.require(all_kinds==set(builtin.COMMON_DERIVES),"fresh whole contexts discover all nine resolved kinds")
+        self.require(any("SimpleStmtLoweringCtx" in e["owner"] for e in live_erased) and sum("SelectedDeclarations" in e["owner"] for e in live_erased)>=3,"authentic four Default erased observations retained")
+        self.require(bool(builtin.validate_contexts(contexts)),"four whole contexts complete")
+        self.assertions+=1
+        with self.assertRaisesRegex(builtin.Unsupported,"context completeness"):builtin.validate_contexts(contexts[:-1])
+        c,r,m=prepared(self,builtin.TOOL/"fixtures","builtin_fixture","extension-test",whole=True,test_mode=True)
+        self.require(any("TestOnly" in d["owner"] for d in c["declarations"]),"actual test-only fixture selected")
+        other=self.evidence/"relocated-fixtures"
+        shutil.copytree(builtin.TOOL/"fixtures",other)
+        repeated,repeat_receipt,repeat_common=prepared(self,other,"builtin_fixture","relocated-extension",whole=True)
+        self.require(repeated==self.extended,"unchanged authentic capture normalizes across checkout paths")
+        self.require(builtin.normalize(repeat_common,other)==builtin.normalize(self.extended_common,builtin.TOOL/"fixtures"),"relocated complete original RA declaration correspondence")
 
 
 if __name__ == "__main__":

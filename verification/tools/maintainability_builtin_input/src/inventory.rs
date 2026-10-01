@@ -30,6 +30,11 @@ pub fn owner(tcx: TyCtxt<'_>, did: DefId, implementation: DefId, chain: &[Value]
         Some("core::clone::Clone") => Some("core::clone::Clone"),
         Some("core::cmp::PartialEq") => Some("core::cmp::PartialEq"),
         Some("core::marker::Copy") => Some("core::marker::Copy"),
+        Some("core::cmp::Eq") => Some("core::cmp::Eq"),
+        Some("core::cmp::Ord") => Some("core::cmp::Ord"),
+        Some("core::cmp::PartialOrd") => Some("core::cmp::PartialOrd"),
+        Some("core::default::Default") => Some("core::default::Default"),
+        Some("core::hash::macros::Hash") => Some("core::hash::Hash"),
         _ => None,
     };
     let role = if primary.is_some() && primary == trait_identity.as_deref() {
@@ -37,7 +42,15 @@ pub fn owner(tcx: TyCtxt<'_>, did: DefId, implementation: DefId, chain: &[Value]
     } else {
         "compiler-only-auxiliary"
     };
+    let selected = chain.first().is_some_and(|c| c["builtin"] == true)
+        && typed::selected_source(tcx, tcx.def_span(did));
+    let (body_tokens, typed_sites, catalog, types) = if selected {
+        typed::body(tcx, did)
+    } else {
+        (None, vec![], Default::default(), vec![])
+    };
     json!({
+        "declaration_facts":if selected {Some(crate::semantic::declaration(tcx,did,implementation))}else{None},"published_body":{"tokens":body_tokens,"sites":typed_sites,"catalog":catalog,"types":types},
         "output_role":role,"structural_identity":tcx.def_path(did).to_string_no_crate_verbose(), "owner": tcx.def_path_str(did), "owner_kind": format!("{kind:?}"),
         "parent": tcx.def_path_str(tcx.parent(did)),
         "receiver_identity": identity::ty(tcx, receiver),
@@ -75,7 +88,6 @@ pub fn capture(tcx: TyCtxt<'_>) -> Value {
             .dcx()
             .fatal("independent inventory HIR/type trait-impl universe discrepancy");
     }
-    let suffix = std::env::var("SIFR_BUILTIN_SOURCE_SUFFIX").expect("selected source contract");
     let mut universe = vec![];
     let mut owners = vec![];
     for local in implementations {
@@ -103,7 +115,7 @@ pub fn capture(tcx: TyCtxt<'_>) -> Value {
                     && entry["macro_identity"].is_null()
             }) {
             ("unsupported", "unknown source or resolved macro owner")
-        } else if !source.ends_with(&suffix) {
+        } else if !typed::selected_source(tcx, tcx.def_span(local)) {
             ("nonselected", "outside selected Cargo source")
         } else if expansion == ExpnId::root() {
             ("nonselected", "source implementation")
