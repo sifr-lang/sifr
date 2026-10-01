@@ -132,27 +132,28 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
             "runner": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
             "suite": "build-qualification",
             "workflow": ".github/workflows/local-first-validation.yml",
+            "native_executables": {
+                "sifr-sql-mysql": "sifr_sql_mysql_tools",
+                "sifr-sql-postgresql": "sifr_sql_postgresql_tools",
+                "sifr-sql-sqlite": "sifr_sql_sqlite_tools",
+            },
+            "native_claim": "linked-native-target-directories",
+            "cross_target_claim": "cross-target-check-only",
         },
         "build evidence identity has drifted",
     )
-    runner = (REPO_ROOT / evidence["runner"]).read_text(encoding="utf-8")
-    for token in (
-        "cargo",
-        "check",
-        "--locked",
-        "--offline",
-        "CARGO_INCREMENTAL",
-        "TemporaryDirectory",
-        "incremental_plan != clean_plan",
-        "reproduced_plan != clean_plan",
-    ):
-        require(token in runner, f"SQL build runner omits executable mechanism: {token}")
+    for binary, package in evidence["native_executables"].items():
+        manifest_path = REPO_ROOT / "crates" / package / "Cargo.toml"
+        require(manifest_path.is_file(), f"SQL tool package is missing: {package}")
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        require(f'name = "{binary}"' in manifest_text,
+                f"SQL tool executable is missing from package: {binary}")
     manifest = read_json(REPO_ROOT / "verification/areas/sql_platform/manifest.json")
     suites = {str(suite.get("name")): suite for suite in manifest.get("suites", [])}
     suite = suites.get(evidence["suite"])
     require(isinstance(suite, dict), "SQL build qualification suite is absent")
     require(
-        suite.get("resource_classes") == ["default-local"],
+        suite.get("resource_classes") == ["default-local", "long-running"],
         "SQL build qualification must use the schema-supported default-local resource class",
     )
     commands = {str(case.get("command")) for case in suite.get("cases", [])}
@@ -176,6 +177,8 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
             evidence["suite"] in sql_rows[0].get("suites", []),
             f"{profile} omits executable SQL build qualification",
         )
+        require(set(sql_rows[0].get("resource_classes", [])) == {"default-local", "long-running"},
+                f"{profile} SQL resource declaration differs from its build suite")
 
 
 def validate_named_test(evidence: str) -> None:
@@ -289,6 +292,8 @@ def self_test() -> None:
         ("missing-security", lambda value: value["security_contracts"].pop()),
         ("missing-build-mode", lambda value: value["build_modes"].pop()),
         ("missing-build-evidence", lambda value: value.pop("build_evidence")),
+        ("wrong-native-claim", lambda value: value["build_evidence"].__setitem__("native_claim", "cargo-check-plan")),
+        ("missing-executable", lambda value: value["build_evidence"]["native_executables"].pop("sifr-sql-mysql")),
         ("missing-evidence", lambda value: value["allocation_evidence"].clear()),
         ("missing-doc-example", lambda value: value["runnable_documentation_examples"].clear()),
         ("missing-component-evidence", lambda value: value["component_protocol_evidence"].pop("sifr_sql_mysql")),

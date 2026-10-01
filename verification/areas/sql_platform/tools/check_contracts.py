@@ -387,7 +387,7 @@ def validate_profiles(overrides: dict[str, Any] | None = None) -> None:
         require(len(selections) == 1, f"profile {name} must select sql_platform exactly once")
         row = selections[0]
         require(set(row.get("suites", [])) == PROFILE_SUITES, f"profile {name} omits an SQL platform suite")
-        require(set(row.get("resource_classes", [])) == {"default-local"}, f"profile {name} has invalid SQL resources")
+        require(set(row.get("resource_classes", [])) == {"default-local", "long-running"}, f"profile {name} has invalid SQL resources")
 
 
 def validate_all(overrides: dict[str, Any] | None = None) -> None:
@@ -439,6 +439,11 @@ def self_test() -> None:
                             if row["crate"] == "libsqlite3-sys").pop("source_patch")),
         ("missing-dependency-constraint", "qualification", lambda value: value["constraints"].pop()),
         (
+            "wrong-build-resource-class",
+            "profiles",
+            wrong_sql_resource_class,
+        ),
+        (
             "missing-profile-suite",
             "profiles",
             remove_sql_profile_suite,
@@ -455,6 +460,12 @@ def self_test() -> None:
         accepted.append(label)
     require(not accepted, f"contract mutations were accepted: {', '.join(accepted)}")
     print(f"SQL platform contract self-test ok: mutations={len(mutations)}")
+
+
+def wrong_sql_resource_class(profiles: dict[str, Any]) -> None:
+    selections = profiles["create-pr"]["selected_areas"]
+    sql_selection = next(row for row in selections if row.get("area") == "sql_platform")
+    sql_selection["resource_classes"] = ["default-local"]
 
 
 def remove_sql_profile_suite(profiles: dict[str, Any]) -> None:
