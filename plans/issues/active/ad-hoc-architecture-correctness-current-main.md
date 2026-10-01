@@ -10,6 +10,111 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1pet original source-binder authority stop (2026-10-01)
+
+**Current controlling state: H03a1pet needs-new-scope and unaccepted; H03a1pe
+remains open and unaccepted.** The combined owner carried the entire unaccepted
+#4213 implementation from `8bdbe4430c767477d454ab6af8fea38a395145dc` onto fresh
+main `6418939546be1551c607ababd26c26f8280c9af4` as `36d9de9f2`, then preserved
+partial repair candidate `fcca47cf1920edf44dffb231c41762a2ffd243a1` in
+[draft #4217](https://github.com/sifr-lang/sifr/pull/4217). **Do not merge that draft or #4213.** This stop is implementation
+scope evidence, not a capability, review or current-main integration pass.
+
+The partial candidate adds exhaustive published Dynamic predicate facts,
+strict schema v3, original raw capture/inventory/invocation provenance and
+body-type-dependency/adjustment region observations. It introduces the required
+real six-field aggregate Debug fixtures and a bounded `ObjectShapes` fixture
+with ordered lifetime/type/const existential arguments, actual supertrait
+projection ownership, auto-trait-only absence and a higher-ranked
+`for<'b> BoundObject<'b, Output=u16>` field. All partial changes stay inside
+approved helper/script paths. Complete original acceptance and the required
+augmented assertions remain unfinished.
+
+### Exact failed surface and authority boundary
+
+The locked helper build succeeded with helper-only
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input`. The first exact command,
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinExtensionTests.test_default_eq_hash_ordering_bodies_and_members`,
+failed in `setUpClass`: **0 tests and 0 selected acceptance assertions ran**.
+Original fixed-arity fixture compiler capture and RA join completed in setup.
+The whole extended fixture compiler capture then completed with **191 selected
+owners, 112 impl-universe entries and 24 structured Dynamic nodes**. Its
+independent inventory contains genuine nonempty existential Region binders and
+`ReBound` depth facts for `ObjectShapes`. The RA companion subsequently failed:
+`unresolved declaration lifetime 'b in builtin_fixture::extension::ObjectShapes`.
+There is no successful whole-fixture RA join/`successful.json` or accepted
+combined extension export. Its existing `capture.json` is partial compiler/body
+inventory evidence only; it cannot qualify the failed original-source join.
+
+Pinned [RA `resolve_lifetime_param`](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs#L1692)
+searches `AnyHasGenericParams` ancestors, then converts the located lifetime
+parameter to a declaration-owned definition. Its
+[`LifetimeParam`](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/lib.rs#L3645)
+returns a `GenericDef` parent. The real `for<'b>` occurrence supplies no such
+identity through this API. Compiler binder facts alone do not establish the
+required original RA/compiler declaration/source binder correspondence. The
+owner did not infer identity from text, position or nesting and did not change
+producer/API/pin or substitute a weaker fixture.
+
+**Observed scope is the newly introduced bounded `ObjectShapes` positive
+fixture. No required actual-current-main owned surface is proven affected by
+this RA binder gap.** No full `sifr_codegen` or `sifr_lowering` Linux production
+or test context was reached by this candidate. All thirteen exact original
+individual cases remain unqualified (first failed before assertions; remaining
+twelve unrun), all three complete classes are unrun, and all four current-main
+contexts remain unqualified. The former fifteen/sixty-eight Debug diagnostics
+and donor's three historical case passes remain historical evidence. They are
+not replaced by this partial serializer/build success. No scoped Opus review,
+full adapter, Windows qualification, broad gate or metric work ran.
+
+The controlling H03a1pet scope item 1 requires **“Unsupported nested type, const
+or binder facts still fail closed.”** Item 5 requires bounded **real producer**
+fixtures and **“supported existential binders”**, preserving original/generated
+declaration lifetime facts. Item 2 retains declaration binders/depth and source
+correspondence. The binding H03a1peo contract preserves complete declaration
+lifetimes/binders/source correspondence, forbids position guesses and copied
+facts, and permits authentic body erasure only for bounded lifetime-independent
+consumers. The explicit H03a1pet stop rule includes **“ambiguous
+semantic/source/binder/body origin”**. The compiler supports this fixture's
+recursive bound-region representation; the independent original-source resolver
+does not establish its binder ownership. That absent authority triggers the
+stop rule without claiming a current-main runtime surface failure.
+
+### Preserved evidence and next owner decision
+
+Exact raw files, failed RA/compiler/build logs, source excerpts/digests,
+partial counts and scope/format/Python-syntax/file-size/whitespace/clean-tree
+checks are on `yaser5@192.168.1.134` under
+`/data/sifr-h03a1pet-trait-object-repair-evidence-20261001/`, with candidate report
+`candidates/fcca47cf1920edf44dffb231c41762a2ffd243a1/unsupported-source-binder-stop.json`.
+The failed prepared directory is
+`prepared/5af7d7de263efa818acee0d5e00b39cf32b451f9469b5ec2159608ee29dc5830/`.
+The stopped worktree/branch are
+`/data/sifr-h03a1pet-trait-object-repair-20261001` and
+`codex/h03a1pet-trait-object-repair-20261001`. The accepted inactive target passed
+fresh process/open-handle and complete graph/component/tool identity checks
+before exclusive adoption; it remains preserved after the stop. Resource
+reserves were sufficient; no cleanup occurred. Donor #4213, its worktree and
+all historical raw/failed evidence remain unchanged.
+
+**Next action: a separate source/scope advisor adjudicates this binder authority
+boundary before further implementation.** The smallest source-backed options are
+an explicit supported-binder acceptance boundary for the existing pinned
+producers, retaining fail-closed rejection of this unsupported source shape; or
+a bounded original source-binder correspondence authority contract using
+existing compiler/RA sources. Neither option is selected here. Any change must
+state how genuine declaration binder identity/depth/source correspondence and
+all original acceptance remain enforced; no producer/API expansion, inferred
+identity, substitute fixture or waiver is approved by this stop.
+
+H03a1pet/H03a1pe and H03a1/H03a/H03b-H03f/D01b/D01c remain dependency-blocked.
+H03a1pera/perp stay prospectively deactivated. H03ep -> exact expanded V01
+approval/full capture -> H03eq remains binding; no 65-case capture starts.
+H01e automatic-review restriction/H01i and external/integration/whole-phase
+owners remain unchanged. This owner records the documentation-only stop and
+stops; no next batch begins.
+
+
 ## H03a1pets trait-object scope adjudication (2026-10-01)
 
 **Current controlling state: H03a1pets documentation adjudication closed;
@@ -2195,8 +2300,8 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
 | H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
 | H03a1pets | Merged #4214 stop and approved H03a1peo #4211/#4212; **closed**, scope #4215 and delivery receipt above. | Canonical-only trait-object scope adjudication; no implementation or qualification pass. |
-| H03a1pet | Merged H03a1pets scope/receipt and H03a1peo, accepted H03a1pr/H03a1p and closed H03a1pes; **ready after documentation merges**. | One combined Dynamic/observation-coverage repair plus complete carried H03a1pe qualification/review/merge; serializer-only pass is insufficient. |
-| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **open and unaccepted**, failed #4213 preserved. | H03a1pet owns the outstanding combined extension under the approved observation contract; full original qualification/review/merge must close it before H03a1 adapter resumes. |
+| H03a1pet | Merged H03a1pets scope/receipt and H03a1peo, accepted H03a1pr/H03a1p and closed H03a1pes; **needs-new-scope and unaccepted**, stopped draft and source-binder record above. | Partial Dynamic repair reached the new bounded fixture's absent original RA binder authority; all original qualification remains unfinished; no current-main binder-gap surface established. |
+| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **open and unaccepted**, failed #4213 and H03a1pet draft preserved. | H03a1pet source-binder scope stop blocks outstanding combined extension; full original qualification/review/merge must close it before H03a1 adapter resumes. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
