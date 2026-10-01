@@ -99,7 +99,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         corrupted["declarations"] = [d for d in corrupted["declarations"] if not d["owner"].startswith("<Record as std::cmp::PartialEq>")]
         self.reject(corrupted, "negative-missing-entire-PartialEq-impl")
         self.assertions += 1
-        with self.assertRaises(builtin.Unsupported):
+        with self.assertRaisesRegex(builtin.Unsupported, "producer evidence changed or truncated"):
             builtin.validate_join(corrupted, self.common, self.inventory, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
         corrupted = copy.deepcopy(self.fixture)
         corrupted["declarations"] = [d for d in corrupted["declarations"] if d["owner"] != marker["owner"]]
@@ -111,7 +111,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         corrupted["declarations"].remove(self.method("Record", "fmt"))
         self.reject(corrupted, "negative-missing-Record-fmt")
         self.assertions += 1
-        with self.assertRaises(builtin.Unsupported):
+        with self.assertRaisesRegex(builtin.Unsupported, "producer evidence changed or truncated"):
             builtin.validate_join(corrupted, self.common, self.inventory, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
 
 
@@ -232,7 +232,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             corrupted["declarations"] = [declaration for declaration in corrupted["declarations"] if not (owner in declaration["owner"] and declaration["owner_kind"] == "AssocFn")]
             self.reject(corrupted, "negative-live-missing-" + owner.split("::")[1].split()[0], receipt=receipt, authority=inventory)
             self.assertions += 1
-            with self.assertRaises(builtin.Unsupported):
+            with self.assertRaisesRegex(builtin.Unsupported, "producer evidence changed or truncated"):
                 builtin.validate_join(corrupted, common, inventory, receipt=receipt, input_identity=receipt["inputs"])
         corrupted = copy.deepcopy(live)
         next(d for d in corrupted["declarations"] if d["typed_sites"])["typed_sites"].pop()
