@@ -229,6 +229,15 @@ def invocation_correspondence(capture, common, inputs, b):
         selected=[d for d in capture["declarations"] if d["receiver_identity"]==invocation["receiver"] and d["expansion_chain"][0]["macro_identity"]==invocation["macro"]]
         if not selected:raise b.Unsupported("invocation-owned missing complete compiler outputs")
         site=invocation["invocation_site"]
+        if "include_source_mapping" not in invocation:
+            raise b.Unsupported("missing original invocation include source disposition")
+        mapping=invocation["include_source_mapping"]
+        compiler_included=any(c["macro_identity"]=="core::macros::builtin::include" for c in selected[0]["expansion_chain"])
+        if compiler_included and selected[0]["expansion_chain"][0]["call_site"]["quality"]=="exact-source" and mapping is None:
+            raise b.Unsupported("missing exact original included invocation source authority")
+        if mapping is not None:
+            if set(mapping)!={"kind","receiver","file","source_range","expanded_source_tokens"} or mapping["kind"]!="ra-public-include-token-descent-and-to-def" or site is None or mapping["receiver"]!=invocation["receiver"] or mapping["file"]!=site["file"] or mapping["source_range"]!=invocation["source_range"] or mapping["expanded_source_tokens"]!=invocation["declaration_facts"]["source_tokens"]:
+                raise b.Unsupported("invocation semantic include source correspondence conflict")
         if site is not None:
             actual_path=Path(inputs["input_root"])/selected[0]["expansion_chain"][0]["call_site"]["file"].removeprefix("checkout:/")
             if Path(site["file"]).resolve()!=actual_path.resolve():

@@ -6,6 +6,8 @@ use syntax::{
 };
 #[path = "ra_common/declarations.rs"]
 mod declarations;
+#[path = "ra_common/include_sources.rs"]
+mod include_sources;
 #[path = "ra_common/ra_types.rs"]
 mod ra_types;
 use load_cargo::{LoadCargoConfig, ProcMacroServerChoice};
@@ -125,14 +127,18 @@ fn main() -> anyhow::Result<()> {
                     let Some(source) = semantics.source(adt) else {
                         anyhow::bail!("missing common ADT source");
                     };
-                    if semantics
-                        .original_range(source.value.syntax())
-                        .file_id
-                        .file_id(&db)
-                        != file
-                    {
+                    let included = source.file_id.original_file_respecting_includes(&db);
+                    let is_include =
+                        source.file_id.is_macro() && included != source.file_id.original_file(&db);
+                    let source_file = if is_include {
+                        included
+                    } else {
+                        semantics.original_range(source.value.syntax()).file_id
+                    };
+                    if source_file.file_id(&db) != file {
                         continue;
                     }
+                    let mut physical = None;
                     for (attribute_ordinal, attribute) in source.value.attrs().enumerate() {
                         let Some(meta) = attribute.meta() else {
                             continue;
@@ -144,7 +150,77 @@ fn main() -> anyhow::Result<()> {
                             let origin =
                                 origin.ok_or_else(|| anyhow::anyhow!("unresolved common macro"))?;
                             if origin.builtin_derive_kind(&db).is_some() {
-                                invocations.push(json!({"invocation_site":if source.file_id.original_file(&db).file_id(&db)==file && !source.file_id.is_macro(){Some(declarations::invocation_site(&meta,derive_ordinal,&file_text,path.as_str())?)}else{None},"module":ra_types::module(&db,module),"source_range":format!("{:?}",semantics.original_range(source.value.syntax()).range),"attribute_ordinal":attribute_ordinal,"derive_ordinal":derive_ordinal,"receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"macro":format!("{}::{}",ra_types::module(&db,origin.module(&db)),origin.name(&db).as_str()),"declaration_facts":declarations::facts(&db,&semantics,hir::GenericDef::Adt(adt),source.value.syntax(),&format!("{}::{}",ra_types::module(&db,module),adt.name(&db).as_str()))?,"declaration_source":source.value.syntax().text().to_string(),"source_name":source.value.name().map(|n|n.text().to_string())}));
+                                if is_include && physical.is_none() {
+                                    let node = include_sources::physical_adt(
+                                        &semantics,
+                                        adt,
+                                        source.file_id,
+                                        included,
+                                    )?;
+                                    anyhow::ensure!(
+                                        declarations::source_tokens(node.syntax())
+                                            == declarations::source_tokens(source.value.syntax()),
+                                        "included builtin semantic/physical ADT token correspondence conflict: {:?}; physical={:?}; expanded={:?}",
+                                        adt.name(&db),
+                                        declarations::source_tokens(node.syntax()),
+                                        declarations::source_tokens(source.value.syntax())
+                                    );
+                                    physical = Some(node);
+                                }
+                                let (site, range, text, mapping) = if let Some(node) = &physical {
+                                    let original_attribute =
+                                        node.attrs().nth(attribute_ordinal).ok_or_else(|| {
+                                            anyhow::anyhow!(
+                                                "missing original include attribute ordinal"
+                                            )
+                                        })?;
+                                    let original_meta =
+                                        original_attribute.meta().ok_or_else(|| {
+                                            anyhow::anyhow!(
+                                                "missing original include attribute meta"
+                                            )
+                                        })?;
+                                    anyhow::ensure!(
+                                        declarations::source_tokens(original_meta.syntax())
+                                            == declarations::source_tokens(meta.syntax()),
+                                        "included original derive attribute correspondence conflict"
+                                    );
+                                    let range = format!("{:?}", node.syntax().text_range());
+                                    let mapping = json!({"kind":"ra-public-include-token-descent-and-to-def","receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"file":path.as_str(),"source_range":range,"expanded_source_tokens":declarations::source_tokens(source.value.syntax())});
+                                    (
+                                        Some(declarations::invocation_site(
+                                            &original_meta,
+                                            derive_ordinal,
+                                            &file_text,
+                                            path.as_str(),
+                                        )?),
+                                        range,
+                                        node.syntax().text().to_string(),
+                                        mapping,
+                                    )
+                                } else {
+                                    (
+                                        if source.file_id.original_file(&db).file_id(&db) == file
+                                            && !source.file_id.is_macro()
+                                        {
+                                            Some(declarations::invocation_site(
+                                                &meta,
+                                                derive_ordinal,
+                                                &file_text,
+                                                path.as_str(),
+                                            )?)
+                                        } else {
+                                            None
+                                        },
+                                        format!(
+                                            "{:?}",
+                                            semantics.original_range(source.value.syntax()).range
+                                        ),
+                                        source.value.syntax().text().to_string(),
+                                        serde_json::Value::Null,
+                                    )
+                                };
+                                invocations.push(json!({"include_source_mapping":mapping,"invocation_site":site,"module":ra_types::module(&db,module),"source_range":range,"attribute_ordinal":attribute_ordinal,"derive_ordinal":derive_ordinal,"receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"macro":format!("{}::{}",ra_types::module(&db,origin.module(&db)),origin.name(&db).as_str()),"declaration_facts":declarations::facts(&db,&semantics,hir::GenericDef::Adt(adt),source.value.syntax(),&format!("{}::{}",ra_types::module(&db,module),adt.name(&db).as_str()))?,"declaration_source":text,"source_name":source.value.name().map(|n|n.text().to_string())}));
                             }
                         }
                     }
@@ -157,12 +233,15 @@ fn main() -> anyhow::Result<()> {
                     let Some(source) = semantics.source(adt) else {
                         anyhow::bail!("missing impl ADT source");
                     };
-                    if semantics
-                        .original_range(source.value.syntax())
-                        .file_id
-                        .file_id(&db)
-                        != file
+                    let included = source.file_id.original_file_respecting_includes(&db);
+                    let source_file = if source.file_id.is_macro()
+                        && included != source.file_id.original_file(&db)
                     {
+                        included
+                    } else {
+                        semantics.original_range(source.value.syntax()).file_id
+                    };
+                    if source_file.file_id(&db) != file {
                         continue;
                     }
                     let Some(trait_) = implementation.trait_(&db) else {

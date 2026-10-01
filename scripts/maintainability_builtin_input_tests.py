@@ -9,6 +9,7 @@ import unittest
 
 import maintainability_builtin_input as builtin
 import dynamic_acceptance
+import include_acceptance
 
 
 def prepared(test, root, package, label, *, whole, test_mode=False, repeat=False):
@@ -493,6 +494,7 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
         self.mutation(lambda c,m:next(x for x in c["declarations"] if x["owner"]==eq["owner"]).update(hir_body=False),"falsely-bodyless-Eq")
 
         dynamic_acceptance.positive(self)
+        include_acceptance.positive(self)
 
     def test_lifetime_receiver_and_method_generics_preserve_constraints(self):
         declarations=self.extended["declarations"]
@@ -578,6 +580,7 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
             builtin.verify_capture(self.extended,self.extended_receipt,self.extended_receipt["inputs"],replacement)
 
         dynamic_acceptance.negatives(self)
+        include_acceptance.negatives(self)
 
     def test_live_owned_derive_inventory_has_complete_dispositions(self):
         contexts=[];all_kinds=set();live_erased=[]

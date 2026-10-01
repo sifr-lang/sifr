@@ -36,3 +36,5 @@ pub struct ObjectShapes<'a> {
     pub auto_only: std::marker::PhantomData<&'a (dyn Send + Sync + 'a)>,
     pub static_object: &'a (dyn std::fmt::Debug + 'static),
 }
+
+pub mod included_contracts { include!("included_contracts.rs"); }
