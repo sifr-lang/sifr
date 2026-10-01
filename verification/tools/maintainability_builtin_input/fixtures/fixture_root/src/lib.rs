@@ -26,3 +26,5 @@ pub fn local_owner() {
     struct Local;
     impl Local {}
 }
+
+pub mod extension;
