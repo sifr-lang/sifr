@@ -304,6 +304,9 @@ class BuiltinInventoryTests(unittest.TestCase):
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "missing independent inventory"):
             builtin.validate_mapping(self.fixture, None)
+        self.assertions += 1
+        with self.assertRaisesRegex(builtin.Unsupported, "missing independent inventory expected authority"):
+            builtin.verify_capture(self.fixture,self.fixture_receipt,self.fixture_receipt["inputs"],None)
         common = copy.deepcopy(self.common)
         common["invocations"].append(copy.deepcopy(common["invocations"][0]))
         self.common_reject(self.fixture, common, "duplicate-invocation")
