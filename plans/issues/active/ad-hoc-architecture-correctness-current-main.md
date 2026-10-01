@@ -7550,3 +7550,122 @@ capability result; then stop. A missing component or unsupported AST/HIR/provena
 join must return its exact blocker. H03a1 full adapter resumption is a subsequent
 assignment, and H03a-H03f remain dependent and unstarted. This scope has no local
 blocker; actual-producer capability remains unproven.
+
+### H03a1p builtin capability attempt: blocked for adjudication (2026-10-01)
+
+**State: H03a1p is unaccepted and blocked for adjudication.** The implementation
+remains an unmerged draft in [PR #4194](https://github.com/sifr-lang/sifr/pull/4194),
+candidate 4eed8ff1894091249a65ec101d992698762f2158 on base
+219101aa767a6a83c76fdb527ed86b248f827340. No capability delivery, semantic adapter,
+metric admission or phase closure is accepted by this record. H03a0 and H03a1s
+remain closed; the original H03a1 attempt in #4191 remains unaccepted.
+
+The owned branch codex/h03a1p-builtin-capability-20261001 implements the isolated
+Rust 1.98.1 compiler companion and pinned RA common declaration/signature join,
+with helper-only bootstrap. Official rustc-dev archive, installed component,
+runtime, rust-src and API 6 server identities were acquired and freshly checked.
+Compiler commit is 48a229ceaefd4985c50990b14116b6d856af0985; RA remains
+03fcb77246f2568adb0e9b2fa60d19c6cc1686f4, tree
+0081a116ddfb9f5c3673eba97df030bea907106f. The official component archive SHA-256
+is 97c49fd126d47aa0446488e2674af8b3062b1ec8d72d59ce83d43e45f34a5245.
+Root Cargo files, compiler/resolver sources and APIs, metrics and profiles were
+not changed.
+
+The exact isolated locked build passed. Each reserved BuiltinCapabilityTests
+case passed individually with fail-fast selection; the complete class passed
+5/5 with **269 executed assertions in 310.763 seconds**:
+
+| Exact case | Executed assertions |
+| --- | ---: |
+| test_builtin_bodies_calls_and_auxiliary_origins | 49 |
+| test_hygiene_and_same_spelled_methods_preserve_trait_origin | 8 |
+| test_expansion_ast_hir_mapping_is_owned_and_complete | 182 |
+| test_component_context_and_input_drift_fail_closed | 19 |
+| test_live_rust_ir_builtin_surface_has_complete_dispositions | 11 |
+
+The actual fixture has 31 builtin invocations, 72 generated declarations and 58
+typed call/operator sites. The live Linux production capture has 39 invocations
+on 13 receivers, 91 generated declarations and 728 typed sites, including actual
+RustFile fmt/clone/eq bodies. Standalone formatting, documentation error-code
+links, scoped whitespace checks and the 900-line guard (4,319 files) passed.
+These passes describe executed tests; they **do not establish the missing
+completeness acceptance criterion** found by review.
+
+The initial Opus review returned **NOT SATISFIED**: negative tests failed on
+integrity digests before semantic validation, missing common members could be
+skipped, impl member counts did not account for declaration records, and callable
+target/trait/implementation/dispatch/ownership were unchecked. One remediation
+batch recomputed negative integrity digests, added actual HIR member ledgers and
+a compiler-derived callable catalog, strengthened the join, redirected analysis
+output to owned evidence, and disclosed cfg override and Cargo freshness reuse.
+Scoped self-review then found that removing an entire PartialEq impl and method
+could leave its marker invocation present. The same repair batch added a saved
+expanded-AST owner ledger and reran the named requalification above.
+
+The remediation Opus review also returned **NOT SATISFIED**, reproducing the
+initial missing-required-record finding. Its concrete remaining blocker is:
+
+- main.rs:62-64 and typed.rs:179,218 derive the owner ledger and declaration
+  records from the same saved AST and selection filter. Removing a declaration
+  and its ledger copy preserves internal consistency; no independent HIR/ty impl
+  inventory proves that the item exists.
+- maintainability_builtin_input.py:344-353 still skips an RA common method when
+  its entire compiler impl is absent. The invocation set at :378-381 collapses
+  multiple generated impls to one receiver/macro pair.
+- The reviewer reproduced acceptance after removing both lists' Record PartialEq
+  impl plus eq, Record StructuralPartialEq marker, CopySensitive TrivialClone
+  auxiliary impl, live Visibility PartialEq impl plus eq, or all 13 live
+  StructuralPartialEq markers. Existing negatives remove only one copy and
+  therefore do not prove complete fail-closed admission.
+
+The required correction is an independent compiler enumeration of selected
+builtin-generated local HIR/ty impl owners after successful analysis, reconciled
+one-to-one with the expanded AST. RA builtin-invocation ownership must reject
+missing common methods even when the compiler impl is absent. Negatives must
+remove impl/marker/auxiliary entries from both serialized lists and exercise that
+independent authority. All five individual cases and the class remain required.
+The reviewer verified the callable catalog, digest repair, actual HIR member
+ledger, output redirect and receipt disclosures as corrected.
+
+The **phase-closure-loop** skill says that the same finding returning twice
+requires stopping and adjudication. Implementation stopped here; no third repair
+or review was started and #4194 remains draft. The independent-inventory correction
+above is proposed work for adjudication, not an accepted implementation.
+Follow-ups retain invocation-store reuse provenance, long JSON expressions and
+future explicit desugaring classification for the separate H03a1 adapter.
+
+Evidence remains outside Git on yaser5@192.168.1.134 in
+/data/sifr-h03a1p-builtin-capability-evidence-20261001/, final candidate directory
+candidates/4eed8ff1894091249a65ec101d992698762f2158/ and actual class corpus
+acceptance-hte0av72/. SHA-256 values:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| qualification.json (input/config/tool/callable/AST-owner/token/body/join and log digests) | e6bb293c4d69f63ebc8bc7ced0d0098a11c7f091d04a088ccb9b9159b9adf6da |
+| review-initial.md | 7bd9ce4dc053d6671ddd0025e76c407552fd08812a85cf02572bc9a380a32c53 |
+| review-remediation.md | 7ce0a2e785f5668c8617cdd440cc13106ce1230b273772bba463e7c3a4761f86 |
+| ci-create-pr-failure.log | 3073df6c1c38ae0a6edebd1f07007aee1ea7d5f21008fc3e2474cafedf3ccfa8 |
+
+All earlier failed, cancelled, superseded and provisional probes and source
+candidates retain their status. The completed broad create-PR job on
+[the candidate CI run](https://github.com/sifr-lang/sifr/actions/runs/36804102697)
+failed with “performance qualification unavailable: select
+SIFR_PERFORMANCE_REFERENCE before validation setup”; this known external
+performance-reference failure is preserved separately from the completeness
+blocker. No CI, full-gate, Windows, performance, release or whole-phase pass is
+claimed. The intermediate policy deferred create-PR/full merge profiles to final
+integration; it did not waive scoped review or capability acceptance.
+
+The session owns /data/sifr-h03a1p-builtin-capability-20261001, its branches, index,
+target and evidence. Last measured reserve was 32 GiB free disk and 9.7 GiB
+available RAM, with a 1.9 GiB owned target and 362 MiB evidence. No pressure cleanup
+or another session's artifact mutation occurred. Publication used an isolated Mac
+bare relay, preserving both primary checkouts. This blocker receipt changes only
+the canonical phase and needs documentation checks without another broad gate or
+external review.
+
+**Next action: adjudicate the repeated H03a1p completeness finding before assigning
+an independently enumerated owner inventory repair.** H03a1p and H03a1 remain
+unaccepted. The original five SemanticInputTests, full context/input/external
+closure and all seven later MetricTests remain mandatory; metrics cannot resume.
+This owner stops after the documentation blocker receipt.
