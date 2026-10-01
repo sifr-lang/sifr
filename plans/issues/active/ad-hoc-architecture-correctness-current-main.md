@@ -12,7 +12,7 @@ The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/p
 
 ## H03a1petbs supported source-binder boundary adjudication (2026-10-01)
 
-**Current controlling state: H03a1petbs documentation adjudication qualified;
+**Current controlling state: H03a1petbs documentation adjudication closed;
 H03a1petb is ready for separate implementation assignment only after this scope
 and its separate delivery receipt merge. H03a1pe remains open and unaccepted.**
 This prospective decision reads fresh main
@@ -202,6 +202,82 @@ H01e's independent automatic-review restriction/H01i and external/integration/
 whole-phase owners remain unchanged. Q01 and whole-phase closure retain their
 separate owners. **Documentation blocker: none. Implementation acceptance:
 unproven.** This owner starts no next batch.
+
+
+### H03a1petbs supported source-binder boundary delivery receipt (2026-10-01)
+
+**State: H03a1petbs documentation adjudication closed; H03a1petb ready for separate
+assignment after this receipt merges; H03a1pe remains open and unaccepted.**
+[Scope PR #4220](https://github.com/sifr-lang/sifr/pull/4220) merged as
+`9e60ce5ce6b5e9b54edcfd7b11ab058fc92b8883`, from exact documentation candidate
+`4b0d57ddf3f05d75353fa04ff4ed4049acc84907` on base
+`548b4ef610fa365408223afbe6a3c2ab802c25a6`. Candidate and merged trees equal
+`c657ba7bdf2e82cb31caf92433a9848f9ecd421f`. Only this canonical Markdown changed:
+new prospective adjudication, current execution rows and sequence.
+
+The source-backed supported-facts decision isolates only the newly introduced
+`ObjectShapes::bound` source HRTB as a real source-authority rejection fixture
+following authentic successful compiler capture; it cannot abort positive setup,
+publish an accepted combined export or substitute generic/compiler/input failure.
+Supported nonempty binders remain lossless and empties exact. All original
+receiver/lifetime/outlives/static/method-bound/parent-own/Hasher/Sized/alpha and
+RA/compiler/source correspondence assertions remain mandatory. Required original
+fixtures or current-owned contexts encountering unsupported source HRTB still
+stop. Compiler original HIR retains authentic binder-resolution ingredients;
+this receipt makes no global producer impossibility or complete source absence
+claim. No semantic identity may come from syntax spelling, position or nesting.
+
+Next H03a1petb carries the entire #4217 partial repair plus #4213 donor extension,
+finishes all supported Dynamic/body observations and original qualification,
+authenticated completeness and semantic mutation assertions, thirteen individual
+cases/three complete classes/four actual Linux contexts, focused checks and
+complete exact-candidate Opus 5.5 review, then merge and separate receipt.
+Drafts #4213/#4217 remain unaccepted do-not-merge. The locked helper build and
+191/112/24 compiler fixture counts remain diagnostic evidence; first case failed
+with zero selected tests/assertions, remaining selections/classes/contexts unrun.
+Partial `capture.json` is compiler-only with no successful whole-fixture RA join.
+No actual current-main binder-gap surface is proven affected. H03a1pe closes only
+on fully accepted H03a1petb; full Linux/Windows adapter/closure and metrics retain
+separate later owners and unchanged acceptance.
+
+Exact `python3 verification/areas/documentation/check_structure.py` and its
+registered mutation harness passed, as did
+`python3 scripts/check_file_size_guardrails.py` for **4,319 files**. Historical
+Markdown byte-preservation except the declared execution rows/sequence,
+single-path scope, source anchors, prior report/source/raw digests, whitespace
+and clean-tree checks passed. Scoped documentation self-review was **SATISFIED**,
+with no documentation blockers; it is not external implementation approval.
+Candidate-keyed qualification is at
+`/data/sifr-h03a1petbs-supported-binder-scope-evidence-20261001/candidates/4b0d57ddf3f05d75353fa04ff4ed4049acc84907/`.
+`qualification.json` SHA-256
+`8524646d53d241833b4bd85510ac7ae10ca2c5ba75a577b25f270c27cc70101f`;
+`self-review.md` SHA-256
+`3f8222b5b384aa19e8b90acf373244067533ac396ab28e4c4958eb3a503f6653`.
+The source audit digest is recorded above; original binder-stop report digest
+remains `aa40202df93603f3ac0faf6c8c33c4e1e8d331518ad43d746a99f665273ecfdb`.
+Automatic GitHub jobs were incomplete at scope merge; no overall CI pass is
+claimed. This separate record runs relevant documentation/history/scope/
+whitespace/clean-tree checks only, with no external review or broad gate.
+
+The owner used LAN host `yaser5@192.168.1.134`, exclusive worktree
+`/data/sifr-h03a1petbs-supported-binder-scope-20261001`, branches
+`codex/h03a1petbs-supported-binder-scope-20261001` and
+`codex/h03a1petbs-supported-binder-receipt-20261001`, outside-Git evidence above
+and isolated Mac bare relay `/tmp/sifr-h03a1petbs-relay.ypfI93/relay.git`.
+Only exact editor/nested VS Code documentation gitlinks were initialized; no
+tracked gitlink changes occurred. Fresh post-outage ownership/process/open-handle/
+status/resource observations were taken. Both primary checkouts, stopped donor
+worktrees, prior raw/source evidence and inactive target remain preserved.
+No Cargo/build/producer, target adoption/cleanup, implementation/API/pin/consumer
+change, adapter/Windows/metrics/performance/release/integration/phase pass ran.
+
+**Next action: separately assign H03a1petb after this receipt merge.**
+H03a1pe/H03a1/H03a/H03b-H03f/D01b/D01c remain open or dependency-blocked;
+H03a1pera/perp remain prospectively deactivated. Preserve H03ep -> exact expanded
+V01 approval/full capture -> H03eq, with no 65-case capture. H01e automatic-review
+restriction/H01i and external/Q01/whole-phase ownership remain unchanged.
+**Documentation blocker: none. Implementation qualification: unproven.**
+This owner stops after the receipt merge and starts no next batch.
 
 
 ## H03a1pet original source-binder authority stop (2026-10-01)
@@ -2551,9 +2627,9 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pera | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical lossless-region authority reservation; future distinct analysis requires its own owner/scope. |
 | H03a1perp | **Prospectively deactivated as F30 prerequisite** by H03a1peo. | Historical region capability reservation; no new producer selected. |
 | H03a1pets | Merged #4214 stop and approved H03a1peo #4211/#4212; **closed**, scope #4215 and delivery receipt above. | Canonical-only trait-object scope adjudication; no implementation or qualification pass. |
-| H03a1petbs | Merged source-binder stop #4218/#4219 and user-authorized Astra advisor; **documentation adjudication qualified**, delivery receipt pending. | Canonical-only prospective supported source-binder boundary; exact new HRTB source-authority rejection, all original acceptance retained. |
+| H03a1petbs | Merged source-binder stop #4218/#4219 and user-authorized Astra advisor; **closed**, scope #4220 and delivery receipt above. | Canonical-only prospective supported source-binder boundary; exact new HRTB source-authority rejection, all original acceptance retained. |
 | H03a1pet | **Stopped and unaccepted**, #4217 and source-binder stop preserved; prospective continuation is H03a1petb. | Partial compiler facts are unsuccessful qualification evidence; do not merge this historical draft. |
-| H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; retain accepted H03a1pr/H03a1p and closed H03a1pes; **ready only after both documentation merges**. | One complete carried supported Dynamic repair plus all original H03a1pe qualification, scoped review, merge and separate receipt; no current-main HRTB admission inferred. |
+| H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; retain accepted H03a1pr/H03a1p and closed H03a1pes; **ready after this documentation delivery receipt merges**. | One complete carried supported Dynamic repair plus all original H03a1pe qualification, scoped review, merge and separate receipt; no current-main HRTB admission inferred. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **open and unaccepted**, failed #4213 and H03a1pet draft preserved. | H03a1petb must complete the carried combined extension and full original qualification/review/merge under H03a1petbs before H03a1 adapter resumes. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
