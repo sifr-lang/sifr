@@ -1029,7 +1029,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pi | H03a1p repeated finding; **closed**, scope #4196 and receipt below. | Docs only: independent inventory adjudication; no capability acceptance. |
 | H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
 | H03a1pes | H03a1pr and combined #4200 gap; **closed**, scope #4201 and receipt below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
-| H03a1pe | Merged H03a1pes; waiting, separately assigned. | One verification-only extension for Eq/Ord/PartialOrd/Default/Hash, lifetime correspondence and method generic constraints; four Linux owned contexts and bounded fixtures. |
+| H03a1pe | Merged H03a1pes; **needs-new-scope**, required generated call-region correspondence unproved; stop record below. | Combined extension remains unaccepted. Fresh Default probes expose compiler-erased call substitutions; separately adjudicate their lossless authority mechanism before resumption. |
 | H03a1 | H03a0, repaired H03a1p and H03a1pe merged; waiting. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; waiting, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
@@ -8502,3 +8502,123 @@ input/provenance/freshness, twice unchanged captures, all seven later MetricTest
 and Q01 remain required. No implementation/capability/adapter/metric/Windows/gate/
 performance/release or whole-phase pass is claimed. This owner stops after the
 receipt merge. **Current documentation item blocker: none.**
+
+
+### H03a1pe lossless generated call-region correspondence stop (2026-10-01)
+
+**State: needs-new-scope; H03a1pe extended capability remains unaccepted and H03a1
+resumption remains blocked by it.** This session starts from fresh main
+`3ad6fbace9b84fc6e474e1aba354b00cba681474`, with accepted #4198/#4199 and closed
+#4201/#4202 scope dependencies. The first required lossless correspondence probe
+finds missing compiler authority for current generated typed call regions. This
+is an unproved relation inside the approved producer boundary, **not a claim that
+every pinned public API is globally incapable**. No kind, lifetime or constraint
+is newly admitted; all historical #4191/#4194 review failures and #4200 diagnostic
+failures retain their status.
+
+#### Fresh actual producer evidence
+
+The owner revalidated the full official pinned Rust 1.98.1/Cargo identities,
+rustc-dev/runtime inventory, rust-src, API 6 proc-macro server, locked RA graph
+and source, helper sources and executable/runtime build binding before reuse.
+After clean prior worktrees, inactive-process/open-handle and configuration
+checks, it exclusively adopted the inactive 3.6 GiB builtin target. Original
+helper executables and build receipt were preserved outside Git before diagnostic
+instrumentation, then restored byte-for-byte with original helper source.
+The approved locked helper build used only
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input`, two Cargo jobs and the
+owned target. Bootstrap never entered analyzed packages.
+
+A fresh real locked `cargo check --lib -p sifr_codegen --target
+x86_64-unknown-linux-gnu` preparation succeeded and supplied the exact original
+non-test library invocation. A standalone after-analysis replay of that invocation
+captured the complete whole-codegen production HIR/AST inventory and typed sites
+under the explicit **`diagnostic-h03a1pe-region-probe-v1`** schema. It added direct
+`RegionKind` probes and `matches!(region.kind(), ty::ReErased)` facts, preserving
+the unchanged actual generated bodies. This schema is diagnostic and cannot
+publish an admitted capability. Real Cargo artifact success belongs to preparation;
+the standalone capture stopped after analysis and supplied no Cargo artifact.
+
+Two required current generated owners demonstrate four erased call substitutions:
+
+| Actual generated owner | Generated signature authority | Actual `Default::default` field-call substitution |
+| --- | --- | --- |
+| `<lower_stmt::candidate_and_validation::SimpleStmtLoweringCtx<'a> as std::default::Default>::default` | No function binder variables; return receiver carries early lifetime `'a/#0`. | `Option<&'{erased} sifr_type_system::Type>` at `candidate_and_validation.rs:123`; the nested reference is exactly `ReErased`. |
+| `<stdlib_interop_demand::SelectedDeclarations<'a> as std::default::Default>::default` | No function binder variables; return receiver carries early lifetime `'a/#0`. | Three distinct `BTreeSet<&'{erased} str, Global>` field calls at `stdlib_interop_demand.rs:178,179,180`; every nested reference is exactly `ReErased`. |
+
+The declaration/signature query retains the receiver lifetime, while published
+`TypeckResults` loses its relation to the call's inferred substitution. Merely
+copying `'a` from the receiver, original field or source syntax would reconstruct
+a generated fact without the required semantic authority. RA's published
+reference/type-argument APIs also omit these regions, as recorded in H03a1pes.
+The current producers therefore do not establish the complete four-part bridge
+for this required shape. Under the explicit stop rule, the owner stops before
+extending admission or running the named positive acceptance tests.
+
+#### Pinned API limit and smallest next decision
+
+Official pinned compiler source explains the actual observation:
+`compiler/rustc_hir_typeck/src/writeback.rs:979-988` folds free regions in published
+body types to `re_erased`; its `Resolver::fold_region` at lines 1004-1008 retains
+bound regions and erases other regions. This is producer loss before consumer
+serialization, so changing the serializer cannot recover the missing call region.
+Generated declaration regions/binders and original declaration constraints remain
+potential compiler facts; they do not independently authenticate the lost
+inferred call substitution.
+
+Read-only inspection of the same pinned compiler's public
+`rustc_borrowck::consumers::get_bodies_with_borrowck_facts` identifies a **possible
+separate mechanism**, not an accepted solution: it exposes regenerated MIR region
+variables and borrow-checking/Polonius facts. `RegionInferenceContext`'s original
+region definitions, external names and universal-region mapping are private to
+`rustc_borrowck`; `UniversalRegions` and its conversion/mapping methods are also
+`pub(crate)`. Public equality/outlives queries do not themselves provide a lossless
+original-declaration-to-generated-HIR-call identity. No MIR/Polonius probe, private
+API access, positional reconstruction or new producer admission ran in this item.
+Whether a public mechanism can establish every required identity and constraint
+remains a separate feasibility decision.
+
+**Smallest next action: separately adjudicate compiler region authority and its
+lossless correspondence before resuming the combined H03a1pe extension.** Require
+exact original declaration, generated signature/binder, typed call-substitution,
+AST/HIR ownership and constraint proofs, including lifetime/static substitutions
+and coordinated semantic-removal negatives against intact authority. Decide
+explicitly whether any MIR/borrow-checking mechanism and producer boundary may be
+added. This stop does not authorize a producer upgrade, private-field workaround,
+guessed substitution, erased-lifetime waiver, reduced common join or split
+kind-at-a-time admission. H03a1pes's four new cases, all retained cases and four
+Linux contexts remain required for later acceptance; downstream full H03a1,
+Windows/structural union, metrics and Q01 remain open.
+
+#### Evidence and validation boundary
+
+Evidence is outside Git at
+`/data/sifr-h03a1pe-builtin-extension-evidence-20261001/` on
+`yaser5@192.168.1.134`. `lossless-correspondence-stop.json` SHA-256 is
+`e340d4e6532b47dfc922aa42425cb280b095bff5288d3978ba42434ce3182cfa`.
+Fresh whole-codegen production raw diagnostic SHA-256 is
+`59c3ff024b23f335cd0de917d553deb74608c2a68674359d7763e2aa217c8dfa`;
+its summary is `509b6cc2b63f8f29c2eb19d7236a37656b09082d214c1c4886c425a5c16b826d`.
+The report binds exact successful preparation/invocation, raw inventory,
+source/extern/config/compiler inputs, diagnostic helper executable/source and
+official API-source digests. Original setup shell failure, initial probe and
+instrumentation replay remain in the attempt history; the final observation uses
+fresh selected preparation. No diagnostic export is reused as a positive capture.
+
+The owner used `/data/sifr-h03a1pe-builtin-extension-20261001`, branch
+`codex/h03a1pe-builtin-extension`, owned evidence and an isolated Mac bare bundle
+relay. Only exact Ruff, LeetCode and documentation gitlinks were prepared in that
+worktree. Resource checks retained the 12 GiB disk/8 GiB RAM reserve with at most
+two Cargo jobs and one sequential producer; no cleanup occurred. Both primary
+checkouts, historical worktrees/evidence and unrelated targets remain intact.
+
+This is a documentation-only stop record after diagnostic feasibility work.
+Relevant documentation structure/mutation, 900-line, scope/diff/clean-tree checks
+and scoped self-review qualify its accuracy only. **No BuiltinExtensionTests,
+new retained-case acceptance, fixture/test/lowering positive qualification,
+extended capability, authenticated bridge, external implementation review, full
+adapter, Windows, metric, broad gate, performance, release or whole-phase pass is
+claimed.** The original accepted H03a1p surface remains unchanged. This owner
+stops after merging the stop record and its record-only receipt; the next session
+must own the separate scope decision. **Blocker: required current generated
+call-region correspondence remains unproved within the approved producers.**
