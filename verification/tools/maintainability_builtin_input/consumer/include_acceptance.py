@@ -13,7 +13,10 @@ def positive(test):
         mapping = invocation["include_source_mapping"]
         test.require(mapping is not None and mapping["kind"] == "ra-public-include-token-descent-and-to-def", "public span-token descent and semantic identity")
         test.require(mapping["receiver"] == invocation["receiver"] and mapping["source_range"] == invocation["source_range"], "semantic included receiver and physical source range")
-        test.require(mapping["expanded_source_tokens"] == invocation["declaration_facts"]["source_tokens"], "exact expanded/physical source token correspondence")
+        test.require(mapping["expanded_source_tokens"] == invocation["declaration_facts"]["source_tokens"], "complete original expanded source token stream")
+        indices={c["index"] for c in mapping["ordinary_comments"]}
+        test.require(len(indices)==2 and [t for index,t in enumerate(mapping["physical_source_tokens"]) if index not in indices]==mapping["expanded_source_tokens"], "complete physical token stream retains leading and interior ordinary comments")
+        test.require(any("'a ::" in c["text"] for c in mapping["ordinary_comments"]), "comment contents retained without literal/token rewriting")
         test.require(mapping["file"].endswith("/included_shapes.rs") and invocation["invocation_site"]["file"] == mapping["file"], "actual innermost included physical source")
         owners = [d for d in test.extended["declarations"] if d["receiver_identity"] == invocation["receiver"] and d["expansion_chain"][0]["macro_identity"] == invocation["macro"]]
         test.require(bool(owners) and all(sum(c["macro_identity"] == "core::macros::builtin::include" for c in d["expansion_chain"]) == 2 for d in owners), "original compiler nested include chain retained")
@@ -63,3 +66,15 @@ def negatives(test):
         originals=[i for i in common["invocations"] if i["source_name"]=="LocalShape"]
         originals[0]["declaration_facts"]["identity"]=originals[1]["declaration_facts"]["identity"]
     test.mutation(swap_identity,"swapped-local-containing-function-source-owner")
+    def selected_include(common):
+        return next(i for i in common["invocations"] if i["source_name"]=="Included")["include_source_mapping"]
+    for label,change in (
+        ("omission",lambda m:m.pop("ordinary_comments")),
+        ("remove",lambda m:m["ordinary_comments"].pop()),
+        ("text",lambda m:m["ordinary_comments"][0].update(text="// forged")),
+        ("index",lambda m:m["ordinary_comments"][0].update(index=999)),
+        ("range",lambda m:m["ordinary_comments"][0].update(range="0..1")),
+        ("order",lambda m:m["ordinary_comments"].reverse()),
+        ("physical",lambda m:m["physical_source_tokens"].pop()),
+    ):
+        test.mutation(lambda c,m,change=change:change(selected_include(m)),"included-comment-"+label)

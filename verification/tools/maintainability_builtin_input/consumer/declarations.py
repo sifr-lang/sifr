@@ -119,7 +119,7 @@ def validate_inventory_body(capture, authority, b):
                 raise b.Unsupported("independent inventory callable catalog conflict")
 
 
-def source_correspondence(compiler, resolver, b):
+def source_correspondence(compiler, resolver, source, b):
     """RA resolves declaration parameters/bounds; compiler owns generated regions."""
     if any("unsupported" in p for p in resolver["parameters"]):
         raise b.Unsupported("unsupported RA declaration parameter")
@@ -129,7 +129,7 @@ def source_correspondence(compiler, resolver, b):
     expected = [{**p,"index":i} for i,p in enumerate(expected)]
     if expected != resolver["parameters"]:
         raise b.Unsupported("original RA/compiler declaration parameter ownership conflict")
-    tokens, source = compiler["source_tokens"], resolver["source_tokens"]
+    tokens = compiler["source_tokens"]
     positions = [i for i in range(len(source)-len(tokens)+1) if source[i:i+len(tokens)] == tokens]
     if len(positions) != 1:
         raise b.Unsupported("ambiguous original RA/compiler declaration source correspondence")
@@ -164,12 +164,14 @@ def validate_bridge(declaration, member, invocation, b):
     facts=declaration["declaration_facts"]
     if invocation["declaration_facts"]["identity"] != facts["original"]["identity"]:
         raise b.Unsupported("original ADT semantic identity conflict")
-    adt = source_correspondence(facts["original"],invocation["declaration_facts"],b)
+    mapping=invocation["include_source_mapping"]
+    source=invocation["declaration_facts"]["source_tokens"] if mapping is None else mapping["physical_source_tokens"]
+    adt = source_correspondence(facts["original"],invocation["declaration_facts"],source,b)
     bridge=facts["trait_bridge"]
     trait=member["trait_declaration_facts"]
     if trait["identity"] != bridge["trait_method"] or bridge["trait"] != declaration["trait_identity"]:
         raise b.Unsupported("resolved original trait method identity conflict")
-    original=source_correspondence(bridge["original"],trait,b)
+    original=source_correspondence(bridge["original"],trait,trait["source_tokens"],b)
     if alpha(bridge["substituted_signature"]) != alpha(facts["signature"]):
         raise b.Unsupported("unproved compiler trait/Self/receiver signature substitution")
     generated_clauses={b.encoded(alpha(p)) for p in facts["predicates"]["own"]}
@@ -236,7 +238,7 @@ def invocation_correspondence(capture, common, inputs, b):
         if compiler_included and selected[0]["expansion_chain"][0]["call_site"]["quality"]=="exact-source" and mapping is None:
             raise b.Unsupported("missing exact original included invocation source authority")
         if mapping is not None:
-            if set(mapping)!={"kind","receiver","file","source_range","expanded_source_tokens"} or mapping["kind"]!="ra-public-include-token-descent-and-to-def" or site is None or mapping["receiver"]!=invocation["receiver"] or mapping["file"]!=site["file"] or mapping["source_range"]!=invocation["source_range"] or mapping["expanded_source_tokens"]!=invocation["declaration_facts"]["source_tokens"]:
+            if set(mapping)!={"kind","receiver","file","source_range","expanded_source_tokens","physical_source_tokens","ordinary_comments"} or mapping["kind"]!="ra-public-include-token-descent-and-to-def" or site is None or mapping["receiver"]!=invocation["receiver"] or mapping["file"]!=site["file"] or mapping["source_range"]!=invocation["source_range"] or mapping["expanded_source_tokens"]!=invocation["declaration_facts"]["source_tokens"]:
                 raise b.Unsupported("invocation semantic include source correspondence conflict")
         if site is not None:
             actual_path=Path(inputs["input_root"])/selected[0]["expansion_chain"][0]["call_site"]["file"].removeprefix("checkout:/")
@@ -245,7 +247,9 @@ def invocation_correspondence(capture, common, inputs, b):
             start,end=map(int,invocation["source_range"].split(".."))
             if actual_path.read_bytes()[start:end]!=invocation["declaration_source"].encode():
                 raise b.Unsupported("invocation original source range conflict")
-        tokens=invocation["declaration_facts"]["source_tokens"]
+        if mapping is not None:
+            include_token_correspondence(mapping,actual_path,start,end,b)
+        tokens=invocation["declaration_facts"]["source_tokens"] if mapping is None else mapping["physical_source_tokens"]
         attributes=[];cursor=0
         while cursor<len(tokens):
             if tokens[cursor].startswith(("//","/*")):cursor+=1;continue
@@ -302,3 +306,28 @@ def context_correspondence(capture, common, inputs, b):
         source=Path(inputs["input_root"])/source
     if Path(context["root_file"]).resolve()!=source.resolve():
         raise b.Unsupported("selected RA target/compiler original root source correspondence conflict")
+
+
+
+def include_token_correspondence(mapping, path, start, end, b):
+    physical=mapping["physical_source_tokens"]
+    expanded=mapping["expanded_source_tokens"]
+    comments=mapping["ordinary_comments"]
+    if not isinstance(physical,list) or not isinstance(expanded,list) or not isinstance(comments,list):
+        raise b.Unsupported("included source token correspondence schema conflict")
+    indices=[]
+    for comment in comments:
+        if not isinstance(comment,dict) or set(comment)!={"index","text","range"}:
+            raise b.Unsupported("included ordinary comment correspondence schema conflict")
+        index,text=comment["index"],comment["text"]
+        if not isinstance(index,int) or isinstance(index,bool) or not 0<=index<len(physical) or physical[index]!=text:
+            raise b.Unsupported("included original comment/token index correspondence conflict")
+        ordinary=(text.startswith("//") and not text.startswith(("///","//!")) or text.startswith("////") or text.startswith("/*") and not text.startswith(("/**","/*!")) or text.startswith("/***") or text=="/**/")
+        if not ordinary:
+            raise b.Unsupported("included source semantic/doc token cannot be dropped")
+        left,right=map(int,comment["range"].split(".."))
+        if not start<=left<right<=end or path.read_bytes()[left:right]!=text.encode():
+            raise b.Unsupported("included original comment byte source correspondence conflict")
+        indices.append(index)
+    if indices!=sorted(set(indices)) or [token for index,token in enumerate(physical) if index not in indices]!=expanded:
+        raise b.Unsupported("included complete physical/expanded token correspondence conflict")

@@ -1,5 +1,6 @@
+// Original ordinary comments and their bytes must remain in source evidence.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Included<'a> { pub value: &'a str }
+pub struct Included<'a> { /* 'a :: tokens inside this comment are trivia */ pub value: &'a str }
 
 pub struct LocalContainer;
 impl LocalContainer {

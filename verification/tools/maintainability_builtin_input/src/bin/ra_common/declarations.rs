@@ -3,40 +3,41 @@ use hir::{GenericDef, GenericParam, Semantics, db::HirDatabase};
 use serde_json::{Value, json};
 use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
 
+pub fn token_parts(token: &syntax::SyntaxToken) -> Vec<String> {
+    let text = token.text();
+    if matches!(
+        text,
+        "->" | "::"
+            | ".."
+            | "..="
+            | "=>"
+            | "&&"
+            | "||"
+            | "=="
+            | "!="
+            | "<="
+            | ">="
+            | "<<"
+            | ">>"
+            | "+="
+            | "-="
+            | "*="
+            | "/="
+            | "%="
+            | "&="
+            | "|="
+            | "^="
+    ) {
+        text.chars().map(|c| c.to_string()).collect()
+    } else {
+        vec![text.to_string()]
+    }
+}
 pub fn source_tokens(node: &SyntaxNode) -> Vec<String> {
     node.descendants_with_tokens()
         .filter_map(|element| element.into_token())
         .filter(|token| token.kind() != SyntaxKind::WHITESPACE)
-        .flat_map(|token| {
-            let text = token.text();
-            if matches!(
-                text,
-                "->" | "::"
-                    | ".."
-                    | "..="
-                    | "=>"
-                    | "&&"
-                    | "||"
-                    | "=="
-                    | "!="
-                    | "<="
-                    | ">="
-                    | "<<"
-                    | ">>"
-                    | "+="
-                    | "-="
-                    | "*="
-                    | "/="
-                    | "%="
-                    | "&="
-                    | "|="
-                    | "^="
-            ) {
-                text.chars().map(|c| c.to_string()).collect::<Vec<_>>()
-            } else {
-                vec![text.to_string()]
-            }
-        })
+        .flat_map(|token| token_parts(&token))
         .collect()
 }
 pub fn facts<DB: HirDatabase>(

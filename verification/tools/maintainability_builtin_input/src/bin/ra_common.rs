@@ -197,14 +197,10 @@ fn main() -> anyhow::Result<()> {
                                         source.file_id,
                                         included,
                                     )?;
-                                    anyhow::ensure!(
-                                        declarations::source_tokens(node.syntax())
-                                            == declarations::source_tokens(source.value.syntax()),
-                                        "included builtin semantic/physical ADT token correspondence conflict: {:?}; physical={:?}; expanded={:?}",
-                                        adt.name(&db),
-                                        declarations::source_tokens(node.syntax()),
-                                        declarations::source_tokens(source.value.syntax())
-                                    );
+                                    include_sources::token_correspondence(
+                                        node.syntax(),
+                                        source.value.syntax(),
+                                    )?;
                                     physical = Some(node);
                                 }
                                 let (site, range, text, mapping) = if let Some(node) = &physical {
@@ -226,7 +222,16 @@ fn main() -> anyhow::Result<()> {
                                         "included original derive attribute correspondence conflict"
                                     );
                                     let range = format!("{:?}", node.syntax().text_range());
-                                    let mapping = json!({"kind":"ra-public-include-token-descent-and-to-def","receiver":ra_types::canonical(&db,&adt.ty(&db),&[])?,"file":path.as_str(),"source_range":range,"expanded_source_tokens":declarations::source_tokens(source.value.syntax())});
+                                    let mut mapping = include_sources::token_correspondence(
+                                        node.syntax(),
+                                        source.value.syntax(),
+                                    )?;
+                                    mapping["kind"] =
+                                        json!("ra-public-include-token-descent-and-to-def");
+                                    mapping["receiver"] =
+                                        ra_types::canonical(&db, &adt.ty(&db), &[])?;
+                                    mapping["file"] = json!(path.as_str());
+                                    mapping["source_range"] = json!(range);
                                     (
                                         Some(declarations::invocation_site(
                                             &original_meta,

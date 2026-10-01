@@ -45,3 +45,36 @@ pub fn physical_adt<DB: HirDatabase>(
     );
     Ok(node)
 }
+
+pub fn token_correspondence(
+    physical: &syntax::SyntaxNode,
+    expanded: &syntax::SyntaxNode,
+) -> anyhow::Result<serde_json::Value> {
+    let mut original = vec![];
+    let mut semantic = vec![];
+    let mut comments = vec![];
+    for token in physical
+        .descendants_with_tokens()
+        .filter_map(|t| t.into_token())
+    {
+        if token.kind() == syntax::SyntaxKind::WHITESPACE {
+            continue;
+        }
+        let parts = super::declarations::token_parts(&token);
+        if token.kind() == syntax::SyntaxKind::COMMENT {
+            anyhow::ensure!(parts.len() == 1, "ordinary source comment token conflict");
+            comments.push(serde_json::json!({"index":original.len(),"text":token.text(),"range":format!("{:?}",token.text_range())}));
+        } else {
+            semantic.extend(parts.clone());
+        }
+        original.extend(parts);
+    }
+    let published = super::declarations::source_tokens(expanded);
+    anyhow::ensure!(
+        semantic == published,
+        "unsupported included source token transformation beyond ordinary comments"
+    );
+    Ok(
+        serde_json::json!({"physical_source_tokens":original,"expanded_source_tokens":published,"ordinary_comments":comments}),
+    )
+}
