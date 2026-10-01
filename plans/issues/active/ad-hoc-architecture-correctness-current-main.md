@@ -204,8 +204,10 @@ whole-phase closer is not admitted. This owner stops without a next batch.
 
 ## V01 governed reference-repair proposal and Q01 handoff (2026-10-01)
 
-**State: documentation scope prepared; capture approval and storage admission
-pending. V01's historical pass is preserved; current Q01 remains blocked.**
+**State: documentation scope prepared; explicit capture approval pending. The
+proposed storage estimate now fits after authorized owner cleanup; final operation
+admission still belongs to the capture session. V01's historical pass is preserved;
+current Q01 remains blocked.**
 This decision follows #4207 and its #4208 receipt on main
 `6aafd4763507b3f23157d5f75f5342910c659388`. It authorizes delivery of this
 reviewable plan only. No admission probe, compiler preparation, assertion,
@@ -250,7 +252,8 @@ Use the unchanged complete manifest
 `d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2`,
 with benchmark-input digest
 `603c897904ee4c90feb90519b7172ea5501df84712a145ae8f156184cfdea8ec`.
-The fixture comprises `main.sifr`, `api.sifr`, `service.sifr`, `worker.sifr`,
+The expanded `query_projects/lsp_workspace` fixture comprises `main.sifr`,
+`api.sifr`, `service.sifr`, `worker.sifr`,
 `view.sifr` and `stage_00.sifr` through `stage_19.sifr`, plus the checked-in
 `sifr.toml`. There are **65 cases, 117 warmup invocations and 715 measured
 samples**, processed by the runner in lexical case order:
@@ -296,7 +299,8 @@ immutable profile **`linux-i7-4720hq-12gb-dev-v2-data`** and its bundled measure
 baseline/derived regression budgets. Approve target and temporary storage on
 `/data` ext4 `/dev/sda1`, explicitly differing from v1's root device. This
 storage choice binds both capture and downstream Q01; it is not interchangeable
-with root ext4. Record the direct approval text, actor, date and this proposal's
+with root ext4. Include the private `/data` Sifr cache location below in that
+approval and both run receipts. Record the direct approval text, actor, date and this proposal's
 merged PR/SHA outside the capture tree before executing the command.
 
 The existing idle-host authorization for `schedutil` -> `performance` followed
@@ -320,19 +324,43 @@ not that Cargo cache. Neither cache is established as compatible preparation
 for proposed compiler `4b319c0...`; no adoption, cleanup or build was attempted.
 
 Proposed future paths, owned by one separately assigned capture session:
-`/data/sifr-architecture-v01-reference-v2-capture/` (clean checkout), its
-`cargo-target/` and `tmp/`, and external
+`/data/sifr-architecture-v01-reference-v2-capture/` (clean checkout), sibling
+`/data/sifr-architecture-v01-reference-v2-target/` and
+`/data/sifr-architecture-v01-reference-v2-tmp/`, private
+`/data/sifr-architecture-v01-reference-v2-cache/` via `SIFR_CACHE_DIR`, and external
 `/data/sifr-architecture-v01-reference-v2-evidence/` (approval, raw logs,
-identity, artifact and run receipts). Before cloning/initializing/building,
-record actual source/submodule footprint, free space, target size, active
-process/handle ownership and a reserve calculation. E03's existing receipt
-reports its private target at approximately **19 GiB**. A conservative initial
-capture allocation is **19 GiB target + 8 GiB build/growth + 2 GiB temporary,
-source and evidence = 29 GiB (31,138,512,896 bytes)** on `/data`, exceeding
-observed free space by **6,787,461,120 bytes**. This is an operation estimate,
-not a proven peak or a size-triggered cleanup threshold. Recalculate from actual
-compatible artifacts and planned work before any producer. Space is currently
-unadmitted; no future build may start solely on this estimate.
+identity, artifact and run receipts). Keep writable cache/temp/target outputs
+outside the clean source tree. The proposed compiler supports `SIFR_CACHE_DIR`
+in `crates/sifr_driver/src/cache_storage.rs::root`; use this private path for
+capture and Q01 rather than adopting the shared root native cache. Record the
+actual Cargo/rustup homes and reserve any unavoidable writes on their devices
+before preparation.
+
+Before cloning/initializing/building, record actual source/submodule footprint,
+free space, target/cache sizes, active process/handle ownership and a reserve
+calculation. E03's existing receipt reports its private target at approximately
+**19 GiB**. The initial allocation estimate is **19 GiB target + 8 GiB combined
+build growth/private native-cache growth + 2 GiB temporary, source and evidence
+= 29 GiB (31,138,512,896 bytes)** on `/data`. It initially exceeded observed
+free space by **6,787,461,120 bytes**. That initial resource blocker was resolved
+by a separately authorized orchestrator pressure cleanup of its closed obsolete
+C02b Cargo-only target, `/data/sifr-architecture-c02b-python-authoring-20260928/target`.
+The owner verified unchanged branch/head `1d9cae1`, validation/review receipts,
+no tracked target paths, two empty handle checks and no active compiler producer;
+source, branch, evidence and all H02/E03 helper caches were preserved.
+**24,252,141,568 bytes** were reclaimed. The external receipt is
+`/tmp/sifr-architecture-c02b-storage-s72sb8eq/result.json`, copied with its
+proofs into this documentation session's external evidence directory.
+
+Read-only reinspection after that cleanup found `/data` free
+**48,601,337,856 bytes** (about 45.3 GiB), leaving **17,462,824,960 bytes** beyond
+the proposed 29 GiB allocation. Root free space was **3,978,719,232 bytes**;
+the proposed large target and private native cache are on `/data`. The 29 GiB
+estimate is not a proven peak or a size-triggered cleanup threshold. Recalculate
+from actual compatible artifacts and planned work immediately before any producer;
+this docs-only snapshot is not final operation admission. No cache was adopted
+or cleaned by the documentation worker, and no reference-capture approval or
+measurement follows from the resource recovery.
 
 An owner-proven compatible warm cache can reduce the new allocation only after
 its source/configuration/artifact identities, exclusive ownership and available
@@ -359,8 +387,10 @@ before/during/after policy, power, temperature, competing processes, memory,
 source/gitlink/configuration, cache and storage identity; no kernel rollback,
 software change, hidden comparison exemption or hand-edited freshness is allowed.
 
-Initialize only the pinned submodules required by the reference compiler and
-checks; record their exact commits. Before measured work, explicitly prepare
+Fetch `origin/main` in the isolated reference checkout and prove the proposed
+compiler is its ancestor before preparation; the capture ancestry check requires
+that ref. Initialize only the pinned submodules required by the reference
+compiler and checks; record their exact commits. Before measured work, explicitly prepare
 `cargo build -q -p sifr --message-format=json-render-diagnostics` and
 `cargo build -q -p sifr_frontend --bin frontend_query_bench` in the owned target,
 with compatible cache/metadata reuse. Do not use a first cold preparation as
@@ -386,8 +416,8 @@ python3 verification/areas/performance/run_benchmarks.py \
   --json-out /data/sifr-architecture-v01-reference-v2-evidence/capture-report.json
 ```
 
-Export `CARGO_TARGET_DIR` and `TMPDIR` to the exact approved `/data` paths before
-preparation and this command. The runner atomically creates only
+Export `CARGO_TARGET_DIR`, `TMPDIR` and `SIFR_CACHE_DIR` to the exact approved
+sibling `/data` paths before preparation and this command. The runner atomically creates only
 `verification/areas/performance/data/references/linux-i7-4720hq-12gb-dev-v2-data.json`
 after every manifest case passes stability/correctness/capture validation.
 Require 65 unique results, exact sample counts, usable RSS, unchanged beginning
@@ -423,7 +453,7 @@ stops capture; retain the failure rather than silently selecting another compile
 
 After the performance owner's merged profile and evidence handoff, separately
 assign Q01 on then-current exact main. Use the same actual kernel, `/data` target
-and temporary device, toolchain/concurrency/build environment, input hash,
+and temporary device/private Sifr cache, toolchain/concurrency/build environment, input hash,
 reference digest and restored idle-host policy. Inspect owned compatible target
 preparation and reserve again: the capture reserve does not establish capacity
 for the larger full merge profile. First run the exact admission command above;
