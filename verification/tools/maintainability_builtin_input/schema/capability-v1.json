@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sifr-maintainability-builtin-capability-v1",
+  "description": "Actual compiler capability evidence. Original source/context, helper/runtime and capture digests are bound by the separate receipt. H03a1 adapter export is not supplied.",
+  "type": "object",
+  "required": [
+    "schema",
+    "cfg",
+    "declarations",
+    "other_macro_declarations",
+    "context",
+    "lowering_erased_bound",
+    "callable_catalog",
+    "expanded_owner_ledger",
+    "inventory_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "sifr-maintainability-builtin-capability-v1"
+    },
+    "declarations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "owner",
+          "owner_kind",
+          "receiver_identity",
+          "trait_identity",
+          "canonical_signature",
+          "visibility",
+          "generic_parameters",
+          "generic_predicates",
+          "generic_bounds",
+          "tokens",
+          "token_sequence",
+          "ast_body",
+          "hir_body",
+          "ast_body_tokens",
+          "hir_body_tokens",
+          "ast_impl_member_count",
+          "hir_impl_member_count",
+          "span",
+          "expansion_chain",
+          "ast_sites",
+          "typed_sites",
+          "declaration_disposition",
+          "hir_members",
+          "structural_identity",
+          "output_role"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expansion_chain": {
+            "type": "array",
+            "minItems": 1
+          },
+          "ast_sites": {
+            "type": "array"
+          },
+          "typed_sites": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "ancestor",
+                "target",
+                "signature",
+                "trait",
+                "implementation",
+                "instance_kind",
+                "generics",
+                "result_type",
+                "receiver",
+                "adjustments",
+                "tokens",
+                "token_sequence",
+                "span",
+                "expansion_chain",
+                "disposition",
+                "target_owner",
+                "implementation_owner"
+              ],
+              "properties": {
+                "disposition": {
+                  "enum": [
+                    "scalar-operation",
+                    "resolved-call",
+                    "generic-trait-call",
+                    "dynamic-trait-call"
+                  ]
+                }
+              }
+            }
+          },
+          "declaration_disposition": {
+            "enum": [
+              "typed-generated-body",
+              "bodyless-impl",
+              "impl-with-members"
+            ]
+          }
+        }
+      }
+    },
+    "other_macro_declarations": {
+      "type": "array"
+    },
+    "expanded_owner_ledger": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "owner",
+          "token_sequence",
+          "ast_body"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "token_sequence": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "inventory_digest": {
+      "type": "string"
+    }
+  }
+}
