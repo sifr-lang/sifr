@@ -320,7 +320,7 @@ def include_token_correspondence(mapping, path, start, end, b):
         if not isinstance(comment,dict) or set(comment)!={"index","text","range"}:
             raise b.Unsupported("included ordinary comment correspondence schema conflict")
         index,text=comment["index"],comment["text"]
-        if not isinstance(index,int) or isinstance(index,bool) or not 0<=index<len(physical) or physical[index]!=text:
+        if not isinstance(index,int) or isinstance(index,bool) or not isinstance(text,str) or not isinstance(comment["range"],str) or not 0<=index<len(physical) or physical[index]!=text:
             raise b.Unsupported("included original comment/token index correspondence conflict")
         ordinary=(text.startswith("//") and not text.startswith(("///","//!")) or text.startswith("////") or text.startswith("/*") and not text.startswith(("/**","/*!")) or text.startswith("/***") or text=="/**/")
         if not ordinary:
