@@ -117,6 +117,27 @@ codegen/lowering Linux production/test contexts in
 review. This proposal admits no producer change, capability waiver, Windows/full
 adapter result, or acceptance of the preserved failed candidate.
 
+### Documentation stop receipt and automatic CI disclosure
+
+This docs-only stop receipt is [#4214](https://github.com/sifr-lang/sifr/pull/4214).
+Only this canonical Markdown and the current H03a1pe table row change. Relevant
+documentation, diff/scope, clean-tree and historical-preservation checks are
+retained outside Git under the evidence root's `stop-receipt/` directory keyed
+by the final record candidate. No external review or broad gate is required for
+this record-only update. The implementation candidate and failed evidence stay
+unaccepted and preserved; the worktree returns to the implementation branch for
+the separate scope handoff.
+
+The implementation PR's automatic
+[local-first-create-pr job](https://github.com/sifr-lang/sifr/actions/runs/36852761585/job/110338032282)
+failed in `performance_reference_admission` after 93 ms, before validation test
+setup: `SIFR_PERFORMANCE_REFERENCE` was unset. Its actual log is retained as
+`implementation-ci-job.log` under the implementation candidate evidence root.
+This infrastructure result supplies no test pass and does not alter the
+intermediate policy or the independently observed local semantic stop. Other
+automatic jobs were still running when this disclosure was captured; no overall
+CI pass is claimed.
+
 ## H03 approved prospective observation and resource sequencing amendment (2026-10-01)
 
 **H03a1peo: documentation amendment closed; H03a1pe implementation remains
