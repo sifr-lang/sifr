@@ -71,6 +71,92 @@ admission rejection and imprecise governor-receipt wording. Both are corrected
 above; its response is preserved outside the Git tree (SHA-256
 `94331217faaa3355b7c35f68c3d1f9351ccf600f6da3eb64c3ffa3044cf8c21a`).
 
+## Q01 final candidate qualification: reference admission blocked (2026-10-01)
+
+**State: blocked; no exact-candidate full merge-profile pass, Q01 acceptance or
+whole-phase closure.** The owned final integration candidate is fresh merged
+main `7525b770560e9f7534445a61666a461c50612d6e`, containing the merged
+Architecture work through #4206. The qualifier inspected Authority, the owner
+crosswalk, retained criteria, delivery/dependency receipts and the separate
+Emitted Rust handoff before attempting expensive work.
+
+The same live reference-admission entrypoint that precedes Cargo in the merge
+profile was run explicitly with
+`python3 verification/areas/performance/reference_admission.py`. It exited 1:
+`reference profile linux-i7-4720hq-12gb-dev-v1 is not comparable: host.kernel,
+execution.benchmark_inputs_sha256`. The immutable selected reference digest
+remains `a33f46702c3e16b4f7e511a155b9c7a06880c19e703611e071e1b86103cee91d`.
+The reference kernel is `7.0.0-31-generic`; the live kernel is
+`7.0.0-34-generic`. Its benchmark input digest is
+`dcf7572b0181a9f577bfaec736e40dae5d25354bc476d0ade6cc365f77f6e364`;
+the current tracked inputs produce
+`603c897904ee4c90feb90519b7172ea5501df84712a145ae8f156184cfdea8ec`.
+Compared with reference compiler `ca7a6d60e266beccce21d4c16e08667086578277`,
+the changed benchmark inputs are E03/#4085's 25-module workspace fixture:
+`verification/areas/performance/query_projects/lsp_workspace/src/main.sifr`
+and the twenty added `stage_00.sifr` through `stage_19.sifr` files. E03's
+receipt already reserves this comparability decision for Q01. No expired
+historical Mac capture, previous pass, candidate baseline or changed reference
+was substituted.
+
+The probe used Python 3.14.7, Rust/Cargo 1.98.1 and two Cargo jobs, with newly
+owned target/temp directories on the reference's root ext4 device
+`/dev/mapper/ubuntu--vg-ubuntu--lv`. It checked a clean source tree and absence
+of active Cargo/rustc/gate producers. Under the existing approved idle-host
+policy, all eight CPU governors changed from `schedutil` to `performance`
+for admission and were restored afterward; before/during/after receipts are
+preserved. Freshness and the remaining host/execution comparisons produced no
+reported mismatch. This is an admission result, not benchmark evidence.
+
+The canonical full command remains `scripts/run_all_tests.sh` (merge profile).
+It was **not started** after this failed prerequisite. No Cargo setup, compiler
+build, selected assertion, companion-freshness check, performance measurement,
+full gate, automatic CI pass or release qualification is claimed. The stopped
+qualification does not justify rerunning unchanged admission, weakening
+comparability, or cleaning caches. Before long work, root storage had only
+about 3.8 GiB free and `/data` about 24 GiB; the offered inactive H02 target is
+40 GiB on `/data`'s different device `/dev/sda1`. It was inspected without
+adoption or cleanup. A later admitted run also needs an owned compatible target
+and an adequate storage reserve.
+
+Candidate-keyed evidence is outside Git on `yaser5@192.168.1.134` at
+`/data/sifr-architecture-q01-final-qualification-evidence-20261001/7525b770560e9f7534445a61666a461c50612d6e/`.
+It contains the exact command/environment, source/tree/submodule identities,
+disk/memory/process state, governor receipts, exit status and reference/input
+comparison. The admission log SHA-256 is
+`c67c8bc5ed73991875977de3525015606a657e7345d006593d7b56fd96fd9e9e`;
+`reference-mismatch.json` SHA-256 is
+`e81b5bb5883963d76f18087e2de0612131c002d666f914b913f60cf4c307503f`.
+The newly owned checkout's uninitialized submodules were recorded before the
+probe; no producer ran against missing submodule inputs. Only the pinned editor
+submodules are initialized afterward for the documentation record checks.
+
+**V01/compiler-performance owner prerequisite:** qualify the current host and
+changed benchmark corpus through the governed named-reference procedure in
+`verification/areas/performance/data/references/README.md`: immutable captures
+require explicitly approved full-corpus evidence on a merged compiler reference,
+with measured complete identity and only benchmark-tooling changes relative to
+that compiler. The candidate cannot become its own reference. The owner must
+resolve both kernel compatibility and the expanded workspace's input/reference
+coverage; this qualifier has no authority to recapture, weaken checks, change
+host software or adopt a new performance baseline. After the owner's approved
+reference/host/input handoff and storage reserve are ready, separately assign
+Q01 to run the exact-candidate full merge profile, repair/review in-scope causes
+and rerun the full gate as required.
+
+Owner handoffs remain explicit: H01e has the #4103 content-review restriction;
+H01i depends on its completion. H03a1pera's compiler-interface authority decision
+and H03a1perp are inactive; H03a1pe is unaccepted, so H03a1, H03a and H03b-H03f
+remain dependency-blocked. H03a1p's accepted original four-kind capability does
+not supply the complete semantic adapter or named-region/binder/constraint
+authority. D01b/D01c remain open after structural delivery. X02 and retained
+Emitted Rust Item 12 remain with their external owner; the existing handoff
+record does not establish their exact-current-candidate acceptance. These
+prerequisites are preserved even if a later full gate passes. Whole-phase review
+and docs-only closure keep their separate owner and cannot start from this
+blocked admission. This worker changes only this phase record and stops;
+no next batch or implementation repair was started.
+
 ## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
 
 The Emitted-Rust final qualifier's exact-main
