@@ -10,7 +10,8 @@
     "other_macro_declarations",
     "context",
     "lowering_erased_bound",
-    "callable_catalog"
+    "callable_catalog",
+    "expanded_owner_ledger"
   ],
   "properties": {
     "schema": {
@@ -106,6 +107,27 @@
     },
     "other_macro_declarations": {
       "type": "array"
+    },
+    "expanded_owner_ledger": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "owner",
+          "token_sequence",
+          "ast_body"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "token_sequence": {
+            "type": "array"
+          }
+        }
+      }
     }
   }
 }

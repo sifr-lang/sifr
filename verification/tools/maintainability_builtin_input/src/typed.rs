@@ -154,32 +154,30 @@ impl<'tcx> Visitor<'tcx> for Typed<'tcx> {
         self.parent = parent;
     }
 }
+pub fn selected(tcx: TyCtxt<'_>, decl: &Declaration) -> bool {
+    let expansion = decl.span.ctxt().outer_expn().expn_data();
+    if !matches!(expansion.kind, ExpnKind::Macro(MacroKind::Derive, _)) {
+        return false;
+    }
+    std::env::var("SIFR_BUILTIN_SOURCE_SUFFIX").is_ok_and(|source| {
+        tcx.sess
+            .source_map()
+            .lookup_char_pos(decl.span.lo())
+            .file
+            .name
+            .prefer_local_unconditionally()
+            .to_string()
+            .ends_with(&source)
+    })
+}
 pub fn capture(
     tcx: TyCtxt<'_>,
     ast: &[Declaration],
 ) -> (Vec<Value>, std::collections::BTreeMap<String, Value>) {
     let mut records = vec![];
     let mut catalog = std::collections::BTreeMap::new();
-    for decl in ast {
-        let expansion = decl.span.ctxt().outer_expn().expn_data();
-        if !matches!(expansion.kind, ExpnKind::Macro(MacroKind::Derive, _)) {
-            continue;
-        }
+    for decl in ast.iter().filter(|decl| selected(tcx, decl)) {
         let did = decl.def.to_def_id();
-        if let Ok(source) = std::env::var("SIFR_BUILTIN_SOURCE_SUFFIX") {
-            if !tcx
-                .sess
-                .source_map()
-                .lookup_char_pos(decl.span.lo())
-                .file
-                .name
-                .prefer_local_unconditionally()
-                .to_string()
-                .ends_with(&source)
-            {
-                continue;
-            }
-        }
         let mut sites = vec![];
         let mut body_tokens = None;
         if let Some(bodyid) = tcx.hir_maybe_body_owned_by(decl.def) {

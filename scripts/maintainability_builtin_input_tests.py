@@ -76,6 +76,15 @@ class BuiltinCapabilityTests(unittest.TestCase):
         next(d for d in corrupted["declarations"] if d["owner_kind"] == "AssocFn")["hir_body"] = False
         self.reject(corrupted, "negative-empty-required-body")
         corrupted = copy.deepcopy(self.fixture)
+        corrupted["declarations"] = [d for d in corrupted["declarations"] if not d["owner"].startswith("<Record as std::cmp::PartialEq>")]
+        self.reject(corrupted, "negative-missing-entire-PartialEq-impl")
+        self.assertions += 1
+        with self.assertRaises(builtin.Unsupported):
+            builtin.validate_join(corrupted, self.common)
+        corrupted = copy.deepcopy(self.fixture)
+        corrupted["declarations"] = [d for d in corrupted["declarations"] if d["owner"] != marker["owner"]]
+        self.reject(corrupted, "negative-missing-bodyless-marker")
+        corrupted = copy.deepcopy(self.fixture)
         next(s for d in corrupted["declarations"] for s in d["typed_sites"] if s["target"])["target"] = "invented::direct_target"
         self.reject(corrupted, "negative-invented-target")
         corrupted = copy.deepcopy(self.fixture)

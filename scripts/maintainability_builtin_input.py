@@ -237,7 +237,14 @@ def validate_mapping(capture):
         if descriptor["path"] != path or not descriptor["signature"] or not descriptor["owner"]:
             raise Unsupported("invalid compiler callable declaration catalog")
     declarations = capture["declarations"]
+    ledger = capture["expanded_owner_ledger"]
+    expanded = {entry["owner"]:entry for entry in ledger}
     owners = {declaration["owner"] for declaration in declarations}
+    if len(expanded) != len(ledger) or owners != expanded.keys():
+        raise Unsupported("missing/duplicate expanded AST declaration disposition")
+    for declaration in declarations:
+        if any(declaration[field] != expanded[declaration["owner"]][field] for field in ("token_sequence", "ast_body")):
+            raise Unsupported("expanded AST owner/body witness conflict")
     for declaration in declarations:
         if declaration["owner_kind"] == "AssocFn":
             if declaration["parent"] not in owners:
@@ -319,6 +326,7 @@ def add_intervals(capture):
 
 
 def validate_join(capture, common):
+    validate_mapping(capture)
     if common["producer"] != RA_COMMIT:
         raise Unsupported("wrong common-member producer")
     # Logical true/false are implicit language constants; RA lists true explicitly.
