@@ -13,7 +13,7 @@ import sys
 import tomllib
 import time
 
-SCHEMA = "sifr-maintainability-builtin-capability-v2"
+SCHEMA = "sifr-maintainability-builtin-capability-v3"
 RUST_COMMIT = "48a229ceaefd4985c50990b14116b6d856af0985"
 CARGO_COMMIT = "797e8a9bca276c1c9f9f738d2a20f484fa4eea9d"
 RA_COMMIT = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4"
@@ -171,7 +171,7 @@ def normalized_body_tokens(tokens):
 
 
 def validate_schema(value):
-    schema = json.loads((TOOL / "schema/capability-v2.json").read_text())
+    schema = json.loads((TOOL / "schema/capability-v3.json").read_text())
     def check(value, rule, path):
         types = {"object": dict, "array": list, "string": str}
         if "type" in rule and not isinstance(value, types[rule["type"]]):
@@ -755,6 +755,8 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     if not (output / "raw.json").is_file():
         raise Unsupported("selected typechecking/expansion failed; no complete capture")
     # Rebind all original Rust inputs and actual externally prepared metadata.
+    raw_capture_digest = digest((output / "raw.json").read_bytes())
+    raw_inventory_digest = digest((output / "raw-inventory.json").read_bytes())
     raw = json.loads((output / "raw.json").read_text())
     raw_inventory = json.loads((output / "raw-inventory.json").read_text())
     for descriptor in (d for catalog in [raw["callable_catalog"], *(o["published_body"]["catalog"] for o in raw_inventory["owners"])] for d in catalog.values()):
@@ -787,6 +789,9 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
                 if len(owners) != 1:
                     raise Unsupported("ambiguous dependency callable ownership")
                 site[field + "_owner"] = owners.pop()
+    declaration_consumer.bind_dynamic_origins(
+        [raw,raw_inventory],selected[0]["package_id"].replace("path+file://" + str(root), "checkout:"),
+        sysroot,prepared_files,artifact_owners,sys.modules[__name__])
     for path, sha256 in prepared_files.items():
         if digest(Path(path).read_bytes()) != sha256:
             raise Unsupported(f"prepared input changed during analysis: {path}")
@@ -821,17 +826,19 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     add_intervals(capture)
     inventory = normalize(raw_inventory, root, sysroot)
     capture["inventory_digest"] = digest(encoded(inventory))
-    authority = {"inventory":inventory,"context":capture["context"],"cfg":capture["cfg"],"input_digest":digest(encoded(config))}
+    origin = {"raw_capture_digest":raw_capture_digest,"raw_inventory_digest":raw_inventory_digest,"producer":"pinned-rustc-helper","stage":"rustc-after-analysis","invocation_digest":digest(encoded(config["invocation"])),"input_digest":digest(encoded(config))}
+    capture["original_capture"] = origin
+    authority = {"original_capture":origin,"inventory":inventory,"context":capture["context"],"cfg":capture["cfg"],"input_digest":digest(encoded(config))}
     authority_path = output / "inventory-authority.json"
     authority_path.write_bytes(encoded(authority))
     reference = {"path":str(authority_path),"digest":digest(authority_path.read_bytes())}
     config["inventory_authority"] = reference
     capture["consumer_capabilities"] = declaration_consumer.capabilities(capture,("call-count","resolved-module-fanout","declaration-signatures"),sys.modules[__name__])
-    counts = _validate_mapping(capture, authority)
+    counts = None
     receipt = {"inventory_authority":reference,"timing_seconds": {"locked_preparation": result.elapsed_seconds, "metadata": metadata_result.elapsed_seconds, "compiler_analysis": analysis.elapsed_seconds, "total": time.monotonic() - started}, "inputs": config, "capture_digest": digest(encoded(capture)), "counts": counts, "preparation_cargo_artifact_success": True, "capture_cargo_artifact_success": False, "cargo_status": result.returncode, "capture_stopped_after_analysis": True, "cfg_relation": "actual compiler cfg applied via public resolver CfgOverrides, then correspondence verified", "preparation_reuse": "capture-owned wrapper forces a fresh selected invocation; compatible dependency artifacts remain warm", "analysis_output_transform": "only --out-dir redirected to owned evidence; original Cargo args retained"}
     capture["consumer_capabilities"] = declaration_consumer.capabilities(capture,("call-count","resolved-module-fanout","declaration-signatures"),sys.modules[__name__])
     receipt["capture_digest"] = digest(encoded(capture))
-    verify_capture(capture,receipt,config,authority)
+    receipt["counts"] = verify_capture(capture,receipt,config,authority)
     (output / "capture.json").write_bytes(encoded(capture))
     (output / "receipt.json").write_bytes(encoded(receipt))
     return capture, receipt

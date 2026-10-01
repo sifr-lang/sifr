@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "sifr-maintainability-builtin-capability-v2",
+  "$id": "sifr-maintainability-builtin-capability-v3",
   "description": "Actual compiler capability evidence. Original source/context, helper/runtime and capture digests are bound by the separate receipt. H03a1 adapter export is not supplied.",
   "type": "object",
   "required": [
@@ -13,11 +13,12 @@
     "callable_catalog",
     "expanded_owner_ledger",
     "inventory_digest",
-    "consumer_capabilities"
+    "consumer_capabilities",
+    "original_capture"
   ],
   "properties": {
     "schema": {
-      "const": "sifr-maintainability-builtin-capability-v2"
+      "const": "sifr-maintainability-builtin-capability-v3"
     },
     "declarations": {
       "type": "array",
@@ -111,6 +112,18 @@
               "bodyless-impl",
               "impl-with-members"
             ]
+          },
+          "body_type_dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "resolution",
+                "tokens",
+                "region_stage"
+              ]
+            }
           }
         }
       }
@@ -150,6 +163,17 @@
         "body_erasure_observations",
         "body_region_authority",
         "lifetime_sensitive_proof"
+      ]
+    },
+    "original_capture": {
+      "type": "object",
+      "required": [
+        "raw_capture_digest",
+        "raw_inventory_digest",
+        "producer",
+        "stage",
+        "invocation_digest",
+        "input_digest"
       ]
     }
   }

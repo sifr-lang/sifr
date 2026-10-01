@@ -84,7 +84,7 @@ impl<'tcx> Visitor<'tcx> for Typed<'tcx> {
             }),
             _ => None,
         };
-        self.types.push(json!({"type":self.typeck.node_type_opt(t.hir_id).map(|t|crate::semantic::ty(self.tcx,t)),"resolution":resolution,"tokens":crate::identity::tokens(&rustc_hir_pretty::ty_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),t.as_unambig_ty()))}));
+        self.types.push(json!({"region_stage":"rustc-hir-typeck-writeback-after-analysis","type":self.typeck.node_type_opt(t.hir_id).map(|t|crate::semantic::ty(self.tcx,t)),"resolution":resolution,"tokens":crate::identity::tokens(&rustc_hir_pretty::ty_to_string(&(&self.tcx as &dyn hir::intravisit::HirTyCtxt),t.as_unambig_ty()))}));
         intravisit::walk_ty(self, t);
     }
 
