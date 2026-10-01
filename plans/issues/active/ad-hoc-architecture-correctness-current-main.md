@@ -202,6 +202,245 @@ of the blocker record only. It supplies no full-gate or companion-freshness
 pass, Q01 acceptance, release qualification or whole-phase closure; the
 whole-phase closer is not admitted. This owner stops without a next batch.
 
+## V01 governed reference-repair proposal and Q01 handoff (2026-10-01)
+
+**State: documentation scope prepared; capture approval and storage admission
+pending. V01's historical pass is preserved; current Q01 remains blocked.**
+This decision follows #4207 and its #4208 receipt on main
+`6aafd4763507b3f23157d5f75f5342910c659388`. It authorizes delivery of this
+reviewable plan only. No admission probe, compiler preparation, assertion,
+measurement, reference publication or Q01 gate was run for this record.
+
+### Reference authority and exact inputs
+
+The existing immutable `linux-i7-4720hq-12gb-dev-v1` bytes/digest and historical
+capture stay unchanged. Its compiler
+`ca7a6d60e266beccce21d4c16e08667086578277` cannot exercise today's complete
+benchmark tooling: every LSP scenario now calls `sifr/debugCacheStats` and
+requires `pythonDeclarations.hits/misses`, but that compiler has no such request
+handler. Read-only `git grep` at that SHA found neither protocol name in
+`crates/sifr_lsp` or `crates/sifr_analysis`; the current caller is
+`verification/areas/performance/lsp_query_bench.py::cache_stats`. The expanded
+workspace also requires 25 connected modules. Removing the protocol assertion,
+inventing counters or transplanting a compiler implementation would change the
+approved acceptance and is outside this repair.
+
+Propose the already merged E03 compiler **`4b319c0f784c4c5e71d93621de8331d41f98e3fc`**
+([PR #4085](https://github.com/sifr-lang/sifr/pull/4085)), subject to explicit
+compiler/performance capture approval. It contains the real cache-statistics
+handler and the expanded fixture; its receipt above records successful real
+25-module cache-delta and focused workspace requests. It predates Q01's
+`7525b770560e9f7534445a61666a461c50612d6e` candidate and this documentation
+base; neither current candidate supplies its own baseline. These are static
+capability and existing functional evidence, not a new full-corpus pass.
+
+The exact benchmark-tooling overlay relative to that compiler is **empty**:
+`git diff --binary 4b319c0f784c4c5e71d93621de8331d41f98e3fc
+6aafd4763507b3f23157d5f75f5342910c659388 -- verification/areas/performance/
+internal_docs/performance_budgets.md` produces zero bytes (SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`).
+The reference checkout must start at that exact merged compiler, preserving its
+Cargo manifests/lock, source, configuration and submodule gitlinks. Do not
+cherry-pick current-main compiler changes or this phase document into it. If
+subsequent tooling differs, stop for a newly pinned tooling-only overlay review;
+do not widen this approved proposal implicitly.
+
+Use the unchanged complete manifest
+`verification/areas/performance/data/benchmark_manifest.json`, SHA-256
+`d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2`,
+with benchmark-input digest
+`603c897904ee4c90feb90519b7172ea5501df84712a145ae8f156184cfdea8ec`.
+The fixture comprises `main.sifr`, `api.sifr`, `service.sifr`, `worker.sifr`,
+`view.sifr` and `stage_00.sifr` through `stage_19.sifr`, plus the checked-in
+`sifr.toml`. There are **65 cases, 117 warmup invocations and 715 measured
+samples**, processed by the runner in lexical case order:
+
+| Manifest selection | Cases | Warmups per case | Measured samples per case |
+| --- | ---: | ---: | ---: |
+| `build-project-*` | 5 | 1 | 5 |
+| `build-single-file-*` | 10 | 1 | 5 |
+| `check-project-*` | 5 | 1 | 5 |
+| `check-single-file-*` | 10 | 1 | 5 |
+| `diagnostic-non-regression-*` | 5 | 1 | 5 |
+| `formatter-*` | 2 | 1 | 5 |
+| `incremental-local-loop-*` | 5 | 3 | 20 |
+| `interactive-tooling-foundation-*` | 5 | 3 | 20 |
+| `lsp-query-001-request-families`, `lsp-query-002-cold-start` | 2 | 1 | 5 |
+| `lsp-query-003-diagnostics` through `lsp-query-018-did-open-diagnostics` | 16 | 3 | 20 |
+
+Preserve the manifest's inner repetitions (20 for LSP 003-017, 10 for 018),
+timeouts, expected exits, cache assertions and 10% latency stability bound.
+`check_budgets.py::MIN_P95_SAMPLE_COUNT` is 20: **26 cases** qualify p95;
+**39 five-sample cases** retain reported p95 observations without p95 budget
+qualification. Full corpus does not mean p95 qualification for every case.
+The producer permits only its existing two retries after rejected attempts;
+retain rejected host snapshots and final failure evidence.
+
+### Explicit decision required before execution
+
+The governing sources are
+`verification/areas/performance/data/references/README.md` ("A new version
+requires explicit approved capture from a merged compiler reference") and
+`internal_docs/performance_budgets.md`, named reference machines, plus
+`reference_profiles.py::validate_compiler_reference` and
+`trend_baseline.py::validate_capture_request`. The latter enforce a clean exact
+source, full corpus, measured host identity and the compiler/performance approval
+owner. Supplying `--reference-approval compiler/performance` records that owner;
+it does not create human authorization.
+
+**Approval request prepared for the user/compiler-performance owner:** approve
+one full-manifest controlled latency capture from merged E03 compiler
+`4b319c0f784c4c5e71d93621de8331d41f98e3fc`, with the empty overlay and exact
+inputs above, on the actual `7.0.0-34-generic` Linux host, creating the distinct
+immutable profile **`linux-i7-4720hq-12gb-dev-v2-data`** and its bundled measured
+baseline/derived regression budgets. Approve target and temporary storage on
+`/data` ext4 `/dev/sda1`, explicitly differing from v1's root device. This
+storage choice binds both capture and downstream Q01; it is not interchangeable
+with root ext4. Record the direct approval text, actor, date and this proposal's
+merged PR/SHA outside the capture tree before executing the command.
+
+The existing idle-host authorization for `schedutil` -> `performance` followed
+by restoration remains applicable to approved Linux qualification. It does not
+approve the new compiler baseline, reference capture, budgets or storage choice.
+No trusted authorization available to this documentation worker explicitly
+approves this proposed new reference. The policy approval remains pending even
+though routine plan execution and documentation publication are authorized.
+
+### Storage and preparation admission
+
+Read-only inspection found root free space **3,978,956,800 bytes** and `/data`
+free space **24,351,051,776 bytes** after this isolated documentation checkout.
+The owned V01 root target
+`/home/yaser5/projects/sifr/architecture-v01-live-qualification-target` occupies
+**15,746,199,552 bytes**; its existing external run receipt binds compiler
+`8e8ec4255cf4ec3ffcab577adfc100efa8aa4a7b`, Rust/Cargo 1.98.1, Python 3.14.7,
+two jobs and root ext4. Its temporary directory occupies 4,096 bytes. The
+V01 checkout's local `/data/.../target` is only **16,691,200 bytes** of reports,
+not that Cargo cache. Neither cache is established as compatible preparation
+for proposed compiler `4b319c0...`; no adoption, cleanup or build was attempted.
+
+Proposed future paths, owned by one separately assigned capture session:
+`/data/sifr-architecture-v01-reference-v2-capture/` (clean checkout), its
+`cargo-target/` and `tmp/`, and external
+`/data/sifr-architecture-v01-reference-v2-evidence/` (approval, raw logs,
+identity, artifact and run receipts). Before cloning/initializing/building,
+record actual source/submodule footprint, free space, target size, active
+process/handle ownership and a reserve calculation. E03's existing receipt
+reports its private target at approximately **19 GiB**. A conservative initial
+capture allocation is **19 GiB target + 8 GiB build/growth + 2 GiB temporary,
+source and evidence = 29 GiB (31,138,512,896 bytes)** on `/data`, exceeding
+observed free space by **6,787,461,120 bytes**. This is an operation estimate,
+not a proven peak or a size-triggered cleanup threshold. Recalculate from actual
+compatible artifacts and planned work before any producer. Space is currently
+unadmitted; no future build may start solely on this estimate.
+
+An owner-proven compatible warm cache can reduce the new allocation only after
+its source/configuration/artifact identities, exclusive ownership and available
+growth reserve are documented. The offered 40 GiB H02 `/data` cache is another
+session's cache and is not the reference preparation. The shared session target
+archive, SQL and all other-session targets are excluded. The earlier root C02a1
+cleanup of 34,787,901,440 bytes is already reflected in free space and cannot be
+counted again. Preserve the current warm caches. Pressure cleanup requires
+inactive obsolete artifacts owned by the executing session, no active handles
+and inadequate operation reserve, under `AGENTS.md` and compiler DX architecture
+section 7. If compatible reuse or permitted owner cleanup cannot meet the
+reserve, record the exact resource blocker and stop; cleanup permission is not
+a substitute for sufficient disk. No cleanup is authorized by this plan.
+
+### Future execution and acceptance, after approval and resources
+
+Use one producer sequentially and `CARGO_BUILD_JOBS=2`. Match the actual i7-4720HQ
+four-core/eight-thread 12 GiB-capacity-class host; Rust/Cargo 1.98.1, Python
+3.14.7, contributor-dev/dev mode, default Rust test threads, no external build
+flags/wrappers and measured user Cargo configuration. Establish the recorded
+frequency driver/bounds/boost and `performance` governor before admission;
+restore the saved governors in an EXIT trap on success or failure. Record full
+before/during/after policy, power, temperature, competing processes, memory,
+source/gitlink/configuration, cache and storage identity; no kernel rollback,
+software change, hidden comparison exemption or hand-edited freshness is allowed.
+
+Initialize only the pinned submodules required by the reference compiler and
+checks; record their exact commits. Before measured work, explicitly prepare
+`cargo build -q -p sifr --message-format=json-render-diagnostics` and
+`cargo build -q -p sifr_frontend --bin frontend_query_bench` in the owned target,
+with compatible cache/metadata reuse. Do not use a first cold preparation as
+performance evidence. Preserve timing/cache reports if preparation is slow;
+the old V01 180-second cold timeout does not justify widening measured deadlines.
+Run the following future checks fail fast, with `SIFR_PERFORMANCE_REFERENCE`
+unset before capture (the old incompatible reference must not be selected):
+
+```bash
+PYTHONPATH=verification/areas/performance python3 -m unittest -f reference_profile_tests.NamedReferenceTests reference_admission_tests.ReferenceAdmissionTests
+python3 verification/areas/performance/run_benchmarks.py --validate-only
+python3 verification/areas/performance/run_benchmarks.py --self-test
+python3 verification/areas/performance/check_budgets.py --self-test
+RUSTUP_TOOLCHAIN=1.98.1 CARGO_BUILD_JOBS=2 \
+SIFR_VALIDATION_PROFILE=approved-reference SIFR_THERMAL_POLICY=controlled-host \
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-reference-profile linux-i7-4720hq-12gb-dev-v2-data \
+  --reference-compiler-commit 4b319c0f784c4c5e71d93621de8331d41f98e3fc \
+  --compiler-lane contributor-dev --sample-scale manifest \
+  --reference-approval compiler/performance \
+  --require-controlled-host --controlled-host-mode latency \
+  --output-root /data/sifr-architecture-v01-reference-v2-evidence/measurements \
+  --json-out /data/sifr-architecture-v01-reference-v2-evidence/capture-report.json
+```
+
+Export `CARGO_TARGET_DIR` and `TMPDIR` to the exact approved `/data` paths before
+preparation and this command. The runner atomically creates only
+`verification/areas/performance/data/references/linux-i7-4720hq-12gb-dev-v2-data.json`
+after every manifest case passes stability/correctness/capture validation.
+Require 65 unique results, exact sample counts, usable RSS, unchanged beginning
+and end host/build identities, full raw evidence, clean producer source, the
+merged compiler ancestor and the original bundled policy derivation. Preserve
+LSP SLO caps and timeout/cache/correctness obligations. Capture alone certifies
+neither reference nor candidate usability thresholds.
+
+Record the file-byte SHA-256 and separately compute the canonical JSON digest
+using `reference_profiles.profile_digest`; that second digest is the admission
+identity. Record manifest/input digests, capture/overlay compiler SHAs, executable
+and helper hashes, run/invocation IDs, raw evidence digest and approval receipt.
+Publish no partial profile. Commit the new profile as the only capture result
+in a clean performance-owner branch before named admission; installing it must
+not make a dirty candidate appear qualified. Do not patch the v1 JSON or global
+historical baselines/trend. Do not mutate capture-report metadata to make it a
+candidate budget result.
+
+With `SIFR_PERFORMANCE_REFERENCE=linux-i7-4720hq-12gb-dev-v2-data`, run
+`python3 verification/areas/performance/reference_admission.py`,
+`python3 verification/areas/performance/check_trend_policy.py`, and
+`python3 verification/areas/performance/check_budgets.py` on the clean installed
+profile with its approved storage/environment. These check admission, provenance,
+freshness, complete reference/budget schema and waiver policy; the no-results
+budget command is not numerical candidate qualification. Run scoped Opus review
+of the exact new-reference candidate and evidence, merge its narrow PR only when
+approval, validation and review cover the same candidate, then publish the
+separate delivery receipt. Any missing baseline capability, insufficient disk,
+identity drift, uncontrolled/unstable sample, invalid receipt, or partial corpus
+stops capture; retain the failure rather than silently selecting another compiler.
+
+### Q01 retry and dependency boundaries
+
+After the performance owner's merged profile and evidence handoff, separately
+assign Q01 on then-current exact main. Use the same actual kernel, `/data` target
+and temporary device, toolchain/concurrency/build environment, input hash,
+reference digest and restored idle-host policy. Inspect owned compatible target
+preparation and reserve again: the capture reserve does not establish capacity
+for the larger full merge profile. First run the exact admission command above;
+only on success run **`scripts/run_all_tests.sh`** on that exact candidate. Repair
+the first in-scope cause, execute its failed/affected assertions, review and merge
+repairs, and rerun the full gate until it passes. Keep external failures with
+their owners and stop the dependent work. Do not rerun unchanged failed admission.
+
+This handoff does not close H01e's #4103 content-review restriction or H01i;
+H03a1pera's external compiler-interface authority decision and H03a1perp remain
+inactive, H03a1pe remains unaccepted, and H03a1 -> H03a -> H03b-H03f and
+D01b/D01c remain dependency-blocked. External X02/Emitted Rust acceptance remains
+with its owner. Q01 and whole-phase acceptance are open. The whole-phase closer
+requires the qualifier's pass and the retained owner acceptances; its work is
+read-only review and closure documentation. This documentation owner stops after
+review, merge and a separate receipt; capture and Q01 require separate assignments.
+
 ## TypeScript-Go guardrail taxonomy blocker (2026-09-27)
 
 The Emitted-Rust final qualifier's exact-main
