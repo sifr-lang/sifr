@@ -264,11 +264,13 @@ class BuiltinInventoryTests(unittest.TestCase):
         (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"receipt":receipt,"semantic_rejection":str(caught.exception),"integrity_passed":True}))
 
     def common_reject(self, value, common, label, authority=None):
-        receipt = self._live_receipt if authority is not None else self.fixture_receipt
+        receipt = copy.deepcopy(self._live_receipt if authority is not None else self.fixture_receipt)
+        receipt["capture_digest"] = builtin.digest(builtin.encoded(value))
+        self.require(receipt["capture_digest"] == builtin.digest(builtin.encoded(value)), "common mutation integrity recomputed before semantic admission")
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "invocation|common-member|independent inventory") as caught:
             builtin.validate_join(value, common, authority or self.inventory, receipt=receipt, input_identity=receipt["inputs"])
-        (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"common":common,"semantic_rejection":str(caught.exception)}))
+        (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"common":common,"receipt":receipt,"intact_authority_digest":builtin.digest(builtin.encoded(authority or self.inventory)),"semantic_rejection":str(caught.exception),"integrity_passed":True}))
 
     def test_hir_ty_owner_inventory_is_independent_of_ast_projection(self):
         inventory = self.inventory["inventory"]
@@ -310,14 +312,27 @@ class BuiltinInventoryTests(unittest.TestCase):
             mutation(authority["inventory"])
             value = copy.deepcopy(self.fixture)
             value["inventory_digest"] = builtin.digest(builtin.encoded(authority["inventory"]))
+            receipt = copy.deepcopy(self.fixture_receipt)
+            receipt["capture_digest"] = builtin.digest(builtin.encoded(value))
+            self.require(receipt["capture_digest"] == builtin.digest(builtin.encoded(value)), "inventory mutation projection integrity recomputed")
             self.assertions += 1
-            with self.assertRaisesRegex(builtin.Unsupported, "independent inventory"):
-                builtin.validate_mapping(value, authority, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
-            (self.evidence / (label + ".json")).write_bytes(builtin.encoded(authority))
+            with self.assertRaisesRegex(builtin.Unsupported, "independent inventory") as semantic:
+                builtin.validate_mapping(value, self.inventory, receipt=receipt, input_identity=self.fixture_receipt["inputs"])
+            self.assertions += 1
+            with self.assertRaisesRegex(builtin.Unsupported, "replacement expected authority") as replacement:
+                builtin.validate_mapping(value, authority, receipt=receipt, input_identity=self.fixture_receipt["inputs"])
+            (self.evidence / (label + ".json")).write_bytes(builtin.encoded({"capture":value,"receipt":receipt,"proposed_authority":authority,"intact_authority_digest":builtin.digest(builtin.encoded(self.inventory)),"semantic_rejection":str(semantic.exception),"replacement_rejection":str(replacement.exception),"integrity_passed":True}))
+        value = copy.deepcopy(self.fixture)
+        value["context"]["target"] = "wrong-context"
+        receipt = copy.deepcopy(self.fixture_receipt)
+        receipt["capture_digest"] = builtin.digest(builtin.encoded(value))
+        self.assertions += 1
+        with self.assertRaisesRegex(builtin.Unsupported, "independent inventory context"):
+            builtin.validate_mapping(value, self.inventory, receipt=receipt, input_identity=self.fixture_receipt["inputs"])
         authority = copy.deepcopy(self.inventory)
         authority["context"]["target"] = "wrong-context"
         self.assertions += 1
-        with self.assertRaisesRegex(builtin.Unsupported, "independent inventory context"):
+        with self.assertRaisesRegex(builtin.Unsupported, "replacement expected authority"):
             builtin.validate_mapping(self.fixture, authority, receipt=self.fixture_receipt, input_identity=self.fixture_receipt["inputs"])
         self.assertions += 1
         with self.assertRaisesRegex(builtin.Unsupported, "missing independent inventory"):
