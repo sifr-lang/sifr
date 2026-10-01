@@ -23,8 +23,62 @@ def alpha(value):
     return value
 
 
+def bind_dynamic_origins(values, local_owner, sysroot, prepared_files, artifact_owners, b):
+    for node in nodes(values):
+        if "dynamic" not in node:
+            continue
+        for predicate in node["dynamic"]["predicates"]:
+            fact=predicate["fact"]
+            for definition in [fact["definition"]]+([fact["trait_owner"]] if fact["kind"]=="Projection" else []):
+                paths=definition.pop("origin_paths")
+                if paths is None:
+                    definition["owner"]=local_owner
+                    continue
+                owners={("sysroot:"+b.RUST_COMMIT) if Path(name).resolve().is_relative_to(sysroot) else artifact_owners.get(str(Path(name).resolve())) for name in paths}
+                if None in owners or len(owners)!=1 or any(str(Path(name).resolve()) not in prepared_files for name in paths):
+                    raise b.Unsupported("unbound existential definition/external closure")
+                definition["owner"]=owners.pop()
+
+
+def validate_dynamic(node, b):
+    dynamic=node["dynamic"]
+    if set(dynamic)!={"predicates","principal","projections","auto_traits","object_region"}:
+        raise b.Unsupported("incomplete Dynamic semantic fields")
+    principal=[];projections=[];auto_traits=[]
+    for index,predicate in enumerate(dynamic["predicates"]):
+        if set(predicate)!={"binders","fact"} or not isinstance(predicate["binders"],list):
+            raise b.Unsupported("incomplete existential binder facts")
+        fact=predicate["fact"];kind=fact.get("kind")
+        fields={"kind","definition"}
+        if kind in ("Trait","Projection"):
+            fields|={"arguments","existential_self"}
+            if fact.get("existential_self")!="omitted" or not isinstance(fact.get("arguments"),list):
+                raise b.Unsupported("changed existential Self/ordered arguments")
+            if any(set(a) not in ({"lifetime"},{"type"},{"const"}) for a in fact["arguments"]):
+                raise b.Unsupported("unknown existential argument kind")
+        if kind=="Trait":principal.append(index)
+        elif kind=="Projection":
+            projections.append(index);fields|={"trait_owner","term"}
+            term=fact.get("term",{})
+            if set(term)!={"kind","payload"} or term["kind"] not in ("type","const"):
+                raise b.Unsupported("incomplete existential projection term")
+        elif kind=="AutoTrait":auto_traits.append(index)
+        else:raise b.Unsupported("unknown existential predicate kind")
+        if set(fact)!=fields:
+            raise b.Unsupported("incomplete existential predicate facts")
+        for identity in [fact["definition"]]+([fact["trait_owner"]] if kind=="Projection" else []):
+            if set(identity)!={"canonical","structural","crate","kind","owner"} or any(not isinstance(v,str) or not v for v in identity.values()):
+                raise b.Unsupported("incomplete existential definition ownership")
+    if len(principal)>1 or dynamic["principal"]!=(principal[0] if principal else None) or dynamic["projections"]!=projections or dynamic["auto_traits"]!=auto_traits:
+        raise b.Unsupported("ambiguous existential principal/projection/auto-trait presence")
+    if not isinstance(dynamic["object_region"],dict) or "kind" not in dynamic["object_region"]:
+        raise b.Unsupported("missing published trait-object region")
+
+
 def supported(value, *, declaration, b):
     for node in nodes(value):
+        if "dynamic" in node:
+            validate_dynamic(node,b)
         if any(key.startswith("unsupported") for key in node):
             raise b.Unsupported("unsupported required declaration/body semantic fact")
         if declaration and node.get("kind") == "ReErased":
@@ -34,6 +88,8 @@ def supported(value, *, declaration, b):
 
 
 def validate_inventory_body(capture, authority, b):
+    if capture["original_capture"]!=authority["original_capture"]:
+        raise b.Unsupported("independent inventory original capture provenance conflict")
     expected_capabilities=capabilities(capture,("call-count","resolved-module-fanout","declaration-signatures"),b)
     if capture["consumer_capabilities"]!=expected_capabilities:
         raise b.Unsupported("independent inventory consumer capability observation conflict")
@@ -98,6 +154,7 @@ def source_correspondence(compiler, resolver, b):
         elif lifetime["syntax"]!={"static":"'static","placeholder":"'_"}[disposition["kind"]]:
             raise b.Unsupported("original lifetime static/placeholder source correspondence conflict")
     traits = {n["trait"] for n in nodes(compiler["predicates"]) if "trait" in n}
+    traits.update(p["fact"]["definition"]["canonical"] for n in nodes(compiler.get("field_types",[])) if "dynamic" in n for p in n["dynamic"]["predicates"] if p["fact"]["kind"] in ("Trait","AutoTrait"))
     if any(bound["trait"] not in traits for bound in resolver["bounds"]):
         raise b.Unsupported("original resolved declaration trait bound conflict")
     return {"kind":"ra-semantic-declaration-and-source-correspondence","source_token_start":positions[0],"parameters":expected,"lifetimes":resolver["lifetimes"],"compiler_declaration":compiler}
@@ -126,13 +183,42 @@ def validate_bridge(declaration, member, invocation, b):
     return {"original_adt":adt,"original_trait_method":original,"generated_authority":"authenticated-compiler-declaration","compiler_trait_substitution":bridge}
 
 
+def region_paths(value, path=()):
+    if isinstance(value,dict):
+        if value.get("kind")=="ReErased":
+            yield list(path)
+        for key,child in value.items():
+            yield from region_paths(child,path+(key,))
+    elif isinstance(value,list):
+        for index,child in enumerate(value):
+            yield from region_paths(child,path+(index,))
+
+
 def capabilities(capture, required, b):
     allowed={"call-count","resolved-module-fanout","declaration-signatures"}
     erased=[]
+    origin=capture["original_capture"]
+    stage="rustc-hir-typeck-writeback-after-analysis"
     for declaration in capture["declarations"]:
+        def record(surface,ordinal,semantic,*,target=None,adjustment=None):
+            supported(semantic,declaration=False,b=b)
+            for path in region_paths(semantic):
+                location={"surface":surface,"ordinal":ordinal,"path":path}
+                if adjustment is not None:location["adjustment_ordinal"]=adjustment
+                erased.append({"original_capture":origin,"producer":"pinned-rustc-helper","stage":stage,
+                    "owner":declaration["owner"],"invocation":declaration["expansion_chain"],
+                    "location":location,"target":target,"observation":"published-ReErased","lost_relation":"unresolved"})
+        for index,dependency in enumerate(declaration["body_type_dependencies"]):
+            if dependency["region_stage"]!=stage:
+                raise b.Unsupported("unknown body dependency erasure producer/stage")
+            record("body-type-dependency",index,dependency["type"])
         for index,site in enumerate(declaration["typed_sites"]):
-            if any(n.get("kind")=="ReErased" for n in nodes([site["published_arguments"],site["published_result"],site["published_receiver"]])):
-                erased.append({"owner":declaration["owner"],"site":index,"target":site["target"],"stage":site["region_stage"],"invocation":declaration["expansion_chain"],"observation":"published-ReErased","lost_relation":"unresolved"})
+            if site["region_stage"]!=stage:
+                raise b.Unsupported("unknown body call erasure producer/stage")
+            for field in ("published_arguments","published_result","published_receiver"):
+                record(field,index,site[field],target=site["target"])
+            for adjustment,value in enumerate(site["adjustments"] or []):
+                record("adjustment-target",index,value["published_target"],target=site["target"],adjustment=adjustment)
     if not required or not set(required).issubset(allowed):
         raise b.Unsupported("required consumer capability unresolved; ownership/lifetime/deletion needs separate proof")
     return {"required":sorted(required),"available":sorted(allowed),"body_erasure_observations":erased,"body_region_authority":"published-pinned-compiler-RegionKind","lifetime_sensitive_proof":"unresolved" if erased else "not-requested"}

@@ -71,15 +71,27 @@ pub fn ty<'tcx>(tcx: TyCtxt<'tcx>, t: ty::Ty<'tcx>) -> Value {
         ty::Alias(k, a) => {
             json!({"alias":crate::identity::path(tcx,match a.kind { ty::AliasTyKind::Projection{def_id} | ty::AliasTyKind::Inherent{def_id} | ty::AliasTyKind::Opaque{def_id} | ty::AliasTyKind::Free{def_id} => def_id }),"kind":format!("{k:?}"),"arguments":args(tcx,a.args)})
         }
+        ty::Dynamic(predicates, r) => crate::dynamic::capture(tcx, predicates, *r),
         ty::FnDef(d, a) => {
             json!({"function":crate::identity::path(tcx,*d),"arguments":args(tcx,a)})
         }
         other => json!({"unsupported_type":format!("{other:?}")}),
     }
 }
+pub fn binders(tcx: TyCtxt<'_>, variables: &ty::List<ty::BoundVariableKind>) -> Vec<Value> {
+    variables
+        .iter()
+        .map(|v| match v {
+            ty::BoundVariableKind::Region(k) => {
+                json!({"kind":"region","origin":bound_region(tcx,k)})
+            }
+            other => json!({"unsupported_binder":format!("{other:?}")}),
+        })
+        .collect()
+}
 pub fn bound_signature<'tcx>(tcx: TyCtxt<'tcx>, binder: ty::PolyFnSig<'tcx>) -> Value {
     let sig = binder.skip_binder();
-    json!({"binders":binder.bound_vars().iter().map(|v|match v {ty::BoundVariableKind::Region(k)=>json!({"kind":"region","origin":bound_region(tcx,k)}),other=>json!({"unsupported_binder":format!("{other:?}")})}).collect::<Vec<_>>(),"parameters":sig.inputs().iter().map(|t|ty(tcx,*t)).collect::<Vec<_>>(),"return":ty(tcx,sig.output()),"variadic":sig.c_variadic(),"unsafe":sig.safety().is_unsafe()})
+    json!({"binders":binders(tcx,binder.bound_vars()),"parameters":sig.inputs().iter().map(|t|ty(tcx,*t)).collect::<Vec<_>>(),"return":ty(tcx,sig.output()),"variadic":sig.c_variadic(),"unsafe":sig.safety().is_unsafe()})
 }
 pub fn signature(tcx: TyCtxt<'_>, def: DefId) -> Value {
     let binder = tcx.fn_sig(def).instantiate_identity().skip_norm_wip();
@@ -101,7 +113,7 @@ pub fn clause_fact<'tcx>(tcx: TyCtxt<'tcx>, clause: ty::Clause<'tcx>) -> Value {
         ty::ClauseKind::TypeOutlives(p) => json!({"type_outlives":[ty(tcx,p.0),region(tcx,p.1)]}),
         other => json!({"unsupported_clause":format!("{other:?}")}),
     };
-    json!({"binders":binder.bound_vars().iter().map(|v|match v {ty::BoundVariableKind::Region(k)=>json!({"kind":"region","origin":bound_region(tcx,k)}),other=>json!({"unsupported_binder":format!("{other:?}")})}).collect::<Vec<_>>(),"fact":fact})
+    json!({"binders":binders(tcx,binder.bound_vars()),"fact":fact})
 }
 pub fn predicates(tcx: TyCtxt<'_>, def: DefId) -> Value {
     let p = tcx.predicates_of(def);
