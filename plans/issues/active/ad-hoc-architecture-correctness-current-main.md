@@ -8622,3 +8622,61 @@ claimed.** The original accepted H03a1p surface remains unchanged. This owner
 stops after merging the stop record and its record-only receipt; the next session
 must own the separate scope decision. **Blocker: required current generated
 call-region correspondence remains unproved within the approved producers.**
+
+
+### H03a1pe generated region authority stop-record delivery receipt (2026-10-01)
+
+**State: stop record merged; H03a1pe implementation remains needs-new-scope and
+unaccepted.** [PR #4203](https://github.com/sifr-lang/sifr/pull/4203) merged as
+`3f26a4d26a82d30050f6c5bcba20efc80c780e48`, from documentation candidate
+`ce893af9e05f7e4a0f7e4e961f3a25d9c82b5b61` on base
+`3ad6fbace9b84fc6e474e1aba354b00cba681474`. Its merged tree exactly matches
+candidate tree `1d69009d05059fdda98db9376fba696a684ea687`.
+
+The fresh exact codegen Linux production library diagnostic binds four actual
+`ReErased` Default call substitutions to owners whose generated receiver return
+signatures retain early lifetime `'a/#0`. The approved HIR/typeck and RA producer
+boundary cannot currently prove their required lossless generated-to-original
+relation. This receipt closes only delivery of the truthful stop record; it does
+not close the combined extension or claim global pinned-API impossibility.
+Potential MIR/borrow-checking authority remains a separately adjudicated mechanism
+with no probe, positional reconstruction or admission performed here.
+
+Documentation structure and its mutation harness, the file-size guard for
+**4,319 maintained files**, unchanged-helper formatting, scope/whitespace and
+clean-tree checks passed. Scoped self-review is **SATISFIED for stop-record
+accuracy**, with no documentation blockers. Original compiler/RA/consumer/helper/
+manifest/lock bytes and accepted helper executable/runtime binding were restored
+and revalidated exactly. Diagnostic publication rejects the explicit diagnostic
+schema even after supplying the expected root context/inventory fields.
+All original H03a1s-and-later history remains byte-for-byte intact.
+
+Candidate-keyed evidence is at
+`/data/sifr-h03a1pe-builtin-extension-evidence-20261001/candidates/ce893af9e05f7e4a0f7e4e961f3a25d9c82b5b61/`
+on `yaser5@192.168.1.134`. `qualification.json` SHA-256 is
+`339e46d4b01e44276207326d22d467780bf9d23f7a91d58d7cc56c45911a285c`.
+The actual diagnostic/API report and raw-capture digests are recorded above.
+Original failed setup/check/relay attempts remain preserved separately; they are
+not capability or documentation passes. The final diagnostic used fresh original
+Cargo preparation. No diagnostic export is accepted as positive evidence.
+
+The owner used worktree `/data/sifr-h03a1pe-builtin-extension-20261001`, branches
+`codex/h03a1pe-builtin-extension` and `codex/h03a1pe-stop-receipt-20261001`, owned
+outside-Git evidence and isolated Mac bare relay
+`/tmp/sifr-h03a1pe-relay.hlFlF9/relay.git`. The exclusively adopted builtin target
+is inactive and retains the restored original helper identity; no cleanup ran.
+Final preflight retained approximately 25 GiB free disk and 9 GiB available RAM.
+Both primary checkouts, historical worktrees and unrelated targets were untouched.
+
+This record-only receipt requires documentation/scope/diff/clean-tree checks only;
+no external implementation review or broad gate is repeated. **No new extension
+or retained named-case acceptance, fixture/test/lowering positive qualification,
+authenticated lifetime bridge, full adapter, Windows/structural union, metric,
+full gate, performance, release or phase closure is claimed.** H03a1p's accepted
+narrow surface and all H03a1pes/downstream requirements remain intact.
+
+**Next action: separately adjudicate the missing compiler region authority and
+complete correspondence proofs, then explicitly reassign combined H03a1pe.**
+The owner stops after this receipt merge and has started no next batch.
+**Blocker: lossless current generated call-region correspondence is unproved in
+the approved producer boundary.**
