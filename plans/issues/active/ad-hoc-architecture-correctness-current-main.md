@@ -1029,7 +1029,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pi | H03a1p repeated finding; **closed**, scope #4196 and receipt below. | Docs only: independent inventory adjudication; no capability acceptance. |
 | H03a1pr | Merged H03a1pi; **closed**, #4198/#4199. | Independent inventory repair and complete carried H03a1p requalification/review within the accepted bounded surface. |
 | H03a1pes | H03a1pr and combined #4200 gap; **closed**, scope #4201 and receipt below. | Docs only: combined builtin kind/generic adjudication; no extended capability acceptance. |
-| H03a1pers | #4203/#4204 stop; documentation adjudication complete, receipt pending. | No region producer adopted; precise authority blocker and inactive prerequisite reservation below. |
+| H03a1pers | #4203/#4204 stop; **closed**, adjudication #4205 and receipt below. | No region producer adopted; precise authority blocker and inactive prerequisite reservation below. |
 | H03a1pera | H03a1pers; **blocked, inactive** pending externally owned compiler-interface/authority decision. | Docs only: source-supported public route or separately authorized external interface/pin ownership. |
 | H03a1perp | Merged H03a1pera mechanism decision required; **blocked, inactive**. | Reserved separate lossless region capability prerequisite; no ready implementation or admission. |
 | H03a1pe | Merged H03a1pes; **needs-new-scope**, required generated call-region correspondence unproved; stop record below. | Combined extension remains unaccepted. Fresh Default probes expose compiler-erased call substitutions; separately adjudicate their lossless authority mechanism before resumption. |
@@ -8871,3 +8871,70 @@ proof boundary is feasible.** This owner merges this documentation adjudication
 and a separate receipt, then stops. **Blocker: semantic named-region/binder and
 original constraint authority is not published by the audited public consumer
 routes; exact regenerated-to-generated-call correspondence is still unproved.**
+
+
+### H03a1pers region authority adjudication delivery receipt (2026-10-01)
+
+**State: documentation adjudication closed; implementation dependency blocked.**
+[PR #4205](https://github.com/sifr-lang/sifr/pull/4205) merged as
+`764151ec02e93faa74da5a9cd17fc9e62aa9f6df`, from candidate
+`006f12f15fc000e6b6091fe327646786e7c928f8` on fresh base
+`82f9f894f8efde0881677dfa140b93378905a871`. The merged tree exactly matches
+candidate tree `404832dabcc2a07f89661c00a98166a0282a3439`.
+
+The source audit covers the pinned public borrowck consumer, complete exact
+Polonius `AllFacts`, region replacement and solving, THIR/MIR scope/call ownership,
+query interception example and official NLL text/Graphviz output. It preserves
+public maximal HIR coverage as a plausible ownership aid and acknowledges graph
+lifetime spelling labels. Neither supplies the missing semantic declaration/
+parameter/binder-to-region identity or original constraint provenance. No global
+API impossibility is asserted and no producer, probe or source/API mutation was
+adopted. The four prior erased Default substitutions remain unchanged evidence.
+
+Documentation structure and its registered mutation harness, the file-size guard
+for **4,319 maintained files**, whitespace/single-path scope, clean-tree and
+historical byte-preservation checks passed. Scoped documentation self-review is
+**SATISFIED for adjudication accuracy**, with no documentation blocker. The
+accepted #4198/#4199 surface and all original H03a1s-and-later historical records
+were preserved byte-for-byte. The outside-Git attempt history retains one failed
+hardcoded audit-count assertion; actual record counts were inspected and the
+scope check corrected without changing compiler sources or audit inputs.
+
+Candidate-keyed evidence on `yaser5@192.168.1.134` is at
+`/data/sifr-h03a1-region-authority-scope-evidence-20261001/candidates/006f12f15fc000e6b6091fe327646786e7c928f8/`.
+`qualification.json` SHA-256 is
+`04bf8f02a301a61618b0f12b2d69ca4b0cd7e69491ba79cca19c1f011f93b3a8`;
+`self-review.md` is
+`6cbfd73dc80739809c90af6e3c04f0158e1595b9e5b46417338c5c67d076c78e`.
+The source-audit and adjudication report digests are recorded above; the original
+#4203 stop report remains byte-identical. Download errors remain explicit audit
+attempts, not successful input evidence.
+
+The owner used `/data/sifr-h03a1-region-authority-scope-20261001`, branches
+`codex/h03a1-region-authority-scope-20261001` and
+`codex/h03a1-region-authority-receipt-20261001`, its outside-Git evidence and Mac
+bare relay `/tmp/sifr-h03a1-region-authority-relay.fxJvlX/relay.git`.
+Only the exact editor/nested VS Code documentation gitlinks were initialized.
+Both primary checkouts, accepted helper/target, prior worktrees, sources and
+evidence were untouched. No Cargo operation, target adoption or cleanup ran.
+This separate receipt requires relevant documentation/scope/diff/clean-tree
+checks only; no external implementation review or broad gate is repeated.
+
+H03a1pera and H03a1perp remain **blocked and inactive**, requiring a distinct
+source-supported compiler-interface/authority decision before any implementation
+assignment. H03a1pe remains needs-new-scope and unaccepted; H03a1, H03a and
+H03b-H03f remain open and dependency-blocked. D01b/D01c remain open after structural
+delivery and dependency-blocked. H01e's independent automatic content-review
+restriction and H01i dependency remain unchanged. All thirteen builtin cases,
+original five SemanticInputTests, Linux/Windows structural union, external closure,
+build/input/provenance/freshness obligations and seven later MetricTests remain
+binding. Q01 integration and whole-phase review retain separate ownership.
+
+**Next action: distinct H03a1pera authority decision only.** The smallest external
+requirement is a semantic same-capture region-definition/universal binding and
+original constraint provenance view, plus actual generated call ownership proof.
+This record closes no extension, adapter, Windows, metric, performance, release
+or whole-phase acceptance. **Documentation item blocker: none. Dependency blocker:
+the audited public routes do not publish the required semantic named-region/
+binder and original constraint authority; complete generated call correspondence
+remains unproved.** This owner stops after this receipt merge; no next batch began.
