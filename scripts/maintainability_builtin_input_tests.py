@@ -147,7 +147,10 @@ class BuiltinCapabilityTests(unittest.TestCase):
         root = self.evidence / "other-checkout"
         shutil.copytree(builtin.TOOL / "fixtures", root)
         capture, receipt = builtin.capture_package(root, "builtin_fixture", "builtin_fixture", self.evidence / "other-capture", self.helper, self.target, self.identity)
-        self.require(capture == self.fixture, "unchanged producer capture normalizes across checkouts")
+        authority = builtin.read_inventory(receipt, receipt["inputs"])
+        self.require(bool(builtin.verify_capture(capture, receipt, receipt["inputs"], authority)), "relocated capture authentic original authority")
+        self.require(bool(builtin.verify_capture(self.fixture, self.fixture_receipt, self.fixture_receipt["inputs"], self.inventory)), "original capture authentic original authority")
+        self.require(dynamic_acceptance.semantic_capture(capture) == dynamic_acceptance.semantic_capture(self.fixture), "unchanged complete semantic capture normalizes across checkouts")
         for mutation, label in (
             (lambda c: c["declarations"][0].update(owner=c["declarations"][1]["owner"]), "swapped-owners"),
             (lambda c: c["declarations"][1]["ast_sites"][0]["span"].update(quality="exact-source"), "forged-exact"),
