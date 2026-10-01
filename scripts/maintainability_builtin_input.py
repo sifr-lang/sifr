@@ -366,6 +366,7 @@ def compiler_wrapper():
 
 
 def capture_package(root, package, selected_crate, output, helper, target, identity):
+    started = time.monotonic()
     root, output = Path(root).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
@@ -444,7 +445,10 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
             continue
         origin = message["package_id"].replace("path+file://" + str(root), "checkout:")
         for filename in message["filenames"]:
-            artifact_owners[str(Path(filename).resolve())] = origin
+            path = Path(filename).resolve()
+            artifact_owners[str(path)] = origin
+            if path.suffix in {".rmeta", ".rlib", ".so"}:
+                prepared_files[str(path)] = digest(path.read_bytes())
         package_sources[message["package_id"]] = package_roots[message["package_id"]]
     for package_root in package_sources.values():
         members = sorted(str(path.relative_to(package_root)) for path in package_root.rglob("*") if path.is_file() and not set(path.relative_to(package_root).parts).intersection({".git", "target", "__pycache__"}))
@@ -452,6 +456,10 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
         for member in members:
             path = package_root / member
             prepared_files[str(path)] = digest(path.read_bytes())
+    prepared_files.update(identity["selected_sysroot_metadata"])
+    for name, sha256 in prepared_files.items():
+        if digest(Path(name).read_bytes()) != sha256:
+            raise Unsupported(f"prepared input changed before analysis: {name}")
     (output / "invocation.json").write_bytes(encoded(invocation))
     for key in invocation["environment_removed"]:
         environment.pop(key, None)
@@ -461,15 +469,11 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     sysroot = Path(run(["rustc", "--print", "sysroot"]).stdout.strip())
     environment["SIFR_BUILTIN_CAPTURE"] = str(output / "raw.json")
     environment["SIFR_BUILTIN_SOURCE_SUFFIX"] = "crates/sifr_codegen/src/rust_ir.rs" if package == "sifr_codegen" else "fixture_root/src/lib.rs"
-    run([str(helper), *invocation["args"]], cwd=root, env=environment, log=output / "compiler-analysis.log")
+    analysis = run([str(helper), *invocation["args"]], cwd=root, env=environment, log=output / "compiler-analysis.log")
     if not (output / "raw.json").is_file():
         raise Unsupported("selected typechecking/expansion failed; no complete capture")
     # Rebind all original Rust inputs and actual externally prepared metadata.
     raw = json.loads((output / "raw.json").read_text())
-    for path, sha256 in identity["selected_sysroot_metadata"].items():
-        if digest(Path(path).read_bytes()) != sha256:
-            raise Unsupported(f"selected sysroot metadata drift: {path}")
-        prepared_files[path] = sha256
     for declaration in raw["declarations"]:
         for site in declaration["typed_sites"]:
             for field in ("target", "implementation"):
@@ -486,7 +490,8 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
                         owners.add(artifact_owners[str(path)])
                     else:
                         raise Unsupported(f"unreadable/unowned actual dependency metadata: {path}")
-                    prepared_files[str(path)] = digest(path.read_bytes())
+                    if str(path) not in prepared_files:
+                        raise Unsupported(f"dependency metadata lacks original preparation binding: {path}")
                 if len(owners) != 1:
                     raise Unsupported("ambiguous dependency callable ownership")
                 site[field + "_owner"] = owners.pop()
@@ -522,7 +527,7 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
             raise Unsupported(f"unaccounted generated auxiliary item: {declaration['owner']}")
     add_intervals(capture)
     counts = validate_mapping(capture)
-    receipt = {"inputs": config, "capture_digest": digest(encoded(capture)), "counts": counts, "preparation_cargo_artifact_success": True, "capture_cargo_artifact_success": False, "cargo_status": result.returncode, "capture_stopped_after_analysis": True}
+    receipt = {"timing_seconds": {"locked_preparation": result.elapsed_seconds, "metadata": metadata_result.elapsed_seconds, "compiler_analysis": analysis.elapsed_seconds, "total": time.monotonic() - started}, "inputs": config, "capture_digest": digest(encoded(capture)), "counts": counts, "preparation_cargo_artifact_success": True, "capture_cargo_artifact_success": False, "cargo_status": result.returncode, "capture_stopped_after_analysis": True}
     (output / "capture.json").write_bytes(encoded(capture))
     (output / "receipt.json").write_bytes(encoded(receipt))
     return capture, receipt

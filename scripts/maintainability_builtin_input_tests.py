@@ -32,6 +32,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         )
         cls.common = json.loads(common.stdout)
         (cls.evidence / "fixture-common.json").write_bytes(builtin.encoded(cls.common))
+        builtin.verify_capture(cls.fixture, cls.fixture_receipt, cls.fixture_receipt["inputs"])
         cls.join = builtin.validate_join(cls.fixture, cls.common)
         (cls.evidence / "fixture-join.json").write_bytes(builtin.encoded(cls.join))
 
@@ -141,7 +142,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
             ("source", builtin.TOOL / "fixtures/fixture_root/src/lib.rs"),
             ("external-source", builtin.TOOL / "fixtures/field_origin/src/lib.rs"),
             ("configuration", builtin.TOOL / "fixtures/Cargo.toml"),
-            ("extern", next(Path(name) for name in inputs["files"] if name.endswith(".rmeta"))),
+            ("extern", next(Path(name) for name in inputs["files"] if name.endswith(".rmeta") and Path(name).is_relative_to(self.target))),
         ):
             original = path.read_bytes()
             stat = path.stat()
@@ -173,6 +174,7 @@ class BuiltinCapabilityTests(unittest.TestCase):
         environment.pop("RUSTC_BOOTSTRAP", None)
         environment.update(receipt["inputs"]["resolver_preparation_environment"])
         common = json.loads(builtin.run([str(self.resolver), str(builtin.ROOT), "sifr_codegen", "crates/sifr_codegen/src/rust_ir.rs", str(self.evidence / "live/capture.json")], env=environment, log=self.evidence / "live-resolver.log").stdout)
+        builtin.verify_capture(live, receipt, receipt["inputs"])
         joined = builtin.validate_join(live, common)
         self.require(len(joined) == len(common["common_members"]), "full actual common live surface joined")
         counts = builtin.validate_mapping(live)
