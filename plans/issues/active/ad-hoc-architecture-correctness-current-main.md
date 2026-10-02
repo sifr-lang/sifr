@@ -84,6 +84,12 @@ captured original dependency cfg, and stops on any ambiguity or graph drift.
 The original checksum-authenticated registry archive is compared member by member
 to the actual extracted source inventory before capture and each admission.
 Loaded Python source/cache/native-module files and runtime inputs are also bound.
+Candidate `9886393f45a6925ae51eced32720ce26b7f0be60` passed the first named
+case (1/1, 7 assertions) and then failed the join case after 20 executed assertions:
+the genuine E0496 helper control exits 101, whereas ordinary rustc exits 1.
+`attempts/9886393f45a6925ae51eced32720ce26b7f0be60/` retains both logs and
+completion records. The exact helper-error expectation is corrected; its prior
+first-case pass cannot qualify the changed test/runtime inputs.
 Source inspection
 and partial joins are ingredients, rather than completed feasibility acceptance.
 Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,

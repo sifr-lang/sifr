@@ -114,8 +114,8 @@ class SourceBinderFeasibilityTests(unittest.TestCase):
         failed=builtin.run(["rustc",*bad_args],env=env,log=directory / "invalid-shadow-control.log",allowed=(1,))
         self.require(failed.returncode==1 and "E0496" in failed.stderr,"invalid lexical shadowing is a genuine compiler-error negative")
         replay["SIFR_BUILTIN_SOURCE_BINDER"]=str(directory / "failed-raw.json")
-        failed=builtin.run([str(self.target / "debug/sifr_maintainability_builtin_input"),*bad_args],env=replay,log=directory / "invalid-shadow-capture.log",allowed=(1,))
-        self.require(failed.returncode==1 and not (directory / "failed-raw.json").exists(),"compiler failure cannot publish original local HIR feasibility")
+        failed=builtin.run([str(self.target / "debug/sifr_maintainability_builtin_input"),*bad_args],env=replay,log=directory / "invalid-shadow-capture.log",allowed=(101,))
+        self.require(failed.returncode==101 and "E0496" in failed.stderr and not (directory / "failed-raw.json").exists(),"compiler failure cannot publish original local HIR feasibility")
 
 
 def stable(identity):return identity["crate"],identity["hash"]
