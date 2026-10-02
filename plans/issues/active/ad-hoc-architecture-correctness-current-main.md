@@ -10,6 +10,73 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbipau source/native authority amendment delivery receipt (2026-10-02)
+
+**Current controlling state: H03a1hbipau human-approved source/native authority
+amendment is closed by the merged amendment and this separate canonical receipt.
+After this receipt merges, separately assign H03a1hbip only. H03a1hbc/full
+H03a1 remain dependency-blocked. Zero proof cases/assertions, zero accepted
+contexts of four; semantic_export false. No source fact is a proof pass.**
+
+[Amendment PR #4273](https://github.com/sifr-lang/sifr/pull/4273) merged as
+650982fe16d3c6b792ce0b52f9e950bb16501f7a from exact final candidate
+869b23cb6ef4290fb8d9e0d54adfe56d4e9089e6 on base
+8a27592de8ae8d29a649ff88fcef82b5f5fdf97b. The complete candidate and merge
+trees equal 32cea08d9713cf74b94d4660d6d9a58517af0dcd. Current main was
+verified unchanged before merge; the clean exclusively owned tree is retained.
+This receipt changes only canonical Markdown/current readiness rows.
+
+The explicit human authorization quoted in the amendment selects independent
+authenticated physical/native direct source attribute membership and independently
+authenticated original-classified/final compiler semantic identities. Original
+rustc AttrId/attachment, exhaustive compiler-certified consumed-item lineage
+and pre-consumption survival are deliberately not claimed. Schema/consumer/test
+naming must expose that boundary; empty expanded/lowered attrs remain transformed
+observations. The instrumented compiler alternative is unselected. No compiler
+boundary implementation, custom toolchain or capability is accepted.
+
+The exact declaration spans, full direct attrs, owner/context/order/style/
+token/subnode relations, actual RA source/to_def and final compiler owner/parent/
+trait/binder facts remain mandatory. ScalarCallRewriter token/subnode/owner
+correspondence is still an actual unproved requirement. The next proof includes
+complete independent inventories, genuine repeated left/right includes,
+attributed production anchors, all four original Linux lowering/codegen lib/tests
+controls, original thirteen-case/fixture union, fresh unchanged repeat and
+input/source/cfg mutation rejection. Every required owner needs exact authority
+or explicit non-admission preventing complete acceptance. No broader semantic
+waiver, omission, source-name/text/range/hull/copy identity or fallback.
+
+Exact amendment documentation validation is outside Git at
+/data/sifr-h03a1-source-attribute-amendment-20261002/evidence/amendment-final/validation-summary.json,
+SHA-256 14001f9a7f1bc4ed3a77739987ed0029702b058caedb6667520a9576632fc258.
+Documentation structure/registered mutation harness and the 900-line source
+guard (4,338 maintained files), exact old-byte reconstruction after registered
+edits, canonical-only scope, whitespace/clean tree, exact docs-input gitlinks,
+no targets and all 50 donor artifacts pass.
+Candidate-keyed scoped **SELF-review: SATISFIED**, no blockers:
+evidence/candidates/869b23cb6ef4290fb8d9e0d54adfe56d4e9089e6/self-review.json,
+SHA-256 c4473390f317ccdf5cf54c45d577c75f2543d05bc6f278e27d4f568eef935506.
+Initial private author setup failure and failed staged-tree clean assertion are
+retained; corrected owned configuration produced the clean exact candidate.
+No implementation/compiler/Cargo/RA operation, experiment, Sifr gate, target/
+cleanup, external Opus review or next batch occurred.
+
+The receipt itself runs the same exact documentation commands, registered
+history/scope checks and SELF-review only; no repeated broad gate or external review.
+Outside-Git evidence remains on yaser5@192.168.1.134 under
+/data/sifr-h03a1-source-attribute-amendment-20261002/evidence/, with terminal
+handoff copied to
+/Users/yaseralnajjar/.codex/sifr-architecture-evidence/h03a1-source-attribute-amendment-20261002/.
+
+**Exact next worker: H03a1hbip**, after this receipt, under the amendment's
+owned paths/dependencies, four exact IncludeSourceCorrespondenceTests individually/
+full class, exact Cargo controls and HBF/focused commands above. Complete
+proof/review/merge/separate receipt precedes H03a1hbc; complete HBC delivery
+precedes full adapter. Public pins and all unrelated owners remain unchanged;
+explicit future expanded V01 approval is still required and old65-case capture
+is not a substitute. Documentation blocker: none. Complete diagnostic union
+remains unproved. This owner is terminal and starts no proof or next batch.
+
 ## H03a1hbipau human-approved source/native attribute authority amendment (2026-10-02)
 
 **Current controlling state: the smaller source/native attribute authority
@@ -5472,8 +5539,8 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
 | H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
 | H03a1hbipa | #4268/#4269/#4270 and accepted HBI/H03a1hbie/HBF/HBS history retained; audit delivered. | Historical needs-new-scope stop remains unaccepted; human-approved H03a1hbipau source/native amendment above prospectively supersedes only attribute authority/readiness. |
-| H03a1hbipau | **Human-approved source/native authority amendment delivered**; separately merged canonical receipt required before proof assignment. | Explicit authorization above selects smaller source/native membership plus independently authenticated compiler semantic identity; original rustc AttrId/attachment/consumed-item lineage/survival not claimed. No custom compiler; zero proof cases/contexts. |
-| H03a1hbip | Complete HBI/H03a1hbie and historical #4268/#4269/#4270/#4271/#4272 retained; **ready for separate proof only after approved amendment and separate receipt merge**. | Four exact IncludeSourceCorrespondenceTests/full class under amended source membership contract; complete inventories, original four Linux contexts and all semantic/binder/trait/token obligations required. Zero accepted cases/contexts; no HBC/adapter acceptance. |
+| H03a1hbipau | **Closed, human-approved source/native authority amendment**; #4273 candidate 869b23cb6ef4290fb8d9e0d54adfe56d4e9089e6 / merge 650982fe16d3c6b792ce0b52f9e950bb16501f7a and controlling separate receipt above. | Exact source/native membership plus independent compiler semantic identity; lost original rustc AttrId/attachment/consumed-item lineage/survival explicitly not claimed. No custom compiler, zero proof cases/contexts. |
+| H03a1hbip | Complete HBI/H03a1hbie and #4268/#4269/#4270/#4271/#4272 history retained; **ready for separately assigned proof after approved #4273 amendment and this separate receipt merge**. | Four exact IncludeSourceCorrespondenceTests/full class under amended source membership contract; complete inventories, original four Linux contexts and all semantic/binder/trait/token obligations required. Zero accepted cases/contexts; no HBC/adapter acceptance. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
