@@ -6,8 +6,8 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, 5, 7, 10 and prerequisites 7A/10A merged. Continue Items
-12, registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
+Status: Items 4, 4A, 5, 7, 10, 11, 12 and prerequisites 7A/10A/12A merged.
+Continue registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
 [#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
@@ -743,7 +743,7 @@ Additional closure criteria for the later items:
 - [x] Runtime byte values retain binary/text identity through round trips,
   including valid and invalid UTF-8, and encoding failures are classified
   correctly.
-- [ ] CLI and editor preserve the same provider diagnostic identity, severity,
+- [x] CLI and editor preserve the same provider diagnostic identity, severity,
   and source span, including unsupported interpolation types.
 
 ### Qualification and closer policy
@@ -1749,3 +1749,56 @@ Prove preservation of an actual PostgreSQL schema-related span and retain forged
 foreign-document and out-of-bounds negative checks. Rebuild all changed producer
 closures. No SQL-specific parsing or filesystem access belongs in the generic
 component host, and no arbitrary response document is authorized.
+
+## Item 12 / 12A — merged cloud diagnostic parity (2026-10-02)
+
+Merged [PR #4248](https://github.com/sifr-lang/sifr/pull/4248) as
+`fbf9d13ada4f6f5db9085a04f165d56b52ac6d63`; exact implementation candidate
+`d8001757981ce704288e25606a12d8875f72e083`, base
+`3bce4a7542b4942dca0343158dbc9cdc8f1fc8b7`, tree
+`707ab4dcd93b8b275b3b1f1b580b4018ab83f627`. CLI and editor retain provider
+codes, error/warning/note severity and physical primary/related spans through
+one renderer and package-neutral HIR carriers. Unsafe holes fail identically
+before dispatch; provider-unsupported closed SQLite list/tuple holes retain
+provider identity and exact hole locations. Valid positional and `template=`
+calls preserve compile-time erasure; native SQLite execution remains intact.
+
+The PostgreSQL response echoes its exact validated processor identity, and the
+MySQL adapter preserves native analyzer diagnostics. Generic context artifacts
+authorize only explicit checked catalog diagnostic ranges, with canonical shape,
+count, fingerprint and version checks. Template source maps retain their original
+document authority. Foreign/forged and out-of-range diagnostics remain rejected.
+All ten guest artifacts were rebuilt and pass current provenance validation.
+
+73 focused tests pass with no failures or ignored tests: 18 component-authority,
+20 renderer/editor/profile/frontend, 25 provider compiler tests over SQLite, three
+MySQL series and six PostgreSQL majors, plus all 10 actual application tests
+(864.72 seconds). The application matrix proves same-source CLI/editor syntax,
+name, unsafe/unsupported-hole and schema-related span parity for standalone and
+decorated calls, corrected-edit clearing, valid keyword/positional templates,
+actual database binding/typed-row execution and independent drift rejection.
+Final workspace Clippy, formatting, HIR/driver guards, file-size guard (4335 files)
+and all 31 provenance mutations pass. Immutable logs and hashes are in
+`/workspace/sql-item12-cloud-evidence/qualification-receipt.json`.
+
+[Exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4248#issuecomment-5951128490):
+`SATISFIED`, no blockers; response SHA-256
+`602278a6a5c05068b88c2b57aff0321162a19aaf82eefacdede857a8dfc4903d`.
+The first two review requests were rejected for modified required headings;
+they remain failed-format evidence. Only the third complete response is approval.
+Earlier authoring/setup failures, obsolete-artifact reads, interrupted matrices
+and the Clippy assigning-clones failure remain failed/incomplete evidence in
+`failure-history.md`; none is counted as final passing qualification.
+Non-blocking projection precision/provider ownership, warning relocation/editor
+omission and related suggestions are tracked in
+[#4249](https://github.com/sifr-lang/sifr/issues/4249).
+
+Pressure cleanup reclaimed only 69 inactive older session-owned compiler
+incremental directories, retaining the newest two per package; free space rose
+from 2.3 to 7.2 GiB. The receipt is
+`storage-cleanup-before-compiler-item.json`. No active/shared target was removed.
+
+No full merge gate or release qualification is claimed for this intermediate
+item. This record-only update requires documentation checks, without another
+Opus review or unchanged functional checks. Item 13 and final integration/Item 6
+closure remain pending.
