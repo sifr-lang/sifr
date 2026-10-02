@@ -1,0 +1,5 @@
+{
+  "extends": "merge",
+  "name": "cloud",
+  "description": "Full merge correctness coverage on shared VMs; performance has a separate explicit verdict."
+}

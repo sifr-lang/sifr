@@ -1,5 +1,54 @@
 # Performance Budgets
 
+## Shared cloud validation
+
+`scripts/run_all_tests.sh --profile cloud` inherits the complete live merge
+correctness inventory. Functional tests and safety deadlines remain blocking;
+host-dependent step timings are recorded separately. Missing or noisy performance
+evidence cannot suppress correctness execution. The final JSON report separates
+`functional_status`, `performance_status` and `qualified`. A correctness pass
+with inconclusive performance is usable, but is not a qualified performance pass.
+
+For phase qualification, use `--profile cloud -- --require-performance` and set
+`SIFR_CLOUD_PERFORMANCE_RECEIPT` to a complete candidate-bound cloud receipt.
+Existing create-pr/merge/nightly/release controlled-host behavior is unchanged.
+
+The prospective `shared-cloud-median-v1` contract runs exactly 32 adjacent
+baseline/candidate pairs per manifest case, in balanced pseudorandom AB/BA order
+fixed before samples. Both compilers are prepared from clean source, their
+executable/helper hashes and configuration are recorded, and the independent
+compiler reference must be merged. No optional stopping or selective combining
+of invocations is allowed. Every command is a fresh launch; query endpoints retain
+manifest warmups and internal sample counts but supply one median per process
+for inference. Preparation uses matched endpoint-specific build caches.
+
+Inference measures the median paired budget excess `candidate − T(baseline)`.
+`T` retains each existing budget formula and absolute median cap. Exact binomial
+order-statistic intervals allocate familywise alpha 0.05 across the complete
+median family. An upper bound at or below zero passes; a lower bound above zero
+is a regression; overlapping intervals are inconclusive. These guarantees are
+conditional on independent stationary pair summaries. Prospective rank-based
+temporal-drift, execution-order and serial-dependence permutation screens use
+4095 permutations and Bonferroni correction across three screens per case.
+Detected violations are inconclusive; passing screens does not prove independence.
+
+Existing individual editor/formatter latency ceilings and observed RSS/cache
+limits remain hard checks. p95 is descriptive and explicitly population-tail
+unqualified under this finite cloud contract. GNU Time CPU counters are
+supplementary; they do not replace latency or unavailable instruction counters.
+All required median decisions and observed hard checks must pass for cloud
+qualification. Any required inconclusive result blocks phase closure.
+
+Prepare each endpoint in its own clean checkout using
+`python3 verification/areas/performance/cloud_worker.py prepare --output <directory>`.
+Then run `cloud_benchmarks.py capture --baseline <baseline-receipt.json>
+--candidate <candidate-receipt.json> --reference-compiler-commit <merged-sha>
+--output <new-evidence-directory>`. Keep the same measured environment/affinity
+and use a functioning process adopter. Check the resulting immutable raw evidence
+with `cloud_benchmarks.py check --receipt <receipt.json>`. Receipts expire after
+24 hours and reject changed source, tooling, corpus, budgets, artifacts, counters
+or host configuration. Raw measurements and rejected outcomes remain preserved.
+
 frontend query architecture performance policy is local-first and versioned under `verification/areas/performance/`.
 
 ## Files

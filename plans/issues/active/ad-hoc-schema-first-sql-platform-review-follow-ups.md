@@ -2014,3 +2014,17 @@ The review response SHA-256 is
 `4e0795952e23f1a6afcba81626f9ac1d334d1de8c232f2e4e89bf1ea15f23a9c`;
 the response and failed regression log remain outside Git. Capture, candidate
 comparison, final delivery review and the terminal phase gate are still pending.
+
+## Item 14C — shared-cloud verification policy (2026-10-02)
+
+Prospectively registered in [#4267](https://github.com/sifr-lang/sifr/issues/4267) before implementation after the user explicitly requested support for ordinary shared VMs as part of this phase. This supersedes Item 14's low-CV capture requirement only for the explicit cloud contract. Physical controlled-host qualification remains unchanged. Historical failed captures remain failed.
+
+The cloud validation profile inherits all merge correctness selections, guards and toolchain checks. Performance admission and scheduling noise cannot suppress correctness. Its report records functional and performance verdicts independently; inconclusive performance is never a qualified pass.
+
+The versioned shared-cloud contract uses exactly 32 nearby baseline/candidate pairs per case, with balanced randomized AB/BA order fixed before measurement. Both endpoints are clean, source/configuration-bound, prepared equivalently, and the baseline compiler is an independently merged ancestor. No optional stopping, favorable retries or selective merging of attempts. Preserve all 65 cases, real process RSS/CPU, source identity, command exit/output/cache rules, deadlines and process-group disappearance.
+
+Inference qualifies the median paired budget excess C−T(B), where T is the existing case-specific regression formula, including its absolute median caps. Exact binomial order-statistic intervals use a familywise 5% error allocation over all declared median decisions. Stationary independent pair summaries are an explicit assumption, not guaranteed by random order. Prospective temporal-drift, execution-order and serial-dependence screens use multiplicity-adjusted permutation tests; detected violations are inconclusive, and passing screens does not prove the assumptions. Query samples within one process supply one inference summary, never extra independent pairs.
+
+All observed individual editor latencies retain existing absolute ceilings, and all observed candidate process RSS maxima meet derived RSS limits. p95 is descriptive and explicitly not population-tail-qualified under this bounded cloud contract. This is a new prospective acceptance contract, not a claim of equivalence to the old marginal-median/p95 contract. CPU time is supplementary and no PMU/instruction or steal-time correction claim is permitted.
+
+Acceptance requires meaningful negative/noise/regression/ambiguity/identity/timeout/cleanup/receipt tests, scoped Opus approval, all required paired median decisions and observed hard checks passing, and one full final cloud correctness gate plus whole-phase audit/review. Any required inconclusive decision blocks performance qualification and phase closure. Cloud correctness can be used normally while reporting that lack of qualification.
