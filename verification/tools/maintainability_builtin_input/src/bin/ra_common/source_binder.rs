@@ -106,11 +106,13 @@ pub fn capture<DB: HirDatabase>(
                     traits.push(json!({"range":interval(p.syntax()),"token":p.syntax().text().to_string(),"identity":format!("{}::{}",super::ra_types::module(db,t.module(db)),t.name(db).as_str()),"source_range":interval(s.value.syntax()),"name_range":s.value.name().map(|n|interval(n.syntax())),"name_token":s.value.name().map(|n|n.syntax().text().to_string()),"source_file":files.file_path(semantics.original_range(s.value.syntax()).file_id.file_id(db)).as_path().map(|p|p.as_str()),"roundtrip":true}));
                 }
             }
+            let intrinsic_cfg=function.module(db).krate(db).cfg(db).into_iter().filter(|a|**a==cfg::CfgAtom::Flag(hir::sym::true_)).map(|_|json!({"kind":"intrinsic-true","authority":"pinned-cfg::CfgOptions::default"})).collect::<Vec<_>>();
             let mut callee_cfg = function
                 .module(db)
                 .krate(db)
                 .cfg(db)
                 .into_iter()
+                .filter(|a| **a != cfg::CfgAtom::Flag(hir::sym::true_))
                 .map(|atom| match atom {
                     cfg::CfgAtom::Flag(key) => json!({"key":key.as_str(),"value":null}),
                     cfg::CfgAtom::KeyValue { key, value } => {
@@ -119,7 +121,7 @@ pub fn capture<DB: HirDatabase>(
                 })
                 .collect::<Vec<_>>();
             callee_cfg.sort_by_cached_key(|a| a.to_string());
-            calls.push(json!({"callee_cfg":callee_cfg,"caller_file":path.as_str(),"caller_range":interval(call.syntax()),"receiver":receiver_ty.display(db,krate.to_display_target(db)).to_string(),"contains_unknown":receiver_ty.contains_unknown(),"owner_file":original_path.as_str(),"owner_range":interval(source.value.syntax()),"parent_range":interval(impl_source.value.syntax()),"owner_tokens":super::declarations::source_tokens(source.value.syntax()),"owner_name":function.name(db).as_str(),"owner_module":super::ra_types::module(db,function.module(db)),"owner_roundtrip":true,"parent_roundtrip":true,"impl_trait":resolved_impl.trait_(db).map(|t|format!("{}::{}",super::ra_types::module(db,t.module(db)),t.name(db).as_str())),"parameters":params.iter().enumerate().map(|(ordinal,p)|generic(db,ordinal,*p)).collect::<Vec<_>>(),"inherited_parameters":inherited.iter().enumerate().map(|(ordinal,p)|generic(db,ordinal,*p)).collect::<Vec<_>>(),"lifetime_occurrences":lifetimes,"trait_constraints":traits}));
+            calls.push(json!({"callee_cfg":callee_cfg,"intrinsic_cfg":intrinsic_cfg,"caller_file":path.as_str(),"caller_range":interval(call.syntax()),"receiver":receiver_ty.display(db,krate.to_display_target(db)).to_string(),"contains_unknown":receiver_ty.contains_unknown(),"owner_file":original_path.as_str(),"owner_range":interval(source.value.syntax()),"parent_range":interval(impl_source.value.syntax()),"owner_tokens":super::declarations::source_tokens(source.value.syntax()),"owner_name":function.name(db).as_str(),"owner_module":super::ra_types::module(db,function.module(db)),"owner_roundtrip":true,"parent_roundtrip":true,"impl_trait":resolved_impl.trait_(db).map(|t|format!("{}::{}",super::ra_types::module(db,t.module(db)),t.name(db).as_str())),"parameters":params.iter().enumerate().map(|(ordinal,p)|generic(db,ordinal,*p)).collect::<Vec<_>>(),"inherited_parameters":inherited.iter().enumerate().map(|(ordinal,p)|generic(db,ordinal,*p)).collect::<Vec<_>>(),"lifetime_occurrences":lifetimes,"trait_constraints":traits}));
         }
     }
     anyhow::ensure!(

@@ -126,6 +126,17 @@ fn main() -> anyhow::Result<()> {
             .cloned()
             .collect::<Vec<_>>();
         disabled.push(cfg::CfgAtom::Flag(hir::sym::rust_analyzer));
+        disabled.extend(
+            cargo
+                .packages()
+                .filter(|p| cargo[*p].name == "syn")
+                .flat_map(|p| cargo[p].features.keys())
+                .map(|name| cfg::CfgAtom::KeyValue {
+                    key: hir::Symbol::intern("feature"),
+                    value: hir::Symbol::intern(name),
+                })
+                .filter(|atom| !dependency_cfg.contains(atom)),
+        );
         config
             .cfg_overrides
             .selective

@@ -68,7 +68,15 @@ Two preliminary named attempts remain failed/unaccepted, with zero executed case
 `feasibility-original-1.log` exposed ambiguous syn artifact selection, repaired by
 selecting the actual caller --extern artifact; `feasibility-original-final.log`
 exposed inconsistent directory exclusion handling, repaired with explicit original
-inventory dispositions. Their raw captures/logs remain outside Git. Source inspection
+inventory dispositions. Their raw captures/logs remain outside Git. A third preliminary attempt,
+`hbf-original.log` at `d9b1fd8c8bea912cb0aa7b9b55c063ac56e574a1`, stops before
+executing cases on an exact dependency cfg mismatch: four RA metadata feature
+atoms absent from the actual invocation, plus RA's intrinsic `true` atom. The
+pinned public CfgDiff now removes metadata features absent from actual compiler
+cfg; the pinned CfgOptions::default intrinsic boolean receives a separate explicit
+disposition, while all ordinary cfg atoms must match exactly. This attempt is
+failed/unaccepted and retains its raw originals and 283.912-second unittest log.
+Source inspection
 and partial joins are ingredients, rather than completed feasibility acceptance.
 Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,
 review and merge evidence is recorded separately after completion; broad gates are

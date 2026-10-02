@@ -136,6 +136,7 @@ def _project(originals, inputs, api):
     _validate_originals(originals, inputs, api)
     raw = originals["syn-raw.json"]
     ra = unique(originals["ra-source.json"]["calls"], "original RA callable", api)
+    require(ra["intrinsic_cfg"] == [{"kind":"intrinsic-true","authority":"pinned-cfg::CfgOptions::default"}], "unknown/missing RA intrinsic cfg disposition", api)
     require(ra["callee_cfg"] == raw["cfg"], "original dependency compiler/RA cfg-feature context conflict", api)
     require(ra["owner_roundtrip"] and ra["parent_roundtrip"] and not ra["contains_unknown"] and ra["impl_trait"] is None, "wrong original RA owner/trait/receiver", api)
     caller = unique([c for c in originals["caller-raw.json"]["calls"] if c["source"]["kind"] == "original" and [c["source"]["start"],c["source"]["end"]] == ra["caller_range"] and str(path_at(Path(inputs["root"]),c["source"]["file"])) == ra["caller_file"]], "original compiler callable occurrence", api)
