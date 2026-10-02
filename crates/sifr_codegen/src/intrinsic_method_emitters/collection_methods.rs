@@ -768,6 +768,9 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Option<crate::RustExpr> {
+        if Self::is_sql_query_expr(expr) {
+            return self.try_lower_sql_query_expr(expr);
+        }
         if let HirExpr::Index { object, index, ty } = expr
             && !crate::helpers::is_option_type(ty)
             && let Some(lowered) = self

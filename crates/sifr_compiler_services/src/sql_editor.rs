@@ -186,6 +186,9 @@ impl PreparedSqlProfiles {
     /// they are erased before Rust generation.
     pub fn install_compiler_externals(&self, defs: &mut sifr_lowering::ExternalDefs) {
         use sifr_type_system::{FunctionType, ParamConvention, Type};
+        defs.typed_method_processor = Some(std::sync::Arc::new(
+            crate::editor::sql_typed_methods::SqlTypedMethods::new(self.clone()),
+        ));
 
         let template_method = |name: &str| {
             (

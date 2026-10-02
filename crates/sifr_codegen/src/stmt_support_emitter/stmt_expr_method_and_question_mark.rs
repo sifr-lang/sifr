@@ -475,6 +475,16 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if Self::is_sql_query_expr(expr) {
+            return self
+                .try_lower_sql_query_expr(expr)
+                .map(Some)
+                .ok_or_else(|| {
+                    crate::CodegenError::new(
+                        "compiler-approved SQL expression could not be lowered",
+                    )
+                });
+        }
         if let HirExpr::Index {
             object, index, ty, ..
         } = expr

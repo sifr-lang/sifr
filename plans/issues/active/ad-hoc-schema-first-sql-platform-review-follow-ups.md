@@ -1499,3 +1499,110 @@ codegen/lowering suites, relevant guards/Clippy and scoped Opus review.
 No untracked skip, blanket authority fallback or lint waiver is authorized.
 This necessary integration repair is explicitly authorized by the user's
 instruction to finish without stopping on prerequisites.
+
+## Item 10 integration scope registration (2026-10-02)
+
+The cloud continuation owns the missing production integration mechanism: an
+outer compiler-service processor consumes normally lowered typed SQL arguments,
+returns a checked expression before function return inference/export collection,
+and retains the resulting nominal profile, row, cardinality and effect contract
+through code generation. Lowering owns expression typing and ownership; component
+transport and SQL semantics stay in compiler services and provider packages.
+The runtime implementation stays in the first-party SQLite runtime package.
+
+The initial public execution boundary is SQLite, core scalar codecs, verified
+pools, and explicitly bounded fetches. The end-to-end project uses an actual
+SQLite file with an empty application catalog and parameterized SELECT queries.
+`connect` must independently observe the empty catalog; populated schema profiles
+remain a targeted unsupported boundary until general provider-owned runtime
+introspection is connected. No literal fingerprint masquerades as introspection.
+Other providers and unsupported value codecs must fail with targeted diagnostics.
+This boundary qualifies the named ordinary-source integration criterion without
+claiming provider-wide connection support.
+
+Named acceptance: real component + project + native database execution for
+decorated and standalone queries across return/import; invalid standalone SQL;
+profile mismatch; conflicting decorated return identities; invalid row field and
+codec; catalog drift rejected at connection. Focused existing profile discovery,
+query contracts and SQLite runtime tests, formatting and common guards precede
+scoped Opus review. Final full qualification remains phase-end only.
+
+Item 10's real component qualification exposed two directly blocking producer
+boundaries: SQLite drops typed hole descriptors and scalar SELECT cardinality,
+and common component codec assembly confuses source/nullable value types with
+the database codec's canonical payload type. This bounded integration repair
+includes core scalar hole propagation, conservative no-FROM cardinality, and
+canonical codec payload assembly. It does not introduce a broader SQL resolver.
+Changed shared producer inputs require rebuilt component artifacts and refreshed
+provenance for their complete dependency closure before qualification.
+
+Native integration also requires inferred awaited Result initializers inside a
+try block to use the compiler's existing checked QuestionMark/error channel.
+Explicit Result annotations retain their envelope; outside-try inference is
+unchanged. Named non-SQL lowering cases must qualify this bounded parity repair.
+Typed method lowering records pending requests and reads prepared expressions
+only. The outer frontend resolves new requests and retries before return/export
+finalization, including adapter relowering. Cache keys include complete typed
+source expressions so edited SQL and dependent inferred types cannot reuse stale
+facts. SQLite result envelopes sort structural field descriptors canonically
+while preserving declaration order in provider result/decoder metadata.
+
+The strict coverage check found Item 7's existing `view_normalization` Cargo
+target missing from the classification registry. Register it as a merge test
+fixture alongside the new native application target, without changing test
+selection or weakening readiness. Preserve the initial failed check receipt.
+
+The schema-profile qualification guard still inspected only the old driver
+transport owner after shared preparation moved into compiler services. Update
+its inspected source closure to include that actual owner, retaining every
+required mechanism check and its negative mutations. This is a stale guard
+repair; actual profile preparation remains covered by the native component path.
+
+The native build exposed a required dependency-plan omission: the SQLite
+application runtime must be a first-party sysroot crate, with the existing
+bundled `libsqlite3-sys` patch selected for SQL execution. Native manifests
+resolve that patch from the sysroot; portable manifests retain revision-pinned
+Git dependencies and patches. A focused manifest test verifies both renderings.
+No released-toolchain or cross-target native execution qualification is claimed.
+
+Actual native compilation also qualified the statement expression authority:
+compiler-approved SQL constructors must enter the SQL emitter before ordinary
+constructor lowering. One canonical type-and-tag predicate now owns dispatch
+for statement expressions, registry operands and runtime support demand. A
+recognized SQL expression that cannot lower produces a compiler error rather
+than being rendered as an unrelated Rust constructor.
+
+The initial scoped review of `3e27111204ca57fc8c8e2dbb11037efc7f7d15ae`
+returned NOT SATISFIED. Its two in-scope regressions are corrected together:
+LIMIT/OFFSET clauses must be fully recognized literal bounds before tightening
+scalar cardinality, and existing Result bindings must retain their envelope on
+awaited reassignment inside try. Focused regressions cover parenthesized bounds,
+parameters, arithmetic expressions, both literal LIMIT syntaxes, explicit
+Result rebinding, and inferred success-value rebinding. The affected SQLite
+component is rebuilt with its complete source provenance. The initial rejection
+remains recorded in [PR #4242](https://github.com/sifr-lang/sifr/pull/4242#issuecomment-5948305345).
+Optional codegen diagnostic and retry-loop hardening belongs to
+[#4243](https://github.com/sifr-lang/sifr/issues/4243). The runtime fingerprint
+already passes the existing 64-character lowercase-hex check before observation
+SQL is constructed; no additional fingerprint-validation gap is established.
+
+## Item 10A — preserve independent pagination bounds (2026-10-02)
+
+The second Item 10 review of `5a216146e28ed8a1a4618f77dd68bdd3e2f0042e`
+resolved both original findings but returned NOT SATISFIED for a new regression
+in the replacement row-bound parser: it discards a fully literal LIMIT count
+when OFFSET is unknown. This rejects valid FROM queries such as `LIMIT 1 OFFSET
+?1`, `LIMIT ?1, 1`, and `LIMIT 1 OFFSET (1)` that previously retained an
+at-most-one contract. Item 10 stops at this new mechanism and is explicitly
+rescoped through this bounded prerequisite; the user's instruction to complete
+all remaining work authorizes continuing without another permission request.
+
+Item 10A owns independent, complete-expression parsing of count and offset.
+Preserve a known literal count even when its offset is unknown, set the combined
+known-bound flag only when both are known, and retain conservative scalar
+classification and expression-prefix rejection. Tests cover FROM pagination
+and the already fixed no-FROM cases. Rebuild and qualify the actual SQLite
+component and provenance, rerun affected native/compiler checks and guards, and
+give this prerequisite its own scoped initial review on its exact candidate.
+Reuse compatible Item 10 evidence for unchanged mechanisms; no third review of
+the original unchanged findings or broad intermediate gate is required.

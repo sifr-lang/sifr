@@ -275,14 +275,33 @@ pub fn execute_embedded_request(
     }
     let parser = parser_from_schema(&schema, series)?;
     let (source, document, start, end) = template_source(&request.parts)?;
-    let response =
-        SqliteCompilerComponent::new(parser).execute(SqliteComponentRequest::AnalyzeQuery {
-            schema: schema.clone(),
-            source,
-            sifr_document: document,
-            sifr_start: start,
-            sifr_end: end,
-        });
+    let inputs = request
+        .holes
+        .iter()
+        .map(|hole| {
+            let slot = hole
+                .index
+                .checked_add(1)
+                .ok_or_else(|| component_diagnostic("SQLite hole slot overflows"))?;
+            Ok((slot, scalar_hole_type(&hole.ty)?))
+        })
+        .collect::<Result<BTreeMap<_, _>, SqliteDiagnostic>>()?;
+    let analysis = SqliteAnalyzer::new(&parser, &schema)?
+        .with_parameter_inputs(inputs)?
+        .analyze_query(&source)
+        .map_err(|mut diagnostic| {
+            diagnostic
+                .related
+                .push(sifr_sql_contract::ProviderDiagnosticSpan {
+                    kind: "sifr".into(),
+                    document,
+                    start,
+                    end,
+                    label: "Sifr template source".into(),
+                });
+            diagnostic
+        })?;
+    let response = SqliteComponentResponse::Query(analysis);
     into_embedded_response(
         request.component.processor,
         request.plan_kind,
@@ -414,19 +433,21 @@ fn into_embedded_response(
     };
     let payload = serde_json::to_vec(&analysis)
         .map_err(|_| component_diagnostic("cannot serialize SQLite analysis"))?;
+    let mut canonical_fields = analysis
+        .result_fields
+        .iter()
+        .map(|field| RecordField {
+            name: field.name.clone(),
+            ty: closed_type(&field.sifr_type),
+        })
+        .collect::<Vec<_>>();
+    canonical_fields.sort_by(|left, right| left.name.cmp(&right.name));
     let result_type = if analysis.result_fields.is_empty() {
         ClosedType::None
     } else {
         ClosedType::List {
             item: Box::new(ClosedType::Record {
-                fields: analysis
-                    .result_fields
-                    .iter()
-                    .map(|field| RecordField {
-                        name: field.name.clone(),
-                        ty: closed_type(&field.sifr_type),
-                    })
-                    .collect(),
+                fields: canonical_fields,
             }),
         }
     };
@@ -491,8 +512,12 @@ fn template_source(parts: &[TemplatePart]) -> Result<(String, String, u32, u32),
                 source.push_str(text);
                 span
             }
-            TemplatePart::Hole { span, .. } => {
-                source.push('?');
+            TemplatePart::Hole { span, index } => {
+                use std::fmt::Write as _;
+                let slot = index
+                    .checked_add(1)
+                    .ok_or_else(|| component_diagnostic("SQLite hole slot overflows"))?;
+                let _ = write!(source, "?{slot}");
                 span
             }
         };
@@ -576,4 +601,46 @@ fn closed_type(ty: &SifrType) -> ClosedType {
 
 fn component_diagnostic(message: impl Into<String>) -> SqliteDiagnostic {
     SqliteDiagnostic::at_sql(SqliteDiagnosticCode::ProviderContract, message, 0, 1)
+}
+
+fn scalar_hole_type(
+    ty: &ClosedType,
+) -> Result<
+    (
+        sifr_sql_contract::DatabaseType,
+        sifr_sql_contract::Nullability,
+    ),
+    SqliteDiagnostic,
+> {
+    use sifr_sql_contract::{DatabaseType, IntegerSign, IntegerWidth, Nullability};
+    let database = match ty {
+        ClosedType::Bool => DatabaseType::Boolean,
+        ClosedType::Int => DatabaseType::Integer {
+            sign: IntegerSign::Signed,
+            width: IntegerWidth::Bits64,
+        },
+        ClosedType::Float => DatabaseType::Float64,
+        ClosedType::Str | ClosedType::None => DatabaseType::Text {
+            fixed: false,
+            max_characters: None,
+        },
+        ClosedType::Bytes => DatabaseType::Binary { max_bytes: None },
+        ClosedType::Optional { item } => {
+            let (database, _) = scalar_hole_type(item)?;
+            return Ok((database, Nullability::Nullable));
+        }
+        _ => {
+            return Err(component_diagnostic(
+                "SQLite typed hole requires a supported scalar codec",
+            ));
+        }
+    };
+    Ok((
+        database,
+        if matches!(ty, ClosedType::None) {
+            Nullability::Nullable
+        } else {
+            Nullability::NonNull
+        },
+    ))
 }

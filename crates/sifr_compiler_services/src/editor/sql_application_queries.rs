@@ -294,7 +294,7 @@ fn canonical_requirement_name(
     }
 }
 
-fn request_for_declaration(
+pub(super) fn request_for_declaration(
     module_name: &str,
     declaration: &sifr_frontend::SqlQueryDeclaration,
     profile: &sifr_sql_contract::RegisteredProfileModule,

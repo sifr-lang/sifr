@@ -518,3 +518,105 @@ fn claimed_sqlite_sql_values_keep_canonical_bind_contracts() {
         );
     }
 }
+
+#[test]
+fn typed_parameters_preserve_scalar_and_nullable_projection_contracts() {
+    use sifr_sql_contract::{DatabaseType, IntegerSign, IntegerWidth, Nullability, SifrType};
+    let parser = parser();
+    let schema = normalized_schema("");
+    let integer = DatabaseType::Integer {
+        sign: IntegerSign::Signed,
+        width: IntegerWidth::Bits64,
+    };
+    let text = DatabaseType::Text {
+        fixed: false,
+        max_characters: None,
+    };
+    let analyzer = SqliteAnalyzer::new(&parser, &schema)
+        .expect("catalog")
+        .with_parameter_inputs(BTreeMap::from([
+            (1, (integer, Nullability::NonNull)),
+            (2, (text, Nullability::Nullable)),
+        ]))
+        .expect("typed inputs");
+    let analysis = analyzer
+        .analyze_query("SELECT ?1 AS z, ?2 AS a")
+        .expect("typed projection");
+    assert_eq!(analysis.cardinality, Cardinality::EXACTLY_ONE);
+    assert_eq!(
+        analysis.result_fields[0].sifr_type,
+        SifrType::FixedInteger {
+            sign: IntegerSign::Signed,
+            width: IntegerWidth::Bits64
+        }
+    );
+    assert_eq!(
+        analysis.result_fields[1].sifr_type,
+        SifrType::Union {
+            members: BTreeSet::from([SifrType::Str, SifrType::None])
+        }
+    );
+    assert_eq!(analysis.parameters[0].nullability, Nullability::NonNull);
+    assert_eq!(analysis.parameters[1].nullability, Nullability::Nullable);
+}
+
+#[test]
+fn scalar_cardinality_keeps_filters_offsets_and_compound_queries_conservative() {
+    let parser = parser();
+    let schema = normalized_schema("");
+    let analyzer = SqliteAnalyzer::new(&parser, &schema).expect("catalog");
+    for (sql, expected) in [
+        ("SELECT 1 AS value", Cardinality::EXACTLY_ONE),
+        ("SELECT 1 AS value WHERE 0", Cardinality::AT_MOST_ONE),
+        ("SELECT 1 AS value LIMIT 0", Cardinality::ZERO),
+        ("SELECT 1 AS value LIMIT 1 OFFSET 1", Cardinality::ZERO),
+        ("SELECT 1 AS value LIMIT (0)", Cardinality::AT_MOST_ONE),
+        (
+            "SELECT 1 AS value LIMIT 1 OFFSET (1)",
+            Cardinality::AT_MOST_ONE,
+        ),
+        ("SELECT 1 AS value LIMIT ?1", Cardinality::AT_MOST_ONE),
+        (
+            "SELECT 1 AS value LIMIT 1 OFFSET ?1",
+            Cardinality::AT_MOST_ONE,
+        ),
+        ("SELECT 1 AS value LIMIT 1 - 1", Cardinality::AT_MOST_ONE),
+        (
+            "SELECT 1 AS value LIMIT 1 OFFSET 0 + 1",
+            Cardinality::AT_MOST_ONE,
+        ),
+        ("SELECT 1 AS value LIMIT 1, 1", Cardinality::ZERO),
+        ("SELECT 1 AS value LIMIT 0, 1", Cardinality::EXACTLY_ONE),
+        ("SELECT 1 AS value UNION ALL SELECT 2", Cardinality::MANY),
+    ] {
+        assert_eq!(
+            analyzer.analyze_query(sql).expect(sql).cardinality,
+            expected,
+            "{sql}"
+        );
+    }
+}
+
+#[test]
+fn pagination_preserves_independent_complete_literal_limits() {
+    let parser = parser();
+    let schema = normalized_schema("CREATE TABLE users(id INTEGER PRIMARY KEY) STRICT");
+    let analyzer = SqliteAnalyzer::new(&parser, &schema).expect("catalog");
+    for (bounds, expected) in [
+        ("LIMIT 1 OFFSET ?1", Cardinality::AT_MOST_ONE),
+        ("LIMIT ?1, 1", Cardinality::AT_MOST_ONE),
+        ("LIMIT 1 OFFSET (1)", Cardinality::AT_MOST_ONE),
+        ("LIMIT 1 OFFSET 0 + 1", Cardinality::AT_MOST_ONE),
+        ("LIMIT coalesce(?1, 0), 1", Cardinality::AT_MOST_ONE),
+        ("LIMIT 1 - 1 OFFSET ?1", Cardinality::MANY),
+        ("LIMIT ?1, 1 + 1", Cardinality::MANY),
+        ("LIMIT (1) OFFSET 0", Cardinality::MANY),
+    ] {
+        let sql = format!("SELECT id FROM users {bounds}");
+        assert_eq!(
+            analyzer.analyze_query(&sql).expect(&sql).cardinality,
+            expected,
+            "{sql}"
+        );
+    }
+}

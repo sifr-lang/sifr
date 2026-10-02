@@ -471,3 +471,41 @@ const fn effect_hir_name(effect: HirSqlEffectKind) -> &'static str {
 fn effect_hir_identity(effect: HirSqlEffectKind) -> String {
     format!("sifr.sql.effect.{}", effect_hir_name(effect))
 }
+
+/// Decode the canonical nominal cardinality retained in imported SQL signatures.
+/// This uses the same identity mapping as query binding, without session state.
+pub fn sql_cardinality_from_type(ty: &Type) -> Result<Cardinality, String> {
+    let Type::Class {
+        identity: Some(identity),
+        ..
+    } = ty.resolve_alias()
+    else {
+        return Err("SQL cardinality identity is missing".into());
+    };
+    if identity == "sifr.sql.cardinality.Empty" {
+        return Ok(Cardinality::Empty);
+    }
+    let tail = identity
+        .strip_prefix("sifr.sql.cardinality.Interval_")
+        .ok_or("SQL cardinality identity is invalid")?;
+    let (minimum, maximum) = tail
+        .split_once('_')
+        .ok_or("SQL cardinality identity is invalid")?;
+    let minimum = minimum
+        .parse::<u64>()
+        .map_err(|_| "SQL cardinality minimum is invalid")?;
+    let maximum = if maximum == "many" {
+        None
+    } else {
+        Some(
+            maximum
+                .parse::<u64>()
+                .map_err(|_| "SQL cardinality maximum is invalid")?,
+        )
+    };
+    let cardinality = Cardinality::new(minimum, maximum).map_err(|error| error.to_string())?;
+    if cardinality_identity(&cardinality) != *identity {
+        return Err("SQL cardinality identity is not canonical".into());
+    }
+    Ok(cardinality)
+}

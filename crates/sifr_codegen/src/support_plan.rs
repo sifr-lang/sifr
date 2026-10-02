@@ -150,6 +150,9 @@ impl ModuleSupportDemand {
 
     pub(crate) fn base_required_features(&self) -> HashSet<StdlibFeature> {
         let mut features = self.required_features.clone();
+        if self.runtime.sql {
+            features.insert(StdlibFeature::SqliteRuntime);
+        }
         if self.structural_interop_enabled {
             features.insert(StdlibFeature::StructuralRuntime);
         }
@@ -296,6 +299,9 @@ pub(crate) fn render_support(
     }
 
     let mut required_features = demand.required_features.clone();
+    if demand.runtime.sql {
+        required_features.insert(StdlibFeature::SqliteRuntime);
+    }
     add_import_features(&import_needs, &mut required_features);
     if demand.structural_interop_enabled {
         required_features.insert(StdlibFeature::StructuralRuntime);

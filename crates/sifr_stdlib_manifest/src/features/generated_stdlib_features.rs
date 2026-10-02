@@ -107,6 +107,7 @@ fn features_for_requirement(feature: StdlibFeature) -> &'static [&'static str] {
         | StdlibFeature::Ipc
         | StdlibFeature::SifrRuntime
         | StdlibFeature::StructuralRuntime
+        | StdlibFeature::SqliteRuntime
         | StdlibFeature::Tokio => &[],
     }
 }

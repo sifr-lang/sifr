@@ -9,6 +9,7 @@ use crate::parser::{
     RawStatement, SqliteParseError, SqliteParser, is_keyword, normalize_tokens, parse_error,
 };
 
+mod query_bounds;
 mod token_utils;
 
 use token_utils::{
@@ -135,8 +136,7 @@ fn lower_query(tokens: &[Token]) -> Result<SqliteQuery, SqliteParseError> {
         Some(Keyword::By),
         &[Keyword::Limit, Keyword::For, Keyword::Union],
     );
-    let (limit, comma_offset) = limit_clause(tokens);
-    let offset = numeric_after(tokens, Keyword::Offset).or(comma_offset);
+    let (limit, offset, row_bounds_known) = query_bounds::row_bounds(tokens);
     let common_tables = if select > 0 {
         tokens[1..select]
             .iter()
@@ -147,6 +147,9 @@ fn lower_query(tokens: &[Token]) -> Result<SqliteQuery, SqliteParseError> {
         Vec::new()
     };
     Ok(SqliteQuery {
+        compound: [Keyword::Union, Keyword::Intersect, Keyword::Except]
+            .iter()
+            .any(|keyword| find_top_level_keyword(tokens, *keyword, select + 1).is_some()),
         common_tables,
         projections,
         relations,
@@ -157,6 +160,7 @@ fn lower_query(tokens: &[Token]) -> Result<SqliteQuery, SqliteParseError> {
         order_by,
         limit,
         offset,
+        row_bounds_known,
         distinct,
         windowed: tokens
             .iter()
@@ -802,31 +806,4 @@ fn next_clause(tokens: &[Token], start: usize) -> Option<usize> {
     .into_iter()
     .filter_map(|keyword| find_top_level_keyword(tokens, keyword, start))
     .min()
-}
-
-fn numeric_after(tokens: &[Token], keyword: Keyword) -> Option<u64> {
-    let index = find_top_level_keyword(tokens, keyword, 0)?;
-    match tokens.get(index + 1) {
-        Some(Token::Number(value)) => value.parse().ok(),
-        _ => None,
-    }
-}
-
-fn limit_clause(tokens: &[Token]) -> (Option<u64>, Option<u64>) {
-    let Some(index) = find_keyword(tokens, Keyword::Limit, 0) else {
-        return (None, None);
-    };
-    let first = tokens.get(index + 1).and_then(|token| match token {
-        Token::Number(value) => value.parse().ok(),
-        _ => None,
-    });
-    if tokens.get(index + 2) == Some(&Token::Comma) {
-        let count = tokens.get(index + 3).and_then(|token| match token {
-            Token::Number(value) => value.parse().ok(),
-            _ => None,
-        });
-        (count, first)
-    } else {
-        (first, None)
-    }
 }

@@ -61,6 +61,7 @@ pub(crate) struct RuntimeSupportDemand {
     pub(crate) async_generator: bool,
     pub(crate) sync_generator: bool,
     pub(crate) template: bool,
+    pub(crate) sql: bool,
     pub(crate) task_sleep: bool,
     pub(crate) task_scope: bool,
     pub(crate) task_scope_offload: bool,
@@ -109,6 +110,7 @@ impl RuntimeSupportDemand {
         self.async_generator |= other.async_generator;
         self.sync_generator |= other.sync_generator;
         self.template |= other.template;
+        self.sql |= other.sql;
         self.task_sleep |= other.task_sleep;
         self.task_scope |= other.task_scope;
         self.task_scope_offload |= other.task_scope_offload;
@@ -219,6 +221,9 @@ impl RuntimeSupportDemand {
         self.record_type(expr.ty());
         match expr {
             HirExpr::TemplateString(_) => self.template = true,
+            HirExpr::ConstructorCall { .. } if crate::RustEmitter::is_sql_query_expr(expr) => {
+                self.sql = true;
+            }
             HirExpr::Call { func, .. } => match func.as_str() {
                 "__sifr_task_sleep" => self.task_sleep = true,
                 "__sifr_task_gather"

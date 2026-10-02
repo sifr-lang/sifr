@@ -843,3 +843,6 @@ fn provider_analysis_exposes_only_validated_common_semantics() {
     };
     assert!(nullable_custom.validate(&custom_registry).is_err());
 }
+
+#[path = "support/component_codec_tests.rs"]
+mod component_codec_tests;

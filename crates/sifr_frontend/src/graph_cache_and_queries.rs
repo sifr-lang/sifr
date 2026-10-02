@@ -16,7 +16,7 @@ use crate::source_maps::AuxiliarySourceState;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     ExternalDefs, HirModule, LoweringOptions, LoweringResult, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic, lower_module_with_externals_name_and_options,
+    RevealTypeDiagnostic,
 };
 use sifr_python_ast::{Stmt, Suite};
 use sifr_syntax::ParsedModule;
@@ -26,6 +26,8 @@ use std::hash::Hash;
 use std::path::Path;
 use std::sync::Arc;
 
+mod typed_methods;
+use typed_methods::lower_with_prepared_methods;
 mod external_overlay;
 pub use external_overlay::prepare_external_defs;
 mod loaders;
@@ -321,12 +323,7 @@ pub fn compile_module_hir_with_source_and_options(
     // constructor shape. Later adapter stages consume this same representation.
     let class_declarations =
         crate::class_declarations::ClassDeclarationSet::collect(module_name, stmts);
-    match lower_module_with_externals_name_and_options(
-        module_name,
-        stmts,
-        external_defs,
-        lowering_options.clone(),
-    ) {
+    match lower_with_prepared_methods(module_name, stmts, external_defs, &lowering_options) {
         Ok(mut result) => {
             if let Err(errors) =
                 crate::typed_descriptors::collect(module_name, stmts, &mut result, external_defs)
@@ -402,11 +399,11 @@ pub fn compile_module_hir_with_source_and_options(
                     .specialization_requests
                     .clone_from(&specialization_requests);
                 let applied_selections = result.class_adapter_selections.clone();
-                result = match lower_module_with_externals_name_and_options(
+                result = match lower_with_prepared_methods(
                     module_name,
                     stmts,
                     external_defs,
-                    final_options,
+                    &final_options,
                 ) {
                     Ok(mut finalized) => {
                         finalized.declaration_descriptors = descriptors;

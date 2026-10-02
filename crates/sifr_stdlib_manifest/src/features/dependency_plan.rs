@@ -11,6 +11,7 @@ use super::runtime_features::RuntimeFeatures;
 pub enum SysrootCrate {
     SifrRuntime,
     SifrStdlib,
+    SqliteRuntime,
 }
 
 impl SysrootCrate {
@@ -19,6 +20,7 @@ impl SysrootCrate {
         match self {
             Self::SifrRuntime => "sifr_runtime",
             Self::SifrStdlib => "sifr_stdlib",
+            Self::SqliteRuntime => "sifr_sql_sqlite_runtime",
         }
     }
 
@@ -27,6 +29,7 @@ impl SysrootCrate {
         match self {
             Self::SifrRuntime => "sifr_runtime",
             Self::SifrStdlib => "sifr_stdlib",
+            Self::SqliteRuntime => "sifr_sql_sqlite_runtime",
         }
     }
 }
@@ -154,13 +157,20 @@ pub fn sysroot_dependency_plan_with_sysroot(
         .collect::<BTreeSet<_>>();
     let runtime_required = runtime_features.requires_runtime_crate()
         || required_features.contains(&StdlibFeature::SifrRuntime);
-    let crates = sysroot_crate_dependencies(
+    let mut crates = sysroot_crate_dependencies(
         sysroot,
         runtime_required,
         runtime_features,
         &stdlib_features,
     );
     let direct_dependencies = retained_direct_dependencies(required_features);
+    if required_features.contains(&StdlibFeature::SqliteRuntime) {
+        crates.push(SysrootCrateDependency {
+            krate: SysrootCrate::SqliteRuntime,
+            path: sysroot.root.join("crates/sifr_sql_sqlite_runtime"),
+            features: BTreeSet::new(),
+        });
+    }
     let cache_fingerprint =
         cache_fingerprint(sysroot, &crates, &direct_dependencies, cargo_vendor_mode);
 

@@ -33,6 +33,7 @@ pub enum SqliteStatementKind {
 #[serde(deny_unknown_fields)]
 pub struct SqliteQuery {
     pub common_tables: Vec<String>,
+    pub compound: bool,
     pub projections: Vec<SqliteProjection>,
     pub relations: Vec<Vec<String>>,
     pub joins: Vec<Vec<String>>,
@@ -42,6 +43,8 @@ pub struct SqliteQuery {
     pub order_by: Vec<SqliteExpression>,
     pub limit: Option<u64>,
     pub offset: Option<u64>,
+    /// Every LIMIT/OFFSET expression was completely parsed as a literal bound.
+    pub row_bounds_known: bool,
     pub distinct: bool,
     pub windowed: bool,
     pub for_update: bool,
