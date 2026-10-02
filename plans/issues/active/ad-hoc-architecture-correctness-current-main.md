@@ -10,6 +10,84 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbipa original attribute authority blocker delivery receipt (2026-10-02)
+
+**Current controlling state: H03a1hbipa's documentation adjudication is delivered
+and stops needs-new-scope. H03a1hbip is not ready for implementation; H03a1hbc and
+full H03a1 remain dependency-blocked.** [Canonical blocker PR #4269](https://github.com/sifr-lang/sifr/pull/4269)
+merged as `9c16b21251ef28fca8c001b2a92dcba0091d2bf5` from exact documentation
+candidate `27c4535f36cf5db61f508858ac8ce901431732c1`, on base
+`d7341d10ea09c06ba7af94232bbce131e7e65a97`. The LAN owner fetched the actual
+merge and verified its complete tree equals the validated/self-reviewed candidate.
+This separate receipt changes only the canonical Markdown/current scope row;
+all registered earlier sections and original facts reconstruct byte-for-byte.
+
+The read-only audit addresses both exact pre-consumption original identity/
+attachment and compiler-owned transformation authority. The inspected unchanged
+root/module/include parser, AttrId allocation, resolver query/output, transient
+derive, cfg trace and public expansion provenance interfaces do not evidence the
+complete required original AttrId/style/order/attachment and final-owner transition
+inventory for consumed include-loaded derives. Source inspection proves no
+capability and asserts no universal pinned-API impossibility. Neither source text,
+empty expanded/lowered attrs, unchanged declaration spans, generated output nor
+macro callsite/module provenance is accepted as that ledger.
+
+The precise next job remains a separately owned compiler-interface/authority
+scope decision: identify an actually supported complete unchanged public route,
+or separately authorize a concrete authority boundary. No implementation is
+ready or newly authorized by this receipt. Every original compiler declaration
+span, production/left-right include/ScalarCallRewriter anchor, pin, owner/context/
+fixture, independent inventory, semantic/binder/trait obligation and HBI/H03a1hbie
+source-envelope contract remains mandatory. The four exact HBIP cases and full
+class, original four Linux contexts and affected HBF/builtin regressions remain
+prospective and unexecuted: **zero named proof cases, zero assertions, zero accepted
+contexts of four; semantic_export false**. HBC's five cases, full fixture union,
+review/merge/receipt still precede full adapter work; HBIP complete proof/receipt
+still precede HBC. All accepted/failed historical records and separate SQL/
+Windows/metrics/V01/Q01 ownership remain unchanged.
+
+Exact scope candidate validation passed documentation structure and registered
+mutation harness, 900-line guard for 4,338 maintained files, twenty-two exact
+pinned source-link/range claims covering sixteen full official byte-identical
+compiler/RA files, original stop artifact reauthentication, byte-exact historical
+reconstruction, canonical-only scope, whitespace and clean-tree checks. Scoped
+self-review is **SATISFIED**, with no blocking findings. Durable evidence is on
+`yaser5@192.168.1.134` at
+`/data/sifr-h03a1hbip-original-attribute-scope-evidence-20261002/`:
+
+| Exact scope artifact | SHA-256 |
+| --- | --- |
+| `source-audit.json` | `e02a0aaf1980311d90238ad6b1a44cc06f379b82ee54d080d0ca300bd594986f` |
+| `scope-final/validation-summary.json` | `f0642b9c52a1acbeb3dde19653933466bb00c900db62b79fd8042dd08f7b0e10` |
+| `candidates/27c4535f36cf5db61f508858ac8ce901431732c1/self-review.json` | `53ababd703928bd89470f907da8f8385cd149eb7c8f7b2db28c6d1ceb6084019` |
+| `scope.bundle` | `30ba69557c8749ca67d2fcb6f14674854d3bac8b8d3355b3106a116bd2e25263` |
+
+The initial missing editor/vscode documentation-input failure remains retained.
+Owned private checkouts at exact unchanged gitlinks
+`d6fde7111800349428f63db05a34ca9a32acd576` /
+`5930dc1a0ccc52d9f382553156e98294a95420d9` supplied those inputs. #4268 report,
+terminal handoff and 223-artifact manifest remain byte-identical and authenticated;
+its original production controls, 16,351-input authentication, consumed-attr
+observations and all unmerged diagnostic snapshots remain historical development
+evidence. No historical changed-input test result becomes current proof.
+
+Owned scope/receipt branches are
+`codex/h03a1hbip-original-attribute-scope-20261002` and
+`codex/h03a1hbip-original-attribute-scope-receipt-20261002`, in the exclusively
+owned `/data/sifr-h03a1hbip-original-attribute-scope-20261002` worktree. Publication
+uses owned bundles/private Mac bare relay and existing HTTPS credential helper,
+without touching the shared Mac index. This receipt uses relevant documentation/
+mutation, file-size, source/history/scope/whitespace/clean-tree checks and scoped
+self-review only, with candidate-keyed durable records outside Git. No compiler/
+Cargo/RA capability experiment, build, Sifr test/gate, target creation/cleanup,
+code/manifest/lock/pin/producer change, external review or next batch occurred.
+
+**Next action: distinct compiler-interface/authority scope decision only. Blocker:
+complete exact original consumed-attribute attachment or transformation authority
+and final-owner transition inventory is not evidenced by the inspected unchanged
+routes.** This owner is terminal. HBIP remains needs-new-scope; no HBC or full
+adapter assignment is unlocked.
+
 ## H03a1hbipa original pre-consumption attribute scope blocker (2026-10-02)
 
 **Current controlling state: H03a1hbipa stops needs-new-scope;
@@ -4801,7 +4879,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
 | H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
-| H03a1hbipa | #4268 and all accepted HBI/H03a1hbie/HBF/HBS retained; **needs-new-scope**, canonical-only original-attribute authority adjudication stopped. | Inspected unchanged root/module/include/query/derive/cfg/provenance interfaces do not evidence a complete raw-attribute attachment/transition ledger. Separate authority decision required; no implementation is ready. |
+| H03a1hbipa | #4268 and all accepted HBI/H03a1hbie/HBF/HBS retained; **needs-new-scope**, scope blocker #4269 at `9c16b21251ef28fca8c001b2a92dcba0091d2bf5` and separate receipt above; no complete mechanism selected. | Inspected unchanged root/module/include/query/derive/cfg/provenance interfaces do not evidence a complete raw-attribute attachment/transition ledger. Separate authority decision required; no implementation is ready. |
 | H03a1hbip | Complete H03a1hbie #4265/#4266 retained; **needs-new-scope**, #4268 consumed-attribute stop and H03a1hbipa bounded interface audit retained; zero accepted cases/contexts. | Exact original pre-consumption attachment or transformation authority requires a distinct supported interface scope decision; no proof readiness, partial envelope, HBC or adapter acceptance. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
