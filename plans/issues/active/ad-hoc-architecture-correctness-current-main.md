@@ -10,6 +10,264 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbipau proposed compiler attribute authority decision (2026-10-02)
+
+**Current controlling state: the distinct documentation decision is delivered as
+PROPOSED, REQUIRES USER AUTHORIZATION. No complete unchanged route is evidenced;
+no changed compiler boundary is authorized or proved. Ready implementation IDs:
+none. H03a1hbip remains needs-new-scope; H03a1hbc and full H03a1 remain blocked.**
+This decision starts from actual fetched main
+`88b490e4698503179f7af2c4e6ac6a568222a093`, including #4269's exact candidate
+`27c4535f36cf5db61f508858ac8ce901431732c1`/merge
+`9c16b21251ef28fca8c001b2a92dcba0091d2bf5` and #4270's exact candidate
+`450f9c9e31a62797130c686d30e56d4cdbf8327e`/merge above. Both complete merge trees
+match their validated candidates. H03a1hbipau names this documentation decision
+only; it reserves no ready implementation item. All earlier receipts, failures,
+source facts and obligations below remain historical bytes, not amended proof.
+
+### Supported route decision and material alternatives
+
+The complete H03a1hbipa audit and controlling receipt were read, including both
+pre-consumption identity and transformation authority. No genuinely distinct,
+supported unchanged route supplying the missing complete event/object and final
+owner transition inventory is evidenced by those sources or the retained inputs.
+Recombining parse callbacks, early lints, query outputs, AttrId allocation,
+DeriveResolution, cfg traces, expansion provenance or RA origins supplies no new
+such event. This decision does not repeat that audit or assert universal API
+impossibility. An additional open-ended public-route audit is not the next job.
+
+| Material decision | Exact guarantees and cost | Disposition |
+| --- | --- | --- |
+| Retain the complete current authority contract; add a compiler-owned ledger | Preserve actual original rustc AttrId, raw kind/style/order/tokens/attachment and compiler-owned item/attribute transitions to final semantic owners. Requires a separate instrumented rustc build, matching components/helper ABI, distribution, security updates and per-pin regression maintenance. | The bounded design below is the smallest defensible full-contract boundary identified, but feasibility and user authorization remain prerequisites. |
+| Explicitly amend attribute authority to independently authenticated physical and native source membership | Retain exact original bytes/normalization, complete physical/native direct attribute membership and token/subnode order per actual include context, RA source/to_def owner/parent/trait roundtrips, and actual final compiler NodeId/LocalDefId/HIR owner/parent/trait/binder semantics. Original and generated classifications and empty expanded/lowered observations remain distinct. Attribute attachment would be a physical/native syntax claim only: relinquish original rustc AttrId, compiler-original attachment, exhaustive consumed-attribute lineage and compiler-certified survival from pre-consumption item to final owner. A source join cannot be described as any of those lost claims. | Materially simpler: existing helper/RA graph, no maintained compiler build. This is a deliberate contract amendment requiring user authorization and separate scope; it does not meet the present contract or prove the remaining ScalarCallRewriter/token/owner relation. It is not an approved workaround or ready HBIP route. |
+| Upstream a ledger interface before using it | Same full-contract semantics if the complete proposed interface is accepted; avoids Sifr distributing a permanent local compiler variant after adoption. Upstream acceptance, release timing, exact new pin and component delivery are externally owned and unknown. | No upstream request is sent. This cannot unblock the current pinned proof and would require a separate explicit pin decision. |
+
+**Recommendation:** if the complete original compiler-attachment and transformation
+claims remain required, authorize only a separately owned, finite instrumented-ledger
+prerequisite using the design below. Do not authorize HBIP, HBC or the full adapter
+at the same time. The ledger is recommended because it is the smallest evidenced
+location that can observe the required loss, not because a compiler fork is cheap.
+For a maintainability tool, the build/distribution/upkeep burden is substantial;
+if the user prefers source-membership claims, the explicit smaller amendment above
+is the proportionate alternative, with the listed claims deliberately relinquished.
+No proposal is selected by implication and this owner cannot approve either.
+
+### One concrete full-contract boundary: compiler-owned session ledger
+
+The proposed owner is a separately authorized compiler-interface maintainer,
+responsible for an instrumented derivative of the original upstream source pin,
+not the Sifr serializer or RA producer. The responsibility spans rustc_ast/
+rustc_parse/rustc_session, rustc_expand/rustc_builtin_macros, rustc_resolve,
+rustc_ast_lowering and a read-only rustc_interface export. Proposed names below
+are design names, not claims of an existing public API. The existing Sifr helper
+would be a later consumer, separately scoped only after the prerequisite qualifies.
+
+Add a session-owned append-only `OriginalAttributeLedgerV1` and compiler-carried
+`SourceObjectId`/`AstOccurrenceId` metadata on every attribute-bearing AST object
+and every declaration/subnode needed for ownership. Include crate, ordinary/
+associated/foreign items, fields, variants, generic/ordinary parameters, statements,
+expressions and other AstFragment attribute targets; nested owners and inner attrs
+are not skipped. The ID is allocated by the compiler when it constructs the object,
+before transformations, and is separate from `DUMMY_NODE_ID`, AttrId, addresses,
+spans and names. Preserve an immutable source-object identity; every actual AST
+clone receives a new occurrence identity and an explicit source-occurrence edge.
+Moves retain the occurrence. Constructor/clone metadata must not enter semantic
+stable hashing, source spans, macro-visible tokens or output code.
+
+Use compiler-owned trace metadata with an audited Clone implementation and
+explicit construction provenance, plus instrumented attribute-list mutation and
+node handoffs. An AST clone cannot silently copy an occurrence identity. A parser
+or compiler constructor cannot introduce an unregistered occurrence. Before/after
+snapshots at the typed mutation/handoff boundaries enumerate full input/output
+occurrence and attached-attribute multisets; IDs carried by the actual objects
+establish edges. No address lifetime, spelling, source interval or reconstructed
+parser object is used as identity. Constructor, clone, mutation, replacement,
+removal and finalization responsibilities must all be covered before acceptance;
+adding one callback to collect_invocations alone is insufficient.
+
+Keep independent immutable inventories of (a) every original parsed object and
+its raw direct attributes, (b) all constructed/clone occurrences and transformations,
+and (c) final AST/resolver/HIR owners. Enumerate before filtering and retain explicit
+empty inventories and unavailable/failed dispositions. An original attribute record
+contains actual AttrId, AttrKind including doc-comment kind/payload, AttrStyle,
+original direct-list ordinal, exact owning source object/occurrence, original parent,
+span with hygiene/expansion context, raw SourceFile identity/bytes/hash and official
+raw-to-normalized offset map, attribute path/argument/delimiter tokens/subnodes,
+original token availability and declaration tokens/span/kind separately. The item's
+outer attributes are separate from its declaration token stream. Observed token
+absence is never converted to an empty original attribute inventory.
+
+The proposed parser boundary retains the actual input token stream unconditionally
+for tracked source constructs at first parse/attachment, before any transformation;
+this is new instrumentation, not a claim that current `ForceCollect::No` supplies
+those tokens. Capture doc-comment desugaring and interpolated nonterminal attachment
+as explicit compiler transformations. Bind raw source bytes and parser token spans;
+never pretty-print, reparse, manufacture an AST owner or infer original tokens from
+later output. If a required original input cannot be retained exactly, the prerequisite
+stops. Macro output tokens and compiler-synthesized objects carry generated/input
+provenance and explicit availability, not a fabricated physical original.
+
+### Exact proposed events and source-backed compiler seams
+
+These official source locations identify where to instrument; they are not a
+completeness proof for a patch that does not exist. All listed originals are read-only
+and byte-identical to official upstream files at
+`48a229ceaefd4985c50990b14116b6d856af0985`.
+
+| Proposed compiler-stage event and owning object | Exact seam; required ledger authority |
+| --- | --- |
+| `ParsedObjectAttached` on the completed actual AST object and direct attribute vector | [parse_item construction/token collection](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_parse/src/parser/item.rs#L170-L196) constructs Item with DUMMY_NODE_ID. Instrument parser completion after token collection and attachment, including interpolated-node attribute prepend, and corresponding crate/associated/foreign/other target constructors. Capture before root preconfiguration, not merely the later driver callback. [Attribute/NormalAttr](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_ast/src/ast.rs#L3421-L3448) supplies actual identity/kind/style/span and optional attribute tokens. |
+| `ModuleLoaded` and `IncludeParsed` with actual input invocation and parsed output objects | [out-of-line module loading](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L1385-L1426) adds inner attrs and may reconfigure; capture the preexisting and added lists separately and retain attachment transitions. [include make_items](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/source_util.rs#L156-L192) parses fresh items: each receives the originating actual include invocation/expansion/module context before collection. Reused left/right source gets distinct occurrences and context edges. Root, module and include completion are all covered. |
+| `FragmentEntered`/`InvocationSelected`/`FragmentReturned` with actual AstFragment and InvocationKind | [fully_expand_fragment](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L473-L587) receives each fragment and queues derived invocations; [collect_invocations](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L628-L667) visits it and hands placeholders to resolver. Observe before mutation and after expansion result construction for root, include/bang, attribute/procedural, derive and compiler-generated fragments. Bind complete ordered input/output sets, actual expansion IDs/parents/module and invocation identity, retries/status and placeholder substitution; retries do not duplicate successful facts. |
+| `AttributeConsumed`, `AttributeReplaced`, `ObjectRemoved` on the actual attached list/object | [take_first_attr](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L2200-L2246) removes the invocation attribute before final NodeId assignment: record its original identity, occurrence, original/current ordinal and complete attachment before remove. [cfg collector paths](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L2305-L2393) remove nodes, insert traces or expand attributes. Record actual predicate/result/reason and full replacement sets; a removed object terminates as removed with no invented final owner. |
+| `CfgConfigured` and `TokensTransformed` on StripUnconfigured inputs/outputs | [root pre_configure_attrs and attr_into_trace](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/config.rs#L130-L158), [configure/token configuration](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/config.rs#L169-L192) and [cfg_attr clone/replacement processing](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/config.rs#L240-L310) must preserve the immutable before-image, recursive replacement relations, generated AttrIds and clone identities. Trace tokens are transformed records, never substituted for raw originals. |
+| `DeriveInputCloned`/`DeriveReturned` with actual Annotatable and each DeriveResolution | [builtin derive](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_builtin_macros/src/derive.rs#L37-L104) configures/clones item for resolved paths and returns the original. Link the consumed original derive AttrId to this invocation, actual resolved trait path/extension and clone occurrences; carry these relations when [queued derive invocations consume the resolutions](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L473-L587). Record original pass-through and generated outputs separately. Procedural token input/output and builtin generated AST are explicit invocation transformations, not assumed identity-preserving copies. |
+| `NodeAssigned`/`DefinitionCreated` on actual surviving occurrence | [assign_id](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_expand/src/expand.rs#L1234-L1248) allocates resolver NodeId; instrument it and visit_id/other actual assignment paths. [Resolver::create_def](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_resolve/src/lib.rs#L1668-L1720) supplies actual parent, kind, expansion, NodeId and LocalDefId. Preserve owner creation and [PerOwnerResolverData/ResolverAstLowering](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/ty/mod.rs#L211-L265) owner maps too: create_def alone does not insert every owner bridge. Synthesized definitions without AST have explicit generated dispositions. |
+| `HirOwnerEntered`/`NodeLowered`/`HirSyntheticCreated` and final `AnalysisSealed` | [with_hir_id_owner](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_ast_lowering/src/lib.rs#L788-L848) identifies actual NodeId -> HIR owner LocalDefId, including owner ItemLocalId zero. [lower_node_id and next_id](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_ast_lowering/src/lib.rs#L920-L959) create actual HirId or generated IDs; export the mapping in release builds, not the debug-only map. After-analysis joins these actual IDs to independently enumerated owners/parents, stable crate/DefPathHash, resolved traits, declarations/uses/binders/index/depth and constraints. Missing required semantic relation stops; this ledger does not repair erased named-region authority owned elsewhere. |
+
+Events have a versioned closed variant set and capture/stage/status/context identity,
+sequence, complete typed input/output sets and explicit terminal dispositions. Preserve,
+clone, consume, replace, remove, synthesize and assign are distinct edges. Each attr
+occurrence belongs to exactly one owner occurrence/list position at each snapshot;
+original AttrIds remain original even when copies retain them, so occurrence identity
+is additional, not a replacement AttrId. Original owner descendants and direct versus
+nested/inner attachments are explicit. A final owner cannot acquire an original
+attribute simply because tokens or spans match.
+
+An opaque procedural macro replacement records the exact complete input/output
+boundary and invocation, not a guessed per-output survival map. Only a compiler-owned
+pass-through/clone edge supports identity preservation; a replacement has separate
+outputs. If the required contract needs finer original-to-output lineage than that
+compiler boundary establishes, mark it unavailable and stop. Instrumentation observes
+compiler operations; it cannot recover an opaque macro's private semantic intentions.
+This bounds the proposal without promising universal transformation support.
+
+### Why consumed derives are retained, and how authority is consumed
+
+The raw include parser creates an attributed source occurrence before collection.
+The ledger holds `#[derive(Default)]` or `#[derive(Debug)]` with original AttrId,
+kind/style/ordinal/tokens/span and its actual original attachment. take_first_attr
+then records consumption against that occurrence. Builtin derive records its original
+pass-through occurrence and configured clone inputs; final ID assignment and actual
+resolver/HIR bridges bind the surviving original occurrence to its final owner.
+The after-expansion/analysis `attrs=[]` observations remain true transformed facts.
+Their emptiness no longer has to stand in for the absent raw inventory. This is the
+precise new authority provided by the proposed boundary, not a source-span deduction.
+
+All historical anchors remain mandatory: production SifrIntBindingCollector original
+declaration `19..81`, physical STRUCT `0..81`, direct derive `0..18`; both distinct
+IncludedBinder left/right declarations `17..68` and direct Debug attrs; original
+ScalarCallRewriter `0..307`/name `7..25` with unavailable expanded declaration tokens;
+IncludedBinder impl aggregate None and original/native origins. Historical IDs/counts
+are never fresh constants. Token retention must actually resolve the required original
+input availability or stop; no new callback certifies a previously missing token.
+
+Expose immutable sealed compiler-owned snapshots after expansion and after analysis
+through a proposed read-only interface, without changing existing resolver query
+ownership/steal behavior. Root/helper callers retain original parse/attribute,
+transformation and final-owner inventories independently of serialized projections.
+Close each event's input/output partition and each original's terminal path before
+sealing; compare complete final AST/resolver/HIR inventories, not selected owners.
+Consumers/cache/repeat/publication authenticate intact originals and complete bound
+inputs before the closed schema relation. Reject missing/duplicate/order/style/
+attachment/clone/transition/owner/context mutations even when every projection is
+redigested; replaced originals, unknown variants, unsealed analysis or compiler failure
+publish no partial accepted result. RA's independent source/native token/subnode/attr
+relation and every semantic/binder/trait obligation remain separately required.
+
+### Toolchain ownership, distribution and finite prerequisite
+
+Original pins remain Rust 1.98.1 source commit
+`48a229ceaefd4985c50990b14116b6d856af0985`, Cargo
+`797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`, RA
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`/tree
+`0081a116ddfb9f5c3673eba97df030bea907106f`, API 6. The instrumented compiler is
+not the official executable at that pin. A later authorized owner must supply a
+separate patch commit/hash, ledger ABI/schema version, reproducible build recipe,
+bootstrap compiler/LLVM/host/target/config identities, executable and rustc_driver/
+rustc-dev/runtime/sysroot/component digests and distribution manifest. No build
+identity is invented here, no original pin is silently substituted/upgraded, and
+existing manifests/locks/producer graph remain unchanged by this decision.
+
+Build the helper against matching instrumented components and bind that new helper
+identity explicitly. Keep official original Cargo controls with normal artifacts and
+actual top-level environment/RUSTC_WRAPPER as independent originals; instrumented
+replays are labelled changed-compiler captures with their actual invocation/input
+bindings, never called unchanged official controls. Qualify source/semantic parity
+under the same locked original graphs and complete inputs. Custom rustc requires a
+separate distribution/update owner, reproducible artifacts, ABI pairing and fresh
+validation after every patch/upstream change. It creates storage/CI/recovery and
+maintenance costs even when Cargo/RA pins stay fixed. No packaging, deployment,
+compiler build or analyzed invocation is authorized by this documentation merge.
+
+**Smallest finite validation prerequisite after explicit authorization:** one
+separately scoped compiler-ledger capability candidate, not an adapter redesign.
+First close constructor/Clone/attribute mutation/handoff coverage for the tracked
+AST universe and all event variants; compare independent before/after inventories.
+Use one bounded fixture union covering root, out-of-line module, repeated left/right
+include, bang/procedural output, builtin/procedural derive, multi-derive clones,
+cfg false removal/cfg_attr replacements, nested/inner/doc/interpolated attributes,
+original/generated empty lists and actual lowered owner/subnode links. Positive proof
+must observe original consumed derive attributes and each exact final owner path;
+negatives must reject coordinated omissions/swaps/clones/replacements/redigests and
+forged/replaced originals at every consumer/publication boundary. Unsupported required
+shape or unknown transition stops at that finite boundary, with no audit retry cycle.
+
+Then qualify all four original Linux production/test contexts and unchanged source/
+semantic parity using the exact four H03a1hbie Cargo controls, complete independent
+inventories, original fixtures and production anchors. The existing four exact
+IncludeSourceCorrespondenceTests individually and full class, original thirteen-case
+builtin/extension/inventory union and affected HBF/builtin selections remain mandatory
+for later HBIP; a ledger fixture pass cannot substitute for them. Keep all original
+source/native token/subnode/attr, resolved owner/parent/trait/binder/use/index/depth,
+context union, freshness, repeated-path, input-authentication and negative obligations.
+This document invents no new ready named proof class or passed case.
+
+Resource/input/runner requirements remain HBI/H03a1hbie's: authenticated compatible
+warm inputs, complete environment/argv/host/target/cfg/features/build/extern/proc-macro/
+include/graph/manifests/locks/archive/extracted source/components/server bindings at
+every consumption, 12 GiB free disk/8 GiB RAM, two Cargo jobs/one sequential server,
+1,200-second operations, ownership and timing/cache inspection, no cold performance
+claim or size-only/shared cleanup. The separate compiler build must have its own
+explicit resource/distribution scope; these capture reserves do not authorize that
+build. Second complete implementation review's new mechanism defect still stops.
+
+Only a complete accepted ledger prerequisite and separately merged authorized scope
+can ready HBIP. Complete HBIP proof/review/merge/separate receipt must precede HBC;
+complete HBC five-case/full union/four-context proof/review/merge/separate receipt
+precedes full adapter. No Windows, SQL, metrics/resources, V01/Q01 or erased-region
+work is unlocked; explicit future expanded V01 human approval remains mandatory.
+Current qualification remains zero proof cases/assertions and zero accepted contexts
+of four, semantic_export false. Prior acceptance/failures and external owners retain
+all original dispositions.
+
+### Documentation evidence and exact terminal decision
+
+Exclusively owned worktree/branch/index:
+`/data/sifr-h03a1-compiler-authority-decision-20261002` /
+`codex/h03a1-compiler-authority-decision-20261002`. Outside-Git evidence on
+`yaser5@192.168.1.134` is
+`/data/sifr-h03a1-compiler-authority-decision-evidence-20261002/`:
+registered append/current-row/order edit contract, official byte-identical design
+seams/source ranges, reauthenticated #4270 handoff/source audit/terminal manifest,
+documentation structure/registered mutation harness, maintained-source file-size
+guard, exact historical reconstruction, canonical-only scope/whitespace/clean-tree
+checks and candidate-keyed scoped SELF-review. Relevant documentation commands are
+`python3 verification/areas/documentation/check_structure.py` and
+`python3 scripts/check_file_size_guardrails.py`. Exact unchanged editor/vscode gitlinks
+are privately checked out for docs inputs. No source/helper/schema/manifest/lock/pin/
+producer change, compiler/Cargo/RA run, capability experiment, Sifr test/gate, target
+creation/cleanup, Opus/external review or next batch occurs. Publication uses an owned
+bundle/private bare relay without mutating shared Mac checkout/index or other owners.
+A separate canonical delivery receipt records exact candidate/merge and evidence.
+
+**Documentation blocker: none. Implementation blocker: explicit user authorization
+and a separately proved/distributed compiler ledger boundary are absent. Exact next
+action: the user decides whether to retain full compiler-original attribute/lineage
+claims and authorize the finite ledger prerequisite, or explicitly amend to the
+smaller source-membership contract with the lost claims above.** This owner stops
+at this proposal and its receipt; no compiler change or proof assignment is ready.
+
 ## H03a1hbipa original attribute authority blocker delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1hbipa's documentation adjudication is delivered
@@ -4879,8 +5137,9 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
 | H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
-| H03a1hbipa | #4268 and all accepted HBI/H03a1hbie/HBF/HBS retained; **needs-new-scope**, scope blocker #4269 at `9c16b21251ef28fca8c001b2a92dcba0091d2bf5` and separate receipt above; no complete mechanism selected. | Inspected unchanged root/module/include/query/derive/cfg/provenance interfaces do not evidence a complete raw-attribute attachment/transition ledger. Separate authority decision required; no implementation is ready. |
-| H03a1hbip | Complete H03a1hbie #4265/#4266 retained; **needs-new-scope**, #4268 consumed-attribute stop and H03a1hbipa bounded interface audit retained; zero accepted cases/contexts. | Exact original pre-consumption attachment or transformation authority requires a distinct supported interface scope decision; no proof readiness, partial envelope, HBC or adapter acceptance. |
+| H03a1hbipa | #4268 and all accepted HBI/H03a1hbie/HBF/HBS retained; **needs-new-scope**, scope blocker #4269 at `9c16b21251ef28fca8c001b2a92dcba0091d2bf5` and receipt #4270 retained. | Finite unchanged-route audit delivered; distinct H03a1hbipau proposal above awaits user authorization and separate capability proof; no complete mechanism accepted. |
+| H03a1hbipau | Distinct compiler-interface/authority documentation decision above; **PROPOSED, REQUIRES USER AUTHORIZATION**; ready implementation IDs none. | Recommended finite compiler-owned original-attribute/transition ledger if full claims retained; materially simpler explicit source-membership amendment compared with exact lost claims. No compiler boundary change or proof assignment authorized. |
+| H03a1hbip | Complete H03a1hbie #4265/#4266 retained; **needs-new-scope**, #4268 consumed-attribute stop and H03a1hbipa bounded interface audit retained; zero accepted cases/contexts. | Exact original pre-consumption attachment or transformation authority awaits explicit H03a1hbipau boundary authorization and separate complete capability proof; no proof readiness, partial envelope, HBC or adapter acceptance. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
@@ -4895,7 +5154,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
 H03a1pers, H03a1peo, H03a1pets, stopped H03a1pet, H03a1petbs,
-H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbie, H03a1hbipa (stopped; distinct authority decision required), H03a1hbip, H03a1hbc,
+H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbie, H03a1hbipa (audit delivered), H03a1hbipau (proposal delivered; user authorization and separate proof required), H03a1hbip, H03a1hbc,
 H03a1, H03a, H03b, H03c, H03d,
 H03ep (H03eps only on a concrete readiness failure), approved full expanded
 V01 capture, H03eq, then H03f**, one independently owned
