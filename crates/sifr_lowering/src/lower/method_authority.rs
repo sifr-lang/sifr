@@ -234,10 +234,10 @@ fn classify_call(
                 signature,
                 ctx.current_module_name.as_deref(),
             );
-            if declaration.module != ctx.current_module_name.as_deref().unwrap_or_default() {
-                Some(MethodAuthority::Imported { declaration })
-            } else {
+            if declaration.module == ctx.current_module_name.as_deref().unwrap_or_default() {
                 Some(MethodAuthority::LocalNominal { declaration })
+            } else {
+                Some(MethodAuthority::Imported { declaration })
             }
         }
         Type::List(_)

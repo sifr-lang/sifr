@@ -1291,3 +1291,29 @@ invoke workspace Clippy; Items 1–3 and 7 still name it separately. The SQL
 runtime/test owner can factor the assertion's type. Historical evidence:
 `/home/yaser5/projects/sifr/dx2-evidence/clippy6.log` (availability not
 rechecked during P0).
+
+## Item 7A — cloud compiler lint prerequisite (2026-10-02)
+
+Status: registered and in progress; separate prerequisite for Item 7, tracked
+in [#4230](https://github.com/sifr-lang/sifr/issues/4230). The user explicitly
+authorized completing all necessary repairs and continuing until phase closure
+in this cloud session ("Don't block anything until you finish"). This supersedes
+the session-stop/external-owner boundary for necessary prerequisites; retain
+separate item scope, true qualification, and review evidence.
+
+Scope: behavior-preserving correction of the eight unchanged workspace Clippy
+findings in checked_place.rs, lower_expr/iterators_and_callables.rs, and
+sifr_lowering lower/method_authority.rs. Move local helper declarations before
+the first statement, clone already-owned method names directly, and express
+local/imported authority with the equivalent positive comparison and swapped
+branches. No emitted Rust, SQL resolver, runtime, dependency, lint waiver, or
+coverage-policy change belongs to this prerequisite.
+
+Named qualification: existing sifr_codegen and sifr_lowering library tests;
+required `cargo clippy --workspace -- -D warnings`; formatting, HIR/driver/file
+size guards, diff check, and one exact-candidate scoped Opus review. The
+prospective phase-end broad-gate policy applies; reuse unchanged Item 7 SQL
+qualification and its SATISFIED remediation review. After separate delivery,
+refresh Item 7 against main, verify unchanged SQL validation/review input hashes,
+and qualify workspace Clippy on the combined candidate before its merge.
+Historical failures and the original external-owner stop remain preserved.
