@@ -10,6 +10,80 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbipau compiler authority proposal delivery receipt (2026-10-02)
+
+**Current controlling state: distinct authority decision delivered;
+PROPOSED, REQUIRES USER AUTHORIZATION. Ready implementation IDs: none.**
+[Decision PR #4271](https://github.com/sifr-lang/sifr/pull/4271) merged as
+`9be92c307ced4ea0a290f234a8f14b12eda12406`, from exact documentation candidate
+`15b73e3a757ab1018d181076f69d54b9e4e149ff` on base
+`88b490e4698503179f7af2c4e6ac6a568222a093`. Actual fetched merge and candidate
+complete trees both equal `1720fda170ce589023f4d832a2c42255d1f540d4`.
+The complete previous unchanged-route audit is retained; no distinct complete
+supported unchanged event/object/transition route is evidenced and no universal
+API impossibility or new capability is claimed.
+
+The concrete proposed compiler-owned ledger records original parse/attribute
+identity/attachment and source tokens, clone occurrences and exact cfg/derive/
+macro removals/replacements/pass-through transitions, then actual resolver
+NodeId/LocalDefId and lowering HirId links to analyzed owners/parents/traits/
+binders/context. Separate ledger token storage preserves existing AST token
+availability and macro-input choices. Opaque procedural replacement boundaries
+do not certify guessed per-output identity. The original upstream source pin
+and proposed instrumented build identity remain explicitly distinct; compiler
+build, component/helper ABI pairing, distribution, updates and validation impose
+ongoing costs. No new compiler executable or patch identity is invented.
+
+The decision compares a materially cheaper, deliberate physical/native attribute
+membership amendment with precise retained source/final semantic guarantees and
+lost original rustc AttrId/attachment/consumption-lineage claims. It recommends
+only a finite separately owned ledger prerequisite if the full claims remain
+required. Neither boundary is authorized by this merge; no HBIP/HBC/full adapter
+assignment is ready. All original anchors, pins, owners/contexts/fixtures,
+independent inventories, semantic obligations and prospective checks remain
+mandatory. HBIP complete proof/review/merge/separate receipt precedes HBC; HBC
+complete proof/review/merge/separate receipt precedes full adapter. No expanded
+V01 human approval is waived. Current proof counts remain zero cases/assertions,
+zero accepted contexts of four and semantic_export false.
+
+Exact candidate validation passed registered documentation structure/mutation
+harness, 900-line guard for 4,338 maintained files, seventeen exact source design
+seams across nine full official byte-identical pinned compiler files, complete
+49-artifact #4270 donor reauthentication, historical byte reconstruction,
+canonical-only scope, whitespace and clean owned tree. Scoped SELF-review is
+SATISFIED, no blocking findings. A corrected source-range marker assertion and
+initial self-review token-storage clarification are retained outside Git; neither
+is capability evidence. Evidence on `yaser5@192.168.1.134` is at
+`/data/sifr-h03a1-compiler-authority-decision-evidence-20261002/`:
+
+| Exact decision artifact | SHA-256 |
+| --- | --- |
+| `source-design-audit.json` | `61625a4408dbf9c3e9ca93b92e0ed2b00902017ef5611e859ee6f8350051a754` |
+| `decision-final/validation-summary.json` | `1810ac61bf49a49d60bb03274a90599310d0697f64748267b78670811a2afb97` |
+| `candidates/15b73e3a757ab1018d181076f69d54b9e4e149ff/self-review.json` | `bbd333c031e56f6ebca8bd0c575da66c0b4aa2c16a1537dc6e34ef44f286daa5` |
+| `decision.bundle` | `0c9f562221476b41b58bedfa79d4a5a57438b400715562d858d946f019ec692a` |
+
+This separate canonical receipt uses only relevant documentation/mutation,
+file-size, source/history/donor/scope/whitespace/clean-tree checks and scoped
+SELF-review. Exclusively owned worktree is
+`/data/sifr-h03a1-compiler-authority-decision-20261002`; decision and receipt
+branches use `codex/h03a1-compiler-authority-decision-20261002` and
+`codex/h03a1-compiler-authority-decision-receipt-20261002`. Owned bundles/private
+Mac bare relay publish without shared checkout/index mutations. Donor worktrees,
+indexes, sources, targets and evidence remain read-only. No compiler/helper/source/
+schema/manifest/lock/pin/producer changes, compiler/Cargo/RA runs, experiments,
+Sifr gates, target creation/cleanup, Opus/external review or next batch occurred.
+Atomic terminal handoff is copied under
+`/Users/yaseralnajjar/.codex/sifr-architecture-evidence/h03a1-compiler-authority-decision-20261002/`.
+
+**Documentation blocker: none. Implementation blocker: user authority decision
+and a separately qualified compiler boundary remain absent. Exact next action:
+user authorization for the full-contract finite ledger prerequisite, or an explicit
+source-membership contract amendment with the listed lost claims.** This owner
+is terminal. H03a1hbip stays needs-new-scope; H03a1hbc/full H03a1 and downstream
+metrics/resources remain blocked. SQL, Windows, V01/Q01 and all historical
+acceptance/failure dispositions remain unchanged.
+
 ## H03a1hbipau proposed compiler attribute authority decision (2026-10-02)
 
 **Current controlling state: the distinct documentation decision is delivered as
