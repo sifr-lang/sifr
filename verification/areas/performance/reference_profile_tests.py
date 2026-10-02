@@ -367,9 +367,10 @@ class NamedReferenceTests(unittest.TestCase):
 
 def run_self_test():
     from reference_admission_tests import ReferenceAdmissionTests
+    from reference_host_allocation_tests import ManagedAllocationTests
 
     result = unittest.TestResult()
-    for case in (NamedReferenceTests, ReferenceAdmissionTests):
+    for case in (NamedReferenceTests, ReferenceAdmissionTests, ManagedAllocationTests):
         unittest.defaultTestLoader.loadTestsFromTestCase(case).run(result)
     if not result.wasSuccessful():
         raise ReferenceProfileError(str(result.errors + result.failures))

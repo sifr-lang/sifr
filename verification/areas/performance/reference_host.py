@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from compiler_lanes import selection
+from reference_host_allocation import managed_allocation
 
 
 def output(argv: list[str]) -> str:
@@ -42,6 +43,11 @@ def linux_memory() -> dict[str, int]:
 
 
 def cpu_power_policy() -> dict[str, Any]:
+    kind = os.environ.get("SIFR_PERFORMANCE_HOST_KIND", "physical")
+    if kind not in {"physical", "managed-linux"}:
+        raise ValueError(f"unknown performance reference host kind: {kind}")
+    if kind == "managed-linux" and platform.system() != "Linux":
+        raise ValueError("managed-linux reference requires Linux")
     if platform.system() == "Darwin":
         return {"source": "pmset", "configuration": output(["pmset", "-g", "custom"])}
     root = Path("/sys/devices/system/cpu/cpufreq")
@@ -54,19 +60,25 @@ def cpu_power_policy() -> dict[str, Any]:
                 "scaling_min_freq", "scaling_max_freq",
             )
         })
-    if not policies:
+    if not policies and kind == "physical":
         raise ValueError("named reference requires measurable CPU frequency policy")
     boost_paths = (
         root / "boost",
         Path("/sys/devices/system/cpu/intel_pstate/no_turbo"),
     )
-    return {
+    measured = {
         "source": "sysfs",
         "policies": policies,
         "boost_controls": {
             str(path): path.read_text().strip() for path in boost_paths if path.is_file()
         },
     }
+    if kind == "managed-linux":
+        return {
+            "source": "managed-linux", "allocation": managed_allocation(),
+            "frequency_policy": measured if policies else {"source": "unavailable"},
+        }
+    return measured
 
 
 def host_details() -> dict[str, Any]:
