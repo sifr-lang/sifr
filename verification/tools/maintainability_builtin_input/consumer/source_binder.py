@@ -10,6 +10,7 @@ import time
 SCHEMA = "sifr-maintainability-source-binder-feasibility-v1"
 FRAGMENT = "sifr-maintainability-source-binder-v1"
 _AUTHORITY = object()
+_REGISTERED = {}
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,12 @@ class OriginalAuthority:
     originals: bytes
     inputs: bytes
     seal: object
+
+
+def _authority(originals, inputs, api):
+    authority = OriginalAuthority(api.encoded(originals), api.encoded(inputs), _AUTHORITY)
+    _REGISTERED[id(authority)] = authority
+    return authority
 
 
 def require(condition, reason, api):
@@ -53,7 +60,7 @@ def _inputs(root, metadata, messages, invocations, identity, output, api):
     for package in built:
         package_root = Path(packages[package]["manifest_path"]).parent
         members = sorted(str(p.relative_to(package_root)) for p in package_root.rglob("*") if p.is_file() and not set(p.relative_to(package_root).parts).intersection({".git", "target", "__pycache__"}))
-        directories[str(package_root)] = members
+        directories[str(package_root)] = {"members":members,"exclude_operational":True}
         for member in members:
             p = package_root / member
             files[str(p)] = api.digest(p.read_bytes())
@@ -78,7 +85,7 @@ def _inputs(root, metadata, messages, invocations, identity, output, api):
                 require(p.exists(), "missing original build-script input " + str(p), api)
                 if p.is_dir():
                     members = sorted(str(v.relative_to(p)) for v in p.rglob("*") if v.is_file())
-                    directories[str(p)] = members
+                    directories[str(p)] = {"members":members,"exclude_operational":False}
                     for member in members: files[str(p / member)] = api.digest((p / member).read_bytes())
                 else: files[str(p)] = api.digest(p.read_bytes())
     for invocation in invocations:
@@ -129,6 +136,7 @@ def _project(originals, inputs, api):
     _validate_originals(originals, inputs, api)
     raw = originals["syn-raw.json"]
     ra = unique(originals["ra-source.json"]["calls"], "original RA callable", api)
+    require(ra["callee_cfg"] == raw["cfg"], "original dependency compiler/RA cfg-feature context conflict", api)
     require(ra["owner_roundtrip"] and ra["parent_roundtrip"] and not ra["contains_unknown"] and ra["impl_trait"] is None, "wrong original RA owner/trait/receiver", api)
     caller = unique([c for c in originals["caller-raw.json"]["calls"] if c["source"]["kind"] == "original" and [c["source"]["start"],c["source"]["end"]] == ra["caller_range"] and str(path_at(Path(inputs["root"]),c["source"]["file"])) == ra["caller_file"]], "original compiler callable occurrence", api)
     owner = unique([o for o in raw["declaration_owners"] if stable(o["identity"]) == stable(caller["target"])], "original dependency-local resolved owner", api)
@@ -160,6 +168,7 @@ def _project(originals, inputs, api):
             require(physical[span["start"]:span["end"]].decode() == occurrence["token"] == span["snippet"], "literal original lifetime token conflict", api)
             if lifetime:
                 require(lifetime["resolved"]["kind"] == "LateBound" and stable(lifetime["resolved"]["target"]) == stable(parameter["identity"]), "missing genuine compiler late-bound declaration relation", api)
+            require(binder["variables"][binder["parameters"].index(parameter["identity"])]["declaration"] == parameter["identity"], "ordered compiler bound variable declaration conflict", api)
             correspondences.append({"hir":hir,"role":role,"target":stable(parameter["identity"]),"binder":binder["id"],"binder_parameter_ordinal":binder["parameters"].index(parameter["identity"]),"ra":occurrence,"source":span,"resolved":lifetime["resolved"] if lifetime else {"kind":"GenericParamDeclaration"}})
     for lifetime in owner["lifetime_occurrences"]:
         if lifetime["syntax"] == "Implicit":
@@ -194,15 +203,15 @@ def _project(originals, inputs, api):
 
 
 def _verify(proof, receipt, authority, api):
-    require(isinstance(authority,OriginalAuthority) and authority.seal is _AUTHORITY, "unauthenticated or replaced original bridge authority", api)
+    require(isinstance(authority,OriginalAuthority) and authority.seal is _AUTHORITY and _REGISTERED.get(id(authority)) is authority, "unauthenticated or replaced original bridge authority", api)
     inputs = json.loads(authority.inputs)
     require(receipt["inputs"] == inputs and receipt["capture_status"] == 0 and receipt["semantic_export"] is False, "original bridge context/capture compiler failure", api)
     for name, sha in inputs["files"].items():
         require(Path(name).is_file() and api.digest(Path(name).read_bytes()) == sha, "original bridge input/source/artifact drift: " + name, api)
-    for name, members in inputs["directories"].items():
+    for name, inventory in inputs["directories"].items():
         root=Path(name)
-        actual=sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and not set(p.relative_to(root).parts).intersection({".git","target","__pycache__"}))
-        require(actual == members, "original source directory input drift: " + name, api)
+        actual=sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and (not inventory["exclude_operational"] or not set(p.relative_to(root).parts).intersection({".git","target","__pycache__"})))
+        require(actual == inventory["members"], "original source directory input drift: " + name, api)
     require({k:api.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")} == inputs["parent_environment"], "original parent environment drift", api)
     for key,value in inputs["build_environment"].items(): require(os.environ.get(key) == value, "build-script environment drift", api)
     for name,sha in inputs["tool"]["consumer_sources"].items(): require(api.digest((api.ROOT / "scripts" / name).read_bytes()) == sha, "original consumer source drift", api)
@@ -234,7 +243,7 @@ def capture(output, target, identity, api):
         for name,sha in binding.items(): require(api.digest((output/name).read_bytes()) == sha,"cached original authority drift",api)
         originals=_originals(output,api)
         receipt=json.loads((output / "receipt.json").read_text())
-        authority=OriginalAuthority(api.encoded(originals),api.encoded(receipt["inputs"]),_AUTHORITY)
+        authority=_authority(originals,receipt["inputs"],api)
         proof=json.loads((output / "proof.json").read_text())
         verify(proof,receipt,authority,api)
         print("source-binder prepared cache HIT",receipt["timing_seconds"])
@@ -275,7 +284,7 @@ def capture(output, target, identity, api):
         analysis_times[name]=analysis.elapsed_seconds
     raw=json.loads((output/"syn-raw.json").read_text());caller=json.loads((output/"caller-raw.json").read_text())
     (output/"independent-inventory.json").write_bytes(api.encoded(inventory(raw)))
-    (output/"ra-context.json").write_bytes(api.encoded({"context":{"crate":"sifr_codegen"},"cfg":caller["cfg"]}))
+    (output/"ra-context.json").write_bytes(api.encoded({"context":{"crate":"sifr_codegen"},"cfg":caller["cfg"],"dependency_cfg":raw["cfg"]}))
     resolver_env=os.environ.copy()
     for key in ("RUSTC_BOOTSTRAP","RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER"):resolver_env.pop(key,None)
     resolver_env.update(CARGO_INCREMENTAL="0",CARGO_BUILD_JOBS="2",CARGO_TARGET_DIR=str(target),SIFR_BUILTIN_SOURCE_BINDER_RA="1")
@@ -298,7 +307,7 @@ def capture(output, target, identity, api):
     originals=_originals(output,api)
     proof=_project(originals,inputs,api)
     receipt={"inputs":inputs,"proof_digest":api.digest(api.encoded(proof)),"capture_status":0,"semantic_export":False,"timing_seconds":{"original_control":result.elapsed_seconds,"metadata":metadata_result.elapsed_seconds,"analysis":analysis_times,"resolver":resolver.elapsed_seconds,"total":time.monotonic()-start}}
-    authority=OriginalAuthority(api.encoded(originals),api.encoded(inputs),_AUTHORITY)
+    authority=_authority(originals,inputs,api)
     verify(proof,receipt,authority,api)
     (output/"proof.json").write_bytes(api.encoded(proof));(output/"receipt.json").write_bytes(api.encoded(receipt))
     (output/"success.json").write_bytes(api.encoded({name:api.digest((output/name).read_bytes()) for name in ("proof.json","receipt.json","original-build.json","dependency-invocation.json","caller-invocation.json","syn-raw.json","caller-raw.json","ra-source.json","independent-inventory.json")}))

@@ -102,6 +102,35 @@ fn main() -> anyhow::Result<()> {
         .cfg_overrides
         .selective
         .insert(package.clone(), selected_diff);
+    if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+        let dependency_cfg = capture["dependency_cfg"]
+            .as_array()
+            .ok_or_else(|| anyhow::anyhow!("missing original dependency cfg authority"))?
+            .iter()
+            .map(|a| {
+                let key = hir::Symbol::intern(a["key"].as_str().expect("authenticated cfg key"));
+                if let Some(value) = a["value"].as_str() {
+                    cfg::CfgAtom::KeyValue {
+                        key,
+                        value: hir::Symbol::intern(value),
+                    }
+                } else {
+                    cfg::CfgAtom::Flag(key)
+                }
+            })
+            .collect::<Vec<_>>();
+        let mut disabled = workspace
+            .rustc_cfg
+            .iter()
+            .filter(|a| !dependency_cfg.contains(a))
+            .cloned()
+            .collect::<Vec<_>>();
+        disabled.push(cfg::CfgAtom::Flag(hir::sym::rust_analyzer));
+        config
+            .cfg_overrides
+            .selective
+            .insert("syn".into(), cfg::CfgDiff::new(dependency_cfg, disabled));
+    }
     workspace.cfg_overrides = config.cfg_overrides.clone();
     let builds = workspace.run_build_scripts(&config, &|p| eprintln!("{p}"))?;
     if let Some(error) = builds.error() {

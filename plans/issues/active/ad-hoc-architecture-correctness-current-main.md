@@ -10,6 +10,70 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbf bounded original dependency feasibility implementation (2026-10-02)
+
+**Controlling state: H03a1hbf implementation candidate; diagnostic admission is
+pending exact named qualification, scoped Opus review, merge and separate receipt.**
+This item starts from fresh main `ba4fad1fa35d3ef2f40b52b43bcc8d1178dd1254`.
+It changes only the scoped builtin companion, consumers, bounded fixtures, entrypoint
+scripts and this canonical record. H03a1hbc and full H03a1 remain dependency-blocked.
+There is no semantic adapter export, broader context qualification or next batch.
+
+The new dependency-aware wrapper observes the actual original syn invocation from
+unchanged selected `cargo check --locked --lib -p sifr_codegen --target
+x86_64-unknown-linux-gnu --message-format=json`, preserving normal rustc artifact
+production and Cargo's successful build-finished event. Missing warm invocation
+provenance triggers only a recorded `cargo clean --package syn@3.0.5 --target
+x86_64-unknown-linux-gnu` in the exclusively owned target, then the same selected
+control. The separately replayed after-analysis diagnostic retains the original
+argv/cwd/environment and authenticates its independent successful-build authority;
+analyzed packages and dependencies receive no bootstrap.
+
+Original local HIR enumeration precedes owner selection. The bounded proof uses
+stable crate/DefPathHash relations between the actual downstream callable and the
+original dependency-local owner, actual GenericParam/LifetimeKind::Param targets,
+compiler named_bound_var depth/index and supported late_bound_vars maps. It retains
+signature/generic/predicate facts, explicit empty and implicit dispositions and
+full original owner/parameter/binder/occurrence/trait inventories outside projections.
+RA registers the external source through Semantics::source and round-trips the
+callable, parent and each resolved trait. Original SourceFile byte conversion joins
+unique RA lifetime/path/name node intervals, without deriving HRTB identity from
+spelling or nesting. The callee cfg is checked against the original compiler cfg.
+
+The separate `sifr-maintainability-source-binder-feasibility-v1` diagnostic schema
+carries the `sifr-maintainability-source-binder-v1` fragment and required records;
+consumer admission reauthenticates caller-held registered original authority,
+source/config/build/tool/runtime/component/RA/server/archive/extern/artifact inputs
+and the bounded projection. It rejects copied authority, redigested omissions,
+wrong owners/traits, duplicate/forged occurrences/depths and compiler failure.
+The accepted builtin v3 path and ObjectShapes source-authority negative are retained.
+Real independent same-spelled binder declarations with a Unicode prefix are
+compiled and compared to actual pinned RA syntax; an invalid shadowing declaration
+is a genuine compiler-error negative. The fixture syntax receipt explicitly carries
+syntax-only authority and supplies no RA semantic HRTB identity.
+
+Owned execution is `yaser5@192.168.1.134`, branch
+`codex/h03a1hbf-original-dependency-feasibility-20261002`, worktree
+`/data/sifr-h03a1hbf-original-dependency-feasibility-20261002`, target
+`/data/sifr-h03a1hbf-target-20261002` and evidence
+`/data/sifr-h03a1hbf-evidence-20261002`. Preflight found 672 GiB free disk and about
+10 GiB available RAM, no active compiler/semantic producer and no open donor-target
+handles. The terminal prior target was copied into exclusive owned storage; its
+original and all shared targets remain untouched. Two Cargo jobs, one sequential
+semantic worker/server and 1,200-second operation guards apply. Exact gitlinks were
+initialized; the first control's missing uninitialized ruff manifest failure remains
+in `original-control.log` and is not accepted compiler authority.
+
+Two preliminary named attempts remain failed/unaccepted, with zero executed cases:
+`feasibility-original-1.log` exposed ambiguous syn artifact selection, repaired by
+selecting the actual caller --extern artifact; `feasibility-original-final.log`
+exposed inconsistent directory exclusion handling, repaired with explicit original
+inventory dispositions. Their raw captures/logs remain outside Git. Source inspection
+and partial joins are ingredients, rather than completed feasibility acceptance.
+Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,
+review and merge evidence is recorded separately after completion; broad gates are
+assigned to final integration. **Next action: qualify and review H03a1hbf only.**
+
 ## H03a1hbs original HIR/source-binder scope delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1hbs documentation checkpoint closed;
@@ -3340,7 +3404,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; **closed**, implementation #4222 at `06dd8ed4597430445c6631c3891ec879e219692a` and separate controlling receipt above. | Complete carried supported Dynamic repair and all original H03a1pe qualification: 26 selected tests/3,854 assertions, four fresh Linux joins/repeats, scoped Opus 5.5 SATISFIED; exact new source HRTB remains a compiler-success/RA-authority negative. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
 | H03a1hbs | Required dependency source-binder stop #4234/#4235; **closed**, scope #4236 at `46ec9daf44a42427954ae20aab7f1046a1803f23` and controlling receipt above. | Original compiler HIR/source-binder scope only; H03a1hbf ready for separate assignment, no capability/adapter acceptance. |
-| H03a1hbf | Merged H03a1hbs scope/receipt and accepted #4222/#4233; **ready after documentation delivery**. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
+| H03a1hbf | Merged H03a1hbs scope/receipt and accepted #4222/#4233; **assigned, implementation candidate pending qualification/review/merge/receipt**. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbc | Successful merged H03a1hbf proof/receipt; **reserved, dependency-blocked**. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts; complete merged proof required before separate full adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |

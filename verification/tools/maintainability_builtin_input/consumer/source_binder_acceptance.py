@@ -77,7 +77,7 @@ class SourceBinderFeasibilityTests(unittest.TestCase):
         self.reject(value,"wrong-trait")
         receipt=copy.deepcopy(self.receipt);receipt["capture_status"]=101
         self.reject(self.proof,"compiler-failure",receipt=receipt)
-        self.reject(self.proof,"replaced-authority",authority=bridge.OriginalAuthority(self.authority.originals,self.authority.inputs,object()))
+        self.reject(self.proof,"replaced-authority",authority=bridge.OriginalAuthority(self.authority.originals,self.authority.inputs,self.authority.seal))
         self.assertions+=1
         with self.assertRaises(builtin.Unsupported):bridge.verify(self.proof,self.receipt,None,builtin)
         self.require(bridge.verify(self.proof,self.receipt,self.authority,builtin)["semantic_export"] is False,"intact independent originals remain valid after all mutations")
