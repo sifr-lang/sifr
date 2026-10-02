@@ -10,6 +10,99 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbip required attributed include physical-node stop (2026-10-02)
+
+**Current controlling state: H03a1hbip needs new scope; no complete include-source
+proof is accepted. H03a1hbc and full H03a1 remain dependency-blocked.** This stop
+starts from actual latest main `c2e1265f82c8b94f66c871e147e0826a86037443`, retaining
+HBI scope #4262, separate receipt #4263, HBF/HBS and every historical failure.
+The exclusively owned diagnostic snapshot
+`a80fd6ea0c9bbf58a7b10668bd6ead3eb5a70565` is unaccepted and unmerged. Only this
+canonical stop record is published; it does not close the diagnostic proof item.
+
+The pinned public mechanism supplies exact token origins in the observed bounded
+LF and BOM/CRLF/Unicode fixtures, including distinct native owners for two modules
+that reuse one included physical file. Both impl aggregate original_range_opt
+values remain None. Physical forward descent reaches only one cached include
+context, while native per-token origins were available in both; that observation
+alone is not recorded as a blocker or a complete owner/context proof. An attributed
+fixture then exposes the exact-node requirement: original compiler IncludedBinder
+STRUCT spans `17..68`, whereas the actual parsed physical STRUCT is `0..68`,
+including `#[derive(Debug)]`. Those development observations use changed diagnostic
+inputs and confer no named-case, whole-relation, binder or full-union acceptance.
+
+A fresh **required production** observation confirms the same boundary. The exact
+original command
+`cargo check --locked --lib -p sifr_codegen --target x86_64-unknown-linux-gnu --message-format=json`
+succeeds with normal artifacts and successful build-finished. Its actual caller
+invocation/environment and a separate successful rustc-after-analysis capture are
+retained. Independent compiler inventory contains **9,955 owners**; the native RA
+inventory has **2,721 records**, including 553 explicit missing-native-source
+records with no inferred disposition or accepted omission. No fresh actual syn
+invocation was produced by this warm control; complete dependency replay, input/
+context union and syn joins are not claimed. This is development evidence for the
+specific required-node stop, not a completed original-authority proof.
+
+| Required production fact | Fresh observation |
+| --- | --- |
+| Original owner | `generated_rust_canonicalizer::syntax_cleanup::borrowed_scalar_parameters::SifrIntBindingCollector` |
+| Compiler-selected physical source | `crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/type_facts.rs`, STRUCT `19..81`, hygiene `#0`, disposition `original` |
+| Original compiler identity | `DefId(0:11595)`, stable crate `8998610378578412169`, DefPathHash component `16289700893998164090`; parent module `DefId(0:1653)` in this capture only |
+| Actual parsed physical STRUCT nodes in that file | `0..81` and `2708..2775`; **zero STRUCT nodes at `19..81`** |
+| Actual native RA owner/source | `StructId(3c214)`, `MacroFile(MacroCallId(Id(3bc36)))`, STRUCT `0..71`; genuine Semantics::source/to_def roundtrip succeeds |
+| Public origin observation | Aggregate original range is `0..81`; all 18 native nontrivia tokens have unique exact physical kind/text/interval origins in that attribute-inclusive node |
+| Missing required relation | The compiler-selected `19..81` interval/kind has no actual physical STRUCT node; token origins for `0..81` do not establish that required node |
+
+The native and physical nodes retain `#[derive(Default)]`; the original compiler
+owner span starts after that attribute. The finite contract requires a unique
+parsed physical node at the original compiler-selected exact range and kind.
+Widening `19..81` to `0..81`, dropping the attribute/declaration facts, bounding
+endpoints, constructing a copied/reparsed STRUCT or treating include syntax as
+generated would change that requirement. No such substitution is made. This stop
+identifies a missing required exact physical-node relation, **not universal
+impossibility of the pinned public APIs or a failed token-origin map**. The fresh
+raw identities are capture anchors, not constants for future cross-capture joins.
+
+The four prospective IncludeSourceCorrespondenceTests remain absent and
+unexecuted: **zero named cases / zero assertions**, no full class, zero accepted
+four-context union and no accepted proof/publication. Their focused existing
+regressions were not reached. Only one original production context was observed
+for development; its success does not accept any context. ScalarCallRewriter and
+the complete original owner/context/fixture/binder union remain unqualified.
+`semantic_export: false` is retained. HBC's five cases and full original union,
+ObjectShapes RA-only negative, genuine body ReErased rules, prior #4261 stop,
+HBF #4238/#4258 and HBS/#4222/#4233 acceptance stay unchanged. No adapter,
+Windows, metric, V01, Q01, SQL or integration-gate acceptance is added.
+
+Raw controls, original invocations, after-analysis data, independent inventories,
+physical/native tokens and nodes, source/hash/normalization observations, failed
+attributed diagnostic and corrected development inventory remain outside Git at
+`/data/sifr-h03a1hbip-evidence-20261002/` on `yaser5@192.168.1.134`. Immutable
+production originals are under `production-original/`; helper/source/executable
+bytes are frozen under `frozen-candidate/`. `source-stop-report.json` SHA-256 is
+`51896c6e0bdc0554bb01ccd554d16e36f7397d50aadb5cbad5c7be73f2c1d731`;
+`unaccepted-diagnostic.bundle` SHA-256 is
+`203dd5fb886d8fba72cbed427049fc8d5bf711aab388595fcbbeac04e0755798`.
+The report binds the retained raw artifacts and precise missing-node observation.
+All prior owners' worktrees, targets, raw evidence and failures remain intact.
+Root/helper manifests, locks and producer/API graph remain unchanged. Compatible
+warm artifacts were copied read-only into the owned target after process/open-
+handle checks; no cache cleanup occurred. Preflight and observed resources exceed
+the 12 GiB disk/8 GiB available-RAM reserve; no resource blocker is reported.
+
+The diagnostic worktree/branch and target remain exclusively owned and retained.
+This canonical-only stop uses a separate owned worktree, documentation structure/
+mutation checks, 900-line guardrail, exact historical reconstruction, scope/
+whitespace checks and scoped self-review. No partial diagnostic implementation is
+merged, no external implementation review or broad gate is run, and no complete
+proof delivery receipt is issued.
+
+**Next action: separately scope authenticated compiler declaration/attribute
+envelope correspondence to the actual complete physical/native owner node,
+preserving every original range and fact, before another H03a1hbip attempt.**
+HBC cannot resume until a complete HBIP proof and separate receipt merge. This
+owner stops here and starts neither HBC nor the full adapter.
+
 ## H03a1hbi include-source scope delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1hbi documentation scope is closed;
@@ -4075,7 +4168,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbs | Required dependency source-binder stop #4234/#4235; **closed**, scope #4236 at `46ec9daf44a42427954ae20aab7f1046a1803f23` and controlling receipt above. | Original compiler HIR/source-binder scope only; H03a1hbf ready for separate assignment, no capability/adapter acceptance. |
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
-| H03a1hbip | Merged H03a1hbi #4262 scope and controlling separate receipt required; **ready for separate assignment after receipt merge**. | Exact include-source diagnostic proof: four prospective named cases, complete four Linux contexts, scoped review/merge and separate receipt; semantic_export false. |
+| H03a1hbip | HBI #4262/#4263 retained; **needs-new-scope**, required attributed physical-node stop above; zero accepted proof cases/contexts. | Exact include-source diagnostic proof remains open: authentic compiler declaration/attribute envelope scope is required before four named cases, complete four Linux contexts, scoped review/merge and separate receipt; semantic_export false. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
