@@ -10,6 +10,101 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbc required include-owner source-authority stop (2026-10-02)
+
+**Current controlling state: H03a1hbc needs new scope; no complete capability
+proof is accepted. Full H03a1 remains dependency-blocked.** This stop starts
+from verified main `894272cfa94bb1a8b37a832cc82502e63a13efe0`, preserving
+H03a1hbf #4238/#4258 and every earlier accepted prerequisite, failure and review.
+The implementation attempt remains unmerged on
+`codex/h03a1hbc-complete-binder-bridge-20261002` at diagnostic snapshot
+`9a5c96aa013923648647a014ba9cc8dc4198031c`; candidate
+`3fc35ae78897d49b5161d98c0d24938e38b1551e` was the attempted production
+qualification. No implementation PR, scoped implementation approval, semantic
+adapter export or next batch is claimed.
+
+### Missing required original source relation
+
+The actual unchanged locked Linux sifr_codegen production Cargo graph completed
+successfully with normal artifacts and a successful build-finished event.
+Separate exact original caller/syn compiler replays retained dependency-local
+HIR and source records. The complete owner projection then rejected
+`generated_rust_canonicalizer::syntax_cleanup::borrowed_scalar_parameters::ScalarCallRewriter`:
+compiler source is
+`crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/call_rewriter.rs`,
+bytes `0..307`, name `7..25`, genuine compiler hygiene `#0`.
+The file is consumed by `include!`; parsing the physical file without its
+include semantic context supplied no RA source/to_def owner. The 521.734-second
+preparation ended with no accepted proof or success receipt.
+
+A distinct bounded real include fixture then used the existing pinned public
+`Semantics::descend_token_into_include_expansion` and registered source/to_def
+roundtrips. This establishes the native semantic context, but
+`original_range_opt` returned `None` for the required impl owner:
+`MacroFile(MacroCallId(Id(12c5d)))`, native syntax range `44..107`.
+Its original compiler owner is `IncludedBinder<'a>`,
+`src/included.rs` bytes `52..126`, declaration `'a` `57..59`,
+`LocalDefId` 61 with parameter 62 in this exact capture, stable crate
+`9362986356028905341` and owner DefPathHash local component
+`11813089114578613898`. Compiler lifetime target identities and original
+bytes are available; the required exact RA original impl/source-node relation
+is not supplied by this scoped mechanism. Compiler root hygiene does not
+authorize relabelling it as a generated/coarse owner.
+
+The bounded fixture's unchanged Cargo build and separate after-analysis compiler
+capture succeeded, independently retaining 23 original owners. RA failed before
+accepted projection/publication. The exact selection
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.SourceBinderCapabilityTests.test_inherited_own_and_hrtb_identity_preserve_declarations`
+therefore failed in setUpClass: **0 executed cases, 0 assertions**, 52.316 seconds.
+The public source-range absence is retained explicitly; no copied declaration,
+textual owner/binder inference, fuzzy join, private resolver, producer upgrade,
+fallback, missing-owner omission or requirement waiver was introduced.
+
+### Evidence and acceptance limits
+
+Evidence remains outside Git at
+`/data/sifr-h03a1hbc-evidence-20261002/`. The immutable stop report
+`source-stop-report.json` has SHA-256
+`a597e21622c8603eef7483dad59f9b02d533f34806c73bea4d46d89debd26748`.
+It names the original build/invocation/capture files, source and parameter records,
+failure logs, atomic operation completions and frozen helper/runtime binding.
+The live preparation log `candidate-prepare-sifr_codegen-lib.log` has SHA-256
+`510dd9521dce45dc45707ed5be8e733035c4bbf16962b4d84525ba317a87e540`;
+the final bounded rejection log `development-included-source-stop.log` has
+SHA-256 `f29fb87f1e5d5a491b3346ff0b6dbe99dfa1d917a4ec49a3e3b0b7cb1228bc15`.
+
+Earlier development selections proved ordinary explicit/inherited/HRTB and
+normalization ingredients (identity case 14 assertions, alpha case 24, expanded
+identity case 19). Their inputs subsequently changed; they remain historical
+development evidence and are not current HBC acceptance. Coordinated-omission
+development rejected overwritten normal variant artifacts; separate owned
+artifact directories corrected that storage cause. Failed declaration queries,
+source joins and all raw records remain history.
+
+**HBC acceptance: zero complete five-case proof, zero full-class acceptance,
+zero accepted four-context union.** Lowering/test contexts, the complete original
+fixture union, affected thirteen-case assertions and HBF regression qualification
+remain unqualified for the unmerged attempt. Original accepted builtin/extension/
+inventory, Dynamic/include/source-authority and ObjectShapes negative behavior
+on main was not rewritten. HBF remains diagnostic feasibility with
+`semantic_export: false`; it cannot fill this capability gap.
+
+The existing compiler/Cargo/RA/server/component pins and isolated locked graph
+were retained. Only the helper build received build-only bootstrap. Owned disk
+and RAM reserves remained sufficient, at most two Cargo jobs and one sequential
+semantic server were used, operation guards were 1,200 seconds, and no size-only
+target cleanup or cold-run performance claim occurred. Resource blocker: none.
+
+This canonical-only stop record uses documentation structure/mutation checks,
+file-size guardrail, historical byte preservation, scope/whitespace checks and
+scoped self-review. It does not merge the unaccepted code, run broad gates or
+request an implementation review for a failed capability candidate.
+
+**Next action: separately rescope and prove the missing exact included-owner/
+impl source correspondence under the locked pins before a new H03a1hbc attempt.
+This owner stops. No full H03a1 adapter, Windows qualification or metrics work
+is unlocked.**
+
 ## H03a1hbf bounded original dependency feasibility delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1hbf feasibility closed; H03a1hbc ready for
@@ -3617,7 +3712,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
 | H03a1hbs | Required dependency source-binder stop #4234/#4235; **closed**, scope #4236 at `46ec9daf44a42427954ae20aab7f1046a1803f23` and controlling receipt above. | Original compiler HIR/source-binder scope only; H03a1hbf ready for separate assignment, no capability/adapter acceptance. |
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
-| H03a1hbc | Merged H03a1hbf proof #4238 and this separate receipt; **ready for separate assignment**. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts; complete merged proof required before separate full adapter resumption. |
+| H03a1hbc | Merged H03a1hbf proof #4238/#4258 retained; **needs new scope**, required include-owner/impl original source mapping unavailable in this attempt. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified; separately rescope exact included-owner source authority. No complete capability proof or adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
