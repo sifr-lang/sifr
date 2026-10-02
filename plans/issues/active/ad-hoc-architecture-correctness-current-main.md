@@ -69,7 +69,7 @@ Two preliminary named attempts remain failed/unaccepted, with zero executed case
 selecting the actual caller --extern artifact; `feasibility-original-final.log`
 exposed inconsistent directory exclusion handling, repaired with explicit original
 inventory dispositions. Their raw captures/logs remain outside Git. A third preliminary attempt,
-`hbf-original.log` at `d9b1fd8c8bea912cb0aa7b9b55c063ac56e574a1`, stops before
+`attempts/d9b1fd8c8bea912cb0aa7b9b55c063ac56e574a1/hbf-original.log`, stops before
 executing cases on an exact dependency cfg mismatch: four RA metadata feature
 atoms absent from the actual invocation, plus RA's intrinsic `true` atom. The
 pinned public CfgDiff now removes metadata features absent from actual compiler

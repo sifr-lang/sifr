@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import time
+import sys
 
 SCHEMA = "sifr-maintainability-source-binder-feasibility-v1"
 FRAGMENT = "sifr-maintainability-source-binder-v1"
@@ -102,7 +103,19 @@ def _inputs(root, metadata, messages, invocations, identity, output, api):
     for name in ("original-build.json", "dependency-invocation.json", "caller-invocation.json", "syn-raw.json", "caller-raw.json", "ra-source.json", "independent-inventory.json"):
         p = output / name
         if p.is_file(): files[str(p)] = api.digest(p.read_bytes())
-    return {"root":str(root), "tool":identity, "files":files, "directories":directories,
+    runtime_files={str(Path(sys.executable).resolve())}
+    for module in tuple(sys.modules.values()):
+        name=getattr(module,"__file__",None)
+        if name and Path(name).is_file():runtime_files.add(str(Path(name).resolve()))
+    cargo=Path(api.run(["rustup","which","cargo"]).stdout.strip())
+    runtime_files.add(str(cargo))
+    for binary in (Path(sys.executable),cargo):
+        linked=api.run(["ldd",str(binary)]).stdout
+        for line in linked.splitlines():
+            for word in line.split():
+                if word.startswith("/") and Path(word).is_file():runtime_files.add(str(Path(word).resolve()))
+    for name in runtime_files:files[name]=api.digest(Path(name).read_bytes())
+    return {"source_candidate":api.run(["git","rev-parse","HEAD"],cwd=root).stdout.strip(),"host":list(os.uname()),"python_runtime":sys.version,"root":str(root), "tool":identity, "files":files, "directories":directories,
             "build_environment":build_environment,
             "parent_environment":{k:api.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}}
 
@@ -206,6 +219,7 @@ def _project(originals, inputs, api):
 def _verify(proof, receipt, authority, api):
     require(isinstance(authority,OriginalAuthority) and authority.seal is _AUTHORITY and _REGISTERED.get(id(authority)) is authority, "unauthenticated or replaced original bridge authority", api)
     inputs = json.loads(authority.inputs)
+    require(api.run(["git","rev-parse","HEAD"],cwd=inputs["root"]).stdout.strip() == inputs["source_candidate"] and list(os.uname()) == inputs["host"] and sys.version == inputs["python_runtime"], "original candidate/host/Python runtime drift", api)
     require(receipt["inputs"] == inputs and receipt["capture_status"] == 0 and receipt["semantic_export"] is False, "original bridge context/capture compiler failure", api)
     for name, sha in inputs["files"].items():
         require(Path(name).is_file() and api.digest(Path(name).read_bytes()) == sha, "original bridge input/source/artifact drift: " + name, api)

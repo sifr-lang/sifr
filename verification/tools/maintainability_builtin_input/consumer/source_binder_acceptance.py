@@ -16,7 +16,7 @@ class SourceBinderFeasibilityTests(unittest.TestCase):
         cls.component=Path(os.environ["SIFR_BUILTIN_COMPONENT_RECEIPT"])
         cls.identity=builtin.tool_identity(cls.component,cls.target)
         cls.evidence=Path(os.environ["SIFR_BUILTIN_EVIDENCE_DIR"])
-        key=builtin.digest(builtin.encoded([str(builtin.ROOT),cls.identity,{k:builtin.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}]))
+        key=builtin.digest(builtin.encoded([str(builtin.ROOT),builtin.run(["git","rev-parse","HEAD"]).stdout.strip(),cls.identity,{k:builtin.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}]))
         cls.capture_dir=cls.evidence / "source-binder-prepared" / key
         cls.proof,cls.receipt,cls.authority=bridge.capture(cls.capture_dir,cls.target,cls.identity,builtin)
 
