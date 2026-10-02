@@ -1996,3 +1996,21 @@ admission/comparison and scoped review, Item 14 delivery, then the full combined
 merge profile, whole-phase acceptance review, archive and original draft #3647
 closure without merge. Items 1–13 remain delivered; this record does not close
 the phase or reclassify any failed gate as passing.
+
+
+The preliminary draft review of candidate `3aa344435c4377ee0ea726e68e158f9c3694a310`
+returned NOT SATISFIED, preserving the missing independent capture as an
+acceptance omission. It also identified a valid admission omission: the true
+cgroup root exposes neither cpu.max nor memory.max. One remediation batch
+records absent ancestor limits as null while still requiring finite current
+limits and rejecting malformed exposed ancestor controls. A nested true-root
+regression first fails on the old implementation, then passes with three
+additional boundary tests. All **57** reference/allocation/admission/timer tests
+pass after this correction. The 4342-file size guard and diff check pass.
+Workspace Clippy passed on the preceding identical Rust source with the measured
+private Cargo configuration (5m10s); this Python-only correction reuses that lint
+result. The full runner self-test inputs outside allocation remain unchanged.
+The review response SHA-256 is
+`4e0795952e23f1a6afcba81626f9ac1d334d1de8c232f2e4e89bf1ea15f23a9c`;
+the response and failed regression log remain outside Git. Capture, candidate
+comparison, final delivery review and the terminal phase gate are still pending.

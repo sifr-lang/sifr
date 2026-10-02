@@ -65,6 +65,51 @@ class ManagedAllocationTests(unittest.TestCase):
         self.assertEqual([row["path"] for row in measured["controls"]], ["worker", "."])
         self.assertEqual(measured["controls"][1]["cpu_quota_us"], 400000)
 
+    def nested_worker(self):
+        child = self.root / "worker"
+        child.mkdir()
+        (child / "cpu.max").write_text("800000 100000")
+        (child / "memory.max").write_text("34359738368")
+        self.membership.write_text("0::/worker\n")
+        return child
+
+    def test_true_root_without_limit_files_is_recorded(self):
+        self.nested_worker()
+        (self.root / "cpu.max").unlink()
+        (self.root / "memory.max").unlink()
+        (self.root / "cpu.weight").write_text("100")
+        measured = self.allocation()["controls"]
+        self.assertEqual(measured[0]["cpu_quota_us"], 800000)
+        self.assertEqual(measured[0]["memory_max_bytes"], 34359738368)
+        self.assertIsNone(measured[1]["cpu_quota_us"])
+        self.assertIsNone(measured[1]["cpu_period_us"])
+        self.assertIsNone(measured[1]["memory_max_bytes"])
+        self.assertEqual(measured[1]["additional_controls"], {"cpu.weight": "100"})
+
+    def test_partially_exposed_ancestor_limits_are_bound(self):
+        self.nested_worker()
+        (self.root / "cpu.max").unlink()
+        measured = self.allocation()["controls"][1]
+        self.assertIsNone(measured["cpu_period_us"])
+        self.assertEqual(measured["memory_max_bytes"], 17179869184)
+
+    def test_malformed_exposed_ancestor_limits_fail(self):
+        self.nested_worker()
+        for filename in ("cpu.max", "memory.max"):
+            with self.subTest(filename=filename):
+                path = self.root / filename
+                original = path.read_text()
+                path.write_text("malformed")
+                with self.assertRaises(ValueError):
+                    self.allocation()
+                path.write_text(original)
+
+    def test_parent_limits_do_not_replace_missing_current_limits(self):
+        child = self.nested_worker()
+        (child / "cpu.max").unlink()
+        with self.assertRaisesRegex(ValueError, "unavailable"):
+            self.allocation()
+
     def test_invalid_or_escaping_membership_fails(self):
         for value in ("1:cpu:/", "0::relative", "0::/../escape", "0::/\n0::/"):
             with self.subTest(value=value):

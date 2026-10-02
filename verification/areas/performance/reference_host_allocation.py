@@ -9,6 +9,15 @@ def positive_integer(value: str, field: str) -> int:
     return int(value)
 
 
+def exposed_limit(directory: Path, field: str, *, required: bool) -> str | None:
+    try:
+        return (directory / field).read_text().strip()
+    except FileNotFoundError:
+        if required:
+            raise
+        return None
+
+
 def managed_allocation(
     root: Path = Path("/sys/fs/cgroup"),
     membership: Path = Path("/proc/self/cgroup"),
@@ -27,13 +36,17 @@ def managed_allocation(
         for directory in [current, *current.parents]:
             if directory == root.parent:
                 break
-            cpu = (directory / "cpu.max").read_text().strip().split()
-            memory = (directory / "memory.max").read_text().strip()
-            if len(cpu) != 2:
-                raise ValueError("managed Linux reference has invalid cpu.max")
-            period = positive_integer(cpu[1], "CPU period")
-            quota = None if cpu[0] == "max" else positive_integer(cpu[0], "CPU quota")
-            capacity = None if memory == "max" else positive_integer(memory, "memory limit")
+            required = directory == current
+            cpu_text = exposed_limit(directory, "cpu.max", required=required)
+            memory = exposed_limit(directory, "memory.max", required=required)
+            quota = period = None
+            if cpu_text is not None:
+                cpu = cpu_text.split()
+                if len(cpu) != 2:
+                    raise ValueError("managed Linux reference has invalid cpu.max")
+                period = positive_integer(cpu[1], "CPU period")
+                quota = None if cpu[0] == "max" else positive_integer(cpu[0], "CPU quota")
+            capacity = None if memory in (None, "max") else positive_integer(memory, "memory limit")
             if directory == current and (quota is None or capacity is None):
                 raise ValueError("managed Linux reference requires finite CPU and memory limits")
             controls.append({
