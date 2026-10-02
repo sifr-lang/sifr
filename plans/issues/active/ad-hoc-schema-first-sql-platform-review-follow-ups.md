@@ -1301,19 +1301,53 @@ in this cloud session ("Don't block anything until you finish"). This supersedes
 the session-stop/external-owner boundary for necessary prerequisites; retain
 separate item scope, true qualification, and review evidence.
 
-Scope: behavior-preserving correction of the eight unchanged workspace Clippy
-findings in checked_place.rs, lower_expr/iterators_and_callables.rs, and
-sifr_lowering lower/method_authority.rs. Move local helper declarations before
+Scope: behavior-preserving correction of the unchanged workspace Clippy
+findings: the first eight in checked_place.rs,
+lower_expr/iterators_and_callables.rs, and sifr_lowering
+lower/method_authority.rs, followed by twelve downstream driver findings exposed
+when those crates could pass Clippy, then three analysis findings. Driver
+repairs preserve storage ownership, error branches, project-graph bytes and
+compiler initialization. Analysis repairs inline an unchanged preview message
+and borrow type-hierarchy item IDs instead of cloning/consuming them; update
+host, snapshot, LSP callers and existing tests together. No lint waiver. Move local helper declarations before
 the first statement, clone already-owned method names directly, and express
 local/imported authority with the equivalent positive comparison and swapped
 branches. No emitted Rust, SQL resolver, runtime, dependency, lint waiver, or
 coverage-policy change belongs to this prerequisite.
 
 Named qualification: existing sifr_codegen and sifr_lowering library tests;
-required `cargo clippy --workspace -- -D warnings`; formatting, HIR/driver/file
-size guards, diff check, and one exact-candidate scoped Opus review. The
+required `cargo clippy --workspace -- -D warnings`; affected existing driver
+storage/digest/guided-graph tests and analysis/LSP type-hierarchy/preview tests;
+formatting, HIR/driver/file-size guards, diff check, and one exact-candidate
+scoped Opus review. The
 prospective phase-end broad-gate policy applies; reuse unchanged Item 7 SQL
 qualification and its SATISFIED remediation review. After separate delivery,
 refresh Item 7 against main, verify unchanged SQL validation/review input hashes,
 and qualify workspace Clippy on the combined candidate before its merge.
 Historical failures and the original external-owner stop remain preserved.
+
+Existing library qualification exposed six pre-existing failures: three
+codegen optional-length cases already documented by the architecture phase's
+H02a1 owner, one lowering generic optional-parameter length case, and two
+codegen defaultdict slice-append shape assertions. The codegen run passed
+1,751 tests and failed 5; lowering passed 1,144, failed 1 and ignored 1. Do not
+claim these full suites passed. Record their mechanisms separately from this
+behavior-preserving lint item; the phase's final combined integration must
+resolve them under the user's prerequisite authorization. No skipped failing
+test or softened expectation is accepted as full qualification.
+
+## Item 13 — existing compiler integration regressions (2026-10-02)
+
+Status: registered prerequisite before final combined integration/closure.
+Own the six existing compiler-library failures observed during Item 7A,
+tracked in [#4240](https://github.com/sifr-lang/sifr/issues/4240), coordinating
+with the architecture phase's recorded H02a1 optional-length mechanism. Resolve receiver authority/type-contract preservation for the
+existing optional length cases and defaultdict slice-append insertion behavior
+or establish and correct a stale expectation against the actual contract.
+Preserve negative optional-method diagnostics, checked-read safety, generated
+representations and actual insertion/value behavior. Use existing failing
+tests, focused negative/native regressions as needed, then the complete
+codegen/lowering suites, relevant guards/Clippy and scoped Opus review.
+No untracked skip, blanket authority fallback or lint waiver is authorized.
+This necessary integration repair is explicitly authorized by the user's
+instruction to finish without stopping on prerequisites.

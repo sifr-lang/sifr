@@ -112,9 +112,7 @@ pub(super) fn open_namespace(cache: &Path, workspace: &Path, id: &str) -> io::Re
 /// Check existing ancestors without creating directories or following aliases.
 fn safe_path(path: &Path) -> bool {
     path.is_absolute()
-        && path
-            .ancestors()
-            .all(|part| cache_storage::real_directory(part))
+        && path.ancestors().all(cache_storage::real_directory)
         && cache_storage::check_owned(path).is_ok()
 }
 #[cfg(unix)]

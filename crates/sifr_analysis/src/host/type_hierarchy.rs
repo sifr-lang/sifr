@@ -61,12 +61,12 @@ impl AnalysisHost {
 
     pub fn type_hierarchy_supertypes(
         &mut self,
-        item: TypeHierarchyItemId,
+        item: &TypeHierarchyItemId,
     ) -> QueryResult<Vec<TypeHierarchyItem>> {
         let nodes = self.hierarchy_nodes()?;
         let parent = nodes
             .iter()
-            .find(|node| node.item.id == item)
+            .find(|node| &node.item.id == item)
             .and_then(|node| node.parent_identity.as_ref())
             .and_then(|identity| {
                 nodes
@@ -82,10 +82,10 @@ impl AnalysisHost {
 
     pub fn type_hierarchy_subtypes(
         &mut self,
-        item: TypeHierarchyItemId,
+        item: &TypeHierarchyItemId,
     ) -> QueryResult<Vec<TypeHierarchyItem>> {
         let nodes = self.hierarchy_nodes()?;
-        let Some(parent) = nodes.iter().find(|node| node.item.id == item) else {
+        let Some(parent) = nodes.iter().find(|node| &node.item.id == item) else {
             return Ok(self.result(AnalysisQueryKind::TypeHierarchySubtypes, Vec::new()));
         };
         let children = nodes
@@ -246,13 +246,13 @@ mod tests {
             .into_value()
             .expect("child is a type");
         assert_eq!(
-            host.type_hierarchy_supertypes(child.id.clone())
+            host.type_hierarchy_supertypes(&child.id)
                 .expect("supertypes")
                 .into_value(),
             vec![base.clone()]
         );
         assert_eq!(
-            host.type_hierarchy_subtypes(base.id.clone())
+            host.type_hierarchy_subtypes(&base.id)
                 .expect("subtypes")
                 .into_value(),
             vec![child]
@@ -271,7 +271,7 @@ mod tests {
         )
         .expect("edit should load");
         assert!(
-            host.type_hierarchy_subtypes(base.id.clone())
+            host.type_hierarchy_subtypes(&base.id)
                 .expect("updated subtypes")
                 .into_value()
                 .is_empty()
@@ -319,7 +319,7 @@ mod tests {
             .into_value()
             .expect("child type");
         let parents = host
-            .type_hierarchy_supertypes(child.id.clone())
+            .type_hierarchy_supertypes(&child.id)
             .expect("parents")
             .into_value();
         assert_eq!(parents.len(), 1);
@@ -332,7 +332,7 @@ mod tests {
             Some(parents[0].clone())
         );
         assert_eq!(
-            host.type_hierarchy_subtypes(parents[0].id.clone())
+            host.type_hierarchy_subtypes(&parents[0].id)
                 .expect("subtypes")
                 .into_value(),
             vec![child.clone()]
@@ -344,7 +344,7 @@ mod tests {
         )
         .expect("base edit should load");
         assert!(
-            host.type_hierarchy_supertypes(child.id)
+            host.type_hierarchy_supertypes(&child.id)
                 .expect("stale imported base should disappear")
                 .into_value()
                 .is_empty()

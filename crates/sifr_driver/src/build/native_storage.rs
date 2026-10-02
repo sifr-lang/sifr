@@ -90,10 +90,12 @@ pub(crate) fn publication_lock(path: &Path) -> std::io::Result<PublicationLease>
         std::env::current_dir()?.join(path)
     };
     #[cfg(windows)]
-    crate::windows_storage_security::no_reparse(&path)?;
-    std::fs::create_dir_all(&path)?;
+    let path = path.as_path();
     #[cfg(windows)]
-    crate::windows_storage_security::no_reparse(&path)?;
+    crate::windows_storage_security::no_reparse(path)?;
+    std::fs::create_dir_all(path)?;
+    #[cfg(windows)]
+    crate::windows_storage_security::no_reparse(path)?;
     let path = path.canonicalize()?;
     let mut id = sifr_identity::IdentityEncoder::new("native-publication-v1");
     id.field("path", path.as_os_str().as_encoded_bytes());
