@@ -10,6 +10,108 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbip consumed original derive-attribute authority stop (2026-10-02)
+
+**Current controlling state: H03a1hbip needs new scope; the amended
+declaration/attribute envelope has no accepted proof. H03a1hbc and full H03a1
+remain dependency-blocked.** This resumed assignment starts from actual latest
+main `30881c093494cc574e82c82261e607a20f7d42de`, containing complete H03a1hbie
+scope #4265 and separate receipt #4266. It supersedes only HBIP's readiness
+state. The complete amended contract, original HBI requirements and all prior
+accepted/failed evidence remain unchanged.
+
+Recovery found the exact same-session worktree/branch and six partial diagnostic
+source files intact, with no surviving compiler, Cargo, helper or review process
+and no completed operation evidence to adopt. The recovered source bytes and
+cache-adoption receipt are retained outside Git. The exclusively owned
+unaccepted diagnostic candidate is `4b69a9a726fb1031887559fa9583c39bc52525b8`.
+Only this canonical stop record is published.
+
+Fresh unchanged original production control
+`cargo check --locked --lib -p sifr_codegen --target x86_64-unknown-linux-gnu --message-format=json`
+succeeds with normal artifacts and successful build-finished. The actual caller
+invocation, successful compiler status, complete environment including its
+tracked RUSTC_WRAPPER, source/build/extern inputs and separate successful
+after-expansion/after-analysis replays are retained. Bootstrap is confined to
+the isolated helper build and does not enter the analyzed graph.
+
+| Required original fact | Fresh development observation |
+| --- | --- |
+| Production owner | `generated_rust_canonicalizer::syntax_cleanup::borrowed_scalar_parameters::SifrIntBindingCollector` |
+| Compiler original declaration | `type_facts.rs` STRUCT `19..81`, hygiene `#0`, disposition `original`; HIR source and captured expanded AST declaration span/owner association agree; compiler parent is serialized separately, without full cross-stage acceptance |
+| Actual compiler association | NodeId `444945` to `DefId(0:11595 ~ sifr_codegen[7ce1]::generated_rust_canonicalizer::syntax_cleanup::borrowed_scalar_parameters::SifrIntBindingCollector)`; stable crate/DefPathHash and parent remain raw capture anchors, not cross-capture constants |
+| Physical required attribute | Immutable original source begins `#[derive(Default)]`; the fresh physical RA STRUCT includes that attribute at `0..81` |
+| Expanded AST direct attributes | `attributes: []` on that actual original compiler-associated STRUCT after expansion |
+| Separate lowered view | `TyCtxt::hir_attrs` raw variant view is `[]`; no generic HIR Attribute::span is called |
+| Bounded attributed fixture | Normal compilation and replay of real IncludedBinder with `#[derive(Debug)]` succeed; both distinct left/right original declarations retain `17..68` and independently associated expanded `attributes: []` |
+| Development inventory counts | `9955` original compiler owners, `7222` captured expanded AST declarations, `2721` native RA records including `553` explicit missing-native-source records |
+| Other required anchor retained | Original ScalarCallRewriter declaration remains `0..307`; its expanded declaration token availability is explicitly false, with no absence/source acceptance inferred |
+
+The required original derive attribute is consumed before the approved
+after-expansion capture. Exact pinned compiler sources show attribute-invocation
+removal in rustc_expand, derive resolution consumption in rustc_resolve and the
+separate builtin derive expansion. The approved ResolverAstLowering owner maps
+retain actual NodeId/LocalDefId associations but supply no captured complete
+original raw AttrId/style/order/attachment ledger for these observed declarations.
+Expansion call-site/module/macro provenance is a separate fact; it does not
+supply that missing original attribute inventory.
+
+The amended contract explicitly requires exact original compiler-owned attribute
+identity, attachment/source or transformation authority for consumed attributes,
+and explicitly forbids certifying absence from an empty expanded/lowered list
+or a physical parser alone. The fresh empty lists therefore cannot authenticate
+the required original direct attribute. Item token availability, full physical
+range, aggregate source mapping, generated derive output, source text, range
+hull or removal of leading attrs cannot replace the missing AttrId/attachment
+authority. This is the precise unavailable required fact under the approved
+capture, not a claim that every pinned public API or future scoped mechanism is
+impossible. The earlier exact-range stop is retained and not reclassified.
+
+All four prospective IncludeSourceCorrespondenceTests remain absent and
+unexecuted: **zero named cases / zero assertions**, no full class and **zero
+accepted contexts of four**. Focused regressions were not reached. The one
+unchanged production control and bounded fixture are development observations,
+not original-union or diagnostic acceptance. No fresh syn invocation was
+available in this warm control; dependency replay/joins and the complete
+four-context union are unqualified. All native missing-source dispositions stay
+explicit, without inferred omissions. `semantic_export: false` remains fixed.
+
+Evidence is durable on `yaser5@192.168.1.134` at
+`/data/sifr-h03a1hbip-envelope-evidence-20261002/`: recovery manifest, raw
+operations/logs, actual original invocation/control, raw compiler/expanded/
+lowered/native inventories, bounded fixture originals, authenticated inputs,
+official pinned compiler-source audit and frozen final helper/source/executable
+bytes. `source-stop-report.json` SHA-256 is
+`8813cf0e18260e7c1ba7b6454d5e05f95ad5734b400fa9fda54c1cf4c40f8dc2`. The final confirmation reauthenticates
+`16351` retained original input files plus exact helper/component/runtime
+identity after compiler/RA consumption. The initial post-RA input authentication failure used inherited compiler-caller
+Cargo variables; its raw failed inputs/logs are retained. The corrected bounded
+launcher uses the actual original top-level Cargo control environment for RA,
+without changing its graph or arguments. The frozen-helper file-mode launch
+failure is also retained; copying the original executable mode lets the unchanged
+bounded fixture rerun. Intermediate development outputs and prior build bindings
+remain historical; they are not reused as unchanged
+acceptance after the lowered-view diagnostic source change.
+
+The recovered implementation worktree, branch and compatible target remain
+owned and retained. No target cleanup occurred; disk/RAM reserves and sequential
+worker/two-Cargo-job limits were satisfied. Root/helper manifests, locks, pins,
+producer/API graph, compiler/RA sources and other sessions' trees/indexes are
+unchanged. This canonical-only stop uses its own worktree/index and exact unchanged
+documentation gitlinks, registered documentation structure/mutation checks,
+file-size guardrails, whitespace/scope checks, byte-exact historical reconstruction
+and scoped self-review. No partial code merge, external implementation review,
+broad gate or successful proof delivery receipt is issued.
+
+**Next action: separately scope exact compiler-owned original pre-consumption
+attribute identity/attachment or transformation authority for the required
+consumed derive attributes, preserving every original declaration span, pin,
+owner/context/fixture and semantic obligation.** No HBC assignment or full adapter
+resumption precedes complete HBIP proof and its separate receipt. HBF/HBS,
+#4222/#4233, genuine body ReErased rules, ObjectShapes RA-only negative, all prior
+source/region/binder stops, Windows/metrics/V01/Q01 and SQL ownership remain
+unchanged. This owner stops needs-new-scope and starts no next batch.
+
 ## H03a1hbie declaration/attribute envelope scope delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1hbie documentation scope is closed;
@@ -4541,7 +4643,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
 | H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
-| H03a1hbip | Complete merged H03a1hbie scope #4265 and separate receipt required; **ready for separate assignment after receipt merge**, zero accepted proof cases/contexts. | Amended exact declaration/attribute envelope and include-source diagnostic proof: four original named cases/full class, complete original four Linux contexts, affected regressions, scoped review/merge and separate receipt; semantic_export false. |
+| H03a1hbip | Complete amended H03a1hbie #4265/#4266 retained; **needs-new-scope**, consumed original derive attribute identity/attachment authority unavailable, zero accepted proof cases/contexts. | Original compiler-owned attribute attachment/transformation authority must be separately scoped; no partial envelope/include proof, HBC or adapter acceptance. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
