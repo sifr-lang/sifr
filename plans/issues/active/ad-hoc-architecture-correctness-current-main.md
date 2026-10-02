@@ -131,6 +131,12 @@ uses that environment directly. Pre-analysis input hashes and original build-scr
 outputs are now retained durably before replay/RA preparation. The failed raw capture
 and completion records remain unaccepted in `attempts/` and the prepared evidence.
 Fresh qualification and exact-candidate review are required.
+Candidate `12a962cb1b7a755eaea03186a02cb3295b460e78` passes all selected
+checks: named individuals7/21/35, class3/3 with63 and four focused originals
+48/141/48/24, totaling10 cases and387 assertions. Its entire committed-diff
+whitespace guard then found one trailing blank line in the new acceptance module;
+all logs/receipts remain historical in `attempts/`. That line is removed. The
+changed helper-source identity requires final fresh qualification and review.
 The first review's suggestions are deferred to their owning future work: reverse
 trait multiset coverage, typed exception conversion, new ancestor-manifest absence
 coverage, cfg configuration labeling, dep-info mtime/output isolation, environment

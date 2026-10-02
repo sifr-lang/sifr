@@ -127,4 +127,3 @@ class SourceBinderFeasibilityTests(unittest.TestCase):
 
 
 def stable(identity):return identity["crate"],identity["hash"]
-
