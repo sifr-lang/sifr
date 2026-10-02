@@ -7,7 +7,7 @@ Owner: SQL compiler, schema tools, and verification
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
 Status: Items 4, 4A, 5, 7, 10 and prerequisites 7A/10A merged. Continue Items
-11, 12, registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
+12, registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
 [#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
@@ -740,7 +740,7 @@ Additional closure criteria for the later items:
 - [x] Ordinary `.sifr` source builds and executes typed SQL against an actual
   test database without a test-only bridge; decorated and standalone calls
   preserve their profile, binding, and result contracts.
-- [ ] Runtime byte values retain binary/text identity through round trips,
+- [x] Runtime byte values retain binary/text identity through round trips,
   including valid and invalid UTF-8, and encoding failures are classified
   correctly.
 - [ ] CLI and editor preserve the same provider diagnostic identity, severity,
@@ -1671,3 +1671,35 @@ belongs here. Qualify empty, valid UTF-8, embedded-zero and invalid UTF-8 binary
 values with representation/content assertions, valid and malformed text, and
 encoding failures. Use focused native codec tests and actual database round trips
 through the runtime packages; record the tested server versions explicitly.
+
+## Item 11 — merged cloud runtime value preservation (2026-10-02)
+
+[PR #4245](https://github.com/sifr-lang/sifr/pull/4245) merged candidate
+`a4f7c70cc68f479c0df33a91e8d531e5929f3233` as
+`d563a977ba619046a7d223d13daeb7a74ed66ce3`, against base
+`420984aa472f2266a8c53ce46ce9b9d3a6405644`. MySQL now preserves binary
+values from actual column metadata, strictly decodes declared text, and
+classifies encoding failures as Encode. PostgreSQL preserves Encode through
+the driver source chain and rejects unrepresentable NUL text. SQLite's
+existing representation/error boundaries now have actual-file qualification.
+
+Named native tests pass: MySQL 10, PostgreSQL 8, SQLite 12. All 18 live
+tests pass (new value tests plus existing contracts on each server):
+MySQL 8.4.11/9.7.2/26.7.0; PostgreSQL
+13.23/14.24/15.19/16.15/17.11/18.6. Exact image IDs/digests and actual
+server versions are recorded in `/workspace/sql-item11-cloud-evidence/live-value-matrix.json`.
+Workspace Clippy, formatting, HIR/driver/file-size guards (4331 files), and
+unchanged producer-closure qualification (31 mutations) pass. Runtime-only
+changes do not invalidate component producer inputs. The initial PostgreSQL
+test-authoring compile failure, transport-interrupted run, and failed image
+pulls remain failed/incomplete evidence; no ignored live test is counted
+without execution. No full gate or release qualification is claimed here.
+
+Scoped Opus review was SATISFIED with no blocking findings, recorded
+[outside the reviewed Git tree](https://github.com/sifr-lang/sifr/pull/4245#issuecomment-5948957335).
+Atomic response SHA-256:
+`955c5dc9128654a04757122c7bea9a953720cbff4be946f92bdbc4622cf54719`.
+Evidence root: `/workspace/sql-item11-cloud-evidence/`. Optional MySQL live
+hardening belongs to [#4246](https://github.com/sifr-lang/sifr/issues/4246).
+Items 12/13, final combined integration and Item 6 closure remain pending.
+This receipt changes records only and needs no repeated gate or external review.
