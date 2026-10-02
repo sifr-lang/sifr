@@ -249,7 +249,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         return {"capture": capture, "check": check, "functional": functional}[args.command](args)
-    except (BenchmarkError, ValueError, KeyError, OSError, subprocess.SubprocessError) as error:
+    except (BenchmarkError, ValueError, KeyError, TypeError, AttributeError,
+            OSError, subprocess.SubprocessError) as error:
         print(f"cloud performance error: {error}", file=sys.stderr)
         return 2
 
