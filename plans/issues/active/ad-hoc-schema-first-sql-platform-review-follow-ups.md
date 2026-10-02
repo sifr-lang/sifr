@@ -6,10 +6,8 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, 5 and prerequisite 7A merged; Item 7 SQL qualification
-and remediation review passed. Its combined workspace Clippy check is next.
-Continue Item 7, then Items 10, 11, 12, registered prerequisite 13, final
-integration and the Item 6 closer. The compiler lint issue
+Status: Items 4, 4A, 5, 7 and prerequisite 7A merged. Continue Items 10,
+11, 12, registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
 [#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
@@ -134,11 +132,11 @@ that transport. The branch and source remain in the cloud-owned checkout.
 
 ### Item 7 cloud qualification (2026-10-02)
 
-Status: implementation and named PostgreSQL tests qualified; merge waits for
-workspace Clippy prerequisite [#4230](https://github.com/sifr-lang/sifr/issues/4230)
-and exact-candidate Opus review. The prerequisite belongs to the compiler owner;
-a separate behavior-preserving repair scope is awaiting the user's answer.
-Items 10, 11, 12, final integration, and Item 6 closure remain pending.
+Historical initial qualification: implementation and named PostgreSQL tests
+passed at the first Item 7 candidate, while workspace Clippy and scoped review
+were pending. The user subsequently authorized the separate prerequisite
+repair. The initial scoped review found two regressions; its failed result and
+the remediation are preserved below. The final Item 7 delivery receipt follows.
 
 DDL and live catalog views now share analyzer-resolved relation and column
 identities. View-only binding capture retains scope and alias roles, expands
@@ -213,6 +211,45 @@ Historically, compiler prerequisite #4230 remained unresolved at that
 remediation snapshot; no workspace Clippy or merge was then claimed.
 Item 7A below subsequently resolves it. Final integration and phase closure
 still require all later implementation and prerequisite items.
+
+### Item 7 final cloud delivery (2026-10-02)
+
+Status: merged in [PR #4231](https://github.com/sifr-lang/sifr/pull/4231),
+merge `ba8b7e10c3f5955de50491c0c8bef3b44759fb4c`. Final combined candidate
+`7289670309137b4105668816391d6a4566b7c796`, base
+`d08b525049debcc8f0a3aee941936cca062424af`. All SQL implementation,
+test, component, contract and Cargo lockfile inputs exactly match the reviewed
+and SQL-qualified source `1d20429c40663ae803ecf99aabbdd9c28e0ea7b8`.
+The unrelated compiler prerequisite source exactly matches its approved
+`0cb7e398b5f6fa77ca14bbca30535540995f249c`. Documentation receipts
+changed; `combined-input-reuse.json` verifies both source scopes.
+
+Remediation qualification: 31 native parser tests passed per PostgreSQL major
+13–18 (186 total), plus the actual host test against all six rebuilt WASI
+components. Recursive CTEs and ordered set operations join the native, live
+and guest equivalence/non-equivalence regressions. The live matrix freshly
+passed all six server majors with seven view forms and a changed-predicate
+negative control; no initial-candidate live pass was reused for remediation.
+Named tools-package tests passed 6 with 2 live tests ignored and separately
+qualified. Component provenance and PostgreSQL library Clippy passed.
+On the final combined candidate, full workspace Clippy, formatting, HIR/driver
+guards, file-size guard (4324 files), and diff checks passed.
+
+The [SQL remediation Opus review](https://github.com/sifr-lang/sifr/pull/4231#issuecomment-5944162405)
+returned SATISFIED, no blockers; response SHA-256
+`f2db23f05cbb55335bb37855855c807f0b2b32ebca2d603c5d0271a10788c806`.
+The [combined qualification/reuse receipt](https://github.com/sifr-lang/sifr/pull/4231#issuecomment-5947156339)
+records the repaired base and unchanged approved inputs. Reuse is authorized
+by the rule that unrelated base and record-only changes do not invalidate
+review or unchanged validation. No further Item 7 remediation review or
+intermediate broad gate was run. Evidence is outside Git in
+`/workspace/sql-item7-remediation-cloud-evidence/`; initial failures and the
+NOT SATISFIED response remain in `/workspace/sql-item7-cloud-evidence/`.
+
+Pre-existing view semantics stay in [#4232](https://github.com/sifr-lang/sifr/issues/4232).
+The six compiler integration failures stay Item 13 / #4240 and must be fixed
+before final combined qualification. Items 10, 11, 12, 13, final integration
+and Item 6 closure are still pending; the phase is not closed.
 
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
@@ -943,7 +980,7 @@ items execute after Items 1–5 and before the docs-only Item 6 closer.
 
 ### Item 7 — PostgreSQL view normalization parity
 
-Status: cloud implementation and named PostgreSQL qualification complete; workspace Clippy prerequisite #4230 and scoped review pending. Dependencies: Items 1 and 5 merged. Delivery order:
+Status: merged in PR #4231; see final cloud delivery receipt above. Dependencies: Items 1 and 5 merged. Delivery order:
 after Item 5 and before Item 6.
 
 Reported by Item 1 child, not implemented by it: broadening the original PG18
