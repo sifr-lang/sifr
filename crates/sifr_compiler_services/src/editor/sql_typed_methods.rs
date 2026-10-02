@@ -5,7 +5,9 @@ use sifr_frontend::{
     QueryCompilationInput, SqlEditorDocumentView, SqlQueryCompiler, SqlQueryDeclaration,
 };
 use sifr_ir::{HirExpr, HirSqlExecutionMethod};
-use sifr_lowering::{TypedMethodProcessor, TypedMethodRequest};
+use sifr_lowering::{
+    TypedMethodFailure, TypedMethodOutput, TypedMethodProcessor, TypedMethodRequest,
+};
 use sifr_sql_contract::{QueryOrigin, component_codec_registry, provider_analysis_from_response};
 use sifr_type_system::Type;
 
@@ -34,11 +36,7 @@ impl SqlTypedMethods {
         self.profiles
             .registry()
             .entries()
-            .find_map(|(name, registered)| {
-                (identity == &format!("sifr.sql.schemas.{name}")
-                    && registered.authority().profile.schema.dialect.family == "sqlite")
-                    .then_some(name)
-            })
+            .find_map(|(name, _)| (identity == &format!("sifr.sql.schemas.{name}")).then_some(name))
     }
 
     fn query(
@@ -47,22 +45,21 @@ impl SqlTypedMethods {
         owner: &str,
         profile: &str,
         args: &[HirExpr],
-    ) -> Result<HirExpr, String> {
+    ) -> Result<TypedMethodOutput, TypedMethodFailure> {
         let [HirExpr::TemplateString(template)] = args else {
             return Err("SQL construction requires one literal typed template".into());
         };
         let document = SqlEditorDocumentView::from_hir(template).with_profile(profile.to_string());
-        let parameter_types = template
-            .interpolations
-            .iter()
-            .map(|i| sifr_frontend::sql_contract_type(&i.value_type))
-            .collect::<Result<Vec<_>, _>>()?;
+        let unsafe_holes = crate::sql_diagnostics::unsupported_hole_diagnostics(&document, module);
+        if !unsafe_holes.is_empty() {
+            return Err(TypedMethodFailure::Diagnostics(unsafe_holes));
+        }
         let declaration = SqlQueryDeclaration {
             symbol: owner.into(),
             profile_name: profile.into(),
             exported: !owner.starts_with('_'),
             document,
-            parameter_types: parameter_types.clone(),
+            parameter_types: Vec::new(),
         };
         let registered = self
             .profiles
@@ -93,20 +90,36 @@ impl SqlTypedMethods {
             None,
         )
         .map_err(|e| e.to_string())?;
-        let response = host
+        let mut response = host
             .analyze(&component.registration, &component.bytes, &request)
             .map_err(|e| e.to_string())?
             .response;
-        if !response.plan.diagnostics.is_empty() {
-            return Err(response
-                .plan
-                .diagnostics
-                .iter()
-                .map(|d| format!("{}: {}", d.code, d.message))
-                .collect::<Vec<_>>()
-                .join("; "));
+        let diagnostics = response
+            .plan
+            .diagnostics
+            .iter()
+            .map(crate::sql_diagnostics::render_provider_diagnostic)
+            .collect::<Vec<_>>();
+        if diagnostics
+            .iter()
+            .any(|d| d.severity == sifr_diagnostics::Severity::Error)
+        {
+            return Err(TypedMethodFailure::Diagnostics(diagnostics));
         }
+        response.plan.diagnostics.clear();
         let analysis = provider_analysis_from_response(&response).map_err(|e| e.to_string())?;
+        if registered.authority().profile.schema.dialect.family != "sqlite" {
+            // Keep the compile-time template value produced by ordinary SQL erasure.
+            return Ok(TypedMethodOutput {
+                expression: args[0].clone(),
+                diagnostics,
+            });
+        }
+        let parameter_types = template
+            .interpolations
+            .iter()
+            .map(|i| sifr_frontend::sql_contract_type(&i.value_type))
+            .collect::<Result<Vec<_>, _>>()?;
         let codecs =
             component_codec_registry(&analysis, &parameter_types).map_err(|e| e.to_string())?;
         if analysis.effects.effect != sifr_sql_contract::QueryEffect::Read {
@@ -161,10 +174,13 @@ impl SqlTypedMethods {
             "parameter_types": query.hir.parameters.iter().map(|slot| slot.ty.to_string()).collect::<Vec<_>>(),
             "result_types": query.contract.result_fields,
         }).to_string();
-        Ok(HirExpr::ConstructorCall {
-            class_name: "__sifr_sql_bound".into(),
-            args: vec![HirExpr::StringLiteral(descriptor), args[0].clone()],
-            ty,
+        Ok(TypedMethodOutput {
+            expression: HirExpr::ConstructorCall {
+                class_name: "__sifr_sql_bound".into(),
+                args: vec![HirExpr::StringLiteral(descriptor), args[0].clone()],
+                ty,
+            },
+            diagnostics,
         })
     }
 
@@ -314,7 +330,7 @@ impl SqlTypedMethods {
 #[derive(Debug, Default)]
 struct PreparedMethods {
     pending: std::collections::BTreeMap<String, OwnedMethodRequest>,
-    expressions: std::collections::BTreeMap<String, Result<HirExpr, String>>,
+    expressions: std::collections::BTreeMap<String, Result<TypedMethodOutput, TypedMethodFailure>>,
 }
 #[derive(Debug)]
 struct OwnedMethodRequest {
@@ -328,10 +344,22 @@ struct OwnedMethodRequest {
 
 impl TypedMethodProcessor for SqlTypedMethods {
     fn handles(&self, receiver: &Type, method: &str) -> bool {
-        self.profile_name(receiver).is_some() && matches!(method, "sql" | "connect")
-            || matches!(receiver.resolve_alias(), Type::Class { identity: Some(identity), .. } if identity == "sifr.sql.Pool")
+        self.profile_name(receiver).is_some_and(|profile| {
+            method == "sql"
+                || method == "connect"
+                    && self
+                        .profiles
+                        .registry()
+                        .profile(profile)
+                        .is_ok_and(|entry| {
+                            entry.authority().profile.schema.dialect.family == "sqlite"
+                        })
+        }) || matches!(receiver.resolve_alias(), Type::Class { identity: Some(identity), .. } if identity == "sifr.sql.Pool")
     }
-    fn compile(&self, request: TypedMethodRequest<'_>) -> Result<HirExpr, String> {
+    fn compile(
+        &self,
+        request: TypedMethodRequest<'_>,
+    ) -> Result<TypedMethodOutput, TypedMethodFailure> {
         // Include the complete typed source expression, not merely its range: edited
         // templates and dependent inferred types must never reuse stale facts.
         let key = format!("{request:?}");
@@ -374,7 +402,10 @@ impl TypedMethodProcessor for SqlTypedMethods {
 }
 
 impl SqlTypedMethods {
-    fn prepare_method(&self, request: OwnedMethodRequest) -> Result<HirExpr, String> {
+    fn prepare_method(
+        &self,
+        request: OwnedMethodRequest,
+    ) -> Result<TypedMethodOutput, TypedMethodFailure> {
         let OwnedMethodRequest {
             module,
             owner,
@@ -384,20 +415,26 @@ impl SqlTypedMethods {
             keywords,
         } = request;
         if keywords.iter().enumerate().any(|(index, keyword)| {
-            keyword
-                .as_ref()
-                .is_some_and(|name| method != "fetch_all" || index != 1 || name != "max_rows")
+            keyword.as_ref().is_some_and(|name| {
+                (method != "fetch_all" || index != 1 || name != "max_rows")
+                    && (method != "sql" || index != 0 || name != "template")
+            })
         }) {
             return Err("unsupported SQL keyword argument".into());
         }
         if let Some(profile) = self.profile_name(object.ty()) {
             return match method.as_str() {
                 "sql" => self.query(&module, &owner, profile, &args),
-                "connect" => self.connect(profile, &args),
+                "connect" => self
+                    .connect(profile, &args)
+                    .map(Into::into)
+                    .map_err(Into::into),
                 _ => Err("unsupported SQL constructor".into()),
             };
         }
         Self::execute(object, &method, args)
+            .map(Into::into)
+            .map_err(Into::into)
     }
 }
 

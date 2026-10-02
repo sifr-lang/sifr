@@ -10,6 +10,7 @@ use sifr_sql_runtime::{
     RuntimeEffectContract, RuntimeLimits, SchemaDependencySlice, SchemaStrictness, SessionContract,
     SqlErrorKind,
 };
+use sifr_sql_runtime::{OwnedParameter, OwnedSqlValue, RuntimeCodecIdentity};
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::Instant;
@@ -87,6 +88,63 @@ fn read_request(
         },
         mode,
     }
+}
+
+#[tokio::test(flavor = "current_thread")]
+#[ignore = "requires SIFR_MYSQL_TEST_URL"]
+async fn live_binary_and_text_values_keep_their_declared_identity() {
+    let url = std::env::var("SIFR_MYSQL_TEST_URL").expect("test URL");
+    let selected = profile(&url);
+    let pool = connect(selected.clone()).await.expect("verified pool");
+    let bound = |sql: &str, value: OwnedSqlValue| {
+        let mut request = read_request(&selected, sql, ExecutionMode::FetchAll { maximum_rows: 2 });
+        request.parameters = BoundParameters::new(vec![OwnedParameter {
+            slot: 0,
+            codec: RuntimeCodecIdentity::new("mysql.native.v1").expect("codec"),
+            value,
+        }])
+        .expect("parameters");
+        request
+    };
+    for bytes in [
+        Vec::new(),
+        b"valid UTF-8".to_vec(),
+        b"a\0b".to_vec(),
+        vec![0xff, 0, 0x80],
+    ] {
+        let value = OwnedSqlValue::Bytes(Arc::from(bytes));
+        let rows = pool
+            .fetch_all(
+                bound("SELECT CAST(? AS BINARY)", value.clone()),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("binary round trip");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].values(), &[value]);
+    }
+    for text in ["", "valid UTF-8", "a\0b", "snowman ☃"] {
+        let value = OwnedSqlValue::Text(text.into());
+        let rows = pool
+            .fetch_all(
+                bound(
+                    "SELECT CAST(? AS CHAR CHARACTER SET utf8mb4)",
+                    value.clone(),
+                ),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("text round trip");
+        assert_eq!(rows[0].values(), &[value]);
+    }
+    let error = pool
+        .fetch_all(
+            bound("SELECT ?", OwnedSqlValue::Sequence(vec![])),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect_err("unsupported client encoding");
+    assert_eq!(error.kind(), SqlErrorKind::Encode);
 }
 
 #[tokio::test(flavor = "current_thread")]

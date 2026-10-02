@@ -841,6 +841,7 @@ fn boxed_malformed(problem: impl Into<String>, range: TextRange) -> Box<HirDiagn
 
 fn diagnostic(code: DiagnosticCode, message: String, range: TextRange) -> HirDiagnostic {
     HirDiagnostic {
+        external: None,
         code: Some(code),
         message,
         args: BTreeMap::new(),

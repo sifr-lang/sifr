@@ -1,25 +1,25 @@
 {
   "artifacts": [
     {
-      "core_sha256": "9651dce245bcefd457f7a01e2aedf045ae107fe5d708212adc72675418863a72",
+      "core_sha256": "b031948aed3bb73fd49825e227dc50e1fd9093af02e8f8413e0b82e1eab4491b",
       "path": "components/mysql-8.4.wasm",
       "series": "8.4",
-      "sha256": "58b61f6bb7d25deec5221bf791de5eb97deccf8473bb9c1658bb390b1812dde2",
-      "size_bytes": 1524633
+      "sha256": "b2a1c5de4c859871b880561053fa82875c6f5f2a250c8930dedf9dc01372d298",
+      "size_bytes": 1538961
     },
     {
-      "core_sha256": "9651dce245bcefd457f7a01e2aedf045ae107fe5d708212adc72675418863a72",
+      "core_sha256": "b031948aed3bb73fd49825e227dc50e1fd9093af02e8f8413e0b82e1eab4491b",
       "path": "components/mysql-9.7.wasm",
       "series": "9.7",
-      "sha256": "58b61f6bb7d25deec5221bf791de5eb97deccf8473bb9c1658bb390b1812dde2",
-      "size_bytes": 1524633
+      "sha256": "b2a1c5de4c859871b880561053fa82875c6f5f2a250c8930dedf9dc01372d298",
+      "size_bytes": 1538961
     },
     {
-      "core_sha256": "9651dce245bcefd457f7a01e2aedf045ae107fe5d708212adc72675418863a72",
+      "core_sha256": "b031948aed3bb73fd49825e227dc50e1fd9093af02e8f8413e0b82e1eab4491b",
       "path": "components/mysql-26.7.wasm",
       "series": "26.7",
-      "sha256": "58b61f6bb7d25deec5221bf791de5eb97deccf8473bb9c1658bb390b1812dde2",
-      "size_bytes": 1524633
+      "sha256": "b2a1c5de4c859871b880561053fa82875c6f5f2a250c8930dedf9dc01372d298",
+      "size_bytes": 1538961
     }
   ],
   "parser_generator": {
@@ -29,7 +29,9 @@
   "protocol_major": 1,
   "provenance": {
     "build_environment": {
-      "CARGO_BUILD_JOBS": "2"
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0"
     },
     "family": "mysql",
     "rust": {
@@ -45,21 +47,23 @@
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
-      "Cargo.lock": "08980cc4c5b039e99daad80fef3e90ebc8aba92e3adbb8d51ce7e95a1dd7c2ff",
+      "Cargo.lock": "da250d44c11fe7e6e04bd7f4ca2a5bd00ebde7ce56dccd4fde70e6acf339d94f",
       "Cargo.toml": "1108fbb055427808be594f674dc9a06306dc2f822813039f300d1bbcc0590e31",
       "crates/sifr_compiler_component/Cargo.toml": "56f2b6427a88f761119fea2449d47a73d2a5ea3cfbde21e669241d48a00ee695",
       "crates/sifr_compiler_component/build.rs": "2fbb1c185edfcfdced9597884b5a66477085e52a80ac17872bf8bd38944f4bac",
       "crates/sifr_compiler_component/src/cache.rs": "24760870764d218a011d2e05a3e275366775f553dc092b6bde4b10be78d13c77",
       "crates/sifr_compiler_component/src/compiled_identity.rs": "6ba1510c0b91c83f4199f60f6fe2ce7c725f5a507fb28c9cf8e2870e1e23319a",
+      "crates/sifr_compiler_component/src/diagnostic_sources.rs": "3d99cc1ef75a9f5682550c534b37e10c2589f1707fc07b36dafd1beb41929d21",
       "crates/sifr_compiler_component/src/diagnostics.rs": "26929ebdcab63a7329060a17f0b4263f4a5f98363b92b93831d8858e3ae05190",
       "crates/sifr_compiler_component/src/error.rs": "e966dac7855e35b70b5b08418f4d65586677363b1ac1f8447a254616ef4caafc",
       "crates/sifr_compiler_component/src/fingerprint.rs": "cae6162c9e4caeb9fe90afe5b7c7784f82f8221a2bbf46c4e079b10d71267a2d",
       "crates/sifr_compiler_component/src/host.rs": "4e82d3a868211617eba4ae5ba691c0c96ceab883e995572e98b44e62b3c9bea3",
-      "crates/sifr_compiler_component/src/lib.rs": "3c321ce61cfc8b93642f6fde84e553315db43a30ed5a07b8bf47789ad515a5f0",
+      "crates/sifr_compiler_component/src/lib.rs": "3ed432ed4bbb2b5e7aa78c9e7c4aaff7137fba553c6860d7684bbc616620a55b",
       "crates/sifr_compiler_component/src/protocol.rs": "c9299dea7d18a7494f843a4d8f623d6da02a23a6093a61fd891522a8989aae63",
       "crates/sifr_compiler_component/src/registration.rs": "83e850ef98600af7058f1b44c9acdd8c34fc31364f6b2ebdae7bfa6b1bb0dce6",
-      "crates/sifr_compiler_component/src/tests.rs": "dfebccaeeb25487175168bcd4a5bf28fc9401edb4c923808f3a4b2f691f8593f",
-      "crates/sifr_compiler_component/src/validation.rs": "342e3cc5ef89daa93250141077ef7714c889b8f4e268ebb0f25e82fc0aface82",
+      "crates/sifr_compiler_component/src/tests.rs": "11a61cbb80e21916fbc765f0c91aa433e32e82bdcb9433c96f6f297ad071d91c",
+      "crates/sifr_compiler_component/src/tests/diagnostic_sources.rs": "51f4116c7cc9831027e8026d85eb47af1f090d805750bb09aef8fc9f23a9791e",
+      "crates/sifr_compiler_component/src/validation.rs": "8cbdb291f5be5823956c82bb0a93d0e081c26ac686db916ad4aa965de6da80fa",
       "crates/sifr_compiler_component/wit/compiler-component.wit": "782c579c390c73463ea739f1a4777a4629d598ab29737fcce719bbdc7deea30f",
       "crates/sifr_diagnostics/Cargo.toml": "dd8b736b856652232030927ee0b62f0058d0e6c8f4963a544a2a79a0bf4c0cc7",
       "crates/sifr_diagnostics/build.rs": "4027598a9029b41581af3d65d62490f97033cd42a17d2cb91a39a94db9b9968d",
@@ -107,6 +111,7 @@
       "crates/sifr_sql_contract/src/codec_binding.rs": "a53b52a9d2e78335739878c4e3aaa72f8b0ee15263ad28f6c23c6fcd0bd97f46",
       "crates/sifr_sql_contract/src/compiled_identity.rs": "dc4528945d7c09542e89ef2690969a06007acc258da1ecec28ed9ba781bf333c",
       "crates/sifr_sql_contract/src/component.rs": "31b059470d66959ff7b5b580db7dfaa94f60248b7b8cdb50675c477fc590a051",
+      "crates/sifr_sql_contract/src/component_diagnostics.rs": "433a7d41e9af00efd33611efee54caf45faaeb0066192d163fa4540811e55be4",
       "crates/sifr_sql_contract/src/diagnostic.rs": "ff779adb701c3ecbbf3e3860210252a9965d3c50bd0783a453703a0450e7b50c",
       "crates/sifr_sql_contract/src/diff.rs": "946957a960ff4e0691cd7b4de8863e636e08a009d184bf53e7ca7e87d3211a59",
       "crates/sifr_sql_contract/src/effect.rs": "63bd453b00025eb330fe854dd1611d19a93f903bddfa5f54756458796b75d076",
@@ -116,7 +121,7 @@
       "crates/sifr_sql_contract/src/fragment_batches.rs": "95f67dcb7fc35f75974f5a43eba46cf8f571431c675186e00f2a43165e41f519",
       "crates/sifr_sql_contract/src/generated.rs": "430caf1384cd763bd31b1a4d9d3f4552bbb6763279795e472bccc01668676f47",
       "crates/sifr_sql_contract/src/identifier.rs": "9739fa3013fa7f96b765bb0476a12948333367e2b28c0b1ffd0e15d87706aece",
-      "crates/sifr_sql_contract/src/lib.rs": "add75389e009549e39f802da512ef78bf61d27009bae7b80a488af7adef11445",
+      "crates/sifr_sql_contract/src/lib.rs": "e10dde92e77b1ad81d77a107acac343377e003786cfcf02824a976bdf5ef5350",
       "crates/sifr_sql_contract/src/migration/compiler.rs": "aba55d86890ce5797f84d39a6f375d40b87f66f184f2772e0a15aa4918a7c78c",
       "crates/sifr_sql_contract/src/migration/graph.rs": "44f35258a55d09eadcb990b12d6952a049626138e5da2f0a6f303cdb7cd2f979",
       "crates/sifr_sql_contract/src/migration/mod.rs": "3e3c01d8ff5bd8b1e4a26a54ac03e42c83c0041dd871f2c0e6ecdf850172ebe4",
@@ -139,10 +144,10 @@
       "crates/sifr_sql_mysql/src/analyzer.rs": "a41374d607d577c955793b041232a5a8ef361cac6375af79ffd54abea2b52985",
       "crates/sifr_sql_mysql/src/ast.rs": "bb905dc625642f07c8103e7e27cb7c4b0527169ad25cbc8db5e10fad0f52a7e4",
       "crates/sifr_sql_mysql/src/codec.rs": "228422503bacb6f021732b25577b66d0e7c5f3bb7d594a189a52b91778388912",
-      "crates/sifr_sql_mysql/src/component.rs": "d6a5c1b2efec04661ae814a55671a1054e20d3885b4fbb1860dbc3f724bf91ec",
+      "crates/sifr_sql_mysql/src/component.rs": "0b3ad4fc653071f4beb270ca257062fb85b767b8c849c6489411a90f34d4b0ea",
       "crates/sifr_sql_mysql/src/diagnostic.rs": "2b4658f86b19953ffc978a94a22f2ffc2b21b46b580b1ff4c36ba492a8cdbad8",
       "crates/sifr_sql_mysql/src/editor.rs": "a9debe3f06f40cb9304dbb3b5e0777fcb5c0101274ac74252ca4d13304eef4b3",
-      "crates/sifr_sql_mysql/src/guest.rs": "edab0913eb3558da071d5143095e32908d7825c15da5c80dada71cd2ba679486",
+      "crates/sifr_sql_mysql/src/guest.rs": "bde8aa4981b53f57d9b26a990eff5e3a4a6a84f57374c164c019adb70f94cef1",
       "crates/sifr_sql_mysql/src/lexer.rs": "90769228c94345301f4c9551eafcb845555a6eb204a4b22f9e8b86ecf9264484",
       "crates/sifr_sql_mysql/src/lib.rs": "4d5b036c24e5ab230cdb5e692f70dc34a018361d716e57760b1a6115caf1e896",
       "crates/sifr_sql_mysql/src/migration.rs": "764fd1d5bc656311125889e79e6f0679fb3967edbedd3d5fa1d82458e37003ee",
@@ -168,7 +173,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "e767b6a3f45c5d23224a2792baeb827bf86cec20437478aceca433443ca9ee9c",
+    "source_sha256": "162c2e721804bc7e9ba42828b39845dffa5ffc69dda57b3f5d6572ab3403ab41",
     "tools": {
       "virtualizer": {
         "binary_sha256": "3d1337b175ace5751791af435d1f74d8b443e2f6e2bf82ddd3914f081cc65f80",

@@ -8,7 +8,9 @@ use crate::scope::{ErrorTaint, Scope};
 use async_effects::AsyncSuspensionSummary;
 use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
 use external_defs::ExternalDefs;
-pub use external_defs::{TypedMethodProcessor, TypedMethodRequest};
+pub use external_defs::{
+    TypedMethodFailure, TypedMethodOutput, TypedMethodProcessor, TypedMethodRequest,
+};
 use len_aliases::LenAliasFact;
 use mod_impl::lower_module_impl;
 use ruff_text_size::TextRange;
@@ -535,6 +537,7 @@ impl<'defs> LowerCtx<'defs> {
     ) -> ErrorTaint {
         let taint = ErrorTaint::emitted();
         self.errors.push(HirDiagnostic {
+            external: None,
             code: Some(code),
             message,
             args,
@@ -545,6 +548,32 @@ impl<'defs> LowerCtx<'defs> {
         });
         self.last_error_taint = Some(taint);
         taint
+    }
+    pub(in crate::lower) fn external_diagnostic(
+        &mut self,
+        diagnostic: sifr_diagnostics::RenderedDiagnostic,
+    ) {
+        if diagnostic.severity != sifr_diagnostics::Severity::Error {
+            self.warnings.push(LoweringWarningDiagnostic::External {
+                module: self
+                    .current_module_name
+                    .clone()
+                    .unwrap_or_else(|| "main".into()),
+                diagnostic: Box::new(diagnostic),
+            });
+            return;
+        }
+        self.errors.push(HirDiagnostic {
+            message: diagnostic.message.clone(),
+            external: Some(Box::new(diagnostic)),
+            code: None,
+            args: BTreeMap::new(),
+            help: None,
+            primary_range: None,
+            line: None,
+            col: None,
+        });
+        self.last_error_taint = Some(ErrorTaint::emitted());
     }
     pub(in crate::lower) fn error_count(&self) -> usize {
         self.errors.len()

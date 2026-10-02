@@ -170,6 +170,54 @@ def inspect_token(token: Token) -> Result[int, TokenError]:
 }
 
 #[test]
+fn optional_length_retains_receiver_and_builtin_authority() {
+    for payload in [
+        "str",
+        "bytes",
+        "list[int]",
+        "dict[str, int]",
+        "set[int]",
+        "tuple[int, int]",
+    ] {
+        let module = lower(&format!(
+            "def length(value: {payload} | None) -> int:\n    return len(value)\n"
+        ));
+        let authorities = method_authorities(&module, "length");
+        assert!(
+            matches!(authorities.as_slice(), [MethodAuthority::BuiltinIntrinsic { declaration }]
+            if declaration.module == "sifr.builtin" && declaration.symbol == "len"
+                && declaration.owner.as_ref().is_some_and(|owner| owner.contains("None"))),
+            "{authorities:?}"
+        );
+        let mut function = module.functions[0].clone();
+        let mut receivers = Vec::new();
+        visit_hir_function_exprs_mut(&mut function, &mut |expr| {
+            if let HirExpr::MethodCall { object, .. } = expr {
+                receivers.push(object.ty().clone());
+            }
+        });
+        assert_eq!(receivers.len(), 1);
+        assert!(
+            receivers[0].optional_member_type().is_some(),
+            "{receivers:?}"
+        );
+    }
+}
+
+#[test]
+fn optional_length_does_not_admit_other_optional_methods_or_unsized_payloads() {
+    for source in [
+        "def bad(value: str | None) -> int:\n    return value.len()\n",
+        "def bad(value: str | None) -> str:\n    return value.upper()\n",
+        "def bad(value: int | None) -> int:\n    return len(value)\n",
+        "def bad(value: int | str | None) -> int:\n    return len(value)\n",
+    ] {
+        let parsed = parse_module(source).expect("negative source should parse");
+        assert!(lower_module(parsed.suite()).is_err(), "{source}");
+    }
+}
+
+#[test]
 fn unsupported_method_declines_with_diagnostic() {
     let source = "def bad(x: int) -> None:\n    x.nonexistent()\n";
     let parsed = parse_module(source).expect("source should parse");

@@ -10,6 +10,7 @@
 )]
 
 mod cache;
+mod diagnostic_sources;
 mod diagnostics;
 mod error;
 mod fingerprint;
@@ -21,6 +22,7 @@ mod registration;
 mod validation;
 
 pub use cache::{AnalysisCache, CacheKey, DEFAULT_COMPONENT_CACHE_CAPACITY_BYTES};
+pub use diagnostic_sources::{DIAGNOSTIC_SOURCE_LOCATIONS_KIND, diagnostic_source_artifact};
 pub use diagnostics::{DiagnosticCodeDeclaration, DiagnosticRegistry, DiagnosticRegistryOwner};
 pub use error::{ComponentError, ComponentErrorKind};
 pub use fingerprint::compute_plan_fingerprint;

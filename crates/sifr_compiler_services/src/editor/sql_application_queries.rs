@@ -189,20 +189,29 @@ pub fn compile_application_queries(
             component.registration.clone(),
             context.clone(),
         )?;
-        let response = host
+        let mut response = host
             .analyze(&component.registration, &component.bytes, &request)
             .map_err(|failure| error(format!("SQL query component failed: {failure}")))?
             .response;
-        if !response.plan.diagnostics.is_empty() {
-            let messages = response
-                .plan
-                .diagnostics
-                .iter()
-                .map(|diagnostic| format!("{}: {}", diagnostic.code, diagnostic.message))
-                .collect::<Vec<_>>()
-                .join("; ");
-            return Err(error(messages));
+        let diagnostics = response
+            .plan
+            .diagnostics
+            .iter()
+            .map(crate::sql_diagnostics::render_provider_diagnostic)
+            .collect::<Vec<_>>();
+        if diagnostics
+            .iter()
+            .any(|d| d.severity == sifr_diagnostics::Severity::Error)
+        {
+            return Err(diagnostics);
         }
+        project
+            .module_diagnostics
+            .entry(module_name.clone())
+            .or_default()
+            .rendered_warnings
+            .extend(diagnostics);
+        response.plan.diagnostics.clear();
         let analysis = provider_analysis_from_response(&response)
             .map_err(|failure| error(failure.to_string()))?;
         let codecs = component_codec_registry(&analysis, &declaration.parameter_types)
@@ -301,6 +310,11 @@ pub(super) fn request_for_declaration(
     registration: sifr_compiler_component::ComponentRegistration,
     context_artifact: sifr_compiler_component::ContextArtifact,
 ) -> Result<EmbeddedAnalysisRequest, Vec<RenderedDiagnostic>> {
+    let unsupported =
+        crate::sql_diagnostics::unsupported_hole_diagnostics(&declaration.document, module_name);
+    if !unsupported.is_empty() {
+        return Err(unsupported);
+    }
     let parts = template_parts(module_name, &declaration.document.template)?;
     let holes = declaration
         .document
@@ -320,6 +334,13 @@ pub(super) fn request_for_declaration(
         .collect::<Result<Vec<_>, Vec<RenderedDiagnostic>>>()?;
     let authority = profile.authority();
     let schema = &authority.profile.schema;
+    let mut artifacts = vec![context_artifact];
+    if let Some(sources) = sifr_sql_contract::schema_diagnostic_source_artifact(schema)
+        .map_err(|failure| error(failure.to_string()))?
+    {
+        artifacts.push(sources);
+    }
+    artifacts.sort_by(|a, b| (&a.kind, &a.identity).cmp(&(&b.kind, &b.identity)));
     Ok(EmbeddedAnalysisRequest {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         component: registration.identity,
@@ -356,7 +377,7 @@ pub(super) fn request_for_declaration(
                 ),
             ]),
             imported_signatures: Vec::new(),
-            artifacts: vec![context_artifact],
+            artifacts,
         },
         plan_kind: PlanKind::Expression,
     })

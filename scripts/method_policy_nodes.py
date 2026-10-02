@@ -216,6 +216,7 @@ ADAPTATIONS = {(CODEGEN + p, s): r for (p, s), r in ADAPTATIONS.items()}
 # These scopes inspect HIR shapes or signatures; they produce analysis facts or
 # binding policy, never replace a source call. Their caller graph is still bound.
 ANALYSES = {
+    ('intrinsic_method_emitters/collection_methods.rs', 'is_defaultdict_bucket_mutator'): 'inspect typed defaultdict storage alias and canonical in-place membership; no call emission or independent source admission',
     ('body_analysis.rs', 'collect_expr_mutation'): 'walk HIR receiver/arguments and call conventions to record mutation effects; no call emission',
     ('checked_place/control_flow.rs', 'checked_place_refresh_precondition_holds'): 'inspect source statement mutation/place shape to invalidate or refresh witnesses; no source method replacement here',
     ('function_emitter/python_callback_bounds.rs', 'collect_python_callback_bound_names_expr'): 'walk HIR call/method operands to collect Python callback generic bounds; no source call emission',

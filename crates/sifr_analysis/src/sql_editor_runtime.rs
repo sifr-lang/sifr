@@ -3,6 +3,7 @@ use sifr_compiler_component::{
     AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost,
     EmbeddedAnalysisRequest, HoleDescriptor, PlanKind, SourceSpan, TemplatePart,
 };
+use sifr_compiler_services::sql_diagnostics::render_provider_diagnostic;
 use sifr_compiler_services::sql_editor::PreparedSqlProfiles;
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::{
@@ -153,6 +154,17 @@ impl SqlEditorRuntime {
                     "SQL editor profile '{profile_name}' has no schema context"
                 )));
             };
+            let unsupported = sifr_compiler_services::sql_diagnostics::unsupported_hole_diagnostics(
+                document,
+                source_document,
+            );
+            if !unsupported.is_empty() {
+                self.diagnostics
+                    .entry(source_document.into())
+                    .or_default()
+                    .extend(unsupported);
+                continue;
+            }
             let Some(request) = request_for_document(
                 document,
                 source_document,
@@ -344,58 +356,6 @@ fn relation_membership_fingerprint(
     ))
 }
 
-fn render_provider_diagnostic(
-    diagnostic: &sifr_compiler_component::EmbeddedDiagnostic,
-) -> RenderedDiagnostic {
-    let severity = match diagnostic.severity {
-        sifr_compiler_component::DiagnosticSeverity::Error => sifr_diagnostics::Severity::Error,
-        sifr_compiler_component::DiagnosticSeverity::Warning => sifr_diagnostics::Severity::Warning,
-        sifr_compiler_component::DiagnosticSeverity::Note => sifr_diagnostics::Severity::Note,
-    };
-    let message = diagnostic.message.clone();
-    let mut spans = Vec::with_capacity(1 + diagnostic.related.len());
-    spans.push(render_provider_span(&diagnostic.primary, true));
-    spans.extend(
-        diagnostic
-            .related
-            .iter()
-            .map(|span| render_provider_span(span, false)),
-    );
-    RenderedDiagnostic {
-        code: diagnostic.code.clone(),
-        severity,
-        message: message.clone(),
-        message_template: "{message}".to_string(),
-        args: BTreeMap::from([(
-            "message".to_string(),
-            sifr_diagnostics::DiagnosticArg::String(message),
-        )]),
-        url: format!("https://docs.sifr-lang.org/errors/{}", diagnostic.code),
-        spans,
-        children: Vec::new(),
-        help: None,
-        suggestions: Vec::new(),
-    }
-}
-
-fn render_provider_span(
-    span: &sifr_compiler_component::SourceSpan,
-    is_primary: bool,
-) -> sifr_diagnostics::DiagnosticSpan {
-    sifr_diagnostics::DiagnosticSpan {
-        file: Some(span.document.clone()),
-        byte_start: span.start,
-        byte_end: span.end,
-        line: None,
-        column: None,
-        end_line: None,
-        end_column: None,
-        is_primary,
-        label: (!is_primary).then(|| "related SQL location".to_string()),
-        lines: Vec::new(),
-    }
-}
-
 fn dependency_identity(profile: &str, identity: &str) -> String {
     format!("{profile}::{identity}")
 }
@@ -461,6 +421,13 @@ fn request_for_document(
             serde_json::to_string(&profile.session).ok()?,
         ),
     ]);
+    let mut artifacts = vec![context_artifact];
+    if let Some(sources) =
+        sifr_sql_contract::schema_diagnostic_source_artifact(&profile.schema).ok()?
+    {
+        artifacts.push(sources);
+    }
+    artifacts.sort_by(|a, b| (&a.kind, &a.identity).cmp(&(&b.kind, &b.identity)));
     Some(EmbeddedAnalysisRequest {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         component: registration.identity,
@@ -473,7 +440,7 @@ fn request_for_document(
             schema_fingerprint: Some(schema_fingerprint.to_string()),
             semantic_profile,
             imported_signatures: Vec::new(),
-            artifacts: vec![context_artifact],
+            artifacts,
         },
         plan_kind: PlanKind::Expression,
     })

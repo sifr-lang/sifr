@@ -55,8 +55,19 @@ pub(in crate::lower) fn lower_method_call(
             keywords,
             range: call.range(),
         }) {
-            Ok(expression) => Some(expression),
-            Err(message) => {
+            Ok(output) => {
+                for diagnostic in output.diagnostics {
+                    ctx.external_diagnostic(diagnostic);
+                }
+                Some(output.expression)
+            }
+            Err(crate::TypedMethodFailure::Diagnostics(diagnostics)) => {
+                for diagnostic in diagnostics {
+                    ctx.external_diagnostic(diagnostic);
+                }
+                None
+            }
+            Err(crate::TypedMethodFailure::Message(message)) => {
                 ctx.error_with_code_at(DiagnosticCode::COMPONENT_EXECUTION, message, call.range());
                 None
             }

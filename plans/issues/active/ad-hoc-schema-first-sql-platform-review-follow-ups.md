@@ -6,8 +6,8 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, 5, 7, 10 and prerequisites 7A/10A merged. Continue Items
-11, 12, registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
+Status: Items 4, 4A, 5, 7, 10, 11, 12, 13 and prerequisites 7A/10A/12A/13A merged.
+Continue final combined integration and the Item 6 closer. The compiler lint issue
 [#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
@@ -740,10 +740,10 @@ Additional closure criteria for the later items:
 - [x] Ordinary `.sifr` source builds and executes typed SQL against an actual
   test database without a test-only bridge; decorated and standalone calls
   preserve their profile, binding, and result contracts.
-- [ ] Runtime byte values retain binary/text identity through round trips,
+- [x] Runtime byte values retain binary/text identity through round trips,
   including valid and invalid UTF-8, and encoding failures are classified
   correctly.
-- [ ] CLI and editor preserve the same provider diagnostic identity, severity,
+- [x] CLI and editor preserve the same provider diagnostic identity, severity,
   and source span, including unsupported interpolation types.
 
 ### Qualification and closer policy
@@ -1486,7 +1486,7 @@ test or softened expectation is accepted as full qualification.
 
 ## Item 13 — existing compiler integration regressions (2026-10-02)
 
-Status: registered prerequisite before final combined integration/closure.
+Status: merged with prerequisite 13A in [PR #4252](https://github.com/sifr-lang/sifr/pull/4252); final delivery receipt below.
 Own the six existing compiler-library failures observed during Item 7A,
 tracked in [#4240](https://github.com/sifr-lang/sifr/issues/4240), coordinating
 with the architecture phase's recorded H02a1 optional-length mechanism. Resolve receiver authority/type-contract preservation for the
@@ -1499,6 +1499,19 @@ codegen/lowering suites, relevant guards/Clippy and scoped Opus review.
 No untracked skip, blanket authority fallback or lint waiver is authorized.
 This necessary integration repair is explicitly authorized by the user's
 instruction to finish without stopping on prerequisites.
+
+## Item 13A — method-policy integration receipts (2026-10-02)
+
+Status: registered in [#4251](https://github.com/sifr-lang/sifr/issues/4251) before receipt reconciliation; merged with Item 13 in PR #4252. The first policy check during
+Item 13 reports 199 new, stale or changed site/relationship records across the
+current delivered compiler and SQL source. Preserve that failed run at
+`/workspace/sql-item13-cloud-evidence/method-policy-initial.log`; it is not a pass.
+Audit the affected operations and caller chains against their existing owners,
+then update the reviewed inventory and register the typed-defaultdict predicate
+as source-shape analysis. No semantic owner, checker rule or negative mutation
+may be weakened. Qualify the checker and its self-tests and include this receipt
+delta in Item 13's exact-candidate Opus review. The user authorizes this bounded
+integration prerequisite before the final combined gate.
 
 ## Item 10 integration scope registration (2026-10-02)
 
@@ -1657,3 +1670,209 @@ Optional hardening and additional boundary-case suggestions remain in #4243.
 No intermediate broad gate is claimed; Items 11–13, the final combined merge
 profile and Item 6 closure remain required. This receipt is record-only and
 requires documentation checks only.
+
+## Item 11 runtime preservation scope (2026-10-02)
+
+Own binary/text representation at the raw-driver boundary and classification of
+client encoding failures. MySQL must use column type and character-set metadata,
+never successful UTF-8 decoding as evidence that a binary value is text.
+Malformed declared text produces Decode. Encoding failures produce Encode;
+PostgreSQL must preserve an explicit codec error through the driver's error
+source chain. Preserve existing numeric, temporal, JSON and opaque contracts.
+No codec redesign, provider-generalized connection mechanism or resolver work
+belongs here. Qualify empty, valid UTF-8, embedded-zero and invalid UTF-8 binary
+values with representation/content assertions, valid and malformed text, and
+encoding failures. Use focused native codec tests and actual database round trips
+through the runtime packages; record the tested server versions explicitly.
+
+## Item 11 — merged cloud runtime value preservation (2026-10-02)
+
+[PR #4245](https://github.com/sifr-lang/sifr/pull/4245) merged candidate
+`a4f7c70cc68f479c0df33a91e8d531e5929f3233` as
+`d563a977ba619046a7d223d13daeb7a74ed66ce3`, against base
+`420984aa472f2266a8c53ce46ce9b9d3a6405644`. MySQL now preserves binary
+values from actual column metadata, strictly decodes declared text, and
+classifies encoding failures as Encode. PostgreSQL preserves Encode through
+the driver source chain and rejects unrepresentable NUL text. SQLite's
+existing representation/error boundaries now have actual-file qualification.
+
+Named native tests pass: MySQL 10, PostgreSQL 8, SQLite 12. All 18 live
+tests pass (new value tests plus existing contracts on each server):
+MySQL 8.4.11/9.7.2/26.7.0; PostgreSQL
+13.23/14.24/15.19/16.15/17.11/18.6. Exact image IDs/digests and actual
+server versions are recorded in `/workspace/sql-item11-cloud-evidence/live-value-matrix.json`.
+Workspace Clippy, formatting, HIR/driver/file-size guards (4331 files), and
+unchanged producer-closure qualification (31 mutations) pass. Runtime-only
+changes do not invalidate component producer inputs. The initial PostgreSQL
+test-authoring compile failure, transport-interrupted run, and failed image
+pulls remain failed/incomplete evidence; no ignored live test is counted
+without execution. No full gate or release qualification is claimed here.
+
+Scoped Opus review was SATISFIED with no blocking findings, recorded
+[outside the reviewed Git tree](https://github.com/sifr-lang/sifr/pull/4245#issuecomment-5948957335).
+Atomic response SHA-256:
+`955c5dc9128654a04757122c7bea9a953720cbff4be946f92bdbc4622cf54719`.
+Evidence root: `/workspace/sql-item11-cloud-evidence/`. Optional MySQL live
+hardening belongs to [#4246](https://github.com/sifr-lang/sifr/issues/4246).
+Items 12/13, final combined integration and Item 6 closure remain pending.
+This receipt changes records only and needs no repeated gate or external review.
+
+## Item 12 — registered provider reporting boundary (2026-10-02)
+
+Scope: structured provider diagnostics from actual query components through
+ordinary CLI frontend lowering and editor enrichment, preserving code, severity
+and physical source spans. Replace string flattening with a package-neutral
+typed-method diagnostic carrier and one shared renderer. Component semantic
+failures must produce valid diagnostic plans, with SQL offsets projected through
+template parts; unsupported closed hole types must report a targeted provider
+error at the hole. Component-unsafe Sifr types receive the same targeted compiler
+error in both paths. Keep component transport exclusively at the outer frontend.
+Rebuild and qualify every changed producer-input closure. Acceptance uses actual
+components and the same source in CLI/editor, including valid-to-invalid-to-valid
+edits, standalone/decorated forms, unsupported holes and syntax/name failures.
+Retain missing-profile-import authority from Item 3. No resolver, codec or native
+connection scope is added. Items 13 and final integration remain separate.
+
+Item 12 transport refinement: the actual PostgreSQL query component accepts
+both generic and versioned processor identities, but its existing encoder
+always returned a versioned identity. A generic package registration therefore
+failed host validation before any provider diagnostic reached either caller.
+Echo the exact already-validated requested processor and recompute its plan
+fingerprint; versioned registrations retain their identity. This stays inside
+the registered reporting boundary. Fixtures declare the PostgreSQL compiler's
+existing core/libpg-query feature flags and MySQL's explicit character set and
+collation, rather than relaxing profile-authority checks. Preserve the existing
+compile-time template value on non-native providers after validation, and honor
+the declared `template` keyword in SQL construction.
+
+### Item 12A — authorize related diagnostic source locations
+
+Registered before implementation under the user's instruction to complete all
+necessary phase prerequisites. PostgreSQL unknown-column/schema diagnostics may
+reference a physical catalog DDL source in a related span. The generic host
+currently authorizes only template documents; Item 12's initial projection would
+incorrectly treat that schema location as a virtual SQL offset. Own a bounded,
+package-neutral context artifact declaring checked diagnostic source locations;
+validate its shape, fingerprint, canonical ordering and limits, and permit only
+response diagnostic spans contained in those explicit request locations. Keep
+ordinary template/source-map document authority and undeclared-document rejection
+unchanged. SQL outer request builders derive those declarations from the already
+validated SchemaIR, and guest projection maps only actual virtual SQL documents.
+Prove preservation of an actual PostgreSQL schema-related span and retain forged
+foreign-document and out-of-bounds negative checks. Rebuild all changed producer
+closures. No SQL-specific parsing or filesystem access belongs in the generic
+component host, and no arbitrary response document is authorized.
+
+## Item 12 / 12A — merged cloud diagnostic parity (2026-10-02)
+
+Merged [PR #4248](https://github.com/sifr-lang/sifr/pull/4248) as
+`fbf9d13ada4f6f5db9085a04f165d56b52ac6d63`; exact implementation candidate
+`d8001757981ce704288e25606a12d8875f72e083`, base
+`3bce4a7542b4942dca0343158dbc9cdc8f1fc8b7`, tree
+`707ab4dcd93b8b275b3b1f1b580b4018ab83f627`. CLI and editor retain provider
+codes, error/warning/note severity and physical primary/related spans through
+one renderer and package-neutral HIR carriers. Unsafe holes fail identically
+before dispatch; provider-unsupported closed SQLite list/tuple holes retain
+provider identity and exact hole locations. Valid positional and `template=`
+calls preserve compile-time erasure; native SQLite execution remains intact.
+
+The PostgreSQL response echoes its exact validated processor identity, and the
+MySQL adapter preserves native analyzer diagnostics. Generic context artifacts
+authorize only explicit checked catalog diagnostic ranges, with canonical shape,
+count, fingerprint and version checks. Template source maps retain their original
+document authority. Foreign/forged and out-of-range diagnostics remain rejected.
+All ten guest artifacts were rebuilt and pass current provenance validation.
+
+73 focused tests pass with no failures or ignored tests: 18 component-authority,
+20 renderer/editor/profile/frontend, 25 provider compiler tests over SQLite, three
+MySQL series and six PostgreSQL majors, plus all 10 actual application tests
+(864.72 seconds). The application matrix proves same-source CLI/editor syntax,
+name, unsafe/unsupported-hole and schema-related span parity for standalone and
+decorated calls, corrected-edit clearing, valid keyword/positional templates,
+actual database binding/typed-row execution and independent drift rejection.
+Final workspace Clippy, formatting, HIR/driver guards, file-size guard (4335 files)
+and all 31 provenance mutations pass. Immutable logs and hashes are in
+`/workspace/sql-item12-cloud-evidence/qualification-receipt.json`.
+
+[Exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4248#issuecomment-5951128490):
+`SATISFIED`, no blockers; response SHA-256
+`602278a6a5c05068b88c2b57aff0321162a19aaf82eefacdede857a8dfc4903d`.
+The first two review requests were rejected for modified required headings;
+they remain failed-format evidence. Only the third complete response is approval.
+Earlier authoring/setup failures, obsolete-artifact reads, interrupted matrices
+and the Clippy assigning-clones failure remain failed/incomplete evidence in
+`failure-history.md`; none is counted as final passing qualification.
+Non-blocking projection precision/provider ownership, warning relocation/editor
+omission and related suggestions are tracked in
+[#4249](https://github.com/sifr-lang/sifr/issues/4249).
+
+Pressure cleanup reclaimed only 69 inactive older session-owned compiler
+incremental directories, retaining the newest two per package; free space rose
+from 2.3 to 7.2 GiB. The receipt is
+`storage-cleanup-before-compiler-item.json`. No active/shared target was removed.
+
+No full merge gate or release qualification is claimed for this intermediate
+item. This record-only update requires documentation checks, without another
+Opus review or unchanged functional checks. Item 13 and final integration/Item 6
+closure remain pending.
+
+## Item 13 / 13A — merged cloud compiler integration repairs (2026-10-02)
+
+[PR #4252](https://github.com/sifr-lang/sifr/pull/4252) merged as
+`1f7f4f918219048a35241d3f1a462aebc1dae218`. Exact approved candidate
+`107efd3d5633bbd0e4bcf1ac8137fa5ac32425a7`, tree
+`093bac91c0487423f581c47c9983bf46b203609e`, base
+`5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042`.
+Issues #4240/#4251 are resolved. The validated builtin length producer now
+assigns its narrow builtin authority without discarding an optional receiver.
+Direct optional methods and unsized payloads still reject. Typed defaultdict
+mutators reach canonical missing-key insertion before plain-dict shortcuts;
+list and string slice appends retain their actual stored values and existing
+argument-evaluation order. No blanket fallback, skip or weaker assertion was
+introduced.
+
+The complete library suites pass: codegen **1756 passed, 0 failed, 0 ignored**;
+lowering **1148 passed, 0 failed, 1 pre-existing ignored stdlib-registry case**.
+All six registered baseline failures pass in these full selections. New lowering
+checks cover all six sized optional payloads and reject direct optional methods,
+unsized and mixed unsupported payloads. Four actual native fixtures pass:
+`defaultdict_len_and_deque`, `defaultdict_order_independent_inference`,
+`list_append_extend_insert_registry`, and `collection_cloning`. Their assertions
+include None, typed empty and populated lists, Unicode text, missing buckets,
+slice contents and the existing evaluation-order cases. These are focused
+fixture selections, not a full create-PR/merge profile claim.
+
+Workspace Clippy (`--workspace -- -D warnings`), formatting, HIR and driver
+guards, the 4335-file size guard, and diff checks pass. Item 13A reconciles
+177 audited method-policy records across 31 delivered-source paths: 75 new
+records and 102 refreshed records, no removed site or changed existing
+classification/owner. Its 22 changed node/reference receipts include one new
+source-shape predicate. The unchanged checker passes **6344 sites / 234 nodes**;
+all **17 negative policy self-tests** pass. Checker rules, schemas and negative
+tests remain unchanged.
+
+The [exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4252#issuecomment-5951811760)
+is **SATISFIED**, no blockers. Response SHA-256
+`a0fd64ccb7186816fe6d54c4ae1e41925d23b21a2a8a6a45f7d8acf89a13a9a2`.
+Its optional recursive-expression ordering suggestion is separately tracked in
+[#4253](https://github.com/sifr-lang/sifr/issues/4253), without claiming a
+reproduced failure or expanding this six-case scope.
+
+Evidence and log hashes remain outside Git at
+`/workspace/sql-item13-cloud-evidence/qualification-receipt.json`.
+All six baseline failures, the initial 199-line stale-policy failure, wrong
+script filename, and two failed investigation-helper attempts remain preserved.
+The first native run passed three fixtures and failed one: an unannotated empty
+argument inferred list[Any]. Giving that test value its intended list[int]
+annotation retains the same assertion, and all four fixtures then passed.
+Library/Clippy/policy inputs were unchanged by that Sifr-fixture annotation;
+their compatible evidence is reused. Unpublished initial object `01a19542`
+is not an approved candidate or qualification pass. The earlier Item 7A full
+library failures remain historical failures, not retroactively passing runs.
+
+With Cargo/rustc idle and 4.3 GiB free, only 48 obsolete session-owned Sifr
+incremental directories were removed, retaining the latest one per package.
+Free space rose to 8.26 GiB; the cleanup receipt is preserved outside Git.
+This makes no host-sensitive performance claim. Final combined qualification
+and Item 6's original-criterion/draft audit, whole-phase review and archive
+remain pending. This delivery receipt requires documentation checks only.

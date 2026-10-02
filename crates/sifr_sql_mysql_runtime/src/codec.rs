@@ -1,4 +1,4 @@
-use mysql_async::{Row, Value, consts::ColumnType};
+use mysql_async::{Column, Row, Value, consts::ColumnType};
 use sifr_sql_runtime::{OwnedSqlValue, RuntimeLimits, SqlError, SqlErrorKind};
 use std::sync::Arc;
 
@@ -19,7 +19,7 @@ fn encode_value(value: OwnedSqlValue) -> Result<Value, SqlError> {
         OwnedSqlValue::Signed(value) => Ok(Value::Int(value)),
         OwnedSqlValue::Unsigned(value) => Ok(Value::UInt(value)),
         OwnedSqlValue::Float(value) if value.is_finite() => Ok(Value::Double(value)),
-        OwnedSqlValue::Float(_) => Err(codec_error()),
+        OwnedSqlValue::Float(_) => Err(encode_error()),
         OwnedSqlValue::ExactInteger(value) | OwnedSqlValue::Text(value) => {
             Ok(Value::Bytes(value.into_bytes()))
         }
@@ -29,7 +29,7 @@ fn encode_value(value: OwnedSqlValue) -> Result<Value, SqlError> {
             payload,
         } => match type_identity.as_str() {
             "mysql.date.binary.v1" | "mysql.datetime.binary.v1" | "mysql.timestamp.binary.v1" => {
-                let bytes: &[u8; 11] = payload.as_ref().try_into().map_err(|_| codec_error())?;
+                let bytes: &[u8; 11] = payload.as_ref().try_into().map_err(|_| encode_error())?;
                 let value = Value::Date(
                     u16::from_be_bytes([bytes[0], bytes[1]]),
                     bytes[2],
@@ -42,14 +42,14 @@ fn encode_value(value: OwnedSqlValue) -> Result<Value, SqlError> {
                 if type_identity == "mysql.date.binary.v1"
                     && bytes[4..].iter().any(|byte| *byte != 0)
                 {
-                    return Err(codec_error());
+                    return Err(encode_error());
                 }
                 Ok(value)
             }
             "mysql.time.binary.v1" => {
-                let bytes: &[u8; 12] = payload.as_ref().try_into().map_err(|_| codec_error())?;
+                let bytes: &[u8; 12] = payload.as_ref().try_into().map_err(|_| encode_error())?;
                 if bytes[0] > 1 {
-                    return Err(codec_error());
+                    return Err(encode_error());
                 }
                 Ok(Value::Time(
                     bytes[0] == 1,
@@ -63,7 +63,7 @@ fn encode_value(value: OwnedSqlValue) -> Result<Value, SqlError> {
             "mysql.json.binary.v1" => Ok(Value::Bytes(payload.to_vec())),
             _ => Ok(Value::Bytes(payload.to_vec())),
         },
-        OwnedSqlValue::Sequence(_) => Err(codec_error()),
+        OwnedSqlValue::Sequence(_) => Err(encode_error()),
     }
 }
 
@@ -80,16 +80,14 @@ pub(crate) fn decode_row(
         if decoded_bytes > limits.max_decoded_row_bytes {
             return Err(SqlError::new(SqlErrorKind::ResourceLimit));
         }
-        let column_type = row
-            .columns_ref()
-            .get(index)
-            .map(mysql_async::Column::column_type);
-        values.push(decode_value(value, column_type)?);
+        let column = row.columns_ref().get(index);
+        values.push(decode_value(value, column)?);
     }
     Ok((values, decoded_bytes))
 }
 
-fn decode_value(value: &Value, column_type: Option<ColumnType>) -> Result<OwnedSqlValue, SqlError> {
+fn decode_value(value: &Value, column: Option<&Column>) -> Result<OwnedSqlValue, SqlError> {
+    let column_type = column.map(Column::column_type);
     match value {
         Value::NULL => Ok(OwnedSqlValue::Null),
         Value::Bytes(value) if column_type == Some(ColumnType::MYSQL_TYPE_JSON) => {
@@ -98,10 +96,16 @@ fn decode_value(value: &Value, column_type: Option<ColumnType>) -> Result<OwnedS
                 payload: Arc::from(value.clone()),
             })
         }
-        Value::Bytes(value) => Ok(String::from_utf8(value.clone()).map_or_else(
-            |error| OwnedSqlValue::Bytes(Arc::from(error.into_bytes())),
-            OwnedSqlValue::Text,
-        )),
+        Value::Bytes(value) => {
+            let column = column.ok_or_else(codec_error)?;
+            if binary_column(column) {
+                Ok(OwnedSqlValue::Bytes(Arc::from(value.clone())))
+            } else {
+                String::from_utf8(value.clone())
+                    .map(OwnedSqlValue::Text)
+                    .map_err(|_| codec_error())
+            }
+        }
         Value::Int(value) => Ok(OwnedSqlValue::Signed(*value)),
         Value::UInt(value) => Ok(OwnedSqlValue::Unsigned(*value)),
         Value::Float(value) if value.is_finite() => Ok(OwnedSqlValue::Float(f64::from(*value))),
@@ -150,6 +154,32 @@ fn value_size(value: &Value) -> u64 {
     }
 }
 
+fn binary_column(column: &Column) -> bool {
+    let ty = column.column_type();
+    matches!(
+        ty,
+        ColumnType::MYSQL_TYPE_BIT
+            | ColumnType::MYSQL_TYPE_GEOMETRY
+            | ColumnType::MYSQL_TYPE_VECTOR
+    ) || (column.character_set() == 63
+        && matches!(
+            ty,
+            ColumnType::MYSQL_TYPE_STRING
+                | ColumnType::MYSQL_TYPE_VAR_STRING
+                | ColumnType::MYSQL_TYPE_VARCHAR
+                | ColumnType::MYSQL_TYPE_TINY_BLOB
+                | ColumnType::MYSQL_TYPE_MEDIUM_BLOB
+                | ColumnType::MYSQL_TYPE_LONG_BLOB
+                | ColumnType::MYSQL_TYPE_BLOB
+                | ColumnType::MYSQL_TYPE_ENUM
+                | ColumnType::MYSQL_TYPE_SET
+        ))
+}
+
+fn encode_error() -> SqlError {
+    SqlError::new(SqlErrorKind::Encode)
+}
+
 fn codec_error() -> SqlError {
     SqlError::new(SqlErrorKind::Decode)
 }
@@ -191,7 +221,7 @@ mod tests {
         ));
         let bytes = vec![0xff, 0, 0x80];
         assert!(
-            matches!(decode_value(&Value::Bytes(bytes.clone()), None), Ok(OwnedSqlValue::Bytes(value)) if value.as_ref() == bytes)
+            matches!(decode_value(&Value::Bytes(bytes.clone()), Some(&Column::new(ColumnType::MYSQL_TYPE_BLOB).with_character_set(63))), Ok(OwnedSqlValue::Bytes(value)) if value.as_ref() == bytes)
         );
         assert_eq!(
             encode_value(OwnedSqlValue::Bytes(Arc::from(bytes.clone()))).ok(),
@@ -202,7 +232,7 @@ mod tests {
             Ok(OwnedSqlValue::Null)
         ));
         assert!(
-            matches!(decode_value(&Value::Bytes(b"text".to_vec()), None), Ok(OwnedSqlValue::Text(value)) if value == "text")
+            matches!(decode_value(&Value::Bytes(b"text".to_vec()), Some(&Column::new(ColumnType::MYSQL_TYPE_VAR_STRING).with_character_set(45))), Ok(OwnedSqlValue::Text(value)) if value == "text")
         );
     }
 
@@ -217,7 +247,8 @@ mod tests {
             ),
         ] {
             let value = Value::Date(2026, 9, 23, 0, 0, 0, 0);
-            let decoded = decode_value(&value, Some(column_type)).expect("date family decode");
+            let decoded =
+                decode_value(&value, Some(&Column::new(column_type))).expect("date family decode");
             let OwnedSqlValue::Encoded { type_identity, .. } = &decoded else {
                 panic!("date family must keep its SQL identity");
             };
@@ -225,10 +256,12 @@ mod tests {
             assert_eq!(encode_value(decoded).ok(), Some(value));
         }
         let value = Value::Time(false, 0, 12, 34, 56, 789);
-        let decoded = decode_value(&value, Some(ColumnType::MYSQL_TYPE_TIME)).expect("time decode");
+        let decoded = decode_value(&value, Some(&Column::new(ColumnType::MYSQL_TYPE_TIME)))
+            .expect("time decode");
         assert_eq!(encode_value(decoded).ok(), Some(value));
         let json = Value::Bytes(br#"{"ready":true}"#.to_vec());
-        let decoded = decode_value(&json, Some(ColumnType::MYSQL_TYPE_JSON)).expect("JSON decode");
+        let decoded = decode_value(&json, Some(&Column::new(ColumnType::MYSQL_TYPE_JSON)))
+            .expect("JSON decode");
         assert!(
             matches!(&decoded, OwnedSqlValue::Encoded { type_identity, .. } if type_identity == "mysql.json.binary.v1")
         );
@@ -247,7 +280,10 @@ mod tests {
                 payload: Arc::from([2_u8; 12]),
             },
         ] {
-            assert!(encode_value(value).is_err());
+            assert_eq!(
+                encode_value(value).expect_err("encoding must fail").kind(),
+                SqlErrorKind::Encode
+            );
         }
     }
 
@@ -258,7 +294,71 @@ mod tests {
             OwnedSqlValue::Float(f64::INFINITY),
             OwnedSqlValue::Sequence(vec![]),
         ] {
-            assert!(encode_value(value).is_err());
+            assert_eq!(
+                encode_value(value).expect_err("encoding must fail").kind(),
+                SqlErrorKind::Encode
+            );
         }
+    }
+
+    #[test]
+    fn binary_and_text_identity_comes_from_column_metadata() {
+        for ty in [
+            ColumnType::MYSQL_TYPE_STRING,
+            ColumnType::MYSQL_TYPE_VAR_STRING,
+            ColumnType::MYSQL_TYPE_VARCHAR,
+            ColumnType::MYSQL_TYPE_TINY_BLOB,
+            ColumnType::MYSQL_TYPE_MEDIUM_BLOB,
+            ColumnType::MYSQL_TYPE_LONG_BLOB,
+            ColumnType::MYSQL_TYPE_BLOB,
+        ] {
+            let binary = Column::new(ty).with_character_set(63);
+            let text = Column::new(ty).with_character_set(45);
+            for bytes in [
+                Vec::new(),
+                b"valid UTF-8".to_vec(),
+                b"a\0b".to_vec(),
+                vec![0xff, 0, 0x80],
+            ] {
+                let native = encode_value(OwnedSqlValue::Bytes(Arc::from(bytes.clone())))
+                    .expect("binary encoding");
+                assert_eq!(
+                    decode_value(&native, Some(&binary)).expect("binary decoding"),
+                    OwnedSqlValue::Bytes(Arc::from(bytes.clone()))
+                );
+                let textual = decode_value(&native, Some(&text));
+                match std::str::from_utf8(&bytes) {
+                    Ok(value) => assert_eq!(
+                        textual.expect("text decoding"),
+                        OwnedSqlValue::Text(value.into())
+                    ),
+                    Err(_) => assert_eq!(
+                        textual.expect_err("invalid declared text").kind(),
+                        SqlErrorKind::Decode
+                    ),
+                }
+                assert_eq!(
+                    decode_value(&native, None)
+                        .expect_err("missing column metadata")
+                        .kind(),
+                    SqlErrorKind::Decode
+                );
+            }
+        }
+        // MySQL decimal values also use byte packets and binary character set,
+        // but their existing wire representation is textual, not a binary string.
+        let decimal = Column::new(ColumnType::MYSQL_TYPE_NEWDECIMAL).with_character_set(63);
+        assert_eq!(
+            decode_value(&Value::Bytes(b"123.45".to_vec()), Some(&decimal)).expect("decimal"),
+            OwnedSqlValue::Text("123.45".into())
+        );
+        let binary_collation = Column::new(ColumnType::MYSQL_TYPE_VAR_STRING)
+            .with_character_set(46)
+            .with_flags(mysql_async::consts::ColumnFlags::BINARY_FLAG);
+        assert_eq!(
+            decode_value(&Value::Bytes(b"text".to_vec()), Some(&binary_collation))
+                .expect("binary text collation"),
+            OwnedSqlValue::Text("text".into())
+        );
     }
 }
