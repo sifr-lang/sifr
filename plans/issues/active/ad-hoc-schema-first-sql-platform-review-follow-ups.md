@@ -6,7 +6,8 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, and 5 merged; Item 7 is qualified except for the external
+Status: Items 4, 4A, and 5 merged; Item 7 has a scoped remediation candidate.
+Merge requires its exact-candidate qualification/review and the external
 workspace-Clippy prerequisite [#4230](https://github.com/sifr-lang/sifr/issues/4230).
 Continue Items 7, 10, 11, and 12,
 then final integration and the Item 6 closer, in the delivery order below.
@@ -176,6 +177,40 @@ incomplete attempts. The unchanged generator maps signed 32-bit values to
 `int32`; only the stale live-test expectations were corrected. An optional
 all-targets PostgreSQL Clippy run also exposed two pre-existing test-harness
 `expect_used` warnings; this is not the required workspace selection.
+
+### Item 7 scoped remediation (2026-10-02)
+
+Initial candidate `fa9b7bb863c676018136711d47e98ed8adb8165d` in
+[PR #4231](https://github.com/sifr-lang/sifr/pull/4231) passed the named tests
+recorded above, but its scoped Opus review returned `NOT SATISFIED`: recursive
+CTE anchor pre-passes captured inconsistent temporary scope depths, and set
+ORDER BY output references attempted to index an empty local projection list.
+The initial response SHA-256 is
+`ffd11fd56603aa01c5a3fc21d6191e5d13ff5a9931d7e9f510d6b4a3116d0855`.
+Neither the initial review nor its omitted regression coverage is a pass.
+
+The one remediation batch suppresses identity capture during the type-only
+recursive anchor pass, records set ordering by positional output identity,
+and retains bindings by scope/FROM position rather than alias spelling.
+PostgreSQL may print a recursive reference alias `r` as `r_1`; references to
+different self-join positions still remain distinct. Recursive and ordered
+set views now join the native, live, and actual-component regression targets.
+Set-operation ordinal normalization does not generalize ordinary SELECT
+positional ordering. The snapshot's incidental assertion-line header is removed.
+The current remediation qualification and single follow-up review receipts
+are published outside the reviewed tree, keyed by their exact candidate.
+The named qualification repeats the six-major parser/guest and expanded live
+matrices; the full phase gate remains a later integration task. Evidence is in
+`/workspace/sql-item7-remediation-cloud-evidence/`.
+
+Live views must resolve and type-check against the supported introspected
+catalog account. If any view cannot be analyzed, the whole catalog pull fails
+closed, consistently with the DDL producer; no opaque-query or dropped-view
+fallback is supplied. Broader supported-view semantics, JOIN USING star merging,
+and ordinary implicit output alias/positional ordering differences remain
+separate pre-existing follow-ups in [#4232](https://github.com/sifr-lang/sifr/issues/4232).
+The compiler prerequisite #4230 remains unresolved; no workspace Clippy,
+merge, final integration, or phase-closure pass is claimed.
 
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 

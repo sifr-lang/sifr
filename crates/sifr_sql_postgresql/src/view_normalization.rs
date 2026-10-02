@@ -1,9 +1,9 @@
 //! View fingerprints bind names with the query analyzer; spelling and source
-//! locations are not identities. Binding aliases and scope depths retain the
+//! locations are not identities. Binding positions and scope depths retain the
 //! distinction between separate uses of the same relation (including self joins).
-use crate::analysis::{AnalysisContext, PostgresAnalysisError, ScopeFrame};
+use crate::analysis::{AnalysisContext, PostgresAnalysisError, ScopeBinding, ScopeFrame};
 use crate::ast::{Expression, FromItem, SelectItem, SelectStatement};
-use crate::catalog::PostgresCatalog;
+use crate::catalog::{CatalogColumn, PostgresCatalog};
 use crate::diagnostic::PostgresDiagnosticCode;
 use crate::scope::resolve_column_binding;
 use serde::Serialize;
@@ -25,7 +25,7 @@ impl ViewBindings {
     ) -> Result<(), PostgresAnalysisError> {
         let mut targets = Vec::new();
         for (depth, frame) in frames.iter().enumerate().rev().take(1) {
-            for binding in &frame.bindings {
+            for (position, binding) in frame.bindings.iter().enumerate() {
                 if qualifier.last().is_some_and(|name| name != &binding.alias) {
                     continue;
                 }
@@ -38,7 +38,7 @@ impl ViewBindings {
                 for name in &binding.column_order {
                     let column = binding.columns.get(name).ok_or_else(invalid_view)?;
                     targets.push(json!({"expression": {"kind": {"kind": "bound_column",
-                        "identity": column.identity.as_str(), "binding": binding.alias, "scope": depth}}, "alias": null}));
+                        "identity": column_identity(binding, column)?, "binding": position, "scope": depth}}, "alias": null}));
                 }
             }
         }
@@ -68,7 +68,8 @@ impl ViewBindings {
         frames: &[ScopeFrame],
         expression: &Expression,
     ) -> Result<(), PostgresAnalysisError> {
-        let (binding, column, depth) = resolve_column_binding(catalog, path, frames, expression)?;
+        let (binding, column, depth, position) =
+            resolve_column_binding(catalog, path, frames, expression)?;
         // The general expression resolver accepts a relation qualifier. A view
         // fingerprint must additionally verify an explicit schema qualification
         // instead of dropping it and accidentally equating different schemas.
@@ -83,11 +84,16 @@ impl ViewBindings {
                 ));
             }
         }
+        let role = if is_result_column(binding, column) {
+            json!("<result>")
+        } else {
+            json!(position)
+        };
         self.insert(
             expression,
             json!({
-                "kind": {"kind": "bound_column", "identity": column.identity.as_str(),
-                    "binding": binding.alias, "scope": depth},
+                "kind": {"kind": "bound_column", "identity": column_identity(binding, column)?,
+                    "binding": role, "scope": depth},
             }),
         )
     }
@@ -97,13 +103,10 @@ impl ViewBindings {
         item: &FromItem,
         identity: &ObjectId,
     ) -> Result<(), PostgresAnalysisError> {
-        let FromItem::Relation { alias, .. } = item else {
+        let FromItem::Relation { .. } = item else {
             return Err(invalid_view());
         };
-        self.insert(
-            item,
-            json!({"kind": "relation", "name": identity.as_str(), "alias": alias}),
-        )
+        self.insert(item, json!({"kind": "relation", "name": identity.as_str()}))
     }
 
     fn rewrite(&self, value: &mut Value) -> Result<(), PostgresAnalysisError> {
@@ -127,6 +130,15 @@ impl ViewBindings {
                 }
             }
             Value::Object(values) => {
+                // Reference bindings retain the FROM position. Alias spelling
+                // itself can change during PostgreSQL deparsing (r -> r_1).
+                // Keep CTE names and subquery bodies, which identify the source.
+                if values.get("kind").and_then(Value::as_str) == Some("relation")
+                    || (values.get("kind").and_then(Value::as_str) == Some("subquery")
+                        && values.contains_key("alias"))
+                {
+                    values.remove("alias");
+                }
                 // A wildcard is replaced by ordered, bound projection items;
                 // flatten only the SELECT targets, never arbitrary SQL arrays.
                 if let Some(Value::Array(targets)) = values.get_mut("targets") {
@@ -179,7 +191,39 @@ impl ViewBindings {
                 for value in values.values_mut() {
                     self.rewrite(value)?;
                 }
-                if let Some(Value::Array(targets)) = values.get("targets") {
+                if values.get("set_operation").is_some_and(Value::is_object) {
+                    let width = projection_width(
+                        values
+                            .get("set_operation")
+                            .and_then(|set| set.get("left"))
+                            .ok_or_else(invalid_view)?,
+                    )?;
+                    if let Some(Value::Array(orders)) = values.get_mut("order_by") {
+                        for order in orders {
+                            let expression =
+                                order.get_mut("expression").ok_or_else(invalid_view)?;
+                            // PostgreSQL deparses set ordering as an output ordinal.
+                            // Canonicalize only the top-level ordinal, not integer
+                            // constants inside an ORDER BY expression.
+                            if expression
+                                .get("kind")
+                                .and_then(|kind| kind.get("kind"))
+                                .and_then(Value::as_str)
+                                == Some("integer")
+                            {
+                                let position = expression
+                                    .get("kind")
+                                    .and_then(|kind| kind.get("value"))
+                                    .and_then(Value::as_str)
+                                    .and_then(|value| value.parse::<usize>().ok())
+                                    .ok_or_else(invalid_view)?;
+                                *expression = set_output(position, width)?;
+                            } else {
+                                resolve_set_references(expression, width)?;
+                            }
+                        }
+                    }
+                } else if let Some(Value::Array(targets)) = values.get("targets") {
                     let expressions = targets
                         .iter()
                         .filter_map(|target| target.get("expression").cloned())
@@ -195,6 +239,84 @@ impl ViewBindings {
         }
         Ok(())
     }
+}
+
+fn is_result_column(binding: &ScopeBinding, column: &CatalogColumn) -> bool {
+    binding.relation.is_none()
+        && binding.alias == "<result>"
+        && column.identity.as_str().starts_with("result.")
+}
+
+fn column_identity(
+    binding: &ScopeBinding,
+    column: &CatalogColumn,
+) -> Result<String, PostgresAnalysisError> {
+    if binding.relation.is_some() || is_result_column(binding, column) {
+        return Ok(column.identity.as_str().to_string());
+    }
+    let position = binding
+        .column_order
+        .iter()
+        .position(|name| name == &column.name)
+        .ok_or_else(invalid_view)?;
+    Ok(format!("derived-output.{position}"))
+}
+
+fn projection_width(query: &Value) -> Result<usize, PostgresAnalysisError> {
+    if let Some(left) = query.get("set_operation").and_then(|set| set.get("left")) {
+        return projection_width(left);
+    }
+    let targets = query
+        .get("targets")
+        .and_then(Value::as_array)
+        .ok_or_else(invalid_view)?;
+    if !targets.is_empty() {
+        return Ok(targets.len());
+    }
+    query
+        .get("values")
+        .and_then(Value::as_array)
+        .and_then(|rows| rows.first())
+        .and_then(Value::as_array)
+        .map(Vec::len)
+        .ok_or_else(invalid_view)
+}
+
+fn set_output(position: usize, width: usize) -> Result<Value, PostgresAnalysisError> {
+    if position == 0 || position > width {
+        return Err(invalid_view());
+    }
+    Ok(json!({"kind": {"kind": "set_output", "position": position}}))
+}
+
+fn resolve_set_references(value: &mut Value, width: usize) -> Result<(), PostgresAnalysisError> {
+    if let Some(kind) = value.get("kind")
+        && kind.get("kind").and_then(Value::as_str) == Some("bound_column")
+        && kind.get("binding").and_then(Value::as_str) == Some("<result>")
+    {
+        let index = kind
+            .get("identity")
+            .and_then(Value::as_str)
+            .and_then(|identity| identity.strip_prefix("result."))
+            .and_then(|index| index.parse::<usize>().ok())
+            .ok_or_else(invalid_view)?;
+        *value = set_output(index.checked_add(1).ok_or_else(invalid_view)?, width)?;
+        return Ok(());
+    }
+    match value {
+        Value::Array(values) => {
+            for value in values {
+                resolve_set_references(value, width)?;
+            }
+        }
+        Value::Object(values) => {
+            for value in values.values_mut() {
+                resolve_set_references(value, width)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 fn resolve_projection_references(

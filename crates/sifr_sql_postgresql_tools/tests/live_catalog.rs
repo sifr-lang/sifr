@@ -244,6 +244,8 @@ fn parity_schema(mut schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::
                 "parity_alias_view",
                 "parity_order_view",
                 "parity_replaced_view",
+                "parity_recursive_view",
+                "parity_set_view",
             ]
             .iter()
             .any(|name| {
@@ -281,6 +283,8 @@ fn ddl_parity_schema_with_filter(
                  CREATE VIEW parity_order_view AS SELECT id FROM parity_users ORDER BY id ASC; \
                  CREATE VIEW parity_replaced_view AS SELECT id, name FROM parity_users; \
                  CREATE OR REPLACE VIEW parity_replaced_view AS SELECT id, name FROM parity_users WHERE score > 0; \
+                 CREATE VIEW parity_recursive_view AS WITH RECURSIVE r(id) AS (SELECT id FROM parity_users UNION ALL SELECT id + 1 AS id FROM r WHERE id < 3) SELECT id FROM r; \
+                 CREATE VIEW parity_set_view AS SELECT id FROM parity_users UNION SELECT id FROM parity_users ORDER BY id DESC NULLS LAST; \
                  CREATE SEQUENCE parity_owned_sequence AS integer INCREMENT 5 \
                     MINVALUE 0 MAXVALUE 1000 START 0 CACHE 3 CYCLE; \
                  ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.score; \

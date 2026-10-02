@@ -10,7 +10,7 @@ pub(crate) fn resolve_column(
     frames: &[ScopeFrame],
     expression: &Expression,
 ) -> Result<TypeFact, PostgresAnalysisError> {
-    let (binding, column, _) = resolve_column_binding(catalog, path, frames, expression)?;
+    let (binding, column, _, _) = resolve_column_binding(catalog, path, frames, expression)?;
     Ok(TypeFact {
         database_type: column.database_type.clone(),
         nullable: column.nullable,
@@ -24,7 +24,7 @@ pub(crate) fn resolve_column_binding<'a>(
     path: &[String],
     frames: &'a [ScopeFrame],
     expression: &Expression,
-) -> Result<(&'a ScopeBinding, &'a CatalogColumn, usize), PostgresAnalysisError> {
+) -> Result<(&'a ScopeBinding, &'a CatalogColumn, usize, usize), PostgresAnalysisError> {
     let column_name = path.last().ok_or_else(|| {
         PostgresAnalysisError::new(
             PostgresDiagnosticCode::UnknownColumn,
@@ -37,12 +37,13 @@ pub(crate) fn resolve_column_binding<'a>(
         let matches = frame
             .bindings
             .iter()
-            .filter(|binding| qualifier.is_none_or(|value| &binding.alias == value))
-            .filter_map(|binding| {
+            .enumerate()
+            .filter(|(_, binding)| qualifier.is_none_or(|value| &binding.alias == value))
+            .filter_map(|(position, binding)| {
                 binding
                     .columns
                     .get(column_name)
-                    .map(|column| (binding, column))
+                    .map(|column| (binding, column, position))
             })
             .collect::<Vec<_>>();
         if matches.len() > 1 {
@@ -52,8 +53,8 @@ pub(crate) fn resolve_column_binding<'a>(
                 expression,
             ));
         }
-        if let Some((binding, column)) = matches.first() {
-            return Ok((binding, column, depth));
+        if let Some((binding, column, position)) = matches.first() {
+            return Ok((binding, column, depth, *position));
         }
     }
     let mut error = PostgresAnalysisError::new(

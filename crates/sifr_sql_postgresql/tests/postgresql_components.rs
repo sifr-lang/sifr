@@ -118,7 +118,12 @@ fn exercise_view_schema_component(host: &mut ComponentHost, major: u16, bytes: &
         CREATE VIEW expanded AS SELECT * FROM owners; \
         CREATE VIEW different AS SELECT second, first FROM owners; \
         CREATE VIEW replaced AS SELECT first, second FROM owners WHERE first > 0; \
-        CREATE OR REPLACE VIEW replaced AS SELECT first, second FROM owners;";
+        CREATE OR REPLACE VIEW replaced AS SELECT first, second FROM owners; \
+        CREATE VIEW recursive_columns AS WITH RECURSIVE r(first) AS (SELECT first FROM owners UNION ALL SELECT first + 1 AS first FROM r WHERE first < 3) SELECT first FROM r; \
+        CREATE VIEW recursive_qualified AS WITH RECURSIVE r(first) AS (SELECT owners.first FROM owners UNION ALL SELECT r.first + 1 AS first FROM r WHERE r.first < 3) SELECT r.first FROM r; \
+        CREATE VIEW set_ordered AS SELECT first, second FROM owners UNION SELECT first, second FROM owners ORDER BY first; \
+        CREATE VIEW set_ordinal AS SELECT first, second FROM owners UNION SELECT first, second FROM owners ORDER BY 1; \
+        CREATE VIEW set_changed AS SELECT first, second FROM owners UNION SELECT first, second FROM owners ORDER BY second;";
     let sources = vec![SchemaSourceInput {
         document: "views.sql".to_string(),
         kind: SchemaDocumentKind::SqlDdl,
@@ -155,6 +160,9 @@ fn exercise_view_schema_component(host: &mut ComponentHost, major: u16, bytes: &
     assert_eq!(query("unqualified"), query("expanded"));
     assert_eq!(query("unqualified"), query("replaced"));
     assert_ne!(query("unqualified"), query("different"));
+    assert_eq!(query("recursive_columns"), query("recursive_qualified"));
+    assert_eq!(query("set_ordered"), query("set_ordinal"));
+    assert_ne!(query("set_ordered"), query("set_changed"));
 }
 
 fn exercise_sequence_schema_component(host: &mut ComponentHost, major: u16, bytes: &[u8]) {

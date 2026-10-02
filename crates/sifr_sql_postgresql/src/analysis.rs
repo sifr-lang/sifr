@@ -277,7 +277,13 @@ impl AnalysisContext<'_> {
             if select.recursive
                 && let Some(set) = &cte.query.set_operation
             {
-                let anchor = self.analyze_select(&set.left, cte_scopes.clone())?;
+                // The anchor pre-pass establishes the recursive binding's type.
+                // Capture identities only during the subsequent full query pass,
+                // whose scope contains that binding on both DDL and live paths.
+                let bindings = self.view_bindings.take();
+                let anchor = self.analyze_select(&set.left, cte_scopes.clone());
+                self.view_bindings = bindings;
+                let anchor = anchor?;
                 let anchor_names = cte_names(cte, &anchor.fields)?;
                 cte_frame.bindings.push(ScopeBinding::derived(
                     &cte.name,
