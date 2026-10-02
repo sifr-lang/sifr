@@ -137,6 +137,15 @@ checks: named individuals7/21/35, class3/3 with63 and four focused originals
 whitespace guard then found one trailing blank line in the new acceptance module;
 all logs/receipts remain historical in `attempts/`. That line is removed. The
 changed helper-source identity requires final fresh qualification and review.
+Candidate `0a045b4cccc86a097319351ded02ad3f5a7d8716` passes all10 selected
+cases/387 assertions and every guard. Summary SHA-256
+`708add738f2908b2e86e9e2ad761122bf351a7109bdd434ba4fbcb35da900513`
+is preserved with its command evidence. Before the final review, main advanced
+to `420984aa472f2266a8c53ce46ce9b9d3a6405644` through SQL#4242/#4244,
+including Cargo.lock, the sifr_codegen manifest and production sources. These
+externally owned changes are integrated unchanged; the affected original build
+inputs require new exact qualification and review. The locked isolated helper
+graph and all producer pins remain unchanged. No SQL repair is absorbed.
 The first review's suggestions are deferred to their owning future work: reverse
 trait multiset coverage, typed exception conversion, new ancestor-manifest absence
 coverage, cfg configuration labeling, dep-info mtime/output isolation, environment
