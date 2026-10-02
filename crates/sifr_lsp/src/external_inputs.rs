@@ -68,6 +68,7 @@ impl ExternalInputSnapshots {
             .map(PathBuf::as_path)
     }
 
+    #[cfg(test)]
     pub(crate) fn generation(&self, root: &Path) -> Option<u64> {
         self.roots.get(root).map(|snapshot| snapshot.generation)
     }

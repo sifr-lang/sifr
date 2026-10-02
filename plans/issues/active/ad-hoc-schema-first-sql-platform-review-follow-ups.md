@@ -1305,11 +1305,17 @@ Scope: behavior-preserving correction of the unchanged workspace Clippy
 findings: the first eight in checked_place.rs,
 lower_expr/iterators_and_callables.rs, and sifr_lowering
 lower/method_authority.rs, followed by twelve downstream driver findings exposed
-when those crates could pass Clippy, then three analysis findings. Driver
+when those crates could pass Clippy, then three analysis findings and a
+test-only LSP generation accessor, followed by three CLI formatter-cache
+findings. Driver
 repairs preserve storage ownership, error branches, project-graph bytes and
 compiler initialization. Analysis repairs inline an unchanged preview message
 and borrow type-hierarchy item IDs instead of cloning/consuming them; update
-host, snapshot, LSP callers and existing tests together. No lint waiver. Move local helper declarations before
+host, snapshot, LSP callers and existing tests together. Compile the LSP
+generation accessor only for tests, matching all its callers. Formatter-cache
+repairs move the Write trait import before statements, terminate a unit-valued
+identity operation and borrow diagnostic errors; marker bytes and all cache
+policy remain unchanged. No lint waiver. Move local helper declarations before
 the first statement, clone already-owned method names directly, and express
 local/imported authority with the equivalent positive comparison and swapped
 branches. No emitted Rust, SQL resolver, runtime, dependency, lint waiver, or
@@ -1317,7 +1323,8 @@ coverage-policy change belongs to this prerequisite.
 
 Named qualification: existing sifr_codegen and sifr_lowering library tests;
 required `cargo clippy --workspace -- -D warnings`; affected existing driver
-storage/digest/guided-graph tests and analysis/LSP type-hierarchy/preview tests;
+storage/digest/guided-graph tests, analysis/LSP type-hierarchy/preview tests and
+CLI formatter-cache tests;
 formatting, HIR/driver/file-size guards, diff check, and one exact-candidate
 scoped Opus review. The
 prospective phase-end broad-gate policy applies; reuse unchanged Item 7 SQL
