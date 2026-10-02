@@ -60,7 +60,7 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
             start: 10,
             end: 55,
         };
-        let request = EmbeddedAnalysisRequest {
+        let mut request = EmbeddedAnalysisRequest {
             protocol_major: COMPONENT_PROTOCOL_MAJOR,
             component: registration.identity.clone(),
             provider_diagnostics: registration.diagnostics.clone(),
@@ -85,6 +85,15 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
             },
             plan_kind: PlanKind::Expression,
         };
+        if let Some(sources) =
+            sifr_sql_contract::schema_diagnostic_source_artifact(&schema).unwrap()
+        {
+            request.context.artifacts.push(sources);
+            request
+                .context
+                .artifacts
+                .sort_by(|a, b| (&a.kind, &a.identity).cmp(&(&b.kind, &b.identity)));
+        }
         let limits = ComponentHostLimits {
             fuel: 100_000_000,
             ..ComponentHostLimits::default()
@@ -99,6 +108,54 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
         );
         assert!(run.response.plan.diagnostics.is_empty());
         assert!(!run.response.plan.operations.is_empty());
+        let mut invalid = request.clone();
+        invalid.parts = vec![TemplatePart::Static {
+            text: "SELEC broken".into(),
+            span: SourceSpan {
+                document: "src/component.sifr".into(),
+                start: 50,
+                end: 62,
+            },
+        }];
+        let failure = host
+            .analyze(&registration, &bytes, &invalid)
+            .expect("valid diagnostic component plan");
+        let diagnostic = &failure.response.plan.diagnostics[0];
+        assert_eq!(diagnostic.code, "SIFR-SQL-POSTGRESQL-0001");
+        assert_eq!(
+            diagnostic.severity,
+            sifr_compiler_component::DiagnosticSeverity::Error
+        );
+        assert_eq!(diagnostic.primary.document, "src/component.sifr");
+        assert!(diagnostic.primary.start >= 50 && diagnostic.primary.end <= 62);
+
+        let sql = "SELECT missing FROM users";
+        invalid.parts = vec![TemplatePart::Static {
+            text: sql.into(),
+            span: SourceSpan {
+                document: "src/component.sifr".into(),
+                start: 70,
+                end: 70 + u32::try_from(sql.len()).unwrap(),
+            },
+        }];
+        let failure = host
+            .analyze(&registration, &bytes, &invalid)
+            .expect("authorized schema diagnostic");
+        let diagnostic = &failure.response.plan.diagnostics[0];
+        assert_eq!(diagnostic.code, "SIFR-SQL-POSTGRESQL-0003");
+        let expected = schema.objects[&sifr_sql_contract::ObjectId::new("public.users")]
+            .source
+            .as_ref()
+            .unwrap();
+        assert!(
+            diagnostic
+                .related
+                .iter()
+                .any(|span| span.document == expected.document
+                    && span.start == expected.start
+                    && span.end == expected.end)
+        );
+
         exercise_sequence_schema_component(&mut host, major, &bytes);
         exercise_view_schema_component(&mut host, major, &bytes);
     }

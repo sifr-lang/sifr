@@ -110,6 +110,26 @@ fn checked_in_sqlite_component_executes_in_the_capability_free_host() {
     );
     assert!(run.response.plan.diagnostics.is_empty());
     assert!(!run.response.plan.operations.is_empty());
+    let mut invalid = request.clone();
+    invalid.parts = vec![TemplatePart::Static {
+        text: "SELEC broken".into(),
+        span: SourceSpan {
+            document: "src/component.sifr".into(),
+            start: 50,
+            end: 62,
+        },
+    }];
+    let failure = host
+        .analyze(&registration, &bytes, &invalid)
+        .expect("valid diagnostic component plan");
+    let diagnostic = &failure.response.plan.diagnostics[0];
+    assert_eq!(diagnostic.code, "SIFR-SQLITE-0001");
+    assert_eq!(
+        diagnostic.severity,
+        sifr_compiler_component::DiagnosticSeverity::Error
+    );
+    assert_eq!(diagnostic.primary.document, "src/component.sifr");
+    assert!(diagnostic.primary.start >= 50 && diagnostic.primary.end <= 62);
 }
 
 #[test]

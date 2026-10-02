@@ -283,7 +283,18 @@ pub fn execute_embedded_request(
                 .index
                 .checked_add(1)
                 .ok_or_else(|| component_diagnostic("SQLite hole slot overflows"))?;
-            Ok((slot, scalar_hole_type(&hole.ty)?))
+            let ty = scalar_hole_type(&hole.ty).map_err(|mut diagnostic| {
+                diagnostic.code = SqliteDiagnosticCode::UnsupportedFeature;
+                if let Some(TemplatePart::Hole { span, .. }) = request.parts.iter().find(
+                    |part| matches!(part, TemplatePart::Hole { index, .. } if *index == hole.index),
+                ) {
+                    diagnostic.primary.document.clone_from(&span.document);
+                    diagnostic.primary.start = span.start;
+                    diagnostic.primary.end = span.end;
+                }
+                diagnostic
+            })?;
+            Ok((slot, ty))
         })
         .collect::<Result<BTreeMap<_, _>, SqliteDiagnostic>>()?;
     let analysis = SqliteAnalyzer::new(&parser, &schema)?

@@ -404,10 +404,14 @@ fn into_embedded_response(
     schema: &SchemaIr,
     response: MysqlComponentResponse,
 ) -> Result<EmbeddedAnalysisResponse, MysqlDiagnostic> {
-    let MysqlComponentResponse::Query(analysis) = response else {
-        return Err(component_diagnostic(
-            "MySQL embedded query analysis did not return query facts",
-        ));
+    let analysis = match response {
+        MysqlComponentResponse::Query(analysis) => analysis,
+        MysqlComponentResponse::Diagnostic(diagnostic) => return Err(diagnostic),
+        MysqlComponentResponse::Schema(_) => {
+            return Err(component_diagnostic(
+                "MySQL embedded query analysis did not return query facts",
+            ));
+        }
     };
     let payload = serde_json::to_vec(&analysis)
         .map_err(|_| component_diagnostic("cannot serialize MySQL analysis"))?;

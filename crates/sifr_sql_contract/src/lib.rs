@@ -5,6 +5,7 @@ mod cardinality;
 mod codec;
 mod codec_binding;
 mod component;
+mod component_diagnostics;
 mod diagnostic;
 mod diff;
 mod effect;
@@ -39,6 +40,9 @@ pub use codec::{
 pub use codec_binding::{
     CheckedCodecBinding, CodecBindingError, CodecDecoderSignature, CodecEncoderSignature,
     CodecFunctionIdentity,
+};
+pub use component_diagnostics::{
+    project_provider_diagnostics, provider_diagnostic_response, schema_diagnostic_source_artifact,
 };
 pub use diagnostic::CommonSqlDiagnostic;
 

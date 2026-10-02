@@ -84,6 +84,7 @@ pub(crate) fn malformed(
 ) -> HirDiagnostic {
     let problem = problem.into();
     HirDiagnostic {
+        external: None,
         code: Some(DiagnosticCode::META_MALFORMED_DECLARATION),
         message: format!(
             "package {package} declared malformed specialization issue {reason_code}: {problem}"
@@ -122,6 +123,7 @@ pub(crate) fn method_slot_diagnostic(
     };
     let reason = error.into_reason();
     HirDiagnostic {
+        external: None,
         code: Some(code),
         message: match code.code() {
             "SIFR-RUST-SLOT-0001" => format!("invalid reserved method-slot list: {reason}"),

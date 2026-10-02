@@ -295,12 +295,17 @@ pub fn execute_embedded_request(
             sifr_end: end,
         },
     );
-    into_embedded_response(
+    let mut response = into_embedded_response(
         server_major,
         request.context.schema_profile,
         &schema,
         &response,
-    )
+    )?;
+    response.plan.provider_identity = request.component.processor;
+    response.plan.stable_fingerprint =
+        sifr_compiler_component::compute_plan_fingerprint(&response.plan)
+            .map_err(|error| component_diagnostic(error.to_string()))?;
+    Ok(response)
 }
 
 fn embedded_sql_source(

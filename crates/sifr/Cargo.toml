@@ -34,6 +34,8 @@ sha2 = { workspace = true }
 tempfile = "3.27.0"
 
 [dev-dependencies]
+sifr_analysis = { workspace = true }
+sifr_compiler_services = { workspace = true }
 rusqlite = { workspace = true, features = ["bundled"] }
 serde_json = { workspace = true }
 sifr_stdlib_manifest = { workspace = true }

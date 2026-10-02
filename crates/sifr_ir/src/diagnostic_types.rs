@@ -5,6 +5,8 @@ use std::collections::BTreeMap;
 /// Structured diagnostics produced during HIR lowering.
 #[derive(Debug, Clone)]
 pub struct HirDiagnostic {
+    /// Outer provider diagnostics retain their registered identity and source map.
+    pub external: Option<Box<sifr_diagnostics::RenderedDiagnostic>>,
     pub code: Option<DiagnosticCode>,
     pub message: String,
     pub args: BTreeMap<String, DiagnosticArg>,
@@ -30,8 +32,12 @@ pub struct RevealTypeDiagnostic {
     pub primary_range: Option<TextRange>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum LoweringWarningDiagnostic {
+    External {
+        module: String,
+        diagnostic: Box<sifr_diagnostics::RenderedDiagnostic>,
+    },
     UnreachableStatement {
         primary_range: Option<TextRange>,
     },

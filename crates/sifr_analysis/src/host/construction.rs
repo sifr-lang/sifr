@@ -16,9 +16,11 @@ impl AnalysisHost {
         .unwrap_or_else(
             sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
         );
+        let mut externals = sifr_compiler_services::stdlib::external_defs(compiler)?;
+        profiles.install_compiler_externals(&mut externals);
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_compiler_services::stdlib::external_defs(compiler)?,
+            externals,
             Vec::new(),
         )?;
         Self::new_with_sql_profiles(compiler, session, profiles)
