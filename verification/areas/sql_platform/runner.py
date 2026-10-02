@@ -164,7 +164,8 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_sql_mysql", "--test", "mysql_properties",
     ],
     "sql-mysql-runtime-tests": [
-        "cargo", "test", "--locked", "-p", "sifr_sql_mysql_runtime", "--test", "runtime_types",
+        "cargo", "test", "--locked", "-p", "sifr_sql_mysql_runtime",
+        "--lib", "--test", "runtime_types",
     ],
     "sql-mysql-migration-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_mysql_tools", "--test", "migration_qualification",
