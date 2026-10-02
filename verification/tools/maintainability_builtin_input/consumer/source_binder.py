@@ -358,6 +358,12 @@ def capture(output, target, identity, api):
     (output / "original-build.json").write_bytes(api.encoded(build))
     before=_inputs(root,metadata,messages,selected,identity,output,api)
     before["files"][str(archive)]=build["archive_sha256"]
+    (output / "original-inputs-before.json").write_bytes(api.encoded(before))
+    build_outputs=output / "original-build-outputs";build_outputs.mkdir()
+    for message in messages:
+        if message.get("reason") == "build-script-executed":
+            source=Path(message["out_dir"]).parent / "output"
+            shutil.copyfile(source,build_outputs / (api.digest(str(source).encode())+".txt"))
     analysis_times={}
     for invocation,name in zip(selected,("syn-raw.json","caller-raw.json")):
         replay=invocation["environment"].copy()
@@ -369,9 +375,9 @@ def capture(output, target, identity, api):
     raw=json.loads((output/"syn-raw.json").read_text());caller=json.loads((output/"caller-raw.json").read_text())
     (output/"independent-inventory.json").write_bytes(api.encoded(inventory(raw)))
     (output/"ra-context.json").write_bytes(api.encoded({"context":{"crate":"sifr_codegen"},"cfg":caller["cfg"],"dependency_cfg":raw["cfg"],"dependency_root":next(t["src_path"] for t in syn["targets"] if "lib" in t["kind"])}))
-    resolver_env=os.environ.copy()
-    for key in ("RUSTC_BOOTSTRAP","RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER"):resolver_env.pop(key,None)
-    resolver_env.update(CARGO_INCREMENTAL="0",CARGO_BUILD_JOBS="2",CARGO_TARGET_DIR=str(target),SIFR_BUILTIN_SOURCE_BINDER_RA="1")
+    # Build-script identity tracks the wrapper: RA must prepare the same control.
+    resolver_env=env.copy()
+    resolver_env["SIFR_BUILTIN_SOURCE_BINDER_RA"]="1"
     resolver=api.run([str(target / "debug/ra_common"),str(root),"sifr_codegen","crates/sifr_codegen/src/inline_syntax.rs",str(output/"ra-context.json")],env=resolver_env,log=output / "ra-source.log")
     (output/"ra-source.json").write_text(resolver.stdout)
     for name,sha in before["files"].items():require(api.digest(Path(name).read_bytes())==sha,"original input drift across capture/RA stages: "+name,api)

@@ -121,6 +121,16 @@ remain preserved outside Git. Fresh main then advanced to
 including two production sifr_codegen lint files. Main is integrated without
 changing that externally owned implementation; its changed production source
 inputs require new qualification and exact-candidate review before HBF merge.
+Integrated candidate `e7c6075e07a3fb8a4830c89cb461e27e69ee4bef` stopped
+before assertions when RA preparation rewrote the actual sifr_codegen build-script
+output (266.486 seconds). The script tracks `RUSTC_WRAPPER`; RA had removed the
+authenticated control wrapper. The unchanged input-drift guard rejected that context.
+The diagnostic RA launcher now inherits the exact original control environment,
+including its wrapper and owned invocation store. The pinned custom build command
+uses that environment directly. Pre-analysis input hashes and original build-script
+outputs are now retained durably before replay/RA preparation. The failed raw capture
+and completion records remain unaccepted in `attempts/` and the prepared evidence.
+Fresh qualification and exact-candidate review are required.
 The first review's suggestions are deferred to their owning future work: reverse
 trait multiset coverage, typed exception conversion, new ancestor-manifest absence
 coverage, cfg configuration labeling, dep-info mtime/output isolation, environment
