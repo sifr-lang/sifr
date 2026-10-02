@@ -65,6 +65,16 @@ pub fn owner(tcx: TyCtxt<'_>, did: DefId, implementation: DefId, chain: &[Value]
 }
 
 pub fn capture(tcx: TyCtxt<'_>) -> Value {
+    let suffix = std::env::var("SIFR_BUILTIN_SOURCE_SUFFIX").unwrap_or_else(|_| {
+        tcx.sess
+            .dcx()
+            .fatal("missing selected source contract: SIFR_BUILTIN_SOURCE_SUFFIX")
+    });
+    if suffix.is_empty() {
+        tcx.sess
+            .dcx()
+            .fatal("empty selected source contract: SIFR_BUILTIN_SOURCE_SUFFIX");
+    }
     // The universe comes only from compiler HIR; even bodyless/nested impls enter it.
     let implementations = tcx
         .hir_crate_items(())

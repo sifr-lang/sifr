@@ -206,6 +206,28 @@ class BuiltinCapabilityTests(unittest.TestCase):
         result = builtin.run([str(self.helper), str(broken), "--crate-type", "lib", "--edition", "2024"], env=environment, log=self.evidence / "failed-typecheck.log", allowed=(101,))
         self.require(result.returncode != 0 and not destination.exists(), "failed typechecking publishes no partial capture")
         self.require("RUSTC_BOOTSTRAP" not in environment, "bootstrap excluded from analysis")
+        selected = self.evidence / "required-selector.rs"
+        selected.write_text("#[derive(Debug)] pub struct Selected { pub value: u8 }\n")
+        command = [str(self.helper), str(selected), "--crate-type", "lib", "--edition", "2024", "--out-dir", str(self.evidence)]
+        control = self.evidence / "selector-control"
+        control.mkdir()
+        environment.update({"SIFR_BUILTIN_CAPTURE": str(control / "raw.json"), "SIFR_BUILTIN_INVENTORY": str(control / "inventory.json"), "SIFR_BUILTIN_SOURCE_SUFFIX": str(selected)})
+        builtin.run(command, env=environment, log=control / "compiler.log")
+        inventory = json.loads((control / "inventory.json").read_text())
+        self.require((control / "raw.json").is_file() and any(owner["owner_kind"] == "AssocFn" and owner["expansion_chain"][0]["builtin"] for owner in inventory["owners"]), "same real compiler input has selected builtin owners with explicit selector")
+        for label in ("missing", "empty"):
+            output = self.evidence / ("selector-" + label)
+            output.mkdir()
+            current = environment.copy()
+            current["SIFR_BUILTIN_CAPTURE"] = str(output / "raw.json")
+            current["SIFR_BUILTIN_INVENTORY"] = str(output / "inventory.json")
+            if label == "missing":
+                current.pop("SIFR_BUILTIN_SOURCE_SUFFIX")
+            else:
+                current["SIFR_BUILTIN_SOURCE_SUFFIX"] = ""
+            result = builtin.run(command, env=current, log=output / "compiler.log", allowed=(0, 1, 101))
+            self.require(result.returncode != 0 and label + " selected source contract: SIFR_BUILTIN_SOURCE_SUFFIX" in result.stderr, "specific producer selector rejection after real successful control: " + label)
+            self.require(not (output / "raw.json").exists() and not (output / "inventory.json").exists(), "invalid selection publishes no compiler or inventory facts: " + label)
         corrupted = copy.deepcopy(self.fixture)
         corrupted["declarations"][0]["expansion_chain"] = []
         self.reject(corrupted, "negative-missing-expansion")
