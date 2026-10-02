@@ -20,6 +20,14 @@ ROOT = Path(__file__).resolve().parents[3]
 MANIFEST = Path(__file__).parent / "data/benchmark_manifest.json"
 
 
+def measured_identity() -> dict:
+    identity = reference_identity(ROOT, MANIFEST, "latency")
+    identity["execution"]["cloud_runtime_environment"] = {
+        key: os.environ.get(key) for key in ("RAYON_NUM_THREADS", "OMP_NUM_THREADS")
+    }
+    return identity
+
+
 def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
@@ -53,7 +61,7 @@ def prepare(output: Path) -> None:
         "profile": artifacts[0]["profile"], "cargo_messages_sha256": compiler_lanes.digest(output / "frontend-cargo.jsonl")}
     receipt["cloud_source"] = clean_source()
     receipt["cloud_repo"] = str(ROOT)
-    receipt["cloud_identity"] = reference_identity(ROOT, MANIFEST, "latency")
+    receipt["cloud_identity"] = measured_identity()
     (output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 
@@ -71,14 +79,14 @@ def endpoint(receipt_path: Path) -> dict:
     return receipt
 
 
-def measure(receipt: Path, case_id: str, output: Path, artifacts: Path) -> None:
+def measure(receipt: Path, case_id: str, output: Path, artifacts: Path, warmup: bool = False) -> None:
     endpoint(receipt)
     case = next(case for case in validate_manifest(load_manifest(MANIFEST)) if case.id == case_id)
     output.mkdir(parents=True, exist_ok=False)
     if case.kind == "command":
         command = bench.command_for_case(case, artifacts / case.id / "shared-build")
         result = bench.run_subprocess(command, case.timeout_ms)
-        record_command_sample(output, case.id, 0, False, command, result)
+        record_command_sample(output, case.id, 0, warmup, command, result)
         if result["timed_out"] or result["exit_code"] not in case.raw["expected_exit_codes"]:
             raise BenchmarkError(f"cloud command correctness failed: {case.id}")
         values = [result["duration_ms"]]
@@ -98,7 +106,7 @@ def measure(receipt: Path, case_id: str, output: Path, artifacts: Path) -> None:
                        str(case.raw.get("inner_repetitions", 1))]
         def recorded(command, timeout):
             result = bench.run_subprocess(command, timeout)
-            record_command_sample(output, case.id, 0, False, command, result,
+            record_command_sample(output, case.id, 0, warmup, command, result,
                                   query_role="one-endpoint-with-internal-warmups")
             return result
         result, payload, values = run_query_invocation(case, case.kind, command, iterations, recorded)
@@ -119,14 +127,15 @@ def main():
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--case")
     parser.add_argument("--artifacts", type=Path)
+    parser.add_argument("--warmup", action="store_true")
     args = parser.parse_args()
     if args.mode == "prepare":
         prepare(args.output.resolve())
     elif args.mode == "identity":
         endpoint(args.receipt)
-        print(json.dumps(reference_identity(ROOT, MANIFEST, "latency")))
+        print(json.dumps(measured_identity()))
     else:
-        measure(args.receipt, args.case, args.output, args.artifacts)
+        measure(args.receipt, args.case, args.output, args.artifacts, args.warmup)
 
 
 if __name__ == "__main__":

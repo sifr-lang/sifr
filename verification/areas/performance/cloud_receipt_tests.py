@@ -31,7 +31,8 @@ class CloudReceiptTests(unittest.TestCase):
             self.paths[key] = root / f"{key}.json"
             value = {"cloud_repo": str(repo), "cloud_source": source,
                 "artifact": {"path": str(repo / "sifr")},
-                "cloud_identity": {"execution": {"cargo_jobs": "2"}}}
+                "cloud_identity": {"execution": {"cargo_jobs": "2", "cloud_runtime_environment": {
+                    "RAYON_NUM_THREADS": None, "OMP_NUM_THREADS": None}}}}
             self.endpoints[key] = value
             self.paths[key].write_text(json.dumps(value))
         for name, value in [("ROOT", root), ("MANIFEST", self.manifest), ("BUDGETS", self.budgets),
@@ -59,7 +60,7 @@ class CloudReceiptTests(unittest.TestCase):
         cloud.atomic(output / "summary.json", summary)
         raw = output / "samples/case/0.json"
         raw.parent.mkdir(parents=True)
-        cloud.atomic(raw, {"case_id": "case", "warmup": False,
+        cloud.atomic(raw, {"case_id": "case", "warmup": "--warmup" in args,
             "command": [endpoint["artifact"]["path"]], "result": {
                 "duration_ms": 1000.0, "peak_rss_bytes": 100000, "cpu_time_ms": 10.0,
                 "exit_code": 0, "timed_out": False}})
@@ -120,6 +121,14 @@ class CloudReceiptTests(unittest.TestCase):
                     self.check()
                 self.manifest.write_text(saved_manifest)
                 self.paths["candidate"].write_text(saved_endpoint)
+
+    def test_runtime_thread_configuration_is_bound(self):
+        expected = {"execution": {"cloud_runtime_environment": {"RAYON_NUM_THREADS": None, "OMP_NUM_THREADS": None}}}
+        changed = copy.deepcopy(expected)
+        changed["execution"]["cloud_runtime_environment"]["RAYON_NUM_THREADS"] = "4"
+        with patch.object(cloud, "comparison_mismatches", return_value=[]):
+            self.assertEqual(cloud.configuration_mismatches(expected, expected), [])
+            self.assertIn("execution.cloud_runtime_environment", cloud.configuration_mismatches(expected, changed))
 
 
 if __name__ == "__main__":

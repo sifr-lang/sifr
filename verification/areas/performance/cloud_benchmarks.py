@@ -58,6 +58,13 @@ def current_identity(endpoint: dict, path: Path) -> dict:
     return json.loads(worker(endpoint, "identity", "--receipt", str(path)))
 
 
+def configuration_mismatches(expected: dict, actual: dict) -> list[str]:
+    mismatches = comparison_mismatches(expected, actual)
+    if expected["execution"]["cloud_runtime_environment"] != actual["execution"]["cloud_runtime_environment"]:
+        mismatches.append("execution.cloud_runtime_environment")
+    return mismatches
+
+
 def check_endpoints(paths: dict[str, Path], reference: str) -> dict:
     endpoints = {key: read(path) for key, path in paths.items()}
     if endpoints["baseline"]["cloud_source"] == endpoints["candidate"]["cloud_source"]:
@@ -65,12 +72,12 @@ def check_endpoints(paths: dict[str, Path], reference: str) -> dict:
     validate_compiler_reference(Path(endpoints["baseline"]["cloud_repo"]), reference)
     for name, endpoint in endpoints.items():
         observed = current_identity(endpoint, paths[name])
-        if comparison_mismatches(endpoint["cloud_identity"], observed):
+        if configuration_mismatches(endpoint["cloud_identity"], observed):
             raise ValueError("prepared cloud configuration changed")
         repo = Path(endpoint["cloud_repo"])
         if tooling_digest(repo) != tooling_digest(ROOT):
             raise ValueError("endpoints require the same reviewed cloud tooling")
-    if comparison_mismatches(endpoints["baseline"]["cloud_identity"], endpoints["candidate"]["cloud_identity"]):
+    if configuration_mismatches(endpoints["baseline"]["cloud_identity"], endpoints["candidate"]["cloud_identity"]):
         raise ValueError("cloud baseline/candidate host configurations differ")
     return endpoints
 
@@ -99,7 +106,7 @@ def capture(args) -> int:
             for index in range(case.warmups):
                 worker(endpoints[name], "measure", "--receipt", str(paths[name]), "--case", case.id,
                        "--output", str(output / "warmups" / case.id / name / str(index)),
-                       "--artifacts", str(output / "artifacts" / name))
+                       "--artifacts", str(output / "artifacts" / name), "--warmup")
         rows = []
         for index, order in enumerate(schedule(case.id)):
             row = {"order": order, "pair_index": index, "invocation": invocation}
@@ -143,6 +150,14 @@ def check(args) -> int:
     # Measurement concurrency belongs to the immutable endpoint preparation,
     # independently of the enclosing correctness profile's worker count.
     os.environ["CARGO_BUILD_JOBS"] = specification["endpoints"]["candidate"]["cloud_identity"]["execution"]["cargo_jobs"]
+    runtime = specification["endpoints"]["candidate"]["cloud_identity"]["execution"]["cloud_runtime_environment"]
+    if set(runtime) != {"RAYON_NUM_THREADS", "OMP_NUM_THREADS"}:
+        raise ValueError("incomplete cloud runtime configuration")
+    for key, value in runtime.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
     for key, endpoint_path in paths.items():
         if digest(endpoint_path) != specification["endpoint_receipt_hashes"][key]:
             raise ValueError("cloud endpoint receipt changed")
