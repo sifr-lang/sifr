@@ -10,6 +10,263 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbipau human-approved source/native attribute authority amendment (2026-10-02)
+
+**Current controlling state: the smaller source/native attribute authority
+amendment is explicitly authorized and delivered prospectively. H03a1hbip is
+ready only for a separately assigned complete diagnostic proof after this
+amendment and its separate receipt merge. H03a1hbc/full H03a1 remain blocked.
+Zero proof cases/assertions and zero accepted contexts of four; semantic_export
+remains false. Source facts alone are not a proof pass.**
+
+Actual fetched main is 8a27592de8ae8d29a649ff88fcef82b5f5fdf97b: proposal
+#4271 candidate 15b73e3a757ab1018d181076f69d54b9e4e149ff / merge
+9be92c307ced4ea0a290f234a8f14b12eda12406; receipt #4272 candidate
+378c161b6ec25df494cd323b09468a3e88cba5b7 / merge
+8a27592de8ae8d29a649ff88fcef82b5f5fdf97b. Both complete merge trees match
+validated candidates; no relevant main drift is present.
+
+### Explicit authorization and finite prospective supersession
+
+Root presented: "I recommend amending that authority contract: Keep exact
+source/native attribute evidence and final compiler semantic ownership. Drop
+claims about rustc's original attribute IDs, attachment and consumed-item
+lineage. Avoid maintaining an instrumented Rust compiler. ... Approve the
+recommended amendment, followed by a separately scoped proof?" The human
+replied: **"Go ahead to make sure we finalize this".** This explicitly selects
+the smaller source/native authority alternative and authorizes its separately
+scoped proof. Do not ask for this approval again or select/build/distribute
+the alternative instrumented compiler ledger.
+
+This registered amendment supersedes only original attribute identity/
+attachment/consumption-lineage claims and current readiness/order statements
+in HBI, H03a1hbie, HBIPA and HBIPAU. All historical receipts, proposals,
+failed attempts, zero-case stops, original declaration/physical spans and raw
+facts below remain byte-for-byte history. No prior attempt becomes accepted.
+All compiler semantic/binder/trait, source/native token/subnode, inventory,
+input/context and failure obligations outside the relinquished claims remain.
+The complete alternatives and unchanged-route audit were read. This is a
+deliberate authority amendment, not an unchanged-route capability pass.
+
+| Authority boundary | Required retained claim | Explicitly relinquished claim |
+| --- | --- | --- |
+| Physical/native direct source attribute membership | Independently authenticated original raw bytes/hash and official raw/normalized offset map; actual physical AST direct child membership, kind/style/order, path/argument/delimiter tokens/subnodes and declaration relationship; genuine native RA owner/source/to_def, native direct membership and exhaustive public token origins in each real include context. A physical/native syntax attachment claims exactly that authority. | Original rustc AttrId and compiler-original attribute attachment. Physical/native node keys or ordinals do not establish a pre-consumption compiler item identity. |
+| Compiler semantic identity | Independently enumerated original-classified and final compiler semantic identities, actual expanded NodeId/LocalDefId association and analyzed DefId/LocalDefId/HirId, stable crate/DefPathHash, exact parent/trait/binder/use/index/depth and source disposition; actual RA source/to_def and parent/trait roundtrips. | Exhaustive compiler-certified consumed-item/attribute lineage and compiler-certified survival from a pre-consumption item to final owner. A source relation cannot claim those transitions. |
+| Expanded/lowered attributes | Actual stage/status/context-bound transformed observations, explicit empty sets and token availability. Retained expanded AttrId is labelled as that stage's observation only. | Inferring original absence, raw original membership or consumption/survival lineage from empty expanded/lowered attrs, retained IDs, cfg traces or derive output. |
+
+Original-classified declaration owners and final compiler semantic identities
+remain independently authenticated from actual compiler inventories. No source
+name, approximate range, hull/endpoints, text matching, copied AST or unauthenticated
+projection may masquerade as compiler authority. Actual compiler cross-stage
+owner/parent associations required by the existing contract remain mandatory;
+only the abandoned pre-consumption attribute/item lineage claim is removed.
+Generated/coarse/hygiene dispositions, genuine body ReErased rules and the
+ObjectShapes RA-only negative remain intact.
+
+### Precise diagnostic schema and consumer boundary for H03a1hbip
+
+Use one closed versioned diagnostic include-source relation in the existing
+companion. The following names are prospective schema/consumer contract names,
+not implemented or passed interfaces. Keep three independently held immutable
+caller-authority inventories before selection or projection:
+
+1. **Source membership authority:** authenticated raw physical bytes/normalization,
+   complete actual physical owners/direct attrs and token/subnode membership;
+   independent complete native RA owner/source/direct-attribute inventories,
+   actual source/to_def roundtrips and public origin edges. Bind actual native
+   HirFileId/node/ancestor, full include invocation/context, file, attribute
+   style/order/kind, direct versus nested/inner membership, declaration and trivia.
+2. **Compiler semantic authority:** complete actual original-classified compiler
+   declarations/owners and separate expanded/analyzed semantic inventories,
+   NodeId/LocalDefId/HIR associations, parents, traits, binders, declarations/uses,
+   constraints/index/depth and explicit unavailable/generated dispositions.
+   Retain exact original compiler declaration spans/kinds independently.
+3. **Stage observations:** complete expanded/lowered attrs with actual stage/status/
+   context and optional tokens, explicitly transformed. Empty observations
+   never replace source membership or imply original absence.
+
+The schema exposes separately named source_native_attribute_membership,
+compiler_semantic_owner_identity and transformed_attribute_observations,
+each with authority/input/capture bindings. Explicit authority contract fields
+original_rustc_attr_id, compiler_original_attribute_attachment,
+exhaustive_consumed_item_lineage and preconsumption_to_final_survival are
+**not_claimed_by_authorized_contract**. Consumers reject projections or schemas
+claiming those guarantees from source/native membership. Retained expanded
+AttrIds belong only in stage observations. A source ordinal/node key is not a
+rustc AttrId. Schema/consumer/test assertion naming must make the lost claims
+visible; a silent rename preserving a false compiler-original claim is invalid.
+
+A source-membership edge relates actual physical and native direct attribute
+children in one include context, using complete authenticated token/subnode
+origins and exact owner ancestry/order/style. A **separate semantic-source
+correspondence edge** relates the compiler-authenticated declaration/owner to
+actual RA source/to_def and final compiler semantic facts through the required
+exact declaration and native token/subnode relation. It is not an attribute
+survival edge. Select the unique complete physical owner using that exact
+declaration plus source-membership relation; store its whole range separately
+from the compiler declaration. Every nontrivia token and semantic subnode belongs
+to its authenticated declaration/attribute/existing exact disposition. Authenticate
+intervening trivia/comments. Aggregate original_range_opt retains actual Some/None;
+no hull/endpoints certify coverage. Reconcile complete independent multisets.
+
+Consumers, cache hits, repeats and every publication entrypoint first authenticate
+intact caller-held original authority/input inventories, then verify the closed
+relation and all cross-references. Coordinated redigested projections cannot
+replace originals. Every required owner/context has exact authority or explicit
+non-admission preventing a complete proof pass; none may be quietly filtered out.
+Missing/ambiguous native token/subnode origins or remaining required compiler
+semantic facts stop. Failure publishes no accepted partial diagnostic result;
+semantic_export remains false.
+
+### Ready next worker, owned scope and preserved anchors
+
+**Next worker: H03a1hbip only**, after complete amendment merge and separate
+canonical receipt. Dependencies: this authorized H03a1hbipau amendment/receipt,
+HBI #4262/#4263, H03a1hbie #4265/#4266, retained HBIPA #4269/#4270 and
+HBIPAU #4271/#4272 history, accepted HBF #4238/#4258, HBS #4236/#4237 and
+#4222/#4233. No new prerequisite chain is introduced.
+
+Owned paths remain verification/tools/maintainability_builtin_input/,
+scripts/maintainability_builtin_input.py, scripts/maintainability_builtin_input_tests.py
+and this canonical Markdown. Existing companion src/main.rs, src/expanded.rs,
+src/source_binder.rs and src/inventory.rs may change only for original/final
+authority enumeration/capture/serialization. Native membership/origin relations
+belong in src/bin/ra_common/; caller-held verification in consumer/ (prospective
+consumer/include_source_acceptance.py exposes the existing four-case class
+through the existing test module); closed diagnostic relation in schema/;
+real bounded positives/negatives in fixtures/source_binder/. Split by responsibility
+before 900 lines. No broader capture/discovery/metric redesign. Root/helper
+manifests/locks/pins, compiler/RA sources and isolated producer/API/dependency
+graph remain unchanged. No upgrade, private resolver, new producer or fallback.
+
+Fresh proof retains attributed production SifrIntBindingCollector declaration
+19..81, physical STRUCT 0..81 and direct derive 0..18; real IncludedBinder
+left/right declarations 17..68 with direct Debug attrs and separate contexts;
+production ScalarCallRewriter declaration 0..307/name 7..25, whose expanded
+declaration tokens were unavailable; genuine IncludedBinder impl native
+aggregate None. **ScalarCallRewriter's actual exact token/subnode/owner relation
+remains required and unproved; no inferred pass from this amendment.**
+No widening, dropped attribute, owner reclassification or omitted required context.
+Historical IDs/counts remain capture anchors, never fresh constants. Preserve
+the entire original thirteen-case builtin/extension/inventory union, Dynamic/
+include/source-authority fixtures, original/generated/empty dispositions,
+inherited/method-own/nonempty HRTB/outlives, trait and genuine binder obligations.
+
+### Exact next proof commands and bounded acceptance
+
+Keep the existing four IncludeSourceCorrespondenceTests names; they remain
+prospective, absent/unexecuted here. Inside them explicitly name source/native
+membership assertions and final compiler semantic identity assertions so
+"original semantic source" never implies the abandoned lineage.
+
+| Existing exact case | Prospective required assertions under the authorized contract |
+| --- | --- |
+| test_included_impl_and_adt_have_exact_original_semantic_source | Fresh attributed IncludedBinder left/right and production SifrIntBindingCollector prove complete direct source/native attribute membership independently of actual compiler semantic identity/source correspondence. Also prove IncludedBinder impl declarations/uses and ScalarCallRewriter exact owner/token/subnode relation; retain aggregate None and complete independent inventories. No original rustc attachment/survival claim. |
+| test_multi_anchor_normalization_and_context_identity_are_lossless | Exact alpha rename, LF/CRLF/BOM/Unicode maps, associated-item anchors, inherited/method-own/HRTB/outlives/trait identities. Genuine repeated left/right includes each prove complete ordered source attr/token/subnode and semantic relations; one cached forward descent cannot cover both. |
+| test_coordinated_include_source_mutations_fail_closed | Intact positive passes. Bounded source-attribute mutations independently remove/duplicate/forge/swap physical/native direct membership, style, order/ordinal, owner/ancestor, declaration boundary, path/argument/delimiter token/subnodes, raw bytes/normalization and context. Redigest coordinated projections and reject against intact originals. Separately mutate final compiler owner/parent/trait/binder/use/index/depth and reject. Reject source attachment mislabelled compiler-original, invented original AttrId/consumed lineage/survival, transformed empty attrs relabelled original absence, hull-only coverage, dropped attrs, forged exact aggregate None, absent public origin, stale/swapped invocation, replaced authority and failed compiler; no partial publish. |
+| test_required_original_linux_include_context_union_repeats | Complete independent owner/native/physical/attribute inventories and explicit dispositions across all four original Linux contexts and entire fixture union; syn::step joins where applicable. Fresh unchanged repeat across owned checkouts and bounded input/source/cfg mutation rejection. Required missing owner/context/authority is explicit non-admission, not pass. Count actual assertions/edges. |
+
+Run exactly, fail fast, individually and then the full class:
+
+```bash
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests.test_included_impl_and_adt_have_exact_original_semantic_source
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests.test_multi_anchor_normalization_and_context_identity_are_lossless
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests.test_coordinated_include_source_mutations_fail_closed
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests.test_required_original_linux_include_context_union_repeats
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests
+```
+
+Record 1/1 each and 4/4 full class, actual assertions, intact positives and distinct
+negative raw receipts, complete inventories/relation edges. setUpClass failure
+is zero cases/assertions. No historical zero-case stop passes.
+
+Exact original controls/helper build, for that future worker only:
+
+```bash
+cargo check --locked --lib -p sifr_codegen --target x86_64-unknown-linux-gnu --message-format=json
+cargo check --locked --tests -p sifr_codegen --target x86_64-unknown-linux-gnu --message-format=json
+cargo check --locked --lib -p sifr_lowering --target x86_64-unknown-linux-gnu --message-format=json
+cargo check --locked --tests -p sifr_lowering --target x86_64-unknown-linux-gnu --message-format=json
+RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml
+```
+
+Keep normal original artifacts/build-finished success, actual top-level environment
+including tracked RUSTC_WRAPPER, original feature/cfg/unification/test include/
+gitlink/disabled rust_analyzer facts and syn where applicable. Bootstrap reaches
+only the helper build. Exact required focused selections:
+
+```bash
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.SourceBinderFeasibilityTests.test_original_syn_step_dependency_hir_is_available
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.SourceBinderFeasibilityTests.test_syn_step_hir_binder_uses_join_exact_ra_source
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.SourceBinderFeasibilityTests.test_unavailable_or_ambiguous_original_bridge_stops
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.SourceBinderFeasibilityTests
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinExtensionTests.test_lifetime_receiver_and_method_generics_preserve_constraints
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinExtensionTests.test_extended_inventory_owner_and_constraint_removals_fail_closed
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinInventoryTests.test_hir_ty_owner_inventory_is_independent_of_ast_projection
+PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.BuiltinCapabilityTests.test_component_context_and_input_drift_fail_closed
+```
+
+Preserve all original thirteen-case assertions in the retained exact class/case
+table under H03 approved prospective observation and resource sequencing amendment,
+qualified by H03a1petb/#4222/#4233: BuiltinCapabilityTests five,
+BuiltinInventoryTests four, BuiltinExtensionTests four added cases. If shared inputs are affected, rerun their
+exact individuals and full classes with the same fail-fast selector command.
+Reuse acceptance only with unchanged candidate/configuration/validation inputs;
+selected assertions still run. No changed-input reuse or old65-case substitute.
+Original HBC five named cases/full class and full adapter five SemanticInputTests/
+full class and Linux/Windows structural union remain their later owners' obligations.
+
+### Pins, stops and prospective downstream order
+
+Public pins remain Rust 1.98.1 48a229ceaefd4985c50990b14116b6d856af0985,
+Cargo 797e8a9bca276c1c9f9f738d2a20f484fa4eea9d, RA
+03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/tree
+0081a116ddfb9f5c3673eba97df030bea907106f/API 6 and official components.
+Authenticate source/runtime/helper/component/server, argv/cwd/environment/
+host/target/test/cfg/features/build/extern/proc-macro/include/manifest/lock/
+patch/archive/extracted inputs at every consumption/cache hit/repeat; SHA alone
+is insufficient. Retain 12 GiB disk/8 GiB available RAM reserve, two Cargo jobs/
+one sequential server, 1,200-second operations, authenticated compatible warm
+runner/metadata/fixture/target reuse, ownership/timing/cache inspection, pressure
+cleanup of owned inactive obsolete artifacts only and no cold performance claim.
+
+H03a1hbip stops on any remaining missing source/native token/subnode/semantic/
+binder/trait/inventory/context/input authority, failed control or resource blocker,
+without omission or partial success. The abandoned claims alone are not new
+blockers; claiming them is a contract violation. Second actual complete implementation
+review's new mechanism defect still stops/rescopes; no third repair/review.
+Named tests/focused regressions/scoped Opus review, merge and **separate receipt**
+all precede a new H03a1hbc assignment.
+
+H03a1hbc/full H03a1 may consume this source attribute contract only after complete
+HBIP delivery; no broader semantic waiver. Complete HBC five-case/full-class/
+full-fixture/four-context proof/review/merge/separate receipt precedes full adapter.
+Windows/SQL/metrics/resources/V01/Q01 remain separate. Explicit future expanded
+V01 human approval remains required. No proof or next batch starts here.
+
+### Documentation validation and terminal boundary
+
+Only canonical Markdown changes: registered appended amendment/receipt and current
+readiness/order rows. All old sections are preserved exactly. Run
+python3 verification/areas/documentation/check_structure.py,
+python3 scripts/check_file_size_guardrails.py, exact history reconstruction,
+canonical-only scope/whitespace/clean-tree checks and scoped SELF-review.
+No helper/schema/manifest/lock/pin/producer change, Cargo/rustc/RA operation,
+experiment, target/cleanup, Sifr gate or external Opus review occurs.
+Docs-input gitlinks are checked out privately at exact unchanged pins.
+
+Owned branch/index/worktree: codex/h03a1-source-attribute-amendment-20261002 /
+/data/sifr-h03a1-source-attribute-amendment-20261002/worktree. Outside-Git evidence:
+/data/sifr-h03a1-source-attribute-amendment-20261002/evidence/. Read-only donor
+handoff SHA-256 df3ed2b129ae2e5e4b724899ef7597576ff3b094125e2caa77bcd8c281ee86c4
+and 50-artifact manifest SHA-256
+70964fbd9f071696be9a597714d6a5d7fd23a5ae2bf54ddb9ebaef67884e8fb0
+remain authenticated; original failed source proof/envelope/scope donors remain
+unaccepted and immutable. Candidate-keyed validation/SELF-review remain outside
+Git; exact candidate merge tree and separate receipt required.
+Documentation blocker: none. Remaining proof obligation: complete H03a1hbip
+diagnostic union unproved. After receipt assign only H03a1hbip; this owner stops.
+
 ## H03a1hbipau compiler authority proposal delivery receipt (2026-10-02)
 
 **Current controlling state: distinct authority decision delivered;
@@ -5214,9 +5471,9 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
 | H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
-| H03a1hbipa | #4268 and all accepted HBI/H03a1hbie/HBF/HBS retained; **needs-new-scope**, scope blocker #4269 at `9c16b21251ef28fca8c001b2a92dcba0091d2bf5` and receipt #4270 retained. | Finite unchanged-route audit delivered; distinct H03a1hbipau proposal above awaits user authorization and separate capability proof; no complete mechanism accepted. |
-| H03a1hbipau | Distinct compiler-interface/authority documentation decision above; **PROPOSED, REQUIRES USER AUTHORIZATION**; ready implementation IDs none. | Recommended finite compiler-owned original-attribute/transition ledger if full claims retained; materially simpler explicit source-membership amendment compared with exact lost claims. No compiler boundary change or proof assignment authorized. |
-| H03a1hbip | Complete H03a1hbie #4265/#4266 retained; **needs-new-scope**, #4268 consumed-attribute stop and H03a1hbipa bounded interface audit retained; zero accepted cases/contexts. | Exact original pre-consumption attachment or transformation authority awaits explicit H03a1hbipau boundary authorization and separate complete capability proof; no proof readiness, partial envelope, HBC or adapter acceptance. |
+| H03a1hbipa | #4268/#4269/#4270 and accepted HBI/H03a1hbie/HBF/HBS history retained; audit delivered. | Historical needs-new-scope stop remains unaccepted; human-approved H03a1hbipau source/native amendment above prospectively supersedes only attribute authority/readiness. |
+| H03a1hbipau | **Human-approved source/native authority amendment delivered**; separately merged canonical receipt required before proof assignment. | Explicit authorization above selects smaller source/native membership plus independently authenticated compiler semantic identity; original rustc AttrId/attachment/consumed-item lineage/survival not claimed. No custom compiler; zero proof cases/contexts. |
+| H03a1hbip | Complete HBI/H03a1hbie and historical #4268/#4269/#4270/#4271/#4272 retained; **ready for separate proof only after approved amendment and separate receipt merge**. | Four exact IncludeSourceCorrespondenceTests/full class under amended source membership contract; complete inventories, original four Linux contexts and all semantic/binder/trait/token obligations required. Zero accepted cases/contexts; no HBC/adapter acceptance. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
@@ -5231,7 +5488,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
 H03a1pers, H03a1peo, H03a1pets, stopped H03a1pet, H03a1petbs,
-H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbie, H03a1hbipa (audit delivered), H03a1hbipau (proposal delivered; user authorization and separate proof required), H03a1hbip, H03a1hbc,
+H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbie, H03a1hbipa (historical audit delivered), H03a1hbipau (human-approved source/native amendment and separate receipt), H03a1hbip (separately assigned complete proof only after amendment receipt), H03a1hbc,
 H03a1, H03a, H03b, H03c, H03d,
 H03ep (H03eps only on a concrete readiness failure), approved full expanded
 V01 capture, H03eq, then H03f**, one independently owned
