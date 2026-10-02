@@ -12,6 +12,17 @@ pub(crate) fn provider_error() -> SqlError {
 }
 
 pub(crate) fn map_postgres_error(error: &tokio_postgres::Error) -> SqlError {
+    // The raw driver wraps client ToSql errors. Preserve the explicit codec
+    // classification instead of reporting them as an unspecified provider error.
+    let mut source: Option<&(dyn std::error::Error + 'static)> = Some(error);
+    while let Some(current) = source {
+        if let Some(codec) = current.downcast_ref::<SqlError>() {
+            if codec.kind() == SqlErrorKind::Encode {
+                return codec.clone();
+            }
+        }
+        source = current.source();
+    }
     let Some(database) = error.as_db_error() else {
         return SqlError::new(if error.is_closed() {
             SqlErrorKind::Connection
