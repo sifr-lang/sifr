@@ -96,6 +96,30 @@ Built-in CLI names are reserved. The tools manifest also rejects an invalid
 name, an unknown capability, a repeated capability, a missing binary, and an
 unsupported field.
 
+## SQL tool build qualification
+
+The SQL platform build qualification links exactly three native tool executables:
+`sifr-sql-mysql` from `sifr_sql_mysql_tools`,
+`sifr-sql-postgresql` from `sifr_sql_postgresql_tools`, and
+`sifr-sql-sqlite` from `sifr_sql_sqlite_tools`. Cargo artifact messages select
+the linked executable paths. The runner hashes their bytes after clean build A,
+an unchanged rebuild in A, and independent clean build B. It uses locked,
+offline inputs, an explicit host target and dev profile with debug information
+disabled, and private target directories. Both builds use the same Rust flags,
+mapping both target directories to `/sifr-sql-build`, including generated-source
+locations. Build A is removed after its unchanged rebuild comparison, before
+building B. The output records the toolchain, lockfile hash, target, effective
+native settings, and executable hashes.
+
+Equal hashes establish reproducibility across target directories in the same
+source checkout and host environment within one qualification run. They do not establish reproducibility
+across relocated source checkouts or hosts. Other configured targets, including
+`wasm32-wasip2`, run locked offline Cargo checks and report
+`cross-target-check-only`; they make no linked-byte claim. The
+`default-local` and `long-running` resource labels describe this work.
+Private target directory ownership provides build isolation; the labels do
+not reserve a scheduler slot or guarantee isolation from other sessions.
+
 ## Capability grants
 
 The tools manifest is the project-owned grant record. Sifr enforces the grants
