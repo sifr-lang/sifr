@@ -9,7 +9,7 @@ evidence cannot suppress correctness execution. The final JSON report separates
 `functional_status`, `performance_status` and `qualified`. A correctness pass
 with inconclusive performance is usable, but is not a qualified performance pass.
 
-For phase qualification, use `--profile cloud -- --require-performance` and set
+For phase qualification, use `--profile cloud --require-performance` and set
 `SIFR_CLOUD_PERFORMANCE_RECEIPT` to a complete candidate-bound cloud receipt.
 Existing create-pr/merge/nightly/release controlled-host behavior is unchanged.
 
@@ -39,13 +39,25 @@ supplementary; they do not replace latency or unavailable instruction counters.
 All required median decisions and observed hard checks must pass for cloud
 qualification. Any required inconclusive result blocks phase closure.
 
-Prepare each endpoint in its own clean checkout using
-`python3 verification/areas/performance/cloud_worker.py prepare --output <directory>`.
-Then run `cloud_benchmarks.py capture --baseline <baseline-receipt.json>
---candidate <candidate-receipt.json> --reference-compiler-commit <merged-sha>
---output <new-evidence-directory>`. Keep the same measured environment/affinity
-and use a functioning process adopter. Check the resulting immutable raw evidence
-with `cloud_benchmarks.py check --receipt <receipt.json>`. Receipts expire after
+Prepare each endpoint in its own clean checkout using the verifier's locked
+Python runtime. Use that same runtime for capture and receipt checking; a bare
+system Python may differ from the full profile's interpreter and invalidate the
+measured identity. Select `SIFR_PERFORMANCE_HOST_KIND=managed-linux` and a working
+GNU Time executable through `SIFR_PERFORMANCE_TIME` for managed measurements.
+
+```bash
+uv run --project verification --locked python \
+  verification/areas/performance/cloud_worker.py prepare --output <directory>
+uv run --project verification --locked python \
+  verification/areas/performance/cloud_benchmarks.py capture \
+  --baseline <baseline-receipt.json> --candidate <candidate-receipt.json> \
+  --reference-compiler-commit <merged-sha> --output <new-evidence-directory>
+uv run --project verification --locked python \
+  verification/areas/performance/cloud_benchmarks.py check --receipt <receipt.json>
+```
+
+Keep the same measured environment/affinity and use a functioning process adopter.
+Receipts expire after
 24 hours and reject changed source, tooling, corpus, budgets, artifacts, counters
 or host configuration. Raw measurements and rejected outcomes remain preserved.
 
