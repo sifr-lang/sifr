@@ -10,6 +10,81 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbie declaration/attribute envelope scope delivery receipt (2026-10-02)
+
+**Current controlling state: H03a1hbie documentation scope is closed;
+H03a1hbip is ready for a separate diagnostic proof assignment only after this
+separate receipt merges. H03a1hbc and full H03a1 remain dependency-blocked.**
+[Scope PR #4265](https://github.com/sifr-lang/sifr/pull/4265) merged as
+`2cd599e1b7cdf4fbe683bb64ff61b696892987af` from exact documentation candidate
+`3c1b33019bb1c0bbb0710950c25fbb48ad453cfc`, on base
+`50566057cc947bf1dcdc81e3d4656879806b3186`. The LAN owner fetched the actual
+merge and verified its complete tree equals the validated/self-reviewed candidate.
+This receipt supersedes only the pending H03a1hbie scope/HBIP readiness states;
+all historical sections, ranges, raw facts and acceptance boundaries are retained.
+
+The finite prospective contract preserves compiler declaration source separately
+from complete physical/native owner extents. Actual existing expanded-AST capture
+and compiler NodeId/LocalDefId association supply the proposed attribute authority;
+complete identity, attachment, source and all public token/subnode relations
+remain future proof obligations. The twelve new source-link/range claims were
+audited against full byte-identical official exact-pinned compiler/RA source.
+Generic HIR Attribute::span limitations and possibly consumed/transformed attrs
+are explicit stops. No range hull, attribute removal, overlap/name/text join,
+copied declaration, new producer/API/dependency, private RA resolver or guessed
+absence is selected. The documentation does not prove attribute completeness.
+
+All four original IncludeSourceCorrespondenceTests individually/full class,
+complete original four Linux controls, exact affected HBF three cases/full class
+and four builtin/extension/inventory/capability regressions remain prospective
+HBIP requirements. The four new include-source cases are still absent and
+unexecuted: zero cases/assertions, zero accepted contexts and no diagnostic proof
+publication. Original lifetime/binder/trait identities, source/generated/hygiene
+rules, genuine body ReErased capability, original ObjectShapes RA-only negative,
+full fixture union and caller-held original authority remain mandatory. HBF
+#4238/#4258, HBS #4236/#4237 and #4222/#4233 acceptance remain unchanged.
+
+Scope validation passed the registered documentation structure/mutation harness,
+900-line guard for 4,338 maintained files, twelve exact pinned source-link/range
+and full official-source byte audits, exact historical reconstruction, canonical-
+only scope, whitespace and clean-tree checks. Scoped self-review is SATISFIED,
+with no blocking findings. Evidence is durable outside Git on
+`yaser5@192.168.1.134` at `/data/sifr-h03a1hbie-scope-evidence-20261002/`:
+
+| Exact scope artifact | SHA-256 |
+| --- | --- |
+| `scope-final/validation-summary.json` | `120434c69d59eda80f7d95323a2667d1a4d5f5f75632e744d9b8cbfcf1d12bf7` |
+| `candidates/3c1b33019bb1c0bbb0710950c25fbb48ad453cfc/self-review.json` | `1d960677f93d1512b37b107a953ebfb72e8e20e65ef229715ce6a4f145f3d3e4` |
+| `scope.bundle` | `7c60cd8064ee12525c392053d80e82064ac7b90fbaa32d19a67c84456ed7487e` |
+
+The initial missing editor/vscode documentation-input failure is retained;
+exclusively owned private checkouts at unchanged exact gitlinks
+`d6fde7111800349428f63db05a34ca9a32acd576` /
+`5930dc1a0ccc52d9f382553156e98294a95420d9` supplied those inputs. No gitlink,
+lock, dependency, compiler source or other owner's index changed. Removing only
+registered scope/receipt sections and reversing current-row/order amendments
+reconstructs the entire #4264 phase byte-for-byte. Original #4264 report, bundle
+and handoff checksums below were reauthenticated and remain unchanged; prior
+16,351-input/317-artifact authentication is retained as history, not new proof.
+
+Owned branches are `codex/h03a1hbie-envelope-scope-20261002` and
+`codex/h03a1hbie-envelope-scope-receipt-20261002`, in the exclusively owned
+`/data/sifr-h03a1hbie-envelope-scope-20261002` worktree. This separate receipt
+uses relevant documentation/mutation, file-size, source/history/scope/whitespace/
+clean-tree checks and scoped self-review; candidate-keyed receipt evidence remains
+outside Git under the same evidence root. Publication uses owned bundles/private
+Mac bare relay. No Rust/Cargo operation, producer/capability experiment, Sifr
+unit/gate, target creation/cleanup, external review or next batch occurred.
+
+**Next job: separately assign H03a1hbip only after this receipt merges, under the
+amended exact declaration/attribute envelope contract below.** Documentation
+blocker: none. Proof dependency: complete authenticated original envelope and
+native/physical include correspondence remains unproven under the locked pins.
+A complete merged HBIP diagnostic proof and separate receipt precede any new
+HBC assignment; complete HBC capability proof/receipt precedes full H03a1.
+Full Linux/Windows adapter, H03a-H03f, V01 and Q01 are unqualified. This owner is
+terminal and starts no proof, HBC or adapter job.
+
 ## H03a1hbie authenticated declaration/attribute envelope scope checkpoint (2026-10-02)
 
 **Current controlling state: H03a1hbie is a documentation-only scope checkpoint;
@@ -4465,8 +4540,8 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbs | Required dependency source-binder stop #4234/#4235; **closed**, scope #4236 at `46ec9daf44a42427954ae20aab7f1046a1803f23` and controlling receipt above. | Original compiler HIR/source-binder scope only; H03a1hbf ready for separate assignment, no capability/adapter acceptance. |
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **closed**, scope #4262 at `05e62855a316a24ed0a0a17c210cc2c52ecf13e2` and controlling separate receipt above. | Docs only: exact included-owner/impl source rescope delivered; no proof or capability acceptance. |
-| H03a1hbie | #4264 required attributed-node stop plus accepted HBI/HBF/HBS; **scope pending merge/receipt**. | Canonical-only prospective authenticated declaration/attribute envelope contract; no producer/capability acceptance. |
-| H03a1hbip | HBI #4262/#4263 and #4264 retained; awaits complete H03a1hbie scope/receipt; **dependency-blocked**, zero accepted proof cases/contexts. | Separate exact declaration/attribute envelope and include-source diagnostic proof: four original named cases/full class, complete original four Linux contexts, affected regressions, scoped review/merge and separate receipt; semantic_export false. |
+| H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
+| H03a1hbip | Complete merged H03a1hbie scope #4265 and separate receipt required; **ready for separate assignment after receipt merge**, zero accepted proof cases/contexts. | Amended exact declaration/attribute envelope and include-source diagnostic proof: four original named cases/full class, complete original four Linux contexts, affected regressions, scoped review/merge and separate receipt; semantic_export false. |
 | H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
