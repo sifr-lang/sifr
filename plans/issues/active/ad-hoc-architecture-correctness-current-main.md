@@ -100,8 +100,11 @@ absence is never converted to an empty original attribute inventory.
 The proposed parser boundary retains the actual input token stream unconditionally
 for tracked source constructs at first parse/attachment, before any transformation;
 this is new instrumentation, not a claim that current `ForceCollect::No` supplies
-those tokens. Capture doc-comment desugaring and interpolated nonterminal attachment
-as explicit compiler transformations. Bind raw source bytes and parser token spans;
+those tokens. Store retained tokens in separate ledger storage; preserve existing
+AST token availability and macro-input branch decisions. Do not fill a formerly
+None token field or change a macro-visible stream to improve observability. Capture
+doc-comment desugaring and interpolated nonterminal attachment as explicit compiler
+transformations. Bind raw source bytes and parser token spans;
 never pretty-print, reparse, manufacture an AST owner or infer original tokens from
 later output. If a required original input cannot be retained exactly, the prerequisite
 stops. Macro output tokens and compiler-synthesized objects carry generated/input
