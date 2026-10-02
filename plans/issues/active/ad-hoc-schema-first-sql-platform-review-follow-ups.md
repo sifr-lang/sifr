@@ -6,8 +6,8 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, 5, 7, 10, 11, 12 and prerequisites 7A/10A/12A merged.
-Continue registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
+Status: Items 4, 4A, 5, 7, 10, 11, 12, 13 and prerequisites 7A/10A/12A/13A merged.
+Continue final combined integration and the Item 6 closer. The compiler lint issue
 [#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
@@ -1486,7 +1486,7 @@ test or softened expectation is accepted as full qualification.
 
 ## Item 13 — existing compiler integration regressions (2026-10-02)
 
-Status: registered prerequisite before final combined integration/closure.
+Status: merged with prerequisite 13A in [PR #4252](https://github.com/sifr-lang/sifr/pull/4252); final delivery receipt below.
 Own the six existing compiler-library failures observed during Item 7A,
 tracked in [#4240](https://github.com/sifr-lang/sifr/issues/4240), coordinating
 with the architecture phase's recorded H02a1 optional-length mechanism. Resolve receiver authority/type-contract preservation for the
@@ -1502,7 +1502,7 @@ instruction to finish without stopping on prerequisites.
 
 ## Item 13A — method-policy integration receipts (2026-10-02)
 
-Status: registered in [#4251](https://github.com/sifr-lang/sifr/issues/4251) before receipt reconciliation. The first policy check during
+Status: registered in [#4251](https://github.com/sifr-lang/sifr/issues/4251) before receipt reconciliation; merged with Item 13 in PR #4252. The first policy check during
 Item 13 reports 199 new, stale or changed site/relationship records across the
 current delivered compiler and SQL source. Preserve that failed run at
 `/workspace/sql-item13-cloud-evidence/method-policy-initial.log`; it is not a pass.
@@ -1815,3 +1815,64 @@ No full merge gate or release qualification is claimed for this intermediate
 item. This record-only update requires documentation checks, without another
 Opus review or unchanged functional checks. Item 13 and final integration/Item 6
 closure remain pending.
+
+## Item 13 / 13A — merged cloud compiler integration repairs (2026-10-02)
+
+[PR #4252](https://github.com/sifr-lang/sifr/pull/4252) merged as
+`1f7f4f918219048a35241d3f1a462aebc1dae218`. Exact approved candidate
+`107efd3d5633bbd0e4bcf1ac8137fa5ac32425a7`, tree
+`093bac91c0487423f581c47c9983bf46b203609e`, base
+`5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042`.
+Issues #4240/#4251 are resolved. The validated builtin length producer now
+assigns its narrow builtin authority without discarding an optional receiver.
+Direct optional methods and unsized payloads still reject. Typed defaultdict
+mutators reach canonical missing-key insertion before plain-dict shortcuts;
+list and string slice appends retain their actual stored values and existing
+argument-evaluation order. No blanket fallback, skip or weaker assertion was
+introduced.
+
+The complete library suites pass: codegen **1756 passed, 0 failed, 0 ignored**;
+lowering **1148 passed, 0 failed, 1 pre-existing ignored stdlib-registry case**.
+All six registered baseline failures pass in these full selections. New lowering
+checks cover all six sized optional payloads and reject direct optional methods,
+unsized and mixed unsupported payloads. Four actual native fixtures pass:
+`defaultdict_len_and_deque`, `defaultdict_order_independent_inference`,
+`list_append_extend_insert_registry`, and `collection_cloning`. Their assertions
+include None, typed empty and populated lists, Unicode text, missing buckets,
+slice contents and the existing evaluation-order cases. These are focused
+fixture selections, not a full create-PR/merge profile claim.
+
+Workspace Clippy (`--workspace -- -D warnings`), formatting, HIR and driver
+guards, the 4335-file size guard, and diff checks pass. Item 13A reconciles
+177 audited method-policy records across 31 delivered-source paths: 75 new
+records and 102 refreshed records, no removed site or changed existing
+classification/owner. Its 22 changed node/reference receipts include one new
+source-shape predicate. The unchanged checker passes **6344 sites / 234 nodes**;
+all **17 negative policy self-tests** pass. Checker rules, schemas and negative
+tests remain unchanged.
+
+The [exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4252#issuecomment-5951811760)
+is **SATISFIED**, no blockers. Response SHA-256
+`a0fd64ccb7186816fe6d54c4ae1e41925d23b21a2a8a6a45f7d8acf89a13a9a2`.
+Its optional recursive-expression ordering suggestion is separately tracked in
+[#4253](https://github.com/sifr-lang/sifr/issues/4253), without claiming a
+reproduced failure or expanding this six-case scope.
+
+Evidence and log hashes remain outside Git at
+`/workspace/sql-item13-cloud-evidence/qualification-receipt.json`.
+All six baseline failures, the initial 199-line stale-policy failure, wrong
+script filename, and two failed investigation-helper attempts remain preserved.
+The first native run passed three fixtures and failed one: an unannotated empty
+argument inferred list[Any]. Giving that test value its intended list[int]
+annotation retains the same assertion, and all four fixtures then passed.
+Library/Clippy/policy inputs were unchanged by that Sifr-fixture annotation;
+their compatible evidence is reused. Unpublished initial object `01a19542`
+is not an approved candidate or qualification pass. The earlier Item 7A full
+library failures remain historical failures, not retroactively passing runs.
+
+With Cargo/rustc idle and 4.3 GiB free, only 48 obsolete session-owned Sifr
+incremental directories were removed, retaining the latest one per package.
+Free space rose to 8.26 GiB; the cleanup receipt is preserved outside Git.
+This makes no host-sensitive performance claim. Final combined qualification
+and Item 6's original-criterion/draft audit, whole-phase review and archive
+remain pending. This delivery receipt requires documentation checks only.
