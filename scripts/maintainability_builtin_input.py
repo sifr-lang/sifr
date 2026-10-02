@@ -26,6 +26,7 @@ TOOL = ROOT / "verification/tools/maintainability_builtin_input"
 
 sys.path.insert(0, str(TOOL / "consumer"))
 import declarations as declaration_consumer
+import source_binder as source_binder_consumer
 
 
 class Unsupported(RuntimeError):

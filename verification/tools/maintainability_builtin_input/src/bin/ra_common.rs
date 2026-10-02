@@ -12,11 +12,20 @@ mod include_sources;
 mod local_sources;
 #[path = "ra_common/ra_types.rs"]
 mod ra_types;
+#[path = "ra_common/source_binder.rs"]
+mod source_binder;
 use load_cargo::{LoadCargoConfig, ProcMacroServerChoice};
 use project_model::{CargoConfig, ProjectManifest, ProjectWorkspace, RustLibSource};
 use serde_json::json;
 fn main() -> anyhow::Result<()> {
     let args = env::args().collect::<Vec<_>>();
+    if args.get(1).is_some_and(|s| s == "--source-binder-syntax") {
+        println!(
+            "{}",
+            serde_json::to_string(&source_binder::syntax_fixture(&args[2])?)?
+        );
+        return Ok(());
+    }
     let root = Path::new(&args[1]);
     let package = &args[2];
     let mut config = CargoConfig::default();
@@ -144,6 +153,11 @@ fn main() -> anyhow::Result<()> {
             .collect::<Vec<_>>();
         selected_cfg.sort_by_cached_key(|atom| atom.to_string());
         let context = json!({"kind":"ra-semantic-selected-cargo-target-root","root_file":selected_root.as_str(),"package":package,"crate":capture["context"]["crate"]});
+        if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+            let result = source_binder::capture(&semantics, &db, &files, krate, &args[3])?;
+            println!("{}", serde_json::to_string(&result)?);
+            return Ok(());
+        }
         for (file, path) in files.iter() {
             let Some(path) = path.as_path() else { continue };
             if !(if args[3].ends_with('/') {

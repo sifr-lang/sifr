@@ -14,6 +14,7 @@ mod expanded;
 mod identity;
 mod inventory;
 mod semantic;
+mod source_binder;
 mod typed;
 use rustc_driver::{Callbacks, Compilation};
 use rustc_interface::interface;
@@ -25,10 +26,21 @@ struct Capture {
 }
 impl Callbacks for Capture {
     fn after_expansion<'tcx>(&mut self, _: &interface::Compiler, tcx: TyCtxt<'tcx>) -> Compilation {
-        self.ast = expanded::capture(tcx);
+        if std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER").is_none() {
+            self.ast = expanded::capture(tcx);
+        }
         Compilation::Continue
     }
     fn after_analysis<'tcx>(&mut self, _: &interface::Compiler, tcx: TyCtxt<'tcx>) -> Compilation {
+        if let Some(path) = std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER") {
+            std::fs::write(
+                path,
+                serde_json::to_vec_pretty(&source_binder::capture(tcx))
+                    .expect("source binder serialization"),
+            )
+            .expect("write source binder diagnostic");
+            return Compilation::Stop;
+        }
         let inventory = inventory::capture(tcx);
         // Bounded acceptance hook changes only the saved projection, after inventory.
         if let Ok(owner) = std::env::var("SIFR_BUILTIN_OMIT_AST_OWNER") {
