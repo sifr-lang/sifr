@@ -10,6 +10,129 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1 required dependency source-binder admission stop (2026-10-02)
+
+**Current controlling state: H03a1 needs-new-scope; full adapter acceptance remains
+open.** The fresh assignment started at current main
+`161b2e2791ba9622f7ad9a8c77484b765957a1d1` after the accepted H03a1petb/H03a1pe
+implementation and controlling receipt above. This stop changes only this
+canonical record. It preserves that accepted builtin authority and all historical
+failed/stopped records. No Linux/Windows union, external-closure admission,
+semantic export, metric baseline, V01, Q01 or phase closure is delivered.
+
+### Exact mandatory current surface and producer gap
+
+The actual production source at
+`crates/sifr_codegen/src/inline_syntax.rs:108`,
+`consume_validated_support`, calls `input.step(|cursor| { ... })` at original
+byte range `4410..5170`. The pinned semantic producer resolves that call to the
+actual locked dependency **syn 3.0.5**, `syn::parse::ParseBuffer::step`, with
+original source `syn-3.0.5/src/parse.rs:1055` and exact function range
+`34081..37282`. The producer's own `Semantics::source` registers that source;
+`to_def` then round-trips its original AST to the identical resolved function.
+The receiver is `&ParseBuffer<'_>` with `contains_unknown=false`. This is a
+required current callable and dependency signature under H03a1's existing
+external closure and lossless declaration contract, rather than a new fixture.
+
+Its real declaration constraint is
+`F: for<'c> FnOnce(StepCursor<'c, 'a>) -> Result<(R, Cursor<'c>)>`.
+Pinned `Semantics::resolve_lifetime_param` returns **None for three required
+`'c` occurrences**: binder declaration `35876..35878`, StepCursor argument
+`35898..35900`, and Cursor result `35928..35930`. The inherited `'a` at
+`35902..35904` resolves successfully. The scoped diagnostic exits **2** after
+one exact required site, with no accepted export. It uses authentic producer
+queries and original source; neither resolution JSON nor lifetime identities
+were synthesized.
+
+The selected current package independently succeeds with
+`cargo check --locked --lib -p sifr_codegen --target x86_64-unknown-linux-gnu
+--message-format=json`, status **0**, an actual successful build-finished event
+and the locked `syn@3.0.5` compiler artifact. Its registry archive matches
+Cargo.lock checksum
+`12df2e0110f65b775f769bb17ef989067a1d931b2eb822bd4346631eeada89f9`.
+Bootstrap is absent from analyzed packages. Compiler success establishes a
+well-typed current surface; it does not supply the missing original source-binder
+occurrence correspondence or qualify a combined semantic capture.
+
+This triggers the preserved **H03a1petbs stop rule**: a required original source
+HRTB needs separately scoped original compiler HIR resolved lifetime/binder
+identity, RA-resolved owner/trait and exact authenticated source-node
+correspondence. The specific new ObjectShapes negative cannot exclude this
+current callable. Declaration erasure, lexical/spelling/nesting guesses,
+copied signatures, body-erasure observations and a different producer cannot
+replace its declaration authority. The audited pinned public source APIs retain
+the earlier boundary: `resolve_lifetime_param` searches generic-parameter
+ancestors, `lifetime_param_to_def` looks up the enclosing GenericDef map and
+`LifetimeParam::parent` is a GenericDef. This evidence is an exact current
+gap in the selected bridge, not a claim that every pinned producer lacks HRTB
+facts or that every source HRTB is unsupported.
+
+### Diagnostic execution, ownership and retained evidence
+
+The fresh owned branch is `codex/h03a1-full-semantic-adapter-20261002`,
+worktree `/data/sifr-h03a1-full-semantic-adapter-20261002`; execution uses only
+`yaser5@192.168.1.134`. The fresh preflight found 678 GiB free on /data, about
+10 GiB available RAM and no active compiler/semantic producers. The inactive
+accepted target was copied read-only into owned
+`/data/sifr-h03a1-full-semantic-adapter-target-20261002`; its original remains
+unchanged. At most two Cargo jobs, one semantic worker and one proc-macro server
+were used, with 1,200 second operation guards and atomic completion files.
+No shared target, historical donor or another session's index was mutated or
+cleaned.
+
+Actual fresh tool/component/source checks match the accepted Rust/Cargo commits,
+RA commit/tree, rust-src digest, proc-macro server digest and API 6. The isolated
+non-bootstrap helper build succeeds with the exact H03a1 locked manifest command.
+Its 188 selected lock packages all occur in the exact 376-package upstream
+name/version graph, with no adapter-only dependency version. This was a bounded
+capability prototype, preserved outside Git; no incomplete helper or adapter
+implementation is merged.
+
+The first Linux production handwritten-method probe checks 34,936 sites and
+reports two failures in `self.reused.set/get` inside a `#[cfg(test)]` statement.
+The corrected focused probe parses ancestor CfgMeta/CfgAttrMeta predicates with
+the pinned syntax model and evaluates them against actual crate cfg: both sites
+receive explicit **cfg-disabled** dispositions in production. They are not
+producer failures, waived calls or an uncovered branch exclusion. The first
+source-binder probe queries an unregistered external source AST and exits 101;
+that operator error and partial evidence remain historical failure. The final
+probe corrects source registration, authenticates the original callee/path/range
+and reproduces the three unresolved bound occurrences. It takes 2m14s, peaks
+at about 1.53 GiB RSS and has zero swaps. The independent compiler control takes
+1.50 seconds with warm unchanged inputs. No timeout or resource blocker is
+claimed.
+
+The stop report executes **16 diagnostic assertions** binding compiler success,
+actual locked artifact/archive, exact caller/callee/context, known receiver,
+three unresolved bound occurrences, resolved inherited lifetime, disabled
+production test sites, unchanged source inputs and non-admission. These are
+diagnostic checks: **0 of the five SemanticInputTests and 0 acceptance assertions
+ran**. The complete class, live adapter command, Windows contexts, normalized
+repeat exports and fixture mutations remain unrun. There is no consumable
+accepted partial publication and no implementation Opus approval. Documentation
+record checks and scoped self-review apply to this stop-only change; the
+authorized intermediate policy does not require broad gates.
+
+All source, lock, executable/build bindings, raw diagnostic JSONL, command logs,
+atomic completion events, compiler control and failed/partial evidence are under
+`/data/sifr-h03a1-full-semantic-adapter-evidence-20261002/`.
+`required-source-binder-stop.json` SHA-256 is
+`3a56b6a638a7e0982717dbdb3d473104b5a41922c6790f3dd8e9b1ff80af24c0`;
+`source-binder-probe-authenticated-build-receipt.json` SHA-256 is
+`1988d8b2c958a91747b0c0edcdb4be5a1391c759c1386e7905a1a52f94ab4117`.
+The durable local outage handoff is at
+`/Users/yaseralnajjar/.codex/sifr-architecture-evidence/`
+`h03a1-full-semantic-adapter-20261002/handoff.json`; the final archival receipt
+will bind its exact retained archive and this merged stop record.
+
+**Next action: separately adjudicate and scope the required current source-binder
+bridge, then assign its implementation and qualification before a new H03a1
+resumption.** This stop authorizes no bridge implementation, producer/pin/API
+change, required-surface waiver, metric work or next batch. H03a1 remains open;
+H03a metrics and later H03 items retain their dependencies. **Blocker: missing
+authenticated declaration binder/use identity for the current syn ParseBuffer::step
+HRTB.**
+
 ## H03a1petb supported Dynamic repair and H03a1pe delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1petb and H03a1pe closed by the merged combined
@@ -2802,7 +2925,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pet | **Stopped and unaccepted**, #4217 and source-binder stop preserved; prospective continuation is H03a1petb. | Partial compiler facts are unsuccessful qualification evidence; do not merge this historical draft. |
 | H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; **closed**, implementation #4222 at `06dd8ed4597430445c6631c3891ec879e219692a` and separate controlling receipt above. | Complete carried supported Dynamic repair and all original H03a1pe qualification: 26 selected tests/3,854 assertions, four fresh Linux joins/repeats, scoped Opus 5.5 SATISFIED; exact new source HRTB remains a compiler-success/RA-authority negative. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
-| H03a1 | H03a0, repaired H03a1p and fully qualified H03a1pe #4222/controlling receipt merged; **open, ready for separate assignment**. | Separate Linux/Windows full structural union, external closure and build-input semantic adapter under the contract below; no metric baseline or compiler behavior change. |
+| H03a1 | H03a0, repaired H03a1p and fully qualified H03a1pe #4222/controlling receipt merged; **open, needs-new-scope**, required dependency source-binder stop above. | Current syn 3.0.5 ParseBuffer::step HRTB lacks authenticated binder/use correspondence; separately scope that bridge before Linux/Windows full structural union, external closure and build-input adapter resumption. No metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
