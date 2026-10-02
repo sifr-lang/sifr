@@ -1876,3 +1876,123 @@ Free space rose to 8.26 GiB; the cleanup receipt is preserved outside Git.
 This makes no host-sensitive performance claim. Final combined qualification
 and Item 6's original-criterion/draft audit, whole-phase review and archive
 remain pending. This delivery receipt requires documentation checks only.
+
+## Item 14 — managed Linux performance reference prerequisite (2026-10-02)
+
+Status: registered in [#4255](https://github.com/sifr-lang/sifr/issues/4255)
+before implementation. The first final merge-profile attempt on `a3b41eda`
+stops at performance-reference admission before Cargo; preserve its failed
+log in `/workspace/sql-phase-closure-cloud-evidence/final-merge-profile-initial.log`.
+The only named reference describes a different physical Intel host. This
+managed cloud exposes AMD EPYC, five affinity CPUs, a finite four-CPU cgroup
+quota, a 16 GiB memory limit, and no cpufreq policies. Physical-host identity
+correctly rejects that missing frequency exposure.
+
+Own explicit managed-Linux identity and an independent governed capture, not
+an automatic cross-host fallback. Bind actual finite cgroup CPU/memory limits
+and record missing frequency exposure without inventing a governor. Preserve
+physical-host defaults, controlled latency admission, full-manifest counts,
+editor ceilings and regression policy, immutable clean/source-bound receipts.
+Negative checks reject unknown modes, missing/invalid/unlimited allocation and
+changed controls. Capture from merged compiler reference `5fbeee50` before
+Item 13, allowing only benchmark-tooling differences, then qualify the final
+candidate against that independent baseline on this same cloud. The candidate
+must not become its own compiler reference. Focused tests, capture/comparison,
+scoped Opus and delivery precede the resumed full gate. No SQL semantic change,
+performance skip or threshold waiver is authorized. This necessary cloud
+prerequisite follows the user's authorization to finish without blocking.
+
+### Item 14A — live-process telemetry prerequisite (2026-10-02)
+
+Registered before implementation as [#4256](https://github.com/sifr-lang/sifr/issues/4256).
+The cloud container's PID 1 is a non-reaping `tail`; historical exited Cargo and
+rustc zombies are incorrectly classified as competing builds because performance
+telemetry omits process state. Read measured `ps` state and exclude only confirmed
+zombies from activity telemetry. Keep live build rejection at zero CPU, external
+CPU thresholds, controlled sampling and owned-process disappearance checks.
+Qualify state parsing and negative competitor controls. A session-owned Linux
+subreaper supplies adoption/reaping for newly launched validation descendants;
+the existing benchmark cleanup/no-overlap self-tests pass unchanged under it.
+Historical zombies remain unreaped, and the first unsupervised self-test remains
+failed. The initial baseline attempt was interrupted before any measurements;
+its log remains `baseline-capture-initial-interrupted.log`. This prerequisite
+changes benchmark tooling only and must also enter the independent producer.
+
+### Item 14B — managed per-sample measurement prerequisite (2026-10-02)
+
+Registered before implementation as [#4257](https://github.com/sifr-lang/sifr/issues/4257).
+The independent full-manifest capture passed its first 31 cases, then correctly
+refused the JSON diagnostic case after all three allowed attempts exceeded its
+0.10 timing-variation limit (0.118219, 0.240471, 0.112133). No reference was
+published. Its entire raw attempt tree and failed log remain preserved.
+Investigation also found `/usr/bin/time` absent: the exploratory fallback reports
+cumulative prior-child RSS and no per-sample CPU time. This cannot establish an
+honest managed reference. Configure a session-owned GNU Time without root,
+select and fingerprint it explicitly for managed capture/qualification, and
+reject missing per-sample RSS/CPU counters. Preserve physical defaults and all
+sample counts, variation/regression/editor limits and owned-group cleanup.
+Diagnose and stabilize actual execution configuration before another capture;
+any affinity change must be recorded by measured host identity. Partial corpus
+and rejected attempts must never become a reference. Benchmark tooling only;
+the independent merged compiler source remains unchanged.
+
+Item 14B host configuration refinement: startup profiles identify complete
+metadata validation in the source-development context. Keep that validation;
+use a private session-owned Cargo configuration to optimize only
+`sifr_sysroot` and `sifr_compiler_services` in the dev profile (`opt-level=3`).
+The compiler executable keeps its declared dev profile/optimization and debug
+assertions; release profiles and compiler source are unchanged. Existing named
+identity binds the exact user-Cargo-config SHA-256 for both independent capture
+and final qualification. The original Cargo home/configuration remains intact.
+Affinity probes alone did not establish stability and remain exploratory,
+not a captured reference. Test the configured independent compiler before
+another full-corpus attempt; do not relax the 0.10 diagnostic variance limit.
+
+Further Item 14B host refinement, registered prospectively in #4257: affinity
+0-3 and fixed CPU 2 full captures also failed the unchanged variation rule;
+no partial run published a reference. The rejected class-method samples spend
+2.1–3.5 seconds loading complete metadata, versus roughly 0.15–0.27 seconds
+in Rust generation and 0.07–0.13 seconds in reused native building. Metadata
+record decoding/canonical encoding calls `serde_json`, which retains dev
+optimization 1. Extend the private measured Cargo configuration to this
+existing package at `opt-level=3`, alongside the existing sysroot/service
+library overrides. Keep complete validation and compiler source intact;
+user-config SHA binds both endpoints. Warm and probe this actual configuration
+before a fresh full capture. Affinity trials and all rejected corpus attempts
+remain separate evidence, never a combined reference or qualification pass.
+
+
+### Item 14 cloud qualification status — infrastructure interference
+
+The tooling implementation is prepared, but Item 14 is not accepted or merged.
+All 53 named-reference/allocation/timer boundary tests and the complete benchmark
+runner self-test pass under the real session-owned Linux subreaper. Physical
+host defaults, sample counts, the 0.10 variation limit, three-attempt bound,
+editor ceilings, source integrity and no-overlap checks remain unchanged.
+
+Six warmed complete capture attempts on the independent merged compiler
+`5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042` exhausted the existing variation
+limit at different cases. Passing predecessors and focused probes do not form
+an approved reference. The final CPU-0 attempt failed at enumerate/zip build
+(case 8) after seven predecessors passed. All attempts and raw receipts remain
+in `/workspace/sql-item14-cloud-evidence/failure-history.md`; no managed profile
+has been published.
+
+Actual per-sample `/proc/stat` CPU-0 deltas show 16.92–20.95 percent hypervisor
+steal time during six compiler executions. GNU Time elapsed measurements agree
+with the runner's wall time; scheduling interference cannot be corrected by
+changing the timer. Diagnostics are retained in
+`vm-scheduling-diagnostic.json` and `vm-scheduling-diagnostic.log` outside Git.
+The exposed CPU PMU is absent and an own-process user-only instruction-counter
+request fails with ENOENT (`user-hardware-counter-diagnostic.json`); these
+measurements provide no alternative qualification result.
+
+The available cloud-environment capability reports configuration/readiness but
+provides no host reassignment or dedicated CPU allocation operation. A stable
+cloud host is required before another complete reference capture. Repeating the
+unchanged gate or relaxing its criteria does not resolve this external blocker.
+The pending sequence is an independent full 65-case capture, exact-candidate
+admission/comparison and scoped review, Item 14 delivery, then the full combined
+merge profile, whole-phase acceptance review, archive and original draft #3647
+closure without merge. Items 1–13 remain delivered; this record does not close
+the phase or reclassify any failed gate as passing.
