@@ -1500,6 +1500,19 @@ No untracked skip, blanket authority fallback or lint waiver is authorized.
 This necessary integration repair is explicitly authorized by the user's
 instruction to finish without stopping on prerequisites.
 
+## Item 13A — method-policy integration receipts (2026-10-02)
+
+Status: registered in [#4251](https://github.com/sifr-lang/sifr/issues/4251) before receipt reconciliation. The first policy check during
+Item 13 reports 199 new, stale or changed site/relationship records across the
+current delivered compiler and SQL source. Preserve that failed run at
+`/workspace/sql-item13-cloud-evidence/method-policy-initial.log`; it is not a pass.
+Audit the affected operations and caller chains against their existing owners,
+then update the reviewed inventory and register the typed-defaultdict predicate
+as source-shape analysis. No semantic owner, checker rule or negative mutation
+may be weakened. Qualify the checker and its self-tests and include this receipt
+delta in Item 13's exact-candidate Opus review. The user authorizes this bounded
+integration prerequisite before the final combined gate.
+
 ## Item 10 integration scope registration (2026-10-02)
 
 Status: merged with prerequisite 10A in PR #4242; see final delivery receipt below.

@@ -31,6 +31,22 @@ macro_rules! stmt_expr_method_call {
         {
             let source_path = crate::method_call_emitter::source_method_path($expr)?;
             if source_path.is_builtin() {
+                // Typed defaultdict storage must reach its insertion authority
+                // before contextual plain-dict shortcuts erase the alias.
+                if Self::is_defaultdict_bucket_mutator(object, method) {
+                    let places = crate::place_emitter::MethodCallPlaces::new(
+                        *receiver_convention,
+                        receiver_target.as_ref(),
+                        mutable_arg_places,
+                    );
+                    return $emitter.try_lower_registry_method_call_expr(
+                        object,
+                        method,
+                        args,
+                        places,
+                        $expr.ty(),
+                    );
+                }
                 if let Some(lowered) = crate::lower_expr::try_lower_simple_method_call_expr($expr) {
                     return Ok(Some(lowered));
                 }
