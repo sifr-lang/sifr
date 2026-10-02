@@ -24,6 +24,9 @@ pub fn ty(tcx: TyCtxt<'_>, ty: ty::Ty<'_>) -> Value {
         }
         ty::Param(parameter) => json!({"parameter":parameter.name.to_string()}),
         ty::Bool => json!({"builtin":"bool"}),
+        ty::Int(k) => json!({"builtin":format!("{k:?}").to_lowercase()}),
+        ty::Uint(k) => json!({"builtin":format!("{k:?}").to_lowercase()}),
+        ty::Str => json!({"builtin":"str"}),
         _ => json!({"unsupported":ty.to_string()}),
     }
 }
@@ -54,7 +57,7 @@ pub fn bounds(tcx: TyCtxt<'_>, def: DefId) -> Value {
     for parameter in &tcx.generics_of(def).own_params {
         if matches!(parameter.kind, ty::GenericParamDefKind::Type { .. }) {
             parameters.insert(parameter.name.to_string(), Default::default());
-        } else {
+        } else if matches!(parameter.kind, ty::GenericParamDefKind::Const { .. }) {
             return json!({"unsupported_generic":format!("{parameter:?}")});
         }
     }

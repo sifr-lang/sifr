@@ -453,8 +453,7 @@ impl AnalysisHost {
                         rust: None,
                         source_map_files: Vec::new(),
                         unavailable_reason: Some(format!(
-                            "generated Rust preview unavailable because compilation produced {} diagnostic(s)",
-                            diagnostic_count
+                            "generated Rust preview unavailable because compilation produced {diagnostic_count} diagnostic(s)"
                         )),
                     },
                 ));

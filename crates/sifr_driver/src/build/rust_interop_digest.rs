@@ -13,7 +13,7 @@ pub(super) fn digest_path_checked(path: &Path) -> io::Result<String> {
     Ok(identity.finish())
 }
 
-/// An optional root is absent only on NotFound. Existing files, empty
+/// An optional root is absent only on `NotFound`. Existing files, empty
 /// directories, links and read failures remain distinct observations.
 pub(super) fn digest_optional_directory_checked(path: &Path) -> io::Result<Option<String>> {
     match fs::symlink_metadata(path) {

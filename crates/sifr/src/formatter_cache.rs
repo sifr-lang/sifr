@@ -7,7 +7,7 @@ use sifr_format::{DocstringCodeLineLength, FormatOptions};
 use sifr_frontend::SourceProvider;
 use sifr_identity::IdentityEncoder;
 use std::fs;
-use std::io;
+use std::io::{self, Write as _};
 use std::path::Path;
 
 const MARKER_OWNER: &str = "sifr-formatter-cache";
@@ -54,18 +54,17 @@ pub(super) fn write_formatter_cache_entry(
         crate::compiler_identity().as_str(),
     )?;
     fs::create_dir_all(&config.cache_dir)
-        .map_err(|error| cache_error("create", &config.cache_dir, error))?;
+        .map_err(|error| cache_error("create", &config.cache_dir, &error))?;
     let mut staging = tempfile::NamedTempFile::new_in(&config.cache_dir)
-        .map_err(|error| cache_error("stage", &config.cache_dir, error))?;
-    use io::Write as _;
+        .map_err(|error| cache_error("stage", &config.cache_dir, &error))?;
     staging
         .write_all(&marker_contents(&identity))
         .and_then(|()| staging.as_file().sync_all())
-        .map_err(|error| cache_error("write", &config.cache_dir, error))?;
+        .map_err(|error| cache_error("write", &config.cache_dir, &error))?;
     let destination = config.cache_dir.join(&identity);
     staging
         .persist(&destination)
-        .map_err(|error| cache_error("publish", &destination, error.error))?;
+        .map_err(|error| cache_error("publish", &destination, &error.error))?;
     Ok(())
 }
 
@@ -109,7 +108,7 @@ fn formatter_cache_identity(
     );
     match options.docstring_code_line_length {
         DocstringCodeLineLength::Dynamic => {
-            identity.field("docstring_code_line_length", b"dynamic")
+            identity.field("docstring_code_line_length", b"dynamic");
         }
         DocstringCodeLineLength::Fixed(width) => {
             identity.field("docstring_code_line_length", b"fixed");
@@ -123,7 +122,7 @@ fn marker_contents(identity: &str) -> Vec<u8> {
     format!("{MARKER_OWNER}\n{MARKER_SCHEMA}\n{identity}\n").into_bytes()
 }
 
-fn cache_error(action: &str, path: &Path, error: io::Error) -> Vec<RenderedDiagnostic> {
+fn cache_error(action: &str, path: &Path, error: &io::Error) -> Vec<RenderedDiagnostic> {
     vec![formatter_cli_diagnostic(format!(
         "could not {action} formatter cache {}: {error}",
         path.display()

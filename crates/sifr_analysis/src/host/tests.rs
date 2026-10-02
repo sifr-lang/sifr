@@ -602,14 +602,14 @@ fn all_editor_query_methods_expose_current_revision_metadata() {
         AnalysisQueryKind::PrepareTypeHierarchy
     );
     assert_eq!(
-        host.type_hierarchy_supertypes(TypeHierarchyItemId("type".to_string()))
+        host.type_hierarchy_supertypes(&TypeHierarchyItemId("type".to_string()))
             .expect("query should run")
             .metadata()
             .query,
         AnalysisQueryKind::TypeHierarchySupertypes
     );
     assert_eq!(
-        host.type_hierarchy_subtypes(TypeHierarchyItemId("type".to_string()))
+        host.type_hierarchy_subtypes(&TypeHierarchyItemId("type".to_string()))
             .expect("query should run")
             .metadata()
             .query,

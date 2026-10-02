@@ -6,11 +6,11 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, and 5 merged; Item 7 has a scoped remediation candidate.
-Merge requires its exact-candidate qualification/review and the external
-workspace-Clippy prerequisite [#4230](https://github.com/sifr-lang/sifr/issues/4230).
-Continue Items 7, 10, 11, and 12,
-then final integration and the Item 6 closer, in the delivery order below.
+Status: Items 4, 4A, 5 and prerequisite 7A merged; Item 7 SQL qualification
+and remediation review passed. Its combined workspace Clippy check is next.
+Continue Item 7, then Items 10, 11, 12, registered prerequisite 13, final
+integration and the Item 6 closer. The compiler lint issue
+[#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
 [PR #4223](https://github.com/sifr-lang/sifr/pull/4223) merged as
@@ -209,8 +209,10 @@ closed, consistently with the DDL producer; no opaque-query or dropped-view
 fallback is supplied. Broader supported-view semantics, JOIN USING star merging,
 and ordinary implicit output alias/positional ordering differences remain
 separate pre-existing follow-ups in [#4232](https://github.com/sifr-lang/sifr/issues/4232).
-The compiler prerequisite #4230 remains unresolved; no workspace Clippy,
-merge, final integration, or phase-closure pass is claimed.
+Historically, compiler prerequisite #4230 remained unresolved at that
+remediation snapshot; no workspace Clippy or merge was then claimed.
+Item 7A below subsequently resolves it. Final integration and phase closure
+still require all later implementation and prerequisite items.
 
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
@@ -1374,3 +1376,89 @@ invoke workspace Clippy; Items 1–3 and 7 still name it separately. The SQL
 runtime/test owner can factor the assertion's type. Historical evidence:
 `/home/yaser5/projects/sifr/dx2-evidence/clippy6.log` (availability not
 rechecked during P0).
+
+## Item 7A — cloud compiler lint prerequisite (2026-10-02)
+
+Status: merged in [PR #4239](https://github.com/sifr-lang/sifr/pull/4239),
+merge `d08b525049debcc8f0a3aee941936cca062424af`; candidate
+`0cb7e398b5f6fa77ca14bbca30535540995f249c`, base
+`ba4fad1fa35d3ef2f40b52b43bcc8d1178dd1254`. Separate prerequisite for
+Item 7; [#4230](https://github.com/sifr-lang/sifr/issues/4230) is closed.
+The user explicitly
+authorized completing all necessary repairs and continuing until phase closure
+in this cloud session ("Don't block anything until you finish"). This supersedes
+the session-stop/external-owner boundary for necessary prerequisites; retain
+separate item scope, true qualification, and review evidence.
+
+Scope: behavior-preserving correction of the unchanged workspace Clippy
+findings: the first eight in checked_place.rs,
+lower_expr/iterators_and_callables.rs, and sifr_lowering
+lower/method_authority.rs, followed by twelve downstream driver findings exposed
+when those crates could pass Clippy, then three analysis findings and a
+test-only LSP generation accessor, followed by three CLI formatter-cache
+findings. Driver
+repairs preserve storage ownership, error branches, project-graph bytes and
+compiler initialization. Analysis repairs inline an unchanged preview message
+and borrow type-hierarchy item IDs instead of cloning/consuming them; update
+host, snapshot, LSP callers and existing tests together. Compile the LSP
+generation accessor only for tests, matching all its callers. Formatter-cache
+repairs move the Write trait import before statements, terminate a unit-valued
+identity operation and borrow diagnostic errors; marker bytes and all cache
+policy remain unchanged. No lint waiver. Move local helper declarations before
+the first statement, clone already-owned method names directly, and express
+local/imported authority with the equivalent positive comparison and swapped
+branches. No emitted Rust, SQL resolver, runtime, dependency, lint waiver, or
+coverage-policy change belongs to this prerequisite.
+
+Attempted compiler library suites: sifr_codegen and sifr_lowering (failed
+on the six pre-existing semantic cases recorded below). Passing qualification:
+required `cargo clippy --workspace -- -D warnings`; affected existing driver
+storage/digest/guided-graph tests, analysis/LSP type-hierarchy/preview tests and
+CLI formatter-cache tests;
+formatting, HIR/driver/file-size guards, diff check, and one exact-candidate
+scoped Opus review. The
+prospective phase-end broad-gate policy applies; reuse unchanged Item 7 SQL
+qualification and its SATISFIED remediation review. After separate delivery,
+refresh Item 7 against main, verify unchanged SQL validation/review input hashes,
+and qualify workspace Clippy on the combined candidate before its merge.
+Historical failures and the original external-owner stop remain preserved.
+
+Full workspace Clippy passes with -D warnings, no suppressions. All 32 focused
+tests pass: driver storage 9, project graph 1, digest 5; analysis hierarchy 2
+and preview 4; LSP hierarchy 1 and external inputs 4; CLI formatter cache 6.
+Formatting, HIR/driver/file-size guards (4322 files), and diff checks pass.
+Evidence is outside Git in `/workspace/sql-clippy-prerequisite-evidence/`.
+The [exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4239#issuecomment-5947110778)
+returned SATISFIED, no blockers; response SHA-256
+`9a4b07035af02f1d8f22a1aa6d03a7686cb3601eb34dcbad93c4f74cf02329e3`.
+The Windows path is preserved by code review; no Windows execution pass is
+claimed. Initial missing-submodule, staged Clippy failures and three zero-test
+selection attempts remain failed/incomplete evidence. Functional qualification
+uses the owned cloud target, four jobs, offline inputs and debug=0.
+
+
+Existing library qualification exposed six pre-existing failures: three
+codegen optional-length cases already documented by the architecture phase's
+H02a1 owner, one lowering generic optional-parameter length case, and two
+codegen defaultdict slice-append shape assertions. The codegen run passed
+1,751 tests and failed 5; lowering passed 1,144, failed 1 and ignored 1. Do not
+claim these full suites passed. Record their mechanisms separately from this
+behavior-preserving lint item; the phase's final combined integration must
+resolve them under the user's prerequisite authorization. No skipped failing
+test or softened expectation is accepted as full qualification.
+
+## Item 13 — existing compiler integration regressions (2026-10-02)
+
+Status: registered prerequisite before final combined integration/closure.
+Own the six existing compiler-library failures observed during Item 7A,
+tracked in [#4240](https://github.com/sifr-lang/sifr/issues/4240), coordinating
+with the architecture phase's recorded H02a1 optional-length mechanism. Resolve receiver authority/type-contract preservation for the
+existing optional length cases and defaultdict slice-append insertion behavior
+or establish and correct a stale expectation against the actual contract.
+Preserve negative optional-method diagnostics, checked-read safety, generated
+representations and actual insertion/value behavior. Use existing failing
+tests, focused negative/native regressions as needed, then the complete
+codegen/lowering suites, relevant guards/Clippy and scoped Opus review.
+No untracked skip, blanket authority fallback or lint waiver is authorized.
+This necessary integration repair is explicitly authorized by the user's
+instruction to finish without stopping on prerequisites.
