@@ -2,6 +2,8 @@
 
 import copy
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -129,6 +131,16 @@ class CloudReceiptTests(unittest.TestCase):
         with patch.object(cloud, "comparison_mismatches", return_value=[]):
             self.assertEqual(cloud.configuration_mismatches(expected, expected), [])
             self.assertIn("execution.cloud_runtime_environment", cloud.configuration_mismatches(expected, changed))
+
+    def test_cli_malformed_shapes_are_invalid_not_regressions(self):
+        for value in [[], None, {"schema_version": 1, "specification": []},
+                      {"schema_version": 1, "specification": None}]:
+            with self.subTest(value=value):
+                self.receipt_path.write_text(json.dumps(value))
+                result = subprocess.run([sys.executable, cloud.__file__, "check",
+                    "--receipt", str(self.receipt_path)], text=True, capture_output=True)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("cloud performance error:", result.stderr)
 
 
 if __name__ == "__main__":
