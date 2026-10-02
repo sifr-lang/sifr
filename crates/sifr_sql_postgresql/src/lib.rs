@@ -34,6 +34,7 @@ mod semantic_helpers;
 mod semantic_json;
 mod source;
 mod types;
+mod view_normalization;
 mod window_analysis;
 mod writes;
 
@@ -43,7 +44,7 @@ pub use ast::{
     AlterSequenceStatement, Assignment, CaseBranch, CommonTableExpression, ConflictAction,
     ConflictClause, CreateCompositeStatement, CreateRangeStatement, CteMaterialization, Expression,
     ExpressionKind, FromItem, JoinKind, LockStrength, LockWait, LockingClause, OrderDirection,
-    PostgresStatement, PostgresTypeName, SelectItem, SetOperator, StatementKind,
+    OrderNulls, PostgresStatement, PostgresTypeName, SelectItem, SetOperator, StatementKind,
     SubqueryQuantifier, WindowSpecification,
 };
 pub use catalog::{
@@ -67,3 +68,4 @@ pub use source::{
     LibpgQuerySource, SUPPORTED_POSTGRESQL_MAJORS, embedded_source, embedded_sources,
 };
 pub use types::{PostgresType, PostgresTypeRegistry, generated_sifr_type};
+pub use view_normalization::canonical_postgres_view_json;

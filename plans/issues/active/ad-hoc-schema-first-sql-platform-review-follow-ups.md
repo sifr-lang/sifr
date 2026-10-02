@@ -6,8 +6,11 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, and 5 merged; Item 7 is next. Continue Items 7, 10, 11, and 12,
-then final integration and the Item 6 closer, in the delivery order below.
+Status: Items 4, 4A, 5 and prerequisite 7A merged; Item 7 SQL qualification
+and remediation review passed. Its combined workspace Clippy check is next.
+Continue Item 7, then Items 10, 11, 12, registered prerequisite 13, final
+integration and the Item 6 closer. The compiler lint issue
+[#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
 
 [PR #4223](https://github.com/sifr-lang/sifr/pull/4223) merged as
@@ -128,6 +131,88 @@ After the cloud Git CLI credential expired, authenticated GitHub Git-data API
 transport recovered/published commits with exact commit/tree SHA verification.
 No injected credentials were replaced and no repository inputs were changed by
 that transport. The branch and source remain in the cloud-owned checkout.
+
+### Item 7 cloud qualification (2026-10-02)
+
+Status: implementation and named PostgreSQL tests qualified; merge waits for
+workspace Clippy prerequisite [#4230](https://github.com/sifr-lang/sifr/issues/4230)
+and exact-candidate Opus review. The prerequisite belongs to the compiler owner;
+a separate behavior-preserving repair scope is awaiting the user's answer.
+Items 10, 11, 12, final integration, and Item 6 closure remain pending.
+
+DDL and live catalog views now share analyzer-resolved relation and column
+identities. View-only binding capture retains scope and alias roles, expands
+stars in declaration order, resolves output references for ordering/grouping,
+and rejects inconsistent schema qualification or ambiguous columns. Canonical
+ordering preserves direction and null placement. Both producers use the real
+catalog; no qualifier deletion or replacement resolver is introduced.
+
+The PostgreSQL parser matrix passed 29 tests for each major 13–18 (174 total),
+plus the actual checked-in-component host test covering all six rebuilt WASI
+components. Its view schema requests assert qualification/star equivalence,
+replacement, and genuine column-order differences. The live schema-tool matrix
+passed all six server majors with plain, star, aliased, ordered, and replaced
+views, and rejects a changed replacement predicate. The tools-package named
+Cargo tests and PostgreSQL provenance qualification passed. Common formatting,
+HIR/driver/file-size guards (4321 files), diff check, and PostgreSQL library
+Clippy passed. The required workspace Clippy failed in three unchanged compiler
+files with eight findings; no passing workspace check or full merge gate is
+claimed.
+
+Functional qualification used the owned `target/sql-phase-functional`, four
+jobs, offline inputs, and dev/test debug=0. Components were rebuilt with two
+jobs in `target/sql-phase-components`, the exact official WASI SDK 34.0 archive
+and verified extraction, and the pinned WASI-Virt submodule. Docker Hub's pull
+quota required the official ECR PostgreSQL mirror. Images were retained one at
+a time after storage pressure; their actual digests are recorded. After a
+mirror quota interruption, the PostgreSQL 13/14 live passes were reused only
+after all recorded validation inputs matched; 15–18 then passed, using the
+repository's original setup, SQL, and exact test command.
+
+Evidence is outside the reviewed tree in `/workspace/sql-item7-cloud-evidence/`.
+`validation-summary.json` records commands, counts, configuration, and hashes.
+The disk-exhaustion build, missing-submodule setup, stale `i32` fixture assertion,
+expected view snapshot change, and registry quota failures remain failed or
+incomplete attempts. The unchanged generator maps signed 32-bit values to
+`int32`; only the stale live-test expectations were corrected. An optional
+all-targets PostgreSQL Clippy run also exposed two pre-existing test-harness
+`expect_used` warnings; this is not the required workspace selection.
+
+### Item 7 scoped remediation (2026-10-02)
+
+Initial candidate `fa9b7bb863c676018136711d47e98ed8adb8165d` in
+[PR #4231](https://github.com/sifr-lang/sifr/pull/4231) passed the named tests
+recorded above, but its scoped Opus review returned `NOT SATISFIED`: recursive
+CTE anchor pre-passes captured inconsistent temporary scope depths, and set
+ORDER BY output references attempted to index an empty local projection list.
+The initial response SHA-256 is
+`ffd11fd56603aa01c5a3fc21d6191e5d13ff5a9931d7e9f510d6b4a3116d0855`.
+Neither the initial review nor its omitted regression coverage is a pass.
+
+The one remediation batch suppresses identity capture during the type-only
+recursive anchor pass, records set ordering by positional output identity,
+and retains bindings by scope/FROM position rather than alias spelling.
+PostgreSQL may print a recursive reference alias `r` as `r_1`; references to
+different self-join positions still remain distinct. Recursive and ordered
+set views now join the native, live, and actual-component regression targets.
+Set-operation ordinal normalization does not generalize ordinary SELECT
+positional ordering. The snapshot's incidental assertion-line header is removed.
+The current remediation qualification and single follow-up review receipts
+are published outside the reviewed tree, keyed by their exact candidate.
+The named qualification repeats the six-major parser/guest and expanded live
+matrices; the full phase gate remains a later integration task. Evidence is in
+`/workspace/sql-item7-remediation-cloud-evidence/`.
+
+Live views must resolve and type-check against the supported introspected
+catalog account. If any view cannot be analyzed, the whole catalog pull fails
+closed, consistently with the DDL producer; no opaque-query or dropped-view
+fallback is supplied. Broader supported-view semantics, JOIN USING star merging,
+and ordinary implicit output alias/positional ordering differences remain
+separate pre-existing follow-ups in [#4232](https://github.com/sifr-lang/sifr/issues/4232).
+Historically, compiler prerequisite #4230 remained unresolved at that
+remediation snapshot; no workspace Clippy or merge was then claimed.
+Item 7A below subsequently resolves it. Final integration and phase closure
+still require all later implementation and prerequisite items.
 
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
@@ -858,7 +943,7 @@ items execute after Items 1–5 and before the docs-only Item 6 closer.
 
 ### Item 7 — PostgreSQL view normalization parity
 
-Status: blocked by unmerged Item 1, later mechanism. Dependencies: Item 1 merged. Delivery order:
+Status: cloud implementation and named PostgreSQL qualification complete; workspace Clippy prerequisite #4230 and scoped review pending. Dependencies: Items 1 and 5 merged. Delivery order:
 after Item 5 and before Item 6.
 
 Reported by Item 1 child, not implemented by it: broadening the original PG18
@@ -1294,8 +1379,12 @@ rechecked during P0).
 
 ## Item 7A — cloud compiler lint prerequisite (2026-10-02)
 
-Status: registered and in progress; separate prerequisite for Item 7, tracked
-in [#4230](https://github.com/sifr-lang/sifr/issues/4230). The user explicitly
+Status: merged in [PR #4239](https://github.com/sifr-lang/sifr/pull/4239),
+merge `d08b525049debcc8f0a3aee941936cca062424af`; candidate
+`0cb7e398b5f6fa77ca14bbca30535540995f249c`, base
+`ba4fad1fa35d3ef2f40b52b43bcc8d1178dd1254`. Separate prerequisite for
+Item 7; [#4230](https://github.com/sifr-lang/sifr/issues/4230) is closed.
+The user explicitly
 authorized completing all necessary repairs and continuing until phase closure
 in this cloud session ("Don't block anything until you finish"). This supersedes
 the session-stop/external-owner boundary for necessary prerequisites; retain
@@ -1321,7 +1410,8 @@ local/imported authority with the equivalent positive comparison and swapped
 branches. No emitted Rust, SQL resolver, runtime, dependency, lint waiver, or
 coverage-policy change belongs to this prerequisite.
 
-Named qualification: existing sifr_codegen and sifr_lowering library tests;
+Attempted compiler library suites: sifr_codegen and sifr_lowering (failed
+on the six pre-existing semantic cases recorded below). Passing qualification:
 required `cargo clippy --workspace -- -D warnings`; affected existing driver
 storage/digest/guided-graph tests, analysis/LSP type-hierarchy/preview tests and
 CLI formatter-cache tests;
@@ -1332,6 +1422,20 @@ qualification and its SATISFIED remediation review. After separate delivery,
 refresh Item 7 against main, verify unchanged SQL validation/review input hashes,
 and qualify workspace Clippy on the combined candidate before its merge.
 Historical failures and the original external-owner stop remain preserved.
+
+Full workspace Clippy passes with -D warnings, no suppressions. All 32 focused
+tests pass: driver storage 9, project graph 1, digest 5; analysis hierarchy 2
+and preview 4; LSP hierarchy 1 and external inputs 4; CLI formatter cache 6.
+Formatting, HIR/driver/file-size guards (4322 files), and diff checks pass.
+Evidence is outside Git in `/workspace/sql-clippy-prerequisite-evidence/`.
+The [exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4239#issuecomment-5947110778)
+returned SATISFIED, no blockers; response SHA-256
+`9a4b07035af02f1d8f22a1aa6d03a7686cb3601eb34dcbad93c4f74cf02329e3`.
+The Windows path is preserved by code review; no Windows execution pass is
+claimed. Initial missing-submodule, staged Clippy failures and three zero-test
+selection attempts remain failed/incomplete evidence. Functional qualification
+uses the owned cloud target, four jobs, offline inputs and debug=0.
+
 
 Existing library qualification exposed six pre-existing failures: three
 codegen optional-length cases already documented by the architecture phase's

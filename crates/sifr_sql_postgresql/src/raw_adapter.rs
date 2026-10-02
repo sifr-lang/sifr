@@ -5,8 +5,8 @@ use crate::ast::{
     ConflictAction, ConflictClause, CreateDomainStatement, CreateEnumStatement,
     CreateFunctionStatement, CreateIndexStatement, CreateViewStatement, DeleteStatement,
     Expression, ExpressionKind, FromItem, InsertStatement, JoinKind, OrderDirection, OrderItem,
-    PostgresStatement, PostgresTypeName, SelectItem, SelectStatement, SetOperation, SetOperator,
-    SqlSpan, StatementKind, UpdateStatement,
+    OrderNulls, PostgresStatement, PostgresTypeName, SelectItem, SelectStatement, SetOperation,
+    SetOperator, SqlSpan, StatementKind, UpdateStatement,
 };
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::ffi;
@@ -302,6 +302,11 @@ impl<'a> RawAdapter<'a> {
                 "SORTBY_ASC" => OrderDirection::Ascending,
                 "SORTBY_DESC" => OrderDirection::Descending,
                 _ => OrderDirection::Default,
+            },
+            nulls: match string_field(body, "sortby_nulls").unwrap_or("SORTBY_NULLS_DEFAULT") {
+                "SORTBY_NULLS_FIRST" => OrderNulls::First,
+                "SORTBY_NULLS_LAST" => OrderNulls::Last,
+                _ => OrderNulls::Default,
             },
         })
     }

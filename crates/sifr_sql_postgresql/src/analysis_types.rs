@@ -140,6 +140,7 @@ pub(crate) struct AnalysisContext<'a> {
     pub(crate) accessed_objects: BTreeSet<ObjectId>,
     pub(crate) star_expansions: BTreeMap<(u32, u32), StarExpansion>,
     pub(crate) required_capabilities: BTreeSet<String>,
+    pub(crate) view_bindings: Option<crate::view_normalization::ViewBindings>,
 }
 
 impl<'a> AnalysisContext<'a> {
@@ -151,6 +152,7 @@ impl<'a> AnalysisContext<'a> {
             accessed_objects: BTreeSet::new(),
             star_expansions: BTreeMap::new(),
             required_capabilities: BTreeSet::new(),
+            view_bindings: None,
         }
     }
 
