@@ -1657,3 +1657,17 @@ Optional hardening and additional boundary-case suggestions remain in #4243.
 No intermediate broad gate is claimed; Items 11–13, the final combined merge
 profile and Item 6 closure remain required. This receipt is record-only and
 requires documentation checks only.
+
+## Item 11 runtime preservation scope (2026-10-02)
+
+Own binary/text representation at the raw-driver boundary and classification of
+client encoding failures. MySQL must use column type and character-set metadata,
+never successful UTF-8 decoding as evidence that a binary value is text.
+Malformed declared text produces Decode. Encoding failures produce Encode;
+PostgreSQL must preserve an explicit codec error through the driver's error
+source chain. Preserve existing numeric, temporal, JSON and opaque contracts.
+No codec redesign, provider-generalized connection mechanism or resolver work
+belongs here. Qualify empty, valid UTF-8, embedded-zero and invalid UTF-8 binary
+values with representation/content assertions, valid and malformed text, and
+encoding failures. Use focused native codec tests and actual database round trips
+through the runtime packages; record the tested server versions explicitly.

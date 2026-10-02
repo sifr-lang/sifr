@@ -178,6 +178,76 @@ fn request(
     }
 }
 
+#[tokio::test(flavor = "current_thread")]
+#[ignore = "the SQL platform live harness supplies PostgreSQL"]
+async fn live_binary_text_identity_and_client_encoding_errors_are_preserved() {
+    let url = std::env::var("SIFR_POSTGRESQL_TEST_URL").expect("live URL");
+    let pool = connect(profile(&url)).await.expect("verified pool");
+    let bound = |sql: &str, value: OwnedSqlValue| {
+        let mut selected = request(
+            &pool,
+            sql,
+            ExecutionMode::FetchAll { maximum_rows: 2 },
+            RuntimeCardinality::new(1, Some(1)).expect("cardinality"),
+            RuntimeEffect::Read,
+        );
+        selected.parameters = BoundParameters::new(vec![OwnedParameter {
+            slot: 0,
+            codec: RuntimeCodecIdentity::new("postgresql.native.v1").expect("codec"),
+            value,
+        }])
+        .expect("parameters");
+        selected
+    };
+    for bytes in [
+        Vec::new(),
+        b"valid UTF-8".to_vec(),
+        b"a\0b".to_vec(),
+        vec![0xff, 0, 0x80],
+    ] {
+        let value = OwnedSqlValue::Bytes(Arc::from(bytes));
+        let rows = pool
+            .fetch_all(
+                bound("SELECT $1::bytea", value.clone()),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("binary round trip");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].values(), &[value]);
+    }
+    for text in ["", "valid UTF-8", "snowman ☃"] {
+        let value = OwnedSqlValue::Text(text.into());
+        let rows = pool
+            .fetch_all(
+                bound("SELECT $1::text", value.clone()),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("text round trip");
+        assert_eq!(rows[0].values(), &[value]);
+    }
+    for value in [
+        OwnedSqlValue::Bytes(Arc::from(b"binary".as_slice())),
+        OwnedSqlValue::Text("a\0b".into()),
+    ] {
+        let error = pool
+            .fetch_all(bound("SELECT $1::text", value), ExecutionOptions::default())
+            .await
+            .expect_err("unsupported client text encoding");
+        assert_eq!(error.kind(), SqlErrorKind::Encode);
+    }
+    let value = OwnedSqlValue::Text("healthy after encoding failure".into());
+    let rows = pool
+        .fetch_all(
+            bound("SELECT $1::text", value.clone()),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect("pool remains usable");
+    assert_eq!(rows[0].values(), &[value]);
+}
+
 #[derive(Clone)]
 struct RetryOnce {
     calls: Arc<AtomicUsize>,

@@ -124,6 +124,9 @@ fn encode_text(
     ty: &Type,
     output: &mut BytesMut,
 ) -> Result<IsNull, Box<dyn Error + Sync + Send>> {
+    if value.as_bytes().contains(&0) {
+        return Err(codec_error());
+    }
     match *ty {
         Type::TEXT | Type::VARCHAR | Type::BPCHAR | Type::NAME | Type::JSON => {
             output.extend_from_slice(value.as_bytes());
@@ -195,10 +198,7 @@ fn write_u16(output: &mut BytesMut, value: u16) {
 }
 
 fn codec_error() -> Box<dyn Error + Sync + Send> {
-    Box::new(std::io::Error::new(
-        std::io::ErrorKind::InvalidData,
-        "PostgreSQL value does not match its verified codec",
-    ))
+    Box::new(SqlError::new(SqlErrorKind::Encode))
 }
 
 pub(crate) struct RawPostgresValue(pub Vec<u8>);
@@ -288,6 +288,54 @@ mod tests {
     #![allow(clippy::expect_used)]
 
     use super::*;
+
+    #[test]
+    fn binary_identity_and_text_encoding_are_explicit() {
+        for bytes in [
+            Vec::new(),
+            b"valid UTF-8".to_vec(),
+            b"a\0b".to_vec(),
+            vec![0xff, 0, 0x80],
+        ] {
+            let mut encoded = BytesMut::new();
+            PostgresParameter(OwnedSqlValue::Bytes(Arc::from(bytes.clone())))
+                .to_sql(&Type::BYTEA, &mut encoded)
+                .expect("binary encoding");
+            assert_eq!(encoded.as_ref(), bytes.as_slice());
+            assert_eq!(
+                decode_value(&Type::BYTEA, Some(RawPostgresValue(encoded.to_vec())))
+                    .expect("binary decoding"),
+                OwnedSqlValue::Bytes(Arc::from(bytes.clone()))
+            );
+            let textual = decode_value(&Type::TEXT, Some(RawPostgresValue(bytes.clone())));
+            match String::from_utf8(bytes) {
+                Ok(text) => assert_eq!(textual.expect("declared text"), OwnedSqlValue::Text(text)),
+                Err(_) => assert_eq!(
+                    textual.expect_err("malformed text").kind(),
+                    SqlErrorKind::Decode
+                ),
+            }
+        }
+        for (value, ty) in [
+            (
+                OwnedSqlValue::Bytes(Arc::from(b"binary".as_slice())),
+                Type::TEXT,
+            ),
+            (OwnedSqlValue::Text("a\0b".into()), Type::TEXT),
+        ] {
+            let error = PostgresParameter(value)
+                .to_sql(&ty, &mut BytesMut::new())
+                .err()
+                .expect("unsupported encoding");
+            assert_eq!(
+                error
+                    .downcast_ref::<SqlError>()
+                    .expect("typed codec error")
+                    .kind(),
+                SqlErrorKind::Encode
+            );
+        }
+    }
 
     #[test]
     fn standard_sql_values_keep_their_wire_identity_when_rebound() {

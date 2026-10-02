@@ -254,6 +254,68 @@ async fn standard_text_encoded_sql_values_round_trip_through_sqlite() {
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn binary_and_text_values_preserve_representation_through_sqlite() {
+    let directory = tempfile::tempdir().expect("directory");
+    let pool = open_pool(profile(&directory.path().join("binary.sqlite3")))
+        .expect("pool")
+        .verify_schema()
+        .await
+        .expect("verification");
+    for bytes in [
+        Vec::new(),
+        b"valid UTF-8".to_vec(),
+        b"a\0b".to_vec(),
+        vec![0xff, 0, 0x80],
+    ] {
+        let value = OwnedSqlValue::Bytes(Arc::from(bytes.clone()));
+        let rows = pool
+            .fetch_all(
+                request(pool.profile(), "SELECT ?", vec![value.clone()], true),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("binary round trip");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].values(), &[value]);
+        if let Ok(text) = String::from_utf8(bytes) {
+            let value = OwnedSqlValue::Text(text);
+            let rows = pool
+                .fetch_all(
+                    request(pool.profile(), "SELECT ?", vec![value.clone()], true),
+                    ExecutionOptions::default(),
+                )
+                .await
+                .expect("text round trip");
+            assert_eq!(rows[0].values(), &[value]);
+        }
+    }
+    let invalid_text = pool
+        .fetch_all(
+            request(pool.profile(), "SELECT CAST(x'ff' AS TEXT)", vec![], true),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect_err("malformed declared text");
+    assert_eq!(invalid_text.kind(), sifr_sql_runtime::SqlErrorKind::Decode);
+    let invalid_encoding = pool
+        .fetch_all(
+            request(
+                pool.profile(),
+                "SELECT ?",
+                vec![OwnedSqlValue::Sequence(vec![])],
+                true,
+            ),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect_err("unsupported encoding");
+    assert_eq!(
+        invalid_encoding.kind(),
+        sifr_sql_runtime::SqlErrorKind::Encode
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn one_row_fetches_report_cardinality_before_collection_limits() {
     let directory = tempfile::tempdir().expect("directory");
     let pool = open_pool(profile(&directory.path().join("cardinality.sqlite3")))
