@@ -109,6 +109,23 @@ the full tool record includes its authenticated rust-src map beyond the base hel
 identity. Both logs/receipts remain in its `attempts/` directory. Cached admission
 now compares the full current helper/component/source-map identity; no field is
 excluded or defaulted. Fresh qualification is required for the corrected consumer.
+Candidate `29077b2e4e9e998220e3fd3d9b11001126c2c78b` qualified all exact
+checks: three named cases individually (7/21/35 assertions), complete class3/3
+with63 assertions and four originals (48/141/48/24), totaling10 executed cases
+and387 assertions. Validation summary SHA-256
+`e5b07f7c994660faac95b054ff1d5cd501d39334eadc412172d040009d5deb1c` and
+scoped Opus5.5/medium SATISFIED/no blockers, response SHA-256
+`0514f0c7b46759390cf2a5c7a1a15ea350cf2ecf2fb0a5ff36844497a72be3d2`,
+remain preserved outside Git. Fresh main then advanced to
+`de3be8665a9eced030ad83193696ae185a935930` through SQL-owned#4239/#4231/#4241,
+including two production sifr_codegen lint files. Main is integrated without
+changing that externally owned implementation; its changed production source
+inputs require new qualification and exact-candidate review before HBF merge.
+The first review's suggestions are deferred to their owning future work: reverse
+trait multiset coverage, typed exception conversion, new ancestor-manifest absence
+coverage, cfg configuration labeling, dep-info mtime/output isolation, environment
+privacy and entrypoint/discovery cleanup. None were blocking HBF findings and none
+are added to this bounded item. No SQL repair or broad qualification is absorbed.
 Source inspection
 and partial joins are ingredients, rather than completed feasibility acceptance.
 Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,
