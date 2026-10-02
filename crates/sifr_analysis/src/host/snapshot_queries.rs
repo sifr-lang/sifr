@@ -198,7 +198,7 @@ impl AnalysisSnapshot {
     pub fn type_hierarchy_supertypes(
         &self,
         host: &mut AnalysisHost,
-        item: TypeHierarchyItemId,
+        item: &TypeHierarchyItemId,
     ) -> QueryResult<Vec<TypeHierarchyItem>> {
         self.run(host, |host| host.type_hierarchy_supertypes(item))
     }
@@ -206,7 +206,7 @@ impl AnalysisSnapshot {
     pub fn type_hierarchy_subtypes(
         &self,
         host: &mut AnalysisHost,
-        item: TypeHierarchyItemId,
+        item: &TypeHierarchyItemId,
     ) -> QueryResult<Vec<TypeHierarchyItem>> {
         self.run(host, |host| host.type_hierarchy_subtypes(item))
     }

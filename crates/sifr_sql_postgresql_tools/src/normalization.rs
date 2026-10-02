@@ -1,13 +1,19 @@
 use crate::catalog::PostgresCatalogError;
 use sha2::{Digest, Sha256};
-use sifr_sql_contract::{DatabaseType, ObjectId, SchemaObject, SchemaObjectKind, SemanticValue};
+use sifr_sql_contract::{
+    DatabaseType, DialectIdentity, ObjectId, ProviderIdentity, SchemaIr, SchemaObject,
+    SchemaObjectKind, SemanticValue,
+};
 use sifr_sql_postgresql::{
-    LibpgQueryParser, PostgresParser, PostgresStatement, PostgresTypeName, PostgresTypeRegistry,
-    StatementKind, canonical_postgres_ast_json, generated_sifr_type, sequence_default_reference,
+    LibpgQueryParser, PostgresCatalog, PostgresParser, PostgresStatement, PostgresTypeName,
+    PostgresTypeRegistry, StatementKind, canonical_postgres_ast_json, canonical_postgres_view_json,
+    generated_sifr_type, sequence_default_reference,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn normalize_catalog_objects(
+    provider: &ProviderIdentity,
+    dialect: &DialectIdentity,
     server_major: u16,
     objects: &mut [SchemaObject],
 ) -> Result<(), PostgresCatalogError> {
@@ -20,6 +26,35 @@ pub(crate) fn normalize_catalog_objects(
     }
     canonicalize_constraint_identities(objects)?;
     normalize_relations(objects)?;
+    let schema = SchemaIr {
+        format_version: 1,
+        provider: provider.clone(),
+        dialect: dialect.clone(),
+        objects: objects
+            .iter()
+            .cloned()
+            .map(|object| (object.identity.clone(), object))
+            .collect(),
+    };
+    let catalog = PostgresCatalog::from_schema(&schema, registry)
+        .map_err(|_| incomplete("view binding catalog"))?;
+    for relation in objects.iter_mut().filter(|object| {
+        matches!(
+            object.kind,
+            SchemaObjectKind::View | SchemaObjectKind::MaterializedView
+        )
+    }) {
+        let source = required_text(
+            schema
+                .object(&relation.identity)
+                .ok_or_else(|| incomplete("view definition"))?,
+            "provider-query",
+        )?;
+        relation.semantic.insert(
+            "provider-query".to_string(),
+            SemanticValue::Text(canonical_select(source, &catalog)?),
+        );
+    }
     Ok(())
 }
 
@@ -485,7 +520,7 @@ fn normalize_relations(objects: &mut [SchemaObject]) -> Result<(), PostgresCatal
         } else {
             semantic.insert(
                 "provider-query".to_string(),
-                SemanticValue::Text(canonical_select(required_text(relation, "definition")?)?),
+                SemanticValue::Text(required_text(relation, "definition")?.to_string()),
             );
         }
         relation.semantic = semantic;
@@ -493,7 +528,10 @@ fn normalize_relations(objects: &mut [SchemaObject]) -> Result<(), PostgresCatal
     Ok(())
 }
 
-fn canonical_select(source: &str) -> Result<String, PostgresCatalogError> {
+fn canonical_select(
+    source: &str,
+    catalog: &PostgresCatalog,
+) -> Result<String, PostgresCatalogError> {
     let statements = LibpgQueryParser
         .parse(source)
         .map_err(|_| incomplete("parseable view definition"))?;
@@ -506,7 +544,9 @@ fn canonical_select(source: &str) -> Result<String, PostgresCatalogError> {
     else {
         return Err(incomplete("single SELECT view definition"));
     };
-    canonical_postgres_ast_json(query).map_err(|_| incomplete("canonical view definition"))
+    canonical_postgres_view_json(query, catalog).map_err(|error| PostgresCatalogError {
+        message: error.to_string(),
+    })
 }
 
 fn canonical_expression(source: &str) -> Result<String, PostgresCatalogError> {

@@ -77,6 +77,13 @@ CREATE TABLE type_samples (
 CREATE INDEX orders_account_idx ON orders(account_id);
 CREATE VIEW account_view AS SELECT id, email FROM accounts;
 CREATE VIEW parity_user_view AS SELECT id, name, score FROM parity_users;
+CREATE VIEW parity_star_view AS SELECT * FROM parity_users;
+CREATE VIEW parity_alias_view AS SELECT u.id AS user_id, u.name FROM public.parity_users u ORDER BY u.id DESC NULLS LAST;
+CREATE VIEW parity_order_view AS SELECT id FROM parity_users ORDER BY id ASC;
+CREATE VIEW parity_replaced_view AS SELECT id, name FROM parity_users;
+CREATE OR REPLACE VIEW parity_replaced_view AS SELECT id, name FROM parity_users WHERE score > 0;
+CREATE VIEW parity_recursive_view AS WITH RECURSIVE r(id) AS (SELECT id FROM parity_users UNION ALL SELECT id + 1 AS id FROM r WHERE id < 3) SELECT id FROM r;
+CREATE VIEW parity_set_view AS SELECT id FROM parity_users UNION SELECT id FROM parity_users ORDER BY id DESC NULLS LAST;
 CREATE MATERIALIZED VIEW account_count AS SELECT count(*) AS count FROM accounts;
 CREATE FUNCTION add_one(integer) RETURNS integer LANGUAGE SQL IMMUTABLE STRICT AS 'SELECT $1 + 1';
 CREATE FUNCTION add_one(bigint) RETURNS bigint LANGUAGE SQL IMMUTABLE STRICT AS 'SELECT $1 + 1';

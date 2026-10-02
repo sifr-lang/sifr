@@ -93,6 +93,19 @@ fn condition_excludes_checked_sequence_read(
     index: &crate::HirExpr,
     length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
+    fn is_zero(candidate: &crate::HirExpr) -> bool {
+        matches!(candidate, crate::HirExpr::IntLiteral(0))
+            || matches!(candidate, crate::HirExpr::LargeIntLiteral(value) if value == "0")
+    }
+
+    fn integer_literal(candidate: &crate::HirExpr) -> Option<i128> {
+        match candidate {
+            crate::HirExpr::IntLiteral(value) => Some(i128::from(*value)),
+            crate::HirExpr::LargeIntLiteral(value) => value.parse().ok(),
+            _ => None,
+        }
+    }
+
     let is_len_of = |candidate: &crate::HirExpr, object_token: &str| {
         matches!(
             candidate,
@@ -107,19 +120,6 @@ fn condition_excludes_checked_sequence_read(
         ) || matches!(candidate, crate::HirExpr::Name { name, .. }
             if length_aliases.get(name).is_some_and(|collection| collection == object_token))
     };
-
-    fn is_zero(candidate: &crate::HirExpr) -> bool {
-        matches!(candidate, crate::HirExpr::IntLiteral(0))
-            || matches!(candidate, crate::HirExpr::LargeIntLiteral(value) if value == "0")
-    }
-
-    fn integer_literal(candidate: &crate::HirExpr) -> Option<i128> {
-        match candidate {
-            crate::HirExpr::IntLiteral(value) => Some(i128::from(*value)),
-            crate::HirExpr::LargeIntLiteral(value) => value.parse().ok(),
-            _ => None,
-        }
-    }
 
     let Some(object_token) = checked_place_expr_token(object) else {
         return false;

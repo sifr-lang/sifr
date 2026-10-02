@@ -46,6 +46,9 @@ impl AnalysisContext<'_> {
                     .relation(name)
                     .map_err(|diagnostic| PostgresAnalysisError { diagnostic })?;
                 self.referenced.insert(relation.identity.clone());
+                if let Some(bindings) = &mut self.view_bindings {
+                    bindings.record_relation(item, &relation.identity)?;
+                }
                 frame
                     .bindings
                     .push(binding_for_relation(relation, alias.as_deref()));

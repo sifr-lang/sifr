@@ -6,6 +6,7 @@ use sifr_frontend::{
     SourceProvider, SourceText,
 };
 use sifr_package::{CargoLockMode, PackageSourceMap, SifrManifest};
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -87,12 +88,11 @@ pub fn project_tree(input: &[u8]) -> Option<ProjectTree> {
             cargo.push_str("\n[dependencies]\n");
             manifest.push_str("\n[dependencies]\n");
             for dependency in dependencies {
-                cargo.push_str(&format!(
-                    "{dependency} = {{ path = \"../{dependency}\" }}\n"
-                ));
-                manifest.push_str(&format!(
-                    "{dependency} = {{ package = \"{dependency}\", path = \"../{dependency}\", import = \"{dependency}\" }}\n"
-                ));
+                let _ = writeln!(cargo, "{dependency} = {{ path = \"../{dependency}\" }}");
+                let _ = writeln!(
+                    manifest,
+                    "{dependency} = {{ package = \"{dependency}\", path = \"../{dependency}\", import = \"{dependency}\" }}"
+                );
             }
         }
         files.push((PathBuf::from(name).join("Cargo.toml"), cargo));
@@ -102,7 +102,7 @@ pub fn project_tree(input: &[u8]) -> Option<ProjectTree> {
         if index == 0 {
             for (bit, dependency) in NAMES.iter().skip(1).enumerate() {
                 if input[1] & (1 << bit) != 0 {
-                    source.push_str(&format!("from {dependency} import value_{dependency}\n"));
+                    let _ = writeln!(source, "from {dependency} import value_{dependency}");
                 }
             }
             source.push_str("\ndef main() -> None:\n    pass\n");
@@ -111,12 +111,10 @@ pub fn project_tree(input: &[u8]) -> Option<ProjectTree> {
             for (_, to) in graph_edges.iter().filter(|(from, _)| *from == index) {
                 if input[3] & (1 << (index - 1)) != 0 {
                     let dependency = NAMES[*to];
-                    source.push_str(&format!("from {dependency} import value_{dependency}\n"));
+                    let _ = writeln!(source, "from {dependency} import value_{dependency}");
                 }
             }
-            source.push_str(&format!(
-                "\ndef value_{name}() -> int:\n    return {index}\n"
-            ));
+            let _ = writeln!(source, "\ndef value_{name}() -> int:\n    return {index}");
             files.push((PathBuf::from(name).join("src/__init__.sifr"), source));
         }
     }
@@ -183,6 +181,8 @@ fn replay_with_provider<P: SourceProvider>(
     root: &Path,
     provider: &mut P,
 ) -> ReplayOutcome {
+    static COMPILER: OnceLock<CompilerContext> = OnceLock::new();
+
     for name in NAMES {
         let manifest = root.join(name).join("sifr.toml");
         let Ok(source) = provider.read_file(&manifest) else {
@@ -219,7 +219,6 @@ fn replay_with_provider<P: SourceProvider>(
         python_runtime: None,
         lock_mode: CargoLockMode::Normal,
     };
-    static COMPILER: OnceLock<CompilerContext> = OnceLock::new();
     let compiler = COMPILER.get_or_init(CompilerContext::for_test);
     let diagnostics = check_package_project(compiler, &entrypoint, provider);
     if diagnostics.is_empty() {
