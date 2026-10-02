@@ -54,7 +54,10 @@ disk pressure. The amended private-email commit changed metadata only.
 
 ### Item 4A — direct build-resource guard mutations (2026-10-02)
 
-Status: implementation in progress before Item 5. Item 4 remains merged.
+Status: merged in [PR #4226](https://github.com/sifr-lang/sifr/pull/4226)
+as `5c15129bd377c3fbc80f38f09bb9cb5a53062a93`; Item 5 is ready.
+Exact candidate `47b1a54f1092bf9e0051219ace49d15fe34ee580`, base
+`c6b1887c7038fad53e2cd679a963bd88c008d4c0`. Item 4 remains merged.
 The original [#3659](https://github.com/sifr-lang/sifr/issues/3659) asks for
 manifest-guard mutation coverage; Item 4's profile mutation satisfies the P0
 resource-declaration check but does not directly exercise that manifest guard.
@@ -63,6 +66,16 @@ manifest-resource mutation, a profile-versus-suite mismatch mutation, and the
 corresponding resource diagnostic wording. It also delivers the first two
 checker suggestions in #4224. No build recipe, compiler, scheduler, or profile
 membership changes belong here.
+
+Integrated qualification and all 15 mutations passed, including both exact
+resource-guard messages. Contracts and 13 mutations, all five profile checks,
+file-size guard (4319 files), and diff checks passed.
+The [scoped Opus review](https://github.com/sifr-lang/sifr/pull/4226#issuecomment-5943176915)
+returned `SATISFIED`, no blockers; its response SHA-256 is
+`63bb7628fa6b86296df6f0e8e9e27843a363da11a94c19b58b479c41f394611b`. Evidence is in `/workspace/sql-item4a-cloud-evidence/`,
+outside the reviewed tree. Optional hard-coded-set coupling, strict override
+key validation, and additional per-profile mutation coverage remain in #4224;
+they do not add phase acceptance requirements.
 
 Named checks: integrated checker and its self-test, contract checker and its
 self-test, profile schema check, diff check, file-size guard, and scoped
