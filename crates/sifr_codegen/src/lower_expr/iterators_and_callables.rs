@@ -381,7 +381,7 @@ pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustEx
             .collect::<Option<Vec<_>>>()?;
         return Some(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
-            method: method.to_string(),
+            method: method.clone(),
             args: lowered_args,
         });
     }
@@ -394,7 +394,7 @@ pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustEx
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         return Some(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
-            method: method.to_string(),
+            method: method.clone(),
             args: vec![],
         });
     }
@@ -407,7 +407,7 @@ pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustEx
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         return Some(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
-            method: method.to_string(),
+            method: method.clone(),
             args: vec![],
         });
     }
@@ -422,7 +422,7 @@ pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustEx
         )?];
         return Some(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
-            method: method.to_string(),
+            method: method.clone(),
             args: lowered_args,
         });
     }
@@ -433,7 +433,7 @@ pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustEx
         let lowered_object = try_lower_leaf_or_name_expr(object)?;
         let terminal_call = RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
-            method: method.to_string(),
+            method: method.clone(),
             args: vec![],
         };
         return Some(RustExpr::FnCall {

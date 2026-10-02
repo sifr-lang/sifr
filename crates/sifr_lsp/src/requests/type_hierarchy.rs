@@ -54,9 +54,9 @@ fn hierarchy(session: &mut Session, params: Value, supertypes: bool) -> LspResul
         }
         let items = session.with_document_analysis(&uri, |snapshot, host, _file, _source| {
             if supertypes {
-                snapshot.type_hierarchy_supertypes(host, TypeHierarchyItemId(id.to_string()))
+                snapshot.type_hierarchy_supertypes(host, &TypeHierarchyItemId(id.to_string()))
             } else {
-                snapshot.type_hierarchy_subtypes(host, TypeHierarchyItemId(id.to_string()))
+                snapshot.type_hierarchy_subtypes(host, &TypeHierarchyItemId(id.to_string()))
             }
             .map_err(|error| LspError::internal(error.message))
             .map(AnalysisQueryResult::into_value)

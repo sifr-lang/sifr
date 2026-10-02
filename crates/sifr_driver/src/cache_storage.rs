@@ -243,12 +243,11 @@ pub fn inspect() -> io::Result<CacheInspection> {
                         || existing_lock(&family, key)
                             .as_ref()
                             .map_or(true, |file| file.try_lock().is_err());
-                    let bytes = match size(&path) {
-                        Ok(bytes) => bytes,
-                        Err(_) => {
-                            protected_roots.push(path);
-                            continue;
-                        }
+                    let bytes = if let Ok(bytes) = size(&path) {
+                        bytes
+                    } else {
+                        protected_roots.push(path);
+                        continue;
                     };
                     entries.push(CacheEntryInspection {
                         path,
@@ -294,12 +293,11 @@ pub fn inspect() -> io::Result<CacheInspection> {
                 let same_scope = artifact_owned_by(&path, &scope);
                 let protected =
                     !same_scope || lock.as_ref().map_or(true, |file| file.try_lock().is_err());
-                let bytes = match size(&path) {
-                    Ok(bytes) => bytes,
-                    Err(_) => {
-                        protected_roots.push(path);
-                        continue;
-                    }
+                let bytes = if let Ok(bytes) = size(&path) {
+                    bytes
+                } else {
+                    protected_roots.push(path);
+                    continue;
                 };
                 entries.push(CacheEntryInspection {
                     bytes,
@@ -334,12 +332,11 @@ pub fn inspect() -> io::Result<CacheInspection> {
             let lock = existing_lock(&families, key);
             let protected =
                 !same_scope || lock.as_ref().map_or(true, |file| file.try_lock().is_err());
-            let bytes = match size(&path) {
-                Ok(bytes) => bytes,
-                Err(_) => {
-                    protected_roots.push(path);
-                    continue;
-                }
+            let bytes = if let Ok(bytes) = size(&path) {
+                bytes
+            } else {
+                protected_roots.push(path);
+                continue;
             };
             entries.push(CacheEntryInspection {
                 bytes,
