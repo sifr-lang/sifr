@@ -90,6 +90,19 @@ the genuine E0496 helper control exits 101, whereas ordinary rustc exits 1.
 `attempts/9886393f45a6925ae51eced32720ce26b7f0be60/` retains both logs and
 completion records. The exact helper-error expectation is corrected; its prior
 first-case pass cannot qualify the changed test/runtime inputs.
+Candidate `13b09a17ffe1b88e6787cdb43e71adb66b13b7d9` passed all three named
+cases individually (7/21/29 assertions), the complete class (3/3, 57 assertions)
+and all four focused originals (48/141/48/24 assertions), totaling 10 executed
+cases and 375 assertions. Those command completion records and logs are retained
+under its `attempts/` directory. Self-review then found missing explicit ancestor
+workspace-manifest/config/toolchain slots and executable launcher bindings in the
+new consumer. These are added, including explicit absence dispositions. The
+obsolete package-name cfg override is removed; only the unique original dependency
+edge receives the compiler cfg. Original build/inventory/receipt companion records
+are explicitly versioned and closed, and actual original invocation/HIR/RA-source
+record unavailability is tested against intact caller-held originals, with exact
+bytes retained and restored. These changed inputs require fresh qualification;
+none of the prior candidate evidence is current acceptance.
 Source inspection
 and partial joins are ingredients, rather than completed feasibility acceptance.
 Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,

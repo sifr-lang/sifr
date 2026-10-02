@@ -41,7 +41,7 @@ class SourceBinderFeasibilityTests(unittest.TestCase):
         self.require(build["status"]==0 and any(m.get("reason")=="build-finished" and m["success"] for m in build["messages"]),"normal selected Cargo success")
         self.require(invocation["compiler_status"]==0 and "RUSTC_BOOTSTRAP" not in invocation["environment"],"actual dependency invocation succeeds without bootstrap")
         self.require(build["archive_sha256"]=="12df2e0110f65b775f769bb17ef989067a1d931b2eb822bd4346631eeada89f9","locked original registry archive")
-        self.require(len(raw["declaration_owners"])==len(originals["independent-inventory.json"])>1,"complete independently held compiler owner universe before selection")
+        self.require(len(raw["declaration_owners"])==len(originals["independent-inventory.json"]["owners"])>1,"complete independently held compiler owner universe before selection")
         self.require(stable(self.proof["declaration_owners"][0]["identity"]) in {stable(c["target"]) for c in originals["caller-raw.json"]["calls"]},"cross-capture relation uses identical crate/DefPathHash")
         self.require(self.proof["semantic_export"] is False,"feasibility never publishes a semantic adapter export")
 
@@ -81,6 +81,14 @@ class SourceBinderFeasibilityTests(unittest.TestCase):
         self.assertions+=1
         with self.assertRaises(builtin.Unsupported):bridge.verify(self.proof,self.receipt,None,builtin)
         self.require(bridge.verify(self.proof,self.receipt,self.authority,builtin)["semantic_export"] is False,"intact independent originals remain valid after all mutations")
+        for name in ("dependency-invocation.json","syn-raw.json","ra-source.json"):
+            path=self.capture_dir/name
+            retained=self.capture_dir/("retained-original-"+name)
+            original=path.read_bytes()
+            path.rename(retained)
+            try:self.reject(self.proof,"actual-unavailable-"+name)
+            finally:retained.rename(path)
+            self.require(path.read_bytes()==original,"actual original authority bytes retained after unavailable-input rejection")
         self.real_fixtures()
 
     def real_fixtures(self):

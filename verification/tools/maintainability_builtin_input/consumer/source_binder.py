@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 import sys
 import tarfile
+import shutil
 
 SCHEMA = "sifr-maintainability-source-binder-feasibility-v1"
 FRAGMENT = "sifr-maintainability-source-binder-v1"
@@ -57,6 +58,22 @@ def _originals(output, api):
 def _inputs(root, metadata, messages, invocations, identity, output, api):
     files = {str(root / "Cargo.lock"): api.digest((root / "Cargo.lock").read_bytes())}
     directories = {}
+    slots = {}
+    package_roots = {Path(p["manifest_path"]).parent for p in metadata["packages"]}
+    ancestors = {root,*root.parents}
+    for directory in package_roots:
+        for ancestor in (directory,*directory.parents):
+            manifest=ancestor/"Cargo.toml"
+            if manifest.is_file(): files[str(manifest)]=api.digest(manifest.read_bytes())
+    cargo_home=Path(os.environ.get("CARGO_HOME",str(Path.home()/".cargo")))
+    rustup_home=Path(os.environ.get("RUSTUP_HOME",str(Path.home()/".rustup")))
+    candidates={cargo_home/"config",cargo_home/"config.toml",rustup_home/"settings.toml"}
+    for ancestor in ancestors:
+        candidates.update(ancestor/name for name in (".cargo/config",".cargo/config.toml","rust-toolchain","rust-toolchain.toml"))
+    for p in candidates:
+        require(not p.exists() or p.is_file(), "unsupported original manifest/toolchain/config input", api)
+        slots[str(p)]=api.digest(p.read_bytes()) if p.is_file() else None
+        if p.is_file():files[str(p)]=slots[str(p)]
     packages = {p["id"]:p for p in metadata["packages"]}
     built = {m["package_id"] for m in messages if m.get("reason") == "compiler-artifact"}
     for package in built:
@@ -111,14 +128,21 @@ def _inputs(root, metadata, messages, invocations, identity, output, api):
             if name and Path(name).is_file():runtime_files.add(str(Path(name).resolve()))
     cargo=Path(api.run(["rustup","which","cargo"]).stdout.strip())
     runtime_files.add(str(cargo))
-    for binary in (Path(sys.executable),cargo):
+    launchers=[]; executable_selections={}
+    for command in ("cargo","rustc","rustup","git","ldd"):
+        selected=shutil.which(command)
+        require(selected is not None, "missing original executable launcher: "+command, api)
+        p=Path(selected).resolve();runtime_files.add(str(p))
+        executable_selections[command]={"path":selected,"resolved":str(p)}
+        if command != "ldd":launchers.append(p)
+    for binary in {Path(sys.executable),cargo,*launchers}:
         linked=api.run(["ldd",str(binary)]).stdout
         for line in linked.splitlines():
             for word in line.split():
                 if word.startswith("/") and Path(word).is_file():runtime_files.add(str(Path(word).resolve()))
     for name in runtime_files:files[name]=api.digest(Path(name).read_bytes())
     return {"source_candidate":api.run(["git","rev-parse","HEAD"],cwd=root).stdout.strip(),"host":list(os.uname()),"python_runtime":sys.version,"root":str(root), "tool":identity, "files":files, "directories":directories,
-            "build_environment":build_environment,
+            "optional_input_slots":slots,"executable_selections":executable_selections,"build_environment":build_environment,
             "parent_environment":{k:api.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}}
 
 
@@ -145,6 +169,7 @@ def archive_inventory(archive, package, api):
 
 def _validate_originals(originals, inputs, api):
     build = originals["original-build.json"]
+    require(build["schema"] == "sifr-maintainability-original-build-v1", "unknown original successful-build record", api)
     require(build["status"] == 0 and build["command"] == ["cargo","check","--locked","--lib","-p","sifr_codegen","--target","x86_64-unknown-linux-gnu","--message-format=json"], "missing successful unchanged selected Cargo control", api)
     messages = build["messages"]
     require(unique([m for m in messages if m.get("reason") == "build-finished"], "original build-finished event", api)["success"] is True, "failed original compiler graph", api)
@@ -164,9 +189,10 @@ def _validate_originals(originals, inputs, api):
 
 
 def inventory(raw):
-    return [{"owner":stable(o["identity"]), "parameters":[stable(p["identity"]) for p in o["parameters"]],
+    owners = [{"owner":stable(o["identity"]), "parameters":[stable(p["identity"]) for p in o["parameters"]],
              "binders":[b["id"] for b in o["binders"]], "occurrences":[l["hir"] for l in o["lifetime_occurrences"]],
              "traits":[t["hir"] for t in o["trait_constraints"]]} for o in raw["declaration_owners"]]
+    return {"schema":"sifr-maintainability-original-inventory-v1","owners":owners}
 
 
 def _project(originals, inputs, api):
@@ -244,9 +270,17 @@ def _verify(proof, receipt, authority, api):
     require(isinstance(authority,OriginalAuthority) and authority.seal is _AUTHORITY and _REGISTERED.get(id(authority)) is authority, "unauthenticated or replaced original bridge authority", api)
     inputs = json.loads(authority.inputs)
     require(api.run(["git","rev-parse","HEAD"],cwd=inputs["root"]).stdout.strip() == inputs["source_candidate"] and list(os.uname()) == inputs["host"] and sys.version == inputs["python_runtime"], "original candidate/host/Python runtime drift", api)
+    require(set(receipt) == {"schema","inputs","proof_digest","capture_status","semantic_export","timing_seconds"} and receipt["schema"] == "sifr-maintainability-source-binder-receipt-v1", "closed original bridge receipt schema mismatch", api)
     require(receipt["inputs"] == inputs and receipt["capture_status"] == 0 and receipt["semantic_export"] is False, "original bridge context/capture compiler failure", api)
     for name, sha in inputs["files"].items():
         require(Path(name).is_file() and api.digest(Path(name).read_bytes()) == sha, "original bridge input/source/artifact drift: " + name, api)
+    for command, expected in inputs["executable_selections"].items():
+        current=shutil.which(command)
+        require(current is not None and {"path":current,"resolved":str(Path(current).resolve())} == expected, "original executable selection drift: "+command, api)
+    for name, expected in inputs["optional_input_slots"].items():
+        path=Path(name)
+        actual=api.digest(path.read_bytes()) if path.is_file() else None
+        require(actual == expected and (not path.exists() or path.is_file()), "original toolchain/config presence or content drift: "+name, api)
     for name, inventory in inputs["directories"].items():
         root=Path(name)
         actual=sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and (not inventory["exclude_operational"] or not set(p.relative_to(root).parts).intersection({".git","target","__pycache__"})))
@@ -265,7 +299,13 @@ def _verify(proof, receipt, authority, api):
         value=proof[name]
         if "const" in rule:require(value == rule["const"], "original bridge schema variant mismatch: " + name, api)
         if rule.get("type")=="array":require(isinstance(value,list) and rule["minItems"] <= len(value) <= rule["maxItems"], "original bridge bounded inventory mismatch: " + name, api)
-        if rule.get("type")=="object":require(isinstance(value,dict), "original bridge schema type mismatch: " + name, api)
+        if rule.get("type")=="object":
+            require(isinstance(value,dict), "original bridge schema type mismatch: " + name, api)
+            if "properties" in rule:
+                require(set(value)==set(rule["required"]),"closed original inventory schema mismatch",api)
+                require(value["schema"]==rule["properties"]["schema"]["const"],"unknown original inventory schema",api)
+                bound=rule["properties"]["owners"]
+                require(isinstance(value["owners"],list) and bound["minItems"]<=len(value["owners"])<=bound["maxItems"],"bounded original inventory universe mismatch",api)
     originals = json.loads(authority.originals)
     expected = _project(originals,inputs,api)
     require(api.encoded(proof) == api.encoded(expected), "projected original bridge owner/binder/use/trait/inventory conflict", api)
@@ -282,6 +322,7 @@ def capture(output, target, identity, api):
         for name,sha in binding.items(): require(api.digest((output/name).read_bytes()) == sha,"cached original authority drift",api)
         originals=_originals(output,api)
         receipt=json.loads((output / "receipt.json").read_text())
+        require(receipt["inputs"]["tool"] == identity, "cached original helper/component/input identity drift", api)
         authority=_authority(originals,receipt["inputs"],api)
         proof=json.loads((output / "proof.json").read_text())
         verify(proof,receipt,authority,api)
@@ -309,7 +350,7 @@ def capture(output, target, identity, api):
         (output / name).write_bytes(api.encoded(invocation));selected.append(invocation)
     syn=unique([p for p in metadata["packages"] if p["name"]=="syn" and p["version"]=="3.0.5"],"selected original syn package",api)
     archive=unique(list(Path.home().glob(".cargo/registry/cache/*/syn-3.0.5.crate")),"original syn archive",api)
-    build={"command":command,"status":result.returncode,"messages":messages,"syn_package":syn,"archive":str(archive),"archive_sha256":api.digest(archive.read_bytes()),"metadata":metadata,"metadata_sha256":api.digest(api.encoded(metadata)),"owned_dependency_rebuild":rebuild}
+    build={"schema":"sifr-maintainability-original-build-v1","command":command,"status":result.returncode,"messages":messages,"syn_package":syn,"archive":str(archive),"archive_sha256":api.digest(archive.read_bytes()),"metadata":metadata,"metadata_sha256":api.digest(api.encoded(metadata)),"owned_dependency_rebuild":rebuild}
     build["archive_inventory"]=archive_inventory(archive,syn,api)
     (output / "original-build.json").write_bytes(api.encoded(build))
     before=_inputs(root,metadata,messages,selected,identity,output,api)
@@ -346,7 +387,7 @@ def capture(output, target, identity, api):
         inputs["files"][str(p)]=api.digest(p.read_bytes())
     originals=_originals(output,api)
     proof=_project(originals,inputs,api)
-    receipt={"inputs":inputs,"proof_digest":api.digest(api.encoded(proof)),"capture_status":0,"semantic_export":False,"timing_seconds":{"original_control":result.elapsed_seconds,"metadata":metadata_result.elapsed_seconds,"analysis":analysis_times,"resolver":resolver.elapsed_seconds,"total":time.monotonic()-start}}
+    receipt={"schema":"sifr-maintainability-source-binder-receipt-v1","inputs":inputs,"proof_digest":api.digest(api.encoded(proof)),"capture_status":0,"semantic_export":False,"timing_seconds":{"original_control":result.elapsed_seconds,"metadata":metadata_result.elapsed_seconds,"analysis":analysis_times,"resolver":resolver.elapsed_seconds,"total":time.monotonic()-start}}
     authority=_authority(originals,inputs,api)
     verify(proof,receipt,authority,api)
     (output/"proof.json").write_bytes(api.encoded(proof));(output/"receipt.json").write_bytes(api.encoded(receipt))
