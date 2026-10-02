@@ -44,6 +44,15 @@ Python runtime. Use that same runtime for capture and receipt checking; a bare
 system Python may differ from the full profile's interpreter and invalidate the
 measured identity. Select `SIFR_PERFORMANCE_HOST_KIND=managed-linux` and a working
 GNU Time executable through `SIFR_PERFORMANCE_TIME` for managed measurements.
+Use a session-owned verifier environment outside the benchmark checkouts, or
+ensure both checkouts expose identical Python environments to their fixtures.
+For example, set `UV_PROJECT_ENVIRONMENT=/absolute/owned/verification-env` for
+the commands below and the final cloud profile. Nested editor fixtures discover
+ancestor uv projects independently of the runner's `PATH`; a verifier `.venv`
+present in only one checkout changes the editor workload. Cloud identity binds
+the runner interpreter bytes and fixture ancestor uv files, local environment
+configuration and interpreter bytes (including absence). Mismatched or changed
+inputs reject the comparison before measurement or receipt acceptance.
 
 ```bash
 uv run --project verification --locked python \

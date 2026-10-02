@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import compiler_lanes
@@ -20,11 +21,40 @@ ROOT = Path(__file__).resolve().parents[3]
 MANIFEST = Path(__file__).parent / "data/benchmark_manifest.json"
 
 
+def python_context(repo: Path, cases: list) -> dict:
+    """Bind interpreter bytes and ambient uv inputs visible to editor fixtures.
+
+    Repository-local verifier environments can also be discovered by the LSP
+    through fixture ancestry. Equal Python version labels do not make an absent
+    environment comparable with an installed one.
+    """
+    inputs = {}
+    for case in cases:
+        source = repo / case.raw["source_path"]
+        for ancestor in (source.parent, *source.parent.parents):
+            if not ancestor.joinpath("pyproject.toml").is_file():
+                continue
+            for relative in ("pyproject.toml", "uv.lock", ".venv/pyvenv.cfg",
+                             ".venv/bin/python", ".venv/Scripts/python.exe"):
+                path = ancestor / relative
+                name = os.path.relpath(path, repo)
+                if path.is_file():
+                    inputs[name] = compiler_lanes.digest(path)
+                elif path.exists() or path.is_symlink():
+                    raise BenchmarkError(f"invalid ambient Python input: {path}")
+                else:
+                    inputs[name] = None
+    return {"interpreter_sha256": compiler_lanes.digest(Path(sys.executable)),
+            "ambient_inputs": inputs}
+
+
 def measured_identity() -> dict:
     identity = reference_identity(ROOT, MANIFEST, "latency")
     identity["execution"]["cloud_runtime_environment"] = {
         key: os.environ.get(key) for key in ("RAYON_NUM_THREADS", "OMP_NUM_THREADS")
     }
+    identity["execution"]["cloud_python_context"] = python_context(
+        ROOT, validate_manifest(load_manifest(MANIFEST)))
     return identity
 
 

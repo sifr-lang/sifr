@@ -62,6 +62,8 @@ def configuration_mismatches(expected: dict, actual: dict) -> list[str]:
     mismatches = comparison_mismatches(expected, actual)
     if expected["execution"]["cloud_runtime_environment"] != actual["execution"]["cloud_runtime_environment"]:
         mismatches.append("execution.cloud_runtime_environment")
+    if expected["execution"]["cloud_python_context"] != actual["execution"]["cloud_python_context"]:
+        mismatches.append("execution.cloud_python_context")
     return mismatches
 
 
