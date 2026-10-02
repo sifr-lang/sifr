@@ -10,6 +10,177 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1petb supported Dynamic repair and H03a1pe delivery receipt (2026-10-02)
+
+**Current controlling state: H03a1petb and H03a1pe closed by the merged combined
+implementation and this separate record.** The historical stopped donors, failed
+qualifications, source-binder stops and prior adjudications below remain intact.
+The separate H03a1 Linux/Windows full-closure adapter is next; this receipt does
+not qualify that adapter, metrics, Windows capture, V01 or the whole phase.
+
+[Implementation PR #4222](https://github.com/sifr-lang/sifr/pull/4222) merged as
+`06dd8ed4597430445c6631c3891ec879e219692a` from exact final candidate
+`c83f47a3e6eb9410ea3c2395fd7a281604025304`, reviewed against
+`5361aed5204d35fa4c68510f924f66704e8cc268`. The entire partial #4217 repair and its
+#4213 donor extension were carried on the fresh owned branch; neither historical
+draft was merged. The merged implementation blobs equal the qualified candidate
+on all 21 assigned changed paths. Main's intervening SQL-only changes at
+`7118c9da91019d96247b0baaf3c11c867465d508` have no overlap with these paths or the
+actual captured source/configuration/tool/validation inputs; the recorded base
+comparison and final input audit establish that boundary.
+
+### Qualified mechanism and source authority
+
+The supported Dynamic implementation preserves ordered Trait/Projection/AutoTrait
+predicates, explicit empty and genuine nonempty binders, bound-region depths,
+definition identity, actual associated-item declaring trait and authenticated
+closure, ordered lifetime/type/const arguments, omitted existential Self,
+recursive projection terms, auto-only principal absence and object regions
+separate from enclosing reference regions. All original single/two-lifetime,
+outlives, static/parameter, generated-method/reference binder, parent/method-own,
+Hash/Hasher/Sized and alpha/source assertions remain.
+
+Body erasure observations bind the original compiler capture, producer/stage,
+owner/invocation, exact dependency or call/adjustment ordinal and nested path
+across body type dependencies, call arguments/results/receivers and adjustment
+targets. Declaration erasure, lifetime-sensitive and ownership-equivalence
+consumers and observation deletion remain rejected or unresolved. Independent
+`inventory::capture` runs before AST projection; every mapping/join/publication
+validates against the intact caller-held original authority. Integrity-redigested
+semantic mutations retain that original authority, with separate integrity and
+replacement-authority rejection checks. Strict schemas retain no compatibility,
+fallback or default missing-fact path.
+
+Authentic include correspondence uses the pinned public RA include-aware original
+file, macro token descent and exact `to_def` ADT correspondence. Both complete
+original token streams and exact ordinary-comment byte/index/order authority are
+retained. The selected Cargo library root uniquely determines the semantic crate
+and cfg; block-local ADTs bind the public containing function and exact original
+source/range/tokens. All three required live local Default owners remain present.
+Six-field Debug record/tuple/enum aggregates and unit/fixed-arity shapes use their
+actual formatter callees, callable catalog, dependencies and trait-object facts.
+
+Only the prospectively adjudicated new real `ObjectShapes::bound` HRTB is isolated
+as a source-authority rejection. Its actual original compiler capture succeeds
+with genuine nonempty Trait/Projection binders and `ReBound` depth/origin; pinned
+RA specifically rejects the unresolved declaration lifetime `'b`. The compiler-only
+raw/source/inventory/capture/report artifacts have no successful combined receipt,
+common join or accepted publication. No required original owner/context is excluded,
+no declaration binder is erased, and no body capability substitutes for source
+correspondence. This is not a global producer impossibility claim. A new required
+unsupported source binder still invokes the preserved H03a1petbs stop rule.
+
+### Exact acceptance and review
+
+Every original case ran individually using its unchanged canonical selection,
+`PYTHONPATH=scripts python3 -m unittest -f
+maintainability_builtin_input_tests.<Class>.<case>`, then every complete class.
+Actual final results are **26 selected tests and 3,854 assertions**: thirteen
+individuals / 1,927 assertions and thirteen class-selected tests / 1,927 assertions.
+
+| Complete class | Tests | Assertions | Result |
+| --- | ---: | ---: | --- |
+| BuiltinExtensionTests | 4 | 1,518 | passed |
+| BuiltinCapabilityTests | 5 | 276 | passed |
+| BuiltinInventoryTests | 4 | 133 | passed |
+
+The exact candidate's fresh full Linux context joins and independent unchanged-path
+repeat comparisons include all nine resolved builtin kinds, actual locked selected
+`--lib`/`--tests` preparation, original cfg/features with `rust_analyzer` disabled,
+full source/includes/dependency closures and pinned LeetCode gitlink
+`cbe3a55465159ae9467a7a25cc89e0066ed84db2`.
+
+| Context | Declarations | Invocations | Typed sites | Joined methods |
+| --- | ---: | ---: | ---: | ---: |
+| codegen production | 1,200 | 556 | 2,047 | 507 |
+| codegen test | 1,234 | 573 | 2,063 | 519 |
+| lowering production | 460 | 213 | 522 | 187 |
+| lowering test | 462 | 214 | 527 | 188 |
+
+All four repeated captures compare complete compiler semantic facts and complete
+RA/source correspondence. Original context omission, freshness/input drift,
+test-only and relocation assertions pass. The former failure's **15 Debug owners
+and 68 Dynamic facts** authentically join; the candidate-keyed sealed production
+summary records capture digest
+`20a1fd2e9366bd2aed09a2a9c58eee79d7690239a8dfe82d65925331152a4d45`.
+
+The helper-only actual locked build uses
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked
+--manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Bootstrap never enters analyzed packages. Helper formatting, Python syntax,
+registered documentation/mutation checks, file-size guardrail, allowed-path scope,
+whitespace and clean-candidate checks pass. Named assertions run while compatible
+metadata and prepared evidence remain warm; cache hits are not substitutes for
+assertion execution. The authorized intermediate exception skips broad create-PR
+and merge profiles; full integration qualification retains its separate owner.
+
+The first completed scoped Opus 5.5 review of historical candidate `830ea56...`
+was SATISFIED with no blocking finding. The operator then audited its missing-source
+selector suggestion against the already binding no-default-missing-facts contract
+and restored the original mandatory selection precondition at `inventory::capture`.
+The final candidate rejects missing/empty `SIFR_BUILTIN_SOURCE_SUFFIX` before any
+raw or inventory publication. An actual well-typed compiler control plus both
+specific diagnostic/publication rejections retain all 19 original component-drift
+assertions and add five. All thirteen individuals and all three classes were
+repeated for the changed producer/tool/test identity. The **second actual complete
+candidate Opus 5.5 review is SATISFIED, blocking findings: none**,
+with the atomic response at `/data/sifr-h03a1petb-selector-repair-evidence-20261002/candidates/c83f47a3e6eb9410ea3c2395fd7a281604025304/opus-request.b3LX7I/response.md`; SHA-256 `bf724ac8f0768397dbd279710d69bc29c67a922ab0e6fbfcb352cf9e9295c7e1`.
+Failed/empty requests do not count as completed reviews.
+
+### Retained evidence, recovery and deferred work
+
+Final candidate-keyed evidence is at
+`/data/sifr-h03a1petb-selector-repair-evidence-20261002/candidates/`
+`c83f47a3e6eb9410ea3c2395fd7a281604025304/`: exact commands, case/class logs and
+actual counts, final source/configuration/tool/input consistency audit, focused
+checks, sealed 15/68 join proof and scoped review/completion. Original raw, source,
+compiler capture, independent inventory and combined common/join receipts remain
+in their original remote paths. Timing/cache reports, semantic mutation failures,
+compiler-only rejection artifacts and interrupted evidence are retained separately
+from any accepted export.
+
+The host outages and interrupted original request `08IlPr` remain unsuccessful
+history. Its log/response were empty after reboot, with no live request; the fresh
+failed-request retry was a distinct request. Reconciliation found only generated
+owned target artifacts absent; it did not establish who removed them. Original
+sources/pins/configuration/inputs remained intact. After exclusive ownership,
+resource/process/handle checks, an actual same-pinned locked build regenerated real
+build receipts. Historical `830ea56` executable/runtime hashes matched, but lost
+metadata and then the selector repair required the affected exact qualification.
+Historical 26/3,844 passes remain historical, not final candidate acceptance.
+No other owner's target/donor/worktree was cleaned or modified. LAN-only execution,
+12 GiB disk/8 GiB available-memory preflight, at most two jobs and one sequential
+producer/server were retained.
+
+The final immutable evidence collection is copied and digest-verified under
+`/Users/yaseralnajjar/.codex/sifr-architecture-evidence/`
+`h03a1petb-publication-20261001.nZsutJ/`; final archive SHA-256
+`03718f5f3e6b92dd1d5853174d48530a46b335c830913e206ad457e170084925`, manifest SHA-256 `b86a4a7cace2f30e6f39c6a844f1d5c8d01241c33af8b77d42a25ec1b04c3ddf` and durable
+handoff SHA-256 `5e5ab46dda0d9dde32d7dc3408a71649684f576965af1b423d4af1b68b9487d2`. Archive copies preserve evidence; they do
+not claim local admission or a full adapter export. Earlier invalid incomplete
+archives and original historical qualified archives remain preserved.
+
+Separate unstarted follow-ups from the first review remain suggestions/pre-existing
+work: use the consumer's explicit `Unsupported` diagnostic instead of incidental
+`StopIteration` for missing expected invocation lookup; separately scope the
+pre-existing same-function/same-local-ADT key collision across distinct impls
+(current duplicates reject closed); optionally put the sealed 15/68 live Debug
+proof in a named assertion; optionally pass the validated selector into
+`typed::selected_source` rather than reading the environment again. The mandatory
+entry guard already makes the latter safe. None expands this item's accepted contract or changes
+producer pins, consumers, compiler, dependencies or adapter authority.
+
+This separate canonical-only receipt uses relevant documentation/mutation,
+file-size, scope/history/link, whitespace, clean-tree checks and scoped self-review.
+It needs no repeated implementation gate or external review. H03a1petb/H03a1pe
+are closed; **next separate assignment is H03a1 full Linux/Windows structural union,
+external closure and build-input adapter**, then metrics. H03a1pera/perp stay
+deactivated; H03ep -> exact expanded V01 approval/full governed capture -> H03eq
+is preserved, with no 65-case capture authorized. H01e's independent automatic-review
+restriction/H01i, other owners, D01/Q01 and whole-phase closure remain unchanged.
+**Blocker: none. This owner starts no next batch.**
+
+
 ## H03a1petbs supported source-binder boundary adjudication (2026-10-01)
 
 **Current controlling state: H03a1petbs documentation adjudication closed;
@@ -2629,9 +2800,9 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pets | Merged #4214 stop and approved H03a1peo #4211/#4212; **closed**, scope #4215 and delivery receipt above. | Canonical-only trait-object scope adjudication; no implementation or qualification pass. |
 | H03a1petbs | Merged source-binder stop #4218/#4219 and user-authorized Astra advisor; **closed**, scope #4220 and delivery receipt above. | Canonical-only prospective supported source-binder boundary; exact new HRTB source-authority rejection, all original acceptance retained. |
 | H03a1pet | **Stopped and unaccepted**, #4217 and source-binder stop preserved; prospective continuation is H03a1petb. | Partial compiler facts are unsuccessful qualification evidence; do not merge this historical draft. |
-| H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; retain accepted H03a1pr/H03a1p and closed H03a1pes; **ready after this documentation delivery receipt merges**. | One complete carried supported Dynamic repair plus all original H03a1pe qualification, scoped review, merge and separate receipt; no current-main HRTB admission inferred. |
-| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **open and unaccepted**, failed #4213 and H03a1pet draft preserved. | H03a1petb must complete the carried combined extension and full original qualification/review/merge under H03a1petbs before H03a1 adapter resumes. |
-| H03a1 | H03a0, repaired H03a1p and H03a1pe merged; **open, dependency-blocked** by H03a1pe. | Verification-only semantic adapter and admitted input receipts under the contract below; no metric baseline or compiler behavior change. |
+| H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; **closed**, implementation #4222 at `06dd8ed4597430445c6631c3891ec879e219692a` and separate controlling receipt above. | Complete carried supported Dynamic repair and all original H03a1pe qualification: 26 selected tests/3,854 assertions, four fresh Linux joins/repeats, scoped Opus 5.5 SATISFIED; exact new source HRTB remains a compiler-success/RA-authority negative. |
+| H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
+| H03a1 | H03a0, repaired H03a1p and fully qualified H03a1pe #4222/controlling receipt merged; **open, ready for separate assignment**. | Separate Linux/Windows full structural union, external closure and build-input semantic adapter under the contract below; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
