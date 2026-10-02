@@ -198,6 +198,8 @@ make_mock_sysroot_root() {
   mkdir -p \
     "${root}/.cargo" \
     "${root}/crates/sifr_runtime/src" \
+    "${root}/crates/sifr_sql_runtime/src" \
+    "${root}/crates/sifr_sql_sqlite_runtime/src" \
     "${root}/crates/sifr_structural_identity/src" \
     "${root}/crates/sifr_stdlib/src" \
     "${root}/stdlib/sifr" \
@@ -207,6 +209,8 @@ make_mock_sysroot_root() {
 [workspace]
 members = [
   "crates/sifr_runtime",
+  "crates/sifr_sql_runtime",
+  "crates/sifr_sql_sqlite_runtime",
   "crates/sifr_structural_identity",
   "crates/sifr_stdlib",
 ]
@@ -234,6 +238,16 @@ version = "0.0.0-fixture"
 edition = "2024"
 EOF
   printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/sifr_runtime/src/lib.rs"
+  local sql_crate
+  for sql_crate in sifr_sql_runtime sifr_sql_sqlite_runtime; do
+    cat >"${root}/crates/${sql_crate}/Cargo.toml" <<EOF
+[package]
+name = "${sql_crate}"
+version = "0.0.0-fixture"
+edition = "2024"
+EOF
+    printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/${sql_crate}/src/lib.rs"
+  done
   cat >"${root}/crates/sifr_structural_identity/Cargo.toml" <<'EOF'
 [package]
 name = "sifr_structural_identity"

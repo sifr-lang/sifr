@@ -72,7 +72,13 @@ def validate(payload: Any) -> None:
             )
         ),
         "component": (REPO_ROOT / "crates/sifr_compiler_component/src/protocol.rs").read_text(encoding="utf-8"),
-        "dispatch": (REPO_ROOT / "crates/sifr_driver/src/build/sql_profiles.rs").read_text(encoding="utf-8"),
+        "dispatch": "\n".join(
+            (REPO_ROOT / path).read_text(encoding="utf-8")
+            for path in (
+                "crates/sifr_driver/src/build/sql_profiles.rs",
+                "crates/sifr_compiler_services/src/sql_editor.rs",
+            )
+        ),
         "schema_component": (REPO_ROOT / "crates/sifr_sql_contract/src/component.rs").read_text(encoding="utf-8"),
     }
     required_tokens = {

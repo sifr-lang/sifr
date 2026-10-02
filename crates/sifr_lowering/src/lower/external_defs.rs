@@ -70,6 +70,27 @@ pub trait ExternalProvider: std::fmt::Debug + Send + Sync {
     fn prepare(&self, modules: &[String]) -> Result<ExternalDefs, String>;
 }
 
+/// Outer frontend processor for compiler-owned methods on normally typed values.
+/// Lowering only records requests or reads prepared expressions. Component
+/// transport runs in `prepare_pending`, invoked exclusively by the frontend.
+pub trait TypedMethodProcessor: std::fmt::Debug + Send + Sync {
+    fn handles(&self, receiver: &Type, method: &str) -> bool;
+    fn compile(&self, request: TypedMethodRequest<'_>) -> Result<HirExpr, String>;
+    /// Resolve new requests at the outer boundary; report whether lowering must retry.
+    fn prepare_pending(&self) -> bool;
+}
+
+#[derive(Debug)]
+pub struct TypedMethodRequest<'a> {
+    pub module: &'a str,
+    pub owner: &'a str,
+    pub object: HirExpr,
+    pub method: &'a str,
+    pub args: Vec<HirExpr>,
+    pub keywords: Vec<Option<String>>,
+    pub range: ruff_text_size::TextRange,
+}
+
 /// External module definitions that can be imported.
 #[derive(Debug, Clone, Default)]
 pub struct ExternalDefs {
@@ -211,6 +232,7 @@ pub struct ExternalDefs {
     >,
     /// Driver-owned immutable semantic provider; never invoked by lowering.
     pub provider: Option<std::sync::Arc<dyn ExternalProvider>>,
+    pub typed_method_processor: Option<std::sync::Arc<dyn TypedMethodProcessor>>,
 }
 
 impl ExternalDefs {
@@ -387,6 +409,9 @@ impl ExternalDefs {
                 .copy_overlay_from(methods);
         }
         prepared.provider.clone_from(&self.provider);
+        prepared
+            .typed_method_processor
+            .clone_from(&self.typed_method_processor);
         Ok(prepared)
     }
 

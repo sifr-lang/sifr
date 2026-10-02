@@ -224,6 +224,26 @@ fn component_codec_contract(
     database_type: &DatabaseType,
     sifr_type: &SifrType,
 ) -> Result<CodecContract, ProviderAnalysisError> {
+    let payload_type = match database_type {
+        DatabaseType::Custom { .. } => match sifr_type {
+            SifrType::Union { members } if members.contains(&SifrType::None) => {
+                let mut members = members.clone();
+                members.remove(&SifrType::None);
+                if members.len() == 1 {
+                    members
+                        .into_iter()
+                        .next()
+                        .ok_or(ProviderAnalysisError::InvalidDialectSemantics)?
+                } else {
+                    SifrType::Union { members }
+                }
+            }
+            ty => ty.clone(),
+        },
+        _ => crate::canonical_read_type(database_type)
+            .map_err(|_| ProviderAnalysisError::InvalidDialectSemantics)?,
+    };
+    let sifr_type = &payload_type;
     let encoded = serde_json::to_vec(&(identity, database_type, sifr_type))
         .map_err(|_| ProviderAnalysisError::InvalidDialectSemantics)?;
     let digest = Sha256::digest(encoded);

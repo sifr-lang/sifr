@@ -1,6 +1,7 @@
 //! Read-only editor compilation and saved-check reuse.
 mod saved_checks;
 mod sql_application_queries;
+pub(crate) mod sql_typed_methods;
 pub use sql_application_queries::compile_application_queries;
 #[cfg(test)]
 mod tests;

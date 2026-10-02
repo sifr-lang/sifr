@@ -38,6 +38,7 @@
         {"name": "legal_failure_method_names", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "python_read_only_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "runtime_observability_boundary", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "sql_native_application", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "sysroot_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "validation_suites", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
@@ -212,6 +213,7 @@
         {"name": "postgresql_components", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "postgresql_properties", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "postgresql_regressions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "view_normalization", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "merge"}
       ],
       "features": []

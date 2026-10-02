@@ -154,6 +154,20 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
             name,
             ..
         } => {
+            if identity.as_deref() == Some("sifr.sql.BoundQuery") && type_args.len() == 5 {
+                return RustType::Generic {
+                    base: "::sifr_sql_sqlite_runtime::application::BoundQuery".into(),
+                    params: vec![sifr_type_to_rust_type(&type_args[1])],
+                };
+            }
+            if identity.as_deref() == Some("sifr.sql.Pool") {
+                return RustType::Named(
+                    "::sifr_sql_sqlite_runtime::application::VerifiedPool".into(),
+                );
+            }
+            if identity.as_deref() == Some("sifr.sql.SqlError") {
+                return RustType::Named("::sifr_sql_sqlite_runtime::application::SqlError".into());
+            }
             if identity.as_deref() == Some("sifr.meta.NoContext") {
                 return RustType::Named(
                     "::sifr_runtime::interop::structural::NoContext".to_string(),

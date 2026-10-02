@@ -81,6 +81,7 @@ impl SqliteParameterSlots {
 pub struct SqliteAnalyzer<'a> {
     parser: &'a SqliteParser,
     catalog: SqliteCatalog,
+    parameter_inputs: BTreeMap<u32, (DatabaseType, Nullability)>,
 }
 
 impl<'a> SqliteAnalyzer<'a> {
@@ -157,7 +158,33 @@ impl<'a> SqliteAnalyzer<'a> {
         Ok(Self {
             parser,
             catalog: SqliteCatalog { relations, codecs },
+            parameter_inputs: BTreeMap::new(),
         })
+    }
+
+    pub fn with_parameter_inputs(
+        mut self,
+        inputs: BTreeMap<u32, (DatabaseType, Nullability)>,
+    ) -> Result<Self, SqliteDiagnostic> {
+        let types = self
+            .catalog
+            .relations
+            .values()
+            .flat_map(|relation| {
+                relation
+                    .columns
+                    .values()
+                    .map(|column| column.database_type.clone())
+            })
+            .chain(std::iter::once(default_parameter_type()))
+            .chain(inputs.values().map(|(ty, _)| ty.clone()))
+            .collect::<Vec<_>>();
+        self.catalog.codecs = sqlite_codec_registry_for_types(self.parser.series(), types)
+            .map_err(|error| {
+                diagnostic(SqliteDiagnosticCode::ProviderContract, error.to_string())
+            })?;
+        self.parameter_inputs = inputs;
+        Ok(self)
     }
 
     pub fn analyze_query(&self, source: &str) -> Result<ProviderAnalysis, SqliteDiagnostic> {
@@ -236,7 +263,7 @@ impl<'a> SqliteAnalyzer<'a> {
             .chain(query.having.iter())
             .chain(&query.order_by)
         {
-            Self::account_expression(
+            self.account_expression(
                 expression,
                 &scope,
                 &mut accessed_objects,
@@ -262,7 +289,23 @@ impl<'a> SqliteAnalyzer<'a> {
         if !query.group_by.is_empty() || query.having.is_some() {
             required_capabilities.insert("sql.query.aggregate".to_string());
         }
-        let cardinality = if query.limit == Some(1) {
+        let cardinality = if !query.compound
+            && query.relations.is_empty()
+            && query.joins.is_empty()
+            && query.common_tables.is_empty()
+        {
+            if query.limit == Some(0) || query.offset.is_some_and(|offset| offset > 0) {
+                Cardinality::ZERO
+            } else if query.predicate.is_none()
+                && query.having.is_none()
+                && query.group_by.is_empty()
+                && query.row_bounds_known
+            {
+                Cardinality::EXACTLY_ONE
+            } else {
+                Cardinality::AT_MOST_ONE
+            }
+        } else if query.limit == Some(1) {
             Cardinality::AT_MOST_ONE
         } else {
             Cardinality::MANY
@@ -305,7 +348,7 @@ impl<'a> SqliteAnalyzer<'a> {
         }
         let mut parameter_types = SqliteParameterSlots::default();
         for expression in &write.expressions {
-            Self::account_expression(
+            self.account_expression(
                 expression,
                 &[relation],
                 &mut accessed_objects,
@@ -389,9 +432,21 @@ impl<'a> SqliteAnalyzer<'a> {
                 accessed.insert(column.identity.clone());
             }
             expression => {
-                Self::account_expression(expression, scope, accessed, parameters)?;
-                let database_type = expression_type(expression, scope)?;
-                let nullability = Nullability::Nullable;
+                self.account_expression(expression, scope, accessed, parameters)?;
+                let typed_input = match expression {
+                    SqliteExpression::Parameter { marker } => marker
+                        .strip_prefix('?')
+                        .and_then(|number| number.parse::<u32>().ok())
+                        .and_then(|index| self.parameter_inputs.get(&index)),
+                    _ => None,
+                };
+                let database_type = if let Some((ty, _)) = typed_input {
+                    ty.clone()
+                } else {
+                    expression_type(expression, scope)?
+                };
+                let nullability =
+                    typed_input.map_or(Nullability::Nullable, |(_, nullability)| *nullability);
                 let codec = self.codec(&database_type)?;
                 let sifr_type = canonical_read_type_with_nullability_in(
                     &database_type,
@@ -418,6 +473,7 @@ impl<'a> SqliteAnalyzer<'a> {
     }
 
     fn account_expression(
+        &self,
         expression: &SqliteExpression,
         scope: &[&SqliteRelation],
         accessed: &mut BTreeSet<ObjectId>,
@@ -428,16 +484,22 @@ impl<'a> SqliteAnalyzer<'a> {
                 accessed.insert(Self::resolve_column(scope, path)?.identity.clone());
             }
             SqliteExpression::Parameter { marker } => {
-                parameters.add(marker, default_parameter_type())?;
+                let index = marker
+                    .strip_prefix('?')
+                    .and_then(|number| number.parse::<u32>().ok());
+                let ty = index
+                    .and_then(|index| self.parameter_inputs.get(&index))
+                    .map_or_else(default_parameter_type, |(ty, _)| ty.clone());
+                parameters.add(marker, ty)?;
             }
             SqliteExpression::Function { arguments, .. } => {
                 for argument in arguments {
-                    Self::account_expression(argument, scope, accessed, parameters)?;
+                    self.account_expression(argument, scope, accessed, parameters)?;
                 }
             }
             SqliteExpression::Binary { left, right, .. } => {
-                Self::account_expression(left, scope, accessed, parameters)?;
-                Self::account_expression(right, scope, accessed, parameters)?;
+                self.account_expression(left, scope, accessed, parameters)?;
+                self.account_expression(right, scope, accessed, parameters)?;
             }
             SqliteExpression::Raw {
                 columns,
@@ -470,16 +532,26 @@ impl<'a> SqliteAnalyzer<'a> {
             .into_iter()
             .enumerate()
             .map(|(slot, database_type)| {
+                let slot = u32::try_from(slot).map_err(|_| {
+                    diagnostic(
+                        SqliteDiagnosticCode::TypeMismatch,
+                        "too many SQLite parameters",
+                    )
+                })?;
+                let input_slot = slot.checked_add(1).ok_or_else(|| {
+                    diagnostic(
+                        SqliteDiagnosticCode::TypeMismatch,
+                        "too many SQLite parameters",
+                    )
+                })?;
                 Ok(ProviderParameter {
-                    slot: u32::try_from(slot).map_err(|_| {
-                        diagnostic(
-                            SqliteDiagnosticCode::TypeMismatch,
-                            "too many SQLite parameters",
-                        )
-                    })?,
+                    slot,
                     codec: self.codec(&database_type)?,
                     database_type,
-                    nullability: Nullability::Nullable,
+                    nullability: self
+                        .parameter_inputs
+                        .get(&input_slot)
+                        .map_or(Nullability::Nullable, |(_, nullability)| *nullability),
                 })
             })
             .collect()
