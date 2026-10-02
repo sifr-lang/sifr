@@ -72,10 +72,18 @@ inventory dispositions. Their raw captures/logs remain outside Git. A third prel
 `attempts/d9b1fd8c8bea912cb0aa7b9b55c063ac56e574a1/hbf-original.log`, stops before
 executing cases on an exact dependency cfg mismatch: four RA metadata feature
 atoms absent from the actual invocation, plus RA's intrinsic `true` atom. The
-pinned public CfgDiff now removes metadata features absent from actual compiler
-cfg; the pinned CfgOptions::default intrinsic boolean receives a separate explicit
-disposition, while all ordinary cfg atoms must match exactly. This attempt is
-failed/unaccepted and retains its raw originals and 283.912-second unittest log.
+pinned CfgOptions::default intrinsic boolean receives a separate explicit
+disposition, while all ordinary cfg atoms must match exactly. The next candidate
+`1da862f7ad0bb8c977d4f73dd9a35f050ddcbe7a` still stopped before executing cases
+on the four metadata feature atoms (285.828 seconds); both attempts are unaccepted.
+Inspection proved Cargo graph construction reinserts active metadata features after
+CfgOverrides. The bounded companion now configures the original dependency edge
+through pinned public crate graph input APIs. It preserves every root, dependency,
+environment, extra/workspace input and proc-macro identity, uses only the exact
+captured original dependency cfg, and stops on any ambiguity or graph drift.
+The original checksum-authenticated registry archive is compared member by member
+to the actual extracted source inventory before capture and each admission.
+Loaded Python source/cache/native-module files and runtime inputs are also bound.
 Source inspection
 and partial joins are ingredients, rather than completed feasibility acceptance.
 Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,

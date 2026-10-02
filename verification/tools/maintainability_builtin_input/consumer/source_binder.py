@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import time
 import sys
+import tarfile
 
 SCHEMA = "sifr-maintainability-source-binder-feasibility-v1"
 FRAGMENT = "sifr-maintainability-source-binder-v1"
@@ -105,8 +106,9 @@ def _inputs(root, metadata, messages, invocations, identity, output, api):
         if p.is_file(): files[str(p)] = api.digest(p.read_bytes())
     runtime_files={str(Path(sys.executable).resolve())}
     for module in tuple(sys.modules.values()):
-        name=getattr(module,"__file__",None)
-        if name and Path(name).is_file():runtime_files.add(str(Path(name).resolve()))
+        for attribute in ("__file__","__cached__"):
+            name=getattr(module,attribute,None)
+            if name and Path(name).is_file():runtime_files.add(str(Path(name).resolve()))
     cargo=Path(api.run(["rustup","which","cargo"]).stdout.strip())
     runtime_files.add(str(cargo))
     for binary in (Path(sys.executable),cargo):
@@ -120,6 +122,27 @@ def _inputs(root, metadata, messages, invocations, identity, output, api):
             "parent_environment":{k:api.digest(v.encode()) for k,v in os.environ.items() if not k.startswith("SIFR_BUILTIN_")}}
 
 
+def archive_inventory(archive, package, api):
+    archive=Path(archive)
+    require(api.digest(archive.read_bytes()) == "12df2e0110f65b775f769bb17ef989067a1d931b2eb822bd4346631eeada89f9", "original archive authority conflict", api)
+    root=Path(package["manifest_path"]).parent
+    inventory={}
+    with tarfile.open(archive,"r:gz") as source:
+        for member in source.getmembers():
+            if member.isdir(): continue
+            require(member.isfile() and member.name.startswith("syn-3.0.5/"), "unsupported original archive member", api)
+            relative=member.name.removeprefix("syn-3.0.5/")
+            require(relative not in inventory and ".." not in Path(relative).parts, "ambiguous original archive member", api)
+            content=source.extractfile(member)
+            require(content is not None, "missing original archive member bytes", api)
+            inventory[relative]=api.digest(content.read())
+            p=root/relative
+            require(p.is_file() and api.digest(p.read_bytes())==inventory[relative], "original archive/extracted source conflict: "+relative, api)
+    extras=sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and str(p.relative_to(root)) not in inventory)
+    require(set(extras) <= {".cargo-ok",".cargo-checksum.json"}, "unaccounted original extracted source files", api)
+    return {"files":inventory,"cargo_operational_files":extras}
+
+
 def _validate_originals(originals, inputs, api):
     build = originals["original-build.json"]
     require(build["status"] == 0 and build["command"] == ["cargo","check","--locked","--lib","-p","sifr_codegen","--target","x86_64-unknown-linux-gnu","--message-format=json"], "missing successful unchanged selected Cargo control", api)
@@ -131,6 +154,7 @@ def _validate_originals(originals, inputs, api):
     artifact = unique([m for m in messages if m.get("reason") == "compiler-artifact" and m["target"]["name"] == "syn" and extern in m["filenames"]], "actual caller original syn artifact", api)
     require(artifact["package_id"] == build["syn_package"]["id"], "dependency package/artifact mismatch", api)
     require(build["syn_package"]["source"] == "registry+https://github.com/rust-lang/crates.io-index" and build["archive_sha256"] == "12df2e0110f65b775f769bb17ef989067a1d931b2eb822bd4346631eeada89f9", "original locked dependency archive mismatch", api)
+    require(build["archive_inventory"] == archive_inventory(build["archive"],build["syn_package"],api), "original archive inventory drift", api)
     raw = originals["syn-raw.json"]; caller = originals["caller-raw.json"]
     for value in (raw, caller):
         require(value["schema"] == "sifr-maintainability-source-binder-capture-v1" and value["stage"] == "rustc-after-analysis" and value["semantic_export"] is False and value["fragment"] == FRAGMENT, "missing original local HIR capture/stage", api)
@@ -286,6 +310,7 @@ def capture(output, target, identity, api):
     syn=unique([p for p in metadata["packages"] if p["name"]=="syn" and p["version"]=="3.0.5"],"selected original syn package",api)
     archive=unique(list(Path.home().glob(".cargo/registry/cache/*/syn-3.0.5.crate")),"original syn archive",api)
     build={"command":command,"status":result.returncode,"messages":messages,"syn_package":syn,"archive":str(archive),"archive_sha256":api.digest(archive.read_bytes()),"metadata":metadata,"metadata_sha256":api.digest(api.encoded(metadata)),"owned_dependency_rebuild":rebuild}
+    build["archive_inventory"]=archive_inventory(archive,syn,api)
     (output / "original-build.json").write_bytes(api.encoded(build))
     before=_inputs(root,metadata,messages,selected,identity,output,api)
     before["files"][str(archive)]=build["archive_sha256"]
@@ -299,7 +324,7 @@ def capture(output, target, identity, api):
         analysis_times[name]=analysis.elapsed_seconds
     raw=json.loads((output/"syn-raw.json").read_text());caller=json.loads((output/"caller-raw.json").read_text())
     (output/"independent-inventory.json").write_bytes(api.encoded(inventory(raw)))
-    (output/"ra-context.json").write_bytes(api.encoded({"context":{"crate":"sifr_codegen"},"cfg":caller["cfg"],"dependency_cfg":raw["cfg"]}))
+    (output/"ra-context.json").write_bytes(api.encoded({"context":{"crate":"sifr_codegen"},"cfg":caller["cfg"],"dependency_cfg":raw["cfg"],"dependency_root":next(t["src_path"] for t in syn["targets"] if "lib" in t["kind"])}))
     resolver_env=os.environ.copy()
     for key in ("RUSTC_BOOTSTRAP","RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER"):resolver_env.pop(key,None)
     resolver_env.update(CARGO_INCREMENTAL="0",CARGO_BUILD_JOBS="2",CARGO_TARGET_DIR=str(target),SIFR_BUILTIN_SOURCE_BINDER_RA="1")

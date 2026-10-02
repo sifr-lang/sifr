@@ -155,7 +155,145 @@ fn main() -> anyhow::Result<()> {
         num_worker_threads: 1,
         proc_macro_processes: 1,
     };
-    let (db, files, server) = load_cargo::load_workspace(workspace, &config.extra_env, &load)?;
+    let graph_workspace = workspace.clone();
+    let (mut db, files, server) = load_cargo::load_workspace(workspace, &config.extra_env, &load)?;
+    if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+        let mut loader = |path: &vfs::AbsPath| {
+            files
+                .iter()
+                .find_map(|(file, p)| (p.as_path() == Some(path)).then_some(file))
+        };
+        let (graph, _) = graph_workspace.to_crate_graph(&mut loader, &config.extra_env);
+        let mut exact = graph.clone();
+        exact.remove_crates_except(&[]);
+        let loaded = hir::Crate::all(&db);
+        let mut ids = std::collections::HashMap::new();
+        let mut proc_macros = vec![];
+        let selected_edges = graph
+            .iter()
+            .filter(|i| {
+                files.file_path(graph[*i].basic.root_file_id).as_path()
+                    == Some(selected_root.as_path())
+            })
+            .flat_map(|i| graph[i].basic.dependencies.iter())
+            .filter(|d| {
+                d.name.to_string() == "syn"
+                    && files
+                        .file_path(graph[d.crate_id].basic.root_file_id)
+                        .as_path()
+                        .map(|p| p.as_str())
+                        == capture["dependency_root"].as_str()
+            })
+            .map(|d| d.crate_id)
+            .collect::<Vec<_>>();
+        anyhow::ensure!(
+            selected_edges.len() == 1,
+            "missing/ambiguous original caller dependency edge"
+        );
+        let selected_edge = selected_edges[0];
+        let mut selected = 0;
+        for old in graph.iter() {
+            let data = &graph[old];
+            let matches = loaded
+                .iter()
+                .filter(|c| {
+                    c.root_file(&db) == data.basic.root_file_id && c.cfg(&db) == &data.cfg_options
+                })
+                .collect::<Vec<_>>();
+            anyhow::ensure!(
+                !matches.is_empty(),
+                "missing original graph input authority"
+            );
+            let workspace_data = matches[0].base().workspace_data(&db).clone();
+            anyhow::ensure!(
+                matches
+                    .iter()
+                    .all(|c| c.base().workspace_data(&db) == &workspace_data),
+                "ambiguous original graph workspace input"
+            );
+            if data.basic.is_proc_macro {
+                proc_macros.push((old, matches[0].base()));
+            }
+            let mut options = data.cfg_options.clone();
+
+            if old == selected_edge {
+                options = cfg::CfgOptions::default();
+                for atom in capture["dependency_cfg"]
+                    .as_array()
+                    .ok_or_else(|| anyhow::anyhow!("missing dependency cfg"))?
+                {
+                    let key = hir::Symbol::intern(
+                        atom["key"]
+                            .as_str()
+                            .ok_or_else(|| anyhow::anyhow!("missing cfg key"))?,
+                    );
+                    if let Some(value) = atom["value"].as_str() {
+                        options.insert_key_value(key, hir::Symbol::intern(value));
+                    } else {
+                        options.insert_atom(key);
+                    }
+                }
+                selected += 1;
+            }
+            let new = exact.add_crate_root(
+                data.basic.root_file_id,
+                data.basic.edition,
+                data.extra.display_name.clone(),
+                data.extra.version.clone(),
+                options,
+                data.extra.potential_cfg_options.clone(),
+                data.env.clone(),
+                data.basic.origin.clone(),
+                data.basic
+                    .crate_attrs
+                    .iter()
+                    .map(|a| {
+                        a.to_string()
+                            .trim_start_matches("#![")
+                            .trim_end_matches(']')
+                            .to_owned()
+                    })
+                    .collect(),
+                data.basic.is_proc_macro,
+                data.basic.proc_macro_cwd.clone(),
+                workspace_data,
+            );
+            anyhow::ensure!(
+                old == new
+                    && exact[new].basic.root_file_id == data.basic.root_file_id
+                    && exact[new].env == data.env
+                    && exact[new].extra == data.extra,
+                "original graph input identity drift"
+            );
+            ids.insert(old, new);
+        }
+        anyhow::ensure!(
+            selected == 1,
+            "missing/ambiguous original dependency graph root"
+        );
+        for old in graph.iter() {
+            for dependency in &graph[old].basic.dependencies {
+                let mut dependency = dependency.clone();
+                dependency.crate_id = ids[&dependency.crate_id];
+                exact
+                    .add_dep(ids[&old], dependency)
+                    .map_err(|e| anyhow::anyhow!("original dependency graph cycle: {e:?}"))?;
+            }
+        }
+        for old in graph.iter() {
+            anyhow::ensure!(
+                exact[ids[&old]].basic == graph[old].basic,
+                "original graph roots/dependencies changed"
+            );
+        }
+        let installed = exact.set_in_db(&mut db);
+        anyhow::ensure!(
+            proc_macros
+                .iter()
+                .all(|(old, original)| installed[&ids[old]] == *original),
+            "original proc-macro identity changed during exact cfg configuration"
+        );
+    }
     anyhow::ensure!(server.is_some(), "missing selected proc-macro server");
     hir::attach_db(&db, || {
         let semantics = Semantics::new(&db);
