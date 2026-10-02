@@ -1585,3 +1585,24 @@ Optional codegen diagnostic and retry-loop hardening belongs to
 [#4243](https://github.com/sifr-lang/sifr/issues/4243). The runtime fingerprint
 already passes the existing 64-character lowercase-hex check before observation
 SQL is constructed; no additional fingerprint-validation gap is established.
+
+## Item 10A — preserve independent pagination bounds (2026-10-02)
+
+The second Item 10 review of `5a216146e28ed8a1a4618f77dd68bdd3e2f0042e`
+resolved both original findings but returned NOT SATISFIED for a new regression
+in the replacement row-bound parser: it discards a fully literal LIMIT count
+when OFFSET is unknown. This rejects valid FROM queries such as `LIMIT 1 OFFSET
+?1`, `LIMIT ?1, 1`, and `LIMIT 1 OFFSET (1)` that previously retained an
+at-most-one contract. Item 10 stops at this new mechanism and is explicitly
+rescoped through this bounded prerequisite; the user's instruction to complete
+all remaining work authorizes continuing without another permission request.
+
+Item 10A owns independent, complete-expression parsing of count and offset.
+Preserve a known literal count even when its offset is unknown, set the combined
+known-bound flag only when both are known, and retain conservative scalar
+classification and expression-prefix rejection. Tests cover FROM pagination
+and the already fixed no-FROM cases. Rebuild and qualify the actual SQLite
+component and provenance, rerun affected native/compiler checks and guards, and
+give this prerequisite its own scoped initial review on its exact candidate.
+Reuse compatible Item 10 evidence for unchanged mechanisms; no third review of
+the original unchanged findings or broad intermediate gate is required.

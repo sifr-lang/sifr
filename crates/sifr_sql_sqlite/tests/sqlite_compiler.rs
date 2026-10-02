@@ -596,3 +596,27 @@ fn scalar_cardinality_keeps_filters_offsets_and_compound_queries_conservative() 
         );
     }
 }
+
+#[test]
+fn pagination_preserves_independent_complete_literal_limits() {
+    let parser = parser();
+    let schema = normalized_schema("CREATE TABLE users(id INTEGER PRIMARY KEY) STRICT");
+    let analyzer = SqliteAnalyzer::new(&parser, &schema).expect("catalog");
+    for (bounds, expected) in [
+        ("LIMIT 1 OFFSET ?1", Cardinality::AT_MOST_ONE),
+        ("LIMIT ?1, 1", Cardinality::AT_MOST_ONE),
+        ("LIMIT 1 OFFSET (1)", Cardinality::AT_MOST_ONE),
+        ("LIMIT 1 OFFSET 0 + 1", Cardinality::AT_MOST_ONE),
+        ("LIMIT coalesce(?1, 0), 1", Cardinality::AT_MOST_ONE),
+        ("LIMIT 1 - 1 OFFSET ?1", Cardinality::MANY),
+        ("LIMIT ?1, 1 + 1", Cardinality::MANY),
+        ("LIMIT (1) OFFSET 0", Cardinality::MANY),
+    ] {
+        let sql = format!("SELECT id FROM users {bounds}");
+        assert_eq!(
+            analyzer.analyze_query(&sql).expect(&sql).cardinality,
+            expected,
+            "{sql}"
+        );
+    }
+}

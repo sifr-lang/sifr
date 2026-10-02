@@ -1,11 +1,11 @@
 {
   "artifacts": [
     {
-      "core_sha256": "908d6bb260113fc8c3c7fcae23067fff7f940a22050104b6983116997fb6d280",
+      "core_sha256": "0d2df9519b62b840b97c4f34ce0158f37b68d7a397b695d2d0969082cd1b0a53",
       "path": "components/sqlite-3.53.4.wasm",
       "series": "3.53.4",
-      "sha256": "fb304b7ddcbf2353bd5d047af08d7bc69e15fe871b404e6bab61e476e11389fa",
-      "size_bytes": 2024854
+      "sha256": "a2839a5a5ebb5d292aa3588f9a7ac7b4a866690264552cf99a1879d35d818388",
+      "size_bytes": 2026034
     }
   ],
   "parser": {
@@ -137,7 +137,7 @@
       "crates/sifr_sql_sqlite/src/parser.rs": "77fe5cc5139ce6e22b61f67020df2a9d89da5b8f135d4fac45b9e35a9ae81604",
       "crates/sifr_sql_sqlite/src/schema.rs": "eec3643bb1a1d5cdb65adc67f019f0379b66d23fd1db680c019b5e573efc97c2",
       "crates/sifr_sql_sqlite/src/syntax_lowering.rs": "b5ae923a507ca49d56a26c343bd791d1bcf454d0f7393805765acd578add42b2",
-      "crates/sifr_sql_sqlite/src/syntax_lowering/query_bounds.rs": "c83df88742f8d0415b38c97b00f325f9ce07c55a11aae0bd8488d34b3293983b",
+      "crates/sifr_sql_sqlite/src/syntax_lowering/query_bounds.rs": "c61578c8990ad5a144fbd40a964c1043ec4a805f623373b797c5ae8f423fed44",
       "crates/sifr_sql_sqlite/src/syntax_lowering/token_utils.rs": "35be7af3576a62e9818497ce40b0e0720578d3ad4ea4c69044e698c741e2b26e",
       "crates/sifr_sql_sqlite/src/types.rs": "c9c580453fc25528ff29510d40b0e80f0e844cea426383821142ff202b710d69",
       "crates/sifr_structural_identity/Cargo.toml": "7db0dbc5d63032719015cd3002ce86c53a62899f4dbc08b21987e3a8404bc485",
@@ -157,7 +157,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "69fe49004bfd0039b70f9d4d3e7cba397ee3be589d8e1b2bffeb8ae1add91e1d",
+    "source_sha256": "cf5a38c757f0b1122cdff361ff93388668c4b51f225d69ef405ad583132bfd7b",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",
