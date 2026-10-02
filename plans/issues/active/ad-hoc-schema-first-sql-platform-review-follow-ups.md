@@ -1703,3 +1703,49 @@ Evidence root: `/workspace/sql-item11-cloud-evidence/`. Optional MySQL live
 hardening belongs to [#4246](https://github.com/sifr-lang/sifr/issues/4246).
 Items 12/13, final combined integration and Item 6 closure remain pending.
 This receipt changes records only and needs no repeated gate or external review.
+
+## Item 12 — registered provider reporting boundary (2026-10-02)
+
+Scope: structured provider diagnostics from actual query components through
+ordinary CLI frontend lowering and editor enrichment, preserving code, severity
+and physical source spans. Replace string flattening with a package-neutral
+typed-method diagnostic carrier and one shared renderer. Component semantic
+failures must produce valid diagnostic plans, with SQL offsets projected through
+template parts; unsupported closed hole types must report a targeted provider
+error at the hole. Component-unsafe Sifr types receive the same targeted compiler
+error in both paths. Keep component transport exclusively at the outer frontend.
+Rebuild and qualify every changed producer-input closure. Acceptance uses actual
+components and the same source in CLI/editor, including valid-to-invalid-to-valid
+edits, standalone/decorated forms, unsupported holes and syntax/name failures.
+Retain missing-profile-import authority from Item 3. No resolver, codec or native
+connection scope is added. Items 13 and final integration remain separate.
+
+Item 12 transport refinement: the actual PostgreSQL query component accepts
+both generic and versioned processor identities, but its existing encoder
+always returned a versioned identity. A generic package registration therefore
+failed host validation before any provider diagnostic reached either caller.
+Echo the exact already-validated requested processor and recompute its plan
+fingerprint; versioned registrations retain their identity. This stays inside
+the registered reporting boundary. Fixtures declare the PostgreSQL compiler's
+existing core/libpg-query feature flags and MySQL's explicit character set and
+collation, rather than relaxing profile-authority checks. Preserve the existing
+compile-time template value on non-native providers after validation, and honor
+the declared `template` keyword in SQL construction.
+
+### Item 12A — authorize related diagnostic source locations
+
+Registered before implementation under the user's instruction to complete all
+necessary phase prerequisites. PostgreSQL unknown-column/schema diagnostics may
+reference a physical catalog DDL source in a related span. The generic host
+currently authorizes only template documents; Item 12's initial projection would
+incorrectly treat that schema location as a virtual SQL offset. Own a bounded,
+package-neutral context artifact declaring checked diagnostic source locations;
+validate its shape, fingerprint, canonical ordering and limits, and permit only
+response diagnostic spans contained in those explicit request locations. Keep
+ordinary template/source-map document authority and undeclared-document rejection
+unchanged. SQL outer request builders derive those declarations from the already
+validated SchemaIR, and guest projection maps only actual virtual SQL documents.
+Prove preservation of an actual PostgreSQL schema-related span and retain forged
+foreign-document and out-of-bounds negative checks. Rebuild all changed producer
+closures. No SQL-specific parsing or filesystem access belongs in the generic
+component host, and no arbitrary response document is authorized.

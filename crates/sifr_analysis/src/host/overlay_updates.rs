@@ -19,9 +19,11 @@ impl AnalysisHost {
         .unwrap_or_else(
             sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
         );
+        let mut externals = sifr_compiler_services::stdlib::external_defs(compiler)?;
+        profiles.install_compiler_externals(&mut externals);
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_compiler_services::stdlib::external_defs(compiler)?,
+            externals,
             Vec::new(),
         );
         for (path, uri, version, source) in overlays {
@@ -91,11 +93,6 @@ impl AnalysisHost {
         &mut self,
         root: &ProjectRoot,
     ) -> Result<(), Vec<RenderedDiagnostic>> {
-        self.session.reload()?;
-        self.refresh_file_map();
-        self.refresh_current_revision();
-        self.symbol_index = None;
-        self.last_invalidation = None;
         let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
             root.root.as_path(),
             root.entrypoint.as_path(),
@@ -103,6 +100,14 @@ impl AnalysisHost {
         .unwrap_or_else(
             sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
         );
+        let mut externals = sifr_compiler_services::stdlib::external_defs(&self.compiler)?;
+        profiles.install_compiler_externals(&mut externals);
+        self.session.replace_external_defs(externals);
+        self.session.reload()?;
+        self.refresh_file_map();
+        self.refresh_current_revision();
+        self.symbol_index = None;
+        self.last_invalidation = None;
         self.sql_editor_runtime
             .replace_profiles(profiles)
             .map_err(|error| {

@@ -7411,6 +7411,8 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "sifr_analysis",
+ "sifr_compiler_services",
  "sifr_diagnostics",
  "sifr_driver",
  "sifr_format",

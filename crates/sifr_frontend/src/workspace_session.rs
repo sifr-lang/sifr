@@ -416,6 +416,11 @@ impl WorkspaceSession {
         }
     }
 
+    /// Replace outer compilation authorities before reloading project sources.
+    pub fn replace_external_defs(&mut self, external_defs: ExternalDefs) {
+        self.base_external_defs = external_defs;
+    }
+
     pub fn reload(&mut self) -> Result<(), Vec<RenderedDiagnostic>> {
         let had_context = self.context.is_some();
         match &self.target {

@@ -75,9 +75,44 @@ pub trait ExternalProvider: std::fmt::Debug + Send + Sync {
 /// transport runs in `prepare_pending`, invoked exclusively by the frontend.
 pub trait TypedMethodProcessor: std::fmt::Debug + Send + Sync {
     fn handles(&self, receiver: &Type, method: &str) -> bool;
-    fn compile(&self, request: TypedMethodRequest<'_>) -> Result<HirExpr, String>;
+    fn compile(
+        &self,
+        request: TypedMethodRequest<'_>,
+    ) -> Result<TypedMethodOutput, TypedMethodFailure>;
     /// Resolve new requests at the outer boundary; report whether lowering must retry.
     fn prepare_pending(&self) -> bool;
+}
+
+#[derive(Debug, Clone)]
+pub struct TypedMethodOutput {
+    pub expression: HirExpr,
+    pub diagnostics: Vec<sifr_diagnostics::RenderedDiagnostic>,
+}
+
+impl From<HirExpr> for TypedMethodOutput {
+    fn from(expression: HirExpr) -> Self {
+        Self {
+            expression,
+            diagnostics: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TypedMethodFailure {
+    Message(String),
+    Diagnostics(Vec<sifr_diagnostics::RenderedDiagnostic>),
+}
+
+impl From<String> for TypedMethodFailure {
+    fn from(message: String) -> Self {
+        Self::Message(message)
+    }
+}
+impl From<&str> for TypedMethodFailure {
+    fn from(message: &str) -> Self {
+        Self::Message(message.into())
+    }
 }
 
 #[derive(Debug)]

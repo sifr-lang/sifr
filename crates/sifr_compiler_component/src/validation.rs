@@ -155,7 +155,26 @@ pub fn validate_request(
         }
         previous_artifact = Some(key);
     }
+    diagnostic_locations(request, limits)?;
     Ok(())
+}
+
+fn diagnostic_locations(
+    request: &EmbeddedAnalysisRequest,
+    limits: &ComponentHostLimits,
+) -> Result<Vec<SourceSpan>, ComponentError> {
+    let mut locations = Vec::new();
+    for artifact in &request.context.artifacts {
+        if artifact.kind == crate::DIAGNOSTIC_SOURCE_LOCATIONS_KIND {
+            locations.extend(crate::diagnostic_sources::diagnostic_source_locations(
+                artifact,
+                limits
+                    .max_source_map_entries
+                    .saturating_sub(locations.len()),
+            )?);
+        }
+    }
+    Ok(locations)
 }
 
 pub fn validate_response(
@@ -200,6 +219,7 @@ pub fn validate_response(
         })
         .collect::<BTreeSet<_>>();
     let mut operation_count = 0;
+    let diagnostic_locations = diagnostic_locations(request, limits)?;
     for operation in &response.plan.operations {
         validate_operation(operation, 0, &mut operation_count, &known_holes, limits)?;
     }
@@ -208,10 +228,14 @@ pub fn validate_response(
             return Err(limit_error("diagnostic message is too large"));
         }
         validate_span(&diagnostic.primary)?;
-        validate_response_document(&diagnostic.primary, &request_documents)?;
+        validate_diagnostic_document(
+            &diagnostic.primary,
+            &request_documents,
+            &diagnostic_locations,
+        )?;
         for span in &diagnostic.related {
             validate_span(span)?;
-            validate_response_document(span, &request_documents)?;
+            validate_diagnostic_document(span, &request_documents, &diagnostic_locations)?;
         }
         if provider_diagnostics.lifecycle_for(&diagnostic.code) != Some(diagnostic.lifecycle) {
             return Err(ComponentError::new(
@@ -262,6 +286,25 @@ fn validate_response_document(
         ));
     }
     Ok(())
+}
+
+fn validate_diagnostic_document(
+    span: &SourceSpan,
+    template_documents: &BTreeSet<&str>,
+    locations: &[SourceSpan],
+) -> Result<(), ComponentError> {
+    if template_documents.contains(span.document.as_str())
+        || locations.iter().any(|allowed| {
+            allowed.document == span.document
+                && allowed.start <= span.start
+                && span.end <= allowed.end
+        })
+    {
+        return Ok(());
+    }
+    Err(envelope_error(
+        "diagnostic span is outside the explicitly declared request sources",
+    ))
 }
 
 fn validate_dependencies(response: &EmbeddedAnalysisResponse) -> Result<(), ComponentError> {

@@ -801,3 +801,5 @@ fn hash_verification_is_exact() {
         ComponentErrorKind::Integrity
     );
 }
+#[path = "tests/diagnostic_sources.rs"]
+mod diagnostic_source_tests;

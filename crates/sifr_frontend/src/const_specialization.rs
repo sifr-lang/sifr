@@ -481,6 +481,7 @@ fn malformed_diagnostic(
     primary_range: Option<TextRange>,
 ) -> HirDiagnostic {
     HirDiagnostic {
+        external: None,
         code: Some(DiagnosticCode::META_MALFORMED_DECLARATION),
         message: format!(
             "package {package} declared malformed specialization issue {reason_code}: {declaration_problem}"
@@ -605,6 +606,7 @@ fn integer_boundary_diagnostic(
         |(minimum, maximum)| format!("{minimum}..={maximum}"),
     );
     HirDiagnostic {
+        external: None,
         code: Some(DiagnosticCode::INT_JSON_BOUNDARY_POLICY),
         message: format!(
             "integer JSON boundary policy is unsafe at {}: {boundary}",

@@ -31,11 +31,24 @@ fn warning_diagnostic(
     source_context: Option<FrontendSourceContext<'_>>,
     diagnostic: &LoweringWarningDiagnostic,
 ) -> RenderedDiagnostic {
+    if let LoweringWarningDiagnostic::External { module, diagnostic } = diagnostic {
+        let mut diagnostic = (**diagnostic).clone();
+        if let Some(context) = source_context {
+            for span in &mut diagnostic.spans {
+                if span.file.as_deref() == Some(module.as_str()) {
+                    span.file = Some(context.display_path.into());
+                }
+            }
+        }
+        return diagnostic;
+    }
     let structured_help = match diagnostic {
         LoweringWarningDiagnostic::MetaPackageIssue { help, .. } => help.clone(),
         LoweringWarningDiagnostic::UnreachableStatement { .. } => None,
+        LoweringWarningDiagnostic::External { .. } => unreachable!("handled external diagnostic"),
     };
     let (code, message, message_template, args, primary_range) = match diagnostic {
+        LoweringWarningDiagnostic::External { .. } => unreachable!("handled external diagnostic"),
         LoweringWarningDiagnostic::UnreachableStatement { primary_range } => (
             DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
             "unreachable statement ignored".to_string(),
@@ -65,6 +78,7 @@ fn warning_diagnostic(
             related_ranges.as_slice()
         }
         LoweringWarningDiagnostic::UnreachableStatement { .. } => &[],
+        LoweringWarningDiagnostic::External { .. } => unreachable!("handled external diagnostic"),
     };
     if let (Some(context), Some(range)) = (source_context, primary_range) {
         let args = args

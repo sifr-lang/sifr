@@ -136,6 +136,17 @@ pub(super) fn hir_diagnostic_to_rendered(
     source_context: Option<FrontendSourceContext<'_>>,
     error: HirDiagnostic,
 ) -> RenderedDiagnostic {
+    if let Some(diagnostic) = error.external {
+        let mut diagnostic = *diagnostic;
+        if let Some(context) = source_context {
+            for span in &mut diagnostic.spans {
+                if span.file.as_deref() == Some(module_name) {
+                    span.file = Some(context.display_path.into());
+                }
+            }
+        }
+        return diagnostic;
+    }
     let code = error
         .code
         .unwrap_or(DiagnosticCode::INTERNAL_COMPILER_PANIC);
