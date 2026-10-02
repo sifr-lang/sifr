@@ -6,7 +6,7 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Item 4 merged; Item 5 is ready. Continue Items 5, 7, 10, 11, and 12,
+Status: Items 4, 4A, and 5 merged; Item 7 is next. Continue Items 7, 10, 11, and 12,
 then final integration and the Item 6 closer, in the delivery order below.
 The user authorized completing that sequence in this cloud session.
 
@@ -81,6 +81,53 @@ Named checks: integrated checker and its self-test, contract checker and its
 self-test, profile schema check, diff check, file-size guard, and scoped
 exact-candidate Opus review. Reuse Item 4's native/WASI evidence because their
 implementation, flags, dependencies, and validation inputs are unchanged.
+
+### Item 5 cloud delivery receipt (2026-10-02)
+
+Status: merged in [PR #4228](https://github.com/sifr-lang/sifr/pull/4228),
+merge `80510b8f6821d25f9d442f40707a8f16975a2abc`. Exact candidate
+`c8f3712146ad7e00d74abc91558a9932b808968d`, base
+`937f6531d7363b72e76d3feccf98aa0aa5d093e1`. The MySQL adapter now
+selects `--lib --test runtime_types`, adding its eight source-unit tests.
+The other six packages already had the intended selected execution routes;
+no coverage classification, compiler-only membership policy, or scheduler
+change was necessary. The [execution audit](../../../internal_docs/sql_runtime_tooling_coverage.md)
+records the selected adapters and separate ignored/live-server policy.
+
+The named seven-package Cargo test command passed 52 tests, failed none,
+and left 7 live-server tests ignored:
+
+| Package | Passed | Ignored |
+| --- | ---: | ---: |
+| `sifr_sql_mysql_runtime` | 9 | 1 |
+| `sifr_sql_mysql_tools` | 3 | 3 |
+| `sifr_sql_postgresql_runtime` | 7 | 1 |
+| `sifr_sql_postgresql_tools` | 6 | 2 |
+| `sifr_sql_sqlite_runtime` | 11 | 0 |
+| `sifr_sql_sqlite_tools` | 6 | 0 |
+| `sifr_sql_tool` | 10 | 0 |
+
+Actual changed-adapter execution through its manifest case passed all 8 lib
+and 1 type-contract tests. Five profile checks, the merge plan, strict coverage
+readiness (13 guarantees, 35 surfaces, no temporary rows), the file-size guard
+(4319 files), diff check, and document-link checks passed. Functional tests
+used 4 jobs, owned target `target/sql-phase-functional`, offline inputs, and
+dev/test debug=0. These are not host-sensitive performance or live-server passes.
+The MySQL live matrix separately uses `--include-ignored`; it was not run here.
+Runtime value-preservation work remains Item 11.
+
+Evidence is outside the reviewed tree in `/workspace/sql-item5-cloud-evidence/`.
+Seven-package log SHA-256 `4b390bc37826a11b8e2ef8f821f96bc2098f9b29a0d4cf8ddfee917d7e145d1b`;
+changed-adapter log SHA-256 `ca30841e964cd26f7c7e5326bd2d2345498603e282e7a11b7a46f6625c681da2`.
+The [exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4228#issuecomment-5943354729)
+returned `SATISFIED`, no blockers; response SHA-256
+`d0bec7cad013e73b23d663676be85fda71d2b39ef16668ed4cb2cd35ed97be59`. Its only suggestion, a discoverable audit-doc link,
+is delivered by this record-only update. No intermediate full gate is claimed.
+
+After the cloud Git CLI credential expired, authenticated GitHub Git-data API
+transport recovered/published commits with exact commit/tree SHA verification.
+No injected credentials were replaced and no repository inputs were changed by
+that transport. The branch and source remain in the cloud-owned checkout.
 
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
@@ -754,7 +801,8 @@ Named validation:
 
 ### Item 5 — SQL runtime/tooling execution coverage audit
 
-Status: ready after PR #4223. Dependencies: Item 4 merged.
+Status: merged in PR #4228; see the Item 5 cloud delivery receipt above.
+Dependencies: Item 4 merged.
 
 Resolve the bounded audit in #3752 for the seven named SQL runtime/tool packages.
 Trace actual selected adapter and crate-test execution before claiming missing
