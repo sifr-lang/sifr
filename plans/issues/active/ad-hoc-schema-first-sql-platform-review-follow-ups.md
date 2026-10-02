@@ -4,6 +4,54 @@ Status: active, non-blocking
 
 Owner: SQL compiler, schema tools, and verification
 
+## Current cloud continuation and Item 4 delivery (2026-10-02)
+
+Status: Item 4 merged; Item 5 is ready. Continue Items 5, 7, 10, 11, and 12,
+then final integration and the Item 6 closer, in the delivery order below.
+The user authorized completing that sequence in this cloud session.
+
+[PR #4223](https://github.com/sifr-lang/sifr/pull/4223) merged as
+`34cbd6b27f8aad6cee2eb41b6297933dc026c6a7`. The final implementation
+candidate was `b02a1d10e396f35bc8dd6b3744cd07407c646145` on base
+`5361aed5204d35fa4c68510f924f66704e8cc268`. Snapshot
+`e739f62eb90fc8d8671e97bb383bffdd65043bf6` recovered the prior local work;
+the final cloud candidate also fixes generated-source path remapping and
+releases build A before B to bound disk pressure.
+
+Native Linux qualification passed for exactly `sifr-sql-mysql`,
+`sifr-sql-postgresql`, and `sifr-sql-sqlite`: linked SHA-256 hashes matched
+across clean A, unchanged A, and independent clean B under locked/offline
+inputs. The explicit dev recipe disables debug information and holds both
+target-path remaps identical in every mode. Its claim covers one invocation,
+the same source checkout and host, and distinct private target directories.
+WASI passed with 54 artifacts and an explicit check-only claim.
+
+The contract and integrated checks passed, with 13 mutations each; the build
+runner passed 7 mutations, including a real executable-byte change. The
+wrong-resource mutation required by #3659 passed. All 22 verification-runner
+self-test groups, all five profile checks, the 4319-file size guard, and diff
+checks passed. This resolves the historical DX.10 self-test blocker for
+Item 4. No intermediate create-PR or full merge gate is claimed.
+
+Evidence is outside the reviewed tree in `/workspace/sql-item4-cloud-evidence/`.
+The native log SHA-256 is
+`85ef2847eac844b87842465cd74810dad7c44e6cd3b6b41b0dc635321f37578f`;
+the WASI log SHA-256 is
+`176fd15ea2678910f31aa754094c7c886837b29b3b9743d99e8557edba0a4ab8`.
+The [exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/4223#issuecomment-5943137233)
+returned `SATISFIED`, no blockers; response SHA-256
+`d516fff9e943a552abc776c7fa174bd0ccc41288f99e7a42550fd9d97806d0c6`.
+Optional verification and platform-qualification work is tracked separately
+in [#4224](https://github.com/sifr-lang/sifr/issues/4224). Scheduler-policy
+questions #3654/#3660 retain their existing owners.
+
+The missing-target setup failure, initially missing offline Android cache
+input, and interrupted original native run remain failed/incomplete evidence.
+The interrupted target embedded temporary paths and used 16 GiB; its artifact
+hashes are preserved in `interrupted-native-receipt.json`, not counted as a
+qualification pass. Only inactive cloud-owned artifacts were removed under
+disk pressure. The amended private-email commit changed metadata only.
+
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
 The Emitted-Rust qualifier's full merge profile on exact merged main
@@ -57,8 +105,9 @@ non-blocking follow-up; the focused unit suite already asserts those cases.
 The `local-first-create-pr` CI job failed on this PR and is not claimed
 as a gate pass. Under the approved phase-end gate policy, this intermediate
 repair ran no create-PR or full merge gate; the Emitted-Rust final qualifier
-must rerun its full merge profile on the resulting main. SQL Item 4 remains
-separately blocked by the DX.10 self-test.
+must rerun its full merge profile on the resulting main. At the time of this
+receipt, SQL Item 4 was separately blocked by the DX.10 self-test; the current
+cloud delivery receipt above records its resolution.
 
 ## P0 execution and custody reconciliation (2026-09-23)
 
@@ -647,7 +696,8 @@ Named validation:
 
 ### Item 4 — Linked build qualification and consistent resource declarations
 
-Status: blocked by unmerged Item 3. Dependencies: Item 3 merged.
+Status: merged in PR #4223; see the current cloud delivery receipt above.
+Dependencies: Item 3 merged.
 
 Own reference build-qualification runner, linked hash mutation, integrated record
 and checker, SQL manifest/runner commands, and host-tool documentation. Preserve
@@ -674,7 +724,7 @@ Named validation:
 
 ### Item 5 — SQL runtime/tooling execution coverage audit
 
-Status: blocked by unmerged Item 4. Dependencies: Item 4 merged.
+Status: ready after PR #4223. Dependencies: Item 4 merged.
 
 Resolve the bounded audit in #3752 for the seven named SQL runtime/tool packages.
 Trace actual selected adapter and crate-test execution before claiming missing
