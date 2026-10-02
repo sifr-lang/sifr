@@ -10,6 +10,287 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbi exact included-owner source scope checkpoint (2026-10-02)
+
+**Current controlling state: H03a1hbi is a documentation scope checkpoint;
+H03a1hbip is reserved for a separate include-source proof assignment after this
+scope and its separate receipt merge. H03a1hbc remains dependency-blocked.**
+This checkpoint starts from actual origin/main
+`27565837f103ebad90f9084596522ae0e41d4312`, including the controlling
+[H03a1hbc stop #4261](https://github.com/sifr-lang/sifr/pull/4261), exact docs
+candidate `dda87408b435f9392d84cb936ab80c22861cd089`. It prospectively scopes only
+the missing exact original included-owner/impl source correspondence. No producer
+experiment, helper build, capability test, accepted source relation or semantic
+adapter export occurs in this documentation item.
+
+### Pinned public mechanism and evidence boundary
+
+Read-only inspection identifies a concrete **prospective token correspondence
+mechanism**, not an executed proof:
+
+- Pinned RA [Semantics::descend_token_into_include_expansion](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs#L984-L1009)
+  maps a physical token into its cached include context. It may return the original
+  token when context/mapping is absent, and selects at most one mapped token;
+  calling it alone does not establish complete or unambiguous owner provenance.
+- [Semantics::descend_into_macros_cb](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs#L1108-L1117)
+  exposes mapped tokens with their native HirFileId and syntax context.
+  [Semantics::source](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs#L2166-L2172)
+  registers a definition's source for actual source/to_def roundtrips.
+- Public [InFile<SyntaxToken>::original_file_range_opt](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/files.rs#L400-L417)
+  maps each token independently to its original file/range, returning None for a
+  non-root context. `InFile`, `InRealFile` and `HirFileId` are already
+  [reexported by hir](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/lib.rs#L184-L194)
+  in the existing locked dependency graph. No new hir-expand dependency or
+  private resolver is selected.
+- The aggregate [map_node_range_up](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/lib.rs#L1450-L1468)
+  rejects spans with different anchors or contexts. The pinned real-file span map
+  [anchors impl associated items separately](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir-expand/src/span_map.rs#L76-L106).
+  This explains a possible aggregate-range limitation; the retained failed
+  capture does not establish its exact internal cause. The proof must retain
+  `original_range_opt=None` as observed, rather than replace it with a coarse
+  callsite, bounding range or an assertion that root hygiene proves source.
+
+The proposal relates an independently compiler-selected physical AST node to
+its actual RA semantic owner through **every required token's public source
+mapping**, with unique complete coverage and semantic source/to_def roundtrip.
+Compiler resolved lifetime declaration/target/binder/depth and trait identities
+remain the semantic authority. Physical offsets, literal tokens and syntax kinds
+locate and verify the relation; they never substitute for that authority. Whether
+all required original sites satisfy this relation under the locked pins remains
+unproven and belongs exclusively to H03a1hbip.
+
+The original failures remain mandatory anchors. Production
+`ScalarCallRewriter<'plans>` is in
+`crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/call_rewriter.rs`,
+bytes `0..307`, name `7..25`, compiler hygiene `#0`; its physical raw-file
+RA to_def lacks an owner outside the include semantic context. The genuine
+fixture's native IMPL is `MacroFile(MacroCallId(Id(12c5d)))`, `44..107`, with
+aggregate original_range_opt None; its original compiler `IncludedBinder<'a>`
+is `src/included.rs` `52..126`, declaration `'a` `57..59`, LocalDefId 61/
+parameter 62 in that exact capture, stable crate `9362986356028905341` and
+owner DefPathHash component `11813089114578613898`. These historical raw IDs
+and ranges require fresh authentication on the future candidate; they are not
+cross-capture identifiers or hardcoded acceptance values.
+
+### Finite items, dependency order and owned boundaries
+
+**H03a1hbi — this canonical-only documentation scope checkpoint and separate
+receipt.** Dependencies: stop #4261, accepted HBF #4238/#4258, HBS #4236/#4237
+and accepted #4222/#4233. Close only the prospective contract and its validation;
+no source, schema, helper, dependency, target or compiler changes are authorized.
+
+**H03a1hbip — exact original include-owner/source diagnostic proof.** Dependencies:
+merged H03a1hbi scope and separate receipt, with all accepted dependencies above
+intact. Ready for a separate assignment only after those merges. Implement the
+finite relation and four named prospective cases below. Required output is a
+complete diagnostic proof/receipt with `semantic_export: false`, original source
+classification intact, all required contexts covered, scoped Opus approval,
+implementation merge and a separate documentation delivery receipt. Partial
+source success, a single token/owner, compiler success or one context cannot
+close this item. Its receipt must name exact candidate/merge, inputs, case and
+assertion counts, original inventories, source relations and review evidence.
+
+**H03a1hbc — unchanged complete declaration-binder capability item.** A new
+assignment requires complete merged H03a1hbip proof and separate receipt in
+addition to HBF and the existing dependencies. The unaccepted snapshot
+`9a5c96aa013923648647a014ba9cc8dc4198031c` is a read-only donor; no wholesale
+merge or historical-test acceptance is authorized. HBC still owns its five exact
+SourceBinderCapabilityTests individually/full class, complete original fixture
+union, all four Linux contexts, affected originals, review/merge and separate
+receipt. Only complete HBC delivery unlocks a separate full H03a1 assignment.
+
+H03a1hbip owns only the existing companion
+`verification/tools/maintainability_builtin_input/`,
+`scripts/maintainability_builtin_input.py`,
+`scripts/maintainability_builtin_input_tests.py`, and this canonical Markdown.
+Within the companion, the relation belongs to RA source correspondence under
+`src/bin/ra_common/`, caller-held verification under `consumer/`, a closed
+versioned diagnostic schema under `schema/`, and real bounded fixtures under
+`fixtures/source_binder/`. A prospective
+`consumer/include_source_acceptance.py` holds the named class and is exposed
+through the existing test module. Existing compiler capture, inventory and
+invocation modules may change only where exact original authority or relation
+serialization requires it; no broader capture, discovery or metric redesign.
+Split new code by ownership/responsibility before the 900-line limit.
+
+Preserve `Cargo.toml` and `Cargo.lock` in both root and helper, the entire locked
+producer/API graph, compiler/RA sources and analyzed packages. No dependency
+addition/upgrade, private resolver, new producer, fallback, copied declaration,
+fuzzy/textual semantic join or source-only identity substitute. SQL, metrics,
+Windows qualification and full adapter implementation remain outside this scope.
+
+### Original authority and complete source-relation contract
+
+1. Retain the successful unchanged selected Cargo build with normal artifacts
+   and successful build-finished, exact original caller/dependency invocations,
+   source/extern/build inputs and separate actual after-analysis captures.
+   Enumerate original compiler owners, declarations, binders, uses, constraints
+   and dispositions before projection, plus native RA owners/source nodes and
+   their include context. Keep these independently held originals immutable.
+   The accepted HBF syn capture mechanism is reused with input authentication;
+   no independently reconstructed dependency feature graph is permitted.
+2. For each compiler original owner, authenticate its complete physical source
+   file, original bytes/hash and normalization map. Use its exact original range
+   and kind to require a unique parsed physical node. Register the actual native
+   semantic owner through Semantics::source and require to_def back to that same
+   owner, including the actual parent impl/method and resolved trait relations.
+   Retain native HirFileId, include invocation/context and source node separately
+   from physical file/range. Independently reconcile all expected include-owner
+   keys; one cached include context cannot stand in for another.
+3. Enumerate all nontrivia physical and native syntax tokens in those nodes,
+   including delimiters, generic/binder declarations, every lifetime occurrence,
+   signature/constraint and associated-item boundary. Use public mapped-token
+   descent and each native token's optional original file/range to prove a
+   complete ordered relation to the exact physical token intervals and expected
+   native file/owner. Require the actual mapped ancestor node of the correct kind
+   and source/to_def owner, not the first same-spelled or nearest syntax node.
+   Every semantically relevant token and required source subnode must be covered;
+   no endpoint-only range assembly or min/max enclosing range proves the node.
+4. Preserve physical trivia/comment bytes as explicit source dispositions.
+   Existing closed punctuation token_parts normalization may describe lexical
+   subdivision only when the public origin intervals prove each part/group and
+   exhaustive coverage; token text equality by itself is insufficient. Ordinary
+   comments are authenticated from the original AST and must never be counted as
+   semantic tokens. Doc-comment desugaring, generated insertions, absent token
+   origin, cross-file/owner/context conflicts or unsupported transformations
+   require an independently exact existing disposition or stop. Do not erase
+   declaration facts to make token sequences agree.
+5. Require unique physical-node/native-owner correspondence within each actual
+   include context and account for the complete independent owner multisets.
+   Distinct owners using one physical include file remain distinct; reused source,
+   identical spellings or token intervals cannot collapse their semantic keys.
+   Ambiguous or missing mappings reject. If any required current owner/context
+   cannot be related through these pinned public APIs, preserve its exact native
+   and original facts and stop needs-new-scope without a successful proof.
+6. Bind every declaration/use/trait subnode to the authenticated whole-owner
+   relation and original compiler identity. Preserve all explicit, inherited,
+   own, synthetic/elided and empty facts, actual lifetime LocalDefId/HirId targets,
+   compiler binding variants/index/depth, outlives and RA semantic owner/trait
+   roundtrips. Compiler source normalization remains the accepted official
+   SourceFile::original_relative_byte_pos bridge. Include source remains original
+   even with MacroFile syntax; generated/coarse records retain their distinct
+   existing hygiene/expansion/capability rules.
+7. Publish a closed versioned diagnostic relation containing context/build/capture
+   binding, original source/hash/normalization, compiler owner key, native RA
+   owner/file/node, physical node kind/range, include-context identity, exhaustive
+   token/subnode correspondence and explicit dispositions, independent inventories
+   and all cross-references. Reject missing/duplicate/unknown fields or variants,
+   orphaned links, incomplete coverage and wrong schema. Each consumer and
+   publication entrypoint first reauthenticates intact caller-held original
+   authority/inventories and bound inputs, then reconciles the source relation.
+   Redigested coordinated projection mutations or replacement authority cannot
+   repair missing facts. Failure publishes no accepted partial result.
+
+Inputs retain exact Rust/Cargo/component and RA/server identities, helper source/
+executable/runtime, official rustc-dev/rust-src, argv/cwd/environment/cfg/features/
+target/test/host, Cargo graph/manifests/locks/patches, registry archive/extracted
+source, original normalized/raw bytes, include path/invocation, build script/
+proc macro/extern artifacts and capture stage/status. Reauthenticate them at
+**every consumption**, including cache hits and repeat comparison. Candidate SHA
+or matching hashes alone do not establish unchanged authority or validation.
+
+### Exact prospective named checks and original contexts
+
+The following class and four cases are **prospective, absent on this scope
+candidate and unexecuted here**. H03a1hbip must implement actual compiler/RA
+producer assertions, run each with
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests.<case>`,
+then run
+`PYTHONPATH=scripts python3 -m unittest -f maintainability_builtin_input_tests.IncludeSourceCorrespondenceTests`.
+Record 1/1 per individual and 4/4 full class, actual assertion counts and raw
+positive/negative receipts; setUpClass failure is zero executed cases/assertions.
+
+| Exact prospective case | Required proof |
+| --- | --- |
+| `test_included_impl_and_adt_have_exact_original_semantic_source` | Fresh real IncludedBinder impl, own declaration/use and actual production ScalarCallRewriter recover unique whole-node/token/subnode relations through original compiler authority and genuine RA source/to_def; aggregate None is retained. Complete owner inventories reconcile; original/generated dispositions stay distinct. |
+| `test_multi_anchor_normalization_and_context_identity_are_lossless` | Real impl with associated method anchors, inherited/method-own/nonempty HRTB and outlives facts; actual alpha-renamed and LF/CRLF/BOM/Unicode includes retain exact original bytes/offsets and compiler targets/depths. Same-spelled or reused physical source in distinct include contexts never merges owner keys; unsupported required context mapping stops. |
+| `test_coordinated_include_source_mutations_fail_closed` | Remove/duplicate/forge whole owner, token/subnode, file/range, parent/trait, binder/use/index/depth, normalization and include-context links, redigest coordinated projections and reject against intact caller-held originals. Wrong native ancestor/owner, endpoint-only coverage, stale input, absent public map, swapped invocation, replaced authority and compiler failure publish no accepted proof. Intact positive control still passes. |
+| `test_required_original_linux_include_context_union_repeats` | Complete required included-owner/source dispositions in all four actual original Linux contexts; exact current syn::step remains joined where applicable. Fresh unchanged captures normalize across owned checkouts; bounded included-source and cfg mutations reject. Required owner/context/fixture omissions stop rather than yield partial acceptance. |
+
+The helper build, **only for the separately assigned proof**, remains
+`RUSTC_BOOTSTRAP=sifr_maintainability_builtin_input cargo build --locked --manifest-path verification/tools/maintainability_builtin_input/Cargo.toml`.
+Existing authenticated receipt/environment bindings use an exclusively owned
+compatible target, component receipt and evidence root. Bootstrap stays confined
+to that helper build; analyzed caller/dependency graphs receive none.
+The four actual original controls are exactly:
+
+```bash
+cargo check --locked --lib -p sifr_codegen --target x86_64-unknown-linux-gnu --message-format=json
+cargo check --locked --tests -p sifr_codegen --target x86_64-unknown-linux-gnu --message-format=json
+cargo check --locked --lib -p sifr_lowering --target x86_64-unknown-linux-gnu --message-format=json
+cargo check --locked --tests -p sifr_lowering --target x86_64-unknown-linux-gnu --message-format=json
+```
+
+Retain actual selected cfg/features, disabled rust_analyzer cfg, test includes/
+gitlinks, original dependency unification and build/extern input qualification.
+Use the existing runner and compatible prepared metadata/fixtures/target; selected
+assertions must execute. Exact affected existing regressions use the same
+individual unittest command for
+`SourceBinderFeasibilityTests.test_original_syn_step_dependency_hir_is_available`,
+`SourceBinderFeasibilityTests.test_syn_step_hir_binder_uses_join_exact_ra_source`,
+`SourceBinderFeasibilityTests.test_unavailable_or_ambiguous_original_bridge_stops`,
+`BuiltinExtensionTests.test_lifetime_receiver_and_method_generics_preserve_constraints`,
+`BuiltinExtensionTests.test_extended_inventory_owner_and_constraint_removals_fail_closed`,
+`BuiltinInventoryTests.test_hir_ty_owner_inventory_is_independent_of_ast_projection`
+and `BuiltinCapabilityTests.test_component_context_and_input_drift_fail_closed`,
+then the full SourceBinderFeasibilityTests class. Rerun further exact accepted
+cases/classes if changed shared capture/schema/consumer inputs affect them.
+Retain the original thirteen-case builtin/extension/inventory union, genuine
+Dynamic/include/source-authority fixtures, original ObjectShapes RA-only negative
+and genuine body ReErased capability rules. A new original-HIR positive does not
+rewrite those negatives. No unchanged-input acceptance may be reused after drift.
+
+### Resources, stop rules and documentation handoff
+
+Retain Rust 1.98.1 `48a229ceaefd4985c50990b14116b6d856af0985`, Cargo
+`797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`, RA
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4` / tree
+`0081a116ddfb9f5c3673eba97df030bea907106f`, API-6 server and existing isolated
+locked graph. Future proof preflight reserves 12 GiB free disk and 8 GiB available
+RAM, at most two Cargo jobs and one sequential semantic worker/server, existing
+1,200-second operation bounds and authenticated compatible inputs/targets.
+Inspect ownership and timing/cache reports before rebuild or broader selections.
+Clean only own inactive obsolete artifacts under actual pressure; no size-only
+cleanup or cold-run performance claim. This docs owner creates no target, runs no
+Cargo command and performs no cleanup.
+
+Stop on any unsupported required exact source relation, missing original
+invocation/input/inventory, incomplete semantic fact/context, ambiguous join,
+failed capture or insufficient resources. Record the precise unsupported fact
+and raw evidence; no private API, upgrade, fallback, textual identity, generated
+reclassification, dropped fixture/owner/context or waived acceptance. A second
+complete implementation review's new mechanism-level defect requires stop and
+rescope, with no third repair/review or waiver. Future proof uses named tests,
+affected regressions and scoped Opus review before merge; final integration owns
+the broad gate. This documentation item needs scoped self-review only.
+
+Historical #4261 source-stop-report SHA-256
+`a597e21622c8603eef7483dad59f9b02d533f34806c73bea4d46d89debd26748` and terminal
+handoff `c3081d5ba43a772a9b2be9874af4d6a96e58d2f339a47d9c54996f308d6710bc`
+remain byte-identical at `/data/sifr-h03a1hbc-evidence-20261002/`; all failed
+logs and unaccepted snapshot/bundle remain intact. HBF's exact reviewed
+`12a70f1889a22f430c0576a1c050826b44ccd0a8` remains 10 cases/387 assertions,
+6,752 original owners/four exact correspondences, semantic_export false and second
+Opus SATISFIED. HBS, #4222/#4233 (26 tests/3,854 assertions) and #4234/#4235
+stops are unchanged historical authority, not include proof. HBC's changed-input
+14/24/19-assertion development history and final zero executed cases/assertions
+remain unaccepted. No complete four-context HBC union is claimed.
+
+Docs validation is
+`python3 verification/areas/documentation/check_structure.py` including registered
+mutation harness, `python3 scripts/check_file_size_guardrails.py`, audited new
+pinned source links/ranges, exact historical byte reconstruction, canonical-only
+scope, whitespace and clean-tree checks. Evidence and candidate-keyed self-review
+remain outside Git at `/data/sifr-h03a1hbi-scope-evidence-20261002/`; publish via
+an exclusively owned bundle/private bare relay and preserve all other indexes.
+
+**Next action after H03a1hbi scope and separate receipt merge: separately assign
+H03a1hbip only. Documentation blocker: none. Remaining proof dependency:
+unproven complete exact original include-owner/impl source correspondence.**
+This checkpoint unlocks no HBC attempt before the complete merged proof/receipt,
+no full Linux/Windows H03a1 adapter, H03a-H03f metrics, V01 or Q01 acceptance.
+This owner stops after the documentation delivery receipt.
+
 ## H03a1hbc required include-owner source-authority stop (2026-10-02)
 
 **Current controlling state: H03a1hbc needs new scope; no complete capability
@@ -3712,7 +3993,9 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
 | H03a1hbs | Required dependency source-binder stop #4234/#4235; **closed**, scope #4236 at `46ec9daf44a42427954ae20aab7f1046a1803f23` and controlling receipt above. | Original compiler HIR/source-binder scope only; H03a1hbf ready for separate assignment, no capability/adapter acceptance. |
 | H03a1hbf | Merged #4238 at `823e5fd38c1e64abeed11258d106e0532a929f53` and this separate feasibility receipt; **closed**, exact candidate `12a70f1889a22f430c0576a1c050826b44ccd0a8`. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
-| H03a1hbc | Merged H03a1hbf proof #4238/#4258 retained; **needs new scope**, required include-owner/impl original source mapping unavailable in this attempt. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified; separately rescope exact included-owner source authority. No complete capability proof or adapter resumption. |
+| H03a1hbi | Stop #4261 and accepted HBF/HBS retained; **scope checkpoint prepared**, canonical-only contract and separate receipt above. | Docs only: exact included-owner/impl original source correspondence rescope; no proof or capability acceptance. |
+| H03a1hbip | Merged H03a1hbi scope and separate receipt required; **reserved pending documentation delivery**. | Separately assigned exact include-source diagnostic proof: four prospective named cases, complete four Linux contexts, scoped review/merge and separate receipt; semantic_export false. |
+| H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
@@ -3726,7 +4009,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
 H03a1pers, H03a1peo, H03a1pets, stopped H03a1pet, H03a1petbs,
-H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbc,
+H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbip, H03a1hbc,
 H03a1, H03a, H03b, H03c, H03d,
 H03ep (H03eps only on a concrete readiness failure), approved full expanded
 V01 capture, H03eq, then H03f**, one independently owned
