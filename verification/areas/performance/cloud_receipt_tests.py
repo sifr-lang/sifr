@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import cloud_benchmarks as cloud
+import cloud_worker
 
 
 class CloudReceiptTests(unittest.TestCase):
@@ -125,12 +126,39 @@ class CloudReceiptTests(unittest.TestCase):
                 self.paths["candidate"].write_text(saved_endpoint)
 
     def test_runtime_thread_configuration_is_bound(self):
-        expected = {"execution": {"cloud_runtime_environment": {"RAYON_NUM_THREADS": None, "OMP_NUM_THREADS": None}}}
+        expected = {"execution": {"cloud_runtime_environment": {"RAYON_NUM_THREADS": None, "OMP_NUM_THREADS": None},
+                                  "cloud_python_context": {}}}
         changed = copy.deepcopy(expected)
         changed["execution"]["cloud_runtime_environment"]["RAYON_NUM_THREADS"] = "4"
         with patch.object(cloud, "comparison_mismatches", return_value=[]):
             self.assertEqual(cloud.configuration_mismatches(expected, expected), [])
             self.assertIn("execution.cloud_runtime_environment", cloud.configuration_mismatches(expected, changed))
+
+    def test_ambient_python_environment_and_interpreter_bytes_are_bound(self):
+        cases = [SimpleNamespace(raw={"source_path": "verification/fixture/src/main.sifr"})]
+        contexts = []
+        for name in ("baseline-context", "candidate-context"):
+            repo = Path(self.temporary.name) / name
+            project = repo / "verification"
+            project.mkdir(parents=True)
+            (project / "pyproject.toml").write_text("[project]\nname='verifier'\n")
+            (project / "uv.lock").write_text("version = 1\n")
+            contexts.append(cloud_worker.python_context(repo, cases))
+        self.assertEqual(contexts[0], contexts[1])
+        interpreter = project / ".venv/bin/python"
+        interpreter.parent.mkdir(parents=True)
+        interpreter.write_bytes(b"different interpreter bytes")
+        changed = cloud_worker.python_context(repo, cases)
+        self.assertNotEqual(contexts[0], changed)
+        expected = {"execution": {"cloud_runtime_environment": {}, "cloud_python_context": contexts[0]}}
+        actual = {"execution": {"cloud_runtime_environment": {}, "cloud_python_context": changed}}
+        with patch.object(cloud, "comparison_mismatches", return_value=[]):
+            self.assertEqual(cloud.configuration_mismatches(expected, actual), ["execution.cloud_python_context"])
+        changed_interpreter = copy.deepcopy(expected)
+        changed_interpreter["execution"]["cloud_python_context"]["interpreter_sha256"] = "changed"
+        with patch.object(cloud, "comparison_mismatches", return_value=[]):
+            self.assertEqual(cloud.configuration_mismatches(expected, changed_interpreter),
+                             ["execution.cloud_python_context"])
 
     def test_cli_malformed_shapes_are_invalid_not_regressions(self):
         for value in [[], None, {"schema_version": 1, "specification": []},
