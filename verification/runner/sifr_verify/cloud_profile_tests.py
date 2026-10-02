@@ -1,5 +1,8 @@
 """Cloud retains merge correctness without a performance preflight dependency."""
 
+import importlib.util
+import os
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -8,9 +11,24 @@ from .profile_commands import CommandFailed
 from .profile_runner import ProfileRunner, StepResult
 from .step_budgets import StepBudgetContext
 from .profiles import load_profile
+from .paths import REPO_ROOT
 
 
 class CloudProfileTests(unittest.TestCase):
+    def test_inherited_cloud_marker_cannot_change_physical_profile_route(self):
+        spec = importlib.util.spec_from_file_location(
+            "cloud_profile_performance_runner", REPO_ROOT / "verification/areas/performance/runner.py"
+        )
+        performance = importlib.util.module_from_spec(spec)
+        with patch.object(sys, "path", sys.path.copy()):
+            spec.loader.exec_module(performance)
+        for profile in ["merge", "release"]:
+            with self.subTest(profile=profile), patch.dict(os.environ, {"SIFR_VALIDATION_PROFILE": "cloud"}):
+                runner = ProfileRunner(profile, [])
+                with patch.dict(os.environ, runner.env, clear=True), \
+                     patch.object(performance, "run_command_variant", side_effect=lambda suite, label, argv: label):
+                    self.assertEqual(performance.run_profile_variants("smoke"), ["benchmark-smoke"])
+
     def test_live_merge_coverage_is_identical(self):
         merge, cloud = load_profile("merge"), load_profile("cloud")
         for field in ["guardrail_steps", "toolchain_steps", "selected_areas", "crate_test_membership", "execution_sandbox", "e2e"]:

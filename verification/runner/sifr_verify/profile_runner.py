@@ -92,8 +92,8 @@ class ProfileRunner:
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
+        self.env["SIFR_VALIDATION_PROFILE"] = self.profile_name
         if self.profile_name == "cloud":
-            self.env["SIFR_VALIDATION_PROFILE"] = "cloud"
             # An unrelated physical-host reference must not affect correctness.
             self.env.pop("SIFR_PERFORMANCE_REFERENCE", None)
         self.env["CARGO_BUILD_JOBS"] = str(self.profile["e2e"]["cargo_build_jobs"])
