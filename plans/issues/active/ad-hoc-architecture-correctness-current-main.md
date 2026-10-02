@@ -133,6 +133,60 @@ H03a metrics and later H03 items retain their dependencies. **Blocker: missing
 authenticated declaration binder/use identity for the current syn ParseBuffer::step
 HRTB.**
 
+### H03a1 required dependency source-binder stop delivery receipt (2026-10-02)
+
+**State: the stop record is merged; H03a1 remains open, needs-new-scope.**
+[Stop-record PR #4234](https://github.com/sifr-lang/sifr/pull/4234) merged as
+`c71a26b3540df409664e68f0bd18cbc0a966160e` from exact documentation candidate
+`a6effd7beb33c9799db308a1f4aa9bf040397483`, on base
+`161b2e2791ba9622f7ad9a8c77484b765957a1d1`. The actual merged canonical phase
+blob equals that checked candidate. This separate receipt changes only the same
+canonical Markdown and preserves all earlier source-binder/builtin adjudications,
+acceptance evidence and failed records.
+
+The exact current syn 3.0.5 ParseBuffer::step declaration remains the blocker.
+Authentic RA call/source/to_def identity and known receiver, unresolved `'c`
+binder plus two uses, resolved inherited `'a`, exact registry archive checksum
+and independent successful locked selected compiler preparation are bound by
+**16 executed diagnostic assertions**. The five individual SemanticInputTests,
+full class, complete live adapter command, Windows structural union, normalized
+repeat captures and bounded fixture mutation are **unrun**; acceptance is
+**0 tests/0 assertions**, with no accepted partial export or implementation review.
+The accepted H03a1petb/H03a1pe authority is unchanged. ObjectShapes isolation and
+body ReErased observations supply no waiver for this required original signature.
+
+The immutable stop evidence archive is retained at
+`/data/sifr-h03a1-full-semantic-adapter-evidence-20261002.archive.tar.gz` and
+copied to
+`/Users/yaseralnajjar/.codex/sifr-architecture-evidence/`
+`h03a1-full-semantic-adapter-20261002/final-stop-evidence.tar.gz`.
+Archive SHA-256:
+`8a7ea5a02a71c911c16f13348e62ae64d253700f802a3b9993b43242b662bfd8`;
+manifest SHA-256:
+`b9b334591c192e703369daec67101759ee174135e5ecef93f7254241cdc388cc`.
+All 64 manifest entries were independently digest-verified in the local archive.
+It retains prototype/source snapshots, exact locked graph and producer/component
+identity, helper executable, raw positive/negative diagnostics, original partial
+operator failure, timing/cache logs, compiler control, stop report, candidate
+checks/self-review and actual merged stop-publication record. The operator-error
+note explicitly distinguishes the transient source-path compile failures retained
+in the tool transcript from the overwritten raw build-log destination; no lost
+raw log or failed capture is relabeled successful.
+
+Registered documentation structure/mutation checks, the global 900-line guard,
+scope/history preservation, whitespace and clean-tree checks pass for the stop.
+This separate receipt runs the relevant documentation/guard/scope/history/
+whitespace checks and scoped self-review only. No repeated semantic run, external
+review, broad gate, reference capture, compiler change or next implementation
+batch occurs. Owned source branches, warm target and remote/local evidence remain
+preserved; the authenticated publication relay uses its own bundle and bare
+repository, leaving shared Mac checkouts and indexes untouched.
+
+**Next action: separately scope the mandatory original compiler HIR/source-binder
+correspondence bridge before any H03a1 implementation resumption. Blocker: missing
+authenticated declaration binder/use identity for current syn ParseBuffer::step.**
+This owner is terminal needs-new-scope and starts no later batch.
+
 ## H03a1petb supported Dynamic repair and H03a1pe delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1petb and H03a1pe closed by the merged combined
@@ -2925,7 +2979,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pet | **Stopped and unaccepted**, #4217 and source-binder stop preserved; prospective continuation is H03a1petb. | Partial compiler facts are unsuccessful qualification evidence; do not merge this historical draft. |
 | H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; **closed**, implementation #4222 at `06dd8ed4597430445c6631c3891ec879e219692a` and separate controlling receipt above. | Complete carried supported Dynamic repair and all original H03a1pe qualification: 26 selected tests/3,854 assertions, four fresh Linux joins/repeats, scoped Opus 5.5 SATISFIED; exact new source HRTB remains a compiler-success/RA-authority negative. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
-| H03a1 | H03a0, repaired H03a1p and fully qualified H03a1pe #4222/controlling receipt merged; **open, needs-new-scope**, required dependency source-binder stop above. | Current syn 3.0.5 ParseBuffer::step HRTB lacks authenticated binder/use correspondence; separately scope that bridge before Linux/Windows full structural union, external closure and build-input adapter resumption. No metric baseline or compiler behavior change. |
+| H03a1 | H03a0, repaired H03a1p and fully qualified H03a1pe #4222/controlling receipt merged; **open, needs-new-scope**, required dependency source-binder stop #4234 and separate receipt above. | Current syn 3.0.5 ParseBuffer::step HRTB lacks authenticated binder/use correspondence; separately scope that bridge before Linux/Windows full structural union, external closure and build-input adapter resumption. No metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
 | H03c | H03b; waiting. | Lowering API evidence: resolve lowering exports through the existing `sifr_ir` owner, CFG/flow and scope APIs; bind actual consumers, declaration origins and retained-intrinsic ownership. No HIR relocation or visibility/removal change. |
