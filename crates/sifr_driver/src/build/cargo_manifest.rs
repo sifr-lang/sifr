@@ -125,7 +125,11 @@ edition = "2024"
         }
     }
 
-    if !interop_deps.is_empty() {
+    if !interop_deps.is_empty()
+        || dependency_plan
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::SqliteRuntime)
+    {
         let native = dependency_plan
             .sysroot_root
             .join("crates/sifr_runtime/third_party/libsqlite3-sys");
@@ -175,7 +179,11 @@ edition = "2024"
             cargo_toml.push('\n');
         }
     }
-    if !rust_interop_path_dependencies(interop).is_empty() {
+    if !rust_interop_path_dependencies(interop).is_empty()
+        || dependency_plan
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::SqliteRuntime)
+    {
         let _ = write!(
             cargo_toml,
             "\n[patch.crates-io]\nlibsqlite3-sys = {{ git = \"{SIFR_GIT_SOURCE}\", rev = \"{sifr_revision}\" }}\n"
@@ -487,6 +495,49 @@ mod tests {
     };
     use sifr_stdlib_manifest::{SysrootCrate, SysrootCrateDependency};
     use std::path::PathBuf;
+
+    #[test]
+    fn sql_runtime_dependency_uses_native_patch_and_portable_revision() {
+        let mut plan = test_dependency_plan(
+            CargoVendorMode::PackageOwned,
+            PathBuf::from("/opt/sifr/vendor"),
+        );
+        plan.required_features
+            .insert(sifr_stdlib_manifest::StdlibFeature::SqliteRuntime);
+        plan.crates.push(SysrootCrateDependency {
+            krate: SysrootCrate::SqliteRuntime,
+            path: PathBuf::from("/opt/sifr/crates/sifr_sql_sqlite_runtime"),
+            features: BTreeSet::new(),
+        });
+        let native =
+            generate_dependency_cargo_toml_with_interop("app", &plan, &InteropBuildPlan::default());
+        let native: toml::Value = toml::from_str(&native).expect("native manifest");
+        assert_eq!(
+            native["patch"]["crates-io"]["libsqlite3-sys"]["path"].as_str(),
+            Some("/opt/sifr/crates/sifr_runtime/third_party/libsqlite3-sys")
+        );
+        let portable = render_portable_dependency_cargo_toml(
+            "app",
+            &plan,
+            &InteropBuildPlan::default(),
+            "0123456789012345678901234567890123456789",
+        )
+        .expect("portable manifest");
+        let portable: toml::Value = toml::from_str(&portable).expect("portable TOML");
+        assert!(
+            portable["dependencies"]["sifr_sql_sqlite_runtime"]
+                .get("path")
+                .is_none()
+        );
+        assert_eq!(
+            portable["dependencies"]["sifr_sql_sqlite_runtime"]["git"].as_str(),
+            Some(SIFR_GIT_SOURCE)
+        );
+        assert_eq!(
+            portable["patch"]["crates-io"]["libsqlite3-sys"]["rev"].as_str(),
+            Some("0123456789012345678901234567890123456789")
+        );
+    }
 
     #[test]
     fn sysroot_cargo_config_args_apply_vendor_for_sysroot_only_mode() {

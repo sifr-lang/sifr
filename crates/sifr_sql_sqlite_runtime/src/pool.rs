@@ -52,6 +52,13 @@ pub struct SqlitePool<S> {
     state: PhantomData<fn() -> S>,
 }
 
+impl<S> SqlitePool<S> {
+    #[must_use]
+    pub fn profile(&self) -> Arc<SqliteProfile> {
+        Arc::clone(&self.shared.profile)
+    }
+}
+
 impl<S> Clone for SqlitePool<S> {
     fn clone(&self) -> Self {
         Self {

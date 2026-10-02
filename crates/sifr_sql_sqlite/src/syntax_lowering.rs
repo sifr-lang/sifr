@@ -147,6 +147,9 @@ fn lower_query(tokens: &[Token]) -> Result<SqliteQuery, SqliteParseError> {
         Vec::new()
     };
     Ok(SqliteQuery {
+        compound: [Keyword::Union, Keyword::Intersect, Keyword::Except]
+            .iter()
+            .any(|keyword| find_top_level_keyword(tokens, *keyword, select + 1).is_some()),
         common_tables,
         projections,
         relations,

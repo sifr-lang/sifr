@@ -4,6 +4,7 @@
 //! communicate through a bounded channel. Cancellation uses SQLite's
 //! `InterruptHandle`; a cancelled or timed-out worker is never returned to the pool.
 
+pub mod application;
 mod config;
 mod pool;
 mod stream;

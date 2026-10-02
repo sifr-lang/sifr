@@ -8,6 +8,7 @@ use crate::scope::{ErrorTaint, Scope};
 use async_effects::AsyncSuspensionSummary;
 use diagnostic_types::{HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic};
 use external_defs::ExternalDefs;
+pub use external_defs::{TypedMethodProcessor, TypedMethodRequest};
 use len_aliases::LenAliasFact;
 use mod_impl::lower_module_impl;
 use ruff_text_size::TextRange;

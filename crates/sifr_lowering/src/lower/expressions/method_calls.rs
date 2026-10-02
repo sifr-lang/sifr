@@ -33,6 +33,36 @@ pub(in crate::lower) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
+    if let Some(processor) = ctx.externals.typed_method_processor.clone()
+        && processor.handles(object.ty(), &method_name)
+    {
+        let mut args = Vec::new();
+        let mut keywords = Vec::new();
+        for arg in &call.arguments.args {
+            args.push(lower_expr(arg, ctx)?);
+            keywords.push(None);
+        }
+        for keyword in &call.arguments.keywords {
+            args.push(lower_expr(&keyword.value, ctx)?);
+            keywords.push(keyword.arg.as_ref().map(ToString::to_string));
+        }
+        return match processor.compile(crate::TypedMethodRequest {
+            module: ctx.current_module_name.as_deref().unwrap_or("main"),
+            owner: ctx.current_owner.as_deref().unwrap_or("module"),
+            object,
+            method: &method_name,
+            args,
+            keywords,
+            range: call.range(),
+        }) {
+            Ok(expression) => Some(expression),
+            Err(message) => {
+                ctx.error_with_code_at(DiagnosticCode::COMPONENT_EXECUTION, message, call.range());
+                None
+            }
+        };
+    }
+
     if let Some(result) =
         super::attached_api_calls::try_lower_instance_call(object.clone(), attr, call, ctx)
     {

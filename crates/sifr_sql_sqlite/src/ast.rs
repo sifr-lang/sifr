@@ -33,6 +33,7 @@ pub enum SqliteStatementKind {
 #[serde(deny_unknown_fields)]
 pub struct SqliteQuery {
     pub common_tables: Vec<String>,
+    pub compound: bool,
     pub projections: Vec<SqliteProjection>,
     pub relations: Vec<Vec<String>>,
     pub joins: Vec<Vec<String>>,

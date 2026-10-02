@@ -747,3 +747,22 @@ pub(super) fn test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdl
             && error.primary_range == Some(range_for(source, "**{\"default_factory\": list}"))
     }));
 }
+
+#[test]
+fn inferred_awaited_result_uses_checked_try_channel() {
+    let prefix = "async def worker() -> Result[int, ValueError]:\n    await task.sleep(0.0)\n    return 41\n\n";
+    let inferred = format!(
+        "{prefix}async def main():\n    try:\n        value = await worker()\n        print(value + 1)\n    except ValueError:\n        pass\n"
+    );
+    lower_source(&inferred).expect("inferred awaited success value");
+    let explicit = format!(
+        "{prefix}async def main():\n    try:\n        value: Result[int, ValueError] = await worker()\n        retained: Result[int, ValueError] = value\n    except:\n        pass\n"
+    );
+    lower_source(&explicit).expect("explicit envelope remains a Result");
+    let outside =
+        format!("{prefix}async def main():\n    value = await worker()\n    print(value + 1)\n");
+    assert!(
+        lower_source(&outside).is_err(),
+        "outside try does not unwrap"
+    );
+}

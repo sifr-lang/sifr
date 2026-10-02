@@ -196,11 +196,32 @@ pub fn sql_query_declarations(
         let profile_name = &profile_locals[local_profile_name];
         let mut function = function.clone();
         let mut templates = Vec::new();
+        let mut typed_sql = false;
         visit_hir_function_exprs_mut(&mut function, &mut |expression| {
+            if matches!(expression, HirExpr::ConstructorCall { class_name, .. } if class_name == "__sifr_sql_bound")
+            {
+                typed_sql = true;
+            }
             if let HirExpr::TemplateString(template) = expression {
                 templates.push(template.clone());
             }
         });
+        if typed_sql {
+            let facts = sifr_lowering::cfg::flow_facts(&function.body)
+                .map_err(|error| error.to_string())?;
+            if !matches!(function.return_type.resolve_alias(), Type::Class { identity: Some(identity), type_args, .. } if identity == "sifr.sql.BoundQuery" && type_args.len() == 5)
+                || !facts.always_exits()
+                || facts
+                    .reachable_return_types()
+                    .iter()
+                    .any(|ty| ty != &function.return_type)
+            {
+                return Err(format!(
+                    "@{local_profile_name}.query function '{}' must return the same query identity on every reachable path",
+                    function.name
+                ));
+            }
+        }
         if templates.len() != 1 {
             return Err(format!(
                 "@{local_profile_name}.query function '{}' must contain exactly one typed template",
@@ -284,7 +305,7 @@ pub fn erase_compiler_sql_surfaces(module: &mut HirModule, profiles: &BTreeSet<S
     });
 }
 
-pub(crate) fn sql_contract_type(ty: &Type) -> Result<SifrType, String> {
+pub fn sql_contract_type(ty: &Type) -> Result<SifrType, String> {
     Ok(match ty.resolve_alias() {
         Type::Bool | Type::LiteralBool(_) => SifrType::Bool,
         Type::FixedInt(fixed) => {

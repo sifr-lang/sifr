@@ -49,6 +49,7 @@ pub enum StdlibFeature {
     Sha1,
     Sha2,
     SifrRuntime,
+    SqliteRuntime,
     StructuralRuntime,
     Sys,
     Tokio,
@@ -105,6 +106,7 @@ impl StdlibFeature {
         Self::Sha1,
         Self::Sha2,
         Self::SifrRuntime,
+        Self::SqliteRuntime,
         Self::StructuralRuntime,
         Self::Sys,
         Self::Tokio,
@@ -161,6 +163,7 @@ impl StdlibFeature {
             Self::SerdeJson => "serde_json",
             Self::Sha1 => "sha1",
             Self::Sha2 => "sha2",
+            Self::SqliteRuntime => "sifr_sql_sqlite_runtime",
             Self::SifrRuntime => "sifr_runtime",
             Self::StructuralRuntime => "sifr_runtime/structural",
             Self::Sys => "sys",
@@ -211,6 +214,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "sifr_runtime/python" | "sifr-runtime/python" | "python-runtime" => {
             Some(StdlibFeature::PythonRuntime)
         }
+        "sifr_sql_sqlite_runtime" => Some(StdlibFeature::SqliteRuntime),
         "rand" => Some(StdlibFeature::Rand),
         "rand_distr" => Some(StdlibFeature::RandDistr),
         "rayon" => Some(StdlibFeature::Rayon),
