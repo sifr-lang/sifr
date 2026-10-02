@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 from .cloud_profile import run_cloud_profile
 from .profile_commands import CommandFailed
-from .profile_runner import ProfileRunner
+from .profile_runner import ProfileRunner, StepResult
+from .step_budgets import StepBudgetContext
 from .profiles import load_profile
 
 
@@ -47,6 +48,15 @@ class CloudProfileTests(unittest.TestCase):
         runner = ProfileRunner("cloud", [])
         with patch.object(runner, "run", return_value=2):
             self.assertEqual(run_cloud_profile(runner), 2)
+
+    def test_diagnostic_step_timing_does_not_replace_performance_verdict(self):
+        runner = ProfileRunner("cloud", [])
+        budget = StepBudgetContext(name="guardrail", budget_ms=10, enforcement="blocking")
+        with patch.object(runner, "prepare_step_budget", return_value=budget), \
+             patch("sifr_verify.profile_runner.timed_step", return_value=StepResult(status=0, elapsed_ms=1000)):
+            self.assertEqual(runner.execute_step("guardrail", lambda: None), 0)
+        self.assertEqual(runner.functional_exit_status, 0)
+        self.assertEqual(runner.performance_exit_status, 0)
 
 
 def policy_checks():

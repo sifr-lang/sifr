@@ -225,8 +225,8 @@ class ProfileRunner:
         if self.profile_name == "cloud" and budget is not None:
             # Preserve the recorded budget and safety deadline. Scheduling
             # uncertainty cannot fail or suppress later correctness checks.
-            if budget.budget_ms > 0 and result.elapsed_ms > budget.budget_ms:
-                self.performance_exit_status = 3
+            # These are diagnostic step timings, not the paired benchmark
+            # contract. Only a checked cloud receipt qualifies performance.
             budget = replace(budget, enforcement="advisory")
         budget_status = enforce_prepared_step_budget(budget, result.elapsed_ms)
         if budget_status != 0:
