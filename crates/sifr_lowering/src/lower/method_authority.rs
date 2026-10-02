@@ -301,7 +301,12 @@ fn nominal_declaration(
     }
 }
 
-fn builtin(receiver: &Type, method: &str, args: &[HirExpr], return_ty: &Type) -> MethodAuthority {
+pub(super) fn builtin(
+    receiver: &Type,
+    method: &str,
+    args: &[HirExpr],
+    return_ty: &Type,
+) -> MethodAuthority {
     MethodAuthority::BuiltinIntrinsic {
         declaration: CallableIdentity {
             module: "sifr.builtin".to_string(),

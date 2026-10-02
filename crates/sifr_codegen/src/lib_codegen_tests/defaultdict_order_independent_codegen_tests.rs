@@ -49,7 +49,10 @@ fn list_slice_append_uses_defaultdict_entry_insertion() {
         "from sifr.collections import defaultdict\n\ndef solve(values: list[int]) -> int:\n    groups = defaultdict(list)\n    groups[1].append(values[0:2])\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(Vec::new())"));
+    assert!(
+        rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(Vec::new())"),
+        "{rust_code}"
+    );
     assert!(rust_code.contains("__sifr_defaultdict_bucket.push(__sifr_defaultdict_arg_0)"));
     assert!(!rust_code.contains("groups.get_mut("));
 }
@@ -60,7 +63,10 @@ fn string_slice_append_uses_defaultdict_entry_insertion() {
         "from sifr.collections import defaultdict\n\ndef solve(text: str) -> int:\n    groups = defaultdict(list)\n    groups[1].append(text[0:2])\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(Vec::new())"));
+    assert!(
+        rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(Vec::new())"),
+        "{rust_code}"
+    );
     assert!(rust_code.contains("__sifr_defaultdict_bucket.push(__sifr_defaultdict_arg_0)"));
     assert!(!rust_code.contains("groups.get_mut("));
 }

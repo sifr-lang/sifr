@@ -1,6 +1,19 @@
 from sifr.collections import defaultdict, deque
 
+def optional_text_length(value: str | None) -> int:
+    return len(value)
+
+def optional_list_length(value: list[int] | None) -> int:
+    return len(value)
+
 def main():
+    assert optional_text_length(None) == 0
+    assert optional_text_length("") == 0
+    assert optional_text_length("é🙂") == 2
+    assert optional_list_length(None) == 0
+    empty_values: list[int] = []
+    assert optional_list_length(empty_values) == 0
+    assert optional_list_length([3, 4]) == 2
     groups = defaultdict(list)
     groups["hit"].append("hot")
     groups["hit"].append("hut")

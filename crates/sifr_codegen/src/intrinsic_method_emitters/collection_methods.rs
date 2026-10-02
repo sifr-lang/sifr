@@ -13,6 +13,16 @@ struct RegistryMethodOperands {
 }
 
 impl RustEmitter {
+    pub(crate) fn is_defaultdict_bucket_mutator(object: &HirExpr, method: &str) -> bool {
+        match object {
+            HirExpr::Index { object: base, .. } => registry_defaultdict_alias_parts(base.ty())
+                .is_some_and(|(_, _, value_ty)| {
+                    methods::is_in_place_collection_method(value_ty, method)
+                }),
+            _ => false,
+        }
+    }
+
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
         object: &HirExpr,
@@ -22,16 +32,7 @@ impl RustEmitter {
         method_return_ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let operands = self.lower_registry_method_operands(object, method, args, places, false)?;
-        let is_defaultdict_bucket_mutator = match object {
-            HirExpr::Index {
-                object: base_object,
-                ..
-            } => registry_defaultdict_alias_parts(base_object.ty()).is_some_and(
-                |(_, _, value_ty)| methods::is_in_place_collection_method(value_ty, method),
-            ),
-            _ => false,
-        };
-        if is_defaultdict_bucket_mutator {
+        if Self::is_defaultdict_bucket_mutator(object, method) {
             return self
                 .try_lower_defaultdict_index_method_call_expr(
                     object,

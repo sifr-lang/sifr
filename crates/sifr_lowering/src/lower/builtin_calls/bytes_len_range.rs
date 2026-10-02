@@ -122,7 +122,10 @@ pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         | Type::Dict(_, _)
         | Type::Tuple(_)
         | Type::Set(_) => Some(HirExpr::MethodCall {
-            authority: sifr_ir::MethodAuthority::Unclassified,
+            // len() has a validated optional-payload contract. Preserve the
+            // actual receiver representation; ordinary optional methods do
+            // not inherit this builtin admission.
+            authority: super::super::method_authority::builtin(&arg_ty, "len", &[], &Type::Int),
             object: Box::new(arg),
             method: "len".to_string(),
             args: vec![],
