@@ -759,6 +759,14 @@ fn inferred_awaited_result_uses_checked_try_channel() {
         "{prefix}async def main():\n    try:\n        value: Result[int, ValueError] = await worker()\n        retained: Result[int, ValueError] = value\n    except:\n        pass\n"
     );
     lower_source(&explicit).expect("explicit envelope remains a Result");
+    let rebound = format!(
+        "{prefix}async def main():\n    value: Result[int, ValueError] = await worker()\n    try:\n        value = await worker()\n        retained: Result[int, ValueError] = value\n    except:\n        pass\n"
+    );
+    lower_source(&rebound).expect("existing Result binding keeps its envelope on reassignment");
+    let inferred_rebound = format!(
+        "{prefix}async def main():\n    try:\n        value = await worker()\n        value = await worker()\n        print(value + 1)\n    except ValueError:\n        pass\n"
+    );
+    lower_source(&inferred_rebound).expect("inferred success binding still accepts checked await");
     let outside =
         format!("{prefix}async def main():\n    value = await worker()\n    print(value + 1)\n");
     assert!(

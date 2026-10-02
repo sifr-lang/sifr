@@ -299,6 +299,7 @@ impl<'a> SqliteAnalyzer<'a> {
             } else if query.predicate.is_none()
                 && query.having.is_none()
                 && query.group_by.is_empty()
+                && query.row_bounds_known
             {
                 Cardinality::EXACTLY_ONE
             } else {

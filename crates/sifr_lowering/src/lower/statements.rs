@@ -180,9 +180,13 @@ pub(in crate::lower) fn lower_python_context_body(
 pub(in crate::lower) fn inferred_awaited_initializer(
     value: HirExpr,
     initializer: &Expr,
+    existing_binding: Option<&str>,
     ctx: &mut LowerCtx,
 ) -> HirExpr {
-    if ctx.in_try_block && matches!(initializer, Expr::Await(_)) {
+    let retains_result_envelope = existing_binding
+        .and_then(|name| ctx.scope.lookup(name))
+        .is_some_and(|info| matches!(info.ty.resolve_alias(), Type::Result(_, _)));
+    if ctx.in_try_block && !retains_result_envelope && matches!(initializer, Expr::Await(_)) {
         if let Type::Result(ok, error) = value.ty().resolve_alias() {
             let ok = ok.as_ref().clone();
             let error = error.as_ref().clone();

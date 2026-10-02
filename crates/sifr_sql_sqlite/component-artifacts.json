@@ -1,11 +1,11 @@
 {
   "artifacts": [
     {
-      "core_sha256": "bb5fea7415e9aadadbec1af4a91dada62b198ab806d6b630f45576d4915bcaf7",
+      "core_sha256": "908d6bb260113fc8c3c7fcae23067fff7f940a22050104b6983116997fb6d280",
       "path": "components/sqlite-3.53.4.wasm",
       "series": "3.53.4",
-      "sha256": "0530dd075642d5a14be69b26fdf5f82faa1fb83a220fcdea93745854cce9fb37",
-      "size_bytes": 2023611
+      "sha256": "fb304b7ddcbf2353bd5d047af08d7bc69e15fe871b404e6bab61e476e11389fa",
+      "size_bytes": 2024854
     }
   ],
   "parser": {
@@ -124,8 +124,8 @@
       "crates/sifr_sql_contract/src/sql_type.rs": "025f5694825ffa8d94695cbee9fe09bfde9b1279cbee9a5b47a9aab5ffaea673",
       "crates/sifr_sql_contract/src/value_identity.rs": "5cf38cde29f010a0d468b02ba8221771d0ad0ee35152b95b51162d08e7322d67",
       "crates/sifr_sql_sqlite/Cargo.toml": "ddd9c39a0e06dcc78b776244c2bdecf2741fc21635d3276bfadb1db2ae8c8624",
-      "crates/sifr_sql_sqlite/src/analyzer.rs": "a0a03c166b00658ed7889dd5c3b1146b578c6f2ecf4f9882ee59346f5f6fbbd7",
-      "crates/sifr_sql_sqlite/src/ast.rs": "2064b1b7b07eac32fda302435566d687fd7a410f5c9d3915b8b1e75370f0d2b0",
+      "crates/sifr_sql_sqlite/src/analyzer.rs": "b0d7cf0f269fb2e8282502efa8ba0542d5ae1a80619c1f3287ce673abf484fa2",
+      "crates/sifr_sql_sqlite/src/ast.rs": "8c65e207d4db1cecb063fb6c706cf3080ef4b16ff23f4e05db60baf097885f6c",
       "crates/sifr_sql_sqlite/src/codec.rs": "8b19a2a0588c7d3618a119243305c25b53f660914c6088a25a94a172734715af",
       "crates/sifr_sql_sqlite/src/component.rs": "1fa0884216931dcac468a95e55a667e870bf0d00c762d3e0e6b9fea780fc1231",
       "crates/sifr_sql_sqlite/src/diagnostic.rs": "9ad0fed57c16018e6a0985ddaa34b2d58125f894edf02344062c08ed882e3f16",
@@ -136,7 +136,8 @@
       "crates/sifr_sql_sqlite/src/migration.rs": "d8810ec13e4caa4f8ed067813d25686dcf8d38ecd2ad52af6a73c7355cbf44e5",
       "crates/sifr_sql_sqlite/src/parser.rs": "77fe5cc5139ce6e22b61f67020df2a9d89da5b8f135d4fac45b9e35a9ae81604",
       "crates/sifr_sql_sqlite/src/schema.rs": "eec3643bb1a1d5cdb65adc67f019f0379b66d23fd1db680c019b5e573efc97c2",
-      "crates/sifr_sql_sqlite/src/syntax_lowering.rs": "f4ef4c8da542d760c047fa04407504e18f01973194ad31a83e909d9df05eef04",
+      "crates/sifr_sql_sqlite/src/syntax_lowering.rs": "b5ae923a507ca49d56a26c343bd791d1bcf454d0f7393805765acd578add42b2",
+      "crates/sifr_sql_sqlite/src/syntax_lowering/query_bounds.rs": "c83df88742f8d0415b38c97b00f325f9ce07c55a11aae0bd8488d34b3293983b",
       "crates/sifr_sql_sqlite/src/syntax_lowering/token_utils.rs": "35be7af3576a62e9818497ce40b0e0720578d3ad4ea4c69044e698c741e2b26e",
       "crates/sifr_sql_sqlite/src/types.rs": "c9c580453fc25528ff29510d40b0e80f0e844cea426383821142ff202b710d69",
       "crates/sifr_structural_identity/Cargo.toml": "7db0dbc5d63032719015cd3002ce86c53a62899f4dbc08b21987e3a8404bc485",
@@ -156,7 +157,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "e9dc095fc6eff92c1b5468293a9923a1ebb4f881d7cb3682eafb250f3d497dc0",
+    "source_sha256": "69fe49004bfd0039b70f9d4d3e7cba397ee3be589d8e1b2bffeb8ae1add91e1d",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

@@ -570,6 +570,23 @@ fn scalar_cardinality_keeps_filters_offsets_and_compound_queries_conservative() 
         ("SELECT 1 AS value WHERE 0", Cardinality::AT_MOST_ONE),
         ("SELECT 1 AS value LIMIT 0", Cardinality::ZERO),
         ("SELECT 1 AS value LIMIT 1 OFFSET 1", Cardinality::ZERO),
+        ("SELECT 1 AS value LIMIT (0)", Cardinality::AT_MOST_ONE),
+        (
+            "SELECT 1 AS value LIMIT 1 OFFSET (1)",
+            Cardinality::AT_MOST_ONE,
+        ),
+        ("SELECT 1 AS value LIMIT ?1", Cardinality::AT_MOST_ONE),
+        (
+            "SELECT 1 AS value LIMIT 1 OFFSET ?1",
+            Cardinality::AT_MOST_ONE,
+        ),
+        ("SELECT 1 AS value LIMIT 1 - 1", Cardinality::AT_MOST_ONE),
+        (
+            "SELECT 1 AS value LIMIT 1 OFFSET 0 + 1",
+            Cardinality::AT_MOST_ONE,
+        ),
+        ("SELECT 1 AS value LIMIT 1, 1", Cardinality::ZERO),
+        ("SELECT 1 AS value LIMIT 0, 1", Cardinality::EXACTLY_ONE),
         ("SELECT 1 AS value UNION ALL SELECT 2", Cardinality::MANY),
     ] {
         assert_eq!(

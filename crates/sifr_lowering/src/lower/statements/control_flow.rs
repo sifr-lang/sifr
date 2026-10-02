@@ -312,7 +312,12 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         }
         return None;
     };
-    value = super::inferred_awaited_initializer(value, &assign.value, ctx);
+    value = super::inferred_awaited_initializer(
+        value,
+        &assign.value,
+        should_treat_as_existing_binding.then_some(name.as_str()),
+        ctx,
+    );
     let value_ty = value.ty().clone();
     pyinterop::reject_python_context_borrow_storage(&value, assign.value.range(), ctx);
 

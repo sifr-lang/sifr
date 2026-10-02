@@ -1571,3 +1571,17 @@ constructor lowering. One canonical type-and-tag predicate now owns dispatch
 for statement expressions, registry operands and runtime support demand. A
 recognized SQL expression that cannot lower produces a compiler error rather
 than being rendered as an unrelated Rust constructor.
+
+The initial scoped review of `3e27111204ca57fc8c8e2dbb11037efc7f7d15ae`
+returned NOT SATISFIED. Its two in-scope regressions are corrected together:
+LIMIT/OFFSET clauses must be fully recognized literal bounds before tightening
+scalar cardinality, and existing Result bindings must retain their envelope on
+awaited reassignment inside try. Focused regressions cover parenthesized bounds,
+parameters, arithmetic expressions, both literal LIMIT syntaxes, explicit
+Result rebinding, and inferred success-value rebinding. The affected SQLite
+component is rebuilt with its complete source provenance. The initial rejection
+remains recorded in [PR #4242](https://github.com/sifr-lang/sifr/pull/4242#issuecomment-5948305345).
+Optional codegen diagnostic and retry-loop hardening belongs to
+[#4243](https://github.com/sifr-lang/sifr/issues/4243). The runtime fingerprint
+already passes the existing 64-character lowercase-hex check before observation
+SQL is constructed; no additional fingerprint-validation gap is established.

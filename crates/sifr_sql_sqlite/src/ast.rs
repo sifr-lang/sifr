@@ -43,6 +43,8 @@ pub struct SqliteQuery {
     pub order_by: Vec<SqliteExpression>,
     pub limit: Option<u64>,
     pub offset: Option<u64>,
+    /// Every LIMIT/OFFSET expression was completely parsed as a literal bound.
+    pub row_bounds_known: bool,
     pub distinct: bool,
     pub windowed: bool,
     pub for_update: bool,
