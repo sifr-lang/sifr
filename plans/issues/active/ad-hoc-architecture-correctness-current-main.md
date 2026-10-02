@@ -146,6 +146,15 @@ including Cargo.lock, the sifr_codegen manifest and production sources. These
 externally owned changes are integrated unchanged; the affected original build
 inputs require new exact qualification and review. The locked isolated helper
 graph and all producer pins remain unchanged. No SQL repair is absorbed.
+Candidate `791f7aafc844cff1a447e2e135ad8810f286f838` completed all10
+cases/387 assertions and guards before a model-capacity interruption. Atomic
+completion recovery confirmed the run finished without duplication or mutation.
+Summary SHA-256 `c12a40f88411a69f6d02bd2780de5b23758e11c9e60a0b526bd02cd69ea82df2`
+and all raw/completion records remain historical. Main advanced during the outage
+to `a3b41eda368dcaa8b84497a81612e87c0ef2358a` via SQL#4245/#4247/#4248/
+#4250/#4252/#4254, with lock/codegen/transitive compiler-source changes. Those
+external changes are integrated unchanged. The newly authenticated inputs require
+fresh exact qualification before the second scoped review. No SQL repair is owned.
 The first review's suggestions are deferred to their owning future work: reverse
 trait multiset coverage, typed exception conversion, new ancestor-manifest absence
 coverage, cfg configuration labeling, dep-info mtime/output isolation, environment
