@@ -6,7 +6,7 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, 5, 7 and prerequisite 7A merged. Continue Items 10,
+Status: Items 4, 4A, 5, 7, 10 and prerequisites 7A/10A merged. Continue Items
 11, 12, registered prerequisite 13, final integration and the Item 6 closer. The compiler lint issue
 [#4230](https://github.com/sifr-lang/sifr/issues/4230) is resolved.
 The user authorized completing that sequence in this cloud session.
@@ -737,7 +737,7 @@ into an automatic provider-generalization requirement.
 
 Additional closure criteria for the later items:
 
-- [ ] Ordinary `.sifr` source builds and executes typed SQL against an actual
+- [x] Ordinary `.sifr` source builds and executes typed SQL against an actual
   test database without a test-only bridge; decorated and standalone calls
   preserve their profile, binding, and result contracts.
 - [ ] Runtime byte values retain binary/text identity through round trips,
@@ -1502,6 +1502,8 @@ instruction to finish without stopping on prerequisites.
 
 ## Item 10 integration scope registration (2026-10-02)
 
+Status: merged with prerequisite 10A in PR #4242; see final delivery receipt below.
+
 The cloud continuation owns the missing production integration mechanism: an
 outer compiler-service processor consumes normally lowered typed SQL arguments,
 returns a checked expression before function return inference/export collection,
@@ -1588,6 +1590,8 @@ SQL is constructed; no additional fingerprint-validation gap is established.
 
 ## Item 10A — preserve independent pagination bounds (2026-10-02)
 
+Status: merged with Item 10 in PR #4242; see final delivery receipt below.
+
 The second Item 10 review of `5a216146e28ed8a1a4618f77dd68bdd3e2f0042e`
 resolved both original findings but returned NOT SATISFIED for a new regression
 in the replacement row-bound parser: it discards a fully literal LIMIT count
@@ -1606,3 +1610,50 @@ component and provenance, rerun affected native/compiler checks and guards, and
 give this prerequisite its own scoped initial review on its exact candidate.
 Reuse compatible Item 10 evidence for unchanged mechanisms; no third review of
 the original unchanged findings or broad intermediate gate is required.
+
+## Item 10 / 10A final cloud delivery (2026-10-02)
+
+[PR #4242](https://github.com/sifr-lang/sifr/pull/4242) merged as
+`b300be238a08ad860ee2063b566a860a96b8a90f`. Final combined candidate
+`495e496337f0d695d9b7cfd7ddc8e7fa9834b05b`, integration base
+`de3be8665a9eced030ad83193696ae185a935930`; prerequisite 10A base
+`5a216146e28ed8a1a4618f77dd68bdd3e2f0042e`. Evidence remains outside the
+reviewed tree in `/workspace/sql-item10-cloud-evidence/`.
+
+The final SQLite compiler suite passed 14 tests, including independent dynamic
+offset pagination, conservative scalar bounds, and the actual checked-in
+component host. The native application suite passed all 8 cases using ordinary
+project source, the real component and a compiled binary against an actual
+SQLite file: return/import identity, owned binding, inferred row use, bounded
+fetches, negative compilation and independently observed catalog drift.
+The rebuilt SQLite artifact has Git blob
+`58bdc02b414d6df1026009a77c0798442ea77260`; complete provenance qualification
+and all 31 mutations passed. Other provider artifacts retain their qualified,
+unchanged dependency closure. Workspace Clippy, formatting and HIR/driver/file-size
+guards passed (4,331 files). Exact-candidate log hashes are in
+`item10a-qualified-receipt.json`.
+
+Compatible earlier focused receipts cover Result inference/rebinding (1),
+frontend query contracts (4), driver profiles (9), shared profile discovery (3),
+SQLite runtime integration (11), common producer codecs (9), native/portable
+manifest planning (1), strict coverage, profile/common qualification, component
+build inputs, broken archives and matching-target installation. No released
+toolchain, cross-target executable or provider-wide connection claim is made.
+The execution boundary remains SQLite/core scalars with an independently
+observed empty application catalog.
+
+The [final scoped approval](https://github.com/sifr-lang/sifr/pull/4242#issuecomment-5948516996)
+returned SATISFIED, no blockers, for the combined candidate's registered 10A
+prerequisite after the second review confirmed both original Item 10 blockers
+resolved. Final response SHA-256
+`941bfd892c60587e7cb483a8876e23278f21f17212971fbfa8cdf9fdcf74eaf1`.
+The initial rejection on `3e27111204ca57fc8c8e2dbb11037efc7f7d15ae` and the
+second rejection on `5a216146e28ed8a1a4618f77dd68bdd3e2f0042e` remain failures;
+their hashes are respectively
+`92cd82f0298511da47bf89386845e26d06888f48c1e041527232593c63b69e75` and
+`cc9168dc7a6b9b922e0d5fa1d24190d94b7d96c540f2b86bb761a6eb21b0cbd3`.
+Preliminary build, runtime, fixture and guard setup failures are preserved.
+Optional hardening and additional boundary-case suggestions remain in #4243.
+No intermediate broad gate is claimed; Items 11–13, the final combined merge
+profile and Item 6 closure remain required. This receipt is record-only and
+requires documentation checks only.
