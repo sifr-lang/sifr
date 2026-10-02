@@ -103,6 +103,12 @@ are explicitly versioned and closed, and actual original invocation/HIR/RA-sourc
 record unavailability is tested against intact caller-held originals, with exact
 bytes retained and restored. These changed inputs require fresh qualification;
 none of the prior candidate evidence is current acceptance.
+Candidate `5d592d4129fbb851babfe427bd173c51971f2053` passed the first named
+case (1/1, 7 assertions), then cached admission stopped before the join case because
+the full tool record includes its authenticated rust-src map beyond the base helper
+identity. Both logs/receipts remain in its `attempts/` directory. Cached admission
+now compares the full current helper/component/source-map identity; no field is
+excluded or defaulted. Fresh qualification is required for the corrected consumer.
 Source inspection
 and partial joins are ingredients, rather than completed feasibility acceptance.
 Final exact-case/class, focused-regression, formatting/syntax/documentation/guard,

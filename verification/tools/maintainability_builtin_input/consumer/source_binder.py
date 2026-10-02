@@ -322,7 +322,10 @@ def capture(output, target, identity, api):
         for name,sha in binding.items(): require(api.digest((output/name).read_bytes()) == sha,"cached original authority drift",api)
         originals=_originals(output,api)
         receipt=json.loads((output / "receipt.json").read_text())
-        require(receipt["inputs"]["tool"] == identity, "cached original helper/component/input identity drift", api)
+        current_sysroot=Path(api.run(["rustc","--print","sysroot"]).stdout.strip())
+        current_sources={str(p):api.digest(p.read_bytes()) for p in (current_sysroot/"lib/rustlib/src/rust").rglob("*") if p.is_file()}
+        expected_tool={**identity,"rust_source_files":current_sources}
+        require(receipt["inputs"]["tool"] == expected_tool, "cached original helper/component/source input identity drift", api)
         authority=_authority(originals,receipt["inputs"],api)
         proof=json.loads((output / "proof.json").read_text())
         verify(proof,receipt,authority,api)
