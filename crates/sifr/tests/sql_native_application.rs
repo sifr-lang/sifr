@@ -126,7 +126,10 @@ async def main():
         for item in rows:
             print(item.z)
         empty = await db.fetch_optional(app.sql(t"SELECT {{value}} AS value WHERE 0"))
-        print(empty is None)
+        if empty is None:
+            print("empty row")
+        else:
+            print("unexpected row")
     except:
         print("SQL execution failed")
 "#,
@@ -158,7 +161,7 @@ async def main():
     );
     assert_eq!(
         String::from_utf8_lossy(&run.stdout),
-        "42\ncolumn order\nbound text\n41\nTrue\n"
+        "42\ncolumn order\nbound text\n41\nempty row\n"
     );
     assert!(
         std::fs::read(&project.database)
