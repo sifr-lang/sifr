@@ -13,7 +13,7 @@ import sys
 import tomllib
 import time
 
-SCHEMA = "sifr-maintainability-builtin-capability-v1"
+SCHEMA = "sifr-maintainability-builtin-capability-v3"
 RUST_COMMIT = "48a229ceaefd4985c50990b14116b6d856af0985"
 CARGO_COMMIT = "797e8a9bca276c1c9f9f738d2a20f484fa4eea9d"
 RA_COMMIT = "03fcb77246f2568adb0e9b2fa60d19c6cc1686f4"
@@ -22,6 +22,10 @@ SERVER_DIGEST = "98f6311d05a2f4b9132dbdeeefed058204374587f5efcf869db0a94025c3fc2
 SOURCE_DIGEST = "022d8a071204673d370771be04904f302fbebd7e7dada0aa8918f74512bac507"
 ROOT = Path(__file__).resolve().parents[1]
 TOOL = ROOT / "verification/tools/maintainability_builtin_input"
+
+
+sys.path.insert(0, str(TOOL / "consumer"))
+import declarations as declaration_consumer
 
 
 class Unsupported(RuntimeError):
@@ -110,7 +114,7 @@ def _tool_identity(receipt_path, target=None):
         raise Unsupported("missing or mismatched pinned resolver source")
     run(["git", "-C", str(resolver), "diff", "--exit-code", "HEAD"])
     lock_graph = sorted([{key: value for key, value in entry.items() if key in ("name", "version", "source", "checksum", "dependencies")} for entry in lock["package"]], key=lambda entry: (entry["name"], entry["version"]))
-    identity = {"selected_sysroot_metadata": {str(path):digest(path.read_bytes()) for path in sorted((sysroot / "lib/rustlib/x86_64-unknown-linux-gnu/lib").glob("*")) if path.is_file()}, "consumer_sources": {name:digest((ROOT / "scripts" / name).read_bytes()) for name in ("maintainability_builtin_input.py", "maintainability_builtin_input_tests.py")}, "lock_graph": lock_graph, "rustc": rustc, "cargo": cargo, "component_receipt": digest(Path(receipt_path).read_bytes()), "server": SERVER_DIGEST, "rust_src": SOURCE_DIGEST, "resolver": RA_COMMIT, "lock": digest((TOOL / "Cargo.lock").read_bytes()), "helper_sources": {str(p.relative_to(TOOL)):digest(p.read_bytes()) for p in sorted(TOOL.rglob("*")) if p.is_file() and "fixtures" not in p.parts}}
+    identity = {"selected_sysroot_metadata": {str(path):digest(path.read_bytes()) for path in sorted((sysroot / "lib/rustlib/x86_64-unknown-linux-gnu/lib").glob("*")) if path.is_file()}, "consumer_sources": {name:digest((ROOT / "scripts" / name).read_bytes()) for name in ("maintainability_builtin_input.py", "maintainability_builtin_input_tests.py")}, "lock_graph": lock_graph, "rustc": rustc, "cargo": cargo, "component_receipt": digest(Path(receipt_path).read_bytes()), "server": SERVER_DIGEST, "rust_src": SOURCE_DIGEST, "resolver": RA_COMMIT, "lock": digest((TOOL / "Cargo.lock").read_bytes()), "helper_sources": {str(p.relative_to(TOOL)):digest(p.read_bytes()) for p in sorted(TOOL.rglob("*")) if p.is_file() and "fixtures" not in p.parts and "__pycache__" not in p.parts}}
 
     if target is not None:
         binding = json.loads((Path(target) / "builtin-build-receipt.json").read_text())
@@ -125,6 +129,9 @@ def _tool_identity(receipt_path, target=None):
 
 def bind_helper_build(target, receipt_path, build_log):
     target = Path(target).resolve()
+    log_text = Path(build_log).read_text()
+    if "Finished `dev` profile" not in log_text or re.search(r"^error(?:\[|:)",log_text,re.MULTILINE):
+        raise Unsupported("failed/incomplete exact isolated helper build")
     identity = tool_identity(receipt_path)
     files = {}
     for name in ("sifr_maintainability_builtin_input", "ra_common"):
@@ -164,7 +171,7 @@ def normalized_body_tokens(tokens):
 
 
 def validate_schema(value):
-    schema = json.loads((TOOL / "schema/capability-v1.json").read_text())
+    schema = json.loads((TOOL / "schema/capability-v3.json").read_text())
     def check(value, rule, path):
         types = {"object": dict, "array": list, "string": str}
         if "type" in rule and not isinstance(value, types[rule["type"]]):
@@ -287,9 +294,10 @@ def validate_inventory(capture, authority):
     return inventory
 
 
-def validate_mapping(capture, authority):
+def _validate_mapping(capture, authority):
     validate_schema(capture)
     validate_inventory(capture, authority)
+    declaration_consumer.validate_inventory_body(capture, authority, sys.modules[__name__])
     if capture.get("schema") != SCHEMA:
         raise Unsupported("wrong capability schema")
     if any("unsupported" in encoded(declaration["canonical_signature"]).decode() or isinstance(declaration["generic_bounds"], dict) for declaration in capture["declarations"]):
@@ -325,7 +333,7 @@ def validate_mapping(capture, authority):
         chains = declaration["expansion_chain"]
         if not chains or not chains[0]["macro"]:
             raise Unsupported(f"missing resolved expansion origin: {owner}")
-        if chains[0]["macro_identity"] not in {"core::fmt::macros::Debug", "core::clone::Clone", "core::cmp::PartialEq", "core::marker::Copy"}:
+        if chains[0]["macro_identity"] not in COMMON_DERIVES:
             raise Unsupported(f"unproven derive kind: {owner} {chains[0]["macro_identity"]}")
         if not chains[0]["builtin"]:
             raise Unsupported(f"unadmitted non-builtin derive: {owner}")
@@ -392,6 +400,11 @@ COMMON_DERIVES = {
     "core::clone::Clone": ("core::clone::Clone", "clone"),
     "core::cmp::PartialEq": ("core::cmp::PartialEq", "eq"),
     "core::marker::Copy": ("core::marker::Copy", None),
+    "core::cmp::Eq": ("core::cmp::Eq", None),
+    "core::cmp::Ord": ("core::cmp::Ord", "cmp"),
+    "core::cmp::PartialOrd": ("core::cmp::PartialOrd", "partial_cmp"),
+    "core::default::Default": ("core::default::Default", "default"),
+    "core::hash::macros::Hash": ("core::hash::Hash", "hash"),
 }
 
 
@@ -436,9 +449,13 @@ def validate_common_obligations(capture, common):
             raise Unsupported("invocation-owned missing RA common member")
 
 
-def validate_join(capture, common, authority):
+def _validate_join(capture, common, authority, *, receipt=None, input_identity=None, required=("call-count", "resolved-module-fanout", "declaration-signatures")):
+    verify_capture(capture,receipt,input_identity,authority)
+    declaration_consumer.context_correspondence(capture,common,input_identity,sys.modules[__name__])
+    declaration_consumer.capabilities(capture,required,sys.modules[__name__])
+    declaration_consumer.invocation_correspondence(capture,common,input_identity,sys.modules[__name__])
     validate_common_obligations(capture, common)
-    validate_mapping(capture, authority)
+    _validate_mapping(capture, authority)
     if common["producer"] != RA_COMMIT:
         raise Unsupported("wrong common-member producer")
     # Logical true/false are implicit language constants; RA lists true explicitly.
@@ -446,15 +463,24 @@ def validate_join(capture, common, authority):
     if resolver_cfg != capture["cfg"]:
         raise Unsupported(f"producer cfg conflict: compiler={capture['cfg']}, resolver={resolver_cfg}")
     compiler = {}
+    compiler_only = []
     for declaration in capture["declarations"]:
         if declaration["owner_kind"] != "AssocFn":
+            continue
+        if declaration["trait_identity"] == "core::cmp::Eq":
+            invocation = next(i for i in common["invocations"] if i["receiver"]==declaration["receiver_identity"] and i["macro"]=="core::cmp::Eq")
+            original = common["trait_methods"].get(declaration["declaration_facts"]["trait_bridge"]["trait_method"])
+            if original is None:
+                raise Unsupported("missing Eq original trait declaration correspondence")
+            bridge = declaration_consumer.validate_bridge(declaration,{"trait_declaration_facts":original},invocation,sys.modules[__name__])
+            compiler_only.append({"owner":declaration["owner"],"declaration_correspondence":bridge,"signature_authority":"authenticated-compiler-declaration","resolver_generated_signature":"not-exposed","member_disposition":"compiler-only-owned-typed-member"})
             continue
         key = encoded([declaration["receiver_identity"], declaration["trait_identity"], declaration["owner"].rsplit("::", 1)[-1]])
         if key in compiler:
             raise Unsupported("duplicate compiler common member")
         compiler[key] = declaration
     seen = set()
-    joined = []
+    joined = compiler_only
     for member in common["common_members"]:
         key = encoded([member["receiver_identity"], member["trait_identity"], member["method"]])
         # A resolver sees source implementations beyond this builtin-only surface.
@@ -481,12 +507,14 @@ def validate_join(capture, common, authority):
         for field, resolver_value in (("generic_bounds", normalized_bounds), ("visibility", member["visibility"])):
             if resolver_value != declaration[field]:
                 raise Unsupported(f"common {field} conflict: {declaration['owner']}")
-        if member["canonical_signature"] != declaration["canonical_signature"]:
+        if common_signature(member["canonical_signature"], declaration) != common_signature(declaration["canonical_signature"], declaration):
             raise Unsupported(f"common source/signature conflict: {declaration['owner']}")
-        joined.append({"owner": declaration["owner"], "receiver": declaration["receiver_identity"], "trait": declaration["trait_identity"], "signature": declaration["canonical_signature"], "compiler_generics": declaration["generic_bounds"], "resolver_generics": member["generic_bounds"], "generic_relation": {"kind": "compiler-lowering-erases-lang-item-bound", "resolved_lang_item": capture["lowering_erased_bound"], "erased": erased_bounds}})
+        invocation = next(i for i in common["invocations"] if i["identity"]==member["invocation"])
+        bridge = declaration_consumer.validate_bridge(declaration,member,invocation,sys.modules[__name__])
+        joined.append({"declaration_correspondence":bridge,"owner": declaration["owner"], "receiver": declaration["receiver_identity"], "trait": declaration["trait_identity"], "signature": declaration["canonical_signature"], "compiler_generics": declaration["generic_bounds"], "resolver_generics": member["generic_bounds"], "generic_relation": {"kind": "compiler-lowering-erases-lang-item-bound", "resolved_lang_item": capture["lowering_erased_bound"], "erased": erased_bounds}})
     if seen != compiler.keys():
         raise Unsupported("missing one-to-one common member")
-    invocation_join = validate_invocation_multisets(capture, common)
+    invocation_join = _validate_invocation_multisets(capture, common)
     by_owner = {owner:entry for entry in invocation_join for owner in entry["compiler_output_multiset"]}
     for joined_member in joined:
         entry = by_owner[joined_member["owner"]]
@@ -495,7 +523,7 @@ def validate_join(capture, common, authority):
     return joined
 
 
-def validate_invocation_multisets(capture, common):
+def _validate_invocation_multisets(capture, common):
     """Retain all invocation-owned outputs, including invocations with no common method."""
     outputs = {}
     for declaration in capture["declarations"]:
@@ -507,8 +535,56 @@ def validate_invocation_multisets(capture, common):
     return [{"invocation":obligations[key]["identity"],"compiler_output_multiset":sorted(owners)} for key,owners in sorted(outputs.items())]
 
 
+def common_signature(value, declaration):
+    value = json.loads(encoded(value))
+    bridge = declaration["declaration_facts"]["trait_bridge"]
+    for node in declaration_consumer.nodes(value):
+        if "parameter" in node:
+            for relation in bridge["alpha_parameters"]:
+                if node["parameter"] == relation["trait_name"]:
+                    node["parameter"] = relation["generated_name"]
+    return value
+
+
+def validate_mapping(capture, authority, *, receipt=None, input_identity=None):
+    return verify_capture(capture,receipt,input_identity,authority)
+
+
+def validate_join(capture, common, authority, *, receipt=None, input_identity=None, required=("call-count", "resolved-module-fanout", "declaration-signatures")):
+    return _validate_join(capture,common,authority,receipt=receipt,input_identity=input_identity,required=required)
+
+
+def validate_invocation_multisets(capture, common, *, receipt=None, input_identity=None, authority=None):
+    verify_capture(capture,receipt,input_identity,authority)
+    return _validate_invocation_multisets(capture,common)
+
+
+def validate_contexts(entries):
+    required={(p,t) for p in ("sifr_codegen","sifr_lowering") for t in (False,True)}
+    actual=set()
+    for capture,receipt,inputs,authority in entries:
+        verify_capture(capture,receipt,inputs,authority)
+        context=capture["context"]
+        if not inputs["whole"] or context["target"]!="x86_64-unknown-linux-gnu":
+            raise Unsupported("whole owned package context completeness conflict")
+        pair=(inputs["package"],context["test"])
+        if pair in actual:raise Unsupported("duplicate context completeness conflict")
+        actual.add(pair)
+    if actual!=required:raise Unsupported("missing required context completeness")
+    return sorted(actual)
+
+
+def consume(capture, receipt, input_identity, authority, required):
+    verify_capture(capture,receipt,input_identity,authority)
+    return declaration_consumer.capabilities(capture,required,sys.modules[__name__])
+
+
 def verify_capture(capture, receipt, input_identity, expected_inventory):
     """Admission requires the authority held by the caller from the real compiler run."""
+    if receipt is None or input_identity is None:
+        raise Unsupported("unauthenticated consumer/publication; independent inventory admission required")
+    if os.environ.get("SIFR_BUILTIN_OMIT_AST_OWNER") is not None:
+        raise Unsupported("omitted-AST hook rejects publication")
     if expected_inventory is None:
         raise Unsupported("missing independent inventory expected authority")
     if receipt["inputs"] != input_identity:
@@ -545,7 +621,7 @@ def verify_capture(capture, receipt, input_identity, expected_inventory):
     inventory = read_inventory(receipt, input_identity)
     if inventory != expected_inventory:
         raise Unsupported("independent inventory replacement expected authority")
-    return validate_mapping(capture, expected_inventory)
+    return _validate_mapping(capture, expected_inventory)
 
 
 def compiler_wrapper():
@@ -553,7 +629,7 @@ def compiler_wrapper():
     args = sys.argv[2:]
     compiler = args.pop(0)
     selected = os.environ["SIFR_BUILTIN_SELECTED_CRATE"]
-    if "--crate-name" in args and args[args.index("--crate-name") + 1] == selected:
+    if "--crate-name" in args and args[args.index("--crate-name") + 1] == selected and ("--test" in args)==(os.environ.get("SIFR_BUILTIN_TEST")=="1"):
         destination = Path(os.environ["SIFR_BUILTIN_CAPTURE_DIR"])
         destination.mkdir(parents=True, exist_ok=True)
         baseline = json.loads((destination / "baseline.json").read_text())
@@ -563,7 +639,7 @@ def compiler_wrapper():
     return subprocess.run([compiler, *args]).returncode
 
 
-def capture_package(root, package, selected_crate, output, helper, target, identity):
+def capture_package(root, package, selected_crate, output, helper, target, identity, *, test=False, whole=False):
     started = time.monotonic()
     root, output = Path(root).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -579,14 +655,16 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
         wrapper.symlink_to(Path(__file__).resolve())
     invocation_store = Path(target) / "builtin-invocations" / (selected_crate + "-" + wrapper_identity)
     invocation_store.mkdir(parents=True, exist_ok=True)
-    environment.update({"CARGO_INCREMENTAL": "0", "CARGO_BUILD_JOBS": "2", "CARGO_TARGET_DIR": str(target), "RUSTC_WORKSPACE_WRAPPER": str(wrapper), "SIFR_BUILTIN_SELECTED_CRATE": selected_crate, "SIFR_BUILTIN_CAPTURE_DIR": str(invocation_store), "SIFR_BUILTIN_HELPER": str(helper)})
+    environment.update({"CARGO_INCREMENTAL": "0", "CARGO_BUILD_JOBS": "2", "CARGO_TARGET_DIR": str(target), "RUSTC_WORKSPACE_WRAPPER": str(wrapper), "SIFR_BUILTIN_SELECTED_CRATE": selected_crate, "SIFR_BUILTIN_TEST":"1" if test else "0", "SIFR_BUILTIN_CAPTURE_DIR": str(invocation_store), "SIFR_BUILTIN_HELPER": str(helper)})
     environment.pop("RUSTC_WRAPPER", None)
     (invocation_store / "baseline.json").write_bytes(encoded(environment))
     # Workspace wrapper participates in Cargo artifact identity; dependency metadata remains warm.
-    result = run(["cargo", "check", "--locked", "--message-format=json", "-p", package, "--lib", "--target", "x86_64-unknown-linux-gnu"], cwd=root, env=environment, log=output / "cargo-preparation.log")
+    result = run(["cargo", "check", "--locked", "--message-format=json", "-p", package, "--tests" if test else "--lib", "--target", "x86_64-unknown-linux-gnu"], cwd=root, env=environment, log=output / "cargo-preparation.log")
     if not (invocation_store / "invocation.json").is_file():
         raise Unsupported("selected exact Cargo invocation is unavailable")
     invocation = json.loads((invocation_store / "invocation.json").read_text())
+    if ("--test" in invocation["args"]) != test:
+        raise Unsupported("selected exact library test/production invocation mismatch")
     if invocation.get("version") != 2:
         raise Unsupported("obsolete compiler invocation context")
     inherited = {key: digest(value.encode()) for key, value in environment.items() if not key.startswith("SIFR_BUILTIN_")}
@@ -595,7 +673,7 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     if Path(invocation["cwd"]).resolve() != root:
         raise Unsupported("selected invocation belongs to a different checkout")
     messages = [json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")]
-    selected = [message for message in messages if message.get("reason") == "compiler-artifact" and message["target"]["name"] == selected_crate and "lib" in message["target"]["kind"]]
+    selected = [message for message in messages if message.get("reason") == "compiler-artifact" and message["target"]["name"] == selected_crate and "lib" in message["target"]["kind"] and message["profile"]["test"]==test]
     if len(selected) != 1:
         raise Unsupported("missing or ambiguous actual selected Cargo package/target")
     metadata_result = run(["cargo", "metadata", "--locked", "--format-version", "1", "--filter-platform", "x86_64-unknown-linux-gnu"], cwd=root, env=environment, log=output / "cargo-metadata.log")
@@ -667,7 +745,7 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     sysroot = Path(run(["rustc", "--print", "sysroot"]).stdout.strip())
     environment["SIFR_BUILTIN_CAPTURE"] = str(output / "raw.json")
     environment["SIFR_BUILTIN_INVENTORY"] = str(output / "raw-inventory.json")
-    environment["SIFR_BUILTIN_SOURCE_SUFFIX"] = "crates/sifr_codegen/src/rust_ir.rs" if package == "sifr_codegen" else "fixture_root/src/lib.rs"
+    environment["SIFR_BUILTIN_SOURCE_SUFFIX"] = ("fixture_root/src/" if package=="builtin_fixture" else f"crates/{package}/src/") if whole else "crates/sifr_codegen/src/rust_ir.rs" if package == "sifr_codegen" else "fixture_root/src/lib.rs"
     analysis_args = invocation["args"].copy()
     if "--out-dir" not in analysis_args:
         raise Unsupported("original selected output context is unavailable")
@@ -678,8 +756,11 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
     if not (output / "raw.json").is_file():
         raise Unsupported("selected typechecking/expansion failed; no complete capture")
     # Rebind all original Rust inputs and actual externally prepared metadata.
+    raw_capture_digest = digest((output / "raw.json").read_bytes())
+    raw_inventory_digest = digest((output / "raw-inventory.json").read_bytes())
     raw = json.loads((output / "raw.json").read_text())
-    for descriptor in raw["callable_catalog"].values():
+    raw_inventory = json.loads((output / "raw-inventory.json").read_text())
+    for descriptor in (d for catalog in [raw["callable_catalog"], *(o["published_body"]["catalog"] for o in raw_inventory["owners"])] for d in catalog.values()):
         paths = descriptor.pop("origin_paths")
         if paths is None:
             descriptor["owner"] = selected[0]["package_id"].replace("path+file://" + str(root), "checkout:")
@@ -688,7 +769,7 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
             if None in owners or len(owners) != 1 or any(str(Path(name).resolve()) not in prepared_files for name in paths):
                 raise Unsupported("unbound callable catalog origin")
             descriptor["owner"] = owners.pop()
-    for declaration in raw["declarations"]:
+    for declaration in raw["declarations"] + [{"typed_sites":o["published_body"]["sites"]} for o in raw_inventory["owners"]]:
         for site in declaration["typed_sites"]:
             for field in ("target", "implementation"):
                 paths = site.pop(field + "_origin_paths")
@@ -709,6 +790,9 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
                 if len(owners) != 1:
                     raise Unsupported("ambiguous dependency callable ownership")
                 site[field + "_owner"] = owners.pop()
+    declaration_consumer.bind_dynamic_origins(
+        [raw,raw_inventory],selected[0]["package_id"].replace("path+file://" + str(root), "checkout:"),
+        sysroot,prepared_files,artifact_owners,sys.modules[__name__])
     for path, sha256 in prepared_files.items():
         if digest(Path(path).read_bytes()) != sha256:
             raise Unsupported(f"prepared input changed during analysis: {path}")
@@ -727,7 +811,7 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
         if "=" in arg and arg.split("=", 1)[1].endswith((".rmeta", ".rlib", ".so")):
             paths.append(Path(arg.split("=", 1)[1]))
     inputs = {str(p.relative_to(root)) if p.is_relative_to(root) else str(p): digest(p.read_bytes()) for p in sorted(set(paths))}
-    config = {"resolver_preparation_environment": {key:environment[key] for key in ("CARGO_INCREMENTAL", "CARGO_BUILD_JOBS", "CARGO_TARGET_DIR", "RUSTC_WORKSPACE_WRAPPER", "SIFR_BUILTIN_SELECTED_CRATE", "SIFR_BUILTIN_CAPTURE_DIR")}, "parent_environment": {key:digest(value.encode()) for key,value in os.environ.items() if not key.startswith("SIFR_BUILTIN_")}, "input_root": str(root), "build_script_parent_environment": build_environment, "cargo_build_contexts": normalize(build_contexts, root), "cargo_metadata_digest": digest(encoded(normalize(metadata, root))), "directory_members": normalize(directory_members, root), "cargo_package_id": normalize(selected[0]["package_id"].replace("path+file://" + str(root), "checkout:"), root), "package": package, "target": "x86_64-unknown-linux-gnu", "test": False, "tool": identity, "files": inputs, "invocation": normalize(invocation, root)}
+    config = {"resolver_preparation_environment": {key:environment[key] for key in ("CARGO_INCREMENTAL", "CARGO_BUILD_JOBS", "CARGO_TARGET_DIR", "RUSTC_WORKSPACE_WRAPPER", "SIFR_BUILTIN_SELECTED_CRATE", "SIFR_BUILTIN_CAPTURE_DIR")}, "parent_environment": {key:digest(value.encode()) for key,value in os.environ.items() if not key.startswith("SIFR_BUILTIN_")}, "input_root": str(root), "build_script_parent_environment": build_environment, "cargo_build_contexts": normalize(build_contexts, root), "cargo_metadata_digest": digest(encoded(normalize(metadata, root))), "directory_members": normalize(directory_members, root), "cargo_package_id": normalize(selected[0]["package_id"].replace("path+file://" + str(root), "checkout:"), root), "package": package, "target": "x86_64-unknown-linux-gnu", "test": test, "whole":whole,"tool": identity, "files": inputs, "invocation": normalize(invocation, root)}
     sysroot = Path(run(["rustc", "--print", "sysroot"]).stdout.strip())
     capture = normalize(raw, root, sysroot)
     capture["context"] = {"crate":selected_crate,"package": config["cargo_package_id"], "target": config["target"], "test": config["test"]}
@@ -741,15 +825,21 @@ def capture_package(root, package, selected_crate, output, helper, target, ident
         else:
             raise Unsupported(f"unaccounted generated auxiliary item: {declaration['owner']}")
     add_intervals(capture)
-    inventory = normalize(json.loads((output / "raw-inventory.json").read_text()), root, sysroot)
+    inventory = normalize(raw_inventory, root, sysroot)
     capture["inventory_digest"] = digest(encoded(inventory))
-    authority = {"inventory":inventory,"context":capture["context"],"cfg":capture["cfg"],"input_digest":digest(encoded(config))}
+    origin = {"raw_capture_digest":raw_capture_digest,"raw_inventory_digest":raw_inventory_digest,"producer":"pinned-rustc-helper","stage":"rustc-after-analysis","invocation_digest":digest(encoded(config["invocation"])),"input_digest":digest(encoded(config))}
+    capture["original_capture"] = origin
+    authority = {"original_capture":origin,"inventory":inventory,"context":capture["context"],"cfg":capture["cfg"],"input_digest":digest(encoded(config))}
     authority_path = output / "inventory-authority.json"
     authority_path.write_bytes(encoded(authority))
     reference = {"path":str(authority_path),"digest":digest(authority_path.read_bytes())}
     config["inventory_authority"] = reference
-    counts = validate_mapping(capture, authority)
+    capture["consumer_capabilities"] = declaration_consumer.capabilities(capture,("call-count","resolved-module-fanout","declaration-signatures"),sys.modules[__name__])
+    counts = None
     receipt = {"inventory_authority":reference,"timing_seconds": {"locked_preparation": result.elapsed_seconds, "metadata": metadata_result.elapsed_seconds, "compiler_analysis": analysis.elapsed_seconds, "total": time.monotonic() - started}, "inputs": config, "capture_digest": digest(encoded(capture)), "counts": counts, "preparation_cargo_artifact_success": True, "capture_cargo_artifact_success": False, "cargo_status": result.returncode, "capture_stopped_after_analysis": True, "cfg_relation": "actual compiler cfg applied via public resolver CfgOverrides, then correspondence verified", "preparation_reuse": "capture-owned wrapper forces a fresh selected invocation; compatible dependency artifacts remain warm", "analysis_output_transform": "only --out-dir redirected to owned evidence; original Cargo args retained"}
+    capture["consumer_capabilities"] = declaration_consumer.capabilities(capture,("call-count","resolved-module-fanout","declaration-signatures"),sys.modules[__name__])
+    receipt["capture_digest"] = digest(encoded(capture))
+    receipt["counts"] = verify_capture(capture,receipt,config,authority)
     (output / "capture.json").write_bytes(encoded(capture))
     (output / "receipt.json").write_bytes(encoded(receipt))
     return capture, receipt
