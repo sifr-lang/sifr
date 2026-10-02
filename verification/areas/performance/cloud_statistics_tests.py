@@ -92,6 +92,17 @@ class CloudPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate(manifest, budgets, pairs)
 
+    def test_internal_query_observations_do_not_inflate_pair_count(self):
+        manifest, budgets, pairs = corpus()
+        manifest["cases"][0].update(kind="frontend-query", measured=5)
+        budgets["budgets"][0]["policy"] = "frontend-query-edit-loop"
+        for row in pairs["case"]:
+            for key in ("baseline", "candidate"):
+                row[key]["latencies_ms"] *= 5
+        result = evaluate(manifest, budgets, pairs)
+        self.assertEqual(result["pairs_per_case"], PAIRS)
+        self.assertEqual(result["status"], "pass")
+
 
 if __name__ == "__main__":
     unittest.main()
