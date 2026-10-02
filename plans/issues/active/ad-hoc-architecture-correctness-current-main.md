@@ -10,6 +10,72 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbs original HIR/source-binder scope delivery receipt (2026-10-02)
+
+**Current controlling state: H03a1hbs documentation checkpoint closed;
+H03a1hbf ready for separate assignment; H03a1hbc and full H03a1 remain
+dependency-blocked.** [Scope PR #4236](https://github.com/sifr-lang/sifr/pull/4236)
+merged as `46ec9daf44a42427954ae20aab7f1046a1803f23` from exact documentation
+candidate `9c4f893cdf230150c0745fa058a339f2bcaa3fb2`, on base
+`6810b6383f4c8bb6d4657c9934f4e78abe50e6a5`. The merged canonical phase blob
+equals the checked candidate, SHA-256
+`69a18cfe2568c9ba7a1a43d3312e7ae58d578b86e5a086f4c9165d1a6330ae0b`.
+This separate receipt changes only the canonical Markdown and its current
+execution status row; the scope contract and all accepted/stopped historical
+records remain intact.
+
+The pinned source audit confirms original local HIR LifetimeKind::Param,
+ResolvedArg/LateBound identity/depth, binder parameters, local-owner queries and
+original-byte source conversion, plus RA resolved owner/trait/source roundtrip
+ingredients. It does **not** establish an external dependency-local HIR capture
+from the original selected Cargo invocation. H03a1hbf's three prospective
+SourceBinderFeasibilityTests must prove that exact syn::step mechanism and failure
+boundary before H03a1hbc's five prospective SourceBinderCapabilityTests may be
+separately assigned. Only complete merged H03a1hbc capability proof/receipt unlocks
+the separate full H03a1 adapter resumption. The scope defines owner paths, closed
+versioned bridge records, independent inventories/caller-held original authority,
+exact source/binder/use/trait correspondence, freshness/repeat/redigested mutation
+checks, four required Linux contexts, resource/cache rules and honest stops.
+
+Scope evidence is retained on `yaser5@192.168.1.134` at
+`/data/sifr-h03a1-source-binder-scope-evidence-20261002/`, with exact-candidate
+binding under `candidates/9c4f893cdf230150c0745fa058a339f2bcaa3fb2/`.
+Documentation-validation manifest SHA-256:
+`4b2efc508a98a2b105fe14236b69eef6aaffa69b81f23dd3fc5d915c466184d6`.
+Ten pinned API links were fetched read-only and match the inspected installed
+compiler/RA source bytes; source-audit SHA-256:
+`962f81579ef771f18e0daf7fc9d3e4933c45fe6c039f92b464301ac9b896609a`.
+Documentation structure/registered mutation harness and global 900-line guard
+pass (4,322 maintained files), as do exact history reconstruction outside the
+designated current row/order, canonical-only scope, whitespace and clean-tree
+checks. Scoped documentation self-review is **SATISFIED**, SHA-256
+`0b29b93af73acb737cd8d200e7ea7f34c0bbc9c9a1cb16186a40ab0cde088fe7`;
+this is not implementation approval. This receipt uses relevant documentation,
+guard, scope/history/whitespace/clean checks and self-review only.
+
+Owned worktrees are `/data/sifr-h03a1-source-binder-scope-20261002` and
+`/data/sifr-h03a1-source-binder-scope-receipt-20261002`, with their respective
+`codex/h03a1-source-binder-scope-20261002` and
+`codex/h03a1-source-binder-scope-receipt-20261002` branches. Exact editor/nested
+VS Code documentation gitlinks were initialized without changing tracked pins.
+No Cargo target, cleanup, source/API producer modification, build/capability
+experiment, external Opus/advisor, broad gate or next implementation ran. Owned
+bundles and Mac bare relay `/tmp/sifr-h03a1-source-binder-relay.saorE6/repo.git`
+preserve shared checkouts/indexes and all earlier evidence/warm caches.
+
+Accepted #4222/#4233 remains 26 tests/3,854 assertions and four Linux joins/repeats.
+#4234/#4235 remains 16 diagnostic assertions, zero H03a1 acceptance tests/assertions,
+no accepted export or implementation review, with no resource blocker. The
+original ObjectShapes rejection and declaration/body-erasure rules are unchanged.
+Full H03a1's original five SemanticInputTests, Linux/Windows complete production/
+test union, external closure/build inputs, original fixtures and repeated/freshness
+checks, later metric/V01/Q01 and whole-phase obligations remain required.
+
+**Next action: separately assign H03a1hbf only. Documentation blocker: none.
+Remaining implementation blocker: unproven authenticated original syn dependency-local
+HIR binder/use capture and exact RA/source correspondence.** This owner is terminal
+after the receipt and starts no capability or adapter implementation.
+
 ## H03a1hbs original compiler HIR/source-binder scope checkpoint (2026-10-02)
 
 **Current controlling state: H03a1hbs documentation scope prepared; H03a1 remains
@@ -3273,7 +3339,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1pet | **Stopped and unaccepted**, #4217 and source-binder stop preserved; prospective continuation is H03a1petb. | Partial compiler facts are unsuccessful qualification evidence; do not merge this historical draft. |
 | H03a1petb | Merged H03a1petbs scope/receipt, H03a1pets and H03a1peo; **closed**, implementation #4222 at `06dd8ed4597430445c6631c3891ec879e219692a` and separate controlling receipt above. | Complete carried supported Dynamic repair and all original H03a1pe qualification: 26 selected tests/3,854 assertions, four fresh Linux joins/repeats, scoped Opus 5.5 SATISFIED; exact new source HRTB remains a compiler-success/RA-authority negative. |
 | H03a1pe | Accepted H03a1pr/H03a1p, closed H03a1pes and merged H03a1peo/receipt; **closed** by the fully qualified H03a1petb #4222 and controlling receipt above; historical #4213/#4217 remain unmerged. | Full original combined extension qualification, review and implementation merge complete; separate H03a1 Linux/Windows full-closure adapter is next. |
-| H03a1hbs | Required dependency source-binder stop #4234/#4235; **documentation scope prepared**, separate receipt required. | Original compiler HIR/source-binder scope only; no capability/adapter acceptance. |
+| H03a1hbs | Required dependency source-binder stop #4234/#4235; **closed**, scope #4236 at `46ec9daf44a42427954ae20aab7f1046a1803f23` and controlling receipt above. | Original compiler HIR/source-binder scope only; H03a1hbf ready for separate assignment, no capability/adapter acceptance. |
 | H03a1hbf | Merged H03a1hbs scope/receipt and accepted #4222/#4233; **ready after documentation delivery**. | Bounded original dependency-local HIR feasibility: three named diagnostic tests, exact syn::step original invocation/source join; no adapter export. |
 | H03a1hbc | Successful merged H03a1hbf proof/receipt; **reserved, dependency-blocked**. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts; complete merged proof required before separate full adapter resumption. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
