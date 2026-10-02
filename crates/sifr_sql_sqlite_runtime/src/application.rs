@@ -1,5 +1,8 @@
 //! Native application boundary for compiler-approved SQLite queries.
-use crate::{ExecutionOptions, SqliteEvidence, SqlitePool, SqliteProfile, Verified, open_pool};
+use crate::{
+    ExecutionOptions, SqliteEvidence, SqlitePool, SqliteProfile, VerificationProbe, Verified,
+    open_pool,
+};
 use serde::Deserialize;
 use sifr_sql_runtime::SqlErrorKind;
 use sifr_sql_runtime::{
@@ -63,8 +66,13 @@ pub async fn connect(
     profile: String,
     schema: String,
 ) -> Result<VerifiedPool, SqlError> {
-    let expected = SchemaDependencySlice::new(schema.clone(), [])
-        .map_err(|_| error(SqlErrorKind::Provider))?;
+    let expected = SchemaDependencySlice::new(
+        schema.clone(),
+        [sifr_sql_runtime::SchemaProperty::new(
+            "catalog.empty",
+            Some("true".into()),
+        )?],
+    )?;
     // This initial application boundary accepts only the compiler's empty catalog.
     // Every acquired worker observes the actual SQLite catalog before verification.
     let observation = format!(
@@ -76,7 +84,10 @@ pub async fn connect(
         expected,
         SqliteEvidence::Introspection {
             fingerprint_statement: observation,
-            probes: Vec::new(),
+            probes: vec![VerificationProbe::new(
+                "catalog.empty",
+                "SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM main.sqlite_schema WHERE name NOT GLOB 'sqlite_*') THEN 'true' ELSE 'false' END",
+            )?],
         },
         SchemaStrictness::Exact,
         BTreeMap::new(),
