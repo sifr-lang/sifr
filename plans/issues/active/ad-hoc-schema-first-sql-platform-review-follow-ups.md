@@ -52,6 +52,23 @@ hashes are preserved in `interrupted-native-receipt.json`, not counted as a
 qualification pass. Only inactive cloud-owned artifacts were removed under
 disk pressure. The amended private-email commit changed metadata only.
 
+### Item 4A — direct build-resource guard mutations (2026-10-02)
+
+Status: implementation in progress before Item 5. Item 4 remains merged.
+The original [#3659](https://github.com/sifr-lang/sifr/issues/3659) asks for
+manifest-guard mutation coverage; Item 4's profile mutation satisfies the P0
+resource-declaration check but does not directly exercise that manifest guard.
+This bounded follow-up owns only integrated-checker injection seams, a wrong
+manifest-resource mutation, a profile-versus-suite mismatch mutation, and the
+corresponding resource diagnostic wording. It also delivers the first two
+checker suggestions in #4224. No build recipe, compiler, scheduler, or profile
+membership changes belong here.
+
+Named checks: integrated checker and its self-test, contract checker and its
+self-test, profile schema check, diff check, file-size guard, and scoped
+exact-candidate Opus review. Reuse Item 4's native/WASI evidence because their
+implementation, flags, dependencies, and validation inputs are unchanged.
+
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
 The Emitted-Rust qualifier's full merge profile on exact merged main

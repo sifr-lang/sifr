@@ -123,7 +123,10 @@ def validate_record(record: dict[str, Any]) -> None:
                 require((REPO_ROOT / path).is_file(), f"{field} path does not exist: {path}")
 
 
-def validate_build_evidence(record: dict[str, Any]) -> None:
+def validate_build_evidence(
+    record: dict[str, Any], *, manifest_override: dict[str, Any] | None = None,
+    profile_overrides: dict[str, dict[str, Any]] | None = None,
+) -> None:
     evidence = record.get("build_evidence")
     require(isinstance(evidence, dict), "build evidence is absent")
     require(
@@ -148,13 +151,14 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
         manifest_text = manifest_path.read_text(encoding="utf-8")
         require(f'name = "{binary}"' in manifest_text,
                 f"SQL tool executable is missing from package: {binary}")
-    manifest = read_json(REPO_ROOT / "verification/areas/sql_platform/manifest.json")
+    manifest = (manifest_override if manifest_override is not None else
+                read_json(REPO_ROOT / "verification/areas/sql_platform/manifest.json"))
     suites = {str(suite.get("name")): suite for suite in manifest.get("suites", [])}
     suite = suites.get(evidence["suite"])
     require(isinstance(suite, dict), "SQL build qualification suite is absent")
     require(
         suite.get("resource_classes") == ["default-local", "long-running"],
-        "SQL build qualification must use the schema-supported default-local resource class",
+        "SQL build qualification must declare default-local and long-running resource classes",
     )
     commands = {str(case.get("command")) for case in suite.get("cases", [])}
     require(commands == {"sql-build-qualification"}, "SQL build suite command has drifted")
@@ -166,7 +170,8 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
         "cross-target workflow does not execute the SQL build runner",
     )
     for profile in ("create-pr", "merge", "nightly", "release"):
-        profile_record = read_json(REPO_ROOT / "verification" / "profiles" / f"{profile}.json")
+        profile_record = (profile_overrides[profile] if profile_overrides is not None else
+                          read_json(REPO_ROOT / "verification" / "profiles" / f"{profile}.json"))
         sql_rows = [
             row
             for row in profile_record.get("selected_areas", [])
@@ -311,8 +316,31 @@ def self_test() -> None:
         except QualificationError:
             continue
         accepted.append(label)
+    manifest = read_json(REPO_ROOT / "verification/areas/sql_platform/manifest.json")
+    profiles = {name: read_json(REPO_ROOT / "verification/profiles" / f"{name}.json")
+                for name in ("create-pr", "merge", "nightly", "release")}
+    wrong_manifest = copy.deepcopy(manifest)
+    next(suite for suite in wrong_manifest["suites"]
+         if suite["name"] == "build-qualification")["resource_classes"] = ["default-local"]
+    wrong_profiles = copy.deepcopy(profiles)
+    next(row for row in wrong_profiles["merge"]["selected_areas"]
+         if row["area"] == "sql_platform")["resource_classes"] = ["default-local"]
+    resource_mutations = [
+        ("wrong-manifest-resource-class", wrong_manifest, profiles,
+         "SQL build qualification must declare default-local and long-running resource classes"),
+        ("profile-suite-resource-mismatch", manifest, wrong_profiles,
+         "merge SQL resource declaration differs from its build suite"),
+    ]
+    for label, selected_manifest, selected_profiles, expected_error in resource_mutations:
+        try:
+            validate_build_evidence(record, manifest_override=selected_manifest,
+                                    profile_overrides=selected_profiles)
+        except QualificationError as error:
+            require(str(error) == expected_error, f"{label} failed at an unrelated guard: {error}")
+            continue
+        accepted.append(label)
     require(not accepted, f"integrated qualification mutations passed: {', '.join(accepted)}")
-    print(f"SQL integrated qualification self-test ok: mutations={len(mutations)}")
+    print(f"SQL integrated qualification self-test ok: mutations={len(mutations) + len(resource_mutations)}")
 
 
 def main() -> int:
