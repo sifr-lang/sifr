@@ -661,3 +661,5 @@ class BuiltinExtensionTests(BuiltinInventoryTests):
 
 if __name__ == "__main__":
     unittest.main()
+
+from source_binder_acceptance import SourceBinderFeasibilityTests

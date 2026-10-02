@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded original source binder feasibility; no semantic export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "fragment",
+    "context",
+    "original_build_authority",
+    "dependency_invocation",
+    "source_files",
+    "declaration_owners",
+    "binders",
+    "lifetime_occurrences",
+    "trait_constraints",
+    "source_correspondences",
+    "independent_inventory",
+    "semantic_export"
+  ],
+  "properties": {
+    "schema": {
+      "const": "sifr-maintainability-source-binder-feasibility-v1"
+    },
+    "fragment": {
+      "const": "sifr-maintainability-source-binder-v1"
+    },
+    "semantic_export": {
+      "const": false
+    },
+    "context": {
+      "type": "object"
+    },
+    "original_build_authority": {
+      "type": "object"
+    },
+    "dependency_invocation": {
+      "type": "object"
+    },
+    "source_files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "declaration_owners": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "binders": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64
+    },
+    "lifetime_occurrences": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256
+    },
+    "trait_constraints": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64
+    },
+    "source_correspondences": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256
+    },
+    "independent_inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "owners"
+      ],
+      "properties": {
+        "schema": {
+          "const": "sifr-maintainability-original-inventory-v1"
+        },
+        "owners": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536
+        }
+      }
+    }
+  }
+}
