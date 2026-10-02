@@ -200,8 +200,8 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     let generated = String::from_utf8(artifacts.files()[GENERATED_MODULE_PATH].clone())
         .expect("generated source");
     assert!(generated.contains("class domains__public__positive_id:"));
-    assert!(generated.contains("value: i32"));
-    assert!(generated.contains("unit_count: i32"));
+    assert!(generated.contains("value: int32"), "{generated}");
+    assert!(generated.contains("unit_count: int32"), "{generated}");
     assert!(generated.contains("latitude: Numeric"));
     assert!(
         generated.contains("domain_values: SqlArray[domains__public__positive_id | None]"),
@@ -212,18 +212,20 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     );
     assert!(generated.contains("value: Range[Numeric]"));
     {
-        let live = parity_schema(schema, major);
-        let ddl = parity_schema(ddl_parity_schema(provider(), major), major);
+        let live = parity_schema(schema);
+        let ddl = parity_schema(ddl_parity_schema(provider(), major));
         build_schema_artifacts(&authority(ddl.clone())).expect("DDL schema artifacts");
         let differences = semantic_diff(&ddl, &live);
         assert!(differences.is_empty(), "{differences:#?}");
+        let changed = parity_schema(ddl_parity_schema_with_filter(provider(), major, 1));
+        assert!(
+            !semantic_diff(&changed, &live).is_empty(),
+            "a changed replacement predicate must differ from the live view"
+        );
     }
 }
 
-fn parity_schema(
-    mut schema: sifr_sql_contract::SchemaIr,
-    major: u16,
-) -> sifr_sql_contract::SchemaIr {
+fn parity_schema(mut schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::SchemaIr {
     schema.objects.retain(|identity, _| {
         identity.as_str() == "public"
             || identity.as_str() == "public.parity_users"
@@ -236,14 +238,31 @@ fn parity_schema(
             || identity
                 .as_str()
                 .starts_with("public.parity_nextval_users.")
-            || (major == 18
-                && (identity.as_str() == "public.parity_user_view"
-                    || identity.as_str().starts_with("public.parity_user_view.")))
+            || [
+                "parity_user_view",
+                "parity_star_view",
+                "parity_alias_view",
+                "parity_order_view",
+                "parity_replaced_view",
+            ]
+            .iter()
+            .any(|name| {
+                identity.as_str() == format!("public.{name}")
+                    || identity.as_str().starts_with(&format!("public.{name}."))
+            })
     });
     schema
 }
 
 fn ddl_parity_schema(provider: ProviderIdentity, major: u16) -> sifr_sql_contract::SchemaIr {
+    ddl_parity_schema_with_filter(provider, major, 0)
+}
+
+fn ddl_parity_schema_with_filter(
+    provider: ProviderIdentity,
+    major: u16,
+    view_filter: i32,
+) -> sifr_sql_contract::SchemaIr {
     let response = PostgresCompilerComponent::new(LibpgQueryParser).execute(
         PostgresComponentRequest::NormalizeSchema {
             provider: provider.clone(),
@@ -257,6 +276,11 @@ fn ddl_parity_schema(provider: ProviderIdentity, major: u16) -> sifr_sql_contrac
                  ); \
                  CREATE VIEW parity_user_view AS \
                     SELECT id, name, score FROM parity_users; \
+                 CREATE VIEW parity_star_view AS SELECT * FROM parity_users; \
+                 CREATE VIEW parity_alias_view AS SELECT u.id AS user_id, u.name FROM public.parity_users u ORDER BY u.id DESC NULLS LAST; \
+                 CREATE VIEW parity_order_view AS SELECT id FROM parity_users ORDER BY id ASC; \
+                 CREATE VIEW parity_replaced_view AS SELECT id, name FROM parity_users; \
+                 CREATE OR REPLACE VIEW parity_replaced_view AS SELECT id, name FROM parity_users WHERE score > 0; \
                  CREATE SEQUENCE parity_owned_sequence AS integer INCREMENT 5 \
                     MINVALUE 0 MAXVALUE 1000 START 0 CACHE 3 CYCLE; \
                  ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.score; \
@@ -269,7 +293,7 @@ fn ddl_parity_schema(provider: ProviderIdentity, major: u16) -> sifr_sql_contrac
                     id bigint DEFAULT nextval('parity_nextval_sequence'::regclass)\
                  ); \
                  ALTER SEQUENCE parity_nextval_sequence OWNED BY parity_nextval_users.id;"
-                    .to_string(),
+                    .replace("WHERE score > 0", &format!("WHERE score > {view_filter}")),
             )],
         },
     );

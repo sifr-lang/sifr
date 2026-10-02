@@ -324,6 +324,9 @@ impl AnalysisContext<'_> {
             )),
             ExpressionKind::Column { path } => {
                 let fact = resolve_column(self.catalog, path, frames, expression)?;
+                if let Some(bindings) = &mut self.view_bindings {
+                    bindings.record_column(self.catalog, path, frames, expression)?;
+                }
                 if let Some(object) = &fact.source_object {
                     self.accessed_objects.insert(object.clone());
                 }

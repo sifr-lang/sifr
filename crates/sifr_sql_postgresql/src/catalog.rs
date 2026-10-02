@@ -541,6 +541,7 @@ fn add_view(
     };
     let catalog = PostgresCatalog::from_schema(&schema, types.clone())?;
     let mut context = AnalysisContext::new(&catalog);
+    context.view_bindings = Some(crate::view_normalization::ViewBindings::default());
     let analyzed = context
         .analyze_select(&view.query, Vec::new())
         .map_err(|error| error.diagnostic)?;
@@ -571,8 +572,8 @@ fn add_view(
             },
         );
     }
-    let provider_query = crate::canonical_postgres_ast_json(&view.query)
-        .map_err(|_| schema_error_message("cannot serialize PostgreSQL view query"))?;
+    let provider_query = crate::view_normalization::serialize_view(&view.query, &context)
+        .map_err(|error| error.diagnostic)?;
     let mut dependencies = namespace_dependency(&view.name);
     dependencies.extend(analyzed.referenced);
     objects.insert(

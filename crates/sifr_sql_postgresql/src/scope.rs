@@ -10,6 +10,21 @@ pub(crate) fn resolve_column(
     frames: &[ScopeFrame],
     expression: &Expression,
 ) -> Result<TypeFact, PostgresAnalysisError> {
+    let (binding, column, _) = resolve_column_binding(catalog, path, frames, expression)?;
+    Ok(TypeFact {
+        database_type: column.database_type.clone(),
+        nullable: column.nullable,
+        source_object: binding.relation.as_ref().map(|_| column.identity.clone()),
+        name_hint: Some(column.name.clone()),
+    })
+}
+
+pub(crate) fn resolve_column_binding<'a>(
+    catalog: &PostgresCatalog,
+    path: &[String],
+    frames: &'a [ScopeFrame],
+    expression: &Expression,
+) -> Result<(&'a ScopeBinding, &'a CatalogColumn, usize), PostgresAnalysisError> {
     let column_name = path.last().ok_or_else(|| {
         PostgresAnalysisError::new(
             PostgresDiagnosticCode::UnknownColumn,
@@ -18,7 +33,7 @@ pub(crate) fn resolve_column(
         )
     })?;
     let qualifier = (path.len() > 1).then(|| path.get(path.len() - 2)).flatten();
-    for frame in frames.iter().rev() {
+    for (depth, frame) in frames.iter().enumerate().rev() {
         let matches = frame
             .bindings
             .iter()
@@ -38,12 +53,7 @@ pub(crate) fn resolve_column(
             ));
         }
         if let Some((binding, column)) = matches.first() {
-            return Ok(TypeFact {
-                database_type: column.database_type.clone(),
-                nullable: column.nullable,
-                source_object: binding.relation.as_ref().map(|_| column.identity.clone()),
-                name_hint: Some(column.name.clone()),
-            });
+            return Ok((binding, column, depth));
         }
     }
     let mut error = PostgresAnalysisError::new(

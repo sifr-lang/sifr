@@ -192,7 +192,12 @@ fn schema_from_rows(
             source: None,
         });
     }
-    crate::normalization::normalize_catalog_objects(expected_major(&dialect)?, &mut objects)?;
+    crate::normalization::normalize_catalog_objects(
+        &provider,
+        &dialect,
+        expected_major(&dialect)?,
+        &mut objects,
+    )?;
     normalize_schema(
         provider,
         dialect,

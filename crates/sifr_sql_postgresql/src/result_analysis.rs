@@ -35,6 +35,9 @@ impl AnalysisContext<'_> {
             if let ExpressionKind::Star { qualifier } = &target.expression.kind {
                 let first = output.len();
                 expand_star(target, qualifier, frames, &mut output)?;
+                if let Some(bindings) = &mut self.view_bindings {
+                    bindings.record_star(target, qualifier, frames)?;
+                }
                 let expansion = StarExpansion {
                     start: target.expression.span.start,
                     end: target.expression.span.end,

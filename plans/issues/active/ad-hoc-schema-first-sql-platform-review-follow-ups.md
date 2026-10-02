@@ -6,7 +6,9 @@ Owner: SQL compiler, schema tools, and verification
 
 ## Current cloud continuation and Item 4 delivery (2026-10-02)
 
-Status: Items 4, 4A, and 5 merged; Item 7 is next. Continue Items 7, 10, 11, and 12,
+Status: Items 4, 4A, and 5 merged; Item 7 is qualified except for the external
+workspace-Clippy prerequisite [#4230](https://github.com/sifr-lang/sifr/issues/4230).
+Continue Items 7, 10, 11, and 12,
 then final integration and the Item 6 closer, in the delivery order below.
 The user authorized completing that sequence in this cloud session.
 
@@ -128,6 +130,52 @@ After the cloud Git CLI credential expired, authenticated GitHub Git-data API
 transport recovered/published commits with exact commit/tree SHA verification.
 No injected credentials were replaced and no repository inputs were changed by
 that transport. The branch and source remain in the cloud-owned checkout.
+
+### Item 7 cloud qualification (2026-10-02)
+
+Status: implementation and named PostgreSQL tests qualified; merge waits for
+workspace Clippy prerequisite [#4230](https://github.com/sifr-lang/sifr/issues/4230)
+and exact-candidate Opus review. The prerequisite belongs to the compiler owner;
+a separate behavior-preserving repair scope is awaiting the user's answer.
+Items 10, 11, 12, final integration, and Item 6 closure remain pending.
+
+DDL and live catalog views now share analyzer-resolved relation and column
+identities. View-only binding capture retains scope and alias roles, expands
+stars in declaration order, resolves output references for ordering/grouping,
+and rejects inconsistent schema qualification or ambiguous columns. Canonical
+ordering preserves direction and null placement. Both producers use the real
+catalog; no qualifier deletion or replacement resolver is introduced.
+
+The PostgreSQL parser matrix passed 29 tests for each major 13–18 (174 total),
+plus the actual checked-in-component host test covering all six rebuilt WASI
+components. Its view schema requests assert qualification/star equivalence,
+replacement, and genuine column-order differences. The live schema-tool matrix
+passed all six server majors with plain, star, aliased, ordered, and replaced
+views, and rejects a changed replacement predicate. The tools-package named
+Cargo tests and PostgreSQL provenance qualification passed. Common formatting,
+HIR/driver/file-size guards (4321 files), diff check, and PostgreSQL library
+Clippy passed. The required workspace Clippy failed in three unchanged compiler
+files with eight findings; no passing workspace check or full merge gate is
+claimed.
+
+Functional qualification used the owned `target/sql-phase-functional`, four
+jobs, offline inputs, and dev/test debug=0. Components were rebuilt with two
+jobs in `target/sql-phase-components`, the exact official WASI SDK 34.0 archive
+and verified extraction, and the pinned WASI-Virt submodule. Docker Hub's pull
+quota required the official ECR PostgreSQL mirror. Images were retained one at
+a time after storage pressure; their actual digests are recorded. After a
+mirror quota interruption, the PostgreSQL 13/14 live passes were reused only
+after all recorded validation inputs matched; 15–18 then passed, using the
+repository's original setup, SQL, and exact test command.
+
+Evidence is outside the reviewed tree in `/workspace/sql-item7-cloud-evidence/`.
+`validation-summary.json` records commands, counts, configuration, and hashes.
+The disk-exhaustion build, missing-submodule setup, stale `i32` fixture assertion,
+expected view snapshot change, and registry quota failures remain failed or
+incomplete attempts. The unchanged generator maps signed 32-bit values to
+`int32`; only the stale live-test expectations were corrected. An optional
+all-targets PostgreSQL Clippy run also exposed two pre-existing test-harness
+`expect_used` warnings; this is not the required workspace selection.
 
 ## Public-`bigint` compatibility guard integration blocker (2026-09-27)
 
@@ -858,7 +906,7 @@ items execute after Items 1–5 and before the docs-only Item 6 closer.
 
 ### Item 7 — PostgreSQL view normalization parity
 
-Status: blocked by unmerged Item 1, later mechanism. Dependencies: Item 1 merged. Delivery order:
+Status: cloud implementation and named PostgreSQL qualification complete; workspace Clippy prerequisite #4230 and scoped review pending. Dependencies: Items 1 and 5 merged. Delivery order:
 after Item 5 and before Item 6.
 
 Reported by Item 1 child, not implemented by it: broadening the original PG18

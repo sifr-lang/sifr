@@ -100,7 +100,61 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
         assert!(run.response.plan.diagnostics.is_empty());
         assert!(!run.response.plan.operations.is_empty());
         exercise_sequence_schema_component(&mut host, major, &bytes);
+        exercise_view_schema_component(&mut host, major, &bytes);
     }
+}
+
+fn exercise_view_schema_component(host: &mut ComponentHost, major: u16, bytes: &[u8]) {
+    use sifr_sql_contract::{
+        ObjectId, SchemaDocumentKind, SchemaSourceInput, SessionContract,
+        schema_normalization_from_response, schema_normalization_request,
+        schema_source_fingerprint,
+    };
+    let mut registration = component_registration(major).unwrap();
+    registration.identity.processor = format!("sifr.sql.postgresql.v{major}.schema");
+    let sql = "CREATE TABLE owners (first bigint, second bigint); \
+        CREATE VIEW unqualified AS SELECT first, second FROM owners; \
+        CREATE VIEW qualified AS SELECT owners.first, owners.second FROM public.owners; \
+        CREATE VIEW expanded AS SELECT * FROM owners; \
+        CREATE VIEW different AS SELECT second, first FROM owners; \
+        CREATE VIEW replaced AS SELECT first, second FROM owners WHERE first > 0; \
+        CREATE OR REPLACE VIEW replaced AS SELECT first, second FROM owners;";
+    let sources = vec![SchemaSourceInput {
+        document: "views.sql".to_string(),
+        kind: SchemaDocumentKind::SqlDdl,
+        fingerprint: schema_source_fingerprint(sql.as_bytes()),
+        contents: sql.as_bytes().to_vec(),
+    }];
+    let request = schema_normalization_request(
+        &registration,
+        "0.0.0",
+        "app.Schema",
+        &major.to_string(),
+        &SessionContract::default(),
+        &Default::default(),
+        &sources,
+    )
+    .unwrap();
+    let run = host
+        .analyze(&registration, bytes, &request)
+        .unwrap_or_else(|error| panic!("PostgreSQL {major} view component: {error}"));
+    assert!(
+        run.response.plan.diagnostics.is_empty(),
+        "{:?}",
+        run.response.plan.diagnostics
+    );
+    let output =
+        schema_normalization_from_response(support::provider(), &sources, &run.response).unwrap();
+    let query = |name: &str| {
+        output.schema.objects[&ObjectId::new(format!("public.{name}"))]
+            .semantic
+            .get("provider-query")
+            .unwrap()
+    };
+    assert_eq!(query("unqualified"), query("qualified"));
+    assert_eq!(query("unqualified"), query("expanded"));
+    assert_eq!(query("unqualified"), query("replaced"));
+    assert_ne!(query("unqualified"), query("different"));
 }
 
 fn exercise_sequence_schema_component(host: &mut ComponentHost, major: u16, bytes: &[u8]) {

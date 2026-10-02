@@ -1,5 +1,6 @@
 ---
 source: crates/sifr_sql_postgresql/tests/postgresql_regressions.rs
+assertion_line: 172
 expression: views
 ---
 [
@@ -19,7 +20,7 @@ expression: views
                 {},
             ),
             "provider-query": Text(
-                "{\"common_tables\":[],\"from\":[{\"alias\":null,\"kind\":\"relation\",\"name\":[\"ordered\"]}],\"group_by\":[],\"having\":null,\"limit\":null,\"locking\":[],\"offset\":null,\"order_by\":[],\"predicate\":null,\"recursive\":false,\"set_operation\":null,\"targets\":[{\"alias\":null,\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"a\"]}}}],\"values\":[],\"windows\":[]}",
+                "{\"common_tables\":[],\"from\":[{\"alias\":null,\"kind\":\"relation\",\"name\":\"public.ordered\"}],\"group_by\":[],\"having\":null,\"limit\":null,\"locking\":[],\"offset\":null,\"order_by\":[],\"predicate\":null,\"recursive\":false,\"set_operation\":null,\"targets\":[{\"alias\":null,\"expression\":{\"kind\":{\"binding\":\"ordered\",\"identity\":\"public.ordered.a\",\"kind\":\"bound_column\",\"scope\":0}}}],\"values\":[],\"windows\":[]}",
             ),
             "unique-sets": List(
                 [],
@@ -53,7 +54,7 @@ expression: views
                 {},
             ),
             "provider-query": Text(
-                "{\"common_tables\":[],\"from\":[{\"alias\":null,\"kind\":\"relation\",\"name\":[\"ordered\"]}],\"group_by\":[],\"having\":null,\"limit\":null,\"locking\":[],\"offset\":null,\"order_by\":[],\"predicate\":null,\"recursive\":false,\"set_operation\":null,\"targets\":[{\"alias\":null,\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"z\"]}}},{\"alias\":null,\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"a\"]}}}],\"values\":[],\"windows\":[]}",
+                "{\"common_tables\":[],\"from\":[{\"alias\":null,\"kind\":\"relation\",\"name\":\"public.ordered\"}],\"group_by\":[],\"having\":null,\"limit\":null,\"locking\":[],\"offset\":null,\"order_by\":[],\"predicate\":null,\"recursive\":false,\"set_operation\":null,\"targets\":[{\"alias\":null,\"expression\":{\"kind\":{\"binding\":\"ordered\",\"identity\":\"public.ordered.z\",\"kind\":\"bound_column\",\"scope\":0}}},{\"alias\":null,\"expression\":{\"kind\":{\"binding\":\"ordered\",\"identity\":\"public.ordered.a\",\"kind\":\"bound_column\",\"scope\":0}}}],\"values\":[],\"windows\":[]}",
             ),
             "unique-sets": List(
                 [],
