@@ -1458,3 +1458,41 @@ leased graph. Actual Cargo retained opt-level 1, assertions and overflow checks;
 no functional assertion or performance comparison is inferred. The shared
 25-GiB debug cache was preserved. Its resource/raw Cargo record is outside Git at
 `/workspace/validation-work/evidence/compact-438a5635-1c78-46ed-b771-c826413d339f/`.
+
+## M2 explicit compact source-profile scheduling
+
+The actual default create-PR attempt at `be6b4cdc1ced25b3ee0b56776f841001f2a93cb1`
+failed its declared disk floor during generated compiler preparation, before any
+qualifying area assertions. The historical log remains
+`/workspace/validation-work/evidence/create-pr-be6b4cdc1.log`.
+The next bounded repair introduces an explicitly selected compact policy for
+Linux source profiles, based on the retained debug=0/incremental=0 cold compiler
+observation above. It preserves every canonical selection and default policy;
+prospective allocations retain 2 GiB disk reserve and at least 1 GiB monitored
+stopping headroom. It rejects conflicting compiler settings and records the
+configuration in execution identity. Sysroot graphs receive session UUID paths,
+retire only with their matching leases, and their required runtime consumers run
+before remaining preparation. Only selected metadata configurations prepare.
+Generated compiler preparation now matches assertion-time offline configuration.
+The policy changes resource scheduling, with no build/assertion reuse claim and
+no waiver of numeric regression acceptance.
+
+Five controls passed for selection equality, conflicting settings, actual shared
+producer/consumer paths, private-graph retirement with shared/other-session cache
+preservation, exact selected metadata preparation and failure blocking.
+An initial foundation attempt failed because the newly created sparse worktree
+had no `target` directory; that failure remains recorded. The directory was
+created before retrying. The corrected foundation run passed all 32 groups; profiles and the source
+size guard passed. Broad native gates and this repair's scoped review are
+pending. The user authorized continuing through successive bounded items.
+
+The repaired native program candidate `b5b5e382d8427e4ebb90693aa9a1b198c105d103`
+received SATISFIED Opus review in
+`/workspace/validation-work/evidence/sifr-claude.gmFV1n/response.md`.
+Clean native preparation, full 54-process capture and independent checking passed:
+`/workspace/validation-work/evidence/generated-programs-b5b5e382d/prepared.json`,
+`/workspace/validation-work/evidence/generated-program-full-b5b5e382d/receipt.json`;
+logs `m4-native-preparation-b5b5e382d.log`, `m4-native-full-capture-b5b5e382d.log`
+and `m4-native-full-check-b5b5e382d.log`. These descriptive observations include
+startup, throughput, CPU, RSS and binary size. Allocation metrics remain unavailable;
+independent compiler comparison, broad gates and M4/phase acceptance remain pending.

@@ -91,11 +91,21 @@ class ProfileRunner:
         if self.require_performance and self.profile_name != "cloud":
             raise ProfileRunnerError("--require-performance is specific to the cloud profile")
         forward_args = [arg for arg in forward_args if arg != "--require-performance"]
+        self.compact_resources = "--compact-resources" in forward_args
+        forward_args = [arg for arg in forward_args if arg != "--compact-resources"]
+        if self.compact_resources and self.profile_name not in {"create-pr", "merge", "nightly", "cloud"}:
+            raise ProfileRunnerError("compact resources require a source validation profile")
         self.no_fail_fast = "--no-fail-fast" in forward_args
         self.forward_args = [arg for arg in forward_args if arg != "--no-fail-fast"]
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
+        if self.compact_resources:
+            for key, value in (("CARGO_PROFILE_DEV_DEBUG", "0"), ("CARGO_INCREMENTAL", "0")):
+                if self.env.get(key) not in (None, value):
+                    raise ProfileRunnerError("compact resource compiler configuration conflicts with " + key)
+                self.env[key] = value
+            self.env["SIFR_VERIFY_RESOURCE_POLICY"] = "compact"
         self.env["SIFR_VALIDATION_PROFILE"] = self.profile_name
         if self.profile_name == "cloud":
             # An unrelated physical-host reference must not affect correctness.
@@ -127,8 +137,8 @@ class ProfileRunner:
         for guardrail in self.profile["guardrail_steps"]:
             if guardrail not in early:
                 continue
-            status = self.execute_step(step_name("guardrail", guardrail),
-                                       lambda g=guardrail: self.run_guardrail(g))
+            status = self.execute_assertion(step_name("guardrail", guardrail),
+                                            lambda g=guardrail: self.run_guardrail(g))
             failed = failed or status
             if status and not self.no_fail_fast:
                 return failed
@@ -139,7 +149,11 @@ class ProfileRunner:
         if self.profile_name == "cloud":
             from .cloud_schedule import run_staged_cloud
             return run_staged_cloud(self, early)
-        prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
+        if self.compact_resources:
+            from .compact_profile import prepare_compact
+            prepared = prepare_compact(self)
+        else:
+            prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
         if prepared and not self.no_fail_fast:
             return prepared
         if not prepared and self.profile.get("cargo_policy", {}).get("offline") is True:
@@ -151,19 +165,21 @@ class ProfileRunner:
             if prepared:
                 self.block_step(step_name("guardrail", guardrail), "cargo_cache_setup")
                 continue
-            status = self.execute_step(step_name("guardrail", guardrail),
-                                       lambda g=guardrail: self.run_guardrail(g))
+            status = self.execute_assertion(step_name("guardrail", guardrail),
+                                            lambda g=guardrail: self.run_guardrail(g))
             failed = failed or status
             if status and not self.no_fail_fast:
                 return failed
         for selection in self.profile["selected_areas"]:
             area = str(selection["area"])
             suites = [str(suite) for suite in selection["suites"]]
+            if area in getattr(self, "compact_completed_areas", set()):
+                continue
             if area == "performance":
                 suites = [suite for suite in suites if suite not in MEASUREMENT_SUITES]
                 if suites and not prepared:
                     started = now_ms()
-                    status = self.execute_step("area_performance_correctness",
+                    status = self.execute_assertion("area_performance_correctness",
                         lambda s=suites: self.run_performance_part(s, "correctness"))
                     performance_elapsed_ms += now_ms() - started
                     failed = failed or status
@@ -175,7 +191,7 @@ class ProfileRunner:
             if prepared:
                 self.block_step(step_name("area", area), "cargo_cache_setup")
                 continue
-            status = self.execute_step(step_name("area", area),
+            status = self.execute_assertion(step_name("area", area),
                                        lambda a=area, s=suites: self.run_area(a, s))
             failed = failed or status
             if status and not self.no_fail_fast:
@@ -188,7 +204,7 @@ class ProfileRunner:
             if prepared:
                 self.block_step(step_name("toolchain", toolchain_step), "cargo_cache_setup")
                 continue
-            status = self.execute_step(step_name("toolchain", toolchain_step),
+            status = self.execute_assertion(step_name("toolchain", toolchain_step),
                                        lambda t=toolchain_step: self.run_toolchain_step(t))
             failed = failed or status
             if status:
@@ -218,6 +234,12 @@ class ProfileRunner:
             self.execute_step("area_performance", finish, performance=bool(measured),
                               prior_elapsed_ms=performance_elapsed_ms)
         return failed or self.performance_exit_status
+
+    def execute_assertion(self, name, callback):
+        schedule = getattr(self, 'compact_schedule', None)
+        if schedule is None:
+            return self.execute_step(name,callback)
+        return schedule.step(name, callback, allocation='remaining-assertions', monitor_disk=True)
 
     def block_step(self, name: str, prerequisite: str) -> None:
         print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")

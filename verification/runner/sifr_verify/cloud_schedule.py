@@ -60,8 +60,10 @@ def clamp_workers(runner, resources):
     return runner.e2e_worker_limits
 
 
-def load_schedule(root: Path = REPO_ROOT) -> dict:
-    policy = json.loads((root / "verification/policy/cloud_resource_schedule.json").read_text())
+def load_schedule(root: Path = REPO_ROOT, mode: str = "cloud") -> dict:
+    if mode not in {"cloud", "compact"}:
+        raise ResourceError("unknown resource schedule", "unavailable")
+    policy = json.loads((root / ("verification/policy/" + mode + "_resource_schedule.json")).read_text())
     validate_data(policy, load_schema("cloud_resource_schedule.schema.json"), source="cloud resource schedule")
     expected = {"dependency-acquisition", "sysroot-source", "sysroot-package", "sysroot-assertions",
                 "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions",
@@ -84,14 +86,14 @@ class Schedule:
         self.journal = root / "target/verification/execution-journals" / self.owner
         self.index = 0
         try:
-            self.policy = load_schedule(root)
+            self.policy = load_schedule(root, runner.env.get("SIFR_VERIFY_RESOURCE_POLICY", "cloud"))
             resources = discover(disk_path=root)
         except (ResourceError, ValueError, OSError) as error:
             self.record("admission-unavailable", {"state": "infrastructure-failure",
                          "classification": "unavailable", "detail": str(error)})
             raise
         workers = clamp_workers(runner, resources)
-        self.key = execution_key(selection={"contract": stage_plan("cloud"), "required_kinds": {}},
+        self.key = execution_key(selection={"contract": stage_plan(getattr(runner, "profile_name", "cloud")), "required_kinds": {}},
             commands=[[sys.executable, "-m", "sifr_verify", *sys.argv[1:]]], artifacts=[],
             producer={"kind": "owned-local-runner", "session": self.owner}, services={},
             env=runner.env, root=root, resource_identity=resources.identity())
@@ -224,6 +226,8 @@ def run_staged_cloud(runner, early: set[str]) -> int:
     enable_offline_cargo(env)
     env[OWNER_VARIABLE] = schedule.owner
     env["SIFR_VERIFY_GRAPH_OWNER"] = schedule.graph_owner
+    if env.get("SIFR_VERIFY_RESOURCE_POLICY") == "compact":
+        env["SIFR_VERIFY_SYSROOT_GRAPH_SESSION"] = schedule.owner
     failed = 0
     for kind in ("source", "package"):
         status = schedule.step("preparation_sysroot_" + kind,

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import os
 import subprocess
+from graph_paths import graph_path
 from pathlib import Path
 
 
 def source_build_configuration(root: Path, environment: dict[str, str]):
-    target = root.resolve() / "target" / "sysroot_release" / "source-cargo-target"
+    target = graph_path(root,environment,"source-cargo-target")
     env = environment.copy()
     env["CARGO_TARGET_DIR"] = str(target)
     env["CARGO_NET_OFFLINE"] = "true"

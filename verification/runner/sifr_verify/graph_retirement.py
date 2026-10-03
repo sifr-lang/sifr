@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import stat
+import re
 import tempfile
 from pathlib import Path
 
@@ -32,7 +33,8 @@ def plain_path(root: Path, path: Path) -> Path:
 
 
 def require_owned_path(root: Path, relative: str) -> Path:
-    if relative not in GRAPH_PATHS:
+    if relative not in GRAPH_PATHS and not re.fullmatch(
+            r"target/sysroot_release/graphs/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/(?:source-cargo-target|cargo-target)",relative):
         raise ResourceError("retirement path is not a declared isolated graph", "unavailable")
     root = root.resolve()
     return plain_path(root, root / relative)
@@ -68,8 +70,9 @@ class GraphLease:
         leases.mkdir(parents=True, exist_ok=True)
         if leases.is_symlink():
             raise ResourceError("graph lease directory must not be a symlink", "unavailable")
-        self.marker = leases / (self.path.name + ".json")
-        self.lock = leases / (self.path.name + ".lock")
+        marker_name = self.path.name if relative in GRAPH_PATHS else self.path.parent.name+"-"+self.path.name
+        self.marker = leases / (marker_name + ".json")
+        self.lock = leases / (marker_name + ".lock")
         self.consumers: set[str] = set()
         self.passed: set[str] = set()
         self._stream = None

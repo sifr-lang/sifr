@@ -225,7 +225,22 @@ follows these lifetimes. Runtime adapters independently recompute the same
 isolated producer identity and rehash the consumed outputs; invalid declared
 receipts fail closed. A preparation receipt records zero runtime assertions.
 Unknown cache owners can be consumed through Cargo but are never cleaned.
-The 8 GiB disk reserve remains required; compression adds no acceptance claim.
+The default cloud policy retains its 8 GiB disk reserve; compression adds no
+acceptance claim.
+
+Linux source profiles can explicitly select `--compact-resources` with
+`create-pr`, `merge`, `nightly` or `cloud`. This prospective policy uses
+`CARGO_PROFILE_DEV_DEBUG=0` and `CARGO_INCREMENTAL=0`, a 2 GiB disk reserve
+and at least 1 GiB additional monitored stopping headroom. Conflicting compiler
+settings fail before execution. It preserves the canonical suite, fixture and
+assertion selections, safety deadlines and performance qualification contracts.
+Each sysroot graph uses a new session UUID; only leased graphs owned by that
+session retire. Selected sysroot assertions run after their graphs retire and
+before the remaining library preparations. Preparation never counts as an
+assertion. Stage journals retain admissions, configuration, failures and actual
+resource observations; estimates can fail closed and do not promise capacity.
+Generated compiler preparation and assertions both use offline Cargo after
+separate dependency acquisition. Quantitative performance remains last.
 
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to

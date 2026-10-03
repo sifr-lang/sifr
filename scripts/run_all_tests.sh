@@ -25,6 +25,7 @@ Options:
   --release-report-out <path>                 Write immutable release evidence (release only)
   --emit-plan                                 Print the selected profile execution plan and exit
   --require-performance                       Require qualified performance (cloud only)
+  --compact-resources                         Explicit bounded Linux source-profile execution
   --help                                      Show this help
 
 Any remaining arguments are forwarded to the verification-owned e2e pass runner.
