@@ -95,7 +95,7 @@ def matrix(test,proof,receipt,authority):
 
 def semantic_matrix(test,proof,receipt,authority):
     joins=proof['compiler_semantic_owner_identity']['correspondences']
-    ci=next(i for i,j in enumerate(joins) if j['native_owner'] is not None and j['compiler_semantic_owner_identity']['binder_use_correspondences']['binders'])
+    ci=next(i for i,j in enumerate(joins) if j['native_owner'] is not None and j['compiler_semantic_owner_identity']['binder_use_correspondences']['binders'] and j['compiler_semantic_owner_identity']['outlives_correspondences'])
     def sem(p):return p['compiler_semantic_owner_identity']['correspondences'][ci]['compiler_semantic_owner_identity']
     def use(p):return next(u for u in sem(p)['binder_use_correspondences']['uses'] if u['compiler']['resolved']['kind']=='LateBound')
     for label,change in (

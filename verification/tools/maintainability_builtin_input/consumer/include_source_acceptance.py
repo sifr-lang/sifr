@@ -84,7 +84,7 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
 
     def test_included_impl_and_adt_have_exact_original_semantic_source(self):
         proof,receipt,authority=self.fixture_capture('attributes');source,semantic,_=assertions.inventories(self,proof,receipt,authority,b)
-        for side in ('left','right'):assertions.attribute_anchor(self,proof,authority,'::'+side+'::IncludedBinder',[17,68],[0,68],[0,16],b)
+        for side in ('left','right'):assertions.attribute_anchor(self,proof,authority,side+'::IncludedBinder',[17,68],[0,68],[0,16],b)
         joins=proof['compiler_semantic_owner_identity']['correspondences'];owners=semantic['compiler']['declaration_owners']
         impls=[j for j in joins if owners[j['compiler_owner']]['source_owner_kind']=='Impl']
         self.require(len(impls)==2 and all(any(n['aggregate_original'] is None for n in j['source_native_attribute_membership']['subnodes']) for j in impls),'genuine IncludedBinder impl aggregate original_range_opt None stays None')

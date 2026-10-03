@@ -10,6 +10,21 @@ from include_source_authority import require
 
 def census(root,metadata,messages,invocations,identity,output,target,api):
     inputs=source_binder._inputs(root,metadata,messages,invocations,identity,output,api)
+    modules=root/'.gitmodules'
+    if modules.is_file():inputs['files'][str(modules)]=api.digest(modules.read_bytes())
+    links=[]
+    for line in api.run(['git','ls-files','--stage'],cwd=root).stdout.splitlines():
+        fields=line.split(None,3)
+        if fields[0]!='160000':continue
+        relative=fields[3];directory=root/relative
+        initialized=(directory/'.git').exists()
+        record={'path':relative,'expected':fields[1],'initialized':initialized}
+        if initialized:
+            record['actual']=api.run(['git','rev-parse','HEAD'],cwd=directory).stdout.strip()
+            require(record['actual']==record['expected'],'original gitlink revision drift',api)
+            api.run(['git','diff','--exit-code','HEAD'],cwd=directory)
+        links.append(record)
+    inputs['gitlinks']=links
     # Freeze every metadata package before semantic producers select any source.
     for package in metadata['packages']:
         directory=Path(package['manifest_path']).parent

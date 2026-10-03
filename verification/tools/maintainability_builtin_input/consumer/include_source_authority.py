@@ -71,6 +71,12 @@ def authenticate(authority,receipt,api):
     for name,sha in inputs['tool']['consumer_sources'].items():require(api.digest((api.ROOT/'scripts'/name).read_bytes())==sha,'consumer source drift',api)
     for name,sha in inputs['tool']['helper_sources'].items():require(api.digest((api.TOOL/name).read_bytes())==sha,'helper/schema source drift',api)
     for name,sha in inputs['tool']['helper_build']['executables_and_runtime'].items():require(api.digest(Path(name).read_bytes())==sha,'helper executable/runtime drift',api)
+    for link in inputs['gitlinks']:
+        directory=Path(inputs['root'])/link['path']
+        require((directory/'.git').exists()==link['initialized'],'original gitlink initialization drift',api)
+        if link['initialized']:
+            require(api.run(['git','rev-parse','HEAD'],cwd=directory).stdout.strip()==link['actual']==link['expected'],'original gitlink identity drift',api)
+            api.run(['git','diff','--exit-code','HEAD'],cwd=directory)
     resolver=inputs['resolver_root']
     require(api.run(['git','-C',resolver,'rev-parse','HEAD']).stdout.strip()==api.RA_COMMIT and api.run(['git','-C',resolver,'rev-parse','HEAD^{tree}']).stdout.strip()==api.RA_TREE,'official RA pin drift',api)
     api.run(['git','-C',resolver,'diff','--exit-code','HEAD'])
