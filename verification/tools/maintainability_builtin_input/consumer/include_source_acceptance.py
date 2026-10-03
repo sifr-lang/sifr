@@ -13,6 +13,7 @@ import include_source_negatives as negatives
 from include_source_authority import read_originals
 from include_source import verify
 import include_source_union as union
+import include_source_encoding as canonical
 
 CONTEXTS=tuple(capture.context(p,t) for p in ('sifr_codegen','sifr_lowering') for t in (False,True))
 VARIANTS=('hrtb','alpha','crlf','bom','unicode')
@@ -59,6 +60,25 @@ def signature(proof,authority):
         # compared, while each proof separately establishes all native owners.
         result.append({'compiler_owner':j['compiler_owner'],'source':normalize(owners[j['compiler_owner']]['source']),'kind':owners[j['compiler_owner']]['source_owner_kind'],'tokens':membership['tokens'],'subnodes':[{'kind':n['kind'],'aggregate_original':normalize(n['aggregate_original']),'contextual_original':normalize(n['contextual_original'])} for n in membership['subnodes']],'attributes':membership['source_attributes'],'physical_trivia':normalize(membership['physical_trivia']),'physical_range':membership['physical_range'],'association':normalize(sem['association']),'compiler_parameters':normalize(sem.get('parameters',[])),'compiler_binders':normalize(sem.get('binders',[])),'compiler_uses':normalize(sem.get('uses',[])),'compiler_traits':normalize(sem.get('traits',[]))})
     return result
+
+
+def signature_record(proof,receipt,authority,path):
+    # Keep every normalized source edge, but release the object graph before
+    # independently loading the repeat's complete originals and projection.
+    verify(proof,receipt,authority,b)
+    canonical.write(path,signature(proof,authority))
+    return (str(path),canonical.file_digest(path),Path(path).stat().st_size)
+
+
+def signatures_equal(left,right):
+    for path,sha,size in (left,right):
+        if Path(path).stat().st_size!=size or canonical.file_digest(path)!=sha:
+            raise b.Unsupported('held complete normalized signature byte binding drift')
+    with Path(left[0]).open('rb') as first,Path(right[0]).open('rb') as second:
+        while True:
+            a=first.read(1024*1024);c=second.read(1024*1024)
+            if a!=c:return False
+            if not a:return True
 
 
 class IncludeSourceCorrespondenceTests(unittest.TestCase):
@@ -157,17 +177,31 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
         for ctx in CONTEXTS:
             proof,receipt,authority=self.get(b.ROOT,ctx);assertions.inventories(self,proof,receipt,authority,b)
             qualified.append(union.qualify(proof,receipt,authority,self.last_output,b))
-            before=signature(proof,authority);syn=proof['compiler_semantic_owner_identity']['original_syn_correspondence']
+            label=ctx['package']+('-tests' if ctx['test'] else '-lib')
+            before=signature_record(proof,receipt,authority,self.run_dir/(label+'-main-normalized.json'));syn=proof['compiler_semantic_owner_identity']['original_syn_correspondence']
             self.require((syn is not None)==(ctx['package']=='sifr_codegen'),'actual original syn::step joins exactly where caller dependency applies')
             if syn:
                 self.require(len(syn['source_correspondences'])==4 and syn['semantic_export'] is False,'complete actual syn::step declaration/HRTB/inherited source correspondences')
                 exact=proof['compiler_semantic_owner_identity']['exact_original_dependency_source']
                 self.require(len(exact['declaration_owners'])==2 and all(j['membership']['tokens'] and j['membership']['subnodes'] and j['association'] for j in exact['declaration_owners']),'retained syn::step also has complete native original token/subnode and actual compiler NodeId/LocalDefId/HIR owner authority')
+            if syn:del exact
+            del syn
             summaries.append({'context':ctx,'owners':len(proof['compiler_semantic_owner_identity']['complete_owner_dispositions']),'required':len(proof['compiler_semantic_owner_identity']['correspondences']),'roots':len(proof['source_native_attribute_membership']['include_roots'])})
             del proof,receipt,authority;gc.collect()
             proof,receipt,authority=self.get(repeat,ctx);assertions.inventories(self,proof,receipt,authority,b)
             qualified.append(union.qualify(proof,receipt,authority,self.last_output,b))
-            self.require(signature(proof,authority)==before,'fresh unchanged complete source/native and independent compiler owner relation normalizes across owned checkouts')
+            after=signature_record(proof,receipt,authority,self.run_dir/(label+'-repeat-normalized.json'))
+            self.require(signatures_equal(before,after),'fresh unchanged complete source/native and independent compiler owner relation normalizes across owned checkouts')
+            path=Path(after[0])
+            with path.open('r+b') as stream:
+                original=stream.read(1);stream.seek(0);stream.write(b' ')
+            try:
+                self.assertions+=1
+                with self.assertRaisesRegex(b.Unsupported,'signature byte binding drift'):signatures_equal(before,after)
+            finally:
+                with path.open('r+b') as stream:stream.write(original)
+            self.require(signatures_equal(before,after),'restored complete normalized signature bytes retain the genuine independently authenticated repeat comparison')
+            (self.run_dir/(label+'-normalized-bindings.json')).write_bytes(b.encoded({'main':before,'repeat':after,'compared_every_byte':True}))
             del proof,receipt,authority,before;gc.collect()
         for name in ('attributes',*VARIANTS):
             proof,receipt,authority=self.fixture_capture(name);assertions.inventories(self,proof,receipt,authority,b);qualified.append(union.qualify(proof,receipt,authority,self.last_output,b));del proof,receipt,authority;gc.collect()
