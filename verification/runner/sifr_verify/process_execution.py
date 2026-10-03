@@ -168,7 +168,10 @@ def execute(
                 spawn_options = {}
                 if sys.platform.startswith("linux"):
                     status_read, status_write = os.pipe()
-                    spawned_command = [sys.executable, str(Path(__file__).with_name("process_supervisor.py")),
+                    # Control-plane imports cannot depend on the command's site
+                    # hooks, PYTHONPATH, or mutable bytecode caches.
+                    spawned_command = [sys.executable, "-I", "-S", "-B", "-X", "pycache_prefix=/dev/null",
+                                       str(Path(__file__).with_name("process_supervisor.py")),
                                        "--status-fd", str(status_write), "--", *command]
                     spawn_options["pass_fds"] = (status_write,)
                 previous_mask = None

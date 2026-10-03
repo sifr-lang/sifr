@@ -283,7 +283,11 @@ class ProfileRunner:
 
     def run_guardrail(self, guardrail: str) -> None:
         if guardrail == "hir-maintainability":
-            self.run_python("scripts/check_hir_maintainability_guardrails.py")
+            if self.profile_name == "cloud":
+                from .checkpoint_recipes import run_guard
+                run_guard(guardrail, env=self.env)
+            else:
+                self.run_python("scripts/check_hir_maintainability_guardrails.py")
         elif guardrail == "method-dispatch-authority":
             self.run_script_with_self_test("scripts/check_method_dispatch_authority.py")
         elif guardrail == "unsafe-abi-contracts":
