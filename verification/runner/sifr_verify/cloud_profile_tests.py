@@ -5,6 +5,7 @@ import os
 import sys
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from .cloud_profile import run_cloud_profile
 from .profile_commands import CommandFailed
@@ -15,6 +16,31 @@ from .paths import REPO_ROOT
 
 
 class CloudProfileTests(unittest.TestCase):
+    def test_interop_setup_and_execution_keep_their_own_uv_environment(self):
+        from .area_cargo_setup import prepare_area_graphs
+
+        path = REPO_ROOT / "verification/areas/python_interop/runner.py"
+        spec = importlib.util.spec_from_file_location("cloud_interop_runner", path)
+        interop = importlib.util.module_from_spec(spec)
+        with patch.object(sys, "path", sys.path.copy()):
+            spec.loader.exec_module(interop)
+        inherited = {"UV_PROJECT_ENVIRONMENT": "/owned/external-verifier", "VIRTUAL_ENV": "/owned/external-verifier"}
+        expected = str(interop.AREA_ROOT / ".venv")
+        preparation = []
+        prepare_area_graphs({"selected_areas": [{"area": "python_interop", "suites": ["callback-examples"]}]},
+                            inherited, lambda command, env: preparation.append(env))
+        self.assertEqual(len(preparation), 1)
+        self.assertEqual(preparation[0]["UV_PROJECT_ENVIRONMENT"], expected)
+        self.assertNotIn("VIRTUAL_ENV", preparation[0])
+        with patch.dict(os.environ, inherited), \
+             patch.object(interop, "_command_report_path", return_value=None), \
+             patch.object(interop.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="", stderr="")) as child:
+            interop.run_case({"id": "isolation", "command": "python-interop-callback-examples",
+                              "entry": "verification/areas/python_interop/runner/prepare_examples.py", "expect_exit_code": 0})
+        self.assertEqual(child.call_args.kwargs["env"]["UV_PROJECT_ENVIRONMENT"], expected)
+        self.assertNotIn("VIRTUAL_ENV", child.call_args.kwargs["env"])
+        self.assertEqual(inherited["UV_PROJECT_ENVIRONMENT"], "/owned/external-verifier")
+
     def test_inherited_cloud_marker_cannot_change_physical_profile_route(self):
         spec = importlib.util.spec_from_file_location(
             "cloud_profile_performance_runner", REPO_ROOT / "verification/areas/performance/runner.py"

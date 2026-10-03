@@ -52,7 +52,9 @@ ancestor uv projects independently of the runner's `PATH`; a verifier `.venv`
 present in only one checkout changes the editor workload. Cloud identity binds
 the runner interpreter bytes and fixture ancestor uv files, local environment
 configuration and interpreter bytes (including absence). Mismatched or changed
-inputs reject the comparison before measurement or receipt acceptance.
+inputs reject the comparison before measurement or receipt acceptance. The CLI
+read-only fixture honors the explicitly configured verifier environment; Python
+interop preparation and execution retain their separate project environment.
 
 ```bash
 uv run --project verification --locked python \
