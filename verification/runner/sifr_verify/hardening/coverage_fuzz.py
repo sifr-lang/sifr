@@ -8,15 +8,17 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import tempfile
 import time
 from pathlib import Path
 from typing import Any
 
+from ..process_execution import execute
+
 ROOT = Path(__file__).resolve().parents[4]
 MANIFEST = ROOT / "verification/areas/fuzz_property/coverage_fuzz_manifest.json"
 MAX_OUTPUT_TAIL = 8192
+CAPTURE_LIMIT_BYTES = 16 * 1024 * 1024
 EXECUTIONS = re.compile(r"(?:stat::number_of_executed_units:\s*|^#)([0-9]+)", re.MULTILINE)
 COVERAGE = re.compile(r"\bcov:\s*([0-9]+)")
 ARTIFACT = re.compile(r"(?:Test unit written to |artifact_prefix=)(\S+)")
@@ -41,34 +43,26 @@ def bounded_tail(value: str | bytes | None) -> str:
 def invoke(argv: list[str], *, timeout: int, env: dict[str, str]) -> dict[str, Any]:
     started = time.perf_counter()
     try:
-        proc = subprocess.run(
-            argv, cwd=ROOT, env=env, text=True, capture_output=True,
-            check=False, timeout=timeout,
-        )
-        output = proc.stdout + proc.stderr
-        count, coverage = counters(output)
-        return {
-            "exit_code": proc.returncode,
-            "output_tail": bounded_tail(output),
-            "executions": count, "coverage_edges": coverage,
-            "timed_out": False,
-            "duration_ms": round((time.perf_counter() - started) * 1000, 3),
-        }
-    except FileNotFoundError as error:
-        return {
-            "exit_code": 127, "output_tail": bounded_tail(str(error)),
-            "timed_out": False, "duration_ms": 0,
-        }
-    except subprocess.TimeoutExpired as error:
-        return {
-            "exit_code": 124,
-            "output_tail": bounded_tail(bounded_tail(error.stdout) + bounded_tail(error.stderr)),
-            "timed_out": True,
-            "duration_ms": round((time.perf_counter() - started) * 1000, 3),
-        }
+        outcome = execute(argv, cwd=ROOT, env=env, deadline_seconds=timeout,
+                          limit_bytes=CAPTURE_LIMIT_BYTES)
+    except (OSError, ValueError, RuntimeError) as error:
+        missing = isinstance(error, FileNotFoundError)
+        return {"exit_code": 127 if missing else 2, "output_tail": bounded_tail(str(error)),
+                "timed_out": False, "infrastructure_error": not missing,
+                "duration_ms": round((time.perf_counter() - started) * 1000, 3)}
+    output = (outcome.stdout + outcome.stderr).decode("utf-8", "replace")
+    count, coverage = counters(output)
+    incomplete = outcome.truncated or outcome.cause not in {"exit", "safety_deadline"}
+    return {"exit_code": 2 if incomplete else outcome.returncode,
+            "output_tail": bounded_tail(output), "executions": count, "coverage_edges": coverage,
+            "timed_out": outcome.cause == "safety_deadline", "infrastructure_error": incomplete,
+            "process_cause": "capture-limit" if outcome.truncated else outcome.cause,
+            "duration_ms": round((time.perf_counter() - started) * 1000, 3)}
 
 
 def classify_preflight(result: dict[str, Any]) -> str:
+    if result.get("infrastructure_error"):
+        return "infrastructure-failure"
     output = result["output_tail"].lower()
     if result["exit_code"] == 127 or any(marker in output for marker in MISSING_TOOL_ERRORS):
         return "missing-tool"
@@ -173,7 +167,8 @@ def preserve_finding(
     replays = [invoke(replay_argv, timeout=90, env=env) for _ in range(2)]
     signals = [FINDING_SIGNAL.search(item["output_tail"]) for item in replays]
     stable = (
-        all(item["exit_code"] != 0 and not item["timed_out"] for item in replays)
+        all(item["exit_code"] != 0 and not item["timed_out"]
+            and not item.get("infrastructure_error") for item in replays)
         and all(signal is not None for signal in signals)
         and len({signal.group(0) for signal in signals if signal is not None}) == 1
     )
@@ -190,7 +185,8 @@ def preserve_finding(
             f"{name}/src/__init__.sifr" for name in ("alpha", "beta", "gamma")
         }
         actual = {str(path.relative_to(tree_dir)) for path in tree_dir.rglob("*") if path.is_file()} if tree_dir.is_dir() else set()
-        if actual != expected or "PROJECT_TREE_EXPORT_ERROR" in export["output_tail"]:
+        if (actual != expected or "PROJECT_TREE_EXPORT_ERROR" in export["output_tail"]
+                or export["timed_out"] or export.get("infrastructure_error")):
             return {
                 "status": "compiler-finding-unminimized",
                 "artifact": str(source), "minimized_seed": str(saved),
@@ -214,7 +210,8 @@ def preserve_finding(
         "replay_command": replay_argv,
         "minimization": variant(label + ":minimize", "pass", minimize_argv, minimized),
         "replays": [
-            variant(label + f":replay-{index}", "pass" if item["exit_code"] != 0 else "fail", replay_argv, item)
+            variant(label + f":replay-{index}", "pass" if item["exit_code"] != 0 and not item["timed_out"]
+                    and not item.get("infrastructure_error") else "fail", replay_argv, item)
             for index, item in enumerate(replays, 1)
         ],
     }
@@ -255,7 +252,8 @@ def run(
         ),
     }
     if tool["exit_code"] != 0 or rustc["exit_code"] != 0:
-        receipt["status"] = "missing-tool"
+        receipt["status"] = "infrastructure-failure" if any(
+            row.get("infrastructure_error") for row in (tool, rustc)) else "missing-tool"
         receipt["variants"].append(variant(label + ":tool", "missing-tool", tool_argv, tool))
         return receipt
 
@@ -290,7 +288,9 @@ def run(
     coverage = execution.get("coverage_edges")
     if count is None or coverage is None:
         count, coverage = counters(execution["output_tail"])
-    if execution["timed_out"]:
+    if execution.get("infrastructure_error"):
+        status = "infrastructure-failure"
+    elif execution["timed_out"]:
         status = "target-timeout"
     elif execution["exit_code"] != 0:
         has_new_artifact = any(path.is_file() for path in artifact_dir.iterdir())

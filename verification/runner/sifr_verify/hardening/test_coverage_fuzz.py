@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-import subprocess
+import os
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -10,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from . import coverage_fuzz as fuzz
+from ..process_execution import Outcome
 
 
 def result(exit_code: int = 0, output: str = "", timed_out: bool = False) -> dict:
@@ -181,12 +183,47 @@ class CoverageFuzzTests(unittest.TestCase):
 
     def test_counters_survive_bounded_dictionary_tail(self) -> None:
         output = "#12 cov: 8\n" + "dictionary" * fuzz.MAX_OUTPUT_TAIL
-        completed = subprocess.CompletedProcess(["cargo"], 0, output, "")
-        with patch.object(fuzz.subprocess, "run", return_value=completed):
+        completed = Outcome(0, "exit", output.encode(), b"", False, .01)
+        with patch.object(fuzz, "execute", return_value=completed):
             actual = fuzz.invoke(["cargo"], timeout=10, env={})
         self.assertEqual(actual["executions"], 12)
         self.assertEqual(actual["coverage_edges"], 8)
         self.assertLessEqual(len(actual["output_tail"]), fuzz.MAX_OUTPUT_TAIL)
+
+    def test_capture_loss_and_missing_custody_fail_closed(self):
+        for outcome in (Outcome(0, "exit", b"#12 cov: 8", b"", True, .01),
+                        Outcome(130, "cancelled", b"#12 cov: 8", b"", False, .01)):
+            with patch.object(fuzz, "execute", return_value=outcome):
+                actual = fuzz.invoke(["unused"], timeout=10, env={})
+            self.assertTrue(actual["infrastructure_error"])
+            self.assertEqual(fuzz.classify_preflight(actual), "infrastructure-failure")
+        with patch.object(fuzz, "execute", side_effect=OSError("missing cleanup confirmation")):
+            actual = fuzz.invoke(["unused"], timeout=10, env={})
+        self.assertTrue(actual["infrastructure_error"])
+        receipt = self.fake_run(result(0, "cargo-fuzz 0.13.2"), result(0, "rustc nightly"),
+                                result(), actual)
+        self.assertEqual(receipt["status"], "infrastructure-failure")
+        self.assertNotIn("finding", receipt)
+
+    def test_real_detached_resistant_timeout_is_reaped_before_next_command(self):
+        if not sys.platform.startswith("linux"):
+            self.skipTest("Linux canonical subreaper custody")
+        pid_file = Path(self.temp.name) / "child.pid"
+        child = "import os,signal; os.setsid(); signal.signal(signal.SIGTERM,signal.SIG_IGN); " \
+                "open(__import__('sys').argv[1], 'w').write(str(os.getpid())); signal.pause()"
+        parent = "import subprocess,sys,signal; signal.signal(signal.SIGTERM,signal.SIG_IGN); " \
+                 "subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2]]); signal.pause()"
+        actual = fuzz.invoke([sys.executable, "-c", parent, child, str(pid_file)], timeout=2,
+                             env=os.environ.copy())
+        self.assertTrue(actual["timed_out"])
+        self.assertFalse(actual["infrastructure_error"])
+        pid = int(pid_file.read_text())
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)
+        next_run = fuzz.invoke([sys.executable, "-c", "import os,sys; "
+                               "os.kill(int(sys.argv[1]),0)", str(pid)], timeout=10, env=os.environ.copy())
+        self.assertNotEqual(next_run["exit_code"], 0)
+        self.assertIn("ProcessLookupError", next_run["output_tail"])
 
     def test_nonzero_guided_executions_and_coverage(self) -> None:
         receipt = self.fake_run(

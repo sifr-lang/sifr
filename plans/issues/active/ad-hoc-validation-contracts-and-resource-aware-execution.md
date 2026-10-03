@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 delivered; M1 and M2 implementation in progress
+current_stage: M0 delivered; M1–M4 implementation in progress
 
 ## Objective and authority
 
@@ -59,8 +59,8 @@ and disposition. Split large milestones into independently reviewable changes.
 | M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; delivered in #4279 |
 | M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | in progress |
 | M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | in progress |
-| M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | pending |
-| M4 | Compiler performance levels and separate generated-program benchmarks | 7–9, 14, 20 | pending |
+| M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | in progress |
+| M4 | Compiler performance levels and separate generated-program benchmarks | 7–9, 14, 20 | in progress |
 | M5 | Artifact custody, published-predecessor upgrades, and compatibility/platform qualification | 10–12, 15, 19 | pending |
 | M6 | End-to-end constrained-runner acceptance and verified protected enforcement | All scope and final acceptance | pending |
 
@@ -221,12 +221,13 @@ in M0 and the relevant stage contracts. Targeted checks belong to the bounded
 item; the authoritative gate belongs to the final candidate under applicable
 policy. Required release checks remain conditional on a real release request.
 
-Current state: M0 delivered through #4279; M1 and M2 implementation in progress;
-M3–M6 remain pending.
+Current state: M0 delivered through #4279; M1–M4 implementation in progress;
+M5/M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: use the measured existing-cache preparation cost to refine prospective
-admission, finish independent correctness/performance routing, and continue M3–M6.
+Next action: finish trusted aggregate custody and main-push reuse, then implement
+generated-program metrics and exact-artifact predecessor coverage before full
+constrained acceptance and protected enforcement.
 The shared debug cache remains preserved; its ownership is not a prerequisite for
 normal Cargo preparation. The cold estimate is not the measured additional cost.
 M1/M2 acceptance gates and M3–M6 delivery remain open. Execution records below
@@ -1289,3 +1290,30 @@ admission route before their qualification can be claimed. Anonymous commit
 fetch is sufficient for this public repository; private-repository support is
 not claimed. Workflow trust bootstrap and separate App provisioning remain
 explicit prerequisites for protected enforcement.
+
+
+## M3 sustained fuzz custody — work in progress
+
+The instrumented fuzz adapter now invokes the canonical bounded process owner for
+preflight, builds, campaigns, minimization and replays. It retains actual native
+exit status and counters from bounded output, reaps detached resistant children
+before returning, and records infrastructure/cancellation/capture failures
+separately from compiler findings. Incomplete capture cannot qualify guided
+executions, a stable finding or a project-tree export. The prospective capture
+bound is 16 MiB per stream; the retained human-readable tail remains 8 KiB.
+
+Eighteen focused controls passed, including a real detached resistant timeout and
+PID absence in a following command, missing custody and capture/cancellation
+rejection, preserved counters outside the bounded tail, existing minimized-seed
+replays and all current frontend/diagnostic/project target contracts. This is
+adapter coverage, not execution of five real instrumented campaigns. The budget,
+engine version, corpus inventory, seed preservation and two-replay obligations
+remain unchanged. Raw evidence is outside Git at
+`/workspace/validation-work/evidence/m3-fuzz-custody-targeted.log`.
+
+Trusted aggregate remediation `6387097081ea1b03b3c1c2c243462562b4b488c3`
+passed scoped Opus review with no blockers; review is outside Git at
+`/workspace/validation-work/evidence/sifr-claude.OE7Ot6/response.md`.
+All 31 foundation groups passed for the sustained-fuzz adapter with Cargo idle;
+its earlier concurrent short-deadline failure remains historical failed evidence.
+Separate App credential custody and main reuse are the next bounded M3 item.
