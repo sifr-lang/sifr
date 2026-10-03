@@ -225,8 +225,10 @@ Current state: M0 delivered through #4279; M1 and M2 implementation in progress;
 M3–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: resolve shared debug-cache ownership and the recorded capacity boundary,
-then run fresh constrained preparation/assertions under the reviewed M2 mechanisms.
+Next action: use the measured existing-cache preparation cost to refine prospective
+admission, finish independent correctness/performance routing, and continue M3–M6.
+The shared debug cache remains preserved; its ownership is not a prerequisite for
+normal Cargo preparation. The cold estimate is not the measured additional cost.
 M1/M2 acceptance gates and M3–M6 delivery remain open. Execution records below
 identify candidate SHA, checks, review, dependencies and failures; the plan itself
 is not qualifying execution evidence.
@@ -999,3 +1001,38 @@ The storage prerequisite is registered as [#4278](https://github.com/sifr-lang/s
 The resume instructions (`/workspace/sql-cloud-transfer/cloud-v2-resume.md`) and verified evidence bundle (`/workspace/sql-cloud-transfer/cloud-v2-evidence.tar.gz`) preserve the current work. The bundle excludes runtime tools, build caches and authentication. Restore those separately in the new environment.
 
 **The existing SQL phase remains open. This proposal expands the work plan; it does not waive its pending correctness, performance or review requirements.**
+
+## M2 continuation — measured cache preparation and independent performance
+
+The user's instruction to continue supersedes treating unknown shared-cache
+ownership as a prerequisite for progress. The shared debug cache remains intact;
+normal Cargo preparation validates and consumes its existing outputs.
+
+At observed commit `973c821c774fc1cec4d8a33d9dc74141fe87d489`, the Rust workspace,
+locks, toolchain, configuration, stdlib and sysroot inputs matched the earlier
+`d5cedf1` preparation. A bounded native `package_build.py --metadata-only`
+observation completed both original `cargo test --no-run` configurations in
+68.16 seconds with 17,113,088 bytes net additional allocation. The observation
+admitted 2 GiB growth, 8 GiB disk reserve, 6 GiB resident memory and 2 GiB memory
+reserve, and watched a stricter disk floor during execution. It executed zero
+test assertions, deleted no cache, and supplies preparation cost evidence only.
+The external raw log is
+`/workspace/validation-work/evidence/m2-warm-metadata-observation-973c821c7.log`.
+This measurement does not qualify a new compiler candidate or prove every
+remaining preparation fits. Prospective cache-aware admission remains necessary.
+
+The next bounded implementation moves physical performance admission and the
+performance area after selected correctness guardrails, areas and toolchain
+checks for ordinary profiles. Missing performance admission still blocks the
+performance area and final gate, with a separate performance outcome. Blocking
+step timing verdicts persist until the final gate instead of suppressing later
+correctness assertions. Cloud's existing independent qualification route remains.
+No suites or cases are dropped, and required qualification remains blocking.
+
+The first targeted regression run caught an incorrect test expectation that
+all guardrails execute in manifest order; the established inventory guards run
+first. The corrected check verifies the complete multiset, including duplicates,
+while asserting exact area and toolchain selection. The failed run is preserved
+in `m2-independent-performance-targeted.log`; the corrected run is separately
+recorded in `m2-independent-performance-targeted-fixed.log` outside Git.
+Full implementation gates, delivery, and M3–M6 remain open.

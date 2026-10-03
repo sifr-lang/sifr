@@ -117,16 +117,6 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
-        if self.profile_name != "cloud" and any(
-            area["area"] == "performance"
-            and set(area["suites"]).intersection({"rules", "smoke", "representative", "full"})
-            for area in self.profile["selected_areas"]
-        ):
-            admission = self.execute_step(
-                "performance_reference_admission", self.admit_performance_reference
-            )
-            if admission:
-                return admission
         early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
                  "submodule-ownership", "stdlib-manifest-schema"}
         failed = 0
@@ -164,6 +154,8 @@ class ProfileRunner:
                 return failed
         for selection in self.profile["selected_areas"]:
             area = str(selection["area"])
+            if area == "performance":
+                continue
             suites = [str(suite) for suite in selection["suites"]]
             if prepared:
                 self.block_step(step_name("area", area), "cargo_cache_setup")
@@ -188,7 +180,24 @@ class ProfileRunner:
                 failed_toolchain.add(toolchain_step)
             if status and not self.no_fail_fast:
                 return failed
-        return failed
+        # A host-sensitive measurement must not suppress correctness, including
+        # toolchain checks that follow the performance area in the inventory.
+        for selection in self.profile["selected_areas"]:
+            if selection["area"] != "performance":
+                continue
+            if prepared:
+                self.block_step("area_performance", "cargo_cache_setup")
+                continue
+            suites = list(selection["suites"])
+            if set(suites).intersection({"rules", "smoke", "representative", "full"}):
+                admission = self.execute_step("performance_reference_admission",
+                    self.admit_performance_reference, performance=True)
+                if admission:
+                    self.block_step("area_performance", "performance_reference_admission")
+                    continue
+            self.execute_step("area_performance", lambda s=suites: self.run_area("performance", s),
+                              performance=True)
+        return failed or self.performance_exit_status
 
     def block_step(self, name: str, prerequisite: str) -> None:
         print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")
@@ -201,7 +210,7 @@ class ProfileRunner:
         for name in self.profile["toolchain_steps"]:
             self.block_step(step_name("toolchain", name), prerequisite)
 
-    def execute_step(self, name: str, callback: Callable[[], None]) -> int:
+    def execute_step(self, name: str, callback: Callable[[], None], *, performance: bool = False) -> int:
         budget = self.prepare_step_budget(name)
         step_seconds = self.env.get("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS")
         if step_seconds is None:
@@ -226,7 +235,10 @@ class ProfileRunner:
                 else:
                     os.environ[SAFETY_DEADLINE_ENV] = previous_process_deadline
         if result.status != 0:
-            self.functional_exit_status = result.status
+            if performance:
+                self.performance_exit_status = result.status
+            else:
+                self.functional_exit_status = result.status
             return result.status
         if self.profile_name == "cloud" and budget is not None:
             # Preserve the recorded budget and safety deadline. Scheduling
@@ -239,7 +251,9 @@ class ProfileRunner:
             self.performance_exit_status = budget_status
         if budget_status == 0:
             record_step_success(budget, result.elapsed_ms)
-        return budget_status
+        # Retain a blocking timing verdict for the final gate, while allowing
+        # subsequent selected correctness assertions to execute.
+        return 0
 
     def admit_performance_reference(self) -> None:
         script = REPO_ROOT / "verification/areas/performance/reference_admission.py"
