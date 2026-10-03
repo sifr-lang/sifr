@@ -153,7 +153,13 @@ def run_profile_with_report(
         payload.update(outcomes)
         payload["exit_status"] = status
         payload["functional_status"] = "pass" if outcomes["functional_exit_status"] == 0 else "fail"
-        payload["performance_status"] = "pass" if outcomes["performance_exit_status"] == 0 else "fail"
+        performance_code = outcomes["performance_exit_status"]
+        payload["performance_status"] = (
+            "pass" if performance_code == 0 else
+            "inconclusive" if performance_code == 3 else "regression"
+        ) if profile_name == "cloud" else ("pass" if performance_code == 0 else "fail")
+        if profile_name == "cloud":
+            payload["qualified"] = status == 0 and outcomes["functional_exit_status"] == 0 and performance_code == 0
         json_file.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     publish_status("completed", status)
     temp_log.unlink(missing_ok=True)

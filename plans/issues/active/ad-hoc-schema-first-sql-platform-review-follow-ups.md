@@ -1876,3 +1876,195 @@ Free space rose to 8.26 GiB; the cleanup receipt is preserved outside Git.
 This makes no host-sensitive performance claim. Final combined qualification
 and Item 6's original-criterion/draft audit, whole-phase review and archive
 remain pending. This delivery receipt requires documentation checks only.
+
+## Item 14 — managed Linux performance reference prerequisite (2026-10-02)
+
+Status: registered in [#4255](https://github.com/sifr-lang/sifr/issues/4255)
+before implementation. The first final merge-profile attempt on `a3b41eda`
+stops at performance-reference admission before Cargo; preserve its failed
+log in `/workspace/sql-phase-closure-cloud-evidence/final-merge-profile-initial.log`.
+The only named reference describes a different physical Intel host. This
+managed cloud exposes AMD EPYC, five affinity CPUs, a finite four-CPU cgroup
+quota, a 16 GiB memory limit, and no cpufreq policies. Physical-host identity
+correctly rejects that missing frequency exposure.
+
+Own explicit managed-Linux identity and an independent governed capture, not
+an automatic cross-host fallback. Bind actual finite cgroup CPU/memory limits
+and record missing frequency exposure without inventing a governor. Preserve
+physical-host defaults, controlled latency admission, full-manifest counts,
+editor ceilings and regression policy, immutable clean/source-bound receipts.
+Negative checks reject unknown modes, missing/invalid/unlimited allocation and
+changed controls. Capture from merged compiler reference `5fbeee50` before
+Item 13, allowing only benchmark-tooling differences, then qualify the final
+candidate against that independent baseline on this same cloud. The candidate
+must not become its own compiler reference. Focused tests, capture/comparison,
+scoped Opus and delivery precede the resumed full gate. No SQL semantic change,
+performance skip or threshold waiver is authorized. This necessary cloud
+prerequisite follows the user's authorization to finish without blocking.
+
+### Item 14A — live-process telemetry prerequisite (2026-10-02)
+
+Registered before implementation as [#4256](https://github.com/sifr-lang/sifr/issues/4256).
+The cloud container's PID 1 is a non-reaping `tail`; historical exited Cargo and
+rustc zombies are incorrectly classified as competing builds because performance
+telemetry omits process state. Read measured `ps` state and exclude only confirmed
+zombies from activity telemetry. Keep live build rejection at zero CPU, external
+CPU thresholds, controlled sampling and owned-process disappearance checks.
+Qualify state parsing and negative competitor controls. A session-owned Linux
+subreaper supplies adoption/reaping for newly launched validation descendants;
+the existing benchmark cleanup/no-overlap self-tests pass unchanged under it.
+Historical zombies remain unreaped, and the first unsupervised self-test remains
+failed. The initial baseline attempt was interrupted before any measurements;
+its log remains `baseline-capture-initial-interrupted.log`. This prerequisite
+changes benchmark tooling only and must also enter the independent producer.
+
+### Item 14B — managed per-sample measurement prerequisite (2026-10-02)
+
+Registered before implementation as [#4257](https://github.com/sifr-lang/sifr/issues/4257).
+The independent full-manifest capture passed its first 31 cases, then correctly
+refused the JSON diagnostic case after all three allowed attempts exceeded its
+0.10 timing-variation limit (0.118219, 0.240471, 0.112133). No reference was
+published. Its entire raw attempt tree and failed log remain preserved.
+Investigation also found `/usr/bin/time` absent: the exploratory fallback reports
+cumulative prior-child RSS and no per-sample CPU time. This cannot establish an
+honest managed reference. Configure a session-owned GNU Time without root,
+select and fingerprint it explicitly for managed capture/qualification, and
+reject missing per-sample RSS/CPU counters. Preserve physical defaults and all
+sample counts, variation/regression/editor limits and owned-group cleanup.
+Diagnose and stabilize actual execution configuration before another capture;
+any affinity change must be recorded by measured host identity. Partial corpus
+and rejected attempts must never become a reference. Benchmark tooling only;
+the independent merged compiler source remains unchanged.
+
+Item 14B host configuration refinement: startup profiles identify complete
+metadata validation in the source-development context. Keep that validation;
+use a private session-owned Cargo configuration to optimize only
+`sifr_sysroot` and `sifr_compiler_services` in the dev profile (`opt-level=3`).
+The compiler executable keeps its declared dev profile/optimization and debug
+assertions; release profiles and compiler source are unchanged. Existing named
+identity binds the exact user-Cargo-config SHA-256 for both independent capture
+and final qualification. The original Cargo home/configuration remains intact.
+Affinity probes alone did not establish stability and remain exploratory,
+not a captured reference. Test the configured independent compiler before
+another full-corpus attempt; do not relax the 0.10 diagnostic variance limit.
+
+Further Item 14B host refinement, registered prospectively in #4257: affinity
+0-3 and fixed CPU 2 full captures also failed the unchanged variation rule;
+no partial run published a reference. The rejected class-method samples spend
+2.1–3.5 seconds loading complete metadata, versus roughly 0.15–0.27 seconds
+in Rust generation and 0.07–0.13 seconds in reused native building. Metadata
+record decoding/canonical encoding calls `serde_json`, which retains dev
+optimization 1. Extend the private measured Cargo configuration to this
+existing package at `opt-level=3`, alongside the existing sysroot/service
+library overrides. Keep complete validation and compiler source intact;
+user-config SHA binds both endpoints. Warm and probe this actual configuration
+before a fresh full capture. Affinity trials and all rejected corpus attempts
+remain separate evidence, never a combined reference or qualification pass.
+
+
+### Item 14 cloud qualification status — infrastructure interference
+
+The tooling implementation is prepared, but Item 14 is not accepted or merged.
+All 53 named-reference/allocation/timer boundary tests and the complete benchmark
+runner self-test pass under the real session-owned Linux subreaper. Physical
+host defaults, sample counts, the 0.10 variation limit, three-attempt bound,
+editor ceilings, source integrity and no-overlap checks remain unchanged.
+
+Six warmed complete capture attempts on the independent merged compiler
+`5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042` exhausted the existing variation
+limit at different cases. Passing predecessors and focused probes do not form
+an approved reference. The final CPU-0 attempt failed at enumerate/zip build
+(case 8) after seven predecessors passed. All attempts and raw receipts remain
+in `/workspace/sql-item14-cloud-evidence/failure-history.md`; no managed profile
+has been published.
+
+Actual per-sample `/proc/stat` CPU-0 deltas show 16.92–20.95 percent hypervisor
+steal time during six compiler executions. GNU Time elapsed measurements agree
+with the runner's wall time; scheduling interference cannot be corrected by
+changing the timer. Diagnostics are retained in
+`vm-scheduling-diagnostic.json` and `vm-scheduling-diagnostic.log` outside Git.
+The exposed CPU PMU is absent and an own-process user-only instruction-counter
+request fails with ENOENT (`user-hardware-counter-diagnostic.json`); these
+measurements provide no alternative qualification result.
+
+The available cloud-environment capability reports configuration/readiness but
+provides no host reassignment or dedicated CPU allocation operation. A stable
+cloud host is required before another complete reference capture. Repeating the
+unchanged gate or relaxing its criteria does not resolve this external blocker.
+The pending sequence is an independent full 65-case capture, exact-candidate
+admission/comparison and scoped review, Item 14 delivery, then the full combined
+merge profile, whole-phase acceptance review, archive and original draft #3647
+closure without merge. Items 1–13 remain delivered; this record does not close
+the phase or reclassify any failed gate as passing.
+
+
+The preliminary draft review of candidate `3aa344435c4377ee0ea726e68e158f9c3694a310`
+returned NOT SATISFIED, preserving the missing independent capture as an
+acceptance omission. It also identified a valid admission omission: the true
+cgroup root exposes neither cpu.max nor memory.max. One remediation batch
+records absent ancestor limits as null while still requiring finite current
+limits and rejecting malformed exposed ancestor controls. A nested true-root
+regression first fails on the old implementation, then passes with three
+additional boundary tests. All **57** reference/allocation/admission/timer tests
+pass after this correction. The 4342-file size guard and diff check pass.
+Workspace Clippy passed on the preceding identical Rust source with the measured
+private Cargo configuration (5m10s); this Python-only correction reuses that lint
+result. The full runner self-test inputs outside allocation remain unchanged.
+The review response SHA-256 is
+`4e0795952e23f1a6afcba81626f9ac1d334d1de8c232f2e4e89bf1ea15f23a9c`;
+the response and failed regression log remain outside Git. Capture, candidate
+comparison, final delivery review and the terminal phase gate are still pending.
+
+## Item 14C — shared-cloud verification policy (2026-10-02)
+
+Prospectively registered in [#4267](https://github.com/sifr-lang/sifr/issues/4267) before implementation after the user explicitly requested support for ordinary shared VMs as part of this phase. This supersedes Item 14's low-CV capture requirement only for the explicit cloud contract. Physical controlled-host qualification remains unchanged. Historical failed captures remain failed.
+
+The cloud validation profile inherits all merge correctness selections, guards and toolchain checks. Performance admission and scheduling noise cannot suppress correctness. Its report records functional and performance verdicts independently; inconclusive performance is never a qualified pass.
+
+The versioned shared-cloud contract uses exactly 32 nearby baseline/candidate pairs per case, with balanced randomized AB/BA order fixed before measurement. Both endpoints are clean, source/configuration-bound, prepared equivalently, and the baseline compiler is an independently merged ancestor. No optional stopping, favorable retries or selective merging of attempts. Preserve all 65 cases, real process RSS/CPU, source identity, command exit/output/cache rules, deadlines and process-group disappearance.
+
+Inference qualifies the median paired budget excess C−T(B), where T is the existing case-specific regression formula, including its absolute median caps. Exact binomial order-statistic intervals use a familywise 5% error allocation over all declared median decisions. Stationary independent pair summaries are an explicit assumption, not guaranteed by random order. Prospective temporal-drift, execution-order and serial-dependence screens use multiplicity-adjusted permutation tests; detected violations are inconclusive, and passing screens does not prove the assumptions. Query samples within one process supply one inference summary, never extra independent pairs.
+
+Every recorded candidate editor/formatter benchmark sample must meet the unchanged absolute latency ceiling. Samples retain the existing manifest and runner semantics; warm LSP samples average their declared inner repetitions. All observed candidate process RSS maxima meet derived RSS limits. Individual-request maxima and population p95 are explicitly unqualified under this bounded cloud contract; p95 is descriptive. This is a new prospective acceptance contract, not a claim of equivalence to the old marginal-median/p95 contract. CPU time is supplementary and no PMU/instruction or steal-time correction claim is permitted.
+
+Acceptance requires meaningful negative/noise/regression/ambiguity/identity/timeout/cleanup/receipt tests, scoped Opus approval, all required paired median decisions and observed hard checks passing, and one full final cloud correctness gate plus whole-phase audit/review. Any required inconclusive decision blocks performance qualification and phase closure. Cloud correctness can be used normally while reporting that lack of qualification.
+
+### Item 14C ambient Python context correction
+
+The fixed Python 3.14 capture on candidate `2f61cd929a85c365f25764a5864a56fb6573f1f4` stopped after 49 complete cases / 1,568 pairs when the diagnostics warmup exceeded its unchanged 60-second deadline. There is no qualification receipt. Crossed compiler/project probes establish a benchmark environment asymmetry: only the candidate checkout had an ancestor verifier `.venv`, whose 32 MB interpreter the unchanged LSP repeatedly fingerprints. The complete 460-update probe progresses with no stderr backpressure; placing the owned verifier environment outside both pure-Sifr benchmark checkouts restores approximately 4–5 ms per update. Preserve this rejected invocation and all raw evidence.
+
+Prospectively bind both the runner interpreter bytes and fixture ancestor uv files, local environment configuration/interpreter bytes or absence in cloud identity. Reject mismatches before capture and drift before receipt acceptance. Use an external session-owned `UV_PROJECT_ENVIRONMENT` for capture and the terminal profile, leaving compiler discovery and external-input checks intact. Existing budgets, workload counts, deadlines and the fixed-pair protocol remain unchanged. The separate pre-existing compiler cost is tracked in [#4275](https://github.com/sifr-lang/sifr/issues/4275). Fresh source-bound preparations and complete capture are still required; the diagnostic probe is not qualification.
+
+### Item 14C external verifier coverage preservation (2026-10-03)
+
+The external verifier environment also needs explicit propagation boundaries. The CLI read-only application fixture now uses the configured `UV_PROJECT_ENVIRONMENT` (relative to the verifier project when relative); an explicitly invalid environment fails instead of skipping. All six real CLI read-only tests execute and pass with the external environment, and the missing-environment negative fails as required. Python-interop preparation and execution select their own project environment rather than inheriting the verifier environment. Both actual child routes leak the verifier selection before correction; the new regression covers both corrected routes. All eight cloud-profile and 22 statistics/receipt tests pass; the unchanged physical admission check remains passing. Formatting, the 4350-file guard and diff checks pass. These setup repairs preserve functional coverage without changing compiler semantics or measurement limits. Refresh the candidate preparation after publication; the unchanged independently merged baseline preparation remains reusable.
+
+
+### Item 14C latency sample wording correction (2026-10-03)
+
+Astra's requested advisory review identified that the new phrase “all observed individual editor latencies” overstated the preserved benchmark semantics. Existing warm LSP samples average `inner_repetitions`, as already documented in Performance Budgets. The contract now explicitly applies the unchanged ceiling to every recorded benchmark sample and makes no individual-request maximum claim. This corrects wording and its diagnostic label without changing the measurements, manifest counts, deadlines, numeric budgets or evaluation predicate.
+
+The correction was recorded before evaluating invocation `cloud-1790986378748336425`. That invocation was interrupted with exit 130 after three complete cases and 104 complete pairs; all partial raw evidence is retained and unqualified. No partial observations may be combined with the required fresh complete source-bound invocation.
+
+
+## Item 14D — final source-direction integration prerequisite (2026-10-03)
+
+Registered before implementation as [#4276](https://github.com/sifr-lang/sifr/issues/4276). The complete v1 capture on candidate `d41f9f1f532b34d9484651ac24ce5c2b4e6b1c21` terminated unqualified, and the final cloud correctness gate stopped at five source-direction findings. Running the unchanged guard on independently merged compiler `5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042` reproduces every finding. Its failure remains historical evidence, without a full functional pass claim.
+
+Bound this necessary integration prerequisite to the three codegen test fragments and two guided project replay entrypoints. Use the existing recognized test-source filenames and update includes, retaining every test body. Receive the source provider from actual fuzz/test composition roots rather than constructing a disk provider inside the driver; preserve overlay-backed and exported disk replay. Keep the architecture guard and its negative tests unchanged. No allowlist, suppression, skipped assertion or SQL/compiler semantic repair is authorized by this prerequisite. Acceptance requires the unchanged guard/self-test, genuine affected codegen/guided-replay tests including caller-overlay authority, caller compilation, lint/format/size checks, scoped exact-candidate Opus approval and resumed final correctness selection.
+
+## Item 14E — prospective shared-cloud p95 and precision revision (2026-10-03)
+
+Registered before implementation or fresh measurement as [#4277](https://github.com/sifr-lang/sifr/issues/4277), following the user's explicit request for ordinary shared-VM support and Astra HIGH's advice. This prospectively supersedes Item 14C's v1 performance contract, while preserving its cloud correctness inventory and independent verdicts.
+
+Complete v1 invocation `cloud-1790989457007807051` ran all 65 cases × 32 pairs in 241.5 minutes and exited 1: 48 pass, 14 inconclusive, 3 maximum-sample latency failures. Receipt SHA-256 `967970dfdd7c39bb1ced3c55087f2ff6905dacb82d3e94eb29f01a55fa1b7d9d`. It remains failed and unqualified. The maximum rule had applied stored p95 budgets to every sample, a materially stricter and sample-count-sensitive requirement. Completion exceeded that rule on 17/640 baseline versus 15/640 candidate samples, despite a slightly lower candidate median. Those facts do not retroactively alter the registered v1 evaluation or establish a compiler regression.
+
+`shared-cloud-median-v2` preserves every existing numeric budget, paired median formula/cap, manifest/internal sample count and warmup, deadline, process cleanup, output/cache rule, real RSS/CPU and source/host/runtime/artifact/raw binding. Restore the existing v1 editor/frontend-query/formatter tail family to observed nearest-rank empirical p95 with its existing relative p95 formulas/caps. Command/build/check p95 remains descriptive and unqualified; their acceptance uses the declared paired-median rule, as in v1. This does not claim enforcement of every historical controlled-host p95 metric. Equally sized process sample groups are pooled descriptively, without claiming inner-sample independence or population p95 qualification. Median inference still uses one process summary per pair and exact binomial intervals with familywise alpha 0.05 across all 65 median decisions. Stationary independent pair summaries remain conditional assumptions; the existing multiplicity-adjusted temporal/order/serial screens remain mandatory.
+
+The complete per-case count table registered in #4277 is frozen in `verification/areas/performance/cloud_precision.py`. Its total is 5,120 entirely fresh pairs: 32 cases × 32, 15 × 64, 9 × 96, 4 × 128, 2 × 192, 2 × 224 and completion × 928. Counts use the failed v1 run only as pilot evidence and target approximately 99% modeled per-case power from uncertain pilot sign probabilities, never guaranteed power or qualification. Declare the complete count table and balanced randomized AB/BA schedules before measuring. No optional stopping, post-outcome count changes, favorable unchanged retry, selected passing-case reuse or cross-invocation combining is allowed. Expected runtime is 12–13 hours on the existing VM.
+
+Acceptance requires meaningful quantile-versus-maximum and real p95-breach tests, heterogeneous complete-count/family error allocation and mutated declaration/receipt regressions; fresh clean source-bound endpoint preparation and one complete new invocation/check; all required median decisions and empirical tail/resource checks passing; final cloud correctness, scoped exact-SHA Opus approval and whole-phase audit. Any required inconclusive or regression still blocks qualification and closure. All previous failures remain preserved. Original #3647 closes without merge only after actual final acceptance.
+
+### Items 14D/14E focused validation before fresh qualification
+
+The unchanged source-direction guard and its complete negative self-test pass. All 18 affected codegen method-authority tests and three guided-replay tests pass, including caller-overlay authority. Workspace and actual CLI test-harness Clippy, Rust formatting, the 4351-file size guard and diff check pass. All 29 cloud statistics/receipt tests pass; the isolated-spike behavioral regression fails on v1 as expected. The actual `project_graph` fuzz caller compiles using an isolated validation manifest. Its existing checkout lockfile is stale and prevents `--locked` resolution; both failed locked attempts remain recorded, and the isolated resolver leaves checkout Cargo files unchanged. These are focused checks, not full correctness or performance qualification. Hash-bound logs are retained in `v2-focused-validation-receipt.json` outside Git. Fresh published-source preparation, full correctness, complete v2 capture/check, exact-candidate Opus review and phase closure remain pending.

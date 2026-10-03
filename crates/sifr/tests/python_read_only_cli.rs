@@ -58,8 +58,17 @@ impl TestPackage {
             .expect("uv lock should run");
         assert!(status.success(), "uv lock fixture should succeed");
         let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let shared_venv = repository.join("verification/.venv");
+        let configured_environment = std::env::var_os("UV_PROJECT_ENVIRONMENT");
+        let shared_venv = configured_environment.as_ref().map_or_else(
+            || repository.join("verification/.venv"),
+            |configured| repository.join("verification").join(configured),
+        );
         if !shared_venv.join("bin/python").is_file() {
+            assert!(
+                configured_environment.is_none(),
+                "configured verification environment has no interpreter: {}",
+                shared_venv.display()
+            );
             eprintln!("skipping Python application fixture: verification/.venv is unavailable");
             return None;
         }

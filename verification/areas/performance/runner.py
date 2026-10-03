@@ -65,6 +65,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    cloud = os.environ.get("SIFR_VALIDATION_PROFILE") == "cloud"
+    if cloud:
+        os.environ.pop("SIFR_PERFORMANCE_REFERENCE", None)
     if os.environ.get("SIFR_PERFORMANCE_REFERENCE"):
         try:
             load_profile(os.environ["SIFR_PERFORMANCE_REFERENCE"])
@@ -74,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("performance area does not support --bless")
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     selected = select_suites(manifest, set(args.suite))
-    if any(suite["name"] in {"rules", "smoke", "representative", "full"} for suite in selected):
+    if not cloud and any(suite["name"] in {"rules", "smoke", "representative", "full"} for suite in selected):
         try:
             profile = admit_reference(os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
         except (ReferenceProfileError, TrendPolicyError, BudgetError, ValueError, OSError, KeyError) as error:
@@ -201,6 +204,12 @@ def run_rules_variants(suite_name: str) -> list[dict[str, Any]]:
 
 
 def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
+    if os.environ.get("SIFR_VALIDATION_PROFILE") == "cloud":
+        output = REPO_ROOT / "target/performance" / f"cloud-functional-{time.time_ns()}"
+        return [run_command_variant(suite_name, "cloud-corpus-correctness",
+                [sys.executable, str(AREA_ROOT / "cloud_benchmarks.py"), "functional", "--output", str(output)]),
+                run_command_variant(suite_name, "cloud-policy-tests",
+                [sys.executable, "-m", "unittest", "discover", "-s", str(AREA_ROOT), "-p", "cloud_*_tests.py"])]
     if suite_name == "smoke":
         argv = [sys.executable, str(RUN_BENCHMARKS), "--sample-scale", "smoke"]
         for case_id in SMOKE_CASES:
