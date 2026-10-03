@@ -63,10 +63,8 @@ def authenticate(authority,receipt,api):
     for name,expected in inputs['optional_input_slots'].items():
         path=Path(name);actual=api.digest(path.read_bytes()) if path.is_file() else None
         require(actual==expected and (not path.exists() or path.is_file()),'original configuration presence/content drift: '+name,api)
-    for name,inventory in inputs['directories'].items():
-        root=Path(name)
-        actual=sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file() and (not inventory['exclude_operational'] or not set(p.relative_to(root).parts).intersection({'.git','target','__pycache__'})))
-        require(actual==inventory['members'],'original directory membership drift: '+name,api)
+    from include_source_directories import authenticate as authenticate_directories
+    authenticate_directories(inputs['directories'],api)
     for key,value in inputs['build_environment'].items():require(os.environ.get(key)==value,'original build-script environment drift: '+key,api)
     for name,sha in inputs['tool']['consumer_sources'].items():require(api.digest((api.ROOT/'scripts'/name).read_bytes())==sha,'consumer source drift',api)
     for name,sha in inputs['tool']['helper_sources'].items():require(api.digest((api.TOOL/name).read_bytes())==sha,'helper/schema source drift',api)

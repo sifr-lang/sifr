@@ -92,6 +92,12 @@ fn dependency_bridge<DB: HirDatabase>(
                 sem.to_def(&caller_source.value) == Some(caller_owner),
                 "actual caller owner source/to_def conflict"
             );
+            // Register every actual definition tree before querying declaration sources.
+            // Out-of-line declarations can live in a different ancestor file.
+            for module in function.module(db).path_to_root(db) {
+                let src = sem.module_definition_node(module);
+                inventory.reference(sem, db, files, src.file_id, &src.value)?;
+            }
             let mut module_owners = vec![];
             for module in function.module(db).path_to_root(db) {
                 if let Some(src) = module.declaration_source(db) {

@@ -6,6 +6,7 @@ from include_source_authority import authenticate,read_originals,require,decode
 from include_source_relation import project,SCHEMA,LOST,NOT_CLAIMED
 import include_source_constraints
 import include_source_dependency
+import include_source_directories
 
 _EXPECTED={}
 RECEIPT='sifr-maintainability-include-source-receipt-v1'
