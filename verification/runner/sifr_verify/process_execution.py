@@ -7,11 +7,14 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+import errno
+import json
 import math
 import os
 import selectors
 import signal
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -95,6 +98,8 @@ def execute(
     proc: subprocess.Popen[bytes] | None = None
     group_killed = False
     selector: selectors.BaseSelector | None = None
+    status_read: int | None = None
+    status_write: int | None = None
 
     def cancel(signum, frame):
         nonlocal cancelled
@@ -105,6 +110,27 @@ def execute(
         if group_killed:
             return
         group_killed = True
+        if sys.platform.startswith("linux"):
+            # The dedicated subreaper owns all descendants, including those
+            # that call setsid. Let it terminate and reap before killing it.
+            assert proc is not None
+            try:
+                proc.send_signal(signal.SIGTERM)
+                proc.wait(timeout=5)
+            except ProcessLookupError:
+                pass
+            except subprocess.TimeoutExpired:
+                os.killpg(pid, signal.SIGKILL)
+                proc.wait()
+                raise RuntimeError("verification process supervisor did not complete cleanup")
+            # If the supervisor itself was killed, retain the previous session
+            # teardown as a last containment action. Missing completion metadata
+            # below still rejects the run: group teardown cannot prove reaping.
+            try:
+                os.killpg(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            return
         try:
             os.killpg(pid, signal.SIGTERM)
             time.sleep(0.25)
@@ -125,9 +151,19 @@ def execute(
             code = 130 if cancelled else 124
         else:
             with _input_stream(input_bytes) as stdin:
-                proc = subprocess.Popen(command, cwd=cwd, env=child_env, stdin=stdin,
+                spawned_command = command
+                spawn_options = {}
+                if sys.platform.startswith("linux"):
+                    status_read, status_write = os.pipe()
+                    spawned_command = [sys.executable, str(Path(__file__).with_name("process_supervisor.py")),
+                                       "--status-fd", str(status_write), "--", *command]
+                    spawn_options["pass_fds"] = (status_write,)
+                proc = subprocess.Popen(spawned_command, cwd=cwd, env=child_env, stdin=stdin,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        start_new_session=True)
+                                        start_new_session=True, **spawn_options)
+                if status_write is not None:
+                    os.close(status_write)
+                    status_write = None
         # Ownership begins at spawn. Selector, registration and user callback
         # failures all pass through the same group teardown and child wait.
         if proc is None:
@@ -144,9 +180,15 @@ def execute(
                 # safety outcome, keep the bytes already read and close our ends.
                 break
             # A direct child may abandon grandchildren that inherited its pipes.
-            if proc.poll() is not None:
+            exited = proc.poll() is not None
+            if exited:
                 kill_group(proc.pid)
-            for key, _ in selector.select(min(0.05, max(0, deadline - time.monotonic()))):
+            events = selector.select(0 if exited else min(0.05, max(0, deadline - time.monotonic())))
+            if exited and not events and sys.platform.startswith("linux"):
+                # A dead supervisor cannot authorize waiting on abandoned pipes.
+                # Drain available bytes, then require its completion metadata.
+                break
+            for key, _ in events:
                 data = os.read(key.fileobj.fileno(), 65536)
                 if not data:
                     selector.unregister(key.fileobj)
@@ -159,6 +201,17 @@ def execute(
                 if emit is not None:
                     emit(key.data, data[:remaining])
         code = proc.wait()
+        if status_read is not None:
+            try:
+                status = json.loads(os.read(status_read, 4096))
+            except (ValueError, OSError) as error:
+                raise OSError(errno.EIO, "supervisor did not confirm owned-tree cleanup") from error
+            if not isinstance(status, dict) or status.get("kind") != "completed":
+                detail = status.get("detail", "invalid supervisor status") if isinstance(status, dict) else "invalid supervisor status"
+                number = status.get("errno", errno.EIO) if isinstance(status, dict) else errno.EIO
+                raise OSError(number if type(number) is int and number > 0 else errno.EIO, detail)
+            if type(status.get("returncode")) is not int or status["returncode"] != code:
+                raise OSError(errno.EIO, "supervisor completion status differs from process exit")
     finally:
         try:
             if proc is not None:
@@ -173,6 +226,9 @@ def execute(
                         proc.stdout.close()
                     if proc.stderr is not None:
                         proc.stderr.close()
+                for descriptor in (status_read, status_write):
+                    if descriptor is not None:
+                        os.close(descriptor)
             finally:
                 for sig, handler in previous.items():
                     signal.signal(sig, handler)
