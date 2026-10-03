@@ -140,7 +140,7 @@ class RecoveryTests(unittest.TestCase):
             original_spawn = subprocess.Popen
             def spawn(command, **kwargs):
                 command = list(command)
-                command[1] = str(copied)
+                command[command.index("--status-fd") - 1] = str(copied)
                 return original_spawn(command, **kwargs)
             timer = threading.Timer(.05, lambda: os.kill(os.getpid(), signal.SIGTERM)) if cancel else None
             try:
@@ -162,6 +162,15 @@ class RecoveryTests(unittest.TestCase):
 
     def test_deadline_before_supervisor_handlers_are_installed(self):
         self.slow_start(cancel=False)
+
+    def test_supervisor_ignores_command_import_path_injection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            (path / "ctypes.py").write_text("raise RuntimeError('command path injected into custody')\n")
+            result = execute([sys.executable, "-I", "-S", "-c", "print('guard')"],
+                             cwd=path, env={**os.environ, "PYTHONPATH": str(path)})
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, b"guard\n")
 
     def test_group_teardown_precedes_leader_reaping(self):
         observed = []

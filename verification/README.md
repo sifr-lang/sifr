@@ -200,6 +200,22 @@ Startup blocks cancellation signals until handlers are installed. Linux teardown
 keeps the leader unreaped until its process group has been terminated, so that
 group's identifier cannot be reused during cleanup.
 
+Correctness checkpoints use `policy/correctness_checkpoints.json` and the existing
+input-bound evidence schema. The first audited recipe is the HIR maintainability
+guard; cloud execution and `uv run --project verification --locked python -m
+sifr_verify checkpoints --guard hir-maintainability` can consume it. Other
+assertions execute fresh until their complete dependency closure is declared.
+The recipe pins the guard's audited bytes, consumed document and path absence,
+whole source inventory, commands, interpreter/stdlib/native-library bytes,
+configuration, and a known local producer. Its guard and custody supervisor use
+isolated Python imports and source reads. Changed inputs, expired/tampered output,
+incomplete inventory, duplicate cases, or another producer reject reuse. Partial
+and failed attempts remain retained; runtime/compile/validation kinds stay distinct.
+No checkpoint grants paired-performance acceptance or combines partial captures.
+Checkpoint capacity or unknown dependencies disable reuse and execute the required
+guard fresh. Observations distinguish reuse from new execution. This one recipe
+does not claim dependency closure or checkpoint coverage for the full profile.
+
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to
 their existing Rust-check, snapshot, formatting and quality obligations. Their

@@ -1,0 +1,128 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "protocol",
+    "owner",
+    "cross_commit_reuse",
+    "max_age_seconds",
+    "max_retained_bytes",
+    "disk_reserve_bytes",
+    "unknown_dependencies",
+    "recipes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "protocol": {
+      "type": "string",
+      "enum": [
+        "owned-local-correctness-v1"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "cross_commit_reuse": {
+      "type": "boolean",
+      "enum": [
+        false
+      ]
+    },
+    "unknown_dependencies": {
+      "type": "string",
+      "enum": [
+        "execute-fresh"
+      ]
+    },
+    "max_age_seconds": {
+      "type": "integer"
+    },
+    "max_retained_bytes": {
+      "type": "integer"
+    },
+    "disk_reserve_bytes": {
+      "type": "integer"
+    },
+    "recipes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "guard",
+          "script",
+          "audited_script_sha256",
+          "execution_kind",
+          "supported_hosts",
+          "cadence",
+          "consumed_paths",
+          "import_contract"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "guard": {
+            "type": "string"
+          },
+          "audited_script_sha256": {
+            "type": "string"
+          },
+          "import_contract": {
+            "type": "string"
+          },
+          "script": {
+            "type": "string",
+            "format": "repo-relative-path"
+          },
+          "execution_kind": {
+            "type": "string",
+            "enum": [
+              "validation"
+            ]
+          },
+          "supported_hosts": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "linux"
+              ]
+            }
+          },
+          "cadence": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "cloud",
+                "manual-recovery"
+              ]
+            }
+          },
+          "consumed_paths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "repo-relative-path"
+            }
+          }
+        }
+      }
+    }
+  }
+}

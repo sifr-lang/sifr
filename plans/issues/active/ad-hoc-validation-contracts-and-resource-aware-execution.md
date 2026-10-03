@@ -282,6 +282,56 @@ here rather than treating the plan itself as execution evidence.
 
 ## M2 scheduling checkpoint — 2026-10-03
 
+### Correctness checkpoint continuation
+
+- Candidate work owns `codex/validation-correctness-checkpoints-20261003` in
+  `/workspace/sifr-validation-recovery`, based on the separately reviewed native
+  SIGKILL correction `1786e75ca197976f055c50a6bc3407ba87589c70`.
+  Its review is outside Git at
+  `/workspace/validation-work/evidence/candidates/1786e75ca197976f055c50a6bc3407ba87589c70/opus-native-sigkill.md`;
+  [PR #4282](https://github.com/sifr-lang/sifr/pull/4282) remains a draft.
+- Input-bound correctness checkpoint consumption now preserves immutable attempts
+  and independent retained copies, recomputes consumer keys, rejects unknown
+  producers, drift, incomplete/duplicate inventory, expired/tampered artifacts,
+  and performance receipts. Unknown dependency closure executes fresh. The
+  complete-inventory reconciler rejects missing or overlapping required cases.
+- The first integrated recipe is the HIR maintainability guard, pinned by audited
+  script hash and explicit consumed-document/path-presence inputs. It binds the
+  full source inventory, tool/interpreter/dependency bytes, all standard-library
+  source files and actual loaded native libraries in an isolated probe. Optional
+  dormant native extensions are not incorrectly treated as loaded dependencies.
+  Site hooks, PYTHONPATH, and mutable bytecode caches do not control the guard or
+  custody supervisor. Other recipes remain fresh because their closure is unknown.
+- Targeted checkpoint/recipe tests: 23 passed, raw
+  `/workspace/validation-work/evidence/m2-checkpoint-recipe-tests.log`. The recipe
+  tests execute the actual guard and demonstrate one execution followed by reuse,
+  consumed-document/untracked-path invalidation, failure preservation after exact
+  restoration, and unaudited-script fresh execution. Their capacity and general
+  runtime identity are fixtures, not constrained-runner qualification. All 44
+  process/custody tests passed, raw
+  `/workspace/validation-work/evidence/m2-checkpoint-control-plane-tests.log`.
+- On the actual current VM, checkpoint capacity is unavailable because ordinary
+  disk reserve is already below 8 GiB after the failed cloud preparation. The
+  real CLI executes the read-only guard fresh and passes; reuse remains disabled.
+  Raw `/workspace/validation-work/evidence/m2-checkpoint-live-capacity.log`.
+  It publishes no checkpoint and does not suppress the required assertion.
+- The parent constrained run `d5cedf1a3` finished unqualified: source preparation
+  passed in 1,721,969 ms; release compiler preparation took 24m13s, corpus test
+  preparation 25m02s, and metadata preparation 1m23s; the whole package stage
+  passed in 3,046,330 ms. Sysroot assertion admission then failed ENOSPC:
+  required 10,737,418,240 bytes, available 7,979,851,776. No sysroot assertion or
+  normal graph retirement ran. Functional failed, performance inconclusive,
+  qualified false. Raw report/time/log/journal are archived under
+  `/workspace/validation-work/evidence/candidates/d5cedf1a3091e10adc93d33b85c32b769891eafb/`.
+- The private source/package graphs measure roughly 5.4/1.8 GiB. The main target's
+  incremental cache now measures about 11 GiB; its original owner remains unknown
+  and it must not be cleaned. Follow-up resource scope must correct measured
+  graph lifetime/footprint and preserve all failures and compiled artifacts.
+  Admission estimates proved insufficient for the main corpus/metadata graph;
+  no reserve, assertion selection, runtime obligation, or performance threshold
+  is lowered or reclassified. Production reuse, implementation acceptance gates,
+  scoped checkpoint review, the resource follow-up, and M3–M6 remain open.
+
 ### Owned descendant recovery continuation
 
 - The constrained execution of `d5cedf1a3091e10adc93d33b85c32b769891eafb`
