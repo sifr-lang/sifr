@@ -76,6 +76,24 @@ class CloudReceiptTests(unittest.TestCase):
     def test_complete_bound_evidence_passes(self):
         self.assertEqual(self.check(), 0)
 
+    def test_mutated_predeclared_count_or_schedule_rejected(self):
+        for field, value in [("pairs_by_case", {"case": 64}), ("schedules", {"case": []})]:
+            receipt = copy.deepcopy(self.receipt)
+            self.receipt["specification"][field] = value
+            with self.assertRaisesRegex(ValueError, "declared count or schedule"):
+                self.check()
+            self.receipt = receipt
+
+    def test_specification_disagrees_with_predeclared_raw_evidence(self):
+        self.receipt["specification"]["started_unix"] += 1
+        with self.assertRaisesRegex(ValueError, "predeclared raw evidence"):
+            self.check()
+
+    def test_failed_v1_receipt_cannot_be_promoted(self):
+        self.receipt["specification"]["policy"] = "shared-cloud-median-v1"
+        with self.assertRaisesRegex(ValueError, "unsupported cloud receipt"):
+            self.check()
+
     def test_changed_raw_sample_rejected(self):
         raw = self.output / "pairs/case/0/candidate/samples/case/0.json"
         raw.write_text('{}')

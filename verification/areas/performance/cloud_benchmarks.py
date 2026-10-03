@@ -14,7 +14,8 @@ from pathlib import Path
 from benchmark_manifest import BenchmarkError, load_manifest, validate_manifest
 from benchmark_process import run_owned_process
 from cloud_contract import evaluate
-from cloud_statistics import PAIRS, POLICY_VERSION, schedule
+from cloud_precision import pairs_for_case
+from cloud_statistics import POLICY_VERSION, schedule
 from reference_host import comparison_mismatches
 from reference_profiles import validate_compiler_reference
 
@@ -95,7 +96,7 @@ def capture(args) -> int:
     specification = {"policy": POLICY_VERSION, "invocation": invocation,
         "reference_compiler_commit": args.reference_compiler_commit,
         "manifest_sha256": digest(MANIFEST), "budgets_sha256": digest(BUDGETS),
-        "started_unix": time.time(), "pairs_per_case": PAIRS, "tooling_sha256": tooling_digest(ROOT),
+        "started_unix": time.time(), "pairs_by_case": {case.id: pairs_for_case(case.id) for case in cases}, "tooling_sha256": tooling_digest(ROOT),
         "schedules": {case.id: schedule(case.id) for case in cases},
         "endpoints": endpoints, "endpoint_receipts": {key: str(path) for key, path in paths.items()},
         "endpoint_receipt_hashes": {key: digest(path) for key, path in paths.items()}}
@@ -121,7 +122,7 @@ def capture(args) -> int:
             rows.append(row)
             atomic(output / "pairs" / case.id / str(index) / "pair.json", row)
         pairs[case.id] = rows
-        print(f"cloud case={case.id} pairs={PAIRS} elapsed_seconds={time.monotonic() - started:.1f}", flush=True)
+        print(f"cloud case={case.id} pairs={pairs_for_case(case.id)} elapsed_seconds={time.monotonic() - started:.1f}", flush=True)
     check_endpoints(paths, args.reference_compiler_commit)
     result = evaluate(manifest, read(BUDGETS), pairs)
     evidence = {}
@@ -143,6 +144,11 @@ def check(args) -> int:
         raise ValueError("unsupported cloud receipt")
     if (specification["manifest_sha256"] != digest(MANIFEST) or specification["budgets_sha256"] != digest(BUDGETS) or specification["tooling_sha256"] != tooling_digest(ROOT)):
         raise ValueError("cloud corpus or budgets changed")
+    declared_cases = load_manifest(MANIFEST)["cases"]
+    counts = {case["id"]: pairs_for_case(case["id"]) for case in declared_cases}
+    schedules = {case["id"]: schedule(case["id"]) for case in declared_cases}
+    if specification.get("pairs_by_case") != counts or specification.get("schedules") != schedules:
+        raise ValueError("cloud declared count or schedule changed")
     age = time.time() - receipt["completed_unix"]
     if age < 0 or age > 24 * 3600:
         raise ValueError("cloud receipt is stale")
@@ -170,6 +176,9 @@ def check(args) -> int:
         raw = (path.parent / name).resolve()
         if not raw.is_relative_to(path.parent) or digest(raw) != expected:
             raise ValueError("raw cloud evidence absent or changed")
+    if ("specification.json" not in receipt["raw_evidence_sha256"] or
+            read(path.parent / "specification.json") != specification):
+        raise ValueError("cloud specification differs from bound predeclared raw evidence")
     pairs = receipt["pairs"]
     invocation = specification["invocation"]
     cases = {case["id"]: case for case in load_manifest(MANIFEST)["cases"]}
