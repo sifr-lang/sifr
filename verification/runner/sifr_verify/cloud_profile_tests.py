@@ -64,16 +64,16 @@ class CloudProfileTests(unittest.TestCase):
         runner = ProfileRunner("cloud", [])
         with patch.object(runner, "prepare_step_budget", return_value=None), \
              patch.object(runner, "admit_performance_reference", side_effect=CommandFailed(2)) as admission, \
-             patch.object(runner, "prepare_cargo_cache") as setup, \
+             patch("sifr_verify.cloud_schedule.run_staged_cloud", return_value=0) as schedule, \
              patch.object(runner, "run_guardrail") as guard, \
              patch.object(runner, "run_area") as area, \
              patch.object(runner, "run_toolchain_step") as toolchain:
             self.assertEqual(runner.run(), 0)
         admission.assert_not_called()
-        setup.assert_called_once()
-        self.assertEqual(guard.call_count, len(runner.profile["guardrail_steps"]))
-        self.assertEqual(area.call_count, len(runner.profile["selected_areas"]))
-        self.assertEqual(toolchain.call_count, len(runner.profile["toolchain_steps"]))
+        schedule.assert_called_once()
+        self.assertEqual(guard.call_count, 5)
+        area.assert_not_called()
+        toolchain.assert_not_called()
 
     def test_inconclusive_is_usable_but_not_qualified(self):
         for require, expected in [(False, 0), (True, 3)]:

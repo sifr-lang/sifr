@@ -7,10 +7,16 @@ import sys
 
 from .paths import REPO_ROOT
 from .profile_commands import CommandFailed, run_command
+from .errors import VerificationError
 
 
 def run_cloud_profile(runner) -> int:
-    functional = runner.run()
+    try:
+        functional = runner.run()
+    except (VerificationError, OSError, ValueError) as error:
+        print(f"Cloud execution blocked: {error}", file=sys.stderr)
+        functional = 2
+    runner.functional_exit_status = functional
     if functional:
         runner.performance_exit_status = runner.performance_exit_status or 3
         return functional

@@ -54,12 +54,14 @@ from .schemas import (
 from .step_budgets import run_self_test as step_budget_self_test
 from .qualification_profile_checks import policy_checks as qualification_profile_checks
 from .validation_contract_checks import policy_checks as validation_contract_checks
+from .resource_schedule_checks import policy_checks as resource_schedule_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
 
 def run_all() -> list[str]:
     checks = [
+        ("resource admission and owned graph lifetimes", resource_schedule_checks),
         ("validation contracts and execution evidence", validation_contract_checks),
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),

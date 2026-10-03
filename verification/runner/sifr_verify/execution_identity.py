@@ -7,6 +7,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -20,6 +21,7 @@ RUNTIME_ENVIRONMENT = (
     "CARGO_ENCODED_RUSTFLAGS", "RUSTC_WRAPPER", "RUSTC_WORKSPACE_WRAPPER",
     "RUSTUP_TOOLCHAIN", "RAYON_NUM_THREADS", "OMP_NUM_THREADS", "SIFR_SYSROOT",
     "SIFR_RELEASE_VERSION", "SYNTAQLITE_SQLITE_VERSION", "WASI_SDK_PATH",
+    "PATH", "CC", "CXX", "LIBCLANG_PATH", "LD_LIBRARY_PATH",
 )
 
 
@@ -39,10 +41,16 @@ def artifact_identity(path: Path) -> dict:
         raise EvidenceError(f"artifact is not a file: {requested}")
     hasher = hashlib.sha256()
     with actual.open("rb") as stream:
+        before = os.fstat(stream.fileno())
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             hasher.update(chunk)
+        after = os.fstat(stream.fileno())
+    stable = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+    if (stable(before) != stable(after) or stable(after) != stable(actual.stat())
+            or requested.resolve(strict=True) != actual):
+        raise EvidenceError(f"artifact changed while establishing identity: {requested}")
     return {"requested_path": str(requested), "path": str(actual),
-            "sha256": hasher.hexdigest(), "size_bytes": actual.stat().st_size}
+            "sha256": hasher.hexdigest(), "size_bytes": after.st_size}
 
 
 def version(*command: str, env: dict[str, str] | None = None) -> str:
@@ -80,6 +88,16 @@ def runtime_identity(env: dict[str, str], *, root: Path = REPO_ROOT) -> dict:
             path = directory / name
             if path.exists():
                 configurations.append(artifact_identity(path))
+    tool_bytes = {}
+    for tool in ("cargo", "rustc", "uv"):
+        located = shutil.which(tool, path=env.get("PATH"))
+        if not located:
+            raise EvidenceError(f"tool executable unavailable: {tool}")
+        tool_bytes[tool] = artifact_identity(Path(located))
+    # rustup shims do not identify the selected compiler toolchain bytes.
+    if shutil.which("rustup", path=env.get("PATH")):
+        for tool in ("cargo", "rustc"):
+            tool_bytes["selected_" + tool] = artifact_identity(Path(version("rustup", "which", tool, env=env)))
     return {
         "interpreter": artifact_identity(Path(sys.executable)),
         "python": sys.version,
@@ -88,6 +106,7 @@ def runtime_identity(env: dict[str, str], *, root: Path = REPO_ROOT) -> dict:
         "tools": {"cargo": version("cargo", "--version", env=env),
                   "rustc": version("rustc", "-vV", env=env),
                   "uv": version("uv", "--version", env=env)},
+        "tool_bytes": tool_bytes,
         "platform": {"system": platform.system(), "machine": platform.machine(),
                      "release": platform.release(), "libc": list(platform.libc_ver())},
         "cargo_configurations": configurations,

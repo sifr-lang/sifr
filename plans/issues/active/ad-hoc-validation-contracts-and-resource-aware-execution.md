@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 delivered; M1 implementation in progress
+current_stage: M0 delivered; M1 and M2 implementation in progress
 
 ## Objective and authority
 
@@ -58,7 +58,7 @@ and disposition. Split large milestones into independently reviewable changes.
 |---|---|---|---|
 | M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; delivered in #4279 |
 | M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | in progress |
-| M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | pending |
+| M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | in progress |
 | M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | pending |
 | M4 | Compiler performance levels and separate generated-program benchmarks | 7–9, 14, 20 | pending |
 | M5 | Artifact custody, published-predecessor upgrades, and compatibility/platform qualification | 10–12, 15, 19 | pending |

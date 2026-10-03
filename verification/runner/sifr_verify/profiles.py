@@ -387,6 +387,9 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
 
 def canonical_step_names(profile: dict[str, Any]) -> set[str]:
     names = {"cargo_cache_setup"}
+    if profile.get("name") == "cloud":
+        names.update({"preparation_dependencies", "preparation_sysroot_source", "preparation_sysroot_package",
+                      "retirement_source_cargo_target", "retirement_cargo_target"})
     names.update(
         f"guardrail_{str(step).replace('-', '_')}"
         for step in profile.get("guardrail_steps", [])

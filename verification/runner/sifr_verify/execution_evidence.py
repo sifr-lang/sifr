@@ -146,5 +146,11 @@ def write_evidence(path: Path, payload: dict) -> None:
             os.fsync(stream.fileno())
         # Link an immutable JSON file only, never mutable Cargo target artifacts.
         os.link(temporary, path)
+        if os.name == "posix":
+            directory_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
     finally:
         temporary.unlink(missing_ok=True)

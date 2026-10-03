@@ -1,0 +1,201 @@
+"""Capacity, ownership and complete staged-selection regressions."""
+from __future__ import annotations
+
+import json
+import shutil
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from .cloud_schedule import run_staged_cloud
+from .graph_retirement import GRAPH_PATHS, GraphLease
+from .profile_runner import ProfileRunner
+from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit
+
+
+@unittest.skipUnless(sys.platform.startswith("linux"), "cloud resource contract is Linux cgroup v2")
+class ResourceTests(unittest.TestCase):
+    def test_nested_cpu_memory_limits_affinity_and_tmpfs_share_one_budget(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            child = root / "child"
+            child.mkdir()
+            meminfo = root / "meminfo"
+            meminfo.write_text("MemTotal: 32768 kB\nMemAvailable: 24000 kB\n")
+            for path, cpu, memory, used in [(root, "200000 100000", 16000, 3000),
+                                             (child, "350000 100000", 20000, 1000)]:
+                (path / "cpu.max").write_text(cpu)
+                (path / "memory.max").write_text(str(memory))
+                (path / "memory.current").write_text(str(used))
+            resources = discover(disk_path=root, cgroup_root=root, cgroup_path=child,
+                                 meminfo=meminfo, affinity=5, tmpfs_paths=())
+            self.assertEqual((resources.effective_cpus, resources.memory_limit_bytes,
+                              resources.memory_available_bytes), (2, 16000, 13000))
+            self.assertEqual(worker_limit(resources, 8), 2)
+            requirements = dict(disk_growth_bytes=1, retained_copy_bytes=1, disk_reserve_bytes=1,
+                                memory_peak_bytes=9000, tmpfs_growth_bytes=5000, memory_reserve_bytes=0)
+            with self.assertRaisesRegex(ResourceError, "shared resident/tmpfs"):
+                admit(resources, requirements)
+
+    def test_unknown_cgroup_and_traversal_are_not_host_capacity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            membership = root / "membership"
+            membership.write_text("0::/nested/job\n")
+            self.assertEqual(own_cgroup(root, membership), root / "nested/job")
+            membership.write_text("0::/../other\n")
+            with self.assertRaises(ValueError):
+                own_cgroup(root, membership)
+            with self.assertRaises(ResourceError):
+                discover(disk_path=root, cgroup_root=root, cgroup_path=root)
+
+    def test_retained_disk_copies_and_reserve_are_admitted_before_work(self):
+        resources = Resources(4, 4, 100, 100, 20, {}, [], {})
+        requirements = dict(disk_growth_bytes=8, retained_copy_bytes=5, disk_reserve_bytes=8,
+                            memory_peak_bytes=1, tmpfs_growth_bytes=0, memory_reserve_bytes=1)
+        with self.assertRaises(ResourceError) as raised:
+            admit(resources, requirements)
+        self.assertEqual(raised.exception.classification, "enospc")
+
+
+@unittest.skipUnless(sys.platform.startswith("linux"), "cloud graph leases require Linux")
+class RetirementTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        self.lease = GraphLease(self.root, GRAPH_PATHS[0], "session").acquire({"boundary", "installed"})
+        self.addCleanup(self.lease.close)
+        self.binary = self.lease.path / "debug/sifr"
+        self.binary.parent.mkdir()
+        self.binary.write_bytes(b"compiler")
+
+    def retire(self, **kwargs):
+        return self.lease.retire(retained=self.root / "retained", protected=[self.binary],
+            command_runner=lambda command, env: shutil.rmtree(self.lease.path), env={}, **kwargs)
+
+    def complete(self):
+        for identifier in self.lease.consumers:
+            self.lease.passed_consumer(identifier)
+
+    def test_failed_or_incomplete_consumers_and_live_builds_prevent_cleanup(self):
+        self.lease.passed_consumer("boundary")
+        with self.assertRaises(ResourceError):
+            self.retire()
+        self.assertTrue(self.binary.exists())
+        self.complete()
+        with patch("sifr_verify.graph_retirement.active_builds", return_value=[123]):
+            with self.assertRaises(ResourceError):
+                self.retire()
+        self.assertTrue(self.binary.exists())
+
+    def test_lease_contention_other_owner_and_marker_drift_are_rejected(self):
+        contender = GraphLease(self.root, GRAPH_PATHS[0], "other")
+        self.addCleanup(contender.close)
+        with self.assertRaises(BlockingIOError):
+            contender.acquire({"boundary"})
+        self.complete()
+        marker = json.loads(self.lease.marker.read_text())
+        marker["owner"] = "other"
+        self.lease.marker.write_text(json.dumps(marker))
+        with self.assertRaises(ResourceError):
+            self.retire()
+        self.assertTrue(self.binary.exists())
+
+    def test_symlinks_cannot_redirect_clean_or_retention(self):
+        self.complete()
+        (self.lease.path / "outside").symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(ResourceError):
+            self.retire()
+        (self.lease.path / "outside").unlink()
+        (self.root / "retained").symlink_to(self.lease.path, target_is_directory=True)
+        with self.assertRaises(ResourceError):
+            self.retire()
+
+    def test_unknown_legacy_graph_is_never_reclaimed(self):
+        self.lease.close()
+        self.lease.marker.unlink()
+        lease = GraphLease(self.root, GRAPH_PATHS[0], "session").acquire({"boundary"})
+        self.addCleanup(lease.close)
+        lease.passed_consumer("boundary")
+        result = lease.retire(retained=self.root / "retained", protected=[self.binary],
+                              command_runner=lambda *args, **kwargs: self.fail("legacy cleanup"), env={})
+        self.assertFalse(result["retired"])
+        self.assertTrue(self.binary.exists())
+
+    def test_net_recovery_includes_copies_and_immutable_compiler_survives(self):
+        self.complete()
+        with patch("sifr_verify.graph_retirement.active_builds", return_value=[]), \
+             patch("sifr_verify.graph_retirement.shutil.disk_usage", side_effect=[
+                 SimpleNamespace(free=100), SimpleNamespace(free=140)]):
+            result = self.retire()
+        self.assertEqual(result["reclaimed_bytes"], 40)
+        kept = Path(result["copies"][0]["retained"]["path"])
+        self.assertEqual(kept.read_bytes(), b"compiler")
+        self.assertEqual(kept.stat().st_mode & 0o222, 0)
+        self.assertFalse(self.lease.path.exists())
+
+
+@unittest.skipUnless(sys.platform.startswith("linux"), "cloud scheduler requires Linux")
+class ScheduleTests(unittest.TestCase):
+    def test_all_canonical_consumers_run_once_before_owned_graph_retirement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = root / "target/verification/areas/sysroot-release-cloud-results.json"
+            result.parent.mkdir(parents=True)
+            result.write_text('{"passed":true}')
+            runner = ProfileRunner("cloud", [])
+            events = []
+            early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
+                     "submodule-ownership", "stdlib-manifest-schema"}
+            class FakeSchedule:
+                owner = "test"
+                journal = root / "journal"
+                def __init__(self, runner): pass
+                def record(self, *args): pass
+                def step(self, name, callback, **kwargs):
+                    events.append(name)
+                    callback()
+                    return 0
+            class FakeLease:
+                def __init__(self, root, relative, owner):
+                    self.relative, self.path = relative, root / relative
+                def acquire(self, consumers): return self
+                def passed_consumer(self, identifier): pass
+                def retire(self, **kwargs): return {"retired": True}
+                def close(self): pass
+            with patch("sifr_verify.cloud_schedule.REPO_ROOT", root), \
+                 patch("sifr_verify.cloud_schedule.Schedule", FakeSchedule), \
+                 patch("sifr_verify.cloud_schedule.GraphLease", FakeLease), \
+                 patch("sifr_verify.cloud_schedule.acquire_cargo_dependencies"), \
+                 patch("sifr_verify.cloud_schedule.prepare_sysroot_source_binary"), \
+                 patch("sifr_verify.cloud_schedule.prepare_sysroot_package_binary"), \
+                 patch("sifr_verify.cloud_schedule.prepare_remaining_graphs") as remaining, \
+                 patch.object(runner, "run_guardrail") as guards, \
+                 patch.object(runner, "run_area") as areas, \
+                 patch.object(runner, "run_toolchain_step") as tools:
+                self.assertEqual(run_staged_cloud(runner, early), 0)
+            self.assertEqual(guards.call_count, len(runner.profile["guardrail_steps"]) - len(early))
+            self.assertEqual(areas.call_args_list[0].args[0], "sysroot_release")
+            self.assertEqual(areas.call_count, len(runner.profile["selected_areas"]))
+            self.assertEqual(tools.call_count, len(runner.profile["toolchain_steps"]))
+            self.assertEqual(len(events), len(set(events)))
+            self.assertLess(events.index("area_sysroot_release"), events.index("retirement_cargo_target"))
+            self.assertLess(events.index("retirement_cargo_target"), events.index("cargo_cache_setup"))
+            self.assertFalse(remaining.call_args.kwargs["include_sysroot"])
+
+
+def policy_checks():
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
+                               for case in (ResourceTests, RetirementTests, ScheduleTests))
+    result = unittest.TestResult()
+    suite.run(result)
+    if not result.wasSuccessful():
+        raise AssertionError(result.errors + result.failures)
+
+
+if __name__ == "__main__":
+    unittest.main()

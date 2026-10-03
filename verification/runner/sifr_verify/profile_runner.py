@@ -139,6 +139,9 @@ class ProfileRunner:
         if failed:
             self.block_steps("invalid-inventory")
             return failed
+        if self.profile_name == "cloud":
+            from .cloud_schedule import run_staged_cloud
+            return run_staged_cloud(self, early)
         prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
         if prepared and not self.no_fail_fast:
             return prepared

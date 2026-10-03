@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "estimate_basis": "prospective conservative allocation; record observations before recalibration",
+  "cold_preparation_deadline_seconds": 7200,
+  "assertion_deadline_seconds": 2400,
+  "stages": {
+    "dependency-acquisition": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 1073741824,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-source": {
+      "disk_growth_bytes": 6442450944,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-package": {
+      "disk_growth_bytes": 10737418240,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-assertions": {
+      "disk_growth_bytes": 2147483648,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "graph-retirement": {
+      "disk_growth_bytes": 0,
+      "retained_copy_bytes": 1073741824,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 1073741824,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "remaining-preparation": {
+      "disk_growth_bytes": 10737418240,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "remaining-assertions": {
+      "disk_growth_bytes": 3221225472,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    }
+  }
+}

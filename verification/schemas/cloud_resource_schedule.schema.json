@@ -1,0 +1,267 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "estimate_basis",
+    "cold_preparation_deadline_seconds",
+    "assertion_deadline_seconds",
+    "stages"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "estimate_basis": {
+      "type": "string"
+    },
+    "cold_preparation_deadline_seconds": {
+      "type": "integer"
+    },
+    "assertion_deadline_seconds": {
+      "type": "integer"
+    },
+    "stages": {
+      "type": "object",
+      "required": [
+        "dependency-acquisition",
+        "sysroot-source",
+        "sysroot-package",
+        "sysroot-assertions",
+        "graph-retirement",
+        "remaining-preparation",
+        "remaining-assertions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dependency-acquisition": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sysroot-source": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sysroot-package": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sysroot-assertions": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "graph-retirement": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "remaining-preparation": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "remaining-assertions": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -78,4 +78,3 @@ PAIR_COUNTS = {
 def pairs_for_case(case_id: str) -> int:
     """Unlisted manifest cases use the policy minimum, never outcome adaptation."""
     return PAIR_COUNTS.get(case_id, DEFAULT_PAIRS)
-
