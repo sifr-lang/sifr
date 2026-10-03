@@ -21,6 +21,7 @@ from .profile_commands import CommandFailed, cargo_command, run_command, uv_area
 from .profile_reporting import run_profile_with_report
 from .compiler_configuration_plan import configuration_plan
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
+from .performance_partition import MEASUREMENT_SUITES, combine as combine_performance, result_path as performance_result_path
 from .profiles import crate_test_mode, crate_test_suites_for_mode, load_profile, resolve_fixture_manifest
 from .step_budgets import (
     StepBudgetContext,
@@ -56,8 +57,8 @@ def now_ms() -> int:
     return time.monotonic_ns() // 1_000_000
 
 
-def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
-    start_ms = now_ms()
+def timed_step(name: str, callback: Callable[[], None], *, prior_elapsed_ms: int = 0) -> StepResult:
+    start_ms = now_ms() - prior_elapsed_ms
     status = 0
     try:
         callback()
@@ -117,6 +118,9 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
+        performance_elapsed_ms = 0
+        if self.profile_name != "cloud":
+            performance_result_path(self.profile_name).unlink(missing_ok=True)
         early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
                  "submodule-ownership", "stdlib-manifest-schema"}
         failed = 0
@@ -154,9 +158,20 @@ class ProfileRunner:
                 return failed
         for selection in self.profile["selected_areas"]:
             area = str(selection["area"])
-            if area == "performance":
-                continue
             suites = [str(suite) for suite in selection["suites"]]
+            if area == "performance":
+                suites = [suite for suite in suites if suite not in MEASUREMENT_SUITES]
+                if suites and not prepared:
+                    started = now_ms()
+                    status = self.execute_step("area_performance_correctness",
+                        lambda s=suites: self.run_performance_part(s, "correctness"))
+                    performance_elapsed_ms += now_ms() - started
+                    failed = failed or status
+                    if status and not self.no_fail_fast:
+                        return failed
+                elif suites:
+                    self.block_step("area_performance_correctness", "cargo_cache_setup")
+                continue
             if prepared:
                 self.block_step(step_name("area", area), "cargo_cache_setup")
                 continue
@@ -189,14 +204,19 @@ class ProfileRunner:
                 self.block_step("area_performance", "cargo_cache_setup")
                 continue
             suites = list(selection["suites"])
-            if set(suites).intersection({"rules", "smoke", "representative", "full"}):
+            measured = [suite for suite in suites if suite in MEASUREMENT_SUITES]
+            if measured:
                 admission = self.execute_step("performance_reference_admission",
                     self.admit_performance_reference, performance=True)
                 if admission:
                     self.block_step("area_performance", "performance_reference_admission")
                     continue
-            self.execute_step("area_performance", lambda s=suites: self.run_area("performance", s),
-                              performance=True)
+            def finish(selected=suites, measurements=measured):
+                if measurements:
+                    self.run_performance_part(measurements, "measurement")
+                combine_performance(self.profile_name, selected)
+            self.execute_step("area_performance", finish, performance=bool(measured),
+                              prior_elapsed_ms=performance_elapsed_ms)
         return failed or self.performance_exit_status
 
     def block_step(self, name: str, prerequisite: str) -> None:
@@ -210,11 +230,13 @@ class ProfileRunner:
         for name in self.profile["toolchain_steps"]:
             self.block_step(step_name("toolchain", name), prerequisite)
 
-    def execute_step(self, name: str, callback: Callable[[], None], *, performance: bool = False) -> int:
+    def execute_step(self, name: str, callback: Callable[[], None], *, performance: bool = False,
+                     prior_elapsed_ms: int = 0) -> int:
         budget = self.prepare_step_budget(name)
         step_seconds = self.env.get("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS")
         if step_seconds is None:
-            result = timed_step(name, callback)
+            result = (timed_step(name, callback, prior_elapsed_ms=prior_elapsed_ms)
+                      if prior_elapsed_ms else timed_step(name, callback))
         else:
             _, deadline = deadline_environment(self.env, step_seconds)
             previous_deadline = self.env.get(SAFETY_DEADLINE_ENV)
@@ -224,7 +246,8 @@ class ProfileRunner:
             # bounded step deadline through those commands as well.
             os.environ[SAFETY_DEADLINE_ENV] = repr(deadline)
             try:
-                result = timed_step(name, callback)
+                result = (timed_step(name, callback, prior_elapsed_ms=prior_elapsed_ms)
+                          if prior_elapsed_ms else timed_step(name, callback))
             finally:
                 if previous_deadline is None:
                     self.env.pop(SAFETY_DEADLINE_ENV, None)
@@ -375,6 +398,8 @@ class ProfileRunner:
             )
             return
         result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
+        if area == "performance" and getattr(self, "performance_result_phase", None):
+            result_slug += "-" + self.performance_result_phase
         run_selected_area(
             area=area,
             suites=suites,
@@ -384,6 +409,13 @@ class ProfileRunner:
                 *args, *(["--no-fail-fast"] if self.no_fail_fast else [])),
             command_runner=lambda command: run_command(command, env=self.env),
         )
+
+    def run_performance_part(self, suites: list[str], phase: str) -> None:
+        self.performance_result_phase = phase
+        try:
+            self.run_area("performance", suites)
+        finally:
+            del self.performance_result_phase
 
     def run_toolchain_step(self, toolchain_step: str) -> None:
         if toolchain_step == "cargo-build-release":

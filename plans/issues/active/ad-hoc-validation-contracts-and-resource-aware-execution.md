@@ -1022,9 +1022,10 @@ This measurement does not qualify a new compiler candidate or prove every
 remaining preparation fits. Prospective cache-aware admission remains necessary.
 
 The next bounded implementation moves physical performance admission and the
-performance area after selected correctness guardrails, areas and toolchain
-checks for ordinary profiles. Missing performance admission still blocks the
-performance area and final gate, with a separate performance outcome. Blocking
+measurement suites after selected correctness guardrails, areas and toolchain
+checks for ordinary profiles. Host-independent frontend, LSP and policy suites
+execute as correctness work. Missing performance admission blocks only
+measurement and the final gate, with a separate performance outcome. Blocking
 step timing verdicts persist until the final gate instead of suppressing later
 correctness assertions. Cloud's existing independent qualification route remains.
 No suites or cases are dropped, and required qualification remains blocking.
@@ -1036,3 +1037,13 @@ while asserting exact area and toolchain selection. The failed run is preserved
 in `m2-independent-performance-targeted.log`; the corrected run is separately
 recorded in `m2-independent-performance-targeted-fixed.log` outside Git.
 Full implementation gates, delivery, and M3–M6 remain open.
+
+Opus rejected candidate `400b65edef4c3f4550be27338da898cbb6dc159c` because its
+whole-area partition still suppressed the frontend/LSP correctness suites when
+admission failed and misclassified their failures. The rejected review remains
+outside Git at `sifr-claude.ehp26g/response.md`. The remediation partitions suites,
+keeps correctness failures functional, removes reference admission from policy
+and frontend-only area invocations, and reconciles both passing partitions into
+the full canonical area result. Missing measurement cannot publish a complete
+passing area result. The existing create-pr area timing allowance includes both
+partition durations. The full original selection and numeric budgets remain.
