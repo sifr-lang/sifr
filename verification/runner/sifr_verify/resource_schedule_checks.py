@@ -273,6 +273,8 @@ class ScheduleTests(unittest.TestCase):
                 journal = root / "journal"
                 def __init__(self, runner): pass
                 def record(self, *args): pass
+                def prepare_command(self, command, *, env):
+                    preparations.append(command)
                 def step(self, name, callback, **kwargs):
                     events.append(name)
                     callback()

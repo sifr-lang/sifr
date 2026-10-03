@@ -26,6 +26,8 @@ from .validation_contracts import stage_plan
 from .schemas import load_schema, validate_data
 from .prepared_sysroot import OWNER_VARIABLE, command as preparation_command
 from .cloud_failure import classify_failure
+from .cargo_resource_forecast import command_cache_hint, test_cache_hint
+from .process_disk_budget import DiskBudget, FLOOR_VARIABLE, PATH_VARIABLE
 
 WORKER_FLAGS = {"--sifr-jobs": "sifr_jobs", "--rust-jobs": "rust_jobs",
                 "--run-jobs": "run_jobs", "--cargo-build-jobs": "cargo_build_jobs"}
@@ -62,7 +64,9 @@ def load_schedule(root: Path = REPO_ROOT) -> dict:
     policy = json.loads((root / "verification/policy/cloud_resource_schedule.json").read_text())
     validate_data(policy, load_schema("cloud_resource_schedule.schema.json"), source="cloud resource schedule")
     expected = {"dependency-acquisition", "sysroot-source", "sysroot-package", "sysroot-assertions",
-                "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions"}
+                "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions",
+                "sysroot-metadata-cached", "preparation-coordination", "preparation-command-cold",
+                "preparation-command-cached"}
     if policy.get("schema_version") != 1 or set(policy.get("stages", {})) != expected:
         raise ResourceError("cloud resource schedule is incomplete", "unavailable")
     for field in ("cold_preparation_deadline_seconds", "assertion_command_deadline_seconds"):
@@ -102,13 +106,20 @@ class Schedule:
                        {"schema_version": 1, "claim": "execution-observation",
                         "observed_at": datetime.now(UTC).isoformat(), **payload})
 
-    def step(self, name, callback, *, allocation, preparation=False):
+    def step(self, name, callback, *, allocation, preparation=False, monitor_disk=False,
+             command_env=None):
+        monitored_env = self.runner.env if command_env is None else command_env
+        saved_disk = {field: monitored_env.get(field) for field in (FLOOR_VARIABLE, PATH_VARIABLE)}
         def admitted():
             try:
                 if inventory(self.root) != self.key["inputs"]["source"]:
                     raise ResourceError("validation inputs changed during the owned run", "unavailable")
                 resources = discover(disk_path=self.root)
                 workers = clamp_workers(self.runner, resources)
+                if command_env is not None:
+                    for variable in ("CARGO_BUILD_JOBS", "RAYON_NUM_THREADS"):
+                        if variable in command_env:
+                            command_env[variable] = str(worker_limit(resources, int(command_env[variable])))
                 observation = admit(resources, self.policy["stages"][allocation])
             except ResourceError as error:
                 self.record(name, {"state": "infrastructure-failure", "classification": error.classification,
@@ -116,6 +127,25 @@ class Schedule:
                 raise
             self.record(name, {"state": "admitted", "e2e_workers": workers, **observation})
             try:
+                if monitor_disk:
+                    # A bounded attempt always runs the original native command.
+                    # Keep the unchanged reserve plus 1GiB stopping headroom;
+                    # this guard is polling containment, not a filesystem quota.
+                    requirements = observation["requirements"]
+                    floor = max(resources.disk_available_bytes - requirements["disk_growth_bytes"],
+                                requirements["disk_reserve_bytes"] + 1024**3)
+                    try:
+                        inherited = DiskBudget.from_environment(monitored_env)
+                    except ValueError as error:
+                        raise ResourceError(str(error), "unavailable") from error
+                    if inherited is not None:
+                        if inherited.path != self.root.resolve():
+                            raise ResourceError("inherited disk floor describes a different filesystem", "unavailable")
+                        floor = max(floor, inherited.floor)
+                    monitored_env[FLOOR_VARIABLE] = str(floor)
+                    monitored_env[PATH_VARIABLE] = str(self.root.resolve())
+                    self.record(name + "-disk-floor", {"floor_bytes": floor, "allocation": allocation,
+                        "claim": "bounded-preparation-attempt", "cache_reuse_claim": False})
                 callback()
                 if inventory(self.root) != self.key["inputs"]["source"]:
                     raise ResourceError("validation inputs changed during step execution", "unavailable")
@@ -144,10 +174,36 @@ class Schedule:
         try:
             return self.runner.execute_step(name, admitted)
         finally:
+            for field, value in saved_disk.items():
+                if value is None:
+                    monitored_env.pop(field, None)
+                else:
+                    monitored_env[field] = value
             if previous is None:
                 self.runner.env.pop(variable, None)
             else:
                 self.runner.env[variable] = previous
+
+    def prepare_command(self, command, *, env):
+        cached = command_cache_hint(self.root, env, command)
+        allocation = "preparation-command-cached" if cached else "preparation-command-cold"
+        self.record("preparation-command", {"argv": command, "allocation": allocation,
+                    "cache_presence_hint": cached, "assertion_reuse": False})
+        failures = []
+        def run():
+            try:
+                run_command(command, env=env)
+            except BaseException as error:
+                failures.append(error)
+                raise
+        status = self.step(f"preparation_command_{self.index:04d}",
+            run, allocation=allocation,
+            preparation=True, monitor_disk=True, command_env=env)
+        if status:
+            if failures:
+                raise failures[0]
+            from .profile_commands import CommandFailed
+            raise CommandFailed(status)
 
 
 def run_staged_cloud(runner, early: set[str]) -> int:
@@ -178,9 +234,13 @@ def run_staged_cloud(runner, early: set[str]) -> int:
             return failed
     # Private graphs now have retained immutable outputs. The large library
     # preparations run after retirement, rather than extending both lifetimes.
+    cached_metadata = test_cache_hint(REPO_ROOT, env, "sifr_driver")
+    schedule.record("metadata-forecast", {"cache_presence_hint": cached_metadata,
+                    "assertion_reuse": False, "native_cache_validation": "Cargo always runs"})
     metadata = schedule.step("preparation_sysroot_metadata", lambda: run_command(
         [sys.executable, str(REPO_ROOT / "verification/areas/sysroot_release/package_build.py"),
-         "--metadata-only"], env=env), allocation="sysroot-metadata", preparation=True)
+         "--metadata-only"], env=env), allocation="sysroot-metadata-cached" if cached_metadata else "sysroot-metadata",
+         preparation=True, monitor_disk=True)
     failed = failed or metadata
     if failed:
         runner.block_step("area_sysroot_release", "sysroot-preparation")
@@ -197,7 +257,7 @@ def run_staged_cloud(runner, early: set[str]) -> int:
     # Every original remaining preparation is retained; only completed sysroot
     # preparation/consumers move earlier. No selection or timeout assertion changes.
     prepared = schedule.step("cargo_cache_setup", lambda: prepare_remaining_graphs(
-        profile, env, run_command, include_sysroot=False), allocation="remaining-preparation", preparation=True)
+        profile, env, schedule.prepare_command, include_sysroot=False), allocation="preparation-coordination", preparation=True)
     failed = failed or prepared
     if prepared:
         runner.block_steps("cargo_cache_setup")

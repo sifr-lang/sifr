@@ -1047,3 +1047,45 @@ and frontend-only area invocations, and reconciles both passing partitions into
 the full canonical area result. Missing measurement cannot publish a complete
 passing area result. The existing create-pr area timing allowance includes both
 partition durations. The full original selection and numeric budgets remain.
+
+## M2 bounded cache-admission candidate
+
+PR #4286's corrected routing candidate is
+`e64f28fc7c71edccfd6111cb35ce54da3a68075b`; Opus remediation review is SATISFIED
+with no blockers. Its 46 targeted regressions and all 29 final-candidate
+foundation groups passed. Review and raw evidence are outside Git under
+`/workspace/validation-work/evidence/candidates/e64f28fc7c71edccfd6111cb35ce54da3a68075b/`.
+The combined performance-area timing is cumulative across both partitions; the
+correctness-part timing is also displayed separately and is not an additional
+elapsed allocation. Running correctness before reference admission deliberately
+permits correctness preparation even when that host cannot qualify measurements.
+
+The next bounded resource change registers a 2 GiB metadata preparation attempt
+when native Cargo outputs and fingerprints are present. This is an allocation
+hint, not an assertion or compilation reuse receipt. Cargo still validates and
+executes both original preparation configurations. A stale hint can fail the
+bounded attempt; it cannot qualify omitted work or trigger an unchanged automatic
+retry. Unknown cache presence retains the original cold metadata estimate.
+
+Remaining preparation now admits each original command sequentially instead of
+requiring its summed cold allocation at entry. Prospective per-command estimates
+are 2 GiB with a native cache hint and 6 GiB otherwise, retaining the existing
+8 GiB disk and 2 GiB memory reserves and worker bounds. Coordination admits only
+its own bookkeeping, never a whole build. Completed preparation still does not
+qualify any later runtime assertion. No selected preparation or assertion is
+removed and no shared cache is cleaned.
+
+The monitored commands receive an absolute filesystem floor that limits their
+net growth and keeps the original reserve plus 1 GiB stopping headroom. The
+owned execution loop checks that floor before spawn and while draining output;
+exhaustion is a failed infrastructure outcome with owned-tree teardown, not a
+pass. This is polling containment with explicit headroom, not a filesystem quota
+or a guarantee against arbitrary concurrent writes. Nested stricter floors are
+preserved, and the caller's environment is restored afterward.
+
+Focused regressions cover stale/symlink/unknown cache hints, original command
+execution, per-command admission, worker clamping, environment restoration,
+invalid budgets, rejection before spawn and a real growth-failure injection with
+a detached termination-resistant descendant. These tests establish the mechanism;
+the next native cache-only observation and complete constrained workload remain
+separate acceptance obligations. M1/M2 implementation gates and M3–M6 stay open.
