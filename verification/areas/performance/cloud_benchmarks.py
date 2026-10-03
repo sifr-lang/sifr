@@ -31,8 +31,12 @@ def digest(path: Path) -> str:
 
 def tooling_digest(repo: Path) -> str:
     result = hashlib.sha256()
-    for path in sorted((repo / "verification/areas/performance").glob("*.py")):
-        result.update(path.name.encode() + b"\0" + path.read_bytes())
+    paths = list((repo / "verification/areas/performance").glob("*.py"))
+    paths.extend(repo / "verification/runner/sifr_verify" / name for name in (
+        "__init__.py", "process_execution.py", "process_supervisor.py", "process_disk_budget.py",
+    ))
+    for path in sorted(paths):
+        result.update(str(path.relative_to(repo)).encode() + b"\0" + path.read_bytes())
     return result.hexdigest()
 
 

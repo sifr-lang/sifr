@@ -1,4 +1,4 @@
-"""Own a timed command's POSIX process group through output drain and cleanup."""
+"""Own benchmark samples through the canonical bounded process supervisor."""
 
 from __future__ import annotations
 
@@ -10,12 +10,17 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from benchmark_manifest import BenchmarkError
 
-TERMINATE_GRACE_SECONDS = 1.0
-REAP_TIMEOUT_SECONDS = 5.0
+# Standalone area entrypoints use the same reviewed process owner as the runner.
+RUNNER_ROOT = Path(__file__).resolve().parents[2] / "runner"
+if str(RUNNER_ROOT) not in sys.path:
+    sys.path.insert(0, str(RUNNER_ROOT))
+from sifr_verify import process_execution
+
+OUTPUT_LIMIT_BYTES = 16 * 1024 * 1024
 
 
 def group_exists(pgid: int) -> bool:
@@ -26,76 +31,25 @@ def group_exists(pgid: int) -> bool:
     return True
 
 
-def signal_group(pgid: int, signum: int) -> None:
-    try:
-        os.killpg(pgid, signum)
-    except ProcessLookupError:
-        pass
-
-
-def finish_group(process: subprocess.Popen[str]) -> tuple[str, str]:
-    """Drain/reap the leader and require the entire owned group to disappear.
-
-    Descendants inherit the session leader's group, including /usr/bin/time's
-    children. Give parents a chance to reap their children, then kill resistant
-    members. Orphans are reaped by the OS's adopter; never start another sample
-    while even a zombie remains in this group. A broken adopter fails closed.
-    """
-    signal_group(process.pid, signal.SIGTERM)
-    try:
-        process.communicate(timeout=TERMINATE_GRACE_SECONDS)
-    except subprocess.TimeoutExpired:
-        pass
-    deadline = time.monotonic() + TERMINATE_GRACE_SECONDS
-    while group_exists(process.pid) and time.monotonic() < deadline:
-        time.sleep(0.01)
-    signal_group(process.pid, signal.SIGKILL)
-    try:
-        output = process.communicate(timeout=REAP_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired as error:
-        raise BenchmarkError(
-            f"benchmark process group {process.pid} did not close its output pipes"
-        ) from error
-    deadline = time.monotonic() + REAP_TIMEOUT_SECONDS
-    while group_exists(process.pid):
-        if time.monotonic() >= deadline:
-            raise BenchmarkError(
-                f"benchmark process group {process.pid} was not fully reaped; "
-                "refusing to start another sample"
-            )
-        time.sleep(0.01)
-    return output
-
-
 def run_owned_process(
     command: list[str], cwd: Path, timeout_seconds: float
 ) -> tuple[subprocess.CompletedProcess[str], bool]:
-    # The timing wrapper itself is the session/group leader. Never signal the
-    # caller's group, and do not rely on killing just the wrapper process.
-    process = subprocess.Popen(
-        command,
-        cwd=cwd,
-        text=True,
-        errors="replace",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        start_new_session=True,
-    )
-    timed_out = False
     try:
-        stdout, stderr = process.communicate(timeout=timeout_seconds)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        stdout, stderr = finish_group(process)
-    except BaseException:
-        finish_group(process)
-        raise
-    else:
-        # A leader can exit while a descendant with redirected output survives.
-        # Preserve the leader's status/output, but close that ownership too.
-        if group_exists(process.pid):
-            finish_group(process)
-    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr), timed_out
+        outcome = process_execution.execute(
+            command, cwd=cwd, deadline_seconds=timeout_seconds,
+            limit_bytes=OUTPUT_LIMIT_BYTES,
+        )
+    except (OSError, ValueError, RuntimeError) as error:
+        raise BenchmarkError(f"benchmark process custody failed: {error}") from error
+    if outcome.truncated:
+        raise BenchmarkError("benchmark output exceeded the declared capture limit")
+    if outcome.cause not in {"exit", "safety_deadline"}:
+        raise BenchmarkError(f"benchmark process did not complete: {outcome.cause}")
+    completed = subprocess.CompletedProcess(
+        command, outcome.returncode, outcome.stdout.decode("utf-8", "replace"),
+        outcome.stderr.decode("utf-8", "replace"),
+    )
+    return completed, outcome.cause == "safety_deadline"
 
 
 _TREE_PROGRAM = r'''
@@ -113,7 +67,9 @@ def terminate(signum, frame):
         child.wait()
     sys.exit(0)
 signal.signal(signal.SIGTERM, terminate)
-if mode == "resistant":
+if mode in ("resistant", "detached"):
+    if mode == "detached" and depth < 2:
+        os.setsid()
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 if depth:
     child = subprocess.Popen(
@@ -139,7 +95,7 @@ def run_self_test(run_sample: Callable[[list[str], int], dict[str, Any]]) -> Non
     """Exercise the public result shape with real child/grandchild groups.
 
     The test-only launch handshake ensures the whole tree is ready before
-    communicate starts its short timeout; correctness never depends on a
+    the test inspects the complete tree; correctness never depends on a
     guessed Python startup delay. No compiler or benchmark input is executed.
     """
     for exit_code in (0, 7):
@@ -155,24 +111,35 @@ def run_self_test(run_sample: Callable[[list[str], int], dict[str, Any]]) -> Non
         assert result["duration_ms"] > 0 and result["peak_rss_bytes"] is not None
         print(f"benchmark process: ordinary exit {exit_code} passed")
 
-    # Even an unreaped orphan must block the caller rather than yield a normal
-    # timed-out sample. Simulate only this OS failure, without leaking a process.
-    fake_process = Mock(pid=123, communicate=Mock(return_value=("", "")))
-    with (
-        patch("benchmark_process.signal_group"),
-        patch("benchmark_process.group_exists", return_value=True),
-        patch("benchmark_process.time.monotonic", side_effect=[0, 2, 3, 9]),
-    ):
-        try:
-            finish_group(fake_process)
-        except BenchmarkError as error:
-            assert "refusing to start another sample" in str(error), error
-        else:
-            raise AssertionError("unreaped process group did not block sampling")
-    print("benchmark process: unreaped group fails closed passed")
+    # Missing cleanup confirmation, cancellation and output loss cannot become
+    # timed-out observations or permit the sampling loop to continue.
+    for failure in (OSError("missing cleanup confirmation"), RuntimeError("cleanup failed")):
+        with patch.object(process_execution, "execute", side_effect=failure):
+            try:
+                run_owned_process(["unused"], Path.cwd(), 1)
+            except BenchmarkError:
+                pass
+            else:
+                raise AssertionError("failed custody authorized another sample")
+    for cause, truncated in (("cancelled", False), ("exit", True)):
+        outcome = process_execution.Outcome(0, cause, b"", b"", truncated, .01)
+        with patch.object(process_execution, "execute", return_value=outcome):
+            try:
+                run_owned_process(["unused"], Path.cwd(), 1)
+            except BenchmarkError:
+                pass
+            else:
+                raise AssertionError("incomplete capture authorized another sample")
+    if sys.platform.startswith("linux"):
+        completed, timed_out = run_owned_process(
+            [sys.executable, "-c", "import os, signal; os.kill(os.getpid(), signal.SIGKILL)"],
+            Path.cwd(), 10,
+        )
+        assert completed.returncode == -signal.SIGKILL and not timed_out
+    print("benchmark process: failed custody and incomplete capture fail closed passed")
 
     real_popen = subprocess.Popen
-    for mode in ("cooperative", "resistant", "leader-exit", "closed-pipes"):
+    for mode in ("cooperative", "resistant", "leader-exit", "closed-pipes", "detached"):
         with TemporaryDirectory(prefix="sifr-benchmark-process-") as raw:
             root = Path(raw)
             script = root / "tree.py"
@@ -185,15 +152,16 @@ def run_self_test(run_sample: Callable[[list[str], int], dict[str, Any]]) -> Non
                 deadline = time.monotonic() + 10.0
                 while not (root / "ready-2").exists():
                     if time.monotonic() >= deadline:
-                        finish_group(process)
+                        process.terminate()
+                        process.wait(timeout=5)
                         raise AssertionError("process tree did not become ready")
                     time.sleep(0.01)
                 return process
 
             try:
-                with patch("benchmark_process.subprocess.Popen", launch_ready):
+                with patch.object(process_execution.subprocess, "Popen", launch_ready):
                     result = run_sample(
-                        [sys.executable, str(script), str(root), "2", mode], 100
+                        [sys.executable, str(script), str(root), "2", mode], 12000
                     )
                 assert len(owned) == 1
                 assert owned[0].pid != os.getpgrp()
@@ -218,7 +186,7 @@ def run_self_test(run_sample: Callable[[list[str], int], dict[str, Any]]) -> Non
                 assert "timeout stderr: café\n" in result["stderr_tail"], result
                 assert isinstance(result["stdout"], str)
                 assert isinstance(result["stderr_tail"], str)
-                if mode == "closed-pipes":
+                if mode in ("leader-exit", "closed-pipes"):
                     assert result["exit_code"] == 0 and not result["timed_out"], result
                 else:
                     assert result["timed_out"] and result["exit_code"] is None, result
@@ -230,4 +198,5 @@ def run_self_test(run_sample: Callable[[list[str], int], dict[str, Any]]) -> Non
             finally:
                 for process in owned:
                     if process.poll() is None or group_exists(process.pid):
-                        finish_group(process)
+                        process.terminate()
+                        process.wait(timeout=5)

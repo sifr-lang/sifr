@@ -2,6 +2,7 @@
 
 import copy
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -31,6 +32,10 @@ class CloudReceiptTests(unittest.TestCase):
         for key, source in [("baseline", "a" * 40), ("candidate", "b" * 40)]:
             repo = root if key == "candidate" else root / "baseline"
             repo.mkdir(exist_ok=True)
+            tooling = repo / "verification/runner/sifr_verify"
+            tooling.mkdir(parents=True)
+            for name in ("__init__.py", "process_execution.py", "process_supervisor.py", "process_disk_budget.py"):
+                shutil.copyfile(cloud.ROOT / "verification/runner/sifr_verify" / name, tooling / name)
             self.paths[key] = root / f"{key}.json"
             value = {"cloud_repo": str(repo), "cloud_source": source,
                 "artifact": {"path": str(repo / "sifr")},
@@ -72,6 +77,16 @@ class CloudReceiptTests(unittest.TestCase):
     def check(self):
         cloud.atomic(self.receipt_path, self.receipt)
         return cloud.check(SimpleNamespace(receipt=self.receipt_path))
+
+    def test_supervisor_closure_drift_and_absence_reject(self):
+        root = Path(self.endpoints["candidate"]["cloud_repo"])
+        original = cloud.tooling_digest(root)
+        helper = root / "verification/runner/sifr_verify/process_supervisor.py"
+        helper.write_bytes(helper.read_bytes() + b"\n# changed custody\n")
+        self.assertNotEqual(original, cloud.tooling_digest(root))
+        helper.unlink()
+        with self.assertRaises(FileNotFoundError):
+            cloud.tooling_digest(root)
 
     def test_complete_bound_evidence_passes(self):
         self.assertEqual(self.check(), 0)
