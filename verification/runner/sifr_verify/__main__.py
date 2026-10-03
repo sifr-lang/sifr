@@ -29,6 +29,9 @@ def main() -> int:
             for name in run_all():
                 print(f"verification runner self-test: {name}: pass")
             return 0
+        if args.command == "changes":
+            from .change_selection import main as changes_main
+            return changes_main(args.command_args)
         if args.command == "profiles":
             return profiles.run_command(args.command_args)
         if args.command == "contracts":

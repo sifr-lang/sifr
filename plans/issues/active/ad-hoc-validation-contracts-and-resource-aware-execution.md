@@ -1180,3 +1180,30 @@ remain outside Git under `/workspace/validation-work/evidence/m2-benchmark-custo
 The initial repair test's old leader-exit timeout expectation failed and is
 preserved; the corrected assertion requires actual normal exit plus cleanup.
 This is not compiler throughput, whole-gate or constrained acceptance evidence.
+
+## M3 conservative change selection — work in progress
+
+Benchmark-custody candidate `be6b4cdc1ced25b3ee0b56776f841001f2a93cb1`
+is draft PR #4289. Scoped Opus review is SATISFIED without blockers at
+`/workspace/validation-work/evidence/sifr-claude.IoH9RB/response.md`.
+The create-PR gate is running against its exact clean full checkout; its log is
+`/workspace/validation-work/evidence/create-pr-be6b4cdc1.log`. A 9 GiB monitored
+filesystem floor preserves the original reserve plus stopping headroom. No shared
+cache is removed and incomplete preparation is not counted as assertions.
+
+The next bounded selector registers `sifr_verify changes plan|run --base SHA
+--head SHA`. It derives reasons and complete canonical jobs from actual exact
+commit diffs. Documentation-only and empty valid diffs retain every create-PR
+obligation; shared, area, unknown, malformed, unavailable and undecodable inputs
+broaden to the complete merge profile. Rename detection is disabled so both the
+deleted and added paths are classified. This initial conservative policy removes
+no cases and makes no unmeasured speed claim. Area refinements wait for measured
+preparation/assertion costs and explicit dependency mapping.
+
+Plans retain the complete canonical profile plan and reasons for all selected
+area, guardrail and toolchain jobs, and state that execution has not occurred.
+Execution requires the exact named clean committed checkout; a dirty candidate
+cannot acquire passing evidence under an earlier SHA. The existing profile runner
+remains the execution authority. Missing diff information broadens selection;
+it never becomes a documentation-only skip. Trusted CI aggregation, main reuse,
+scheduled hardening and protected enforcement remain separate unfinished work.
