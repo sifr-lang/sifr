@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import sys
 import weakref
+import include_source_encoding as canonical
 
 _SEAL=object()
 _REGISTERED=weakref.WeakValueDictionary()
@@ -56,19 +57,19 @@ def authenticate(authority,receipt,api):
     require({k:api.digest(v.encode()) for k,v in os.environ.items() if not k.startswith('SIFR_BUILTIN_')}==inputs['parent_environment'],'original top-level consumer environment drift',api)
     for name,sha in inputs['files'].items():
         path=Path(name)
-        require(path.is_file() and api.digest(path.read_bytes())==sha,'original include-source input drift: '+name,api)
+        require(path.is_file() and canonical.file_digest(path)==sha,'original include-source input drift: '+name,api)
     for command,expected in inputs['executable_selections'].items():
         current=shutil.which(command)
         require(current is not None and {'path':current,'resolved':str(Path(current).resolve())}==expected,'original executable selection drift: '+command,api)
     for name,expected in inputs['optional_input_slots'].items():
-        path=Path(name);actual=api.digest(path.read_bytes()) if path.is_file() else None
+        path=Path(name);actual=canonical.file_digest(path) if path.is_file() else None
         require(actual==expected and (not path.exists() or path.is_file()),'original configuration presence/content drift: '+name,api)
     from include_source_directories import authenticate as authenticate_directories
     authenticate_directories(inputs['directories'],api)
     for key,value in inputs['build_environment'].items():require(os.environ.get(key)==value,'original build-script environment drift: '+key,api)
-    for name,sha in inputs['tool']['consumer_sources'].items():require(api.digest((api.ROOT/'scripts'/name).read_bytes())==sha,'consumer source drift',api)
-    for name,sha in inputs['tool']['helper_sources'].items():require(api.digest((api.TOOL/name).read_bytes())==sha,'helper/schema source drift',api)
-    for name,sha in inputs['tool']['helper_build']['executables_and_runtime'].items():require(api.digest(Path(name).read_bytes())==sha,'helper executable/runtime drift',api)
+    for name,sha in inputs['tool']['consumer_sources'].items():require(canonical.file_digest(api.ROOT/'scripts'/name)==sha,'consumer source drift',api)
+    for name,sha in inputs['tool']['helper_sources'].items():require(canonical.file_digest(api.TOOL/name)==sha,'helper/schema source drift',api)
+    for name,sha in inputs['tool']['helper_build']['executables_and_runtime'].items():require(canonical.file_digest(name)==sha,'helper executable/runtime drift',api)
     for link in inputs['gitlinks']:
         directory=Path(inputs['root'])/link['path']
         require((directory/'.git').exists()==link['initialized'],'original gitlink initialization drift',api)

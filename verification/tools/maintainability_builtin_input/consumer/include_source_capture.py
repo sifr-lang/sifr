@@ -118,7 +118,7 @@ def capture(output,target,identity,api,ctx,root=None):
     source={'native':native}
     canonical.write(output/'source-original.json',source);canonical.write(output/'semantic-original.json',semantic);canonical.write(output/'stage-authority.json',stage)
     inputs=include_source_inputs.finish(before,output,api)
-    inputs['original_inventory']=[{'path':str(output/name),'sha256':api.digest((output/name).read_bytes())} for name in ORIGINALS]
+    inputs['original_inventory']=[{'path':str(output/name),'sha256':canonical.file_digest(output/name)} for name in ORIGINALS]
     del source,semantic,stage,raw,native;gc.collect()
     authority=restore(tuple((output/name).read_bytes() for name in ORIGINALS),inputs,api)
     timing={'normal':normal.elapsed_seconds,'metadata':metadata_result.elapsed_seconds,'compiler':analysis.elapsed_seconds,'native':native_result.elapsed_seconds,'total_capture':time.monotonic()-started}
@@ -131,6 +131,6 @@ def capture(output,target,identity,api,ctx,root=None):
     # The producer derivation is still rechecked through the same public consumer.
     verify(proof,receipt,authority,api)
     canonical.write(output/'proof.json',proof);(output/'receipt.json').write_bytes(api.encoded(receipt))
-    (output/'success.json').write_bytes(api.encoded({name:api.digest((output/name).read_bytes()) for name in (*ORIGINALS,'proof.json','receipt.json')}))
+    (output/'success.json').write_bytes(api.encoded({name:canonical.file_digest(output/name) for name in (*ORIGINALS,'proof.json','receipt.json')}))
     print('include-source prepared cache MISS',ctx,timing,flush=True)
     return proof,receipt,authority

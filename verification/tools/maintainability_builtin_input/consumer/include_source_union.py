@@ -5,6 +5,7 @@ from pathlib import Path
 import unittest
 import uuid
 import weakref
+import include_source_encoding as canonical
 from include_source_authority import require,restore,authenticate,decode
 from include_source import verify
 
@@ -34,7 +35,7 @@ class Fixtures:
 def qualify(proof,receipt,authority,output,api):
     qualification=verify(proof,receipt,authority,api)
     p=Path(output)/'proof.json'
-    require(p.is_file() and api.digest(p.read_bytes())==receipt['proof_digest'],'publication proof differs from verified original relation',api)
+    require(p.is_file() and canonical.file_digest(p)==receipt['proof_digest'],'publication proof differs from verified original relation',api)
     value=Context(api.encoded(receipt),str(p),receipt['proof_digest'],api.encoded(qualification),_SEAL)
     _CONTEXTS[id(value)]=value
     return value
@@ -75,7 +76,7 @@ def publish(contexts,fixtures,destination,main_root,repeat_root,fixture_roots,ap
         # authenticated again before accepting the held consumer derivation.
         authenticate(authority,receipt,api)
         require(inputs['source_candidate']==candidate and ctx['target']=='x86_64-unknown-linux-gnu','original union candidate/target drift',api)
-        require(api.digest(Path(value.proof_path).read_bytes())==value.proof_digest==receipt['proof_digest'],'redigested/swapped publication projection',api)
+        require(canonical.file_digest(value.proof_path)==value.proof_digest==receipt['proof_digest'],'redigested/swapped publication projection',api)
         records.append({'context':ctx,'root':inputs['root'],'proof_path':value.proof_path,'proof_digest':value.proof_digest,'original_inventory':inputs['original_inventory'],'qualification':decode(value.qualification)})
         del original,authority
     require(observed==required,'missing required original context: no partial diagnostic publication',api)
