@@ -11,6 +11,7 @@ extern crate rustc_span;
 extern crate rustc_type_ir;
 mod dynamic;
 mod expanded;
+mod expanded_storage;
 mod identity;
 mod inventory;
 mod semantic;
@@ -24,6 +25,7 @@ use serde_json::json;
 #[derive(Default)]
 struct Capture {
     ast: Vec<expanded::Declaration>,
+    original_text: Option<expanded_storage::OriginalText>,
     stage_attributes: Vec<expanded::StageAttribute>,
     associations: Vec<(rustc_ast::NodeId, rustc_hir::def_id::LocalDefId)>,
 }
@@ -32,7 +34,9 @@ impl Callbacks for Capture {
         if std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER").is_none()
             || std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE").is_some()
         {
-            self.ast = expanded::capture(tcx);
+            let (ast, original_text) = expanded::capture(tcx);
+            self.ast = ast;
+            self.original_text = Some(original_text);
             if std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE").is_some() {
                 self.associations = expanded::associations(tcx);
                 self.stage_attributes = expanded::stage_attributes(tcx);
@@ -41,6 +45,9 @@ impl Callbacks for Capture {
         Compilation::Continue
     }
     fn after_analysis<'tcx>(&mut self, _: &interface::Compiler, tcx: TyCtxt<'tcx>) -> Compilation {
+        if let Some(original_text) = self.original_text.take() {
+            original_text.restore(&mut self.ast);
+        }
         if let Some(path) = std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE") {
             std::fs::write(
                 path,

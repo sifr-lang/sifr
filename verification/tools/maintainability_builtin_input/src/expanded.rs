@@ -30,11 +30,12 @@ pub struct Declaration {
 struct Expanded {
     owners: HashMap<ast::NodeId, LocalDefId>,
     declarations: Vec<Declaration>,
+    original_text: crate::expanded_storage::OriginalText,
 }
 impl<'ast> Visitor<'ast> for Expanded {
     fn visit_item(&mut self, item: &'ast ast::Item) {
         if let Some(def) = self.owners.get(&item.id).copied() {
-            self.declarations.push(Declaration {
+            let mut declaration = Declaration {
                 def,
                 node_id: item.id,
                 ast_kind: item.kind.descr().into(),
@@ -50,7 +51,9 @@ impl<'ast> Visitor<'ast> for Expanded {
                     None
                 },
                 sites: vec![],
-            });
+            };
+            self.original_text.store(&mut declaration);
+            self.declarations.push(declaration);
         }
         visit::walk_item(self, item);
     }
@@ -70,7 +73,7 @@ impl<'ast> Visitor<'ast> for Expanded {
             } else {
                 false
             };
-            self.declarations.push(Declaration {
+            let mut declaration = Declaration {
                 def,
                 node_id: item.id,
                 ast_kind: match &item.kind {
@@ -94,7 +97,9 @@ impl<'ast> Visitor<'ast> for Expanded {
                 },
                 impl_member_count: None,
                 sites: sites.nodes,
-            });
+            };
+            self.original_text.store(&mut declaration);
+            self.declarations.push(declaration);
         }
         visit::walk_assoc_item(self, item, ctxt);
     }
@@ -126,7 +131,7 @@ impl<'ast> Visitor<'ast> for Sites {
         self.parent = parent;
     }
 }
-pub fn capture(tcx: TyCtxt<'_>) -> Vec<Declaration> {
+pub fn capture(tcx: TyCtxt<'_>) -> (Vec<Declaration>, crate::expanded_storage::OriginalText) {
     let resolver = tcx.resolver_for_lowering();
     let mapping = resolver.0.borrow();
     let mut owners = HashMap::new();
@@ -149,9 +154,11 @@ pub fn capture(tcx: TyCtxt<'_>) -> Vec<Declaration> {
     let mut visitor = Expanded {
         owners,
         declarations: vec![],
+        original_text: crate::expanded_storage::OriginalText::create(),
     };
     visitor.visit_crate(&resolver.1.borrow());
-    visitor.declarations
+    visitor.original_text.seal();
+    (visitor.declarations, visitor.original_text)
 }
 
 /// Complete actual compiler resolver associations, captured before lowering consumes them.
