@@ -139,6 +139,17 @@ class NonSourceCheckout:
 # Match the full input identity, job, and condition, never a step name or ordinal.
 NON_SOURCE_CHECKOUTS = (
     NonSourceCheckout(
+        "local-first-validation.yml", "validation-selection", None,
+        {"ref": "${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}",
+         "fetch-depth": 0, "persist-credentials": False},
+        "candidate-bound validation selection policy without compilation",
+    ),
+    NonSourceCheckout(
+        "validation-required.yml", "publish", None,
+        {"ref": "${{ github.sha }}", "fetch-depth": 0, "persist-credentials": False},
+        "trusted protected-check publication policy at the workflow revision",
+    ),
+    NonSourceCheckout(
         "release-publication.yml", "publish", None,
         {"fetch-depth": 0, "persist-credentials": False},
         "publication governance scripts at the workflow revision",

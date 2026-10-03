@@ -25,6 +25,10 @@ class PublisherTests(unittest.TestCase):
         self.executed = self.candidate
 
     def api(self, path, body=None):
+        if path.endswith("/environments/validation-check-publication"):
+            return {"deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}}
+        if "/deployment-branch-policies?" in path:
+            return {"total_count": 1, "branch_policies": [{"name": "main", "type": "branch"}]}
         if body is not None:
             self.published.append(copy.deepcopy(body))
             return {"app": {"id": 42, "slug": "validation-fixture"}}

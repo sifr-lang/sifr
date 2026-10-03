@@ -17,6 +17,7 @@ import urllib.request
 
 from validation_aggregate_policy import CONTEXT, WORKFLOW, evaluate
 from validation_candidate_artifact import candidate_identity
+from validation_publication_environment import verify_environment
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -54,6 +55,7 @@ def main() -> int:
     repository = os.environ["GITHUB_REPOSITORY"]
     run_id = int(os.environ["VALIDATION_RUN_ID"])
     prefix = "/repos/" + repository
+    verify_environment(api, prefix)
     run = api(f"{prefix}/actions/runs/{run_id}")
     workflow = api(f"{prefix}/actions/workflows/local-first-validation.yml")
     candidate = sha(run["head_sha"])
