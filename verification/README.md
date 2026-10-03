@@ -216,6 +216,17 @@ Checkpoint capacity or unknown dependencies disable reuse and execute the requir
 guard fresh. Observations distinguish reuse from new execution. This one recipe
 does not claim dependency closure or checkpoint coverage for the full profile.
 
+Cloud sysroot preparation retains source-bound immutable outputs before running
+the full selected runtime suites. Source compilation retires its private graph
+after bounded lossless compression and byte verification, then separately admits
+restoring the executable. Packaging retains the verified archive and compiler
+before retiring its private release graph. Library corpus/metadata preparation
+follows these lifetimes. Runtime adapters independently recompute the same
+isolated producer identity and rehash the consumed outputs; invalid declared
+receipts fail closed. A preparation receipt records zero runtime assertions.
+Unknown cache owners can be consumed through Cargo but are never cleaned.
+The 8 GiB disk reserve remains required; compression adds no acceptance claim.
+
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to
 their existing Rust-check, snapshot, formatting and quality obligations. Their

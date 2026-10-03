@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "estimate_basis": "prospective conservative allocation; record observations before recalibration",
+  "estimate_basis": "prospective allocations after measured d5 footprints; source retention compresses into at most512MiB before retirement and admits exact raw restoration separately; library preparation follows both private graph lifetimes",
   "cold_preparation_deadline_seconds": 7200,
   "assertion_command_deadline_seconds": 2400,
   "stages": {
@@ -14,18 +14,18 @@
     },
     "sysroot-source": {
       "disk_growth_bytes": 6442450944,
-      "retained_copy_bytes": 0,
+      "retained_copy_bytes": 536870912,
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 6442450944,
       "tmpfs_growth_bytes": 0,
       "memory_reserve_bytes": 2147483648
     },
     "sysroot-package": {
-      "disk_growth_bytes": 10737418240,
-      "retained_copy_bytes": 0,
+      "disk_growth_bytes": 3221225472,
+      "retained_copy_bytes": 1073741824,
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 6442450944,
-      "tmpfs_growth_bytes": 0,
+      "tmpfs_growth_bytes": 1073741824,
       "memory_reserve_bytes": 2147483648
     },
     "sysroot-assertions": {
@@ -33,7 +33,7 @@
       "retained_copy_bytes": 0,
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 6442450944,
-      "tmpfs_growth_bytes": 0,
+      "tmpfs_growth_bytes": 2147483648,
       "memory_reserve_bytes": 2147483648
     },
     "graph-retirement": {
@@ -54,6 +54,14 @@
     },
     "remaining-assertions": {
       "disk_growth_bytes": 3221225472,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-metadata": {
+      "disk_growth_bytes": 10737418240,
       "retained_copy_bytes": 0,
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 6442450944,
