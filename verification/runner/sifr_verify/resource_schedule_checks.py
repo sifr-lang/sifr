@@ -10,7 +10,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from .cloud_schedule import run_staged_cloud
+from .cloud_schedule import Schedule, clamp_workers, load_schedule, run_staged_cloud
+from .cloud_failure import classify_failure
+from .sysroot_preparation import producer, protected_compilers
+from .profile_commands import CommandFailed
 from .cargo_setup import acquire_cargo_dependencies
 from .graph_retirement import GRAPH_PATHS, GraphLease
 from .profile_runner import ProfileRunner
@@ -19,6 +22,32 @@ from .resource_admission import ResourceError, Resources, admit, discover, own_c
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "cloud resource contract is Linux cgroup v2")
 class ResourceTests(unittest.TestCase):
+    def test_every_e2e_worker_argument_is_clamped_without_changing_inventory(self):
+        runner = ProfileRunner("cloud", ["--sifr-jobs=12", "--run-jobs", "1"])
+        canonical = runner.profile["e2e"].copy()
+        resources = Resources(5, 1.5, 100, 100, 100, {}, [], {})
+        limits = clamp_workers(runner, resources)
+        self.assertEqual(limits, {"sifr_jobs": 1, "rust_jobs": 1, "run_jobs": 1, "cargo_build_jobs": 1})
+        self.assertEqual(runner.profile["e2e"], canonical)
+        with patch("sifr_verify.profile_runner.run_command") as command:
+            runner.run_e2e_pass_suite()
+        argv = command.call_args.args[0]
+        for flag in ("--sifr-jobs", "--rust-jobs", "--run-jobs", "--cargo-build-jobs"):
+            self.assertEqual(argv.count(flag), 1)
+            self.assertEqual(argv[argv.index(flag) + 1], "1")
+        self.assertEqual(clamp_workers(runner, resources), limits)
+
+    def test_oom_requires_kill_and_counter_evidence_and_enospc_is_preserved(self):
+        error = CommandFailed(101, "exit")
+        error.outcome = SimpleNamespace(stderr=b"rustc (signal: 9, SIGKILL)")
+        before = {"/group/memory.events": "oom_kill 0"}
+        after = {"/group/memory.events": "oom_kill 1"}
+        self.assertEqual(classify_failure(error, before, after), "oom")
+        self.assertEqual(classify_failure(error, before, before), "assertion")
+        error.outcome = SimpleNamespace(stderr=b"No space left on device")
+        self.assertEqual(classify_failure(error, before, before), "enospc")
+        self.assertEqual(classify_failure(KeyboardInterrupt(), before, before), "cancelled")
+
     def test_nested_cpu_memory_limits_affinity_and_tmpfs_share_one_budget(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -40,6 +69,11 @@ class ResourceTests(unittest.TestCase):
                                 memory_peak_bytes=9000, tmpfs_growth_bytes=5000, memory_reserve_bytes=0)
             with self.assertRaisesRegex(ResourceError, "shared resident/tmpfs"):
                 admit(resources, requirements)
+            (root / "memory.stat").write_text("inactive_file 2000\nfile_dirty 300\nfile_writeback 200\nunevictable 100\n")
+            reclaimed = discover(disk_path=root, cgroup_root=root, cgroup_path=child,
+                                 meminfo=meminfo, affinity=5, tmpfs_paths=())
+            self.assertEqual(reclaimed.memory_available_bytes, 14400)
+            self.assertEqual(reclaimed.memory_limit_bytes, 16000)
 
     def test_unknown_cgroup_and_traversal_are_not_host_capacity(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -127,6 +161,38 @@ class RetirementTests(unittest.TestCase):
         self.assertFalse(result["retired"])
         self.assertTrue(self.binary.exists())
 
+    def test_only_explicit_prior_ownership_can_recover_a_cancelled_graph(self):
+        self.lease.close()
+        wrong = GraphLease(self.root, GRAPH_PATHS[0], "new-session").acquire({"boundary"})
+        self.assertFalse(wrong.eligible)
+        wrong.close()
+        recovered = GraphLease(self.root, GRAPH_PATHS[0], "session").acquire({"boundary"})
+        self.addCleanup(recovered.close)
+        self.assertTrue(recovered.eligible)
+        self.assertEqual(recovered.passed, set())
+
+    def test_retention_uses_both_real_producers_including_the_host_triple(self):
+        source, package = producer("source_build"), producer("package_build")
+        host = "x86_64-unknown-linux-gnu"
+        with patch("sifr_verify.sysroot_preparation.producer", side_effect=[source, package]), \
+             patch.object(package, "host_target", return_value=host):
+            compilers = protected_compilers(self.root, {})
+        command, environment = package.package_build_configuration(self.root, {}, host, self.root / "artifacts")
+        self.assertEqual(compilers["cargo-target"], Path(environment["CARGO_TARGET_DIR"]) /
+                         command[command.index("--target") + 1] / "release/sifr")
+        self.assertEqual(compilers["source-cargo-target"], self.binary)
+        lease = GraphLease(self.root, GRAPH_PATHS[1], "session").acquire({"installed"})
+        self.addCleanup(lease.close)
+        binary = compilers["cargo-target"]
+        binary.parent.mkdir(parents=True)
+        binary.write_bytes(b"host-qualified-compiler")
+        lease.passed_consumer("installed")
+        with patch("sifr_verify.graph_retirement.active_builds", return_value=[]):
+            result = lease.retire(retained=self.root / "retained", protected=[binary], env={},
+                command_runner=lambda command, env: shutil.rmtree(Path(command[-1])))
+        self.assertTrue(result["retired"])
+        self.assertEqual(Path(result["copies"][0]["retained"]["path"]).read_bytes(), b"host-qualified-compiler")
+
     def test_net_recovery_includes_copies_and_immutable_compiler_survives(self):
         self.complete()
         with patch("sifr_verify.graph_retirement.active_builds", return_value=[]), \
@@ -142,6 +208,23 @@ class RetirementTests(unittest.TestCase):
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "cloud scheduler requires Linux")
 class ScheduleTests(unittest.TestCase):
+    def test_preparation_cannot_extend_an_inherited_deadline_and_assertions_keep_per_command_bounds(self):
+        schedule = object.__new__(Schedule)
+        schedule.policy = load_schedule()
+        observed = []
+        runner = SimpleNamespace(env={"SIFR_VERIFY_SAFETY_DEADLINE_SECONDS": "17"})
+        def execute(name, callback):
+            observed.append(runner.env.copy())
+            return 0
+        runner.execute_step = execute
+        schedule.runner = runner
+        schedule.step("prepare", lambda: None, allocation="sysroot-source", preparation=True)
+        schedule.step("assert", lambda: None, allocation="sysroot-assertions")
+        self.assertEqual(observed[0]["SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS"], "17.0")
+        self.assertNotIn("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS", observed[1])
+        self.assertEqual(observed[1]["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"], "17.0")
+        self.assertEqual(runner.env, {"SIFR_VERIFY_SAFETY_DEADLINE_SECONDS": "17"})
+
     def test_acquisition_cannot_compile_a_producer_before_graph_retirement(self):
         commands = []
         profile = ProfileRunner("cloud", []).profile
@@ -161,6 +244,7 @@ class ScheduleTests(unittest.TestCase):
                      "submodule-ownership", "stdlib-manifest-schema"}
             class FakeSchedule:
                 owner = "test"
+                graph_owner = "test"
                 journal = root / "journal"
                 def __init__(self, runner): pass
                 def record(self, *args): pass
@@ -178,6 +262,9 @@ class ScheduleTests(unittest.TestCase):
             with patch("sifr_verify.cloud_schedule.REPO_ROOT", root), \
                  patch("sifr_verify.cloud_schedule.Schedule", FakeSchedule), \
                  patch("sifr_verify.cloud_schedule.GraphLease", FakeLease), \
+                 patch("sifr_verify.cloud_schedule.protected_compilers", return_value={
+                     "source-cargo-target": root / GRAPH_PATHS[0] / "debug/sifr",
+                     "cargo-target": root / GRAPH_PATHS[1] / "x86_64-unknown-linux-gnu/release/sifr"}), \
                  patch("sifr_verify.cloud_schedule.acquire_cargo_dependencies"), \
                  patch("sifr_verify.cloud_schedule.prepare_sysroot_source_binary"), \
                  patch("sifr_verify.cloud_schedule.prepare_sysroot_package_binary"), \

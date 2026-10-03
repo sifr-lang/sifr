@@ -118,6 +118,9 @@ def run_profile_with_report(
     shutil.copyfile(temp_log, latest_log)
     shutil.copyfile(temp_time, latest_time)
     json_file.unlink(missing_ok=True)
+    outcomes = execution_outcomes() if execution_outcomes is not None else {
+        "functional_exit_status": status, "performance_exit_status": 0,
+    }
     try:
         reports.summarize(
             argparse.Namespace(
@@ -125,6 +128,7 @@ def run_profile_with_report(
                 log=str(latest_log),
                 time_file=str(latest_time),
                 json_out=str(json_file),
+                worker_limits=outcomes.get("worker_limits"),
             )
         )
     except BrokenPipeError:
@@ -147,9 +151,6 @@ def run_profile_with_report(
     # Bind functional status to the runner result, never to arbitrary child text.
     if json_file.exists():
         payload = json.loads(json_file.read_text())
-        outcomes = execution_outcomes() if execution_outcomes is not None else {
-            "functional_exit_status": status, "performance_exit_status": 0,
-        }
         payload.update(outcomes)
         payload["exit_status"] = status
         payload["functional_status"] = "pass" if outcomes["functional_exit_status"] == 0 else "fail"

@@ -17,9 +17,6 @@ def run_cloud_profile(runner) -> int:
         print(f"Cloud execution blocked: {error}", file=sys.stderr)
         functional = 2
     runner.functional_exit_status = functional
-    if functional:
-        runner.performance_exit_status = runner.performance_exit_status or 3
-        return functional
     path = os.environ.get("SIFR_CLOUD_PERFORMANCE_RECEIPT")
     verdict = 3
     if path:
@@ -34,7 +31,9 @@ def run_cloud_profile(runner) -> int:
     else:
         print("Cloud performance: inconclusive (no candidate-bound paired receipt)")
     runner.performance_exit_status = verdict or runner.performance_exit_status
-    print(f"[sifr-cloud-verdict] functional=pass performance={runner.performance_exit_status}")
+    print(f"[sifr-cloud-verdict] functional={'fail' if functional else 'pass'} performance={runner.performance_exit_status}")
+    if functional:
+        return functional
     if runner.performance_exit_status == 1 or runner.require_performance:
         return runner.performance_exit_status
     return 0

@@ -67,6 +67,9 @@ def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
     except (VerificationError, AreaResultError) as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
         status = 2
+    except OSError as exc:
+        print(f"sifr_verify: infrastructure failure: {exc}", file=sys.stderr)
+        status = 2
     elapsed_ms = now_ms() - start_ms
     label = "pass" if status == 0 else "fail"
     print(f"[sifr-lane-step] name={name} elapsed_ms={elapsed_ms} status={label}")
@@ -426,7 +429,7 @@ class ProfileRunner:
                 )
 
     def run_e2e_pass_suite(self) -> None:
-        e2e = self.profile["e2e"]
+        e2e = self.profile["e2e"] | getattr(self, "e2e_worker_limits", {})
         args = [
             "--profile",
             self.profile_name,
@@ -469,6 +472,7 @@ def run_profile(
         execution_outcomes=lambda: {
             "functional_exit_status": runner.functional_exit_status,
             "performance_exit_status": runner.performance_exit_status,
+            "worker_limits": getattr(runner, "e2e_worker_limits", None),
         },
         handled_error=ProfileRunnerError,
         release_report_out=release_report_out,

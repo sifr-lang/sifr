@@ -8,13 +8,18 @@ The canonical allocation policy is [cloud_resource_schedule.json](cloud_resource
 Values are prospective estimates, not benchmark observations or hardware minima.
 Every admission records effective affinity/quota, memory capacity and availability,
 free storage, tmpfs free space, pressure and cgroup counters. Resident and tmpfs
-growth share the same memory budget. Each disk admission includes additional
+growth share the same memory budget. Available cgroup memory includes unused
+capacity and clean inactive file cache that the kernel can reclaim, capped by
+the existing limit and host availability; dirty/writeback and unevictable bytes
+are excluded. File cache is never an additional capacity allowance.
+Each disk admission includes additional
 allocation, retained copies and an 8 GiB reserve; the existing SQL clean-build
 reserve is preserved. Workers cannot exceed effective CPU quota/affinity.
 
 Cold preparation has a prospective two-hour safety deadline per named stage;
-assertions retain a forty-minute enclosing safety deadline and their existing
-inner assertion contracts. An inherited earlier deadline always wins. These are
+assertions retain a forty-minute command safety deadline and their existing
+inner assertion contracts. Assertions receive no new whole-step deadline.
+Inherited earlier durations and absolute deadlines always win. These are
 safety bounds, not performance thresholds or claims about expected duration.
 
 Execution order is inventory guardrails, locked dependency acquisition, isolated
@@ -32,6 +37,17 @@ reclaimed. Cleanup rejects live Cargo/rustc processes and symlinks, preserves
 compiler bytes by verified independent immutable copies, then uses Cargo's
 supported `clean --target-dir` operation. Net recovered space includes the cost
 of retained copies; mutable Cargo outputs are never hardlinked for deduplication.
+Protected compiler paths come from each producer's actual configuration,
+including the package's host-triple release directory. All E2E worker arguments,
+including forwarded requests, are clamped without changing case selection.
+
+A session recovering its own interrupted graph can explicitly provide
+`SIFR_VERIFY_GRAPH_OWNER` from its retained prior execution journal. The caller
+must already own that prior run and worktree. The marker's owner, worktree,
+device/inode and UID must still match, and the exclusive lease must be free.
+This preserves build-cache ownership continuity; it does not reuse failed
+assertions. Every consumer must pass again before cleanup. Unknown/other-owner
+markers are never adopted automatically.
 
 Each run publishes immutable observations under
 `target/verification/execution-journals/<session>/`, including its source/runtime

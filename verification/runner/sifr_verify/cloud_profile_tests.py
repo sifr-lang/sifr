@@ -93,6 +93,15 @@ class CloudProfileTests(unittest.TestCase):
         with patch.object(runner, "run", return_value=2):
             self.assertEqual(run_cloud_profile(runner), 2)
 
+    def test_failed_correctness_does_not_hide_an_independent_performance_regression(self):
+        runner = ProfileRunner("cloud", [])
+        with patch.object(runner, "run", return_value=2), \
+             patch.dict("os.environ", {"SIFR_CLOUD_PERFORMANCE_RECEIPT": "receipt"}), \
+             patch("sifr_verify.cloud_profile.run_command", side_effect=CommandFailed(1)):
+            self.assertEqual(run_cloud_profile(runner), 2)
+        self.assertEqual(runner.functional_exit_status, 2)
+        self.assertEqual(runner.performance_exit_status, 1)
+
     def test_diagnostic_step_timing_does_not_replace_performance_verdict(self):
         runner = ProfileRunner("cloud", [])
         budget = StepBudgetContext(name="guardrail", budget_ms=10, enforcement="blocking")

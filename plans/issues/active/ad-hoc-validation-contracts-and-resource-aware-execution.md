@@ -221,8 +221,8 @@ in M0 and the relevant stage contracts. Targeted checks belong to the bounded
 item; the authoritative gate belongs to the final candidate under applicable
 policy. Required release checks remain conditional on a real release request.
 
-Current state: M0 delivered through #4279; M1 implementation in progress;
-M2–M6 remain pending.
+Current state: M0 delivered through #4279; M1 and M2 implementation in progress;
+M3–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
 Next action: implement M1 canonical stage contracts and execution evidence. Subsequent items record candidate
@@ -281,6 +281,41 @@ here rather than treating the plan itself as execution evidence.
   M1–M6, protected enforcement, SQL acceptance and release qualification are open.
 
 ## M2 scheduling checkpoint — 2026-10-03
+
+- Initial read-only Opus mechanism review of candidate `f03c9b324` returned
+  **NOT SATISFIED**, with two valid blockers: the package compiler retention path
+  lacked its host triple, and E2E worker arguments bypassed the cgroup clamp.
+  Review evidence is preserved outside Git at
+  `/workspace/validation-work/evidence/candidates/f03c9b324a9296709120f6503574b6a9cb408adb/opus-m1-m2.md`.
+  The owned run was cancelled (exit 130); its incomplete source preparation and
+  raw journal remain failures, not acceptance evidence.
+- One correction batch now derives retained compiler paths from both real
+  producers, checks actual host-qualified retention with a real temporary lease,
+  clamps every E2E worker argument (including forwarded requests), and records
+  effective workers. It also preserves inherited durations, keeps assertions'
+  existing per-command deadlines, classifies observed OOM/ENOSPC/cancellation,
+  moves metadata-structural cold compilation into named preparation, and keeps
+  functional/performance outcomes independent after a functional failure.
+- The measured stopped-run cgroup had roughly 8.99 GB charged memory, of which
+  only 36.8 MB was anonymous and 6.28 GB was inactive file cache. Treating all
+  charged cache as unavailable caused a false admission failure. The correction
+  uses unused capacity plus clean inactive file cache, excluding dirty/writeback
+  and unevictable bytes and retaining the same capacity and reserve. This is an
+  availability estimate within the existing limit, not extra memory or a lower
+  required workload.
+- Explicit graph ownership continuity is now available for this session's own
+  interrupted run. All consumers start unpassed and must run again; failed
+  assertion results and partial performance captures are never reused.
+  Recovery of the next run uses the retained owner
+  `c151f65d-5f60-4b70-9916-ba481a7d1992`, after verifying matching worktree,
+  device/inode/UID and a free exclusive lease. Unknown owners remain ineligible.
+- Follow-up M2 work still includes complete correctness-checkpoint consumption
+  and stronger descendant adoption/reaping: cancellation killed the owned nested
+  builds but this environment's PID 1 retained dead orphan Cargo/rustc entries.
+  No live detached build was observed, and those dead entries hold no live cwd
+  or graph lease. Do not claim the full reaping/recovery requirement is delivered.
+- Corrected candidate validation and the remediation review remain pending at
+  this record. No implementation PR is merged or phase gate waived.
 
 - Owned branch: `codex/validation-contracts-evidence-20261003`; draft
   [PR #4280](https://github.com/sifr-lang/sifr/pull/4280). M1 and this first M2

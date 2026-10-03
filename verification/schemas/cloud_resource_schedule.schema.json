@@ -4,7 +4,7 @@
     "schema_version",
     "estimate_basis",
     "cold_preparation_deadline_seconds",
-    "assertion_deadline_seconds",
+    "assertion_command_deadline_seconds",
     "stages"
   ],
   "additionalProperties": false,
@@ -21,7 +21,7 @@
     "cold_preparation_deadline_seconds": {
       "type": "integer"
     },
-    "assertion_deadline_seconds": {
+    "assertion_command_deadline_seconds": {
       "type": "integer"
     },
     "stages": {

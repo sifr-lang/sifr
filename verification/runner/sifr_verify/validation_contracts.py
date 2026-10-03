@@ -100,6 +100,14 @@ def stage_plan(stage: str) -> dict:
     # A suite can internally expand an adapter case into many observations.
     # These are manifest IDs, not a claim that the adapter's inner corpus ran.
     result["case_id_semantics"] = "declared adapter cases; runtime expansions require execution evidence"
+    if stage == "cloud":
+        result["execution_routes"] = {"performance": {
+            "selected_suites": next(area["suites"] for area in profile["selected_areas"]
+                                    if area["area"] == "performance"),
+            "functional_route": "existing cloud functional corpus and policy tests",
+            "performance_route": "independent candidate-bound shared-cloud paired receipt",
+            "paired_performance_executed_by_profile": False,
+        }}
     return result
 
 

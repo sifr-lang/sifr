@@ -2,7 +2,7 @@
   "schema_version": 1,
   "estimate_basis": "prospective conservative allocation; record observations before recalibration",
   "cold_preparation_deadline_seconds": 7200,
-  "assertion_deadline_seconds": 2400,
+  "assertion_command_deadline_seconds": 2400,
   "stages": {
     "dependency-acquisition": {
       "disk_growth_bytes": 1073741824,
