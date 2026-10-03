@@ -1413,6 +1413,8 @@ controls include rehashed non-release events, a rehashed wrong CPU target,
 missing profile/command data and changed raw logs. Captures now retain an initial
 incomplete receipt and leave the successfully checked completion bytes unchanged.
 GNU Time below 1.8 is rejected because its older peak-RSS scaling is unreliable.
-The corrected complete performance area passed 101 tests; earlier runner
-foundation coverage passed all 31 groups. Broad candidate gates and native Sifr
+The first corrected full-area run failed because the timer identity test used
+an unparseable test-only version label. Its failed v2 log remains preserved.
+The control now uses an explicit supported version; the corrected v3 full-area
+run passed 101 tests. Earlier runner foundation coverage passed all 31 groups. Broad candidate gates and native Sifr
 qualification remain pending.
