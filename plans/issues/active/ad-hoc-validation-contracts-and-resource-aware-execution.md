@@ -1229,7 +1229,7 @@ constrained acceptance; scheduling is not evidence that campaigns have executed.
 
 `validation-required` is published by a separate default-branch `workflow_run`
 workflow. Candidate validation has read-only permissions and no persisted checkout
-credentials. Only the trusted publisher can write checks; it executes trusted
+credentials. The publisher executes trusted
 source and reads candidate Git objects as data. It independently derives the
 required profile, fetches all jobs from the current run attempt, and checks
 mandatory successes, completion freshness, repository/workflow identity and
@@ -1260,3 +1260,32 @@ are retained at `/workspace/validation-work/evidence/create-pr-be6b4cdc1.log` an
 No qualification assertions ran and no cache was removed. This is failed gate
 evidence, not a passing preparation receipt. Remaining implementation continues;
 no unchanged gate retry or reduced workload is authorized by this result.
+
+
+The aggregate's first scoped review rejected candidate
+`97164d12460d5dbe6548010f552f555bb652b42b`: PR checks must qualify the current
+PR head while binding the executed synthetic merge candidate, and a same-named
+GitHub Actions job could impersonate an aggregate from the Actions app. The
+rejected review is preserved at
+`/workspace/validation-work/evidence/sifr-claude.jdlXds/response.md`.
+
+Remediation posts the PR context on the current head and retains the verified
+merge candidate in its external identity and summary; merge-group/main checks
+remain on their actual candidate. Twelve focused controls pass, including a real
+publisher-path head/merge distinction and rejection of the Actions integration.
+The publisher's Actions token is now read-only. A separately installed GitHub App
+with Checks/write is mandatory for publication, minted through the pinned official
+App-token action and limited to this repository. The returned check must identify
+the declared separate App. Missing credentials cannot produce a protected pass.
+Before enforcement, configure `VALIDATION_CHECK_APP_ID`, the trusted publisher's
+`VALIDATION_CHECK_APP_PRIVATE_KEY`, and pin that exact App integration ID in the
+required-check rule. No App, secret or rule is provisioned or claimed by this
+implementation; credentials are never copied into repository evidence.
+
+Failed-jobs-only reruns do not qualify: all mandatory jobs and the candidate
+artifact must come from one complete current attempt. Fork runs lacking one
+unambiguous PR snapshot fail closed and need a separately implemented trusted
+admission route before their qualification can be claimed. Anonymous commit
+fetch is sufficient for this public repository; private-repository support is
+not claimed. Workflow trust bootstrap and separate App provisioning remain
+explicit prerequisites for protected enforcement.

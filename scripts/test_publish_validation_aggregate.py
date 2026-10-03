@@ -27,7 +27,7 @@ class PublisherTests(unittest.TestCase):
     def api(self, path, body=None):
         if body is not None:
             self.published.append(copy.deepcopy(body))
-            return {}
+            return {"app": {"id": 42, "slug": "validation-fixture"}}
         if path.endswith("/actions/runs/7"):
             return self.run
         if path.endswith("/actions/workflows/local-first-validation.yml"):
@@ -41,7 +41,7 @@ class PublisherTests(unittest.TestCase):
 
     def call(self):
         with patch.dict(os.environ, {"GITHUB_REPOSITORY": "owner/repo", "VALIDATION_RUN_ID": "7",
-                                     "TRUSTED_WORKFLOW_SHA": self.trusted}), patch.object(publisher, "api", self.api), \
+                                     "TRUSTED_WORKFLOW_SHA": self.trusted, "CHECK_APP_ID": "42"}), patch.object(publisher, "api", self.api), \
                 patch.object(publisher, "candidate_identity", return_value={"candidate_sha": self.executed}):
             return publisher.main()
 
@@ -66,8 +66,33 @@ class PublisherTests(unittest.TestCase):
         self.assertEqual(self.call(), 1)
         self.assertEqual(self.published[-1]["conclusion"], "failure")
 
+    def test_pr_publishes_head_while_binding_tested_merge_candidate(self):
+        branch = "c" * 40
+        base = "d" * 40
+        self.run.update(event="pull_request", head_sha=branch,
+                        pull_requests=[{"number": 3, "base": {"sha": base}}])
+        self.jobs = [dict(self.jobs[0], name=name) for name in expected_jobs("pull_request", "create-pr")]
+        old_api = self.api
+        def pr_api(path, body=None):
+            if path.endswith("/pulls/3"):
+                return {"merge_commit_sha": self.candidate, "head": {"sha": branch},
+                        "base": {"sha": base}, "state": "open"}
+            return old_api(path, body)
+        with patch.object(self, "api", pr_api), patch.object(publisher, "fetch"), \
+                patch("sifr_verify.change_selection.selection", return_value={"profile": "create-pr"}):
+            self.assertEqual(self.call(), 0)
+        self.assertEqual(self.published[-1]["head_sha"], branch)
+        self.assertTrue(self.published[-1]["external_id"].endswith(self.candidate))
+        self.assertIn(self.candidate, self.published[-1]["output"]["summary"])
+
+    def test_actions_app_identity_cannot_publish_protected_check(self):
+        with patch.dict(os.environ, {"CHECK_APP_ID": "15368"}), patch.object(publisher, "api") as api:
+            with self.assertRaises(ValueError):
+                publisher.main()
+            api.assert_not_called()
+
     def test_api_failure_never_publishes_success(self):
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "owner/repo", "VALIDATION_RUN_ID": "7"}), \
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "owner/repo", "VALIDATION_RUN_ID": "7", "CHECK_APP_ID": "42"}), \
                 patch.object(publisher, "api", side_effect=OSError("API unavailable")):
             with self.assertRaises(OSError):
                 publisher.main()
