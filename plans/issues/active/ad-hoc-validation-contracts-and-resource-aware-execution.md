@@ -1317,3 +1317,48 @@ passed scoped Opus review with no blockers; review is outside Git at
 All 31 foundation groups passed for the sustained-fuzz adapter with Cargo idle;
 its earlier concurrent short-deadline failure remains historical failed evidence.
 Separate App credential custody and main reuse are the next bounded M3 item.
+
+## M5 actual published predecessor acquisition — work in progress
+
+Sustained-fuzz custody candidate `3b3e2cb54b9ca42688654bc5b051da5d94237bd9`
+is draft PR #4292; its scoped Opus review is SATISFIED with no blockers at
+`/workspace/validation-work/evidence/sifr-claude.DGIVbw/response.md`.
+Protected App-environment custody candidate
+`4fd667541296fc0afbcc8518b715e6c47a6f8a32` is draft PR #4293 and passed
+scoped review at `sifr-claude.wxZnp5/response.md`. Environment creation with the
+current token returned HTTP 403; the user was asked to configure the environment
+and separate App privately in GitHub. No credential or enforcement deployment is
+claimed, and implementation of independent remaining milestones continues.
+
+The published-predecessor registry records all four real beta.16 native archives
+from GitHub release 368902044, published 2026-08-11, publication source commit
+`11581e0630407d397079c032d0cd30fb87f4795e`. Fetching verifies the registered
+public URL, exact byte count and SHA-256; decoded allocation is measured from the
+verified tar inventory, with block/directory allowance and retained reserve.
+Escaping entries fail before extraction, and extraction checks the reserve at
+entry boundaries. Preparation records zero runtime assertions and preserves
+failed/incomplete attempts; candidate versions must follow this real predecessor.
+This registry does not claim first-release inapplicability or silently select a
+same-source synthetic predecessor.
+
+The actual Linux x86_64 archive (73,787,525 bytes, SHA-256
+`8d796c321cc2b5a898c5e751c6769154b068060a69ae3aa302051e4fa9bb5448`)
+was downloaded, independently hashed and decoded to 20,386 files totaling
+414,570,775 bytes under
+`/workspace/validation-work/published/beta16-linux-predecessor/`.
+Its manifest binds beta.16, the native target and the same published source commit.
+The installed binary reports beta.16 and hashes to
+`d4d781ddaead3aa71139dec1a32c3692773ea2787f0c3f60d402fffb36c3bad1`.
+The archive and per-file custody receipt remain outside Git. Later stricter
+admission changes are separate from that historical acquisition observation.
+
+The old published CLI lacks `--print compiler-identity` and `doctor
+--verify-integrity`; those failed probes remain in
+`/workspace/validation-work/evidence/m5-published-predecessor-native-identity.log`.
+Published predecessor qualification must use its declared older supported CLI
+and independently verify archive/package hashes; it cannot fabricate a newer
+embedded identity or relabel these failures. Five focused controls pass for real
+version ordering, complete native registry, exact transfer/hash bounds, safe
+extraction, reserve refusal and preserved failed preparation receipts. Actual
+upgrade/reinstall/rollback, candidate qualification, all required native platforms
+and M6 acceptance remain unfinished.
