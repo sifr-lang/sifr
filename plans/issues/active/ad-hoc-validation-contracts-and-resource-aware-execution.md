@@ -280,6 +280,32 @@ here rather than treating the plan itself as execution evidence.
   checks and reviews still apply to each actual implementation candidate.
   M1–M6, protected enforcement, SQL acceptance and release qualification are open.
 
+## M2 scheduling checkpoint — 2026-10-03
+
+- Owned branch: `codex/validation-contracts-evidence-20261003`; draft
+  [PR #4280](https://github.com/sifr-lang/sifr/pull/4280). M1 and this first M2
+  scheduling item are implemented, not accepted or merged.
+- Integrated the existing cloud foundation at `f88973102` into this branch.
+  Its source PR #4259 and SQL qualification retain their pending disposition.
+- Added prospective cgroup-v2 admission, separate cold preparation deadlines,
+  isolated graph leases, exact retained compiler copies, supported Cargo cleanup,
+  net recovery observations and immutable source/runtime-bound journals.
+  The live merge assertion selection is unchanged. Step checkpoint consumption
+  remains disabled until its dependency closure and accounting are proven.
+- Candidate `f3c4d417e` passed 25 runner self-test groups, strict contracts,
+  profile checks, the file-size guardrail and whole-candidate whitespace checks.
+  Its actual cloud run exposed a compiler build inside generated-input
+  acquisition. The owned run was cancelled (exit 130) before assertion execution;
+  the journal records `cancelled`, not a pass. The producer preparation is now
+  moved after sysroot graph retirement, with a regression checking that early
+  acquisition contains only locked fetch commands.
+- Raw first-run evidence:
+  `/workspace/validation-work/evidence/m2-cloud-execution-f3c4d417e.log` and
+  `/workspace/sifr/target/verification/execution-journals/83d7de3a-5c2d-4634-9b66-fff55ce3ee43/`.
+  Preserve both when creating the corrected candidate; the run does not qualify
+  correctness or performance. Full compiler execution and Opus review remain
+  required. M3–M6 remain unfinished.
+
 ## M1 implementation checkpoint — 2026-10-03
 
 The stage-policy/schema/CLI derive complete current selection from existing

@@ -53,6 +53,12 @@ def acquire_cargo_dependencies(profile, env, command_runner) -> None:
     print(f"[sifr-profile-setup] command={' '.join(command)}")
     command_runner(command, env=setup_env)
     prepare_locked_fixture_caches(profile, setup_env, command_runner)
+
+
+def prepare_generated_inputs(profile, env, command_runner) -> None:
+    """Materialization needs a compiler build, so it belongs to graph preparation."""
+    setup_env = env.copy()
+    setup_env.pop("CARGO_NET_OFFLINE", None)
     if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
         revision = subprocess.check_output(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
@@ -70,6 +76,7 @@ def acquire_cargo_dependencies(profile, env, command_runner) -> None:
 
 def prepare_remaining_graphs(profile, env, command_runner, *, include_sysroot=True) -> None:
     """Prepare the remaining canonical graphs without duplicating early consumers."""
+    prepare_generated_inputs(profile, env, command_runner)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
     # Compiler preparation and execution have identical offline build-script

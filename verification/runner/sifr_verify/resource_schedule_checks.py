@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from .cloud_schedule import run_staged_cloud
+from .cargo_setup import acquire_cargo_dependencies
 from .graph_retirement import GRAPH_PATHS, GraphLease
 from .profile_runner import ProfileRunner
 from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit
@@ -141,6 +142,13 @@ class RetirementTests(unittest.TestCase):
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "cloud scheduler requires Linux")
 class ScheduleTests(unittest.TestCase):
+    def test_acquisition_cannot_compile_a_producer_before_graph_retirement(self):
+        commands = []
+        profile = ProfileRunner("cloud", []).profile
+        acquire_cargo_dependencies(profile, {}, lambda command, env: commands.append(command))
+        self.assertTrue(commands)
+        self.assertTrue(all(command[:2] == ["cargo", "fetch"] for command in commands))
+
     def test_all_canonical_consumers_run_once_before_owned_graph_retirement(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
