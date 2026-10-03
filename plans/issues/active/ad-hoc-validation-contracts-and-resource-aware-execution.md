@@ -225,9 +225,11 @@ Current state: M0 delivered through #4279; M1 and M2 implementation in progress;
 M3–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: implement M1 canonical stage contracts and execution evidence. Subsequent items record candidate
-SHA, changed paths, commands, outcomes, review, dependencies, and exact next action
-here rather than treating the plan itself as execution evidence.
+Next action: resolve shared debug-cache ownership and the recorded capacity boundary,
+then run fresh constrained preparation/assertions under the reviewed M2 mechanisms.
+M1/M2 acceptance gates and M3–M6 delivery remain open. Execution records below
+identify candidate SHA, checks, review, dependencies and failures; the plan itself
+is not qualifying execution evidence.
 
 ## M0 execution record — 2026-10-03
 
