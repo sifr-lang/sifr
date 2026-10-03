@@ -47,6 +47,9 @@ class ResourceTests(unittest.TestCase):
         self.assertEqual(classify_failure(error, before, before), "assertion")
         error.outcome = SimpleNamespace(stderr=b"No space left on device")
         self.assertEqual(classify_failure(error, before, before), "enospc")
+        for classification in ("enospc", "admission", "unavailable"):
+            error.outcome = SimpleNamespace(stderr=f"sysroot-preparation: infrastructure={classification} detail".encode())
+            self.assertEqual(classify_failure(error, before, before), classification)
         self.assertEqual(classify_failure(KeyboardInterrupt(), before, before), "cancelled")
 
     def test_nested_cpu_memory_limits_affinity_and_tmpfs_share_one_budget(self):
@@ -243,7 +246,7 @@ class ScheduleTests(unittest.TestCase):
         self.assertTrue(commands)
         self.assertTrue(all(command[:2] == ["cargo", "fetch"] for command in commands))
 
-    def test_all_canonical_consumers_run_once_before_owned_graph_retirement(self):
+    def test_all_canonical_assertions_survive_earlier_preparation_output_retirement(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             result = root / "target/verification/areas/sysroot-release-cloud-results.json"
@@ -263,22 +266,11 @@ class ScheduleTests(unittest.TestCase):
                     events.append(name)
                     callback()
                     return 0
-            class FakeLease:
-                def __init__(self, root, relative, owner):
-                    self.relative, self.path = relative, root / relative
-                def acquire(self, consumers): return self
-                def passed_consumer(self, identifier): pass
-                def retire(self, **kwargs): return {"retired": True}
-                def close(self): pass
+            preparations = []
             with patch("sifr_verify.cloud_schedule.REPO_ROOT", root), \
                  patch("sifr_verify.cloud_schedule.Schedule", FakeSchedule), \
-                 patch("sifr_verify.cloud_schedule.GraphLease", FakeLease), \
-                 patch("sifr_verify.cloud_schedule.protected_compilers", return_value={
-                     "source-cargo-target": root / GRAPH_PATHS[0] / "debug/sifr",
-                     "cargo-target": root / GRAPH_PATHS[1] / "x86_64-unknown-linux-gnu/release/sifr"}), \
+                 patch("sifr_verify.cloud_schedule.run_command", side_effect=lambda argv, env: preparations.append(argv)), \
                  patch("sifr_verify.cloud_schedule.acquire_cargo_dependencies"), \
-                 patch("sifr_verify.cloud_schedule.prepare_sysroot_source_binary"), \
-                 patch("sifr_verify.cloud_schedule.prepare_sysroot_package_binary"), \
                  patch("sifr_verify.cloud_schedule.prepare_remaining_graphs") as remaining, \
                  patch.object(runner, "run_guardrail") as guards, \
                  patch.object(runner, "run_area") as areas, \
@@ -289,8 +281,11 @@ class ScheduleTests(unittest.TestCase):
             self.assertEqual(areas.call_count, len(runner.profile["selected_areas"]))
             self.assertEqual(tools.call_count, len(runner.profile["toolchain_steps"]))
             self.assertEqual(len(events), len(set(events)))
-            self.assertLess(events.index("area_sysroot_release"), events.index("retirement_cargo_target"))
-            self.assertLess(events.index("retirement_cargo_target"), events.index("cargo_cache_setup"))
+            self.assertLess(events.index("preparation_sysroot_source"), events.index("preparation_sysroot_package"))
+            self.assertLess(events.index("preparation_sysroot_package"), events.index("preparation_sysroot_metadata"))
+            self.assertLess(events.index("preparation_sysroot_metadata"), events.index("area_sysroot_release"))
+            self.assertEqual([argv[-2:] for argv in preparations[:2]], [["prepare", "source"], ["prepare", "package"]])
+            self.assertEqual(preparations[2][-1], "--metadata-only")
             self.assertFalse(remaining.call_args.kwargs["include_sysroot"])
 
 

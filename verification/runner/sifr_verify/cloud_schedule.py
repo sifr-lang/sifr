@@ -1,7 +1,7 @@
 """Run the live merge inventory with bounded, owned graph lifetimes on Linux.
 
-Preparation is scheduling, never qualifying assertion evidence. All selected
-assertions run once; an early failure keeps its graph and blocks its retirement.
+Preparation is scheduling, never qualifying assertion evidence. Successful
+build graphs retire into immutable outputs before independent runtime assertions.
 """
 from __future__ import annotations
 
@@ -14,19 +14,17 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .cargo_setup import (acquire_cargo_dependencies, enable_offline_cargo,
-                          prepare_remaining_graphs, prepare_sysroot_package_binary,
-                          prepare_sysroot_source_binary)
+                          prepare_remaining_graphs)
 from .execution_evidence import write_evidence
 from .execution_identity import artifact_identity
 from .execution_identity import execution_key
 from .fixture_inventory import inventory
-from .graph_retirement import GRAPH_PATHS, GraphLease
 from .paths import REPO_ROOT
 from .profile_commands import run_command
 from .resource_admission import ResourceError, admit, discover, worker_limit
 from .validation_contracts import stage_plan
 from .schemas import load_schema, validate_data
-from .sysroot_preparation import protected_compilers
+from .prepared_sysroot import OWNER_VARIABLE, command as preparation_command
 from .cloud_failure import classify_failure
 
 WORKER_FLAGS = {"--sifr-jobs": "sifr_jobs", "--rust-jobs": "rust_jobs",
@@ -64,7 +62,7 @@ def load_schedule(root: Path = REPO_ROOT) -> dict:
     policy = json.loads((root / "verification/policy/cloud_resource_schedule.json").read_text())
     validate_data(policy, load_schema("cloud_resource_schedule.schema.json"), source="cloud resource schedule")
     expected = {"dependency-acquisition", "sysroot-source", "sysroot-package", "sysroot-assertions",
-                "graph-retirement", "remaining-preparation", "remaining-assertions"}
+                "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions"}
     if policy.get("schema_version") != 1 or set(policy.get("stages", {})) != expected:
         raise ResourceError("cloud resource schedule is incomplete", "unavailable")
     for field in ("cold_preparation_deadline_seconds", "assertion_command_deadline_seconds"):
@@ -168,49 +166,34 @@ def run_staged_cloud(runner, early: set[str]) -> int:
         runner.block_steps("preparation_dependencies")
         return acquired
     enable_offline_cargo(env)
-    leases = []
+    env[OWNER_VARIABLE] = schedule.owner
+    env["SIFR_VERIFY_GRAPH_OWNER"] = schedule.graph_owner
     failed = 0
-    try:
-        for graph in GRAPH_PATHS:
-            leases.append(GraphLease(REPO_ROOT, graph, schedule.graph_owner).acquire({"area_sysroot_release"}))
-        for name, prepare, allocation in (
-                ("preparation_sysroot_source", prepare_sysroot_source_binary, "sysroot-source"),
-                ("preparation_sysroot_package", prepare_sysroot_package_binary, "sysroot-package")):
-            status = schedule.step(name, lambda p=prepare: p(profile, env, run_command),
-                                   allocation=allocation, preparation=True)
-            failed = failed or status
-            if status and not runner.no_fail_fast:
-                return failed
-        if failed:
-            runner.block_step("area_sysroot_release", "sysroot-preparation")
-        else:
-            status = schedule.step("area_sysroot_release",
-                                   lambda: runner.run_area("sysroot_release", selected[0]["suites"]),
-                                   allocation="sysroot-assertions")
-            failed = failed or status
-            if not status:
-                # Results survive both graph lifetimes in an immutable owned journal.
-                result = REPO_ROOT / "target/verification/areas/sysroot-release-cloud-results.json"
-                payload = json.loads(result.read_text())
-                schedule.record("sysroot-results", {"result": payload, "identity": artifact_identity(result)})
-                compilers = protected_compilers(REPO_ROOT, env)
-                for lease in leases:
-                    lease.passed_consumer("area_sysroot_release")
-                    binary = compilers[lease.path.name]
-                    retirement = schedule.step("retirement_" + lease.path.name.replace("-", "_"),
-                        lambda l=lease, b=binary: schedule.record("retirement", l.retire(
-                            retained=REPO_ROOT / "target/verification/retained-compilers" / schedule.owner,
-                            protected=[b], command_runner=run_command, env=env)), allocation="graph-retirement")
-                    failed = failed or retirement
-            if failed and not runner.no_fail_fast:
-                return failed
-    except (ResourceError, OSError, ValueError) as error:
-        schedule.record("graph-lifetime-failure", {"state": "infrastructure-failure",
-                         "classification": getattr(error, "classification", "unavailable"), "detail": str(error)})
-        raise
-    finally:
-        for lease in leases:
-            lease.close()
+    for kind in ("source", "package"):
+        status = schedule.step("preparation_sysroot_" + kind,
+            lambda k=kind: run_command(preparation_command("prepare", k), env=env),
+            allocation="sysroot-" + kind, preparation=True)
+        failed = failed or status
+        if status and not runner.no_fail_fast:
+            return failed
+    # Private graphs now have retained immutable outputs. The large library
+    # preparations run after retirement, rather than extending both lifetimes.
+    metadata = schedule.step("preparation_sysroot_metadata", lambda: run_command(
+        [sys.executable, str(REPO_ROOT / "verification/areas/sysroot_release/package_build.py"),
+         "--metadata-only"], env=env), allocation="sysroot-metadata", preparation=True)
+    failed = failed or metadata
+    if failed:
+        runner.block_step("area_sysroot_release", "sysroot-preparation")
+    else:
+        status = schedule.step("area_sysroot_release",
+            lambda: runner.run_area("sysroot_release", selected[0]["suites"]), allocation="sysroot-assertions")
+        failed = failed or status
+        if not status:
+            result = REPO_ROOT / "target/verification/areas/sysroot-release-cloud-results.json"
+            schedule.record("sysroot-results", {"result": json.loads(result.read_text()),
+                                                "identity": artifact_identity(result)})
+    if failed and not runner.no_fail_fast:
+        return failed
     # Every original remaining preparation is retained; only completed sysroot
     # preparation/consumers move earlier. No selection or timeout assertion changes.
     prepared = schedule.step("cargo_cache_setup", lambda: prepare_remaining_graphs(

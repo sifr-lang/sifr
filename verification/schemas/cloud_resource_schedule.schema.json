@@ -33,7 +33,8 @@
         "sysroot-assertions",
         "graph-retirement",
         "remaining-preparation",
-        "remaining-assertions"
+        "remaining-assertions",
+        "sysroot-metadata"
       ],
       "additionalProperties": false,
       "properties": {
@@ -230,6 +231,38 @@
           }
         },
         "remaining-assertions": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sysroot-metadata": {
           "type": "object",
           "required": [
             "disk_growth_bytes",

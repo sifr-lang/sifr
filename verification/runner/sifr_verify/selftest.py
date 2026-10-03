@@ -24,6 +24,7 @@ from .dx3_process_checks import policy_checks as dx3_process_checks
 from .process_recovery_checks import policy_checks as process_recovery_checks
 from .checkpoint_checks import policy_checks as checkpoint_checks
 from .checkpoint_recipe_checks import policy_checks as checkpoint_recipe_checks
+from .prepared_sysroot_checks import policy_checks as prepared_sysroot_checks
 from .profile_area_steps import run_selected_area
 from .python_interop_segmentation_checks import policy_checks as python_interop_segmentation_checks
 from .profile_results import AreaResultError, validate_area_result
@@ -66,6 +67,7 @@ def run_all() -> list[str]:
     checks = [
         ("input-bound correctness checkpoint consumption", checkpoint_checks),
         ("audited isolated correctness recipe", checkpoint_recipe_checks),
+        ("immutable sysroot preparation output custody", prepared_sysroot_checks),
         ("Linux escaped descendant recovery", process_recovery_checks),
         ("resource admission and owned graph lifetimes", resource_schedule_checks),
         ("validation contracts and execution evidence", validation_contract_checks),

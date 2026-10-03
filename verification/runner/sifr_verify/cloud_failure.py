@@ -28,6 +28,9 @@ def classify_failure(error: BaseException, before: dict, after: dict) -> str:
         return "enospc" if error.errno == errno.ENOSPC else "unavailable"
     outcome = getattr(error, "outcome", None)
     stderr = getattr(outcome, "stderr", b"").lower()
+    for classification in ("enospc", "admission", "unavailable"):
+        if f"sysroot-preparation: infrastructure={classification} ".encode() in stderr:
+            return classification
     if b"no space left on device" in stderr:
         return "enospc"
     killed = getattr(error, "returncode", 0) in {-9, 137} or b"signal: 9" in stderr or b"sigkill" in stderr

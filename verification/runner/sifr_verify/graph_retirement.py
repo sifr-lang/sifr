@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .execution_identity import artifact_identity
 from .resource_admission import ResourceError
+from .compressed_artifacts import compress
 
 GRAPH_PATHS = ("target/sysroot_release/source-cargo-target", "target/sysroot_release/cargo-target")
 CACHE_TAG = b"Signature: 8a477f597d28d172789f06886806bc55\n"
@@ -122,7 +123,8 @@ class GraphLease:
             raise ResourceError("unselected graph consumer cannot retire a graph", "unavailable")
         self.passed.add(identifier)
 
-    def retire(self, *, retained: Path, protected: list[Path], command_runner, env: dict) -> dict:
+    def retire(self, *, retained: Path, protected: list[Path], command_runner, env: dict,
+               max_encoded_bytes: int | None = None) -> dict:
         if self._stream is None or self.passed != self.consumers:
             raise ResourceError("active, failed or incomplete graph consumers prevent retirement", "unavailable")
         require_owned_path(self.root, self.relative)
@@ -149,8 +151,20 @@ class GraphLease:
             if not artifact.is_relative_to(self.path):
                 raise ResourceError("protected artifact is outside the selected graph", "unavailable")
             original = artifact_identity(artifact)
-            destination = plain_path(self.root, retained / original["sha256"] / artifact.name)
+            filename = artifact.name if max_encoded_bytes is None else artifact.name + ".gz"
+            destination = plain_path(self.root, retained / original["sha256"] / filename)
             destination.parent.mkdir(parents=True, exist_ok=True)
+            if max_encoded_bytes is not None:
+                if len(protected) != 1 or type(max_encoded_bytes) is not int or max_encoded_bytes <= 0:
+                    raise ResourceError("compressed retention requires one bounded output", "unavailable")
+                copy = compress(artifact, destination, max_encoded_bytes=max_encoded_bytes)
+                parent = os.open(destination.parent, os.O_RDONLY)
+                try:
+                    os.fsync(parent)
+                finally:
+                    os.close(parent)
+                copies.append(copy)
+                continue
             if not destination.exists():
                 with tempfile.NamedTemporaryFile(dir=destination.parent, delete=False) as stream:
                     temporary = Path(stream.name)

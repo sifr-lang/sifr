@@ -40,20 +40,29 @@ def corpus_configuration(root: Path, original: dict[str, str]):
     return command, env, snapshot
 
 
+def prepare_metadata(root: Path, env: dict[str, str], run=subprocess.run):
+    """Prepare the two library configurations after private graph retirement."""
+    corpus, corpus_env, snapshot = corpus_configuration(root, env)
+    prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
+    run([*corpus[:7], "--no-run"], cwd=root, env=corpus_env, check=True)
+    run(["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--no-run",
+         "metadata_structural_"], cwd=root, env=env, check=True)
+
+
 def prepare(root: Path, env: dict[str, str], run=subprocess.run):
     host = host_target(env)
     command, build_env = package_build_configuration(
         root, env, host, root / "target/sysroot_release/preparation", prepare_only=True)
     run(command, cwd=root, env=build_env, check=True)
-    corpus, corpus_env, snapshot = corpus_configuration(root, env)
-    prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
     # Preserve the selected library graph; filters execute only after preparation.
-    run([*corpus[:7], "--no-run"], cwd=root, env=corpus_env, check=True)
     # metadata-structural is a distinct source-version test configuration.
     # Prepare it explicitly rather than cold-build it during assertions.
-    run(["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--no-run",
-         "metadata_structural_"], cwd=root, env=env, check=True)
+    prepare_metadata(root, env, run)
 
 
 if __name__ == "__main__":
-    prepare(Path(__file__).resolve().parents[3], dict(os.environ, CARGO_NET_OFFLINE="true"))
+    import sys
+    if sys.argv[1:] not in ([], ["--metadata-only"]):
+        raise SystemExit("usage: package_build.py [--metadata-only]")
+    callback = prepare_metadata if sys.argv[1:] else prepare
+    callback(Path(__file__).resolve().parents[3], dict(os.environ, CARGO_NET_OFFLINE="true"))

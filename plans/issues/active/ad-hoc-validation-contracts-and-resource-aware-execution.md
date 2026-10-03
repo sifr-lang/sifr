@@ -332,6 +332,55 @@ here rather than treating the plan itself as execution evidence.
   is lowered or reclassified. Production reuse, implementation acceptance gates,
   scoped checkpoint review, the resource follow-up, and M3–M6 remain open.
 
+### Early immutable-output lifetimes and owned recovery continuation
+
+- The correctness-checkpoint candidate `79e2524e87b0e597100a442c78f3e80779acca53`
+  received Opus **SATISFIED**, with no blocking findings. Review is outside Git at
+  `/workspace/validation-work/evidence/candidates/79e2524e87b0e597100a442c78f3e80779acca53/opus-checkpoints.md`;
+  draft [PR #4283](https://github.com/sifr-lang/sifr/pull/4283) remains gated.
+- This bounded continuation owns `/workspace/sifr` and branch
+  `codex/validation-compiler-graph-lifetimes-20261003`, based on that candidate.
+  It separates compilation/packaging consumers from later runtime consumers.
+  Successful source preparation retains a bounded, verified lossless copy before
+  supported Cargo cleanup and separately admits executable restoration. Package
+  preparation retains its complete verified archive and compiler before cleanup.
+  Only then do the original library corpus/metadata preparation and every selected
+  sysroot assertion run. No compilation receipt claims an assertion passed.
+- Receipts bind current source/observed commit, isolated Python closure, actual
+  tool/compiler bytes, registry sources, toolchain libraries, native build inputs,
+  configuration, producer and retained artifact bytes. Consumers independently
+  recompute the expected identity and reject drift, expiry, tampering or a runtime
+  assertion claim. Unknown cache owners are never cleaned; independently copied
+  outputs still require actual retention admission.
+- Real dependency observation enumerated 50,631 external build input files plus
+  715 stdlib files and 10 loaded native libraries. The first observation rejected
+  directory links; the correction traverses and binds their targets and bytes,
+  rejecting cycles. Both logs remain outside Git; these are dependency observations,
+  not compiler/assertion acceptance evidence.
+- Before retiring the now-obsolete d5 preparations, the old e9 compiler was
+  losslessly compressed to 310,235,081 bytes and decoded/hash-verified. That
+  bounded archival recovery restored the unchanged 8 GiB normal reserve from
+  the already under-reserve failed state; it did not admit a build/assertion.
+  The package graph retired first using exact measured copy allocation, then the
+  source graph, through supported Cargo cleanup under their original exclusive
+  owner leases. Both d5 compiler byte sequences were retained independently,
+  then losslessly compressed and verified (276,879,402 / 31,473,300 bytes).
+  Free storage increased from 7,967,952,896 to approximately 16,318,980,096 bytes.
+  The shared main target remains untouched. Raw d5 assertions remain unexecuted,
+  functional failed, performance inconclusive and qualified false.
+- Custody and retirement records are preserved under each original candidate's
+  external evidence directory. Raw operator logs:
+  `/workspace/validation-work/evidence/m2-obsolete-owned-recovery.log` and
+  `m2-d5-compiler-compression.log`. A gzip decode restores the exact original
+  compiler bytes; earlier raw-file paths now have explicit lossless custody records.
+- Targeted receipt/retention tests cover real immutable copying, compressed
+  restoration, retained native package bytes, changed inputs/artifacts, bounded
+  encode/decode, expiry, runtime-claim rejection, unknown ownership, failed builds
+  and symlink cycles. All 29 foundation groups passed before the last focused
+  additions; 13 final receipt/retention tests passed. Final scoped review, real
+  production checkpoint reuse, fresh constrained execution, and required gates
+  remain pending. M3–M6 are still pending; no phase or performance pass is claimed.
+
 ### Owned descendant recovery continuation
 
 - The constrained execution of `d5cedf1a3091e10adc93d33b85c32b769891eafb`
