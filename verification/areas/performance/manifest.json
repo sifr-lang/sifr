@@ -109,6 +109,13 @@
           "command": "python-script",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "generated-program-contract",
+          "entry": "verification/areas/performance/generated_program_metrics_tests.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

@@ -166,6 +166,8 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def run_rules_variants(suite_name: str) -> list[dict[str, Any]]:
     return [
+        run_command_variant(suite_name, "generated-program-contract",
+                            [sys.executable, str(AREA_ROOT / "generated_program_metrics_tests.py")]),
         run_command_variant(suite_name, "performance-level-contract",
                             [sys.executable, str(AREA_ROOT / "performance_levels_tests.py")]),
         run_command_variant(
