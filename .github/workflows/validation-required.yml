@@ -12,6 +12,7 @@ jobs:
   publish:
     if: contains(fromJSON('["pull_request", "merge_group", "push"]'), github.event.workflow_run.event)
     runs-on: ubuntu-24.04
+    environment: validation-check-publication
     permissions:
       contents: read
       actions: read
