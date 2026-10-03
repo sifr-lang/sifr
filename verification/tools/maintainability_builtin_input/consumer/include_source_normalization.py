@@ -33,15 +33,22 @@ def authenticate_source(record,inputs,api):
         require(point['original_position']==point['position']+point['difference'],'official original-relative byte position witness conflict',api)
         previous=point['position']
     require(record['official_endpoints']==[original_position(record,0,api),original_position(record,record['normalized_source_len'],api)] and record['official_endpoints'][1]==len(raw),'official complete normalization length/boundary conflict',api)
-    normalized=bytearray();omitted=[];last=0
+    # The official API maps boundaries. A normalized LF's complete interval
+    # maps to both raw CRLF bytes; its starting boundary points before the CR.
+    # Authenticate each full interval instead of treating a boundary as a
+    # one-byte origin and accidentally discarding the LF.
+    normalized=bytearray();omitted=[]
+    first=original_position(record,0,api)
+    require(first==0 or (first==3 and raw[:first]==b'\xef\xbb\xbf'),'unsupported initial official source normalization',api)
+    if first:omitted.append((0,first,0))
     for offset in range(record['normalized_source_len']):
-        at=original_position(record,offset,api)
-        require(last<=at<len(raw),'non-monotonic/out-of-bounds official byte map',api)
-        if at>last:omitted.append((last,at,offset))
-        normalized.append(raw[at]);last=at+1
-    if last<len(raw):omitted.append((last,len(raw),record['normalized_source_len']))
-    for start,end,offset in omitted:
-        require((start==0 and offset==0 and raw[start:end]==b'\xef\xbb\xbf') or (raw[start:end]==b'\r' and end<len(raw) and raw[end:end+1]==b'\n'),'unsupported official source normalization disposition',api)
+        start=original_position(record,offset,api);end=original_position(record,offset+1,api)
+        require(0<=start<end<=len(raw),'non-monotonic/out-of-bounds official byte interval',api)
+        interval=raw[start:end]
+        if len(interval)==1:normalized.extend(interval)
+        else:
+            require(interval==b'\r\n','unsupported official source normalization disposition',api)
+            normalized.append(10);omitted.append((start,start+1,offset))
     text=bytes(normalized).decode('utf-8')
     if record['normalized_text'] is not None:require(text==record['normalized_text'],'original compiler normalized source text conflict',api)
     return {'file':filename,'raw_sha256':api.digest(raw),'normalization_authority':record,'omitted_bytes':[{'range':[s,e],'normalized_position':n} for s,e,n in omitted]}
