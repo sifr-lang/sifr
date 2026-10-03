@@ -96,7 +96,7 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
         scalar,owner=assertions.named_join(proof,semantic,'::ScalarCallRewriter',b)
         self.require([owner['source']['start'],owner['source']['end']]==[0,307] and [owner['name_source']['start'],owner['name_source']['end']]==[7,25],'fresh ScalarCallRewriter compiler declaration and name anchors')
         stage=json.loads(authority.stage_observations);observed=stage['owners'][scalar['compiler_semantic_owner_identity']['association']['stage_owner']]
-        self.require(observed['tokens_available'] is False,'actual ScalarCallRewriter transformed expanded tokens unavailable disposition')
+        self.require(observed['declaration_tokens_available'] is False,'actual ScalarCallRewriter transformed expanded tokens unavailable disposition')
         self.require(scalar['source_native_attribute_membership']['tokens'] and scalar['source_native_attribute_membership']['subnodes'] and scalar['compiler_semantic_owner_identity']['parent_relation'],'ScalarCallRewriter still has complete exact native token/subnode/owner/parent relation')
 
     def test_multi_anchor_normalization_and_context_identity_are_lossless(self):
