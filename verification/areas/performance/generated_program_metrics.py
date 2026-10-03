@@ -20,6 +20,7 @@ from compiler_lanes import validate_receipt
 from sifr_verify.resource_admission import discover, admit, worker_limit
 from measurement_timer import managed_timer_identity
 from program_evidence import read_metrics, producer_identity, validate_capture, target_cpu_generic
+from program_artifact_identity import application_events
 
 ROOT = Path(__file__).resolve().parents[3]
 AREA = Path(__file__).parent
@@ -121,19 +122,18 @@ os.execv(os.environ['PROGRAM_RUSTC'],[os.environ['PROGRAM_RUSTC'],*sys.argv[1:]]
     return wrapper,rust_wrapper,events,rust_events
 
 
-def prepare(compiler_receipt: Path, output: Path):
+def prepare(compiler_receipt: Path, output: Path, resource_profile: str = "standard"):
     require_clean_source()
     contract=policy()
     compiler=json.loads(compiler_receipt.read_text())
     validate_receipt(ROOT,compiler['lane'],compiler)
-    if any(os.environ.get(key) for key in ('RUSTFLAGS','CARGO_ENCODED_RUSTFLAGS','LD_PRELOAD','LD_LIBRARY_PATH')):
+    if any(os.environ.get(key) for key in ('RUSTFLAGS','CARGO_ENCODED_RUSTFLAGS','LD_PRELOAD','LD_LIBRARY_PATH','SIFR_SYSROOT','SIFR_SYSROOT_MODE')):
         raise BenchmarkError('unregistered compiler/runtime override prevents program preparation')
     output=output.resolve()
     output.parent.mkdir(parents=True,exist_ok=True)
     resources=discover(disk_path=output.parent)
-    admission=admit(resources, {'disk_growth_bytes':6*1024**3,'retained_copy_bytes':512*1024**2,
-                               'disk_reserve_bytes':8*1024**3,'memory_peak_bytes':6*1024**3,
-                               'tmpfs_growth_bytes':0,'memory_reserve_bytes':2*1024**3})
+    allocation=contract['resource_profiles'][resource_profile]
+    admission=admit(resources,allocation)
     output.mkdir(parents=True,exist_ok=False,mode=0o700)
     rows=[]
     cargo=shutil.which('cargo');rustc=shutil.which('rustc')
@@ -142,25 +142,32 @@ def prepare(compiler_receipt: Path, output: Path):
     previous={key:os.environ.get(key) for key in (
         'SIFR_CARGO','SIFR_RUSTC','PROGRAM_CARGO','PROGRAM_CARGO_EVENTS','PROGRAM_RUSTC',
         'PROGRAM_RUSTC_EVENTS','RUSTFLAGS','SIFR_CACHE_DIR','CARGO_TARGET_DIR','CARGO_BUILD_JOBS',
-        'SIFR_VERIFY_DISK_FLOOR_BYTES','SIFR_VERIFY_DISK_FLOOR_PATH')}
+        'SIFR_VERIFY_DISK_FLOOR_BYTES','SIFR_VERIFY_DISK_FLOOR_PATH','SIFR_SYSROOT','SIFR_SYSROOT_MODE','CARGO_NET_OFFLINE')}
 
     os.environ.update(SIFR_CARGO=str(wrapper),SIFR_RUSTC=str(rust_wrapper),PROGRAM_CARGO=cargo,
                       PROGRAM_CARGO_EVENTS=str(events),RUSTFLAGS='-C target-cpu=generic',
                       PROGRAM_RUSTC=rustc,PROGRAM_RUSTC_EVENTS=str(rust_events),
                       SIFR_CACHE_DIR=str(output/'cache'),CARGO_TARGET_DIR=str(output/'private-target'),
                       CARGO_BUILD_JOBS=str(worker_limit(resources,2)),
-                      SIFR_VERIFY_DISK_FLOOR_BYTES=str(max(9*1024**3,int(previous['SIFR_VERIFY_DISK_FLOOR_BYTES'] or '0'))),
+                      SIFR_VERIFY_DISK_FLOOR_BYTES=str(max(allocation['disk_reserve_bytes']+1024**3,int(previous['SIFR_VERIFY_DISK_FLOOR_BYTES'] or '0'))),
                       SIFR_VERIFY_DISK_FLOOR_PATH=previous['SIFR_VERIFY_DISK_FLOOR_PATH'] or str(output.parent))
+    os.environ['CARGO_NET_OFFLINE']='true'
+    if compiler['lane']=='contributor-dev':
+        os.environ.update(SIFR_SYSROOT=compiler['sysroot']['path'],SIFR_SYSROOT_MODE='source')
     (output/'preparation-state.json').write_text(json.dumps({'status':'incomplete','runtime_assertions':0,'admission':admission}))
     try:
         for case in contract['cases']:
+            copied=output/'sources'/Path(case['source_path']).name
+            copied.parent.mkdir(exist_ok=True,mode=0o700)
+            shutil.copyfile(ROOT/case['source_path'],copied)
+            if digest(copied)!=case['source_sha256']: raise BenchmarkError('program source copy differs')
             destination=output/case['id']
             os.environ['SIFR_CACHE_DIR']=str(output/'cache'/case['id'])
             os.environ['CARGO_TARGET_DIR']=str(output/'private-target'/case['id'])
             cargo_begin=events.stat().st_size if events.exists() else 0
             rustc_begin=rust_events.stat().st_size if rust_events.exists() else 0
-            completed,deadline=run_owned_process([compiler['artifact']['path'],'build',str(ROOT/case['source_path']),
-                                                  '--release','--output',str(destination)],ROOT,2400)
+            completed,deadline=run_owned_process([compiler['artifact']['path'],'--isolated','build',str(copied),
+                                                  '--release','--output',str(destination)],output,2400)
             (output/(case['id']+'.compile.stdout')).write_text(completed.stdout)
             (output/(case['id']+'.compile.stderr')).write_text(completed.stderr)
             if deadline or completed.returncode:
@@ -168,27 +175,21 @@ def prepare(compiler_receipt: Path, output: Path):
             binary=destination/'sifr_output/target/final/sifr_output'
             cargo_end=events.stat().st_size;rustc_end=rust_events.stat().st_size
             artifact_rows=[json.loads(line) for line in events.read_bytes()[cargo_begin:cargo_end].decode().splitlines() if line.startswith('{')]
-            actual=[row for row in artifact_rows if row.get('reason')=='compiler-artifact' and
-                    row.get('target',{}).get('name')=='sifr_output' and row.get('executable')]
-            if not actual:
-                raise BenchmarkError('application Cargo artifact evidence missing')
-            artifact=actual[-1]
+            invocations=[json.loads(line) for line in rust_events.read_bytes()[rustc_begin:rustc_end].decode().splitlines()]
+            artifact,actual_rustc=application_events(artifact_rows,invocations,binary)
             profile=artifact['profile']
             if (profile['test'] or profile['opt_level']!='3' or profile['debug_assertions']
                     or not profile['overflow_checks'] or digest(artifact['executable']) != digest(binary)):
                 raise BenchmarkError('native application profile/artifact differs from release contract')
-            invocations=[json.loads(line) for line in rust_events.read_bytes()[rustc_begin:rustc_end].decode().splitlines()]
-            actual_rustc=[args for args in invocations if '--crate-name' in args and
-                          args[args.index('--crate-name')+1]=='sifr_output']
-            if not actual_rustc or not target_cpu_generic(actual_rustc[-1]):
+            if not target_cpu_generic(actual_rustc):
                 raise BenchmarkError('actual application rustc command lacks registered CPU target')
             protected=output/'binaries'/case['id'];protected.parent.mkdir(exist_ok=True,mode=0o700)
             shutil.copyfile(binary,protected);protected.chmod(0o500)
             if digest(protected)!=digest(binary): raise BenchmarkError('retained native program bytes changed')
             rows.append({'id':case['id'],'binary':str(protected),'binary_sha256':digest(protected),
-                         'rustc_command':actual_rustc[-1],
+                         'rustc_command':actual_rustc,
                          'cargo_events_range':[cargo_begin,cargo_end],'rustc_events_range':[rustc_begin,rustc_end],
-                         'source_sha256':case['source_sha256'],'cargo_artifact':artifact,
+                         'source_sha256':case['source_sha256'],'compiled_source_path':str(copied),'cargo_artifact':artifact,
                          'runtime_dependencies':dependencies(binary)})
     except BaseException as error:
         (output/'preparation-state.json').write_text(json.dumps({'status':'failed','runtime_assertions':0,
@@ -210,7 +211,7 @@ def prepare(compiler_receipt: Path, output: Path):
              'compiler_receipt_sha256':digest(compiler_receipt),'programs':rows,
              'compile_time_scope':'separate preparation logs; excluded from all program observations',
              'target_cpu':'generic','optimization':'release','cargo_events_sha256':digest(events),
-             'rustc_events_sha256':digest(rust_events),'admission':admission}
+             'rustc_events_sha256':digest(rust_events),'admission':admission,'resource_profile':resource_profile}
     (output/'preparation-state.json').write_text(json.dumps({'status':'prepared','runtime_assertions':0}))
     (output/'prepared.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt
@@ -282,11 +283,12 @@ def main():
     parser.add_argument('--compiler-receipt',type=Path)
     parser.add_argument('--prepared',type=Path)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--resource-profile',choices=('standard','constrained'),default='standard')
     parser.add_argument('--level',choices=('smoke','representative','full'),default='smoke')
     args=parser.parse_args()
     if args.command=='prepare':
         if not args.compiler_receipt: parser.error('--compiler-receipt required')
-        prepare(args.compiler_receipt,args.output)
+        prepare(args.compiler_receipt,args.output,args.resource_profile)
     elif args.command=='check':
         validate_capture(args.output,policy(),ROOT)
     else:
