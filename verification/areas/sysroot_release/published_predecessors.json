@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "owner": "release/qualification",
+  "repository": "sifr-lang/sifr",
+  "release_id": 368902044,
+  "version": "0.1.0-beta.16",
+  "published_at": "2026-08-11T23:08:55Z",
+  "source_commit": "11581e0630407d397079c032d0cd30fb87f4795e",
+  "assets": [
+    {
+      "id": 510759017,
+      "name": "sifr-0.1.0-beta.16-aarch64-apple-darwin.tar.gz",
+      "size": 72341053,
+      "digest": "sha256:f8ec4826272c85a7522b1c780fbc88eb0470196b4782d666eb0e2f1b8b228c4f",
+      "browser_download_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.16/sifr-0.1.0-beta.16-aarch64-apple-darwin.tar.gz"
+    },
+    {
+      "id": 510759016,
+      "name": "sifr-0.1.0-beta.16-aarch64-unknown-linux-gnu.tar.gz",
+      "size": 73236905,
+      "digest": "sha256:1f5beef1c29429b7c1992cb43c482973188d127db08c94f6cd853349dff4ac27",
+      "browser_download_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.16/sifr-0.1.0-beta.16-aarch64-unknown-linux-gnu.tar.gz"
+    },
+    {
+      "id": 510759014,
+      "name": "sifr-0.1.0-beta.16-x86_64-apple-darwin.tar.gz",
+      "size": 73104156,
+      "digest": "sha256:c3bd43fad91d3758b01198b4ce305d8d24f00b61d185dbbfeaaa5f97512fef82",
+      "browser_download_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.16/sifr-0.1.0-beta.16-x86_64-apple-darwin.tar.gz"
+    },
+    {
+      "id": 510759022,
+      "name": "sifr-0.1.0-beta.16-x86_64-unknown-linux-gnu.tar.gz",
+      "size": 73787525,
+      "digest": "sha256:8d796c321cc2b5a898c5e751c6769154b068060a69ae3aa302051e4fa9bb5448",
+      "browser_download_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.16/sifr-0.1.0-beta.16-x86_64-unknown-linux-gnu.tar.gz"
+    }
+  ],
+  "receipt_kind": "preparation-output",
+  "runtime_assertions": 0
+}
