@@ -4,6 +4,18 @@ from include_source_declarations import stable,exact_declaration,association
 
 
 def parent_relation(owner,native,owners,stage,roots,records,inputs,api,native_owners,seen=()):
+    identity=stable(owner['identity'])
+    require(identity not in seen,'cyclic original semantic owner parent relation',api)
+    # Reuse only within these same complete immutable original inventories and
+    # this exact native owner/source context. Distinct include roots stay apart.
+    cache=getattr(roots,'parent_relations',None)
+    if cache is None:cache=roots.parent_relations={}
+    key=(id(owners),id(stage),id(native_owners),identity,native['owner'],native['syntax']['root'],native['syntax']['node'])
+    if key not in cache:cache[key]=_parent_relation(owner,native,owners,stage,roots,records,inputs,api,native_owners,seen)
+    return cache[key]
+
+
+def _parent_relation(owner,native,owners,stage,roots,records,inputs,api,native_owners,seen=()):
     key=stable(owner['identity'])
     require(key not in seen,'cyclic original semantic owner parent relation',api)
     parents=[o for o in owners if stable(o['identity'])==stable(owner['parent'])]

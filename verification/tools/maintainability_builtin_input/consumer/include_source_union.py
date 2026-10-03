@@ -72,13 +72,14 @@ def publish(contexts,fixtures,destination,main_root,repeat_root,fixture_roots,ap
         require(key not in observed and key in required,'duplicate/unexpected original context qualification',api);observed.add(key)
         original=tuple(Path(binding['path']).read_bytes() for binding in inputs['original_inventory'])
         authority=restore(original,inputs,api)
+        del original
         # Every original file, cross-stage inventory and control input is
         # authenticated again before accepting the held consumer derivation.
         authenticate(authority,receipt,api)
         require(inputs['source_candidate']==candidate and ctx['target']=='x86_64-unknown-linux-gnu','original union candidate/target drift',api)
         require(canonical.file_digest(value.proof_path)==value.proof_digest==receipt['proof_digest'],'redigested/swapped publication projection',api)
         records.append({'context':ctx,'root':inputs['root'],'proof_path':value.proof_path,'proof_digest':value.proof_digest,'original_inventory':inputs['original_inventory'],'qualification':decode(value.qualification)})
-        del original,authority
+        del authority
     require(observed==required,'missing required original context: no partial diagnostic publication',api)
     artifact={'schema':'sifr-maintainability-complete-include-source-diagnostic-v1','candidate':candidate,'semantic_export':False,'accepted_complete_union':True,'contexts':records,'original_fixture_cases':list(fixtures.cases),'fixture_log':fixtures.log_path,'fixture_log_digest':fixtures.log_digest}
     temporary=destination.with_suffix(destination.suffix+'.tmp');temporary.write_bytes(api.encoded(artifact));temporary.replace(destination)

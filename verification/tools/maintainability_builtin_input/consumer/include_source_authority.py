@@ -6,7 +6,9 @@ from pathlib import Path
 import shutil
 import sys
 import weakref
+import zlib
 import include_source_encoding as canonical
+import include_source_originals as storage
 
 _SEAL=object()
 _REGISTERED=weakref.WeakValueDictionary()
@@ -24,11 +26,16 @@ def decode(data):
 
 @dataclass(frozen=True)
 class Authority:
-    source_membership:bytes
-    compiler_semantics:bytes
-    stage_observations:bytes
+    originals:tuple
     inputs:bytes
     seal:object
+
+    @property
+    def source_membership(self):return self.originals[0].raw()
+    @property
+    def compiler_semantics(self):return self.originals[1].raw()
+    @property
+    def stage_observations(self):return self.originals[2].raw()
 
 
 def require(condition,reason,api):
@@ -41,7 +48,7 @@ def register(source,semantic,stage,inputs,api):
 
 def restore(originals,inputs,api):
     require(len(originals)==3 and all(type(v) is bytes for v in originals),'missing complete independent original bytes',api)
-    value=Authority(*originals,api.encoded(inputs),_SEAL)
+    value=Authority(tuple(storage.Original.hold(v) for v in originals),api.encoded(inputs),_SEAL)
     _REGISTERED[id(value)]=value
     return value
 
@@ -49,9 +56,11 @@ def restore(originals,inputs,api):
 def authenticate(authority,receipt,api):
     require(isinstance(authority,Authority) and authority.seal is _SEAL and _REGISTERED.get(id(authority)) is authority,'replaced/unregistered original include-source authority',api)
     inputs=decode(authority.inputs)
+    require(inputs['original_storage_runtime']=={'path':str(Path(zlib.__file__).resolve()),'compiled':zlib.ZLIB_VERSION,'loaded':zlib.ZLIB_RUNTIME_VERSION},'lossless original storage runtime drift',api)
     require(len(inputs['original_inventory'])==3,'incomplete independent original authority inventory',api)
-    for original,binding in zip((authority.source_membership,authority.compiler_semantics,authority.stage_observations),inputs['original_inventory']):
-        require(api.digest(original)==binding['sha256']==inputs['files'].get(binding['path']),'replaced independent original authority bytes',api)
+    for original,binding in zip(authority.originals,inputs['original_inventory']):
+        require(original.digest()==binding['sha256']==inputs['files'].get(binding['path']),'replaced independent original authority bytes',api)
+    storage.authenticate_decoded(authority)
     require(api.encoded(receipt['inputs'])==authority.inputs,'replaced original include-source input inventory',api)
     require(api.run(['git','rev-parse','HEAD'],cwd=inputs['root']).stdout.strip()==inputs['source_candidate'] and list(os.uname())==inputs['host'] and sys.version==inputs['python_runtime'],'original candidate/host/runtime drift',api)
     require({k:api.digest(v.encode()) for k,v in os.environ.items() if not k.startswith('SIFR_BUILTIN_')}==inputs['parent_environment'],'original top-level consumer environment drift',api)
@@ -83,4 +92,4 @@ def authenticate(authority,receipt,api):
 
 
 def read_originals(authority):
-    return decode(authority.source_membership),decode(authority.compiler_semantics),decode(authority.stage_observations)
+    return storage.read(authority,decode)

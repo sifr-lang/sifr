@@ -118,7 +118,17 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
 
     def test_coordinated_include_source_mutations_fail_closed(self):
         proof,receipt,authority=self.fixture_capture('attributes');assertions.inventories(self,proof,receipt,authority,b);negatives.matrix(self,proof,receipt,authority);negatives.cache_matrix(self,self.last_output,self.identity)
-        del proof,receipt,authority;gc.collect()
+        for original,binding in zip((authority.source_membership,authority.compiler_semantics,authority.stage_observations),receipt['inputs']['original_inventory']):
+            self.require(original==Path(binding['path']).read_bytes(),'caller-held lossless storage preserves the complete actual original bytes')
+        source,_,_=read_originals(authority)
+        ancestors=source['native']['include_contexts'][0]['context']['include_ancestors']
+        saved=list(ancestors)
+        try:
+            ancestors.clear()
+            negatives.reject(self,proof,receipt,authority,'cached-complete-original-decode-mutation')
+        finally:ancestors[:]=saved
+        self.require(verify(proof,receipt,authority,b)['diagnostic_relation'],'complete decoded original restoration retains the independently held immutable positive')
+        del proof,receipt,authority,source,ancestors,saved;gc.collect()
         proof,receipt,authority=self.fixture_capture('hrtb');assertions.generics(self,proof,receipt,authority,b);negatives.semantic_matrix(self,proof,receipt,authority)
         path=self.fixture/'include_probe_hrtb/src/included.rs';original=path.read_bytes()
         try:
