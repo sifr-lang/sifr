@@ -121,6 +121,8 @@ def run_profile_with_report(
     outcomes = execution_outcomes() if execution_outcomes is not None else {
         "functional_exit_status": status, "performance_exit_status": 0,
     }
+    if profile_name != "cloud":
+        status = status or outcomes["functional_exit_status"] or outcomes["performance_exit_status"]
     try:
         reports.summarize(
             argparse.Namespace(

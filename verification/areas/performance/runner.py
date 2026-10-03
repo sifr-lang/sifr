@@ -68,6 +68,11 @@ def main(argv: list[str] | None = None) -> int:
     cloud = os.environ.get("SIFR_VALIDATION_PROFILE") == "cloud"
     if cloud:
         os.environ.pop("SIFR_PERFORMANCE_REFERENCE", None)
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    selected = select_suites(manifest, set(args.suite))
+    measurements = any(suite["name"] in {"smoke", "representative", "full"} for suite in selected)
+    if not measurements:
+        os.environ.pop("SIFR_PERFORMANCE_REFERENCE", None)
     if os.environ.get("SIFR_PERFORMANCE_REFERENCE"):
         try:
             load_profile(os.environ["SIFR_PERFORMANCE_REFERENCE"])
@@ -75,9 +80,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(str(error)) from error
     if args.bless:
         raise SystemExit("performance area does not support --bless")
-    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    selected = select_suites(manifest, set(args.suite))
-    if not cloud and any(suite["name"] in {"rules", "smoke", "representative", "full"} for suite in selected):
+    if not cloud and measurements:
         try:
             profile = admit_reference(os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
         except (ReferenceProfileError, TrendPolicyError, BudgetError, ValueError, OSError, KeyError) as error:
