@@ -1,11 +1,13 @@
 """Cloud policy detects regressions without requiring quiet raw timings."""
 
 import copy
+import math
 import random
 import unittest
 
 from cloud_contract import evaluate, threshold
-from cloud_statistics import PAIRS, assumption_screens, median_interval, schedule
+from cloud_precision import PAIR_COUNTS
+from cloud_statistics import FAMILY_ALPHA, PAIRS, assumption_screens, median_interval, schedule
 
 
 def corpus(multiplier=1.0):
@@ -56,13 +58,65 @@ class CloudPolicyTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 evaluate(manifest, budgets, pairs)
 
-    def test_observed_editor_ceiling_remains_strict(self):
+    def test_empirical_editor_p95_breach_remains_strict(self):
         manifest, budgets, pairs = corpus()
         budgets["budgets"][0]["policy"] = "lsp-query"
         pairs["case"][0]["candidate"]["latencies_ms"] = [2000]
+        pairs["case"][1]["candidate"]["latencies_ms"] = [2000]
         result = evaluate(manifest, budgets, pairs)
         self.assertEqual(result["status"], "regression")
-        self.assertIn("observed-sample-latency-ceiling", result["results"][0]["hard_failures"])
+        self.assertIn("observed-empirical-p95-budget", result["results"][0]["hard_failures"])
+
+    def test_isolated_spike_does_not_change_p95_into_maximum(self):
+        manifest, budgets, pairs = corpus()
+        budgets["budgets"][0]["policy"] = "lsp-query"
+        for row in pairs["case"]:
+            for endpoint in ("baseline", "candidate"):
+                row[endpoint]["latencies_ms"] = [100]
+        pairs["case"][0]["candidate"]["latencies_ms"] = [2000]
+        result = evaluate(manifest, budgets, pairs)
+        self.assertEqual(result["status"], "pass")
+        self.assertEqual(result["results"][0]["descriptive_p95_ms"], 100)
+        self.assertFalse(result["p95_qualified"])
+
+    def test_frozen_precision_plan_and_balanced_schedules(self):
+        self.assertEqual(len(PAIR_COUNTS), 65)
+        self.assertEqual(sum(PAIR_COUNTS.values()), 5120)
+        for case_id, count in PAIR_COUNTS.items():
+            orders = schedule(case_id)
+            self.assertEqual(len(orders), count)
+            self.assertEqual(orders.count("AB"), count // 2)
+            self.assertEqual(orders, schedule(case_id))
+
+    def test_heterogeneous_count_is_mandatory_without_internal_pseudoreplication(self):
+        manifest, budgets, pairs = corpus()
+        case_id = "build-project-003-cargo-manifest"
+        manifest["cases"][0]["id"] = case_id
+        budgets["budgets"][0]["benchmark_id"] = case_id
+        template = pairs["case"][0]
+        rows = []
+        for order in schedule(case_id):
+            row = copy.deepcopy(template)
+            row["order"] = order
+            for endpoint in ("baseline", "candidate"):
+                row[endpoint]["case_id"] = case_id
+                row[endpoint]["latencies_ms"] = [1000]
+            rows.append(row)
+        result = evaluate(manifest, budgets, {case_id: rows})
+        self.assertEqual(result["status"], "pass")
+        self.assertEqual(result["pairs_by_case"], {case_id: 192})
+        rows.pop()
+        with self.assertRaises(ValueError):
+            evaluate(manifest, budgets, {case_id: rows})
+
+    def test_large_count_interval_keeps_exact_family_error_allocation(self):
+        for count in (64, 192, 928):
+            lower, upper = median_interval(list(range(count)), 65, count)
+            probability = sum(math.comb(count, j) for j in range(lower + 1)) / 2 ** count
+            next_probability = probability + math.comb(count, lower + 1) / 2 ** count
+            self.assertLessEqual(probability, FAMILY_ALPHA / (2 * 65))
+            self.assertGreater(next_probability, FAMILY_ALPHA / (2 * 65))
+            self.assertEqual(upper, count - lower - 1)
 
     def test_real_rss_and_cache_breaches_rejected(self):
         for key, value in [("peak_rss_bytes", 100000000), ("cache", {"hits": 0, "misses": 1})]:
@@ -100,7 +154,7 @@ class CloudPolicyTests(unittest.TestCase):
             for key in ("baseline", "candidate"):
                 row[key]["latencies_ms"] *= 5
         result = evaluate(manifest, budgets, pairs)
-        self.assertEqual(result["pairs_per_case"], PAIRS)
+        self.assertEqual(result["pairs_by_case"], {"case": PAIRS})
         self.assertEqual(result["status"], "pass")
 
 
