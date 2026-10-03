@@ -186,6 +186,20 @@ baseline. Failed and blocked cases remain failures during collection and bless.
 Raw diagnostics remain in the area report and mismatch artifacts; failures stream
 as each case finishes. Specialized area runners retain their suite selectors.
 
+Linux verification subprocesses use a dedicated child subreaper. It terminates
+and reaps the command's descendants, including descendants that create another
+session, after completion, cancellation, or a safety deadline. PID file
+descriptors prevent cleanup signals from reaching a reused PID. The execution
+host must provide Linux subreaper and pidfd support; startup rejects unavailable
+custody before launching the command. Other hosts retain session-group teardown.
+A private completion channel confirms cleanup and the native command status;
+missing confirmation or supervisor failure is an infrastructure error. A fatal
+supervisor failure cannot establish that escaped descendants were reaped and
+never qualifies a successful run. Unrelated children remain outside this custody.
+Startup blocks cancellation signals until handlers are installed. Linux teardown
+keeps the leader unreaped until its process group has been terminated, so that
+group's identifier cannot be reused during cleanup.
+
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to
 their existing Rust-check, snapshot, formatting and quality obligations. Their

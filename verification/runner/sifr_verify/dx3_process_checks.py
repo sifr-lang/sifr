@@ -337,11 +337,11 @@ class ProcessTests(unittest.TestCase):
         from .step_budgets import StepBudgetContext
         inherited_deadline = os.environ.get(SAFETY_DEADLINE_ENV)
         runner = ProfileRunner("create-pr", [])
-        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".2"
+        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".6"
         runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
         def step():
             for _ in range(2):
-                run_command([sys.executable, "-c", "import time; time.sleep(.12)"],
+                run_command([sys.executable, "-c", "import time; time.sleep(.35)"],
                             env=runner.env)
         with contextlib.redirect_stdout(io.StringIO()):
             status = runner.execute_step("fixture", step)

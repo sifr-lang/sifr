@@ -21,6 +21,7 @@ from .errors import SchemaError
 from .dx10_profile_checks import policy_checks as dx10_profile_checks
 from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
 from .dx3_process_checks import policy_checks as dx3_process_checks
+from .process_recovery_checks import policy_checks as process_recovery_checks
 from .profile_area_steps import run_selected_area
 from .python_interop_segmentation_checks import policy_checks as python_interop_segmentation_checks
 from .profile_results import AreaResultError, validate_area_result
@@ -61,6 +62,7 @@ GOVERNANCE_SCHEMA_COUNT = 20
 
 def run_all() -> list[str]:
     checks = [
+        ("Linux escaped descendant recovery", process_recovery_checks),
         ("resource admission and owned graph lifetimes", resource_schedule_checks),
         ("validation contracts and execution evidence", validation_contract_checks),
         ("DX.10 application and configuration profiles", dx10_profile_checks),

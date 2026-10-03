@@ -282,6 +282,70 @@ here rather than treating the plan itself as execution evidence.
 
 ## M2 scheduling checkpoint — 2026-10-03
 
+### Owned descendant recovery continuation
+
+- The constrained execution of `d5cedf1a3091e10adc93d33b85c32b769891eafb`
+  continues in `/workspace/sifr`; its source and targets are unchanged. This
+  continuation owns the sparse worktree `/workspace/sifr-validation-recovery`
+  and branch `codex/validation-recovery-checkpoints-20261003`, based on that
+  candidate. It does not claim that the running candidate has passed.
+- Linux commands now run under a dedicated child subreaper with parent-death
+  cancellation, process-identity checks, and PID file descriptors. All children
+  adopted by this private supervisor belong to its command; unrelated direct
+  children of the runner are neither signalled nor reaped. A private completion
+  channel preserves native status and rejects unconfirmed cleanup as an
+  infrastructure error. The host must support these kernel primitives; failure
+  rejects command startup rather than silently weakening custody. Other hosts
+  retain their existing group teardown.
+- Real failure injection covers detached, SIGTERM-ignoring descendants after
+  normal exit, deadline, and cancellation; unrelated-child isolation; missing
+  executables; native signal status; and fatal supervisor failure. A fatal
+  supervisor failure cannot prove escaped descendants were reaped and remains
+  unqualified. The failure injection owns a separate subreaper for its test
+  orphans. These are recovery assertions, not compiler/performance qualification.
+- The initial prototype assumed `/proc/<pid>/task/<pid>/children`; this host
+  does not expose it. Its failed test is preserved in the execution transcript.
+  The implementation reads process relationships and start times from `/proc`
+  stat records instead. The first existing deadline test failed because its
+  0.2-second budget included new supervisor startup; the corrected test keeps
+  total successive command duration greater than each independent deadline.
+  Both failed and corrected raw outputs remain outside Git.
+- Targeted process tests: 36 passed, raw
+  `/workspace/validation-work/evidence/m2-recovery-custody-final.log`.
+  Canonical profiles and the 900-line guardrail passed. The first full runner
+  self-test encountered its pre-existing `target/` setup assumption in this fresh
+  worktree; its raw failure is retained. The retry creates only this worktree's
+  owned target directory; all 26 runner self-test groups then passed, raw
+  `/workspace/validation-work/evidence/m2-recovery-runner-selftest-prepared.log`.
+  Scoped review and implementation PR/merge acceptance still require final
+  candidate evidence.
+- Correctness-checkpoint consumption and M3–M6 remain unfinished. This bounded
+  item changes process custody only and preserves selected assertions and all
+  performance protocols. Parent startup is outside command-body timing; any
+  protocol that measures the entire wrapper must bind the changed mechanism.
+- Scoped review of `c08e8708082729d04590f475025adf63698637e5` returned
+  `SATISFIED`, outside Git at
+  `/workspace/validation-work/evidence/candidates/c08e8708082729d04590f475025adf63698637e5/opus-recovery.md`.
+  [PR #4281](https://github.com/sifr-lang/sifr/pull/4281) is a draft stacked on
+  #4280; neither implementation PR is accepted or merged yet.
+- One follow-up batch closes review suggestions about startup signal races,
+  process-group PID reuse after leader reaping, JSON expansion of non-BMP error
+  text, and supervisor-generated core files. Signals are blocked across spawn
+  until the supervisor installs its handlers. Linux `waitid(WNOWAIT)` reserves
+  the leader's PID until group teardown finishes. Error metadata stays within
+  its byte bound; only the supervisor disables its own core dump after the
+  command has finished. New failure injection exercises these mechanisms,
+  unavailable kernel custody before command spawn, and a live escaped pipe
+  holder after supervisor death. Native status and selected work remain intact.
+- Follow-up targeted tests: 42 passed, raw
+  `/workspace/validation-work/evidence/m2-recovery-hardening-corrected.log`;
+  all 26 runner self-test groups passed, raw
+  `/workspace/validation-work/evidence/m2-recovery-hardening-runner-selftest.log`.
+  The first expanded test caught non-BMP JSON expansion exceeding the pipe frame
+  bound; that failure remains in `m2-recovery-hardening-expanded.log` and was
+  corrected before acceptance. The changed mechanisms require scoped review
+  on their new committed candidate; the earlier approval covers only `c08e87080`.
+
 - Mechanism remediation review of `e9b3eda6726c240f7d2741fd9bef454646212a21`
   returned **SATISFIED**, with no blockers. Evidence is outside Git at
   `/workspace/validation-work/evidence/candidates/e9b3eda6726c240f7d2741fd9bef454646212a21/opus-m1-m2.md`.
