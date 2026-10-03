@@ -14,7 +14,8 @@ def main():
     record={'schema':'sifr-maintainability-original-invocation-v1','compiler':compiler,'args':args,'cwd':os.getcwd(),'environment':dict(os.environ)}
     if 'RUSTC_BOOTSTRAP' in record['environment']:
         raise RuntimeError('bootstrap reached original normal Cargo control')
-    status=subprocess.run([compiler,*args]).returncode
+    # Cargo marks its jobserver descriptors inheritable; keep that exact channel.
+    status=subprocess.run([compiler,*args],close_fds=False).returncode
     record['compiler_status']=status
     data=json.dumps(record,sort_keys=True,separators=(',',':')).encode()
     destination=Path(os.environ['SIFR_BUILTIN_ORIGINAL_INVOCATIONS'])/(str(uuid.uuid4())+'-'+hashlib.sha256(data).hexdigest()+'.json')
