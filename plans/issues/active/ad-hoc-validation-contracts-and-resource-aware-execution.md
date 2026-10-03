@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 review findings corrected; authenticated final review pending
+current_stage: M0 delivered; M1 implementation in progress
 
 ## Objective and authority
 
@@ -56,8 +56,8 @@ and disposition. Split large milestones into independently reviewable changes.
 
 | ID | Deliverable | Brief coverage | Status |
 |---|---|---|---|
-| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; review corrections implemented; final review pending |
-| M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | pending |
+| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; delivered in #4279 |
+| M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | in progress |
 | M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | pending |
 | M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | pending |
 | M4 | Compiler performance levels and separate generated-program benchmarks | 7–9, 14, 20 | pending |
@@ -221,13 +221,11 @@ in M0 and the relevant stage contracts. Targeted checks belong to the bounded
 item; the authoritative gate belongs to the final candidate under applicable
 policy. Required release checks remain conditional on a real release request.
 
-Current state: M0 inventory and agent simplification implemented and validated;
-initial authenticated review found documentation regressions, now corrected.
-M1–M6 remain pending.
+Current state: M0 delivered through #4279; M1 implementation in progress;
+M2–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: verify final M0 reviewer satisfaction, deliver M0, then implement
-M1 contracts/evidence. Subsequent items record candidate
+Next action: implement M1 canonical stage contracts and execution evidence. Subsequent items record candidate
 SHA, changed paths, commands, outcomes, review, dependencies, and exact next action
 here rather than treating the plan itself as execution evidence.
 
@@ -237,7 +235,7 @@ here rather than treating the plan itself as execution evidence.
   `codex/validation-contracts-resource-aware-20261003`, base
   `da57229746b0793577d257b29f1382baf60b37b0`.
 - Draft implementation [PR #4279](https://github.com/sifr-lang/sifr/pull/4279).
-- `AGENTS.md` reduced from 156 to 60 lines. The complete proposal, current-state
+- `AGENTS.md` reduced from 132 to 64 lines after review corrections. The complete proposal, current-state
   inventory and roadmap entry are delivered in the candidate; no executable
   selection, workflow, protection or performance policy has been changed.
 - Passed: pinned-tool `profiles check`, file-size guardrails (4,338 source files),
@@ -270,9 +268,39 @@ here rather than treating the plan itself as execution evidence.
   inventoried without claiming a measurement in this VM. M0 completes the source,
   selection, resource, ownership and enforcement entry inventory.
 - Empty guardrail labels now say `none`, and the verification command reference
-  preserves CLI unit-test/E2E entrypoints. Final authenticated review is pending;
-  M1–M6, protected enforcement, SQL acceptance and release qualification retain
-  their pending status.
+  preserves CLI unit-test/E2E entrypoints.
+- Final authenticated Opus review of `a02d8e1394045da8e2cbc67003741d23a6aa171d`
+  returned SATISFIED with no blockers. Exact-candidate review is retained outside
+  the reviewed tree at `/workspace/validation-work/evidence/candidates/a02d8e1394045da8e2cbc67003741d23a6aa171d/opus-m0.md`.
+  The whole-candidate documentation checks pass. #4279 merged as
+  `2bc2ebfc40db66619ab39134b12e7c9d9817ee7e`. M0 is delivered; historical failed
+  requests and the initial NOT SATISFIED verdict retain their original status.
+- The user authorizes working sequentially through the whole plan, superseding
+  the skill's stop-after-one-delivered-item/start-new-session convention. Required
+  checks and reviews still apply to each actual implementation candidate.
+  M1–M6, protected enforcement, SQL acceptance and release qualification are open.
+
+## M1 implementation checkpoint — 2026-10-03
+
+The stage-policy/schema/CLI derive complete current selection from existing
+profiles/manifests and preserve the live merge inventory for shared-cloud
+correctness. The [contracts policy](../../../verification/policy/validation_contracts.md)
+records stage boundaries, compatibility/support/security authorities and claims.
+Input-bound correctness evidence validates source/runtime/command/selector/service/
+artifact/producer bindings, complete selected-ID accounting, actual execution and
+explicit runtime/compile/validation kinds; immutable output preserves old failures.
+Cross-commit reuse is deliberately conservative pending M3's equivalence protocol.
+
+Passed: 18 new contract/evidence negative tests, existing runner self-tests, strict
+coverage matrix and assignment checks, and file-size guardrails. The actual
+`create-pr` invocation failed before compiler setup at performance reference
+admission because no dedicated `SIFR_PERFORMANCE_REFERENCE` is selected; the raw
+failure is preserved at `/workspace/validation-work/evidence/m1-create-pr.log` and
+is not acceptance evidence. This is the functional starvation explicitly owned
+by the plan's cloud execution work, and is to be resolved through the existing
+#4259 route with M2 scheduling. No implementation PR/merge acceptance is claimed
+for M1 yet. Current implementation remains in the owned
+`codex/validation-contracts-evidence-20261003` branch.
 
 ## Supplied implementation brief — complete scope contract
 

@@ -199,3 +199,19 @@ persistent providers are not qualified until their provider qualification suites
 test them. Diagnostic example checks execute explicitly selected standalone
 check-fail/check-pass pairs and their explain/help surface; contextual package and
 runtime examples are not indiscriminately executed.
+
+## Stage contracts and execution evidence
+
+The [validation contracts](policy/validation_contracts.md) derive stage selections
+from canonical profiles/manifests and distinguish selection from execution:
+
+```bash
+uv run --project verification --locked python -m sifr_verify contracts check
+uv run --project verification --locked python -m sifr_verify contracts plan --stage merge
+```
+
+The correctness evidence schema requires complete selected-ID accounting, actual
+execution, explicit execution kinds, trusted producer expectations, source/runtime/
+artifact bindings and retained-byte verification. Correctness checkpoints cannot
+qualify paired performance. Resource scheduling and protected CI enforcement are
+separate requirements; a contract plan alone is not an execution receipt.

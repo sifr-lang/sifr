@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "stages": [
+    {
+      "stage": "create-pr",
+      "profile": "create-pr",
+      "owner": "compiler/verification",
+      "cadence": "implementation PR candidate",
+      "boundary": "PR feedback; relevant specialist acceptance",
+      "execution_policy": "local-first",
+      "required_outcome": "passed",
+      "entrypoints": []
+    },
+    {
+      "stage": "merge",
+      "profile": "merge",
+      "owner": "compiler/verification",
+      "cadence": "final merge candidate",
+      "boundary": "trusted required aggregate on the candidate commit",
+      "execution_policy": "local-first",
+      "required_outcome": "passed",
+      "entrypoints": []
+    },
+    {
+      "stage": "nightly",
+      "profile": "nightly",
+      "owner": "compiler/verification",
+      "cadence": "scheduled explicit commit",
+      "boundary": "owned hardening defects block affected delivery",
+      "execution_policy": "hardening",
+      "required_outcome": "passed",
+      "entrypoints": []
+    },
+    {
+      "stage": "release",
+      "profile": "release",
+      "owner": "release/distribution",
+      "cadence": "actual release candidate",
+      "boundary": "source qualification before exact-artifact promotion",
+      "execution_policy": "release-source",
+      "required_outcome": "passed",
+      "entrypoints": []
+    },
+    {
+      "stage": "artifact-qualification",
+      "profile": "",
+      "owner": "release/distribution",
+      "cadence": "exact packages before promotion",
+      "boundary": "hash-verified artifact consumers and protected publication",
+      "execution_policy": "exact-artifact",
+      "required_outcome": "passed",
+      "entrypoints": [
+        "scripts/distribution/qualify_native_package.py",
+        "scripts/distribution/qualify_stable_editor.py"
+      ]
+    },
+    {
+      "stage": "python-interop-live",
+      "profile": "python-interop-live",
+      "owner": "compiler/verification",
+      "cadence": "explicit real-service request",
+      "boundary": "live integration contract; no offline substitution",
+      "execution_policy": "explicit-live",
+      "required_outcome": "passed",
+      "entrypoints": []
+    },
+    {
+      "stage": "cloud",
+      "profile": "merge",
+      "owner": "compiler/verification",
+      "cadence": "shared VM correctness candidate",
+      "boundary": "complete live merge correctness; independent performance verdict",
+      "execution_policy": "shared-cloud",
+      "required_outcome": "passed",
+      "entrypoints": []
+    }
+  ],
+  "supported_environments": "verification/areas/runtime_platform/supported_platforms.json",
+  "guarantees": "verification/areas/coverage_matrix/shipped_guarantees.json",
+  "surfaces": "verification/areas/coverage_matrix/compiler_surface_matrix.json",
+  "profile_assignments": "verification/areas/coverage_matrix/profile_assignment_matrix.json"
+}
