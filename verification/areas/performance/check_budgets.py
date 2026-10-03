@@ -69,6 +69,8 @@ def main() -> int:
             return 0
 
         manifest = load_json(Path(args.manifest))
+        if args.results != str(DEFAULT_BASELINES) and load_json(Path(args.results)).get("metadata", {}).get("sample_scale") == "smoke":
+            raise ReferenceProfileError("smoke evidence cannot qualify numeric performance budgets")
         reference = load_profile(args.reference_profile) if args.reference_profile else None
         if reference is not None:
             validate_manifest_binding(reference, Path(args.manifest))

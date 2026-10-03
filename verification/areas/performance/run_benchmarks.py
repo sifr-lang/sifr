@@ -244,6 +244,8 @@ def main() -> int:
             identity_after = reference_identity(REPO_ROOT, Path(args.manifest), args.controlled_host_mode)
             assert_producer_unchanged(identity, identity_after)
         run_report["metadata"]["sample_scale"] = args.sample_scale
+        run_report["metadata"]["qualification_scope"] = (
+            "smoke-unqualified" if args.sample_scale == "smoke" else "registered-reference-required")
         run_report["metadata"]["reference_compiler_commit"] = compiler_reference
         if identity is not None:
             run_report["metadata"]["host_cpu"] = ", ".join(identity["host"]["cpu_models"])
