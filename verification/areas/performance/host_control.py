@@ -465,7 +465,7 @@ def process_activity(
         {"logical_cpus": cpu_count}, control_mode
     )
     if output is None:
-        output = command_output(["ps", "-axo", "pid=,ppid=,pcpu=,comm=,args="])
+        output = command_output(["ps", "-axo", "pid=,ppid=,pcpu=,stat=,comm=,args="])
     rows = parse_process_rows(output)
     if not rows:
         return [], {
@@ -485,14 +485,18 @@ def process_activity(
 def parse_process_rows(output: str) -> list[tuple[int, int, float, str, str]]:
     rows: list[tuple[int, int, float, str, str]] = []
     for line in output.splitlines():
-        parts = line.strip().split(maxsplit=4)
-        if len(parts) < 5 or not parts[0].isdigit() or not parts[1].isdigit():
+        parts = line.strip().split(maxsplit=5)
+        if len(parts) < 6 or not parts[0].isdigit() or not parts[1].isdigit():
+            continue
+        # A measured zombie has exited and cannot consume CPU or run a build.
+        # This does not waive the separate owned-group disappearance check.
+        if parts[3].startswith("Z"):
             continue
         try:
             cpu_percent = float(parts[2])
         except ValueError:
             continue
-        rows.append((int(parts[0]), int(parts[1]), cpu_percent, parts[3], parts[4]))
+        rows.append((int(parts[0]), int(parts[1]), cpu_percent, parts[4], parts[5]))
     return rows
 
 
@@ -775,13 +779,22 @@ def run_self_test() -> None:
         )
     parsed_rows = parse_process_rows(
         "bad row\n"
-        "42 1 not-a-number /usr/bin/noop noop\n"
-        "43 1 12.5 /usr/bin/tool /usr/bin/tool --work\n"
+        "42 1 not-a-number S /usr/bin/noop noop\n"
+        "43 1 12.5 S /usr/bin/tool /usr/bin/tool --work\n"
+        "44 1 99.9 Zs cargo [cargo] <defunct>\n"
+        "45 1 0.0 Z rustc [rustc] <defunct>\n"
     )
     if parsed_rows != [
         (43, 1, 12.5, "/usr/bin/tool", "/usr/bin/tool --work")
     ]:
         raise HostControlError("host control self-test did not parse ps rows safely")
+    live, pressure = process_activity(
+        "900001 1 0.0 S cargo cargo build\n"
+        "900002 1 99.9 Zs rustc [rustc] <defunct>\n"
+        "900003 1 0.0 S sleeper sleeper '<defunct>'\n"
+    )
+    if live != [{"pid": 900001, "category": "cargo"}] or pressure["external_cpu_percent"] != 0:
+        raise HostControlError("host control did not distinguish live zero-CPU builds from zombies")
     unavailable_competitors, unavailable_cpu = process_activity("")
     if unavailable_competitors or unavailable_cpu["source"] != "unavailable":
         raise HostControlError(

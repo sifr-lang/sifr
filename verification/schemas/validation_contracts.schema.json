@@ -1,0 +1,89 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "stages",
+    "supported_environments",
+    "guarantees",
+    "surfaces",
+    "profile_assignments"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "supported_environments": {
+      "type": "string",
+      "format": "repo-relative-path"
+    },
+    "guarantees": {
+      "type": "string",
+      "format": "repo-relative-path"
+    },
+    "surfaces": {
+      "type": "string",
+      "format": "repo-relative-path"
+    },
+    "profile_assignments": {
+      "type": "string",
+      "format": "repo-relative-path"
+    },
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "stage",
+          "profile",
+          "owner",
+          "cadence",
+          "boundary",
+          "execution_policy",
+          "required_outcome",
+          "entrypoints"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "cadence": {
+            "type": "string"
+          },
+          "boundary": {
+            "type": "string"
+          },
+          "execution_policy": {
+            "type": "string"
+          },
+          "required_outcome": {
+            "type": "string",
+            "enum": [
+              "passed"
+            ]
+          },
+          "entrypoints": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "repo-relative-path"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -794,8 +794,8 @@ fn condition_comparison_and_truthiness_preserve_authority() {
 
 include!("method_authority_tests/checked_dict_keys.rs");
 
-include!("method_authority_tests/checked_sequence_exit.rs");
+include!("method_authority_tests/checked_sequence_exit_tests.rs");
 
-include!("method_authority_tests/nonempty_pop.rs");
+include!("method_authority_tests/nonempty_pop_tests.rs");
 
-include!("method_authority_tests/scalar_deque_representation.rs");
+include!("method_authority_tests/scalar_deque_representation_tests.rs");

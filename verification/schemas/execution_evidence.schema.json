@@ -1,0 +1,164 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "claim",
+    "key",
+    "selected",
+    "records",
+    "complete",
+    "started_at",
+    "finished_at",
+    "retained_artifacts",
+    "evidence_digest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "claim": {
+      "type": "string",
+      "enum": [
+        "correctness"
+      ]
+    },
+    "key": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "observed_commit",
+        "input_digest",
+        "inputs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "enum": [
+            1
+          ]
+        },
+        "observed_commit": {
+          "type": "string"
+        },
+        "input_digest": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "object"
+        }
+      }
+    },
+    "selected": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "state",
+          "phases",
+          "executed_count",
+          "elapsed_seconds",
+          "infrastructure",
+          "execution_kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "selected",
+              "validated",
+              "compiled",
+              "executed",
+              "passed",
+              "failed",
+              "skipped",
+              "blocked",
+              "infrastructure-failure"
+            ]
+          },
+          "phases": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "executed_count": {
+            "type": "integer"
+          },
+          "elapsed_seconds": {
+            "type": "number"
+          },
+          "infrastructure": {
+            "type": "string"
+          },
+          "execution_kind": {
+            "type": "string",
+            "enum": [
+              "runtime",
+              "compile",
+              "validation"
+            ]
+          }
+        }
+      }
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "finished_at": {
+      "type": "string"
+    },
+    "retained_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "requested_path",
+          "path",
+          "sha256",
+          "size_bytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "requested_path": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "evidence_digest": {
+      "type": "string"
+    }
+  }
+}

@@ -12,6 +12,10 @@ def source_build_configuration(root: Path, environment: dict[str, str]):
     env = environment.copy()
     env["CARGO_TARGET_DIR"] = str(target)
     env["CARGO_NET_OFFLINE"] = "true"
+    # This private qualification graph has one immutable source input. Keeping
+    # incremental edit caches adds gigabytes without serving a later consumer.
+    # Both preparation and boundary assertions use this same configuration.
+    env["CARGO_INCREMENTAL"] = "0"
     command = ["cargo", "build", "--locked", "--offline", "-p", "sifr"]
     return command, env, target / "debug" / "sifr"
 

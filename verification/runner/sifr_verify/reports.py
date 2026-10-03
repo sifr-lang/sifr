@@ -318,6 +318,13 @@ def summarize(args: argparse.Namespace) -> int:
     if warm_target_minutes > 0 and real_seconds > 0:
         within_budget = real_seconds <= warm_target_minutes * 60
     workers = lane_workers(lane)
+    observed_workers = getattr(args, "worker_limits", None)
+    if observed_workers is not None:
+        if set(observed_workers) != set(workers) or any(
+                isinstance(value, bool) or not isinstance(value, int) or value <= 0
+                for value in observed_workers.values()):
+            raise ValueError("observed worker limits must cover every worker with positive integers")
+        workers = dict(observed_workers)
     e2e_metrics = parsed_log["e2e_metrics"] if isinstance(parsed_log["e2e_metrics"], dict) else None
     cache_hit_rate = None
     rebuild_groups = None

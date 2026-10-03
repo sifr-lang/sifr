@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 
@@ -67,6 +67,9 @@ def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
     except (VerificationError, AreaResultError) as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
         status = 2
+    except OSError as exc:
+        print(f"sifr_verify: infrastructure failure: {exc}", file=sys.stderr)
+        status = 2
     elapsed_ms = now_ms() - start_ms
     label = "pass" if status == 0 else "fail"
     print(f"[sifr-lane-step] name={name} elapsed_ms={elapsed_ms} status={label}")
@@ -83,11 +86,19 @@ class ProfileRunner:
     def __init__(self, profile_name: str, forward_args: list[str]) -> None:
         self.profile = load_profile(profile_name)
         self.profile_name = str(self.profile["name"])
+        self.require_performance = "--require-performance" in forward_args
+        if self.require_performance and self.profile_name != "cloud":
+            raise ProfileRunnerError("--require-performance is specific to the cloud profile")
+        forward_args = [arg for arg in forward_args if arg != "--require-performance"]
         self.no_fail_fast = "--no-fail-fast" in forward_args
         self.forward_args = [arg for arg in forward_args if arg != "--no-fail-fast"]
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
+        self.env["SIFR_VALIDATION_PROFILE"] = self.profile_name
+        if self.profile_name == "cloud":
+            # An unrelated physical-host reference must not affect correctness.
+            self.env.pop("SIFR_PERFORMANCE_REFERENCE", None)
         self.env["CARGO_BUILD_JOBS"] = str(self.profile["e2e"]["cargo_build_jobs"])
         self.env["RAYON_NUM_THREADS"] = str(self.profile["resource_policy"]["max_parallel"])
         target_root = Path(self.env.get("CARGO_TARGET_DIR", REPO_ROOT / "target"))
@@ -106,7 +117,7 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
-        if any(
+        if self.profile_name != "cloud" and any(
             area["area"] == "performance"
             and set(area["suites"]).intersection({"rules", "smoke", "representative", "full"})
             for area in self.profile["selected_areas"]
@@ -131,6 +142,9 @@ class ProfileRunner:
         if failed:
             self.block_steps("invalid-inventory")
             return failed
+        if self.profile_name == "cloud":
+            from .cloud_schedule import run_staged_cloud
+            return run_staged_cloud(self, early)
         prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
         if prepared and not self.no_fail_fast:
             return prepared
@@ -214,6 +228,12 @@ class ProfileRunner:
         if result.status != 0:
             self.functional_exit_status = result.status
             return result.status
+        if self.profile_name == "cloud" and budget is not None:
+            # Preserve the recorded budget and safety deadline. Scheduling
+            # uncertainty cannot fail or suppress later correctness checks.
+            # These are diagnostic step timings, not the paired benchmark
+            # contract. Only a checked cloud receipt qualifies performance.
+            budget = replace(budget, enforcement="advisory")
         budget_status = enforce_prepared_step_budget(budget, result.elapsed_ms)
         if budget_status != 0:
             self.performance_exit_status = budget_status
@@ -409,7 +429,7 @@ class ProfileRunner:
                 )
 
     def run_e2e_pass_suite(self) -> None:
-        e2e = self.profile["e2e"]
+        e2e = self.profile["e2e"] | getattr(self, "e2e_worker_limits", {})
         args = [
             "--profile",
             self.profile_name,
@@ -442,12 +462,17 @@ def run_profile(
     release_report_out: str | None = None,
 ) -> int:
     runner = ProfileRunner(profile_name, forward_args)
+    run_lane = runner.run
+    if profile_name == "cloud":
+        from .cloud_profile import run_cloud_profile
+        run_lane = lambda: run_cloud_profile(runner)
     return run_profile_with_report(
         profile_name,
-        runner.run,
+        run_lane,
         execution_outcomes=lambda: {
             "functional_exit_status": runner.functional_exit_status,
             "performance_exit_status": runner.performance_exit_status,
+            "worker_limits": getattr(runner, "e2e_worker_limits", None),
         },
         handled_error=ProfileRunnerError,
         release_report_out=release_report_out,

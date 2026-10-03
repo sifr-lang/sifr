@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 review findings corrected; authenticated final review pending
+current_stage: M0 delivered; M1 and M2 implementation in progress
 
 ## Objective and authority
 
@@ -56,9 +56,9 @@ and disposition. Split large milestones into independently reviewable changes.
 
 | ID | Deliverable | Brief coverage | Status |
 |---|---|---|---|
-| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; review corrections implemented; final review pending |
-| M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | pending |
-| M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | pending |
+| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; delivered in #4279 |
+| M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | in progress |
+| M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | in progress |
 | M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | pending |
 | M4 | Compiler performance levels and separate generated-program benchmarks | 7–9, 14, 20 | pending |
 | M5 | Artifact custody, published-predecessor upgrades, and compatibility/platform qualification | 10–12, 15, 19 | pending |
@@ -221,13 +221,11 @@ in M0 and the relevant stage contracts. Targeted checks belong to the bounded
 item; the authoritative gate belongs to the final candidate under applicable
 policy. Required release checks remain conditional on a real release request.
 
-Current state: M0 inventory and agent simplification implemented and validated;
-initial authenticated review found documentation regressions, now corrected.
-M1–M6 remain pending.
+Current state: M0 delivered through #4279; M1 and M2 implementation in progress;
+M3–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: verify final M0 reviewer satisfaction, deliver M0, then implement
-M1 contracts/evidence. Subsequent items record candidate
+Next action: implement M1 canonical stage contracts and execution evidence. Subsequent items record candidate
 SHA, changed paths, commands, outcomes, review, dependencies, and exact next action
 here rather than treating the plan itself as execution evidence.
 
@@ -237,7 +235,7 @@ here rather than treating the plan itself as execution evidence.
   `codex/validation-contracts-resource-aware-20261003`, base
   `da57229746b0793577d257b29f1382baf60b37b0`.
 - Draft implementation [PR #4279](https://github.com/sifr-lang/sifr/pull/4279).
-- `AGENTS.md` reduced from 156 to 60 lines. The complete proposal, current-state
+- `AGENTS.md` reduced from 132 to 64 lines after review corrections. The complete proposal, current-state
   inventory and roadmap entry are delivered in the candidate; no executable
   selection, workflow, protection or performance policy has been changed.
 - Passed: pinned-tool `profiles check`, file-size guardrails (4,338 source files),
@@ -270,9 +268,144 @@ here rather than treating the plan itself as execution evidence.
   inventoried without claiming a measurement in this VM. M0 completes the source,
   selection, resource, ownership and enforcement entry inventory.
 - Empty guardrail labels now say `none`, and the verification command reference
-  preserves CLI unit-test/E2E entrypoints. Final authenticated review is pending;
-  M1–M6, protected enforcement, SQL acceptance and release qualification retain
-  their pending status.
+  preserves CLI unit-test/E2E entrypoints.
+- Final authenticated Opus review of `a02d8e1394045da8e2cbc67003741d23a6aa171d`
+  returned SATISFIED with no blockers. Exact-candidate review is retained outside
+  the reviewed tree at `/workspace/validation-work/evidence/candidates/a02d8e1394045da8e2cbc67003741d23a6aa171d/opus-m0.md`.
+  The whole-candidate documentation checks pass. #4279 merged as
+  `2bc2ebfc40db66619ab39134b12e7c9d9817ee7e`. M0 is delivered; historical failed
+  requests and the initial NOT SATISFIED verdict retain their original status.
+- The user authorizes working sequentially through the whole plan, superseding
+  the skill's stop-after-one-delivered-item/start-new-session convention. Required
+  checks and reviews still apply to each actual implementation candidate.
+  M1–M6, protected enforcement, SQL acceptance and release qualification are open.
+
+## M2 scheduling checkpoint — 2026-10-03
+
+- Mechanism remediation review of `e9b3eda6726c240f7d2741fd9bef454646212a21`
+  returned **SATISFIED**, with no blockers. Evidence is outside Git at
+  `/workspace/validation-work/evidence/candidates/e9b3eda6726c240f7d2741fd9bef454646212a21/opus-m1-m2.md`.
+  This is a mechanism approval, not an acceptance-gate or full-phase pass.
+- That candidate completed the source compiler preparation in 932.8 seconds
+  (maximum observed child RSS 5.2 GiB), then failed package admission:
+  required 19,327,352,832 bytes; available 16,573,632,512 bytes. The run exited 2,
+  functional failed, performance inconclusive, qualified false. No sysroot
+  assertion or graph retirement ran. Raw evidence:
+  `/workspace/validation-work/evidence/m2-cloud-execution-e9b3eda67.log` and
+  `/workspace/sifr/target/verification/execution-journals/bdc85050-cc3b-4e10-ac26-832ef5b3bff3/`.
+- Measured private source graph: approximately 11 GiB total and 5 GiB of Rust
+  incremental edit caches. The next bounded resource item disables incremental
+  compilation for this immutable private source qualification graph only. Both
+  its preparation and boundary assertions use the same producer configuration.
+  Contributor/performance compilation policy, every selected assertion and the
+  8 GiB reserve remain unchanged. This prospective input change needs its own
+  targeted checks and review; no earlier failed run is reclassified.
+- The terminated old build context is superseded by this new source build
+  configuration. Before reclaiming its now-obsolete, session-owned source cache,
+  archive its raw journal/report and independently retain the old prepared
+  compiler bytes and hash. No process or lease may still consume the old context.
+  The old assertions remain unexecuted and nonqualifying; all required consumers
+  run afresh against the rebuilt compiler. Do not clean the shared main target.
+- The first supported cleanup attempt safely refused the known owned graph:
+  Cargo 1.98.1 requires a valid `CACHEDIR.TAG`, and the lease had created the
+  target directory before Cargo could initialize that tag. No cache was deleted.
+  The prepared compiler copy survived the failure. The correction initializes
+  Cargo's standard cache tag only for an exactly matching owned graph; unknown
+  caches are never tagged or reclaimed. A real pinned-Cargo dry-run regression
+  covers the issue. The measured old debug compiler is 1,304,028,344 bytes;
+  future retirement copy admission is increased from 1 GiB to 2 GiB accordingly.
+- The superseded source cache is now retired through supported Cargo cleanup.
+  Its independently retained compiler remains outside the Git tree at the
+  candidate's evidence directory, SHA-256
+  `7e39107672cb839fb43994e40f6850a895a082cd7360d06d18d24d63b5d378bd`.
+  Free storage increased from the failed admission's 16,573,632,512 bytes to
+  26,894,381,056 bytes (about 9.61 GiB net across the retention/cleanup lifecycle).
+  The retry's cleanup alone observed 11,636,019,200 bytes recovery because the
+  retained copy had already been allocated by the safely refused first attempt.
+  Preserve this distinction when aggregating economics. Detailed custody and
+  cleanup evidence:
+  `/workspace/validation-work/evidence/candidates/e9b3eda6726c240f7d2741fd9bef454646212a21/superseded-source-cache-retirement.json`.
+
+- Initial read-only Opus mechanism review of candidate `f03c9b324` returned
+  **NOT SATISFIED**, with two valid blockers: the package compiler retention path
+  lacked its host triple, and E2E worker arguments bypassed the cgroup clamp.
+  Review evidence is preserved outside Git at
+  `/workspace/validation-work/evidence/candidates/f03c9b324a9296709120f6503574b6a9cb408adb/opus-m1-m2.md`.
+  The owned run was cancelled (exit 130); its incomplete source preparation and
+  raw journal remain failures, not acceptance evidence.
+- One correction batch now derives retained compiler paths from both real
+  producers, checks actual host-qualified retention with a real temporary lease,
+  clamps every E2E worker argument (including forwarded requests), and records
+  effective workers. It also preserves inherited durations, keeps assertions'
+  existing per-command deadlines, classifies observed OOM/ENOSPC/cancellation,
+  moves metadata-structural cold compilation into named preparation, and keeps
+  functional/performance outcomes independent after a functional failure.
+- The measured stopped-run cgroup had roughly 8.99 GB charged memory, of which
+  only 36.8 MB was anonymous and 6.28 GB was inactive file cache. Treating all
+  charged cache as unavailable caused a false admission failure. The correction
+  uses unused capacity plus clean inactive file cache, excluding dirty/writeback
+  and unevictable bytes and retaining the same capacity and reserve. This is an
+  availability estimate within the existing limit, not extra memory or a lower
+  required workload.
+- Explicit graph ownership continuity is now available for this session's own
+  interrupted run. All consumers start unpassed and must run again; failed
+  assertion results and partial performance captures are never reused.
+  Recovery of the next run uses the retained owner
+  `c151f65d-5f60-4b70-9916-ba481a7d1992`, after verifying matching worktree,
+  device/inode/UID and a free exclusive lease. Unknown owners remain ineligible.
+- Follow-up M2 work still includes complete correctness-checkpoint consumption
+  and stronger descendant adoption/reaping: cancellation killed the owned nested
+  builds but this environment's PID 1 retained dead orphan Cargo/rustc entries.
+  No live detached build was observed, and those dead entries hold no live cwd
+  or graph lease. Do not claim the full reaping/recovery requirement is delivered.
+- Corrected candidate validation and the remediation review remain pending at
+  this record. No implementation PR is merged or phase gate waived.
+
+- Owned branch: `codex/validation-contracts-evidence-20261003`; draft
+  [PR #4280](https://github.com/sifr-lang/sifr/pull/4280). M1 and this first M2
+  scheduling item are implemented, not accepted or merged.
+- Integrated the existing cloud foundation at `f88973102` into this branch.
+  Its source PR #4259 and SQL qualification retain their pending disposition.
+- Added prospective cgroup-v2 admission, separate cold preparation deadlines,
+  isolated graph leases, exact retained compiler copies, supported Cargo cleanup,
+  net recovery observations and immutable source/runtime-bound journals.
+  The live merge assertion selection is unchanged. Step checkpoint consumption
+  remains disabled until its dependency closure and accounting are proven.
+- Candidate `f3c4d417e` passed 25 runner self-test groups, strict contracts,
+  profile checks, the file-size guardrail and whole-candidate whitespace checks.
+  Its actual cloud run exposed a compiler build inside generated-input
+  acquisition. The owned run was cancelled (exit 130) before assertion execution;
+  the journal records `cancelled`, not a pass. The producer preparation is now
+  moved after sysroot graph retirement, with a regression checking that early
+  acquisition contains only locked fetch commands.
+- Raw first-run evidence:
+  `/workspace/validation-work/evidence/m2-cloud-execution-f3c4d417e.log` and
+  `/workspace/sifr/target/verification/execution-journals/83d7de3a-5c2d-4634-9b66-fff55ce3ee43/`.
+  Preserve both when creating the corrected candidate; the run does not qualify
+  correctness or performance. Full compiler execution and Opus review remain
+  required. M3–M6 remain unfinished.
+
+## M1 implementation checkpoint — 2026-10-03
+
+The stage-policy/schema/CLI derive complete current selection from existing
+profiles/manifests and preserve the live merge inventory for shared-cloud
+correctness. The [contracts policy](../../../verification/policy/validation_contracts.md)
+records stage boundaries, compatibility/support/security authorities and claims.
+Input-bound correctness evidence validates source/runtime/command/selector/service/
+artifact/producer bindings, complete selected-ID accounting, actual execution and
+explicit runtime/compile/validation kinds; immutable output preserves old failures.
+Cross-commit reuse is deliberately conservative pending M3's equivalence protocol.
+
+Passed: 18 new contract/evidence negative tests, existing runner self-tests, strict
+coverage matrix and assignment checks, and file-size guardrails. The actual
+`create-pr` invocation failed before compiler setup at performance reference
+admission because no dedicated `SIFR_PERFORMANCE_REFERENCE` is selected; the raw
+failure is preserved at `/workspace/validation-work/evidence/m1-create-pr.log` and
+is not acceptance evidence. This is the functional starvation explicitly owned
+by the plan's cloud execution work, and is to be resolved through the existing
+#4259 route with M2 scheduling. No implementation PR/merge acceptance is claimed
+for M1 yet. Current implementation remains in the owned
+`codex/validation-contracts-evidence-20261003` branch.
 
 ## Supplied implementation brief — complete scope contract
 

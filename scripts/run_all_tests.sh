@@ -14,6 +14,7 @@ Run local-first validation for the selected profile.
 Profiles:
   create-pr Fast local create-PR signal.
   merge     Authoritative merge gate (default).
+  cloud     Merge correctness for shared VMs; performance reported separately.
   nightly   Broad hardening and full-corpus signal.
   release   Highest-confidence local qualification gate.
   python-interop-live
@@ -23,6 +24,7 @@ Options:
   --profile <name>                            Validation profile (default: merge)
   --release-report-out <path>                 Write immutable release evidence (release only)
   --emit-plan                                 Print the selected profile execution plan and exit
+  --require-performance                       Require qualified performance (cloud only)
   --help                                      Show this help
 
 Any remaining arguments are forwarded to the verification-owned e2e pass runner.

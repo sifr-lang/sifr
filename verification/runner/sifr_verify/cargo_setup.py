@@ -41,12 +41,24 @@ def prepare_cargo_cache(
     command_runner: Callable[..., None],
 ) -> None:
     """Populate workspace, selected fixture and generated graphs before offline execution."""
+    acquire_cargo_dependencies(profile, env, command_runner)
+    prepare_remaining_graphs(profile, env, command_runner)
+
+
+def acquire_cargo_dependencies(profile, env, command_runner) -> None:
+    """Acquire exact locked inputs before any explicitly offline preparation."""
     command = cargo_setup_command(profile)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
     print(f"[sifr-profile-setup] command={' '.join(command)}")
     command_runner(command, env=setup_env)
     prepare_locked_fixture_caches(profile, setup_env, command_runner)
+
+
+def prepare_generated_inputs(profile, env, command_runner) -> None:
+    """Materialization needs a compiler build, so it belongs to graph preparation."""
+    setup_env = env.copy()
+    setup_env.pop("CARGO_NET_OFFLINE", None)
     if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
         revision = subprocess.check_output(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
@@ -61,6 +73,12 @@ def prepare_cargo_cache(
             env=setup_env,
         )
 
+
+def prepare_remaining_graphs(profile, env, command_runner, *, include_sysroot=True) -> None:
+    """Prepare the remaining canonical graphs without duplicating early consumers."""
+    prepare_generated_inputs(profile, env, command_runner)
+    setup_env = env.copy()
+    setup_env.pop("CARGO_NET_OFFLINE", None)
     # Compiler preparation and execution have identical offline build-script
     # environments; dependency acquisition above remains explicitly online.
     compiler_env = setup_env | {"CARGO_NET_OFFLINE": "true"}
@@ -69,8 +87,9 @@ def prepare_cargo_cache(
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
     prepare_performance_binaries(profile, setup_env, command_runner)
     prepare_generated_oracle_binary(profile, setup_env, command_runner)
-    prepare_sysroot_source_binary(profile, setup_env, command_runner)
-    prepare_sysroot_package_binary(profile, setup_env, command_runner)
+    if include_sysroot:
+        prepare_sysroot_source_binary(profile, setup_env, command_runner)
+        prepare_sysroot_package_binary(profile, setup_env, command_runner)
     prepare_area_graphs(profile, compiler_env, command_runner)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
 
