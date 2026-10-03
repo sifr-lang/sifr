@@ -25,7 +25,7 @@ def api(path: str, body: dict | None = None):
     request = urllib.request.Request(
         os.environ.get("GITHUB_API_URL", "https://api.github.com") + path,
         data=None if body is None else json.dumps(body).encode(),
-        headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+        headers={"Authorization": "Bearer " + os.environ["CHECK_TOKEN" if body is not None else "GH_TOKEN"],
                  "Accept": "application/vnd.github+json", "Content-Type": "application/json",
                  "X-GitHub-Api-Version": "2022-11-28"},
         method="GET" if body is None else "POST",
@@ -46,12 +46,18 @@ def fetch(commit: str) -> None:
 
 
 def main() -> int:
+    # The future branch rule pins this separate integration. An Actions token
+    # or a same-named Actions job cannot satisfy that rule.
+    app_id = int(os.environ["CHECK_APP_ID"])
+    if app_id <= 0 or app_id == 15368:
+        raise ValueError("protected checks require a dedicated GitHub App identity")
     repository = os.environ["GITHUB_REPOSITORY"]
     run_id = int(os.environ["VALIDATION_RUN_ID"])
     prefix = "/repos/" + repository
     run = api(f"{prefix}/actions/runs/{run_id}")
     workflow = api(f"{prefix}/actions/workflows/local-first-validation.yml")
     candidate = sha(run["head_sha"])
+    check_head = candidate
     errors = []
     profile = "merge"
     if run["event"] == "pull_request":
@@ -61,6 +67,7 @@ def main() -> int:
         snapshot = snapshots[0]
         current = api(f"{prefix}/pulls/{int(snapshot['number'])}")
         candidate = sha(current["merge_commit_sha"])
+        check_head = sha(current["head"]["sha"])
         if (current["head"]["sha"] != run["head_sha"] or
                 current["base"]["sha"] != snapshot["base"]["sha"] or current["state"] != "open"):
             errors.append("PR source/base changed or PR closed after producer admission")
@@ -96,12 +103,16 @@ def main() -> int:
                            workflow_matches=matches, now=datetime.now(timezone.utc)))
     # Missing publication itself leaves a required context absent and blocks.
     conclusion = "failure" if errors else "success"
-    summary = "\n".join(errors) if errors else "Every mandatory current-attempt job passed for this exact candidate."
-    api(prefix + "/check-runs", {"name": CONTEXT, "head_sha": candidate, "status": "completed",
+    summary = ("\n".join(errors) if errors else
+               "Every mandatory current-attempt job passed for this exact candidate.")
+    summary += f"\nTested merge/source candidate: {candidate}\nProtected check head: {check_head}"
+    published = api(prefix + "/check-runs", {"name": CONTEXT, "head_sha": check_head, "status": "completed",
         "conclusion": conclusion, "details_url": run["html_url"],
         "output": {"title": "Protected validation " + conclusion, "summary": summary},
         "external_id": f"validation:{run_id}:{run['run_attempt']}:{candidate}"})
-    print(f"{CONTEXT}: {conclusion} candidate={candidate} producer={run_id}")
+    if published.get("app", {}).get("id") != app_id or published.get("app", {}).get("slug") == "github-actions":
+        raise ValueError("published check did not use the dedicated pinned integration")
+    print(f"{CONTEXT}: {conclusion} check_head={check_head} tested_candidate={candidate} producer={run_id}")
     return 1 if errors else 0
 
 

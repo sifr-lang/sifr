@@ -85,8 +85,14 @@ def validate_publisher(document: dict) -> list[str]:
     if set(jobs) != {"publish"} or document.get("permissions") != {"contents": "read"}:
         errors.append("publisher must isolate write permissions to its trusted job")
     job = jobs.get("publish", {})
-    if job.get("permissions") != {"contents": "read", "actions": "read", "checks": "write"}:
-        errors.append("publisher requires only independent fact reads and check publication")
+    if job.get("permissions") != {"contents": "read", "actions": "read"}:
+        errors.append("publisher Actions token must remain read-only")
+    if not any(step.get("id") == "app-token" and step.get("uses") ==
+               "actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1" and
+               step.get("with", {}).get("app-id") == "${{ vars.VALIDATION_CHECK_APP_ID }}" and
+               step.get("with", {}).get("private-key") == "${{ secrets.VALIDATION_CHECK_APP_PRIVATE_KEY }}" and
+               step.get("with", {}).get("permission-checks") == "write" for step in job.get("steps", [])):
+        errors.append("publisher requires a separate pinned protected-check integration")
     for step in job.get("steps", []):
         if step.get("uses", "").startswith("actions/checkout@"):
             if step.get("with", {}).get("ref") != "${{ github.sha }}" or step.get("with", {}).get("persist-credentials") is not False:

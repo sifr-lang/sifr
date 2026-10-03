@@ -15,7 +15,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-      checks: write
     steps:
       # workflow_run uses the protected default-branch definition. This checkout
       # contains trusted publisher code; candidate objects are fetched as data.
@@ -28,9 +27,20 @@ jobs:
         with:
           version-file: verification/pyproject.toml
           checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+      - name: Mint the separate protected-check integration token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.VALIDATION_CHECK_APP_ID }}
+          private-key: ${{ secrets.VALIDATION_CHECK_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-checks: write
       - name: Verify complete producer facts and publish exact-candidate aggregate
         env:
           GH_TOKEN: ${{ github.token }}
+          CHECK_TOKEN: ${{ steps.app-token.outputs.token }}
+          CHECK_APP_ID: ${{ vars.VALIDATION_CHECK_APP_ID }}
           VALIDATION_RUN_ID: ${{ github.event.workflow_run.id }}
           TRUSTED_WORKFLOW_SHA: ${{ github.sha }}
         run: uv run --project verification --locked python scripts/publish_validation_aggregate.py
