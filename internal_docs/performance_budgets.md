@@ -32,9 +32,11 @@ temporal-drift, execution-order and serial-dependence permutation screens use
 4095 permutations and Bonferroni correction across three screens per case.
 Detected violations are inconclusive; passing screens does not prove independence.
 
-Existing individual editor/formatter latency ceilings and observed RSS/cache
-limits remain hard checks. p95 is descriptive and explicitly population-tail
-unqualified under this finite cloud contract. GNU Time CPU counters are
+Every recorded candidate editor/formatter benchmark sample must meet the
+unchanged absolute latency ceiling. Samples retain the existing manifest and
+runner semantics; warm LSP samples average their declared inner repetitions.
+Observed RSS/cache limits remain hard checks. Individual-request maxima and
+population p95 are explicitly unqualified under this finite cloud contract. GNU Time CPU counters are
 supplementary; they do not replace latency or unavailable instruction counters.
 All required median decisions and observed hard checks must pass for cloud
 qualification. Any required inconclusive result blocks phase closure.
@@ -52,7 +54,9 @@ ancestor uv projects independently of the runner's `PATH`; a verifier `.venv`
 present in only one checkout changes the editor workload. Cloud identity binds
 the runner interpreter bytes and fixture ancestor uv files, local environment
 configuration and interpreter bytes (including absence). Mismatched or changed
-inputs reject the comparison before measurement or receipt acceptance.
+inputs reject the comparison before measurement or receipt acceptance. The CLI
+read-only fixture honors the explicitly configured verifier environment; Python
+interop preparation and execution retain their separate project environment.
 
 ```bash
 uv run --project verification --locked python \

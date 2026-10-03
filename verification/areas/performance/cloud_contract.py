@@ -77,7 +77,7 @@ def evaluate(manifest: dict, budgets: dict, pairs: dict) -> dict:
             errors.append("observed-rss-budget")
         if budget["policy"] in {"lsp-query", "frontend-query-edit-loop", "formatter-command-default"}:
             if max(candidate_values) > budget["thresholds"]["p95_ms"]:
-                errors.append("observed-individual-latency-ceiling")
+                errors.append("observed-sample-latency-ceiling")
         decision = median_decision(excesses, orders, len(expected))
         if errors:
             decision["status"] = "regression"
