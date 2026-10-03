@@ -1147,3 +1147,36 @@ M2/M4 owned-process dependency, not a passing validation result or a level-selec
 regression. A bounded production benchmark-custody repair must precede acceptance;
 no unchanged retry, case removal or weakened cleanup assertion is authorized.
 Generated-program metrics, paired qualification, M3 and M5/M6 remain pending.
+
+## M2/M4 benchmark process custody — work in progress
+
+Level-registration candidate `b0bab262557878052e2a8319af7185f043e18dc9`
+is draft PR #4288. Its scoped Opus review is SATISFIED with no blockers;
+the review is outside Git at
+`/workspace/validation-work/evidence/sifr-claude.c6ingI/response.md`.
+Acceptance gates and remaining milestone obligations remain open.
+
+The production benchmark adapter now uses the canonical owned-process executor.
+On Linux its dedicated subreaper reaps detached and termination-resistant
+children before another sample can start. Missing cleanup confirmation,
+cancellation, infrastructure failure and truncated capture reject the sample.
+The prospective capture bound is 16 MiB per output stream. Normal native exit
+codes and UTF-8 output are preserved; deadlines still have no qualified metrics.
+An early-exiting command retains its actual exit code after descendant cleanup.
+The wall timer includes supervisor overhead without subtraction; matched tooling
+on both endpoints is required before any new paired qualification.
+
+Shared-cloud tooling identity now includes the exact canonical executor,
+supervisor, disk monitor and package initializer bytes. Endpoints missing these
+files or using different bytes fail admission. Counts, budgets and AB/BA schedules
+are unchanged; no historical receipt is requalified under the new identity.
+
+The repaired broad benchmark self-test passed real cooperative, resistant,
+detached, leader-exit and closed-pipe trees with PID disappearance verified from
+the following sample, plus fail-closed capture/custody controls and SIGKILL status.
+All 92 performance-area tests and all 30 runner foundation groups passed.
+A receipt regression also rejects changed or absent supervisor bytes. Raw logs
+remain outside Git under `/workspace/validation-work/evidence/m2-benchmark-custody-*`.
+The initial repair test's old leader-exit timeout expectation failed and is
+preserved; the corrected assertion requires actual normal exit plus cleanup.
+This is not compiler throughput, whole-gate or constrained acceptance evidence.
