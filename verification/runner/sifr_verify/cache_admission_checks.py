@@ -1,6 +1,8 @@
 """Bounded cache estimates cannot skip native checks or leak owned processes."""
 from __future__ import annotations
 import errno
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -19,6 +21,45 @@ from .resource_admission import Resources
 
 
 class CacheForecastTests(unittest.TestCase):
+    def infrastructure_failure(self, *, drift=False):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            runner = ProfileRunner('cloud', [])
+            runner.prepare_step_budget = lambda name: None
+            schedule = object.__new__(Schedule)
+            schedule.runner, schedule.root, schedule.policy = runner, root, load_schedule()
+            schedule.key = {'inputs': {'source': []}}
+            schedule.index = 0
+            records = []
+            def record(name, payload):
+                schedule.index += 1; records.append((name, payload))
+            schedule.record = record
+            resources = Resources(5, 4, 32*1024**3, 32*1024**3,
+                                  (20 if drift else 10)*1024**3, {}, [], {})
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+                 patch('sifr_verify.cloud_schedule.inventory', side_effect=[[], [], ['drift']] if drift else None,
+                       return_value=[]), \
+                 patch('sifr_verify.cloud_schedule.discover', return_value=resources), \
+                 patch('sifr_verify.cloud_schedule.command_cache_hint', return_value=False), \
+                 patch('sifr_verify.cloud_schedule.run_command') as native:
+                status = schedule.step('cargo_cache_setup', lambda: schedule.prepare_command(
+                    ['cargo', 'test', '--no-run', '-p', 'fixture'], env=runner.env),
+                    allocation='preparation-coordination', preparation=True)
+            self.assertEqual(status, 2)
+            if drift:
+                native.assert_called_once()
+            else:
+                native.assert_not_called()
+            failure = [payload for name, payload in records if name == 'cargo_cache_setup' and payload['state'] == 'failed']
+            self.assertEqual(len(failure), 1)
+            self.assertEqual(failure[0]['classification'], 'unavailable' if drift else 'enospc')
+
+    def test_inner_admission_refusal_preserves_outer_infrastructure_classification(self):
+        self.infrastructure_failure()
+
+    def test_post_command_source_drift_preserves_outer_infrastructure_classification(self):
+        self.infrastructure_failure(drift=True)
+
     def test_present_cache_is_only_a_hint_and_unknown_targets_stay_cold(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

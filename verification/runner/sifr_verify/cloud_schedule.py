@@ -107,7 +107,7 @@ class Schedule:
                         "observed_at": datetime.now(UTC).isoformat(), **payload})
 
     def step(self, name, callback, *, allocation, preparation=False, monitor_disk=False,
-             command_env=None):
+             command_env=None, propagate_failure=False):
         monitored_env = self.runner.env if command_env is None else command_env
         saved_disk = {field: monitored_env.get(field) for field in (FLOOR_VARIABLE, PATH_VARIABLE)}
         def admitted():
@@ -171,8 +171,18 @@ class Schedule:
                     raise ResourceError("inherited safety duration must be positive and finite", "unavailable")
                 seconds = min(seconds, value)
         self.runner.env[variable] = str(seconds)
+        failures = []
+        def observed():
+            try:
+                return admitted()
+            except BaseException as error:
+                failures.append(error)
+                raise
         try:
-            return self.runner.execute_step(name, admitted)
+            status = self.runner.execute_step(name, observed)
+            if status and propagate_failure and failures:
+                raise failures[0]
+            return status
         finally:
             for field, value in saved_disk.items():
                 if value is None:
@@ -189,21 +199,11 @@ class Schedule:
         allocation = "preparation-command-cached" if cached else "preparation-command-cold"
         self.record("preparation-command", {"argv": command, "allocation": allocation,
                     "cache_presence_hint": cached, "assertion_reuse": False})
-        failures = []
-        def run():
-            try:
-                run_command(command, env=env)
-            except BaseException as error:
-                failures.append(error)
-                raise
         status = self.step(f"preparation_command_{self.index:04d}",
-            run, allocation=allocation,
-            preparation=True, monitor_disk=True, command_env=env)
+            lambda: run_command(command, env=env), allocation=allocation,
+            preparation=True, monitor_disk=True, command_env=env, propagate_failure=True)
         if status:
-            if failures:
-                raise failures[0]
-            from .profile_commands import CommandFailed
-            raise CommandFailed(status)
+            raise ResourceError(f"preparation failed without a recorded exception: status={status}", "unavailable")
 
 
 def run_staged_cloud(runner, early: set[str]) -> int:

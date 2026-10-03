@@ -1089,3 +1089,21 @@ invalid budgets, rejection before spawn and a real growth-failure injection with
 a detached termination-resistant descendant. These tests establish the mechanism;
 the next native cache-only observation and complete constrained workload remain
 separate acceptance obligations. M1/M2 implementation gates and M3–M6 stay open.
+
+At candidate `5681d9ad0d527dcc5791bfa0134e9f9a5f444f39`, a fresh native
+metadata-only observation using the new scheduler and monitored 2 GiB allowance
+completed in 69,255 ms. Its journal is
+`target/verification/execution-journals/8cb9025f-1e3e-49a8-a01d-aae8feb049e5`
+in the main worktree; raw log is outside Git at
+`/workspace/validation-work/evidence/m2-bounded-metadata-5681d9ad0.log`.
+Both original no-run configurations executed, no cache was deleted and no runtime
+assertions or whole-candidate qualification are claimed.
+
+Opus rejected that candidate because a nested pre-admission or post-execution
+input failure could become a bare command failure and be misclassified as an
+assertion by the coordination step. The rejected review is preserved outside Git
+at `sifr-claude.NXGiZj/response.md`. The remediation propagates the original
+exception from the entire admitted step, preserving classification through both
+journal entries. Regressions inject admission refusal before command execution
+and source drift afterward, verifying the outer entries remain infrastructure
+failures. Unknown failure details fail conservatively as unavailable.
