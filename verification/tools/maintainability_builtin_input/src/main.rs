@@ -47,25 +47,18 @@ impl Callbacks for Capture {
             original_text.restore(&mut self.ast);
         }
         if let Some(path) = std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE") {
-            std::fs::write(
-                path,
-                serde_json::to_vec_pretty(&source_envelope::capture(
+            write_original_json(
+                path.into(),
+                &source_envelope::capture(
                     tcx,
                     &self.ast,
                     &self.associations,
                     &self.stage_attributes,
-                ))
-                .expect("envelope diagnostic serialization"),
-            )
-            .expect("write unaccepted envelope diagnostic");
+                ),
+            );
         }
         if let Some(path) = std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER") {
-            std::fs::write(
-                path,
-                serde_json::to_vec_pretty(&source_binder::capture(tcx))
-                    .expect("source binder serialization"),
-            )
-            .expect("write source binder diagnostic");
+            write_original_json(path.into(), &source_binder::capture(tcx));
             return Compilation::Stop;
         }
         let inventory = inventory::capture(tcx);
@@ -77,17 +70,38 @@ impl Callbacks for Capture {
         inventory::reconcile(tcx, &inventory, &self.ast);
         let inventory_path = std::env::var_os("SIFR_BUILTIN_INVENTORY")
             .expect("explicit independent inventory destination");
-        std::fs::write(
-            inventory_path,
-            serde_json::to_vec_pretty(&inventory).expect("inventory serialization"),
-        )
-        .expect("write independent inventory");
+        write_original_json(inventory_path.into(), &inventory);
         drop(inventory);
         let path = std::env::var_os("SIFR_BUILTIN_CAPTURE").expect("explicit capture destination");
         capture_output::write(tcx, &self.ast, path.into());
         Compilation::Stop
     }
 }
+/// Serialize every original diagnostic value without a second complete byte buffer.
+fn write_original_json(path: std::path::PathBuf, value: &serde_json::Value) {
+    use std::io::Write;
+    let mut temporary = path.clone();
+    temporary.set_extension(format!("original-json-{}.tmp", std::process::id()));
+    let file = std::fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&temporary)
+        .expect("create owned original diagnostic output");
+    let mut writer = std::io::BufWriter::new(file);
+    serde_json::to_writer_pretty(&mut writer, value)
+        .expect("serialize complete original diagnostic");
+    writer.flush().expect("flush complete original diagnostic");
+    writer
+        .get_ref()
+        .sync_all()
+        .expect("durable complete original diagnostic");
+    assert!(
+        !path.exists(),
+        "original diagnostic destination already exists"
+    );
+    std::fs::rename(temporary, path).expect("publish complete original diagnostic");
+}
+
 fn main() {
     rustc_driver::run_compiler(
         &std::env::args().collect::<Vec<_>>(),
