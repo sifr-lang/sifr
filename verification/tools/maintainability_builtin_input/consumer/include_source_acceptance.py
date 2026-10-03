@@ -96,7 +96,7 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
     def get(self,root,ctx):
         result,output=prepared(root,ctx,self.target,self.identity,self.evidence)
         self.last_output=output
-        (self.run_dir/('capture-'+b.digest(str(output).encode())+'.json')).write_bytes(b.encoded({'path':str(output),'receipt_sha256':b.digest((output/'receipt.json').read_bytes()),'originals':[b.digest(x) for x in (result[2].source_membership,result[2].compiler_semantics,result[2].stage_observations)]}))
+        (self.run_dir/('capture-'+b.digest(str(output).encode())+'.json')).write_bytes(b.encoded({'path':str(output),'receipt_sha256':b.digest((output/'receipt.json').read_bytes()),'originals':[original.digest() for original in result[2].originals]}))
         return result
     def fixture_capture(self,name):
         root=self.fixture/('include_probe_'+name);package=json.loads(b.run(['cargo','metadata','--locked','--no-deps','--format-version','1'],cwd=root).stdout)['packages'][0]['name']
