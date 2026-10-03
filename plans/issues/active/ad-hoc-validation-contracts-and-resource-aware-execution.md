@@ -1418,3 +1418,43 @@ an unparseable test-only version label. Its failed v2 log remains preserved.
 The control now uses an explicit supported version; the corrected v3 full-area
 run passed 101 tests. Earlier runner foundation coverage passed all 31 groups. Broad candidate gates and native Sifr
 qualification remain pending.
+
+## M4 rescoped actual application-artifact identity repair
+
+This bounded repair addresses the stopped observation item's real-producer
+mismatch. Selection follows actual Cargo bin target/executable identity and the
+generated manifest, and requires exactly one matching rustc bin invocation.
+Ambiguous or unrelated-crate evidence cannot substitute. The controls now run a
+real Cargo/Rust binary with a hash-suffixed target, rather than inventing that
+event shape. A real Sifr startup producer control also compiled and ran `42`:
+`/workspace/validation-work/evidence/native-program-dc371fc6-c0b3-4964-84dd-7e3a76f67193/`.
+It records the actual opt-level 3/overflow-checking Cargo artifact,
+`sifr_output_c1bab39743a391ac`, generic rustc CPU arguments and delivered hash.
+This is explicitly a prototype producer control against compiler source
+`dca288a19f6bb0b8e9ffd699a98bab62386ff8a8`, not final candidate qualification.
+An earlier control failed because `--offline` was applied inside the repository
+package without its package lock; that failure is preserved separately.
+
+Program preparation copies registered source bytes into an owned standalone
+location, avoiding accidental inheritance of the repository's Sifr package.
+Cargo remains explicitly offline. Contributor compilers use their receipted
+source sysroot; installed product compilers retain their packaged authority.
+The separately registered, explicitly selected constrained observation allocation
+uses one GiB of prospective growth after the actual startup graph measured 123
+MiB, a two-GiB reserve and one-GiB monitored stopping headroom. The standard
+allocation and mandatory compiler shared-cloud qualification obligations remain
+intact. Process observations also bind the actual stable cgroup/CPU/memory limits.
+
+The full performance controls passed 104 tests, including the three real-Cargo
+identity/ambiguity/codegen-alias controls. Profiles and source size passed (4,397
+files). Native preparation/capture at the corrected clean candidate, required
+allocation instrumentation, broad gates and numerical compiler qualification are
+still required before M4/phase acceptance.
+
+A separate compact source-compiler observation passed a cold locked/offline build
+in 586.90 seconds with 1,915,352,054 graph file bytes. It used explicit
+`CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_INCREMENTAL=0`, two Cargo workers and its own
+leased graph. Actual Cargo retained opt-level 1, assertions and overflow checks;
+no functional assertion or performance comparison is inferred. The shared
+25-GiB debug cache was preserved. Its resource/raw Cargo record is outside Git at
+`/workspace/validation-work/evidence/compact-438a5635-1c78-46ed-b771-c826413d339f/`.

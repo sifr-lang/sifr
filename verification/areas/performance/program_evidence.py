@@ -12,6 +12,8 @@ import sys
 from benchmark_manifest import BenchmarkError
 from compiler_lanes import validate_receipt
 from measurement_timer import managed_timer_identity
+from program_artifact_identity import application_events
+from sifr_verify.resource_admission import discover
 
 
 def digest(path):
@@ -25,6 +27,7 @@ def producer_identity(root):
             'python': sys.version, 'python_path': sys.executable,
             'python_sha256': digest(sys.executable),
             'platform': [platform.system(), platform.machine(), platform.release()],
+            'resources': discover(disk_path=root).identity(),
             'environment': {key: hashlib.sha256(os.environ[key].encode()).hexdigest()
                             for key in ('LD_PRELOAD', 'LD_LIBRARY_PATH', 'PATH', 'SIFR_PERFORMANCE_TIME')
                             if key in os.environ}}
@@ -61,6 +64,10 @@ def target_cpu_generic(arguments):
     for index, argument in enumerate(arguments):
         if argument == '-C' and index + 1 < len(arguments):
             values.append(arguments[index + 1])
+        elif argument == '--codegen' and index + 1 < len(arguments):
+            values.append(arguments[index + 1])
+        elif argument.startswith('--codegen='):
+            values.append(argument.split('=', 1)[1])
         elif argument.startswith('-C'):
             values.append(argument[2:])
     return [value for value in values if value.startswith('target-cpu=')] == ['target-cpu=generic']
@@ -83,14 +90,11 @@ def verify_preparation_events(path, prepared):
             previous[key] = end
             records[key] = [json.loads(line) for line in raw[begin:end].decode().splitlines()
                             if line.startswith('{') or line.startswith('[')]
-        artifacts = [row for row in records['cargo_events_range'] if row.get('reason') == 'compiler-artifact'
-                     and row.get('target', {}).get('name') == 'sifr_output' and row.get('executable')]
-        invocations = [args for args in records['rustc_events_range'] if '--crate-name' in args
-                       and args[args.index('--crate-name') + 1] == 'sifr_output']
-        if (not artifacts or artifacts[-1] != program['cargo_artifact'] or not invocations
-                or invocations[-1] != program['rustc_command'] or not target_cpu_generic(invocations[-1])):
+        artifact, invocation = application_events(records['cargo_events_range'],
+                                                  records['rustc_events_range'], program['binary'])
+        if (artifact != program['cargo_artifact'] or invocation != program['rustc_command']
+                or not target_cpu_generic(invocation)):
             raise BenchmarkError('actual Cargo artifact or rustc CPU target differs')
-        artifact = artifacts[-1]
         profile = artifact['profile']
         if (profile['test'] or profile['opt_level'] != '3' or profile['debug_assertions']
                 or not profile['overflow_checks'] or digest(artifact['executable']) != program['binary_sha256']):
@@ -133,6 +137,7 @@ def validate_capture(path, contract, root):
         binary = Path(program['binary'])
         if (program['binary_sha256'] != digest(binary) or row['binary_sha256'] != digest(binary)
                 or program['source_sha256'] != case['source_sha256']
+                or digest(program['compiled_source_path']) != case['source_sha256']
                 or dependencies(binary) != program['runtime_dependencies']
                 or len(row['observations']) != counts['warmups'] + counts['measured']
                 or row['process_count'] != counts['measured']):

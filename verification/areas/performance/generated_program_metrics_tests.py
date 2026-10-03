@@ -99,16 +99,23 @@ class ProgramTests(unittest.TestCase):
     def test_capture_recomputes_raw_counts_summary_freshness_and_drift(self):
         root=self.output('evidence');root.mkdir(parents=True)
         compiler=root/'compiler.json';compiler.write_text(json.dumps({'lane':'test-only'}))
+        source=root/'test-only.sifr';source.write_text('def main():\n    print(42)\n')
+        source_hash=programs.digest(source)
         contract=copy.deepcopy(programs.policy())
-        contract['cases']=[self.case|{'id':'startup','source_sha256':'test-only'}]
+        contract['cases']=[self.case|{'id':'startup','source_sha256':source_hash}]
         observed=programs.sample(self.binary,self.case,root/'startup/0',self.timer)
         observed.update(warmup=False,process_index=0)
         program={'id':'startup','binary':str(self.binary),'binary_sha256':programs.digest(self.binary),
-                 'source_sha256':'test-only','runtime_dependencies':programs.dependencies(self.binary)}
+                 'source_sha256':source_hash,'compiled_source_path':str(source),'runtime_dependencies':programs.dependencies(self.binary)}
         cargo=root/'cargo-artifacts.jsonl';rustc=root/'rustc-invocations.jsonl'
-        artifact={'reason':'compiler-artifact','target':{'name':'sifr_output'},'executable':str(self.binary),
+        project=root/'project';(project/'src').mkdir(parents=True)
+        (project/'src/main.rs').write_text('fn main() { println!("42"); }\n')
+        target='sifr_output_0123456789abcdef'
+        (project/'Cargo.toml').write_text('[package]\nname="sifr_output"\nversion="0.0.0"\nedition="2024"\n[[bin]]\nname="'+target+'"\npath="src/main.rs"\n')
+        artifact={'reason':'compiler-artifact','manifest_path':str(project/'Cargo.toml'),
+                  'target':{'name':target,'kind':['bin'],'src_path':str(project/'src/main.rs')},'executable':str(self.binary),
                   'profile':{'test':False,'opt_level':'3','debug_assertions':False,'overflow_checks':True}}
-        arguments=['--crate-name','sifr_output','-C','target-cpu=generic']
+        arguments=['--crate-name',target,'--crate-type','bin','-C','target-cpu=generic']
         cargo.write_text(json.dumps(artifact)+'\n');rustc.write_text(json.dumps(arguments)+'\n')
         program.update(cargo_artifact=artifact,rustc_command=arguments,
                        cargo_events_range=[0,cargo.stat().st_size],rustc_events_range=[0,rustc.stat().st_size])
@@ -153,7 +160,7 @@ class ProgramTests(unittest.TestCase):
         cargo.write_text(json.dumps(artifact|{'profile':artifact['profile']|{'opt_level':'0'}})+'\n')
         with self.assertRaises(BenchmarkError): check(value)
         cargo.write_text(json.dumps(artifact)+'\n')
-        rustc.write_text(json.dumps(['--crate-name','sifr_output'])+'\n')
+        rustc.write_text(json.dumps(['--crate-name',target])+'\n')
         with self.assertRaises(BenchmarkError): check(value)
         rustc.write_text(json.dumps(arguments)+'\n')
         # Rehashed receipts cannot launder a non-release Cargo event or a
@@ -167,7 +174,7 @@ class ProgramTests(unittest.TestCase):
                 altered['programs'][0]['cargo_events_range']=[0,cargo.stat().st_size]
                 altered['cargo_events_sha256']=programs.digest(cargo)
             else:
-                bad_arguments=['--crate-name','sifr_output','-C','target-cpu=native']
+                bad_arguments=['--crate-name',target,'--crate-type','bin','-C','target-cpu=native']
                 rustc.write_text(json.dumps(bad_arguments)+'\n')
                 altered['programs'][0]['rustc_command']=bad_arguments
                 altered['programs'][0]['rustc_events_range']=[0,rustc.stat().st_size]

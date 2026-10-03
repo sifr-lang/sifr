@@ -50,5 +50,24 @@
   },
   "p95_semantics": "empirical nearest-rank process observation, not a population guarantee",
   "startup_scope": "timed native command lifecycle including GNU Time spawn/wait; supervisor and probe startup excluded",
-  "required_compiler_qualification": "independent shared-cloud-median-v2 unchanged; this protocol cannot substitute for it"
+  "required_compiler_qualification": "independent shared-cloud-median-v2 unchanged; this protocol cannot substitute for it",
+  "resource_profiles": {
+    "standard": {
+      "disk_growth_bytes": 6442450944,
+      "retained_copy_bytes": 536870912,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "constrained": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 134217728,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 4294967296,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    }
+  },
+  "resource_estimate_basis": "Prospective standard allocation retained; explicit constrained observations use one GiB growth after real standalone startup graph measured 123 MiB. Both preserve declared reserves plus one GiB monitored stopping headroom; neither changes compiler qualification obligations."
 }

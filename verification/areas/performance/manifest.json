@@ -116,6 +116,13 @@
           "command": "python-script",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "generated-cargo-artifact-identity",
+          "entry": "verification/areas/performance/program_artifact_identity_tests.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
