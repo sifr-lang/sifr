@@ -323,6 +323,28 @@ here rather than treating the plan itself as execution evidence.
   item changes process custody only and preserves selected assertions and all
   performance protocols. Parent startup is outside command-body timing; any
   protocol that measures the entire wrapper must bind the changed mechanism.
+- Scoped review of `c08e8708082729d04590f475025adf63698637e5` returned
+  `SATISFIED`, outside Git at
+  `/workspace/validation-work/evidence/candidates/c08e8708082729d04590f475025adf63698637e5/opus-recovery.md`.
+  [PR #4281](https://github.com/sifr-lang/sifr/pull/4281) is a draft stacked on
+  #4280; neither implementation PR is accepted or merged yet.
+- One follow-up batch closes review suggestions about startup signal races,
+  process-group PID reuse after leader reaping, JSON expansion of non-BMP error
+  text, and supervisor-generated core files. Signals are blocked across spawn
+  until the supervisor installs its handlers. Linux `waitid(WNOWAIT)` reserves
+  the leader's PID until group teardown finishes. Error metadata stays within
+  its byte bound; only the supervisor disables its own core dump after the
+  command has finished. New failure injection exercises these mechanisms,
+  unavailable kernel custody before command spawn, and a live escaped pipe
+  holder after supervisor death. Native status and selected work remain intact.
+- Follow-up targeted tests: 42 passed, raw
+  `/workspace/validation-work/evidence/m2-recovery-hardening-corrected.log`;
+  all 26 runner self-test groups passed, raw
+  `/workspace/validation-work/evidence/m2-recovery-hardening-runner-selftest.log`.
+  The first expanded test caught non-BMP JSON expansion exceeding the pipe frame
+  bound; that failure remains in `m2-recovery-hardening-expanded.log` and was
+  corrected before acceptance. The changed mechanisms require scoped review
+  on their new committed candidate; the earlier approval covers only `c08e87080`.
 
 - Mechanism remediation review of `e9b3eda6726c240f7d2741fd9bef454646212a21`
   returned **SATISFIED**, with no blockers. Evidence is outside Git at

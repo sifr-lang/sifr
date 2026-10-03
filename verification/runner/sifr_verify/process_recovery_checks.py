@@ -10,9 +10,12 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
+from unittest.mock import patch
 
+from . import process_execution
 from .process_execution import execute
 
 
@@ -121,6 +124,108 @@ class RecoveryTests(unittest.TestCase):
             env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}, timeout=5)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(b"rejected-and-reaped", result.stdout)
+
+    def slow_start(self, *, cancel: bool) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            copied = root / "supervisor.py"
+            text = Path(__file__).with_name("process_supervisor.py").read_text()
+            copied.write_text(text.replace("import ctypes", "import time\ntime.sleep(.25)\nimport ctypes"))
+            marker = root / "launched"
+            original_spawn = subprocess.Popen
+            def spawn(command, **kwargs):
+                command = list(command)
+                command[1] = str(copied)
+                return original_spawn(command, **kwargs)
+            timer = threading.Timer(.05, lambda: os.kill(os.getpid(), signal.SIGTERM)) if cancel else None
+            try:
+                if timer is not None:
+                    timer.start()
+                with patch.object(process_execution.subprocess, "Popen", side_effect=spawn):
+                    result = execute([sys.executable, "-c", f"from pathlib import Path; Path({str(marker)!r}).touch()"],
+                                     cwd=root, deadline_seconds=5 if cancel else .05)
+                self.assertEqual((result.returncode, result.cause),
+                                 (130, "cancelled") if cancel else (124, "safety_deadline"))
+                self.assertFalse(marker.exists(), "command ran after startup cancellation")
+            finally:
+                if timer is not None:
+                    timer.cancel()
+                    timer.join()
+
+    def test_cancellation_before_supervisor_handlers_are_installed(self):
+        self.slow_start(cancel=True)
+
+    def test_deadline_before_supervisor_handlers_are_installed(self):
+        self.slow_start(cancel=False)
+
+    def test_group_teardown_precedes_leader_reaping(self):
+        observed = []
+        original = os.killpg
+        def checked(pid, sig):
+            information = Path(f"/proc/{pid}/stat").read_text()
+            observed.append(information[information.rindex(")") + 2:].split()[0])
+            return original(pid, sig)
+        with patch.object(process_execution.os, "killpg", side_effect=checked):
+            result = execute([sys.executable, "-c", "pass"], cwd=Path.cwd())
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(observed, ["Z"], "leader PID was not reserved until group teardown")
+
+    def test_missing_kernel_custody_rejects_before_command_spawn(self):
+        for missing in ("subreaper", "pidfd"):
+            with self.subTest(primitive=missing):
+                program = (
+                    "import ctypes,errno\nfrom unittest.mock import patch\n"
+                    "from sifr_verify import process_supervisor as supervisor\n"
+                    f"missing={missing!r}\n"
+                    "if missing=='subreaper':\n"
+                    " ctypes.set_errno(errno.ENOSYS)\n"
+                    " hook=patch.object(supervisor.ctypes,'CDLL')\n"
+                    "else:\n"
+                    " hook=patch.object(supervisor.os,'pidfd_open',side_effect=OSError(errno.ENOSYS,'unavailable'))\n"
+                    "with hook as fake, patch.object(supervisor.subprocess,'Popen',side_effect=AssertionError('spawned')) as spawn:\n"
+                    " if missing=='subreaper': fake.return_value.prctl.return_value=-1\n"
+                    " try: supervisor.supervise(['never-launch-this'])\n"
+                    " except OSError as error: assert error.errno==errno.ENOSYS\n"
+                    " else: raise AssertionError('unsupported custody passed')\n"
+                    " spawn.assert_not_called()\n"
+                )
+                result = subprocess.run([sys.executable, "-c", program], capture_output=True,
+                    env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}, timeout=5)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_unicode_infrastructure_detail_preserves_errno(self):
+        with self.assertRaises(OSError) as failure:
+            execute(["\U0001f30d" * 500], cwd=Path.cwd())
+        self.assertEqual(failure.exception.errno, errno.ENAMETOOLONG)
+
+    def test_killed_supervisor_with_live_escaped_pipe_holder_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "pid"
+            command = (
+                "import os,signal,time\nfrom pathlib import Path\n"
+                "parent=os.getppid()\nos.setsid()\n"
+                f"Path({str(path)!r}).write_text(str(os.getpid()))\n"
+                "os.kill(parent,signal.SIGKILL)\ntime.sleep(60)\n"
+            )
+            program = (
+                "import ctypes,errno,os,signal,sys\nfrom pathlib import Path\n"
+                "from sifr_verify.process_execution import execute\n"
+                "assert ctypes.CDLL(None).prctl(36,1,0,0,0)==0\n"
+                "try:\n"
+                f" execute([sys.executable,'-c',{command!r}],cwd=Path.cwd())\n"
+                "except OSError as error:\n"
+                " assert error.errno==errno.EIO\n"
+                "else:\n"
+                " raise AssertionError('escaped pipe holder passed')\n"
+                f"pid=int(Path({str(path)!r}).read_text())\n"
+                "try: os.kill(pid,signal.SIGKILL)\n"
+                "finally: os.waitpid(pid,0)\n"
+                "print('rejected-live-pipe-and-owned-test-orphan-reaped')\n"
+            )
+            result = subprocess.run([sys.executable, "-c", program], capture_output=True,
+                env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(b"rejected-live-pipe", result.stdout)
 
 
 def policy_checks():

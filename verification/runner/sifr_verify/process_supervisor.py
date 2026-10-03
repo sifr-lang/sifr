@@ -9,6 +9,7 @@ import ctypes
 import json
 import os
 from pathlib import Path
+import resource
 import signal
 import subprocess
 import sys
@@ -86,6 +87,7 @@ def supervise(command: list[str]) -> int:
         cancelled = True
     for sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(sig, cancel)
+    signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT, signal.SIGTERM})
     parent = os.getppid()
     libc = ctypes.CDLL(None, use_errno=True)
     # PR_SET_CHILD_SUBREAPER and PR_SET_PDEATHSIG. Fail before command spawn if
@@ -137,7 +139,9 @@ def main() -> None:
     try:
         code = supervise(sys.argv[4:])
     except BaseException as error:
-        status = {"kind": "infrastructure-failure", "detail": str(error)[:1024],
+        # Non-BMP characters expand to twelve ASCII JSON bytes each. Keep this
+        # complete atomic frame below the parent's 4096-byte protocol bound.
+        status = {"kind": "infrastructure-failure", "detail": str(error)[:256],
                   "errno": error.errno if isinstance(error, OSError) else 5}
         code = 2
     else:
@@ -146,6 +150,7 @@ def main() -> None:
     os.close(status_fd)
     if code < 0:
         sig = -code
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
         signal.signal(sig, signal.SIG_DFL)
         os.kill(os.getpid(), sig)
     raise SystemExit(code)

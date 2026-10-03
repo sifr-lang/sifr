@@ -105,6 +105,16 @@ def execute(
         nonlocal cancelled
         cancelled = True
 
+    def child_exited() -> bool:
+        assert proc is not None
+        if proc.returncode is not None:
+            return True
+        if sys.platform.startswith("linux"):
+            # Keep the leader's PID reserved until session teardown completes.
+            # Popen.poll would reap it and permit a different group to reuse it.
+            return os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is not None
+        return proc.poll() is not None
+
     def kill_group(pid: int):
         nonlocal group_killed
         if group_killed:
@@ -115,11 +125,13 @@ def execute(
             # that call setsid. Let it terminate and reap before killing it.
             assert proc is not None
             try:
-                proc.send_signal(signal.SIGTERM)
-                proc.wait(timeout=5)
+                os.kill(pid, signal.SIGTERM)
             except ProcessLookupError:
                 pass
-            except subprocess.TimeoutExpired:
+            stop = time.monotonic() + 5
+            while not child_exited() and time.monotonic() < stop:
+                time.sleep(.01)
+            if not child_exited():
                 os.killpg(pid, signal.SIGKILL)
                 proc.wait()
                 raise RuntimeError("verification process supervisor did not complete cleanup")
@@ -130,6 +142,7 @@ def execute(
                 os.killpg(pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
+            proc.wait()
             return
         try:
             os.killpg(pid, signal.SIGTERM)
@@ -158,9 +171,16 @@ def execute(
                     spawned_command = [sys.executable, str(Path(__file__).with_name("process_supervisor.py")),
                                        "--status-fd", str(status_write), "--", *command]
                     spawn_options["pass_fds"] = (status_write,)
-                proc = subprocess.Popen(spawned_command, cwd=cwd, env=child_env, stdin=stdin,
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        start_new_session=True, **spawn_options)
+                previous_mask = None
+                if sys.platform.startswith("linux"):
+                    previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT, signal.SIGTERM})
+                try:
+                    proc = subprocess.Popen(spawned_command, cwd=cwd, env=child_env, stdin=stdin,
+                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                            start_new_session=True, **spawn_options)
+                finally:
+                    if previous_mask is not None:
+                        signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
                 if status_write is not None:
                     os.close(status_write)
                     status_write = None
@@ -172,7 +192,7 @@ def execute(
         assert proc.stdout is not None and proc.stderr is not None
         selector.register(proc.stdout, selectors.EVENT_READ, "stdout")
         selector.register(proc.stderr, selectors.EVENT_READ, "stderr")
-        while selector.get_map() or proc.poll() is None:
+        while selector.get_map() or not child_exited():
             if cancelled or time.monotonic() >= deadline:
                 cause = "cancelled" if cancelled else "safety_deadline"
                 kill_group(proc.pid)
@@ -180,7 +200,7 @@ def execute(
                 # safety outcome, keep the bytes already read and close our ends.
                 break
             # A direct child may abandon grandchildren that inherited its pipes.
-            exited = proc.poll() is not None
+            exited = child_exited()
             if exited:
                 kill_group(proc.pid)
             events = selector.select(0 if exited else min(0.05, max(0, deadline - time.monotonic())))
@@ -200,6 +220,7 @@ def execute(
                 truncated |= len(data) > remaining
                 if emit is not None:
                     emit(key.data, data[:remaining])
+        kill_group(proc.pid)
         code = proc.wait()
         if status_read is not None:
             try:

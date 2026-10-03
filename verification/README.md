@@ -196,6 +196,9 @@ A private completion channel confirms cleanup and the native command status;
 missing confirmation or supervisor failure is an infrastructure error. A fatal
 supervisor failure cannot establish that escaped descendants were reaped and
 never qualifies a successful run. Unrelated children remain outside this custody.
+Startup blocks cancellation signals until handlers are installed. Linux teardown
+keeps the leader unreaped until its process group has been terminated, so that
+group's identifier cannot be reused during cleanup.
 
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to
