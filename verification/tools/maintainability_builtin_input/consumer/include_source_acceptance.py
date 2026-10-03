@@ -107,14 +107,17 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
             relevant=[m for m in maps if m['file']==str(physical)]
             self.require(len(relevant)==1 and relevant[0]['raw_sha256']==b.digest(raw),'independently authenticated actual '+name+' raw include bytes')
             if name=='crlf':self.require(b'\r\n' in raw and relevant[0]['omitted_bytes'],'actual official CRLF normalization has exhaustive byte witnesses')
-            if name=='bom':self.require(raw.startswith(b'\xef\xbb\xbf') and relevant[0]['omitted_bytes'][0]['range']==[0,3],'actual official UTF-8 BOM normalization witness')
+            if name=='bom':
+                self.require(raw.startswith(b'\xef\xbb\xbf') and relevant[0]['omitted_bytes'][0]['range']==[0,3],'actual official UTF-8 BOM normalization witness')
+                dispositions=[r['membership']['normalization_dispositions'] for r in proof['source_native_attribute_membership']['include_roots']]
+                self.require(len(dispositions)==2 and all(len(d)==1 and d[0]['physical_token']['range']==[0,3] and d[0]['physical_node']['kind']=='ERROR' and d[0]['official_boundary']=={'position':0,'difference':3,'original_position':3} for d in dispositions),'every actual physical BOM token/subnode has an exact authenticated normalization disposition in each include context')
             if name=='unicode':self.require('Café'.encode() in raw and 'λ'.encode() in raw,'genuine multibyte Unicode declaration and trivia bytes retained')
             if name=='alpha':self.require(b'Container' in raw and b"'parent" in raw and b"'bound" in raw,'genuine alpha-renamed declarations and binder tokens')
             del proof,receipt,authority;gc.collect()
         self.require(all(c==counts[0] for c in counts),'all genuine normalized/renamed cases retain complete owner/attribute/constraint counts')
 
     def test_coordinated_include_source_mutations_fail_closed(self):
-        proof,receipt,authority=self.fixture_capture('attributes');assertions.inventories(self,proof,receipt,authority,b);negatives.matrix(self,proof,receipt,authority)
+        proof,receipt,authority=self.fixture_capture('attributes');assertions.inventories(self,proof,receipt,authority,b);negatives.matrix(self,proof,receipt,authority);negatives.cache_matrix(self,self.last_output,self.identity)
         del proof,receipt,authority;gc.collect()
         proof,receipt,authority=self.fixture_capture('hrtb');assertions.generics(self,proof,receipt,authority,b);negatives.semantic_matrix(self,proof,receipt,authority)
         path=self.fixture/'include_probe_hrtb/src/included.rs';original=path.read_bytes()
@@ -129,6 +132,13 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
             negatives.reject(self,proof,receipt,authority,'actual-cfg-manifest-input-drift')
         finally:configuration.write_bytes(original)
         self.require(verify(proof,receipt,authority,b)['diagnostic_relation'],'intact original source/configuration returns to valid diagnostic control')
+        del proof,receipt,authority;gc.collect()
+        proof,receipt,authority=self.fixture_capture('bom');assertions.inventories(self,proof,receipt,authority,b)
+        def bom(p):return p['source_native_attribute_membership']['include_roots'][0]['membership']['normalization_dispositions']
+        negatives.reject(self,proof,receipt,authority,'official-bom-disposition-remove',lambda p:bom(p).clear())
+        negatives.reject(self,proof,receipt,authority,'official-bom-physical-token-forge',lambda p:bom(p)[0]['physical_token'].update(range=[0,2]))
+        negatives.reject(self,proof,receipt,authority,'official-bom-boundary-forge',lambda p:bom(p)[0]['official_boundary'].update(difference=2))
+        negatives.reject(self,proof,receipt,authority,'official-bom-context-swap',lambda p:bom(p)[0].update(native_context=p['source_native_attribute_membership']['include_roots'][1]['membership']['native']))
 
     def test_required_original_linux_include_context_union_repeats(self):
         repeat=Path(os.environ['SIFR_BUILTIN_REPEAT_ROOT']).resolve()

@@ -20,3 +20,10 @@ def write(path,value):
     with temporary.open('xb') as output:
         for chunk in chunks(value):output.write(chunk)
     temporary.replace(path)
+
+
+def file_digest(path):
+    result=hashlib.sha256()
+    with Path(path).open('rb') as source:
+        for chunk in iter(lambda:source.read(1024*1024),b''):result.update(chunk)
+    return result.hexdigest()

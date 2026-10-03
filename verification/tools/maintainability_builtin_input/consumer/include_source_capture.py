@@ -21,14 +21,20 @@ def context(package,test=False):
 
 def load(output,identity,api):
     binding=decode((output/'success.json').read_bytes())
-    for name,sha in binding.items():require(api.digest((output/name).read_bytes())==sha,'cached intact include-source original drift: '+name,api)
+    for name,sha in binding.items():require(canonical.file_digest(output/name)==sha,'cached intact include-source original drift: '+name,api)
     receipt=decode((output/'receipt.json').read_bytes())
     expected={**identity,'rust_source_files':receipt['inputs']['tool']['rust_source_files']}
     require(receipt['inputs']['tool']==expected,'cached include-source helper/component identity drift',api)
     authority=restore(tuple((output/name).read_bytes() for name in ORIGINALS),receipt['inputs'],api)
     gc.collect()
     authenticate(authority,receipt,api)
-    proof=decode((output/'proof.json').read_bytes());verify(proof,receipt,authority,api)
+    # Reconstruct independently from the intact originals before accepting a
+    # cached projection. Compare its exact canonical bytes by digest, avoiding
+    # a second large decoded graph beside the complete authority derivation.
+    from include_source import derive
+    proof=derive(authority,receipt,api)
+    require(canonical.file_digest(output/'proof.json')==receipt['proof_digest'],'cached projection byte binding drift',api)
+    verify(proof,receipt,authority,api)
     print('include-source prepared cache HIT',receipt['context'],receipt['timing_seconds'],flush=True)
     return proof,receipt,authority
 

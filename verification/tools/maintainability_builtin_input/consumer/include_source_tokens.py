@@ -10,10 +10,11 @@ def require(condition,message):
     if not condition:raise ValueError(message)
 
 class Roots:
-    def __init__(self,descriptors,physical):
+    def __init__(self,descriptors,physical,normalizations=()):
         self.root=lru_cache(maxsize=8)(self.root)
         self._relation=lru_cache(maxsize=128)(self._relation)
         self.descriptors=descriptors
+        self.normalizations={n['file']:n for n in normalizations}
         self.physical={}
         for p in physical:
             key=(p['file'],p['editioned_file'])
@@ -47,8 +48,8 @@ class Roots:
         while queue:
             i=queue.pop();result.append(i);queue.extend(reversed(r['nodes'][i]['children']))
         return result
-    def token_edges(self,nr,ni,pr,pi,file):
-        native=self.tokens(nr,ni);physical=self.tokens(pr,pi)
+    def token_edges(self,nr,ni,pr,pi,file,omitted=()):
+        native=self.tokens(nr,ni);physical=[t for t in self.tokens(pr,pi) if t['ordinal'] not in omitted]
         lookup={tuple(t['range']):t for t in physical};groups=defaultdict(list)
         for t in native:
             origin=t['original'];require(origin is not None,'absent required public token origin')
@@ -72,6 +73,17 @@ class Roots:
                 require(all(i==tuple(p['range']) for i in intervals) or intervals==[(p['range'][0]+i,p['range'][0]+i+1) for i in range(len(ts))],'incomplete public punctuation origin group')
             edges.append({'physical_token':p['ordinal'],'native_tokens':[t['ordinal'] for t in ts],'original_intervals':[list(i) for i in intervals],'kind':p['kind']})
         return edges
+    def initial_bom(self,pr,file,reference):
+        normalization=self.normalizations.get(file)
+        if normalization is None or not any(m['range']==[0,3] and m['normalized_position']==0 for m in normalization['omitted_bytes']):return []
+        point=normalization['normalization_authority']['official_normalization'][0]
+        require(point=={'position':0,'difference':3,'original_position':3},'missing exact official initial BOM authority')
+        tokens=[t for t in pr['tokens'] if t['range']==[0,3]]
+        require(len(tokens)==1,'missing/ambiguous complete physical BOM token')
+        token=tokens[0];node=pr['nodes'][token['parent']]
+        require(token['kind']=='ERROR' and token['text']=='\ufeff' and not token['trivia'] and node['kind']=='ERROR' and node['range']==[0,3] and node['parent']==0 and not node['children'] and not node['direct_attributes'] and pr['_members'][node['ordinal']]==[token['ordinal']],'physical initial BOM token/subnode authority conflict')
+        return [{'disposition':'official-initial-utf8-bom-normalization','native_context':reference,'file':file,'raw_sha256':normalization['raw_sha256'],'official_boundary':point,'physical_token':token,'physical_node':node}]
+
     def relation(self,reference,include_root=False):
         return self._relation(reference['root'],reference['node'],include_root)
     def _relation(self,root_index,node_index,include_root):
@@ -84,16 +96,20 @@ class Roots:
         require(len(files)==1,'missing/mixed original native owner files');key=files.pop();file=key[0]
         require(key in self.physical,'native owner original file absent from complete physical inventory')
         pri=self.physical[key];pr=self.root(pri);kind=nr['nodes'][ni]['kind'];matches=[]
+        normalized=self.initial_bom(pr,file,reference) if include_root and ni==0 and kind=='MACRO_ITEMS' else []
+        omitted={d['physical_token']['ordinal'] for d in normalized}
         for pn in pr['nodes']:
             if pn['kind']!=kind and not (include_root and ni==0 and kind=='MACRO_ITEMS' and pn['ordinal']==0 and pn['kind']=='SOURCE_FILE'):continue
             if not all(t['original'] is not None and pn['range'][0]<=t['original']['range'][0]<t['original']['range'][1]<=pn['range'][1] for t in native):continue
-            try:edges=self.token_edges(nr,ni,pr,pn['ordinal'],file)
+            try:edges=self.token_edges(nr,ni,pr,pn['ordinal'],file,omitted)
             except ValueError:continue
             matches.append((pn['ordinal'],edges))
         require(len(matches)==1,'missing/ambiguous complete physical owner token relation')
         pi,edges=matches[0];mapping={i:e['physical_token'] for e in edges for i in e['native_tokens']}
         signatures=defaultdict(list)
-        for i in self.descendants(pr,pi):signatures[(pr['nodes'][i]['kind'],tuple(pr['_members'][i]))].append(i)
+        for i in self.descendants(pr,pi):
+            members=tuple(t for t in pr['_members'][i] if not (i==pi and t in omitted))
+            signatures[(pr['nodes'][i]['kind'],members)].append(i)
         nodes=[];node_map={}
         for i in self.descendants(nr,ni):
             n=nr['nodes'][i];signature=tuple(dict.fromkeys(mapping[t['ordinal']] for t in self.tokens(nr,i)))
@@ -102,6 +118,8 @@ class Roots:
             require(len(candidates)==1,'missing/ambiguous complete original source subnode relation: '+n['kind'])
             target=candidates[0];node_map[i]=target
             nodes.append({'native_node':i,'physical_node':target,'kind':n['kind'],'aggregate_original':n['aggregate_original'],'contextual_original':n['contextual_original']})
+        accounted=set(node_map.values())|{d['physical_node']['ordinal'] for d in normalized}
+        require(accounted==set(self.descendants(pr,pi)),'incomplete independent physical/native subnode multiset')
         attributes=[]
         for i in self.descendants(nr,ni):
             pn=pr['nodes'][node_map[i]];nn=nr['nodes'][i]
@@ -111,4 +129,4 @@ class Roots:
                 attributes.append({'native_owner_node':i,'physical_owner_node':pn['ordinal'],'native_attribute_node':na['node'],'physical_attribute_node':pa['node'],'ordinal':pa['ordinal'],'style':pa['style'],'kind':pa['kind'],'relationship':'direct' if i==ni else 'nested'})
         physical_nodes=set(self.descendants(pr,pi));native_nodes=set(self.descendants(nr,ni))
         trivia=[t for t in pr['tokens'] if t['trivia'] and t['parent'] in physical_nodes]
-        return {'native':reference,'physical':{'root':pri,'node':pi},'file':file,'physical_range':pr['nodes'][pi]['range'],'tokens':edges,'subnodes':nodes,'source_attributes':attributes,'physical_trivia':trivia,'native_trivia':[t for t in nr['tokens'] if t['trivia'] and t['parent'] in native_nodes]}
+        return {'native':reference,'physical':{'root':pri,'node':pi},'file':file,'physical_range':pr['nodes'][pi]['range'],'tokens':edges,'subnodes':nodes,'source_attributes':attributes,'physical_trivia':trivia,'native_trivia':[t for t in nr['tokens'] if t['trivia'] and t['parent'] in native_nodes],'normalization_dispositions':normalized}

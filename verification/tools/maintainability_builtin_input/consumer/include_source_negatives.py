@@ -111,3 +111,25 @@ def semantic_matrix(test,proof,receipt,authority):
         ('outlives-omission',lambda p:sem(p)['outlives_correspondences'].clear()),
     ):reject(test,proof,receipt,authority,label,change)
     test.require(verify(proof,receipt,authority,test.api)['diagnostic_relation'],'intact original semantic controls pass after all semantic swaps/omissions')
+
+
+def cache_matrix(test,output,identity):
+    import shutil
+    from include_source_capture import load,ORIGINALS
+    cache=test.run_dir/'owned-cached-projection-control';cache.mkdir()
+    for name in (*ORIGINALS,'proof.json','receipt.json','success.json'):shutil.copyfile(Path(output)/name,cache/name)
+    original={name:(cache/name).read_bytes() for name in ('proof.json','receipt.json','success.json')}
+    value,receipt,authority=load(cache,identity,test.api)
+    test.require(verify(value,receipt,authority,test.api)['diagnostic_relation'],'actual cached projection rederives complete original cross-references')
+    mutations=(('token-omission',lambda p:p['source_native_attribute_membership']['include_roots'][0]['membership']['tokens'].clear()),('false-original-attachment',lambda p:p.update(compiler_original_attribute_attachment='compiler-original-authority')))
+    for label,change in mutations:
+        projected=json.loads(original['proof.json']);record=json.loads(original['receipt.json']);binding=json.loads(original['success.json']);change(projected)
+        data=test.api.encoded(projected);record['proof_digest']=test.api.digest(data)
+        (cache/'proof.json').write_bytes(data);(cache/'receipt.json').write_bytes(test.api.encoded(record))
+        binding.update({name:test.api.digest((cache/name).read_bytes()) for name in ('proof.json','receipt.json')});(cache/'success.json').write_bytes(test.api.encoded(binding))
+        test.assertions+=1
+        with test.assertRaises(test.api.Unsupported):load(cache,identity,test.api)
+        (test.run_dir/('negative-cache-'+label+'.json')).write_bytes(test.api.encoded({'projection':projected,'receipt':record,'success_binding':binding,'intact_originals':[test.api.digest((cache/name).read_bytes()) for name in ORIGINALS],'accepted_complete_union':False}))
+        for name,data in original.items():(cache/name).write_bytes(data)
+    value,receipt,authority=load(cache,identity,test.api)
+    test.require(verify(value,receipt,authority,test.api)['diagnostic_relation'],'byte-identical cached control remains valid after restoring the owned projection copies')

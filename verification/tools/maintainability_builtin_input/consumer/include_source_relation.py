@@ -21,19 +21,26 @@ def project(source,semantic,stage,inputs,api):
     descriptors=native['syntax_inventory']['roots'];contexts=native['include_contexts']
     require({c['root']['root'] for c in contexts}=={i for i,r in enumerate(descriptors) if r['is_include']},'incomplete independent original include context inventory',api)
     require(len({c['root']['root'] for c in contexts})==len(contexts),'duplicate original include context',api)
+    candidate_files=set()
+    for context in contexts:
+        native_root=roots.root(context['root']['root'])
+        for token in roots.tokens(native_root,context['root']['node']):
+            if token['original'] is not None:candidate_files.add(native_root['origin_files'][token['original']['file']]['path'])
+    records=compiler['source_files'];normalizations=[]
+    for record in records:
+        if path(inputs['root'],record['file']) in candidate_files:normalizations.append(authenticate_source(record,inputs,api))
+    require({s['file'] for s in normalizations}==candidate_files,'missing complete original included SourceFile/raw normalization authority',api)
+    roots.normalizations={n['file']:n for n in normalizations}
     root_edges=[]
     for context in contexts:
         require(context['context']['include_ancestors'],'missing actual original include invocation ancestry',api)
         root_edges.append({'context':context,'membership':roots.relation(context['root'],True)})
     included_files={e['membership']['file'] for e in root_edges}
+    require(included_files==candidate_files,'original include token/normalization file authority conflict',api)
     for physical in native['physical']:
         from pathlib import Path
         require(physical['file'] in inputs['files'],'complete physical source inventory lacks original raw input authority',api)
         require(roots.root(physical['syntax']['root'])['text'].encode()==Path(physical['file']).read_bytes(),'physical original AST/raw source byte inventory conflict',api)
-    records=compiler['source_files'];normalizations=[]
-    for record in records:
-        if path(inputs['root'],record['file']) in included_files:normalizations.append(authenticate_source(record,inputs,api))
-    require({s['file'] for s in normalizations}==included_files,'missing complete original included SourceFile/raw normalization authority',api)
     native_relations=[];declaration_index={}
     for index,observed in enumerate(native['owners']):
         if observed.get('is_include'):
