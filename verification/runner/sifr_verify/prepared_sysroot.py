@@ -39,8 +39,11 @@ def tree_identity(path: Path) -> dict:
     files, links = [], []
     def visit(item: Path, ancestors: set):
         if item.is_symlink():
-            links.append({"path": str(item), "target": str(item.resolve(strict=True)),
-                          "link": os.readlink(item)})
+            try:
+                target = item.resolve(strict=True)
+            except OSError as error:
+                raise EvidenceError("unavailable linked preparation dependency") from error
+            links.append({"path": str(item), "target": str(target), "link": os.readlink(item)})
         if item.is_dir():
             info = item.stat()
             identity = (info.st_dev, info.st_ino)
@@ -57,7 +60,20 @@ def tree_identity(path: Path) -> dict:
 
 
 def command(action: str, kind: str, root: Path = REPO_ROOT) -> list[str]:
-    return [*isolated_python(str(root / "verification/runner/prepared_sysroot.py")), action, kind]
+    argv = isolated_python(str(root / "verification/runner/prepared_sysroot.py"))
+    # The helper consumes no venv/site directory. Bind one pinned physical
+    # interpreter when nested uv chooses python instead of the python3 alias.
+    argv[0] = str(Path(sys.executable).resolve(strict=True))
+    return [*argv, action, kind]
+
+
+def build_environment(environment: dict[str, str]) -> dict[str, str]:
+    result = dict(environment)
+    if "PATH" in result:
+        # Exact duplicate removal preserves first executable lookup order and
+        # empty cwd entries. Distinct paths/directory aliases stay distinct.
+        result["PATH"] = os.pathsep.join(dict.fromkeys(result["PATH"].split(os.pathsep)))
+    return result
 
 
 def store(root: Path, env: dict[str, str]) -> tuple[Path, dict]:
@@ -162,7 +178,7 @@ def prepare(kind: str, *, root: Path, env: dict[str, str]) -> dict:
                 copy = retirement["copies"][0]
                 # Restore only after Cargo has freed the large graph. The
                 # compressed bytes remain durable throughout this transition.
-                admit(discover(disk_path=root), dict(disk_growth_bytes=4*1024**2,
+                retirement["restoration_admission"] = admit(discover(disk_path=root), dict(disk_growth_bytes=4*1024**2,
                     retained_copy_bytes=copy["decoded_size_bytes"], disk_reserve_bytes=8*1024**3,
                     memory_peak_bytes=1024**3, tmpfs_growth_bytes=0, memory_reserve_bytes=2*1024**3))
                 output = restore(copy, Path(copy["retained"]["path"]).with_suffix(""))
@@ -170,7 +186,7 @@ def prepare(kind: str, *, root: Path, env: dict[str, str]) -> dict:
                 # Borrowed graphs can be freshly built and consumed, but never
                 # cleaned. The selected output still gets an independent copy.
                 retained = safe_store(directory / "source") / "sifr"
-                admit(discover(disk_path=root), dict(disk_growth_bytes=4*1024**2,
+                retirement["independent_copy_admission"] = admit(discover(disk_path=root), dict(disk_growth_bytes=4*1024**2,
                     retained_copy_bytes=original["size_bytes"], disk_reserve_bytes=8*1024**3,
                     memory_peak_bytes=1024**3, tmpfs_growth_bytes=0, memory_reserve_bytes=2*1024**3))
                 with output.open("rb") as src, retained.open("xb") as dst:
@@ -239,17 +255,20 @@ def main() -> int:
     parser.add_argument("action", choices=("prepare", "consume", "identity"))
     parser.add_argument("kind", choices=("source", "package"))
     args = parser.parse_args()
+    environment = build_environment(os.environ.copy())
     if args.action == "identity":
-        directory, expected = store(REPO_ROOT, os.environ)
-        value = key(args.kind, REPO_ROOT, os.environ, directory, expected)
+        directory, expected = store(REPO_ROOT, environment)
+        value = key(args.kind, REPO_ROOT, environment, directory, expected)
         print(json.dumps({"claim": "preparation-dependency-observation", "input_digest": value["input_digest"],
             "observed_commit": value["observed_commit"], "build_dependency_files": sum(
-                len(row["files"]) for row in value["inputs"]["runtime"]["build_dependency_trees"])}))
+                len(row["files"]) for row in value["inputs"]["runtime"]["build_dependency_trees"]),
+            "input_components": {name: digest(data) for name, data in value["inputs"].items()},
+            "runtime_components": {name: digest(data) for name, data in value["inputs"]["runtime"].items()}}))
     elif args.action == "prepare":
-        payload = prepare(args.kind, root=REPO_ROOT, env=os.environ.copy())
+        payload = prepare(args.kind, root=REPO_ROOT, env=environment)
         print(json.dumps({"claim": payload["claim"], "input_digest": payload["key"]["input_digest"],
                           "artifact": payload["artifact"], "retirement": payload["retirement"],
                           "runtime_assertions_executed": 0}, sort_keys=True))
     else:
-        print(consume(args.kind, root=REPO_ROOT, env=os.environ.copy()))
+        print(consume(args.kind, root=REPO_ROOT, env=environment))
     return 0

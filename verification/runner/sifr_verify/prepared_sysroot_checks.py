@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -205,6 +206,30 @@ class PreparationTests(unittest.TestCase):
         copy = compress(source, self.root / "valid.gz", max_encoded_bytes=8192)
         with self.assertRaises(ResourceError):
             decoded_identity(Path(copy["retained"]["path"]), limit=100)
+
+    def test_path_duplicate_removal_preserves_tool_lookup_and_alias_priority(self):
+        first, second = self.root / "first", self.root / "second"
+        first.mkdir(); second.mkdir()
+        for directory in (first, second):
+            executable = directory / "tool"
+            executable.write_text("#!/bin/sh\nexit 0\n")
+            executable.chmod(0o755)
+        alias = self.root / "alias"
+        alias.symlink_to(first, target_is_directory=True)
+        path = os.pathsep.join((str(first), str(second), str(first), str(alias), "", ""))
+        canonical = receipts.build_environment({"PATH": path})["PATH"]
+        self.assertEqual(shutil.which("tool", path=canonical), shutil.which("tool", path=path))
+        self.assertIn(str(alias), canonical.split(os.pathsep))
+        reordered = receipts.build_environment({"PATH": os.pathsep.join((str(second), str(first)))})["PATH"]
+        self.assertNotEqual(shutil.which("tool", path=canonical), shutil.which("tool", path=reordered))
+        self.assertEqual(receipts.command("consume", "source")[0], str(Path(sys.executable).resolve()))
+
+    def test_dangling_dependency_link_is_an_infrastructure_error(self):
+        directory = self.root / "dependencies"
+        directory.mkdir()
+        (directory / "broken").symlink_to(self.root / "missing")
+        with self.assertRaises(EvidenceError):
+            receipts.tree_identity(directory)
 
 
 def policy_checks():

@@ -225,9 +225,11 @@ Current state: M0 delivered through #4279; M1 and M2 implementation in progress;
 M3–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: implement M1 canonical stage contracts and execution evidence. Subsequent items record candidate
-SHA, changed paths, commands, outcomes, review, dependencies, and exact next action
-here rather than treating the plan itself as execution evidence.
+Next action: resolve shared debug-cache ownership and the recorded capacity boundary,
+then run fresh constrained preparation/assertions under the reviewed M2 mechanisms.
+M1/M2 acceptance gates and M3–M6 delivery remain open. Execution records below
+identify candidate SHA, checks, review, dependencies and failures; the plan itself
+is not qualifying execution evidence.
 
 ## M0 execution record — 2026-10-03
 
@@ -380,6 +382,66 @@ here rather than treating the plan itself as execution evidence.
   additions; 13 final receipt/retention tests passed. Final scoped review, real
   production checkpoint reuse, fresh constrained execution, and required gates
   remain pending. M3–M6 are still pending; no phase or performance pass is claimed.
+
+### Actual launch identity and reclaimable memory follow-up
+
+- Opus approved the early-lifetime candidate
+  `59f8ee918cd68334fea5adcdcfd9990025bff8a1`, with no blocking findings; draft
+  [PR #4284](https://github.com/sifr-lang/sifr/pull/4284) remains unmerged.
+  Review: `/workspace/validation-work/evidence/candidates/59f8ee918cd68334fea5adcdcfd9990025bff8a1/opus-graph-lifetimes.md`.
+- A real production HIR guard executed and published complete evidence on that
+  candidate, then reused it on the next invocation. Raw logs are
+  `m2-checkpoint-production-fresh-59f8ee918.log` and
+  `m2-checkpoint-production-reuse-59f8ee918.log` outside Git. This is one guard,
+  not full-profile reuse or phase acceptance.
+- The review called out untested real producer/consumer launch identities.
+  Actual direct and nested `uv run` identity observations differed; raw
+  `m2-lifetime-real-nested-key-comparison.log` preserves that failure before any
+  expensive compiler build. This new bounded item pins the same physical Python
+  executable and removes exact duplicate PATH entries while preserving first
+  lookup order, empty cwd entries, and distinct directory aliases. The real
+  direct/nested observations now match every input/runtime component and digest;
+  raw `m2-preparation-real-key-canonicalized.log` retains the result.
+- Provenance reads left roughly 8.1 GB of clean active file LRU pages charged to
+  the cgroup. Counting only inactive file pages falsely reduced available memory
+  below the source-stage requirement. Admission now accounts for clean active
+  and inactive file LRU pages within the same limits and host availability bound,
+  subtracting dirty/writeback/unevictable bytes. Tmpfs/shmem and anonymous LRU
+  pages are not extra memory. The original 2 GiB memory reserve remains required.
+  Actual estimated available memory is approximately 16.3 GB in the 17.18 GB
+  cgroup, without changing capacity; source/package/assertion memory admission
+  passes. Disk remains approximately 16.3 GB, so the existing 19.3 GB cold
+  corpus/metadata and remaining-preparation admission requirements still block.
+- Restoration/copy admission observations are retained in preparation receipts.
+  Dangling dependency links now report infrastructure unavailability instead of
+  an assertion failure. Thirty-one targeted receipt/resource checks pass,
+  including real path lookup preservation, active clean cache accounting,
+  dirty-page exclusion and no shmem/anonymous allowance. Final review/gates and
+  constrained full execution remain pending. The shared main target still has no
+  established owner and remains untouched; M3–M6 remain pending.
+
+- Final memory/launch implementation candidate:
+  `42b0f9d57da1589520422823b42b83062832f880`, draft
+  [PR #4285](https://github.com/sifr-lang/sifr/pull/4285). Read-only Opus returned
+  **SATISFIED**, no blockers; external review:
+  `/workspace/validation-work/evidence/candidates/42b0f9d57da1589520422823b42b83062832f880/opus-memory-launch.md`.
+  The committed-candidate direct/nested observation again matched all input and
+  runtime components, raw `m2-preparation-real-key-42b0f9d57.log`. Final 29
+  foundation groups and the file-size guard passed. These are mechanism checks;
+  required implementation gates, native assertions and performance remain open.
+- Current external blocker: all safely reclaimable obsolete session-owned graphs
+  have been retired with compiler-byte custody intact, but cold preparation
+  still requires 19,327,352,832 bytes against approximately 16,307,044,352 bytes
+  available. No shared `target/debug` cleanup is authorized while its original
+  ownership is unknown. The user has been asked for authoritative disposability
+  information; no answer or elapsed time is treated as authorization.
+  Read-only cleanup scope/resource observation and concrete proposal are outside
+  Git at `/workspace/validation-work/evidence/m2-shared-debug-cache-disposability-observation.json`
+  and `/workspace/validation-work/shared-debug-cache-recovery-proposal.md`.
+  Next action: resolve that ownership boundary, recover only the authorized
+  inactive cache if applicable, then run fresh constrained preparation/assertions
+  with exact candidate-bound receipts. Preserve the unchanged reserve and all
+  failed/unexecuted outcomes. The full plan remains active and incomplete.
 
 ### Owned descendant recovery continuation
 
