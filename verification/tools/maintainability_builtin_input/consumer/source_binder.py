@@ -167,10 +167,12 @@ def archive_inventory(archive, package, api):
     return {"files":inventory,"cargo_operational_files":extras}
 
 
-def _validate_originals(originals, inputs, api):
+def _validate_originals(originals, inputs, api, context=None):
     build = originals["original-build.json"]
     require(build["schema"] == "sifr-maintainability-original-build-v1", "unknown original successful-build record", api)
-    require(build["status"] == 0 and build["command"] == ["cargo","check","--locked","--lib","-p","sifr_codegen","--target","x86_64-unknown-linux-gnu","--message-format=json"], "missing successful unchanged selected Cargo control", api)
+    context=context or {"package":"sifr_codegen","test":False}
+    require(context["package"]=="sifr_codegen" and type(context["test"]) is bool, "unsupported original syn caller context", api)
+    require(build["status"] == 0 and build["command"] == ["cargo","check","--locked","--tests" if context["test"] else "--lib","-p",context["package"],"--target","x86_64-unknown-linux-gnu","--message-format=json"], "missing successful unchanged selected Cargo control", api)
     messages = build["messages"]
     require(unique([m for m in messages if m.get("reason") == "build-finished"], "original build-finished event", api)["success"] is True, "failed original compiler graph", api)
     invocation = originals["dependency-invocation.json"]
@@ -195,8 +197,8 @@ def inventory(raw):
     return {"schema":"sifr-maintainability-original-inventory-v1","owners":owners}
 
 
-def _project(originals, inputs, api):
-    _validate_originals(originals, inputs, api)
+def _project(originals, inputs, api, context=None):
+    _validate_originals(originals, inputs, api, context)
     raw = originals["syn-raw.json"]
     ra = unique(originals["ra-source.json"]["calls"], "original RA callable", api)
     require(ra["intrinsic_cfg"] == [{"kind":"intrinsic-true","authority":"pinned-cfg::CfgOptions::default"}], "unknown/missing RA intrinsic cfg disposition", api)
@@ -263,7 +265,7 @@ def _project(originals, inputs, api):
         require(str(ra_file) in inputs["tool"]["rust_source_files"], "trait source lacks official selected rust-src authority", api)
         constraints.append({"compiler":trait,"ra":r})
     require(named and len(correspondences) == len(ra["lifetime_occurrences"]), "incomplete bounded original occurrence inventory", api)
-    return {"schema":SCHEMA,"fragment":FRAGMENT,"context":{"package":"sifr_codegen","target":"x86_64-unknown-linux-gnu","test":False},"original_build_authority":originals["original-build.json"],"dependency_invocation":originals["dependency-invocation.json"],"source_files":[source],"declaration_owners":[owner,parent],"binders":owner["binders"],"lifetime_occurrences":owner["lifetime_occurrences"],"trait_constraints":constraints,"source_correspondences":correspondences,"independent_inventory":originals["independent-inventory.json"],"semantic_export":False}
+    return {"schema":SCHEMA,"fragment":FRAGMENT,"context":{"package":"sifr_codegen","target":"x86_64-unknown-linux-gnu","test":(context or {}).get("test",False)},"original_build_authority":originals["original-build.json"],"dependency_invocation":originals["dependency-invocation.json"],"source_files":[source],"declaration_owners":[owner,parent],"binders":owner["binders"],"lifetime_occurrences":owner["lifetime_occurrences"],"trait_constraints":constraints,"source_correspondences":correspondences,"independent_inventory":originals["independent-inventory.json"],"semantic_export":False}
 
 
 def _verify(proof, receipt, authority, api):

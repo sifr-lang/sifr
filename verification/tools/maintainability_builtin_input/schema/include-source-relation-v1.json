@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Complete diagnostic source/native membership with independent compiler identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "semantic_export",
+    "original_rustc_attr_id",
+    "compiler_original_attribute_attachment",
+    "exhaustive_consumed_item_lineage",
+    "preconsumption_to_final_survival",
+    "source_native_attribute_membership",
+    "compiler_semantic_owner_identity",
+    "transformed_attribute_observations",
+    "input_binding"
+  ],
+  "properties": {
+    "schema": {
+      "const": "sifr-maintainability-include-source-relation-v1"
+    },
+    "semantic_export": {
+      "const": false
+    },
+    "original_rustc_attr_id": {
+      "const": "not_claimed_by_authorized_contract"
+    },
+    "compiler_original_attribute_attachment": {
+      "const": "not_claimed_by_authorized_contract"
+    },
+    "exhaustive_consumed_item_lineage": {
+      "const": "not_claimed_by_authorized_contract"
+    },
+    "preconsumption_to_final_survival": {
+      "const": "not_claimed_by_authorized_contract"
+    },
+    "source_native_attribute_membership": {
+      "type": "object"
+    },
+    "compiler_semantic_owner_identity": {
+      "type": "object"
+    },
+    "transformed_attribute_observations": {
+      "type": "object"
+    },
+    "input_binding": {
+      "type": "string"
+    }
+  }
+}

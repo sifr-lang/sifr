@@ -15,6 +15,7 @@ mod identity;
 mod inventory;
 mod semantic;
 mod source_binder;
+mod source_envelope;
 mod typed;
 use rustc_driver::{Callbacks, Compilation};
 use rustc_interface::interface;
@@ -23,15 +24,36 @@ use serde_json::json;
 #[derive(Default)]
 struct Capture {
     ast: Vec<expanded::Declaration>,
+    stage_attributes: Vec<expanded::StageAttribute>,
+    associations: Vec<(rustc_ast::NodeId, rustc_hir::def_id::LocalDefId)>,
 }
 impl Callbacks for Capture {
     fn after_expansion<'tcx>(&mut self, _: &interface::Compiler, tcx: TyCtxt<'tcx>) -> Compilation {
-        if std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER").is_none() {
+        if std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER").is_none()
+            || std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE").is_some()
+        {
             self.ast = expanded::capture(tcx);
+            if std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE").is_some() {
+                self.associations = expanded::associations(tcx);
+                self.stage_attributes = expanded::stage_attributes(tcx);
+            }
         }
         Compilation::Continue
     }
     fn after_analysis<'tcx>(&mut self, _: &interface::Compiler, tcx: TyCtxt<'tcx>) -> Compilation {
+        if let Some(path) = std::env::var_os("SIFR_BUILTIN_SOURCE_ENVELOPE") {
+            std::fs::write(
+                path,
+                serde_json::to_vec_pretty(&source_envelope::capture(
+                    tcx,
+                    &self.ast,
+                    &self.associations,
+                    &self.stage_attributes,
+                ))
+                .expect("envelope diagnostic serialization"),
+            )
+            .expect("write unaccepted envelope diagnostic");
+        }
         if let Some(path) = std::env::var_os("SIFR_BUILTIN_SOURCE_BINDER") {
             std::fs::write(
                 path,
