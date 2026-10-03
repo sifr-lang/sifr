@@ -16,7 +16,7 @@ def inventories(test,proof,receipt,authority,api):
     test.require(len(identity['complete_owner_dispositions'])==len(compiler['declaration_owners']),'complete independent original compiler inventory/dispositions')
     test.require(len(membership['native_dispositions'])==len(native['owners']),'complete independent native owner inventory/dispositions')
     test.require(identity['required_owner_indices']==[j['compiler_owner'] for j in identity['correspondences']],'every required original owner has exactly one correspondence')
-    test.require(len(membership['include_roots'])==len(native['include_contexts'])>0,'every independent actual include context reconciles')
+    test.require(len(membership['include_roots'])==len(native['include_contexts']),'every independent actual include context reconciles, including an authenticated empty inventory')
     test.require(len(stage['lowered_attribute_owners'])>0 and stage['lowered_owner_enumeration']=='actual-hir-crate-items-owners-including-crate-root','all actual HIR owners retain transformed observations')
     test.require(stage['accepted_proof'] is False and stage['expanded_attributes'] is not None,'expanded AttrId and empty lowerings remain transformed-stage observations')
     for join in identity['correspondences']:
