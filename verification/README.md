@@ -29,6 +29,12 @@ scripts/run_all_tests.sh --profile create-pr
 scripts/run_all_tests.sh --profile merge --emit-plan
 ```
 
+During focused compiler work, run an affected crate/test with `cargo test -p
+<crate> <test>`. The CLI unit-test command excluding the slow E2E pass suite is
+`cargo test -p sifr -- --skip test_e2e_pass`; its standalone E2E entrypoint is
+`verification/runner/e2e/run_e2e_pass.sh`. These commands supplement the applicable
+profile gate rather than replace it.
+
 `scripts/run_all_tests.sh` is a thin public facade over
 `uv run --project verification --locked python -m sifr_verify profiles run`.
 It fail-fasts when `uv` is missing or differs from the exact version so profile
