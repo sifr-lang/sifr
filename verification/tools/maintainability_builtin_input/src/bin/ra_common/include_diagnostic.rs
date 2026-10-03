@@ -31,12 +31,99 @@ fn node<DB: HirDatabase>(
         json!({"context":context,"semantics":semantics,"owner":owner,"module":format!("{module:?}"),"module_source":{"file":format!("{:?}",module_source.file_id),"kind":format!("{:?}",module_source.value.kind()),"range":range(module_source.value.text_range()),"roundtrip":module_roundtrip,"aggregate_original":sem.original_range_opt(&module_source.value).map(|r|json!({"file":files.file_path(r.file_id.file_id(db)).as_path().map(|p|p.as_str()),"range":range(r.range)}))},"is_include":super::include_inventory::is_include(file,db),"roundtrip":roundtrip,"native_file":format!("{file:?}"),"kind":format!("{:?}",n.kind()),"range":range(n.text_range()),"aggregate_original":sem.original_range_opt(n).map(|r|json!({"file":files.file_path(r.file_id.file_id(db)).as_path().map(|p|p.as_str()),"range":range(r.range)})),"syntax":source,"parent_context":sem.find_parent_file(file).map(|parent|json!({"file":format!("{:?}",parent.file_id),"kind":format!("{:?}",parent.value.kind()),"range":range(parent.value.text_range()),"aggregate_original":sem.original_range_opt(&parent.value).map(|r|json!({"file":files.file_path(r.file_id.file_id(db)).as_path().map(|p|p.as_str()),"range":range(r.range)}))}))}),
     )
 }
+fn dependency_bridge<DB: HirDatabase>(
+    inventory: &mut super::include_inventory::Inventory,
+    sem: &Semantics<'_, DB>,
+    db: &DB,
+    files: &vfs::Vfs,
+    krate: hir::Crate,
+    suffix: &str,
+) -> anyhow::Result<Value> {
+    let mut calls = vec![];
+    for (file, path) in files.iter() {
+        let Some(path) = path.as_path() else { continue };
+        if !path.as_str().ends_with(suffix) {
+            continue;
+        }
+        let parsed = sem.parse(hir::EditionedFileId::new(db, file, krate.edition(db)));
+        for call in parsed
+            .syntax()
+            .descendants()
+            .filter_map(syntax::ast::MethodCallExpr::cast)
+        {
+            let Some(function) = sem.resolve_method_call(&call) else {
+                continue;
+            };
+            if function.name(db).as_str() != "step" {
+                continue;
+            }
+            let source = sem.source(function).ok_or_else(|| {
+                anyhow::anyhow!("missing actual original dependency callable source")
+            })?;
+            anyhow::ensure!(
+                sem.to_def(&source.value) == Some(function),
+                "actual dependency callable source/to_def conflict"
+            );
+            let implementation = source
+                .value
+                .syntax()
+                .ancestors()
+                .find_map(syntax::ast::Impl::cast)
+                .ok_or_else(|| anyhow::anyhow!("missing actual dependency impl source"))?;
+            let parent = sem
+                .to_def(&implementation)
+                .ok_or_else(|| anyhow::anyhow!("unresolved actual dependency impl"))?;
+            let parent_source = sem
+                .source(parent)
+                .ok_or_else(|| anyhow::anyhow!("missing actual dependency impl owner source"))?;
+            anyhow::ensure!(
+                source.file_id == parent_source.file_id
+                    && sem.to_def(&parent_source.value) == Some(parent),
+                "actual dependency impl source/to_def conflict"
+            );
+            let caller_owner = sem
+                .scope(call.syntax())
+                .and_then(|scope| scope.containing_function())
+                .ok_or_else(|| anyhow::anyhow!("missing actual caller containing function"))?;
+            let caller_source = sem
+                .source(caller_owner)
+                .ok_or_else(|| anyhow::anyhow!("missing actual caller owner source"))?;
+            anyhow::ensure!(
+                sem.to_def(&caller_source.value) == Some(caller_owner),
+                "actual caller owner source/to_def conflict"
+            );
+            let mut module_owners = vec![];
+            for module in function.module(db).path_to_root(db) {
+                if let Some(src) = module.declaration_source(db) {
+                    module_owners.push(node(
+                        inventory,
+                        sem,
+                        db,
+                        files,
+                        src.file_id,
+                        src.value.syntax(),
+                        format!("{module:?}"),
+                        module,
+                        sem.to_def(&src.value) == Some(module),
+                    )?);
+                }
+            }
+            calls.push(json!({"caller":inventory.reference(sem,db,files,hir::HirFileId::FileId(hir::EditionedFileId::new(db,file,krate.edition(db))),call.syntax())?,"module_owners":module_owners,"caller_owner":node(inventory,sem,db,files,caller_source.file_id,caller_source.value.syntax(),format!("{caller_owner:?}"),caller_owner.module(db),true)?,"owner":node(inventory,sem,db,files,source.file_id,source.value.syntax(),format!("{function:?}"),function.module(db),true)?,"parent":node(inventory,sem,db,files,parent_source.file_id,parent_source.value.syntax(),format!("{parent:?}"),parent.module(db),true)?}));
+        }
+    }
+    anyhow::ensure!(
+        calls.len() == 1,
+        "missing/ambiguous actual original dependency callable inventory"
+    );
+    Ok(json!(calls))
+}
 pub fn capture<DB: HirDatabase>(
     sem: &Semantics<'_, DB>,
     db: &DB,
     files: &vfs::Vfs,
     krate: hir::Crate,
     suffix: &str,
+    bridge_suffix: Option<&str>,
 ) -> anyhow::Result<Value> {
     let mut inventory = super::include_inventory::Inventory::new()?;
     let mut owners = vec![];
@@ -209,6 +296,10 @@ pub fn capture<DB: HirDatabase>(
         let m = scope.module();
         include_contexts.push(json!({"root":inventory.reference(sem,db,files,file,&root)?,"module":format!("{m:?}"),"context":super::include_context::capture(&mut inventory,sem,db,files,file,&root,m)?}));
     }
+    let dependency_bridge = match bridge_suffix {
+        Some(suffix) => dependency_bridge(&mut inventory, sem, db, files, krate, suffix)?,
+        None => json!(null),
+    };
     let mut selected = inventory.physical_files();
     for (file, path) in files.iter() {
         if path.as_path().is_some_and(|path| {
@@ -235,6 +326,6 @@ pub fn capture<DB: HirDatabase>(
         physical.push(json!({"file":path.as_str(),"editioned_file":format!("{file:?}"),"syntax":inventory.reference(sem,db,files,file.into(),parsed.syntax())?}));
     }
     Ok(
-        json!({"schema":"development-public-include-token-inventory-v1","semantic_export":false,"accepted_proof":false,"owners":owners,"declaration_inventory":declaration_inventory,"include_contexts":include_contexts,"physical":physical,"syntax_inventory":inventory.finish()}),
+        json!({"schema":"development-public-include-token-inventory-v1","semantic_export":false,"accepted_proof":false,"owners":owners,"dependency_bridge":dependency_bridge,"declaration_inventory":declaration_inventory,"include_contexts":include_contexts,"physical":physical,"syntax_inventory":inventory.finish()}),
     )
 }

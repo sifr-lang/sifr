@@ -5,6 +5,7 @@ from pathlib import Path
 from include_source_authority import authenticate,read_originals,require,decode
 from include_source_relation import project,SCHEMA,LOST,NOT_CLAIMED
 import include_source_constraints
+import include_source_dependency
 
 _EXPECTED={}
 RECEIPT='sifr-maintainability-include-source-receipt-v1'

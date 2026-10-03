@@ -309,7 +309,24 @@ fn main() -> anyhow::Result<()> {
             return Ok(());
         }
         if env::var_os("SIFR_BUILTIN_INCLUDE_DIAGNOSTIC").is_some() {
-            let mut result = include_diagnostic::capture(&semantics, &db, &files, krate, &args[3])?;
+            let mut result = include_diagnostic::capture(
+                &semantics,
+                &db,
+                &files,
+                krate,
+                &args[3],
+                if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+                    Some(
+                        capture["source_binder_call_suffix"]
+                            .as_str()
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("missing actual dependency bridge suffix")
+                            })?,
+                    )
+                } else {
+                    None
+                },
+            )?;
             result["context"] = context;
             result["cfg"] = json!(selected_cfg);
             result["intrinsic_cfg"] =

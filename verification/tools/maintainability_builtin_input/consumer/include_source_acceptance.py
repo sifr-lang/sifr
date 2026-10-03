@@ -139,7 +139,10 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
             qualified.append(union.qualify(proof,receipt,authority,self.last_output,b))
             before=signature(proof,authority);syn=proof['compiler_semantic_owner_identity']['original_syn_correspondence']
             self.require((syn is not None)==(ctx['package']=='sifr_codegen'),'actual original syn::step joins exactly where caller dependency applies')
-            if syn:self.require(len(syn['source_correspondences'])==4 and syn['semantic_export'] is False,'complete actual syn::step declaration/HRTB/inherited source correspondences')
+            if syn:
+                self.require(len(syn['source_correspondences'])==4 and syn['semantic_export'] is False,'complete actual syn::step declaration/HRTB/inherited source correspondences')
+                exact=proof['compiler_semantic_owner_identity']['exact_original_dependency_source']
+                self.require(len(exact['declaration_owners'])==2 and all(j['membership']['tokens'] and j['membership']['subnodes'] and j['association'] for j in exact['declaration_owners']),'retained syn::step also has complete native original token/subnode and actual compiler NodeId/LocalDefId/HIR owner authority')
             summaries.append({'context':ctx,'owners':len(proof['compiler_semantic_owner_identity']['complete_owner_dispositions']),'required':len(proof['compiler_semantic_owner_identity']['correspondences']),'roots':len(proof['source_native_attribute_membership']['include_roots'])})
             del proof,receipt,authority;gc.collect()
             proof,receipt,authority=self.get(repeat,ctx);assertions.inventories(self,proof,receipt,authority,b)

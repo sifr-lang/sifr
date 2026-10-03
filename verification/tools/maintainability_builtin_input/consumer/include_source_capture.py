@@ -91,7 +91,7 @@ def capture(output,target,identity,api,ctx,root=None):
     raw=decode((output/'compiler-original.json').read_bytes());ra_input={'context':{'crate':ctx['crate']},'cfg':raw['cfg']}
     del raw;gc.collect()
     if syn is not None:
-        replay=dependency['environment'].copy();replay['SIFR_BUILTIN_SOURCE_BINDER']=str(output/'syn-raw.json')
+        replay=dependency['environment'].copy();replay['SIFR_BUILTIN_SOURCE_BINDER']=str(output/'syn-raw.json');replay['SIFR_BUILTIN_SOURCE_ENVELOPE']=str(output/'syn-stage-raw.json')
         dependency_analysis=api.run([str(target/'debug/sifr_maintainability_builtin_input'),*dependency['args']],cwd=dependency['cwd'],env=replay,log=output/'syn-replay.log')
         dependency_raw=decode((output/'syn-raw.json').read_bytes());(output/'independent-inventory.json').write_bytes(api.encoded(source_binder.inventory(dependency_raw)))
         ra_input.update(dependency_cfg=dependency_raw['cfg'],dependency_root=next(t['src_path'] for t in syn['targets'] if 'lib' in t['kind']),source_binder_call_suffix='crates/sifr_codegen/src/inline_syntax.rs');del dependency_raw;gc.collect()
@@ -104,6 +104,7 @@ def capture(output,target,identity,api,ctx,root=None):
     native_result=api.run(args,cwd=root,env=raenv,log=output/'native.log');native=decode(native_result.stdout)
     (output/'native-original.json').write_bytes(api.encoded(native))
     raw=decode((output/'compiler-original.json').read_bytes());stage=decode((output/'stage-original.json').read_bytes())
+    stage['dependency_inventory']=decode((output/'syn-stage-raw.json').read_bytes()) if syn is not None else None
     semantic={'compiler':raw,'original_control':control,'selected_invocation':caller,'complete_invocation_inventory':invocations,'context':ctx,'original_syn':None,'native_launcher':{'command':args,'cwd':str(root),'environment':raenv,'status':native_result.returncode}}
     if syn is not None:
         semantic['original_syn']={'original-build.json':control,'dependency-invocation.json':dependency,'caller-invocation.json':caller,'syn-raw.json':decode((output/'syn-raw.json').read_bytes()),'ra-source.json':native['original_syn_correspondence'],'independent-inventory.json':decode((output/'independent-inventory.json').read_bytes())}
