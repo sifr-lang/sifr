@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 implemented and validated; required Opus review blocked by missing authentication
+current_stage: M0 review findings corrected; authenticated final review pending
 
 ## Objective and authority
 
@@ -56,7 +56,7 @@ and disposition. Split large milestones into independently reviewable changes.
 
 | ID | Deliverable | Brief coverage | Status |
 |---|---|---|---|
-| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; checks pass; Opus review blocked |
+| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; review corrections implemented; final review pending |
 | M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | pending |
 | M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | pending |
 | M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | pending |
@@ -222,11 +222,12 @@ item; the authoritative gate belongs to the final candidate under applicable
 policy. Required release checks remain conditional on a real release request.
 
 Current state: M0 inventory and agent simplification implemented and validated;
-required review is blocked. M1–M6 remain pending.
+initial authenticated review found documentation regressions, now corrected.
+M1–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: obtain the required authenticated review or an explicit user
-replacement of that review requirement, deliver M0, then implement M1 contracts/evidence. Subsequent items record candidate
+Next action: verify final M0 reviewer satisfaction, deliver M0, then implement
+M1 contracts/evidence. Subsequent items record candidate
 SHA, changed paths, commands, outcomes, review, dependencies, and exact next action
 here rather than treating the plan itself as execution evidence.
 
@@ -240,7 +241,7 @@ here rather than treating the plan itself as execution evidence.
   inventory and roadmap entry are delivered in the candidate; no executable
   selection, workflow, protection or performance policy has been changed.
 - Passed: pinned-tool `profiles check`, file-size guardrails (4,338 source files),
-  changed local-link checks, `git diff --check`, local-first workflow contract
+  changed local-link checks, local-first workflow contract
   regressions, uv toolchain self-tests (46 checks), and the exact-pin invariant
   (6 projects/3 setup steps). Broad compiler gates are inapplicable to M0 prose.
 - Required Opus review attempted three times through the repository review skill;
@@ -252,12 +253,26 @@ here rather than treating the plan itself as execution evidence.
   created for these failed requests.
 - Blocking instruction: the [phase closure loop](../../../.cursor/skills/phase-closure-loop/SKILL.md)
   says, “If all three requests fail, record the blocker and stop.” M0 delivery and
-  progression are paused for authenticated review or explicit user amendment.
+  progression were paused for authenticated review or explicit user amendment.
   Claude CLI is installed session-locally; the missing prerequisite is account
   authentication, not the executable. No interactive login was started.
-- The user has been asked asynchronously how to provide authentication or replace
-  the review method. M1–M6, protected enforcement, SQL acceptance and release
-  qualification retain their pending status.
+- The user completed official Claude sign-in. The authenticated review of
+  `910d200c27faca079de640708e668c7f3b15dd93` returned NOT SATISFIED, retained in
+  `/workspace/validation-work/evidence/sifr-claude.bnNg8w/response.md`. Its two
+  blocking findings were missing unexpected-change/no-outside-mutation/external
+  failure stop rules in `AGENTS.md` and an extra EOF blank line in the new inventory.
+  Both are corrected together. The original workspace-only `git diff --check`
+  missed the untracked inventory; that is withdrawn as whole-candidate evidence.
+  Replacement validation uses `git diff --check` against the exact implementation
+  base and includes all newly added files.
+- SQL cold-preparation cost measurement is explicitly deferred from M0 to M3's
+  lane measurement work; existing preparation commands and historical timings are
+  inventoried without claiming a measurement in this VM. M0 completes the source,
+  selection, resource, ownership and enforcement entry inventory.
+- Empty guardrail labels now say `none`, and the verification command reference
+  preserves CLI unit-test/E2E entrypoints. Final authenticated review is pending;
+  M1–M6, protected enforcement, SQL acceptance and release qualification retain
+  their pending status.
 
 ## Supplied implementation brief — complete scope contract
 

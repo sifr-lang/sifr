@@ -145,7 +145,7 @@ Toolchain: `cargo-test-sifr-full`, `e2e-pass`.
 
 ### `python-interop-live`
 
-Guardrails: .
+Guardrails: none.
 
 Toolchain: none.
 
@@ -178,4 +178,3 @@ Toolchain: `cargo-test-sifr-full`, `e2e-pass`, `e2e-report-determinism`, `e2e-se
 - `fuzz_property`: `property`, `fuzz-smoke`.
 - `ecosystem_compatibility`: `oss-curated`, `ecosystem-broader`.
 - `sql_platform`: `build-qualification`, `compiler-components`, `common-sql`, `contracts`, `dependency-baseline`, `host-tools`, `integrated-qualification`, `migration-engine`, `mysql-provider`, `postgresql-compiler`, `postgresql-migrations`, `postgresql-runtime`, `incremental-editor`, `query-fragments`, `schema-polymorphism`, `schema-profiles`, `schema-tools`, `sqlite-provider`, `mutation`.
-

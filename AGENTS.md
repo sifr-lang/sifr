@@ -12,8 +12,12 @@ Sifr compiles Python syntax to native binaries through Rust. See
   Follow the user's authorized scope and sequencing when it spans multiple items.
 - Own your branch, index, worktree, temporary paths, and build artifacts. Preserve
   unrelated changes; do not clean shared targets or another session's inputs.
+- Do not let another session mutate owned paths during validation or review.
+  If unexpected repository changes appear, stop and ask before proceeding.
 - Record out-of-scope failures with their owner. Preserve failed/incomplete
   evidence; missing execution or a required skip never counts as a pass.
+- Do not absorb unrelated failures or externally owned dependencies. If an
+  external failure blocks the item, record it and stop.
 - Do not add compatibility or fallback paths unless requested. Keep `check`
   separate from codegen/runtime and use the canonical frontend authority.
 - Prevent user-triggered compiler/runtime panics. Generated runtime code must not
