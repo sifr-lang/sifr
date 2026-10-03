@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 from datetime import datetime, timezone, timedelta
 import shutil
+import subprocess
 
 import generated_program_metrics as programs
 from measurement_timer import managed_timer_identity
@@ -78,6 +79,12 @@ class ProgramTests(unittest.TestCase):
         self.assertTrue(rows)
         self.assertTrue(all(Path(row['path']).is_file() and len(row['sha256'])==64 for row in rows))
 
+    def test_old_timer_rss_scaling_is_not_accepted(self):
+        import measurement_timer
+        completed=subprocess.CompletedProcess([],0,'time (GNU Time) 1.7\n','')
+        with patch.object(measurement_timer.subprocess,'run',return_value=completed),self.assertRaises(BenchmarkError):
+            managed_timer_identity()
+
     def test_actual_wrapper_programs_compile_and_record_commands(self):
         root=self.output('wrappers');root.mkdir(parents=True)
         cargo,rustc,cargo_events,rustc_events=programs.write_wrappers(root)
@@ -98,10 +105,18 @@ class ProgramTests(unittest.TestCase):
         observed.update(warmup=False,process_index=0)
         program={'id':'startup','binary':str(self.binary),'binary_sha256':programs.digest(self.binary),
                  'source_sha256':'test-only','runtime_dependencies':programs.dependencies(self.binary)}
+        cargo=root/'cargo-artifacts.jsonl';rustc=root/'rustc-invocations.jsonl'
+        artifact={'reason':'compiler-artifact','target':{'name':'sifr_output'},'executable':str(self.binary),
+                  'profile':{'test':False,'opt_level':'3','debug_assertions':False,'overflow_checks':True}}
+        arguments=['--crate-name','sifr_output','-C','target-cpu=generic']
+        cargo.write_text(json.dumps(artifact)+'\n');rustc.write_text(json.dumps(arguments)+'\n')
+        program.update(cargo_artifact=artifact,rustc_command=arguments,
+                       cargo_events_range=[0,cargo.stat().st_size],rustc_events_range=[0,rustc.stat().st_size])
         prepared=root/'prepared.json'
         prepared.write_text(json.dumps({'kind':'preparation-output','runtime_assertions':0,'optimization':'release',
             'target_cpu':'generic','compiler_receipt':str(compiler),'compiler_receipt_sha256':programs.digest(compiler),
-            'policy_sha256':programs.digest(programs.POLICY),'programs':[program]}))
+            'policy_sha256':programs.digest(programs.POLICY),'programs':[program],
+            'cargo_events_sha256':programs.digest(cargo),'rustc_events_sha256':programs.digest(rustc)}))
         duration=observed['metrics']['startup_lifecycle_ms'];now=datetime.now(timezone.utc)
         value={'schema_version':1,'protocol':contract['protocol'],'status':'captured','level':'smoke',
             'numeric_regression_qualification':False,'prepared_path':str(prepared),'prepared_sha256':programs.digest(prepared),
@@ -123,6 +138,44 @@ class ProgramTests(unittest.TestCase):
         changed=copy.deepcopy(value);changed['finished_utc']=(now-timedelta(days=2)).isoformat();changes.append(changed)
         for changed in changes:
             with self.assertRaises(BenchmarkError): check(changed)
+        original_prepared=json.loads(prepared.read_text())
+        for key in ('cargo_artifact','rustc_command'):
+            changed=copy.deepcopy(original_prepared);del changed['programs'][0][key]
+            prepared.write_text(json.dumps(changed))
+            changed_value=value|{'prepared_sha256':programs.digest(prepared)}
+            with self.assertRaises((BenchmarkError,KeyError)): check(changed_value)
+        prepared.write_text(json.dumps(original_prepared))
+        value['prepared_sha256']=programs.digest(prepared)
+        changed=copy.deepcopy(original_prepared);changed['cargo_events_sha256']='changed'
+        prepared.write_text(json.dumps(changed))
+        with self.assertRaises(BenchmarkError): check(value|{'prepared_sha256':programs.digest(prepared)})
+        prepared.write_text(json.dumps(original_prepared));value['prepared_sha256']=programs.digest(prepared)
+        cargo.write_text(json.dumps(artifact|{'profile':artifact['profile']|{'opt_level':'0'}})+'\n')
+        with self.assertRaises(BenchmarkError): check(value)
+        cargo.write_text(json.dumps(artifact)+'\n')
+        rustc.write_text(json.dumps(['--crate-name','sifr_output'])+'\n')
+        with self.assertRaises(BenchmarkError): check(value)
+        rustc.write_text(json.dumps(arguments)+'\n')
+        # Rehashed receipts cannot launder a non-release Cargo event or a
+        # rustc invocation that never selected the registered CPU target.
+        for kind in ('profile','target'):
+            altered=copy.deepcopy(original_prepared)
+            if kind=='profile':
+                bad_artifact=artifact|{'profile':artifact['profile']|{'opt_level':'0'}}
+                cargo.write_text(json.dumps(bad_artifact)+'\n')
+                altered['programs'][0]['cargo_artifact']=bad_artifact
+                altered['programs'][0]['cargo_events_range']=[0,cargo.stat().st_size]
+                altered['cargo_events_sha256']=programs.digest(cargo)
+            else:
+                bad_arguments=['--crate-name','sifr_output','-C','target-cpu=native']
+                rustc.write_text(json.dumps(bad_arguments)+'\n')
+                altered['programs'][0]['rustc_command']=bad_arguments
+                altered['programs'][0]['rustc_events_range']=[0,rustc.stat().st_size]
+                altered['rustc_events_sha256']=programs.digest(rustc)
+            prepared.write_text(json.dumps(altered))
+            with self.assertRaises(BenchmarkError): check(value|{'prepared_sha256':programs.digest(prepared)})
+            cargo.write_text(json.dumps(artifact)+'\n');rustc.write_text(json.dumps(arguments)+'\n')
+        prepared.write_text(json.dumps(original_prepared));value['prepared_sha256']=programs.digest(prepared)
         (root/'startup/0/stdout').write_text('changed\n')
         with self.assertRaises(BenchmarkError): check(value)
 

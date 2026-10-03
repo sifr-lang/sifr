@@ -19,7 +19,7 @@ from benchmark_process import run_owned_process
 from compiler_lanes import validate_receipt
 from sifr_verify.resource_admission import discover, admit, worker_limit
 from measurement_timer import managed_timer_identity
-from program_evidence import read_metrics, producer_identity, validate_capture
+from program_evidence import read_metrics, producer_identity, validate_capture, target_cpu_generic
 
 ROOT = Path(__file__).resolve().parents[3]
 AREA = Path(__file__).parent
@@ -155,6 +155,10 @@ def prepare(compiler_receipt: Path, output: Path):
     try:
         for case in contract['cases']:
             destination=output/case['id']
+            os.environ['SIFR_CACHE_DIR']=str(output/'cache'/case['id'])
+            os.environ['CARGO_TARGET_DIR']=str(output/'private-target'/case['id'])
+            cargo_begin=events.stat().st_size if events.exists() else 0
+            rustc_begin=rust_events.stat().st_size if rust_events.exists() else 0
             completed,deadline=run_owned_process([compiler['artifact']['path'],'build',str(ROOT/case['source_path']),
                                                   '--release','--output',str(destination)],ROOT,2400)
             (output/(case['id']+'.compile.stdout')).write_text(completed.stdout)
@@ -162,7 +166,8 @@ def prepare(compiler_receipt: Path, output: Path):
             if deadline or completed.returncode:
                 raise BenchmarkError('native program compilation failed')
             binary=destination/'sifr_output/target/final/sifr_output'
-            artifact_rows=[json.loads(line) for line in events.read_text().splitlines() if line.startswith('{')]
+            cargo_end=events.stat().st_size;rustc_end=rust_events.stat().st_size
+            artifact_rows=[json.loads(line) for line in events.read_bytes()[cargo_begin:cargo_end].decode().splitlines() if line.startswith('{')]
             actual=[row for row in artifact_rows if row.get('reason')=='compiler-artifact' and
                     row.get('target',{}).get('name')=='sifr_output' and row.get('executable')]
             if not actual:
@@ -172,16 +177,17 @@ def prepare(compiler_receipt: Path, output: Path):
             if (profile['test'] or profile['opt_level']!='3' or profile['debug_assertions']
                     or not profile['overflow_checks'] or digest(artifact['executable']) != digest(binary)):
                 raise BenchmarkError('native application profile/artifact differs from release contract')
-            invocations=[json.loads(line) for line in rust_events.read_text().splitlines()]
+            invocations=[json.loads(line) for line in rust_events.read_bytes()[rustc_begin:rustc_end].decode().splitlines()]
             actual_rustc=[args for args in invocations if '--crate-name' in args and
                           args[args.index('--crate-name')+1]=='sifr_output']
-            if not actual_rustc or not any('target-cpu=generic' in arg for arg in actual_rustc[-1]):
+            if not actual_rustc or not target_cpu_generic(actual_rustc[-1]):
                 raise BenchmarkError('actual application rustc command lacks registered CPU target')
             protected=output/'binaries'/case['id'];protected.parent.mkdir(exist_ok=True,mode=0o700)
             shutil.copyfile(binary,protected);protected.chmod(0o500)
             if digest(protected)!=digest(binary): raise BenchmarkError('retained native program bytes changed')
             rows.append({'id':case['id'],'binary':str(protected),'binary_sha256':digest(protected),
                          'rustc_command':actual_rustc[-1],
+                         'cargo_events_range':[cargo_begin,cargo_end],'rustc_events_range':[rustc_begin,rustc_end],
                          'source_sha256':case['source_sha256'],'cargo_artifact':artifact,
                          'runtime_dependencies':dependencies(binary)})
     except BaseException as error:
@@ -227,6 +233,7 @@ def capture(prepared: Path, output: Path, level: str):
             'numeric_regression_qualification':False,'policy_sha256':digest(POLICY),'prepared_sha256':digest(prepared),
             'started_utc':datetime.now(timezone.utc).isoformat(),'timer':timer,'rows':[],
             'prepared_path':str(prepared.resolve()),'producer':producer_identity(ROOT)}
+    (output/'receipt.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
     try:
         count=contract['levels'][level]
         for case,program in zip(contract['cases'],receipt['programs'],strict=True):
@@ -263,8 +270,9 @@ def capture(prepared: Path, output: Path, level: str):
         result.update(status='failed',failure=type(error).__name__+': '+str(error))
         raise
     finally:
-        result['finished_utc']=datetime.now(timezone.utc).isoformat()
-        (output/'receipt.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
+        if result['status']!='captured':
+            result['finished_utc']=datetime.now(timezone.utc).isoformat()
+            (output/'receipt.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
     return result
 
 

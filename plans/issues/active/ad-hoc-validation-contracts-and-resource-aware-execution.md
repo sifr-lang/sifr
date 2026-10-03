@@ -1399,3 +1399,20 @@ received a SATISFIED read-only Opus review at
 `/workspace/validation-work/evidence/sifr-claude.RzPTmU/response.md`. This scoped
 review covers acquisition and controls; actual upgrade and release-platform
 qualification remain unfinished.
+
+The first compiled-program observation review at `dca288a19f6bb0b8e9ffd699a98bab62386ff8a8`
+was NOT SATISFIED: its independent checker did not re-derive application release
+profiles and CPU flags from retained command events. The review remains at
+`/workspace/validation-work/evidence/sifr-claude.XlccNX/response.md`.
+The correction verifies complete, case-bound byte ranges in both JSONL event
+files, their SHA-256 hashes, the actual Cargo executable, its release profile and
+an exact, nonconflicting rustc `target-cpu=generic` argument. Each program uses a
+separate private application cache so later preparation cannot overwrite the
+first program's actual Cargo executable before independent checking. Negative
+controls include rehashed non-release events, a rehashed wrong CPU target,
+missing profile/command data and changed raw logs. Captures now retain an initial
+incomplete receipt and leave the successfully checked completion bytes unchanged.
+GNU Time below 1.8 is rejected because its older peak-RSS scaling is unreliable.
+The corrected complete performance area passed 101 tests; earlier runner
+foundation coverage passed all 31 groups. Broad candidate gates and native Sifr
+qualification remain pending.

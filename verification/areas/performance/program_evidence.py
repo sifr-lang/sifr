@@ -56,6 +56,49 @@ def read_metrics(output, case, binary_size):
             'native_wall_seconds': wall, 'timer_resolution_seconds': 0.01}
 
 
+def target_cpu_generic(arguments):
+    values = []
+    for index, argument in enumerate(arguments):
+        if argument == '-C' and index + 1 < len(arguments):
+            values.append(arguments[index + 1])
+        elif argument.startswith('-C'):
+            values.append(argument[2:])
+    return [value for value in values if value.startswith('target-cpu=')] == ['target-cpu=generic']
+
+
+def verify_preparation_events(path, prepared):
+    cargo = path.parent/'cargo-artifacts.jsonl'
+    rustc = path.parent/'rustc-invocations.jsonl'
+    if digest(cargo) != prepared['cargo_events_sha256'] or digest(rustc) != prepared['rustc_events_sha256']:
+        raise BenchmarkError('preparation command event bytes differ')
+    payloads = {'cargo_events_range': cargo.read_bytes(), 'rustc_events_range': rustc.read_bytes()}
+    previous = dict.fromkeys(payloads, 0)
+    for program in prepared['programs']:
+        records = {}
+        for key, raw in payloads.items():
+            begin, end = program[key]
+            if (type(begin) is not int or type(end) is not int or begin != previous[key]
+                    or not begin < end <= len(raw)):
+                raise BenchmarkError('preparation case command ranges differ')
+            previous[key] = end
+            records[key] = [json.loads(line) for line in raw[begin:end].decode().splitlines()
+                            if line.startswith('{') or line.startswith('[')]
+        artifacts = [row for row in records['cargo_events_range'] if row.get('reason') == 'compiler-artifact'
+                     and row.get('target', {}).get('name') == 'sifr_output' and row.get('executable')]
+        invocations = [args for args in records['rustc_events_range'] if '--crate-name' in args
+                       and args[args.index('--crate-name') + 1] == 'sifr_output']
+        if (not artifacts or artifacts[-1] != program['cargo_artifact'] or not invocations
+                or invocations[-1] != program['rustc_command'] or not target_cpu_generic(invocations[-1])):
+            raise BenchmarkError('actual Cargo artifact or rustc CPU target differs')
+        artifact = artifacts[-1]
+        profile = artifact['profile']
+        if (profile['test'] or profile['opt_level'] != '3' or profile['debug_assertions']
+                or not profile['overflow_checks'] or digest(artifact['executable']) != program['binary_sha256']):
+            raise BenchmarkError('actual application release profile or Cargo executable differs')
+    if any(previous[key] != len(raw) for key, raw in payloads.items()):
+        raise BenchmarkError('unassigned preparation command events')
+
+
 def validate_capture(path, contract, root):
     from generated_program_metrics import dependencies
     path = path.resolve()
@@ -65,6 +108,7 @@ def validate_capture(path, contract, root):
     compiler_path = Path(prepared['compiler_receipt'])
     compiler = json.loads(compiler_path.read_text())
     validate_receipt(root, compiler['lane'], compiler)
+    verify_preparation_events(prepared_path, prepared)
     now = datetime.now(timezone.utc)
     start, finish = (datetime.fromisoformat(value[key]) for key in ('started_utc', 'finished_utc'))
     if (start.utcoffset() is None or finish.utcoffset() is None or not start <= finish <= now
