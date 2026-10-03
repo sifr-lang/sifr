@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 implemented; named documentation checks and review pending
+current_stage: M0 implemented and validated; required Opus review blocked by missing authentication
 
 ## Objective and authority
 
@@ -56,7 +56,7 @@ and disposition. Split large milestones into independently reviewable changes.
 
 | ID | Deliverable | Brief coverage | Status |
 |---|---|---|---|
-| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; documentation validation/review pending |
+| M0 | Current-state inventory and simpler `AGENTS.md` with minimum commands by change type | User addition; implementation entry | implemented; checks pass; Opus review blocked |
 | M1 | Canonical inventories, validation contracts, compatibility/support ownership, and evidence schemas | 1, 12–14, 17–19; reuse identity | pending |
 | M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | pending |
 | M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | pending |
@@ -81,7 +81,7 @@ and disposition. Split large milestones into independently reviewable changes.
    first-party source limit, scoped work, and protection of other owners' inputs.
    Do not turn simplification into a waiver of merge or release guarantees.
 
-Proposed command guidance for `AGENTS.md` (to implement and check in M0):
+Command guidance implemented in `AGENTS.md` during M0:
 
 | Work | Minimum local validation |
 |---|---|
@@ -221,12 +221,43 @@ in M0 and the relevant stage contracts. Targeted checks belong to the bounded
 item; the authoritative gate belongs to the final candidate under applicable
 policy. Required release checks remain conditional on a real release request.
 
-Current state: M0 inventory and agent simplification implemented; M1–M6 pending.
+Current state: M0 inventory and agent simplification implemented and validated;
+required review is blocked. M1–M6 remain pending.
 The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
 records current selections, resources, verified protection, owners and gaps.
-Next action: validate and review M0, then implement M1 contracts/evidence. Subsequent items record candidate
+Next action: obtain the required authenticated review or an explicit user
+replacement of that review requirement, deliver M0, then implement M1 contracts/evidence. Subsequent items record candidate
 SHA, changed paths, commands, outcomes, review, dependencies, and exact next action
 here rather than treating the plan itself as execution evidence.
+
+## M0 execution record — 2026-10-03
+
+- Owned implementation candidate: `bbc9db098c96782cdcc4c72d4ec4bb09502bfb2b` on
+  `codex/validation-contracts-resource-aware-20261003`, base
+  `da57229746b0793577d257b29f1382baf60b37b0`.
+- Draft implementation [PR #4279](https://github.com/sifr-lang/sifr/pull/4279).
+- `AGENTS.md` reduced from 156 to 60 lines. The complete proposal, current-state
+  inventory and roadmap entry are delivered in the candidate; no executable
+  selection, workflow, protection or performance policy has been changed.
+- Passed: pinned-tool `profiles check`, file-size guardrails (4,338 source files),
+  changed local-link checks, `git diff --check`, local-first workflow contract
+  regressions, uv toolchain self-tests (46 checks), and the exact-pin invariant
+  (6 projects/3 setup steps). Broad compiler gates are inapplicable to M0 prose.
+- Required Opus review attempted three times through the repository review skill;
+  each failed with `Not logged in · Please run /login`. No review verdict or merge
+  acceptance is claimed. Atomic response paths were never published as passes.
+- Failure logs and their hashes are retained outside the reviewed tree in
+  `/workspace/validation-work/evidence/m0-review-blocker.json`, with the three
+  separate `sifr-claude.*` request directories. No numbered review artifact was
+  created for these failed requests.
+- Blocking instruction: the [phase closure loop](../../../.cursor/skills/phase-closure-loop/SKILL.md)
+  says, “If all three requests fail, record the blocker and stop.” M0 delivery and
+  progression are paused for authenticated review or explicit user amendment.
+  Claude CLI is installed session-locally; the missing prerequisite is account
+  authentication, not the executable. No interactive login was started.
+- The user has been asked asynchronously how to provide authentication or replace
+  the review method. M1–M6, protected enforcement, SQL acceptance and release
+  qualification retain their pending status.
 
 ## Supplied implementation brief — complete scope contract
 
