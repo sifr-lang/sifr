@@ -94,12 +94,15 @@ def discover(*, disk_path: Path, cgroup_root: Path = Path("/sys/fs/cgroup"),
                 if capacity <= 0 or usage < 0:
                     raise ValueError("invalid cgroup memory accounting")
                 limit = min(limit, capacity)
-                # Clean inactive file cache is reclaimable within this same
-                # allowance. Never add tmpfs, dirty/writeback or unevictable
-                # bytes as extra RAM. Reserve still guards concurrent drift.
+                # Clean active/inactive file LRU pages are reclaimable within
+                # this same limit. Reading input provenance must not turn file
+                # cache into reserved anonymous RAM. Never add tmpfs or dirty
+                # writeback/unevictable pages as extra memory.
+                # The existing reserve still guards concurrent drift.
                 stats_path = current / "memory.stat"
                 stats = dict(line.split() for line in stats_path.read_text().splitlines()) if stats_path.is_file() else {}
-                reclaimable = max(0, min(usage, int(stats.get("inactive_file", "0"))) -
+                file_lru = int(stats.get("inactive_file", "0")) + int(stats.get("active_file", "0"))
+                reclaimable = max(0, min(usage, file_lru) -
                                   sum(int(stats.get(name, "0")) for name in
                                       ("file_dirty", "file_writeback", "unevictable")))
                 available = min(available, min(capacity, max(0, capacity - usage) + reclaimable))

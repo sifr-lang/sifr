@@ -381,6 +381,43 @@ here rather than treating the plan itself as execution evidence.
   production checkpoint reuse, fresh constrained execution, and required gates
   remain pending. M3–M6 are still pending; no phase or performance pass is claimed.
 
+### Actual launch identity and reclaimable memory follow-up
+
+- Opus approved the early-lifetime candidate
+  `59f8ee918cd68334fea5adcdcfd9990025bff8a1`, with no blocking findings; draft
+  [PR #4284](https://github.com/sifr-lang/sifr/pull/4284) remains unmerged.
+  Review: `/workspace/validation-work/evidence/candidates/59f8ee918cd68334fea5adcdcfd9990025bff8a1/opus-graph-lifetimes.md`.
+- A real production HIR guard executed and published complete evidence on that
+  candidate, then reused it on the next invocation. Raw logs are
+  `m2-checkpoint-production-fresh-59f8ee918.log` and
+  `m2-checkpoint-production-reuse-59f8ee918.log` outside Git. This is one guard,
+  not full-profile reuse or phase acceptance.
+- The review called out untested real producer/consumer launch identities.
+  Actual direct and nested `uv run` identity observations differed; raw
+  `m2-lifetime-real-nested-key-comparison.log` preserves that failure before any
+  expensive compiler build. This new bounded item pins the same physical Python
+  executable and removes exact duplicate PATH entries while preserving first
+  lookup order, empty cwd entries, and distinct directory aliases. The real
+  direct/nested observations now match every input/runtime component and digest;
+  raw `m2-preparation-real-key-canonicalized.log` retains the result.
+- Provenance reads left roughly 8.1 GB of clean active file LRU pages charged to
+  the cgroup. Counting only inactive file pages falsely reduced available memory
+  below the source-stage requirement. Admission now accounts for clean active
+  and inactive file LRU pages within the same limits and host availability bound,
+  subtracting dirty/writeback/unevictable bytes. Tmpfs/shmem and anonymous LRU
+  pages are not extra memory. The original 2 GiB memory reserve remains required.
+  Actual estimated available memory is approximately 16.3 GB in the 17.18 GB
+  cgroup, without changing capacity; source/package/assertion memory admission
+  passes. Disk remains approximately 16.3 GB, so the existing 19.3 GB cold
+  corpus/metadata and remaining-preparation admission requirements still block.
+- Restoration/copy admission observations are retained in preparation receipts.
+  Dangling dependency links now report infrastructure unavailability instead of
+  an assertion failure. Thirty-one targeted receipt/resource checks pass,
+  including real path lookup preservation, active clean cache accounting,
+  dirty-page exclusion and no shmem/anonymous allowance. Final review/gates and
+  constrained full execution remain pending. The shared main target still has no
+  established owner and remains untouched; M3–M6 remain pending.
+
 ### Owned descendant recovery continuation
 
 - The constrained execution of `d5cedf1a3091e10adc93d33b85c32b769891eafb`

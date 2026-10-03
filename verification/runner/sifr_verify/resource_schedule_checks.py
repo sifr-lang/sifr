@@ -78,6 +78,17 @@ class ResourceTests(unittest.TestCase):
                                  meminfo=meminfo, affinity=5, tmpfs_paths=())
             self.assertEqual(reclaimed.memory_available_bytes, 14400)
             self.assertEqual(reclaimed.memory_limit_bytes, 16000)
+            (root / "memory.stat").write_text(
+                "inactive_file 2000\nactive_file 1000\nfile_dirty 300\nfile_writeback 200\nunevictable 100\n"
+                "shmem 9000\nactive_anon 9000\n")
+            active = discover(disk_path=root, cgroup_root=root, cgroup_path=child,
+                              meminfo=meminfo, affinity=5, tmpfs_paths=())
+            self.assertEqual(active.memory_available_bytes, 15400)
+            self.assertEqual(active.memory_limit_bytes, 16000)
+            (root / "memory.stat").write_text("inactive_file 2000\nactive_file 1000\nfile_dirty 3000\n")
+            dirty = discover(disk_path=root, cgroup_root=root, cgroup_path=child,
+                             meminfo=meminfo, affinity=5, tmpfs_paths=())
+            self.assertEqual(dirty.memory_available_bytes, 13000)
 
     def test_unknown_cgroup_and_traversal_are_not_host_capacity(self):
         with tempfile.TemporaryDirectory() as directory:
