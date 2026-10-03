@@ -1207,3 +1207,56 @@ cannot acquire passing evidence under an earlier SHA. The existing profile runne
 remains the execution authority. Missing diff information broadens selection;
 it never becomes a documentation-only skip. Trusted CI aggregation, main reuse,
 scheduled hardening and protected enforcement remain separate unfinished work.
+
+## M3 trusted aggregate and scheduled hardening — work in progress
+
+Conservative selector candidate `1d1e79489a43437f8a3ff5b5253a3c41950012b8`
+is draft PR #4290. Scoped Opus review is SATISFIED without blockers at
+`/workspace/validation-work/evidence/sifr-claude.wjrztC/response.md`.
+Its three focused regressions pass. An earlier 31-group foundation run passed;
+the later short-deadline failure remains recorded. An isolated diagnostic of that
+unchanged control passed with outcomes 0/exit followed by 124/safety_deadline.
+No failed foundation outcome is converted to a passing full run.
+
+The next CI candidate adds actual queue-candidate checkouts and commit-bound
+profile selection. Main-push and manual validation select one merge profile;
+scheduled validation selects nightly. Automatic pushes no longer duplicate
+create-PR, merge and conditional release qualification. Nightly schedules all five
+bounded instrumented fuzz targets on the event's exact commit and retains
+receipts, working corpora and minimized findings even after failure. The existing
+fuzz subprocess adapter still needs canonical owned-process custody before full
+constrained acceptance; scheduling is not evidence that campaigns have executed.
+
+`validation-required` is published by a separate default-branch `workflow_run`
+workflow. Candidate validation has read-only permissions and no persisted checkout
+credentials. Only the trusted publisher can write checks; it executes trusted
+source and reads candidate Git objects as data. It independently derives the
+required profile, fetches all jobs from the current run attempt, and checks
+mandatory successes, completion freshness, repository/workflow identity and
+actual candidate binding. Missing, skipped, cancelled, failed, stale, duplicated,
+partial and untrusted results cannot yield success.
+
+A selection-job immutable artifact records the actual checkout SHA and producer
+run/attempt. The publisher verifies GitHub's artifact digest, exact bounded ZIP
+inventory, run provenance and candidate identity. It rejects changed PR heads or
+bases and regenerated merge candidates that differ from executed evidence.
+Candidate workflow bytes must equal the trusted default-branch definition;
+workflow changes therefore need a deliberate reviewed trust bootstrap before
+protected enforcement. No candidate checkout or executable artifact runs in the
+privileged publisher. Missing API/publication evidence leaves the required check
+absent and cannot pass.
+
+Ten focused policy/publication/artifact controls pass, as do workflow regressions,
+46 uv pin controls, uv invariants and size/whitespace checks. Branch rules are not
+yet changed: trusted definitions must first be delivered and observed on main.
+Main-push evidence reuse, measured finer selection, real scheduled campaigns,
+platform qualification and external enforcement remain open. No CI run or full
+acceptance is claimed by these local controls.
+
+The exact benchmark-custody candidate's create-PR gate stopped during preparation
+at its declared filesystem floor after 894,904 ms. Its failed raw log and report
+are retained at `/workspace/validation-work/evidence/create-pr-be6b4cdc1.log` and
+`/workspace/sifr/target/validation_lane_reports/create-pr.latest.json`.
+No qualification assertions ran and no cache was removed. This is failed gate
+evidence, not a passing preparation receipt. Remaining implementation continues;
+no unchanged gate retry or reduced workload is authorized by this result.

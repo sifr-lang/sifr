@@ -1,0 +1,36 @@
+name: validation-required-publisher
+
+on:
+  workflow_run:
+    workflows: [local-first-validation]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: contains(fromJSON('["pull_request", "merge_group", "push"]'), github.event.workflow_run.event)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    steps:
+      # workflow_run uses the protected default-branch definition. This checkout
+      # contains trusted publisher code; candidate objects are fetched as data.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version-file: verification/pyproject.toml
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+      - name: Verify complete producer facts and publish exact-candidate aggregate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATION_RUN_ID: ${{ github.event.workflow_run.id }}
+          TRUSTED_WORKFLOW_SHA: ${{ github.sha }}
+        run: uv run --project verification --locked python scripts/publish_validation_aggregate.py

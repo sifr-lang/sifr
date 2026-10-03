@@ -5,7 +5,14 @@ on:
     branches:
       - main
   pull_request:
+  merge_group:
+    types: [checks_requested]
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   uv-toolchain-invariant:
@@ -15,6 +22,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - name: Verify canonical uv pins and platform checksums
         run: |
           python3 scripts/check_local_first_workflow.py
@@ -29,6 +38,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
       - name: Rustfmt check (advisory)
@@ -38,19 +49,51 @@ jobs:
         continue-on-error: true
         run: cargo clippy --workspace -- -D warnings
 
+  validation-selection:
+    name: validation-selection
+    runs-on: ubuntu-24.04
+    outputs:
+      profiles: ${{ steps.select.outputs.profiles }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version-file: verification/pyproject.toml
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+      - name: Select complete candidate-bound coverage
+        id: select
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CANDIDATE_SHA: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+        run: uv run --project verification --locked python scripts/select_ci_validation.py
+      - name: Bind the actual checked-out candidate to the producer attempt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: validation-candidate-${{ github.run_attempt }}
+          path: target/validation-candidate/candidate.json
+          if-no-files-found: error
+          retention-days: 7
+
   local-first-profiles:
     name: local-first-${{ matrix.profile }}
     runs-on: ubuntu-24.04
-    # PRs run only create-pr for fast feedback; broader lanes run on push and manual workflows.
+    needs: validation-selection
     strategy:
       fail-fast: true
       matrix:
-        profile: ${{ fromJSON(github.event_name == 'pull_request' && '["create-pr"]' || '["create-pr", "merge", "release"]') }}
+        profile: ${{ fromJSON(needs.validation-selection.outputs.profiles) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -75,6 +118,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -105,6 +150,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: ${{ matrix.target }}
@@ -173,6 +220,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: wasm32-wasip2
@@ -190,6 +239,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -197,3 +248,45 @@ jobs:
           checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
       - name: Verify deterministic report signature
         run: bash verification/runner/e2e/check_report_determinism.sh --profile merge
+
+  fuzz-hardening:
+    name: fuzz-hardening-${{ matrix.target }}
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [parser, lowering, ownership, diagnostics, project_graph]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version-file: verification/pyproject.toml
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+      - name: Prepare pinned fuzz engine and instrumented toolchain
+        run: |
+          rustup toolchain install nightly --profile minimal
+          cargo install cargo-fuzz --version 0.13.2 --locked
+          cargo +nightly fetch --locked --manifest-path verification/fuzz/Cargo.toml
+      - name: Run bounded target campaign and preserve owned findings
+        env:
+          FUZZ_TARGET: ${{ matrix.target }}
+        run: |
+          mkdir -p target/verification/fuzz
+          git rev-parse HEAD > target/verification/fuzz/source-commit.txt
+          uv run --project verification --locked python -m sifr_verify.hardening.coverage_fuzz --profile nightly --target "$FUZZ_TARGET" --result-json "target/verification/fuzz/$FUZZ_TARGET.json"
+      - name: Retain receipts, corpora and minimized reproductions
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: fuzz-${{ github.sha }}-${{ matrix.target }}-${{ github.run_attempt }}
+          path: target/verification/fuzz
+          if-no-files-found: error
+          retention-days: 30
