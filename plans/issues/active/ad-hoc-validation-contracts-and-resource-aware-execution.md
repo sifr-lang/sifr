@@ -1107,3 +1107,43 @@ exception from the entire admitted step, preserving classification through both
 journal entries. Regressions inject admission refusal before command execution
 and source drift afterward, verifying the outer entries remain infrastructure
 failures. Unknown failure details fail conservatively as unavailable.
+
+## M4 prospective level registration — work in progress
+
+M2 cache-admission candidate `ed3f0b800ed9a4dbc3c516d104f55db47b779c4d`
+passed 60 targeted tests and 30 foundation groups; Opus remediation review is
+SATISFIED with no blockers. Its review is outside Git at
+`/workspace/validation-work/evidence/candidates/ed3f0b800ed9a4dbc3c516d104f55db47b779c4d/opus-cache-admission.md`.
+M1/M2 implementation gates and full constrained acceptance remain open.
+
+The next prospective level contract preserves the existing five-case smoke and
+ten-case representative selections. Smoke runs its original one warmup/one
+observation workload checks without a physical reference and cannot qualify
+numeric regression or p95 budgets. Representative keeps named-reference admission
+and limits its threshold claims to the selected cases. Native `full` now selects
+all 65 manifest cases instead of accidentally reusing the ten-case representative
+list, and its budget checker requires complete inventory. Eligible native metric
+checks do not replace shared-cloud paired qualification.
+
+`performance_levels.json` binds the benchmark-manifest hash, selections, sampling,
+reference requirements and permitted claims. Canonical partition results retain
+and independently reconcile that policy. Level checks reject omissions, duplicates,
+manifest drift and false smoke qualification. The shared-cloud v2 protocol remains
+unchanged at all 65 cases and 5,120 fixed pairs, with independent receipt acceptance;
+no cheaper numeric qualification protocol or smaller paired count is introduced.
+
+Policy-only trend checks validate the existing policy/baseline structure without
+claiming its freshness. Ordinary trend/reference qualification remains strict and
+rejects stale evidence; a regression proves both behaviors. Stored timestamps,
+measurements, expiry windows and numeric thresholds are unchanged. Smoke evidence
+is explicitly rejected by numeric budget qualification.
+
+Focused level/routing/shared-cloud tests pass. The broader benchmark self-test
+failed in the pre-existing resistant-process-group cleanup: the old group-only
+adapter left a zombie and refused another sample. Its raw log is preserved at
+`/workspace/validation-work/evidence/m4-performance-levels-benchmark-selftest.log`.
+`benchmark_process.py` is unchanged from the parent, so this is recorded as the
+M2/M4 owned-process dependency, not a passing validation result or a level-selection
+regression. A bounded production benchmark-custody repair must precede acceptance;
+no unchanged retry, case removal or weakened cleanup assertion is authorized.
+Generated-program metrics, paired qualification, M3 and M5/M6 remain pending.

@@ -52,7 +52,7 @@ class ReferenceAdmissionOrderingTests(unittest.TestCase):
         return runner, status, events
 
     def test_failed_admission_runs_every_functional_selection_before_blocking(self):
-        for profile in ('create-pr', 'merge', 'nightly', 'release'):
+        for profile in ('merge', 'nightly', 'release'):
             with self.subTest(profile=profile):
                 runner, status, events = self.exercise(profile, admission_error=2)
                 self.assertEqual(status, 2)
@@ -68,7 +68,7 @@ class ReferenceAdmissionOrderingTests(unittest.TestCase):
                 self.assertEqual([name for kind, name in events if kind == 'toolchain'], runner.profile['toolchain_steps'])
 
     def test_performance_execution_failure_keeps_functional_outcome(self):
-        runner, status, events = self.exercise('create-pr', area_error=1)
+        runner, status, events = self.exercise('merge', area_error=1)
         self.assertEqual(status, 1)
         self.assertEqual((runner.functional_exit_status, runner.performance_exit_status), (0, 1))
         self.assertEqual(events[-2:], [('admission', 'performance'), ('area', 'performance')])
@@ -85,9 +85,17 @@ class ReferenceAdmissionOrderingTests(unittest.TestCase):
         self.assertEqual((runner.functional_exit_status, runner.performance_exit_status), (0, 124))
         self.assertEqual([name for kind, name in events if kind == 'toolchain'], runner.profile['toolchain_steps'])
         self.assertEqual([name for kind, name in events if kind == 'area'],
-            [item['area'] for item in runner.profile['selected_areas']] + ['performance'])
+            [item['area'] for item in runner.profile['selected_areas']])
         selected = next(item['suites'] for item in runner.profile['selected_areas'] if item['area'] == 'performance')
         self.assertCountEqual([name for _, names in runner.observed_performance_suites for name in names], selected)
+
+    def test_smoke_does_not_need_a_physical_reference(self):
+        runner, status, events = self.exercise('create-pr', admission_error=2)
+        self.assertEqual(status, 0)
+        self.assertEqual((runner.functional_exit_status, runner.performance_exit_status), (0, 0))
+        self.assertNotIn(('admission', 'performance'), events)
+        self.assertEqual(runner.observed_performance_suites,
+            [('correctness', ['smoke', 'frontend-syntax-guardrails', 'lsp-workspace-cache'])])
 
     def test_functional_failure_remains_fail_fast(self):
         runner = ProfileRunner('create-pr', [])
@@ -133,17 +141,22 @@ class PerformancePartitionTests(unittest.TestCase):
     def test_complete_partitions_publish_full_selection_and_missing_part_rejects(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            selected = ['smoke', 'frontend-syntax-guardrails']
+            selected = ['representative', 'frontend-syntax-guardrails']
+            policy_path = root / 'verification/areas/performance/data/performance_levels.json'
+            policy_path.parent.mkdir(parents=True)
+            policy = json.loads((REPO_ROOT / 'verification/areas/performance/data/performance_levels.json').read_text())
+            policy_path.write_text(json.dumps(policy))
             for phase, suite in [('correctness', selected[1]), ('measurement', selected[0])]:
                 path = result_path('fixture', phase, root=root)
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(json.dumps({'schema_version': 1, 'area': 'performance', 'bless': False,
+                path.write_text(json.dumps({'schema_version': 1, 'area': 'performance', 'bless': False, 'performance_levels': policy,
                     'suites': [{'name': suite, 'blocking': True, 'total_failures': 0, 'total_variants': 2}],
                     'summary': {'blocking_failures': 0, 'total_variants': 2}}))
             combine('fixture', selected, root=root)
             payload = json.loads(result_path('fixture', root=root).read_text())
             self.assertEqual([suite['name'] for suite in payload['suites']], selected)
             self.assertEqual(payload['summary']['total_variants'], 4)
+            self.assertEqual(payload['performance_levels'], policy)
             result_path('fixture', root=root).unlink()
             result_path('fixture', 'measurement', root=root).unlink()
             with self.assertRaises(AreaResultError):

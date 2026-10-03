@@ -21,6 +21,7 @@ from reference_profiles import ReferenceProfileError, load_profile  # noqa: E402
 from reference_admission import admit_reference  # noqa: E402
 from check_trend_policy import TrendPolicyError  # noqa: E402
 from check_budgets import BudgetError  # noqa: E402
+from performance_levels import load_levels, selected_cases  # noqa: E402
 
 DATA_ROOT = AREA_ROOT / "data"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
@@ -30,25 +31,8 @@ RUN_BENCHMARKS = AREA_ROOT / "run_benchmarks.py"
 CHECK_BUDGETS = AREA_ROOT / "check_budgets.py"
 CHECK_TREND_POLICY = AREA_ROOT / "check_trend_policy.py"
 
-SMOKE_CASES = [
-    "formatter-corpus-001-project-check",
-    "formatter-large-file-001-check",
-    "incremental-local-loop-001-unchanged-file-update",
-    "interactive-tooling-foundation-002-warm-diagnostics-query",
-    "lsp-query-003-diagnostics",
-]
-REPRESENTATIVE_CASES = [
-    "check-single-file-001-arithmetic",
-    "check-project-004-project-graph",
-    "build-single-file-001-break-continue",
-    "build-project-001-additional-modules",
-    "formatter-corpus-001-project-check",
-    "formatter-large-file-001-check",
-    "incremental-local-loop-001-unchanged-file-update",
-    "interactive-tooling-foundation-002-warm-diagnostics-query",
-    "lsp-query-003-diagnostics",
-    "diagnostic-non-regression-002-json-diagnostic-schema",
-]
+SMOKE_CASES = selected_cases("smoke")
+REPRESENTATIVE_CASES = selected_cases("representative")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -70,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         os.environ.pop("SIFR_PERFORMANCE_REFERENCE", None)
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     selected = select_suites(manifest, set(args.suite))
-    measurements = any(suite["name"] in {"smoke", "representative", "full"} for suite in selected)
+    measurements = any(suite["name"] in {"representative", "full"} for suite in selected)
     if not measurements:
         os.environ.pop("SIFR_PERFORMANCE_REFERENCE", None)
     if os.environ.get("SIFR_PERFORMANCE_REFERENCE"):
@@ -101,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
         "bless": False,
         "manifest": str(MANIFEST_PATH.relative_to(REPO_ROOT)),
         "benchmark_manifest": str(BENCHMARK_MANIFEST.relative_to(REPO_ROOT)),
+        "performance_levels": load_levels(),
         "suites": suite_results,
         "summary": {
             "total_variants": total_variants,
@@ -181,6 +166,8 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def run_rules_variants(suite_name: str) -> list[dict[str, Any]]:
     return [
+        run_command_variant(suite_name, "performance-level-contract",
+                            [sys.executable, str(AREA_ROOT / "performance_levels_tests.py")]),
         run_command_variant(
             suite_name,
             "benchmark-manifest",
@@ -197,7 +184,7 @@ def run_rules_variants(suite_name: str) -> list[dict[str, Any]]:
             "budget-policy-self-test",
             [sys.executable, str(CHECK_BUDGETS), "--self-test"],
         ),
-        run_command_variant(suite_name, "trend-policy", [sys.executable, str(CHECK_TREND_POLICY)]),
+        run_command_variant(suite_name, "trend-policy", [sys.executable, str(CHECK_TREND_POLICY), "--policy-only"]),
         run_command_variant(
             suite_name,
             "trend-policy-self-test",
@@ -214,7 +201,7 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
                 run_command_variant(suite_name, "cloud-policy-tests",
                 [sys.executable, "-m", "unittest", "discover", "-s", str(AREA_ROOT), "-p", "cloud_*_tests.py"])]
     if suite_name == "smoke":
-        argv = [sys.executable, str(RUN_BENCHMARKS), "--sample-scale", "smoke"]
+        argv = [sys.executable, str(RUN_BENCHMARKS), "--sample-scale", "smoke", "--reference-profile", ""]
         for case_id in SMOKE_CASES:
             argv.extend(["--case", case_id])
         return [run_command_variant(suite_name, "benchmark-smoke", argv)]
@@ -238,17 +225,18 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
         (load_profile(os.environ["SIFR_PERFORMANCE_REFERENCE"])["identity"]["execution"]["control_mode"]
          if os.environ.get("SIFR_PERFORMANCE_REFERENCE") else profile_control_mode()),
     ]
-    for case_id in REPRESENTATIVE_CASES:
+    for case_id in selected_cases(suite_name):
         run_argv.extend(["--case", case_id])
     check_argv = [
         sys.executable,
         str(CHECK_BUDGETS),
         "--results",
         results,
-        "--allow-subset",
         "--expected-invocation-id",
         invocation_id,
     ]
+    if suite_name == "representative":
+        check_argv.append("--allow-subset")
     producer = run_command_variant(suite_name, "benchmark-subset", run_argv)
     if producer["status"] != "pass":
         return [producer, blocked_variant("budget-subset", "benchmark-subset")]
@@ -271,7 +259,8 @@ def run_manifest_case(suite_name: str, case: dict[str, Any]) -> dict[str, Any]:
     command = str(case["command"])
     entry = REPO_ROOT / str(case["entry"])
     if command == "python-script":
-        return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(entry)])
+        args = ["--policy-only"] if entry == CHECK_TREND_POLICY else []
+        return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(entry), *args])
     if command == "python-script-self-test":
         return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(entry), "--self-test"])
     if command == "benchmark-validate":
