@@ -85,6 +85,8 @@ def validate_publisher(document: dict) -> list[str]:
     if set(jobs) != {"publish"} or document.get("permissions") != {"contents": "read"}:
         errors.append("publisher must isolate write permissions to its trusted job")
     job = jobs.get("publish", {})
+    if job.get("environment") != "validation-check-publication":
+        errors.append("App credentials require the protected publication environment")
     if job.get("permissions") != {"contents": "read", "actions": "read"}:
         errors.append("publisher Actions token must remain read-only")
     if not any(step.get("id") == "app-token" and step.get("uses") ==
@@ -138,6 +140,9 @@ def main() -> None:
     untrusted = copy.deepcopy(publisher)
     untrusted["jobs"]["publish"]["steps"][0]["with"]["ref"] = CANDIDATE
     assert any("never checkout candidate" in error for error in validate_publisher(untrusted))
+    exposed = copy.deepcopy(publisher)
+    exposed["jobs"]["publish"].pop("environment")
+    assert any("protected publication environment" in error for error in validate_publisher(exposed))
     print("local-first admission and event/profile contracts passed (including regressions)")
 
 

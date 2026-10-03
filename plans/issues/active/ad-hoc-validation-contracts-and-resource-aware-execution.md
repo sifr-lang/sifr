@@ -1496,3 +1496,25 @@ logs `m4-native-preparation-b5b5e382d.log`, `m4-native-full-capture-b5b5e382d.lo
 and `m4-native-full-check-b5b5e382d.log`. These descriptive observations include
 startup, throughput, CPU, RSS and binary size. Allocation metrics remain unavailable;
 independent compiler comparison, broad gates and M4/phase acceptance remain pending.
+
+## M3 trusted publication integration guard repair
+
+The actual compact create-PR gate at `83e25b1cdf243a3251d6db2e7c993c9b0cb0e8e8`
+stopped before preparation: the submodule ownership policy had not classified
+the new trusted publisher checkout. Its failed observation and native logs remain
+at `/workspace/validation-work/evidence/create-pr-compact-83e25b1cd/`.
+The bounded integration repair classifies both the publisher's exact workflow-SHA
+checkout and the candidate selector's exact merge/source-SHA checkout by full
+workflow/job/condition/input identity. Wrong workflow, job, condition, ref, path
+and repository controls remain rejected. Neither job compiles submodule source.
+It also integrates the independently reviewed main-only protected publication
+environment implementation at `4fd667541296fc0afbcc8518b715e6c47a6f8a32`
+(Opus SATISFIED, `sifr-claude.wxZnp5/response.md`). Its credentials remain an
+external dependency: environment administration returned HTTP 403, and no App
+key or branch-rule enforcement was configured by this session.
+
+Submodule policy/self-tests and local-first policy/self-tests passed. An initial
+publisher unit-test invocation used system Python outside the pinned verification
+environment and failed importing `sifr_verify`; the preserved v2 invocation uses
+locked uv. Publisher tests and environment controls passed there. Native gates,
+this repair's scoped review and final required-check enforcement remain pending.
