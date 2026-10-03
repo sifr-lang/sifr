@@ -7,6 +7,7 @@ from include_source_relation import project,SCHEMA,LOST,NOT_CLAIMED
 import include_source_constraints
 import include_source_dependency
 import include_source_directories
+import include_source_encoding as canonical
 
 _EXPECTED={}
 RECEIPT='sifr-maintainability-include-source-receipt-v1'
@@ -21,7 +22,20 @@ def _verify(proof,receipt,authority,api):
     require(type(receipt['capture_status']) is int and receipt['capture_status']==0 and receipt['semantic_export'] is False,'failed original include-source capture',api)
     require(isinstance(proof,dict) and set(proof)==TOP and proof['schema']==SCHEMA and proof['semantic_export'] is False,'closed diagnostic include-source schema mismatch',api)
     require(all(proof[k]==NOT_CLAIMED for k in LOST),'unauthorized compiler-original attribute/lineage claim',api)
-    source,semantic,stage=read_originals(authority)
+    # Derivation is memoized only for this registered immutable authority. Every
+    # consumption still authenticates all originals/inputs before comparing the
+    # complete canonical relation; include roots remain separate actual contexts.
+    key=id(authority)
+    if key not in _EXPECTED or _EXPECTED[key][0]() is not authority:
+        derive(authority,receipt,api)
+    require(_EXPECTED[key][2]==api.encoded(receipt['context']),'original receipt context conflict with independent authority',api)
+    actual=canonical.digest(proof)
+    require(actual==_EXPECTED[key][1] and receipt['proof_digest']==actual,'projected include-source relation/cross-reference conflict with intact originals',api)
+    return {'diagnostic_relation':True,'accepted_complete_union':False,'semantic_export':False,'owners':len(proof['compiler_semantic_owner_identity']['correspondences']),'include_contexts':len(proof['source_native_attribute_membership']['include_roots'])}
+
+
+def _check_originals(originals,inputs,receipt,api):
+    source,semantic,stage=originals
     compiler=semantic['compiler'];native=source['native'];control=semantic['original_control'];invocation=semantic['selected_invocation'];context=receipt['context']
     command=['cargo','check','--locked','--tests' if context['test'] else '--lib','-p',context['package'],'--target','x86_64-unknown-linux-gnu','--message-format=json']
     require(control['command']==command and control['status']==0 and control['cwd']==inputs['root'],'wrong or failed original normal Cargo control',api)
@@ -46,22 +60,14 @@ def _verify(proof,receipt,authority,api):
     require(native['schema']=='development-public-include-token-inventory-v1' and native['accepted_proof'] is False and native['semantic_export'] is False,'unknown original native source inventory',api)
     intrinsic=[{'kind':'intrinsic-true','authority':'pinned-cfg::CfgOptions::default'}]
     require(native['intrinsic_cfg']==intrinsic and native['cfg'].count({'key':'true','value':None})==1 and [c for c in native['cfg'] if c!={'key':'true','value':None}]==compiler['cfg'],'original native/compiler cfg or explicit pinned intrinsic-true context mismatch',api)
-    # Derivation is memoized only for this registered immutable authority. Every
-    # consumption still authenticates all originals/inputs before comparing the
-    # complete canonical relation; include roots remain separate actual contexts.
-    key=id(authority)
-    if key not in _EXPECTED or _EXPECTED[key][0]() is not authority:
-        expected=project(source,semantic,stage,inputs,api)
-        _EXPECTED[key]=(weakref.ref(authority),api.digest(api.encoded(expected)))
-    actual=api.digest(api.encoded(proof))
-    require(actual==_EXPECTED[key][1] and receipt['proof_digest']==actual,'projected include-source relation/cross-reference conflict with intact originals',api)
-    return {'diagnostic_relation':True,'accepted_complete_union':False,'semantic_export':False,'owners':len(proof['compiler_semantic_owner_identity']['correspondences']),'include_contexts':len(proof['source_native_attribute_membership']['include_roots'])}
 
 
 def derive(authority,receipt,api):
     inputs=authenticate(authority,receipt,api)
-    expected=project(*read_originals(authority),inputs,api)
-    _EXPECTED[id(authority)]=(weakref.ref(authority),api.digest(api.encoded(expected)))
+    originals=read_originals(authority)
+    _check_originals(originals,inputs,receipt,api)
+    expected=project(*originals,inputs,api)
+    _EXPECTED[id(authority)]=(weakref.ref(authority),canonical.digest(expected),api.encoded(receipt['context']))
     return expected
 
 
@@ -73,9 +79,7 @@ def verify(proof,receipt,authority,api):
 def publish(proof,receipt,authority,path,api):
     result=verify(proof,receipt,authority,api)
     destination=Path(path);require(not destination.exists(),'diagnostic publication destination already exists',api)
-    temporary=destination.with_suffix(destination.suffix+'.tmp')
-    temporary.write_bytes(api.encoded({'proof':proof,'receipt':receipt,'qualification':result}))
-    temporary.replace(destination)
+    canonical.write(destination,{'proof':proof,'receipt':receipt,'qualification':result})
     return result
 
 

@@ -9,6 +9,7 @@ import include_source_inputs
 from include_source_authority import register,restore,authenticate,decode,require
 from include_source_relation import project
 from include_source import verify,RECEIPT
+import include_source_encoding as canonical
 
 TARGET='x86_64-unknown-linux-gnu'
 ORIGINALS=('source-original.json','semantic-original.json','stage-authority.json')
@@ -109,20 +110,21 @@ def capture(output,target,identity,api,ctx,root=None):
     if syn is not None:
         semantic['original_syn']={'original-build.json':control,'dependency-invocation.json':dependency,'caller-invocation.json':caller,'syn-raw.json':decode((output/'syn-raw.json').read_bytes()),'ra-source.json':native['original_syn_correspondence'],'independent-inventory.json':decode((output/'independent-inventory.json').read_bytes())}
     source={'native':native}
-    (output/'source-original.json').write_bytes(api.encoded(source));(output/'semantic-original.json').write_bytes(api.encoded(semantic));(output/'stage-authority.json').write_bytes(api.encoded(stage))
+    canonical.write(output/'source-original.json',source);canonical.write(output/'semantic-original.json',semantic);canonical.write(output/'stage-authority.json',stage)
     inputs=include_source_inputs.finish(before,output,api)
     inputs['original_inventory']=[{'path':str(output/name),'sha256':api.digest((output/name).read_bytes())} for name in ORIGINALS]
-    authority=register(source,semantic,stage,inputs,api);del source,semantic,stage,raw,native;gc.collect()
+    del source,semantic,stage,raw,native;gc.collect()
+    authority=restore(tuple((output/name).read_bytes() for name in ORIGINALS),inputs,api)
     timing={'normal':normal.elapsed_seconds,'metadata':metadata_result.elapsed_seconds,'compiler':analysis.elapsed_seconds,'native':native_result.elapsed_seconds,'total_capture':time.monotonic()-started}
     if syn is not None:timing['syn_compiler']=dependency_analysis.elapsed_seconds
     receipt={'schema':RECEIPT,'inputs':inputs,'proof_digest':'','capture_status':0,'semantic_export':False,'context':ctx,'timing_seconds':timing}
     authenticate(authority,receipt,api)
     from include_source import derive
     proof=derive(authority,receipt,api);gc.collect()
-    receipt['proof_digest']=api.digest(api.encoded(proof))
+    receipt['proof_digest']=canonical.digest(proof)
     # The producer derivation is still rechecked through the same public consumer.
     verify(proof,receipt,authority,api)
-    (output/'proof.json').write_bytes(api.encoded(proof));(output/'receipt.json').write_bytes(api.encoded(receipt))
+    canonical.write(output/'proof.json',proof);(output/'receipt.json').write_bytes(api.encoded(receipt))
     (output/'success.json').write_bytes(api.encoded({name:api.digest((output/name).read_bytes()) for name in (*ORIGINALS,'proof.json','receipt.json')}))
     print('include-source prepared cache MISS',ctx,timing,flush=True)
     return proof,receipt,authority

@@ -5,6 +5,7 @@ from include_source_declarations import stable,syntax_kind,exact_declaration,ass
 from include_source_parents import parent_relation
 from include_source_normalization import path,authenticate_source
 from include_source_semantics import parameter_edges,binders_and_uses,trait_edges
+import include_source_encoding as canonical
 
 SCHEMA='sifr-maintainability-include-source-relation-v1'
 LOST=('original_rustc_attr_id','compiler_original_attribute_attachment','exhaustive_consumed_item_lineage','preconsumption_to_final_survival')
@@ -119,4 +120,4 @@ def project(source,semantic,stage,inputs,api):
     if semantic.get('original_syn') is not None:
         import source_binder
         syn_relation=source_binder._project({**semantic['original_syn'],'caller-raw.json':compiler},inputs,api,semantic['context'])
-    return {'schema':SCHEMA,'semantic_export':False,**{k:NOT_CLAIMED for k in LOST},'source_native_attribute_membership':{'capture_binding':api.digest(api.encoded(source)),'normalizations':normalizations,'include_roots':root_edges,'physical_inventory':native['physical'],'native_dispositions':native_dispositions},'compiler_semantic_owner_identity':{'capture_binding':api.digest(api.encoded(semantic)),'complete_owner_dispositions':dispositions,'required_owner_indices':required,'correspondences':sorted(joins,key=lambda j:j['compiler_owner']),'original_syn_correspondence':syn_relation,'exact_original_dependency_source':exact_dependency},'transformed_attribute_observations':{'capture_binding':api.digest(api.encoded(stage)),'stage':stage},'input_binding':api.digest(api.encoded(inputs))}
+    return {'schema':SCHEMA,'semantic_export':False,**{k:NOT_CLAIMED for k in LOST},'source_native_attribute_membership':{'capture_binding':canonical.digest(source),'normalizations':normalizations,'include_roots':root_edges,'physical_inventory':native['physical'],'native_dispositions':native_dispositions},'compiler_semantic_owner_identity':{'capture_binding':canonical.digest(semantic),'complete_owner_dispositions':dispositions,'required_owner_indices':required,'correspondences':sorted(joins,key=lambda j:j['compiler_owner']),'original_syn_correspondence':syn_relation,'exact_original_dependency_source':exact_dependency},'transformed_attribute_observations':{'capture_binding':canonical.digest(stage),'stage':stage},'input_binding':canonical.digest(inputs)}
