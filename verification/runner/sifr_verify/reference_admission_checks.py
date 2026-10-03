@@ -117,14 +117,16 @@ class PerformancePartitionTests(unittest.TestCase):
             spec.loader.exec_module(adapter)
         suite = {'name': 'frontend-syntax-guardrails', 'blocking': True,
                  'total_variants': 4, 'total_failures': 0}
-        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()), \
-             patch.object(adapter, 'REPO_ROOT', Path(directory)), \
+        temporary_root = REPO_ROOT / 'target/verification'
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temporary_root) as directory, contextlib.redirect_stdout(io.StringIO()), \
              patch.dict(os.environ, {'SIFR_PERFORMANCE_REFERENCE': 'missing-inherited-reference',
                                     'SIFR_VALIDATION_PROFILE': 'create-pr'}), \
              patch.object(adapter, 'admit_reference') as admission, \
              patch.object(adapter, 'load_profile') as reference, \
              patch.object(adapter, 'run_suite', return_value=suite):
-            self.assertEqual(adapter.main(['--suite', 'frontend-syntax-guardrails', '--result-json', 'result.json']), 0)
+            result = str((Path(directory) / 'result.json').relative_to(REPO_ROOT))
+            self.assertEqual(adapter.main(['--suite', 'frontend-syntax-guardrails', '--result-json', result]), 0)
         admission.assert_not_called()
         reference.assert_not_called()
 
