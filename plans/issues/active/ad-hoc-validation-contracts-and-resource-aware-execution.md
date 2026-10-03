@@ -282,6 +282,50 @@ here rather than treating the plan itself as execution evidence.
 
 ## M2 scheduling checkpoint — 2026-10-03
 
+- Mechanism remediation review of `e9b3eda6726c240f7d2741fd9bef454646212a21`
+  returned **SATISFIED**, with no blockers. Evidence is outside Git at
+  `/workspace/validation-work/evidence/candidates/e9b3eda6726c240f7d2741fd9bef454646212a21/opus-m1-m2.md`.
+  This is a mechanism approval, not an acceptance-gate or full-phase pass.
+- That candidate completed the source compiler preparation in 932.8 seconds
+  (maximum observed child RSS 5.2 GiB), then failed package admission:
+  required 19,327,352,832 bytes; available 16,573,632,512 bytes. The run exited 2,
+  functional failed, performance inconclusive, qualified false. No sysroot
+  assertion or graph retirement ran. Raw evidence:
+  `/workspace/validation-work/evidence/m2-cloud-execution-e9b3eda67.log` and
+  `/workspace/sifr/target/verification/execution-journals/bdc85050-cc3b-4e10-ac26-832ef5b3bff3/`.
+- Measured private source graph: approximately 11 GiB total and 5 GiB of Rust
+  incremental edit caches. The next bounded resource item disables incremental
+  compilation for this immutable private source qualification graph only. Both
+  its preparation and boundary assertions use the same producer configuration.
+  Contributor/performance compilation policy, every selected assertion and the
+  8 GiB reserve remain unchanged. This prospective input change needs its own
+  targeted checks and review; no earlier failed run is reclassified.
+- The terminated old build context is superseded by this new source build
+  configuration. Before reclaiming its now-obsolete, session-owned source cache,
+  archive its raw journal/report and independently retain the old prepared
+  compiler bytes and hash. No process or lease may still consume the old context.
+  The old assertions remain unexecuted and nonqualifying; all required consumers
+  run afresh against the rebuilt compiler. Do not clean the shared main target.
+- The first supported cleanup attempt safely refused the known owned graph:
+  Cargo 1.98.1 requires a valid `CACHEDIR.TAG`, and the lease had created the
+  target directory before Cargo could initialize that tag. No cache was deleted.
+  The prepared compiler copy survived the failure. The correction initializes
+  Cargo's standard cache tag only for an exactly matching owned graph; unknown
+  caches are never tagged or reclaimed. A real pinned-Cargo dry-run regression
+  covers the issue. The measured old debug compiler is 1,304,028,344 bytes;
+  future retirement copy admission is increased from 1 GiB to 2 GiB accordingly.
+- The superseded source cache is now retired through supported Cargo cleanup.
+  Its independently retained compiler remains outside the Git tree at the
+  candidate's evidence directory, SHA-256
+  `7e39107672cb839fb43994e40f6850a895a082cd7360d06d18d24d63b5d378bd`.
+  Free storage increased from the failed admission's 16,573,632,512 bytes to
+  26,894,381,056 bytes (about 9.61 GiB net across the retention/cleanup lifecycle).
+  The retry's cleanup alone observed 11,636,019,200 bytes recovery because the
+  retained copy had already been allocated by the safely refused first attempt.
+  Preserve this distinction when aggregating economics. Detailed custody and
+  cleanup evidence:
+  `/workspace/validation-work/evidence/candidates/e9b3eda6726c240f7d2741fd9bef454646212a21/superseded-source-cache-retirement.json`.
+
 - Initial read-only Opus mechanism review of candidate `f03c9b324` returned
   **NOT SATISFIED**, with two valid blockers: the package compiler retention path
   lacked its host triple, and E2E worker arguments bypassed the cgroup clamp.

@@ -40,6 +40,13 @@ of retained copies; mutable Cargo outputs are never hardlinked for deduplication
 Protected compiler paths come from each producer's actual configuration,
 including the package's host-triple release directory. All E2E worker arguments,
 including forwarded requests, are clamped without changing case selection.
+The isolated source compiler graph disables Rust incremental edit caches:
+its input is immutable throughout qualification, and its later consumers use
+the same source build configuration. The contributor/compiler benchmark graph
+and source assertion selection retain their existing contracts.
+Lease-created target roots initialize Cargo's standard `CACHEDIR.TAG` before
+preparation, since Cargo only initializes the tag when it creates the root.
+Only a matching owned graph receives this tag; unknown caches remain untouched.
 
 A session recovering its own interrupted graph can explicitly provide
 `SIFR_VERIFY_GRAPH_OWNER` from its retained prior execution journal. The caller

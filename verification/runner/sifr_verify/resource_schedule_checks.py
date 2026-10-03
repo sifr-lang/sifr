@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -121,6 +122,12 @@ class RetirementTests(unittest.TestCase):
         with self.assertRaises(ResourceError):
             self.retire()
         self.assertTrue(self.binary.exists())
+
+    def test_leased_target_is_accepted_by_the_actual_pinned_cargo_clean(self):
+        result = subprocess.run(["cargo", "clean", "--target-dir", str(self.lease.path), "--dry-run"],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self.binary.exists())
         self.complete()
         with patch("sifr_verify.graph_retirement.active_builds", return_value=[123]):
             with self.assertRaises(ResourceError):
@@ -153,6 +160,7 @@ class RetirementTests(unittest.TestCase):
     def test_unknown_legacy_graph_is_never_reclaimed(self):
         self.lease.close()
         self.lease.marker.unlink()
+        (self.lease.path / "CACHEDIR.TAG").unlink()
         lease = GraphLease(self.root, GRAPH_PATHS[0], "session").acquire({"boundary"})
         self.addCleanup(lease.close)
         lease.passed_consumer("boundary")
@@ -160,6 +168,7 @@ class RetirementTests(unittest.TestCase):
                               command_runner=lambda *args, **kwargs: self.fail("legacy cleanup"), env={})
         self.assertFalse(result["retired"])
         self.assertTrue(self.binary.exists())
+        self.assertFalse((lease.path / "CACHEDIR.TAG").exists())
 
     def test_only_explicit_prior_ownership_can_recover_a_cancelled_graph(self):
         self.lease.close()
@@ -181,6 +190,8 @@ class RetirementTests(unittest.TestCase):
         self.assertEqual(compilers["cargo-target"], Path(environment["CARGO_TARGET_DIR"]) /
                          command[command.index("--target") + 1] / "release/sifr")
         self.assertEqual(compilers["source-cargo-target"], self.binary)
+        _, source_env, _ = source.source_build_configuration(self.root, {"CARGO_INCREMENTAL": "1"})
+        self.assertEqual(source_env["CARGO_INCREMENTAL"], "0")
         lease = GraphLease(self.root, GRAPH_PATHS[1], "session").acquire({"installed"})
         self.addCleanup(lease.close)
         binary = compilers["cargo-target"]

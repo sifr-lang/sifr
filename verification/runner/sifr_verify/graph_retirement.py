@@ -12,6 +12,7 @@ from .execution_identity import artifact_identity
 from .resource_admission import ResourceError
 
 GRAPH_PATHS = ("target/sysroot_release/source-cargo-target", "target/sysroot_release/cargo-target")
+CACHE_TAG = b"Signature: 8a477f597d28d172789f06886806bc55\n"
 
 
 def plain_path(root: Path, path: Path) -> Path:
@@ -96,6 +97,20 @@ class GraphLease:
                 info = self.path.stat()
                 self.eligible = data == {"owner": self.owner, "worktree": str(self.root), "graph": self.relative,
                                          "device": info.st_dev, "inode": info.st_ino, "uid": os.getuid()}
+            if self.eligible:
+                # Cargo only tags target roots it creates itself. Our lease
+                # creates the root first, so initialize the standard cache tag
+                # for this proven owned graph; never tag an unknown cache.
+                tag = self.path / "CACHEDIR.TAG"
+                if tag.is_symlink():
+                    raise ResourceError("Cargo cache tag must not be a symlink", "unavailable")
+                if not tag.exists():
+                    with tag.open("xb") as stream:
+                        stream.write(CACHE_TAG + b"# Session-owned Cargo target initialized before preparation.\n")
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                if not tag.read_bytes().startswith(CACHE_TAG):
+                    raise ResourceError("owned Cargo cache tag is invalid", "unavailable")
             self.consumers = set(consumers)
             return self
         except BaseException:

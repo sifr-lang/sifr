@@ -38,7 +38,7 @@
     },
     "graph-retirement": {
       "disk_growth_bytes": 0,
-      "retained_copy_bytes": 1073741824,
+      "retained_copy_bytes": 2147483648,
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 1073741824,
       "tmpfs_growth_bytes": 0,
