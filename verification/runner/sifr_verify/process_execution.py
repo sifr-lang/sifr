@@ -21,6 +21,8 @@ import time
 from pathlib import Path
 from typing import Callable
 
+from .process_disk_budget import DiskBudget
+
 
 @dataclasses.dataclass(frozen=True)
 class Outcome:
@@ -90,6 +92,9 @@ def execute(
 
     start = time.monotonic()
     child_env, deadline = deadline_environment(env, deadline_seconds)
+    disk_budget = DiskBudget.from_environment(child_env)
+    if disk_budget is not None:
+        disk_budget.check()
     streams = {"stdout": bytearray(), "stderr": bytearray()}
     truncated = False
     cause = "exit"
@@ -196,6 +201,8 @@ def execute(
         selector.register(proc.stdout, selectors.EVENT_READ, "stdout")
         selector.register(proc.stderr, selectors.EVENT_READ, "stderr")
         while selector.get_map() or not child_exited():
+            if disk_budget is not None:
+                disk_budget.check()
             if cancelled or time.monotonic() >= deadline:
                 cause = "cancelled" if cancelled else "safety_deadline"
                 kill_group(proc.pid)

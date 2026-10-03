@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "estimate_basis": "prospective allocations after measured d5 footprints; source retention compresses into at most512MiB before retirement and admits exact raw restoration separately; library preparation follows both private graph lifetimes",
+  "estimate_basis": "prospective allocations after measured d5 footprints; source retention compresses into at most512MiB before retirement and admits exact raw restoration separately; library preparation follows both private graph lifetimes; existing metadata preparation measured 68.16s and 17,113,088 additional bytes at 973c821c7; cache hints allow a monitored 2GiB preparation attempt, never skip Cargo; remaining commands admitted individually instead of reserving their summed cold graph growth",
   "cold_preparation_deadline_seconds": 7200,
   "assertion_command_deadline_seconds": 2400,
   "stages": {
@@ -62,6 +62,38 @@
     },
     "sysroot-metadata": {
       "disk_growth_bytes": 10737418240,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-metadata-cached": {
+      "disk_growth_bytes": 2147483648,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "preparation-coordination": {
+      "disk_growth_bytes": 268435456,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "preparation-command-cold": {
+      "disk_growth_bytes": 6442450944,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "preparation-command-cached": {
+      "disk_growth_bytes": 2147483648,
       "retained_copy_bytes": 0,
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 6442450944,

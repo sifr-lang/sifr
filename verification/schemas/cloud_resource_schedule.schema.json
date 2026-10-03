@@ -34,7 +34,11 @@
         "graph-retirement",
         "remaining-preparation",
         "remaining-assertions",
-        "sysroot-metadata"
+        "sysroot-metadata",
+        "sysroot-metadata-cached",
+        "preparation-coordination",
+        "preparation-command-cold",
+        "preparation-command-cached"
       ],
       "additionalProperties": false,
       "properties": {
@@ -263,6 +267,134 @@
           }
         },
         "sysroot-metadata": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sysroot-metadata-cached": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "preparation-coordination": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "preparation-command-cold": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "preparation-command-cached": {
           "type": "object",
           "required": [
             "disk_growth_bytes",
