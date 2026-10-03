@@ -418,6 +418,29 @@ here rather than treating the plan itself as execution evidence.
   constrained full execution remain pending. The shared main target still has no
   established owner and remains untouched; M3–M6 remain pending.
 
+- Final memory/launch implementation candidate:
+  `42b0f9d57da1589520422823b42b83062832f880`, draft
+  [PR #4285](https://github.com/sifr-lang/sifr/pull/4285). Read-only Opus returned
+  **SATISFIED**, no blockers; external review:
+  `/workspace/validation-work/evidence/candidates/42b0f9d57da1589520422823b42b83062832f880/opus-memory-launch.md`.
+  The committed-candidate direct/nested observation again matched all input and
+  runtime components, raw `m2-preparation-real-key-42b0f9d57.log`. Final 29
+  foundation groups and the file-size guard passed. These are mechanism checks;
+  required implementation gates, native assertions and performance remain open.
+- Current external blocker: all safely reclaimable obsolete session-owned graphs
+  have been retired with compiler-byte custody intact, but cold preparation
+  still requires 19,327,352,832 bytes against approximately 16,307,044,352 bytes
+  available. No shared `target/debug` cleanup is authorized while its original
+  ownership is unknown. The user has been asked for authoritative disposability
+  information; no answer or elapsed time is treated as authorization.
+  Read-only cleanup scope/resource observation and concrete proposal are outside
+  Git at `/workspace/validation-work/evidence/m2-shared-debug-cache-disposability-observation.json`
+  and `/workspace/validation-work/shared-debug-cache-recovery-proposal.md`.
+  Next action: resolve that ownership boundary, recover only the authorized
+  inactive cache if applicable, then run fresh constrained preparation/assertions
+  with exact candidate-bound receipts. Preserve the unchanged reserve and all
+  failed/unexecuted outcomes. The full plan remains active and incomplete.
+
 ### Owned descendant recovery continuation
 
 - The constrained execution of `d5cedf1a3091e10adc93d33b85c32b769891eafb`
