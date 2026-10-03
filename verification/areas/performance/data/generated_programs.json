@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "owner": "compiler/generated-program-performance",
+  "protocol": "generated-program-observations-v1",
+  "scope": "descriptive process observations; no numeric regression qualification",
+  "optimization": "release",
+  "target_cpu": "generic",
+  "target": "native-host",
+  "levels": {
+    "smoke": {
+      "warmups": 0,
+      "measured": 1
+    },
+    "representative": {
+      "warmups": 2,
+      "measured": 10
+    },
+    "full": {
+      "warmups": 2,
+      "measured": 25
+    }
+  },
+  "cases": [
+    {
+      "id": "integer_throughput",
+      "source_path": "verification/areas/performance/programs/integer_throughput.sifr",
+      "source_sha256": "a62578c44a6c13727d026dbf2bc09fedfc0795131dba89eeaa09e6b8268ade62",
+      "expected_stdout": "45150\n",
+      "work_units": 100000000,
+      "required_metrics": [
+        "throughput_units_per_second",
+        "peak_rss_bytes",
+        "cpu_time_ms"
+      ]
+    },
+    {
+      "id": "startup",
+      "source_path": "verification/areas/performance/programs/startup.sifr",
+      "source_sha256": "5b7ac01db4fa2466d0449ef0f0b92b5c0e6267dad048ea456e4d66a6eac25af9",
+      "expected_stdout": "42\n",
+      "work_units": 1,
+      "required_metrics": [
+        "startup_lifecycle_ms"
+      ]
+    }
+  ],
+  "allocation_metrics": {
+    "status": "unavailable",
+    "reason": "no reviewed allocation instrumentation is installed; never infer allocation counts from RSS"
+  },
+  "p95_semantics": "empirical nearest-rank process observation, not a population guarantee",
+  "startup_scope": "timed native command lifecycle including GNU Time spawn/wait; supervisor and probe startup excluded",
+  "required_compiler_qualification": "independent shared-cloud-median-v2 unchanged; this protocol cannot substitute for it"
+}

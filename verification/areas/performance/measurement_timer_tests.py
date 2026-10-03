@@ -27,10 +27,10 @@ class MeasurementTimerTests(unittest.TestCase):
     def test_explicit_timer_identity_binds_actual_bytes_and_version(self):
         with patch.dict(os.environ, {"SIFR_PERFORMANCE_TIME": str(self.timer)}), patch(
             "measurement_timer.subprocess.run", return_value=subprocess.CompletedProcess(
-                [], 0, "time (GNU Time) test-version\n", "")
+                [], 0, "time (GNU Time) 1.10\n", "")
         ):
             identity = managed_timer_identity()
-        self.assertEqual(identity, {"path": str(self.timer), "version": "time (GNU Time) test-version",
+        self.assertEqual(identity, {"path": str(self.timer), "version": "time (GNU Time) 1.10",
                                     "sha256": hashlib.sha256(self.timer.read_bytes()).hexdigest()})
 
     def test_missing_relative_and_nonexecutable_timer_rejected(self):

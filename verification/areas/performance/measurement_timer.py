@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -24,8 +25,12 @@ def managed_timer_identity() -> dict[str, str]:
         raise BenchmarkError(f"managed Linux measurement timer unavailable: {error}") from error
     if not result.stdout.startswith("time (GNU Time)"):
         raise BenchmarkError("managed Linux measurement timer must be GNU Time")
+    version = result.stdout.splitlines()[0]
+    parsed = re.fullmatch(r"time \(GNU Time\) (\d+)\.(\d+)(?:\.\d+)?", version)
+    if not parsed or tuple(map(int, parsed.groups())) < (1, 8):
+        raise BenchmarkError("GNU Time 1.8 or later is required for reliable peak RSS")
     return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-            "version": result.stdout.splitlines()[0]}
+            "version": version}
 
 
 def require_managed_counters(metrics: dict) -> None:

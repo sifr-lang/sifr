@@ -2,7 +2,7 @@
 
 status: active
 registered: 2026-10-03
-current_stage: M0 delivered; M1–M4 implementation in progress
+current_stage: M0 delivered; M1–M5 implementation in progress
 
 ## Objective and authority
 
@@ -61,7 +61,7 @@ and disposition. Split large milestones into independently reviewable changes.
 | M2 | Shared-VM admission, staged preparation, cache retirement, durable recovery, and evidence reuse | 7, 16, 20; all cloud additions; reuse/recovery | in progress |
 | M3 | Fast change-aware PR validation, enforced merge aggregate, main-push reuse, and scheduled hardening | 2–6, 15, 18 | in progress |
 | M4 | Compiler performance levels and separate generated-program benchmarks | 7–9, 14, 20 | in progress |
-| M5 | Artifact custody, published-predecessor upgrades, and compatibility/platform qualification | 10–12, 15, 19 | pending |
+| M5 | Artifact custody, published-predecessor upgrades, and compatibility/platform qualification | 10–12, 15, 19 | in progress |
 | M6 | End-to-end constrained-runner acceptance and verified protected enforcement | All scope and final acceptance | pending |
 
 ### M0 — inventory and minimal agent instructions
@@ -1362,3 +1362,59 @@ version ordering, complete native registry, exact transfer/hash bounds, safe
 extraction, reserve refusal and preserved failed preparation receipts. Actual
 upgrade/reinstall/rollback, candidate qualification, all required native platforms
 and M6 acceptance remain unfinished.
+
+## M4 compiled-program observations — work in progress
+
+The registered `generated-program-observations-v1` protocol separates compilation
+from native process startup/throughput, actual CPU time, peak RSS and executable
+size. Its two correctness oracles have fixed smoke/representative/full counts
+(1/10/25 measured processes, with 0/2/2 warmups). Empirical nearest-rank p95 is
+computed over process observations; every observation has one inner timing
+sample. GNU Time's 0.01-second wall resolution and launch overhead are explicit.
+Unavailable allocation instrumentation remains unavailable, never zero. This
+observational protocol makes no numeric regression qualification claim and cannot
+replace the required independent 65-case/5,120-pair shared-cloud v2 protocol.
+
+Preparation requires the clean committed compiler receipt, actual Cargo JSON
+application release profile, actual rustc CPU-target arguments, independent native
+executable hashes, resolved runtime-library hashes and retained compilation logs.
+Capture uses the canonical process supervisor, rejects output/status/artifact
+changes, preserves failures, and verifies completion freshness and recomputed
+raw-file counters, process counts and summaries. Canonical performance rules now
+execute its contract controls. These controls compile a clearly test-only C
+fixture, not Sifr: no native Sifr preparation or qualification is inferred.
+
+Targeted controls passed 7 tests; the complete performance area passed 100 tests.
+Profile validation and the 900-line source guard passed (4,395 files). The first
+control attempt failed because GNU Time was absent; it remains preserved. A
+session-local GNU Time 1.10 was then extracted from Debian's public package
+`time_1.10-0.1_amd64.deb`, SHA-256
+`4b789fd1edea74d9d95dab1c7eff3f062a844f9b541e0a776f2d93a19e7295ab`.
+Logs are outside Git under `/workspace/validation-work/evidence/` with prefix
+`m4-generated-program-`. Native observations, reliable allocation instrumentation,
+independent comparisons, broad acceptance and final phase closure remain pending.
+
+The published-predecessor acquisition candidate `e1724df488d239abbf1d53488e1d68f21d0a6d4c`
+received a SATISFIED read-only Opus review at
+`/workspace/validation-work/evidence/sifr-claude.RzPTmU/response.md`. This scoped
+review covers acquisition and controls; actual upgrade and release-platform
+qualification remain unfinished.
+
+The first compiled-program observation review at `dca288a19f6bb0b8e9ffd699a98bab62386ff8a8`
+was NOT SATISFIED: its independent checker did not re-derive application release
+profiles and CPU flags from retained command events. The review remains at
+`/workspace/validation-work/evidence/sifr-claude.XlccNX/response.md`.
+The correction verifies complete, case-bound byte ranges in both JSONL event
+files, their SHA-256 hashes, the actual Cargo executable, its release profile and
+an exact, nonconflicting rustc `target-cpu=generic` argument. Each program uses a
+separate private application cache so later preparation cannot overwrite the
+first program's actual Cargo executable before independent checking. Negative
+controls include rehashed non-release events, a rehashed wrong CPU target,
+missing profile/command data and changed raw logs. Captures now retain an initial
+incomplete receipt and leave the successfully checked completion bytes unchanged.
+GNU Time below 1.8 is rejected because its older peak-RSS scaling is unreliable.
+The first corrected full-area run failed because the timer identity test used
+an unparseable test-only version label. Its failed v2 log remains preserved.
+The control now uses an explicit supported version; the corrected v3 full-area
+run passed 101 tests. Earlier runner foundation coverage passed all 31 groups. Broad candidate gates and native Sifr
+qualification remain pending.
