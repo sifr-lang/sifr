@@ -62,7 +62,7 @@ class CloudPolicyTests(unittest.TestCase):
         pairs["case"][0]["candidate"]["latencies_ms"] = [2000]
         result = evaluate(manifest, budgets, pairs)
         self.assertEqual(result["status"], "regression")
-        self.assertIn("observed-individual-latency-ceiling", result["results"][0]["hard_failures"])
+        self.assertIn("observed-sample-latency-ceiling", result["results"][0]["hard_failures"])
 
     def test_real_rss_and_cache_breaches_rejected(self):
         for key, value in [("peak_rss_bytes", 100000000), ("cache", {"hits": 0, "misses": 1})]:
