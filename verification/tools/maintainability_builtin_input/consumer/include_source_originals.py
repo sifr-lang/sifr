@@ -1,11 +1,20 @@
 """Lossless immutable original storage and authenticated complete decode reuse."""
 from dataclasses import dataclass
 import hashlib
+import importlib.machinery
+from pathlib import Path
+import sys
 import weakref
 import zlib
 import include_source_encoding as canonical
 
 _DECODED={}
+
+
+def runtime_identity():
+    if zlib.__spec__.origin!='built-in' or zlib.__loader__ is not importlib.machinery.BuiltinImporter:
+        raise ValueError('unavailable actual built-in lossless storage runtime authority')
+    return {'kind':zlib.__spec__.origin,'owner':str(Path(sys.executable).resolve()),'compiled':zlib.ZLIB_VERSION,'loaded':zlib.ZLIB_RUNTIME_VERSION}
 
 
 @dataclass(frozen=True)

@@ -6,7 +6,6 @@ from pathlib import Path
 import shutil
 import sys
 import weakref
-import zlib
 import include_source_encoding as canonical
 import include_source_originals as storage
 
@@ -56,7 +55,7 @@ def restore(originals,inputs,api):
 def authenticate(authority,receipt,api):
     require(isinstance(authority,Authority) and authority.seal is _SEAL and _REGISTERED.get(id(authority)) is authority,'replaced/unregistered original include-source authority',api)
     inputs=decode(authority.inputs)
-    require(inputs['original_storage_runtime']=={'path':str(Path(zlib.__file__).resolve()),'compiled':zlib.ZLIB_VERSION,'loaded':zlib.ZLIB_RUNTIME_VERSION},'lossless original storage runtime drift',api)
+    require(inputs['original_storage_runtime']==storage.runtime_identity(),'lossless original storage runtime drift',api)
     require(len(inputs['original_inventory'])==3,'incomplete independent original authority inventory',api)
     for original,binding in zip(authority.originals,inputs['original_inventory']):
         require(original.digest()==binding['sha256']==inputs['files'].get(binding['path']),'replaced independent original authority bytes',api)

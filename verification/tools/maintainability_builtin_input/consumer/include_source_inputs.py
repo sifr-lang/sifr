@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import re
-import zlib
+import include_source_originals as storage
 import include_source_encoding as canonical
 import source_binder
 from include_source_authority import require
@@ -13,12 +13,11 @@ from include_source_authority import require
 
 def census(root,metadata,messages,invocations,identity,output,target,api):
     inputs=source_binder._inputs(root,metadata,messages,invocations,identity,output,api)
-    # Lossless original storage uses the actually loaded stdlib extension and
-    # its complete linked runtime; neither a guessed library nor a new pin.
-    extension=Path(zlib.__file__).resolve()
-    inputs['original_storage_runtime']={'path':str(extension),'compiled':zlib.ZLIB_VERSION,'loaded':zlib.ZLIB_RUNTIME_VERSION}
-    runtime={extension}
-    for name in re.findall(r'(?:=> )?(/[^\s]+)',api.run(['ldd',str(extension)]).stdout):runtime.add(Path(name).resolve())
+    # This host's actual built-in zlib is owned by the selected Python binary.
+    # Authenticate that owner and every actual linked runtime before projection.
+    inputs['original_storage_runtime']=storage.runtime_identity()
+    owner=Path(inputs['original_storage_runtime']['owner']);runtime={owner}
+    for name in re.findall(r'(?:=> )?(/[^\s]+)',api.run(['ldd',str(owner)]).stdout):runtime.add(Path(name).resolve())
     for filename in runtime:inputs['files'][str(filename)]=canonical.file_digest(filename)
     modules=root/'.gitmodules'
     if modules.is_file():inputs['files'][str(modules)]=api.digest(modules.read_bytes())
