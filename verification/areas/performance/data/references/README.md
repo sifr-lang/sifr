@@ -38,3 +38,31 @@ the reference's `cargo_jobs` for its producer and budget checks, even when the
 outer profile uses a different native-build worker count. Other host, toolchain,
 power and input comparisons remain enforced. Selecting a reference does not
 change the machine's governor; establish its recorded policy before admission.
+
+Managed Linux hosts require explicit `SIFR_PERFORMANCE_HOST_KIND=managed-linux`
+during capture and qualification. This mode measures the process's unified
+cgroup-v2 CPU quota, period and memory limit, plus exposed ancestor controls.
+Its current cgroup must expose finite positive CPU and memory limits. Missing,
+unlimited or malformed limits fail admission. Available frequency policies are
+recorded; absent policies are explicitly recorded as unavailable, without an
+invented governor. The complete allocation and frequency exposure are compared
+before and after production and against the immutable reference. Physical-host
+admission remains the default and still requires measurable frequency policy.
+Managed identity does not relax controlled latency sampling, manifest coverage,
+editor ceilings or regression budgets. Capture still requires an independent
+merged compiler reference and a clean tooling-only producer.
+
+Managed measurements also require a real executable GNU Time, selected through
+`SIFR_PERFORMANCE_TIME` when `/usr/bin/time` is unavailable. Its absolute path,
+binary SHA-256 and actual version output are bound into execution identity;
+capture and qualification reject a missing, non-executable or changed timer.
+Each successful sample must expose its own GNU Time RSS and CPU counters.
+Cumulative child-RSS fallback remains exploratory and cannot qualify a managed
+reference. CPU affinity is measured in host identity; use the same allocation
+and affinity for independent capture and candidate qualification.
+
+A host may use a private Cargo configuration for package-specific dev
+optimization. The existing `user_cargo_config_sha256` comparison binds its
+exact bytes across both endpoints. Record the actual Cargo artifact profile;
+package optimization does not turn a dev source compiler into an installed
+release compiler or authorize different sampling/budget policies.

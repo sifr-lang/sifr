@@ -47,5 +47,6 @@ def prepare_area_graphs(profile, env, run):
                            str(root / "runner/prepare_examples.py")]
                 active = env.copy()
                 active.pop("VIRTUAL_ENV", None)
+                active["UV_PROJECT_ENVIRONMENT"] = str(root / ".venv")
                 for suite in selected:
                     run([*command, "--suite", suite], env=active)

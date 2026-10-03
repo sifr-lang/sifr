@@ -44,6 +44,14 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     payload = load_json(path)
     if not isinstance(payload, dict):
         raise ProfileError(f"profile must be a JSON object: {path}")
+    if "extends" in payload:
+        # Cloud inherits the live merge inventory so new correctness checks
+        # cannot silently disappear from its duplicated selection.
+        if (profile != "cloud" or payload.get("extends") != "merge"
+                or set(payload) != {"extends", "name", "description"}):
+            raise ProfileError("only the cloud profile may inherit the merge inventory")
+        inherited = load_profile("merge", profiles_dir)
+        payload = inherited | {key: value for key, value in payload.items() if key != "extends"}
     validate_data(
         payload,
         load_schema("profile.schema.json"),
