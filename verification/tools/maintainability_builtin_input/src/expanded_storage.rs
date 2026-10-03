@@ -37,7 +37,7 @@ fn write_bytes(file: &mut File, bytes: &[u8]) {
     file.write_all(bytes)
         .expect("write complete original bytes");
 }
-fn read_bytes(file: &mut File, remaining: &mut u64) -> Vec<u8> {
+fn read_bytes(file: &mut impl Read, remaining: &mut u64) -> Vec<u8> {
     assert!(*remaining >= 8, "original text length is truncated");
     let mut length = [0; 8];
     file.read_exact(&mut length).expect("read original length");
@@ -157,31 +157,31 @@ impl OriginalText {
             self.file
                 .seek(SeekFrom::Start(record.start))
                 .expect("authenticate original record");
-            let hash = SourceFileHash::new(
-                SourceFileHashAlgorithm::Sha256,
-                (&mut self.file).take(record.length),
-            )
-            .expect("authenticate complete original bytes");
-            assert_eq!(hash, record.hash, "original owner/text record changed");
+            let mut bytes =
+                vec![0; usize::try_from(record.length).expect("original record fits host")];
             self.file
-                .seek(SeekFrom::Start(record.start))
-                .expect("read authenticated original record");
+                .read_exact(&mut bytes)
+                .expect("read complete original record");
+            let hash = SourceFileHash::new_in_memory(SourceFileHashAlgorithm::Sha256, &bytes);
+            assert_eq!(hash, record.hash, "original owner/text record changed");
+            // Decode the same authenticated bytes, rather than rereading the file.
+            let mut original = std::io::Cursor::new(bytes);
             let mut remaining = record.length;
             assert_eq!(
-                read_bytes(&mut self.file, &mut remaining),
+                read_bytes(&mut original, &mut remaining),
                 identity(decl),
                 "actual original owner/span/site identity changed"
             );
-            decl.tokens = String::from_utf8(read_bytes(&mut self.file, &mut remaining))
+            decl.tokens = String::from_utf8(read_bytes(&mut original, &mut remaining))
                 .expect("original UTF-8");
             if decl.body_tokens.is_some() {
                 decl.body_tokens = Some(
-                    String::from_utf8(read_bytes(&mut self.file, &mut remaining))
+                    String::from_utf8(read_bytes(&mut original, &mut remaining))
                         .expect("original body UTF-8"),
                 );
             }
             for site in &mut decl.sites {
-                site.tokens = String::from_utf8(read_bytes(&mut self.file, &mut remaining))
+                site.tokens = String::from_utf8(read_bytes(&mut original, &mut remaining))
                     .expect("original site UTF-8");
             }
             assert_eq!(remaining, 0, "all original bytes restored exhaustively");
@@ -194,7 +194,7 @@ mod tests {
     use super::*;
     use crate::expanded::Site;
     use rustc_ast::NodeId;
-    use rustc_hir::def_id::{LocalDefId, LocalDefIndex};
+    use rustc_hir::def_id::{DefIndex, LocalDefId};
     use rustc_span::DUMMY_SP;
     fn original(label: &str) -> (OriginalText, Declaration) {
         let path = std::env::temp_dir().join(format!(
@@ -203,7 +203,7 @@ mod tests {
         ));
         let declaration = Declaration {
             def: LocalDefId {
-                local_def_index: LocalDefIndex::from_u32(7),
+                local_def_index: DefIndex::from_u32(7),
             },
             node_id: NodeId::from_u32(19),
             ast_kind: "associated function".into(),
