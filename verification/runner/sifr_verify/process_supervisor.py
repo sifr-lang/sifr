@@ -151,7 +151,8 @@ def main() -> None:
     if code < 0:
         sig = -code
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-        signal.signal(sig, signal.SIG_DFL)
+        if sig not in {signal.SIGKILL, signal.SIGSTOP}:
+            signal.signal(sig, signal.SIG_DFL)
         os.kill(os.getpid(), sig)
     raise SystemExit(code)
 

@@ -104,6 +104,11 @@ class RecoveryTests(unittest.TestCase):
         result = execute([sys.executable, "-c", "import os,signal; os.kill(os.getpid(),signal.SIGTERM)"], cwd=Path.cwd())
         self.assertEqual((result.returncode, result.cause), (-signal.SIGTERM, "exit"))
 
+    def test_native_sigkill_is_preserved_for_oom_classification(self):
+        result = execute([sys.executable, "-c", "import os,signal; os.kill(os.getpid(),signal.SIGKILL)"], cwd=Path.cwd())
+        self.assertEqual((result.returncode, result.cause), (-signal.SIGKILL, "exit"))
+        self.assertNotIn(b"Traceback", result.stderr)
+
     def test_killed_supervisor_cannot_authorize_success_or_pipe_wait(self):
         # The test has its own subreaper so its injected supervisor death never
         # delegates orphan reaping to the host's PID 1.
