@@ -60,12 +60,14 @@ from .qualification_profile_checks import policy_checks as qualification_profile
 from .validation_contract_checks import policy_checks as validation_contract_checks
 from .resource_schedule_checks import policy_checks as resource_schedule_checks
 from .cache_admission_checks import policy_checks as cache_admission_checks
+from .change_selection_checks import policy_checks as change_selection_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
 
 def run_all() -> list[str]:
     checks = [
+        ("conservative commit-bound change selection", change_selection_checks),
         ("input-bound correctness checkpoint consumption", checkpoint_checks),
         ("audited isolated correctness recipe", checkpoint_recipe_checks),
         ("immutable sysroot preparation output custody", prepared_sysroot_checks),
