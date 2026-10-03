@@ -346,6 +346,22 @@ here rather than treating the plan itself as execution evidence.
   corrected before acceptance. The changed mechanisms require scoped review
   on their new committed candidate; the earlier approval covers only `c08e87080`.
 
+- The recovery hardening candidate
+  `49fb3f47f6c1af1c556edb6cdb6ebfeb7434a10c` received `SATISFIED`, preserved at
+  `/workspace/validation-work/evidence/candidates/49fb3f47f6c1af1c556edb6cdb6ebfeb7434a10c/opus-recovery-hardening.md`.
+  That second review discovered an original supervisor mechanism defect:
+  resetting a SIGKILL handler raises `EINVAL`, losing native `-9` and disrupting
+  OOM classification. Per the closure loop, the prior item stops/rescopes rather
+  than iterating again under its old approval. A separate bounded correction
+  owns branch `codex/validation-native-sigkill-20261003`, based on `49fb3f47f`.
+  It skips resetting unchangeable signal handlers and proves native `-9` and
+  absence of a supervisor traceback with actual failure injection. It never
+  infers OOM from SIGKILL alone; actual OOM counter evidence remains required.
+  All 14 recovery tests passed; raw output is
+  `/workspace/validation-work/evidence/m2-native-sigkill-tests.log`. The prior
+  unchanged 29 process tests and 26 foundation groups remain recorded. The new
+  candidate still needs scoped review and the final implementation gates.
+
 - Mechanism remediation review of `e9b3eda6726c240f7d2741fd9bef454646212a21`
   returned **SATISFIED**, with no blockers. Evidence is outside Git at
   `/workspace/validation-work/evidence/candidates/e9b3eda6726c240f7d2741fd9bef454646212a21/opus-m1-m2.md`.
