@@ -1289,3 +1289,28 @@ admission route before their qualification can be claimed. Anonymous commit
 fetch is sufficient for this public repository; private-repository support is
 not claimed. Workflow trust bootstrap and separate App provisioning remain
 explicit prerequisites for protected enforcement.
+
+## M3 protected publisher credential custody — work in progress
+
+Aggregate remediation `6387097081ea1b03b3c1c2c243462562b4b488c3` passed
+scoped Opus review without blockers; raw review is outside Git at
+`/workspace/validation-work/evidence/sifr-claude.OE7Ot6/response.md`.
+The next custody item places the App private key in the dedicated
+`validation-check-publication` GitHub environment. That environment must permit
+only the protected default branch, with custom branch/tag policy restricted to
+`main` as a branch; candidate PR, queue and tag refs cannot access it. A general
+repository secret is insufficient because other candidate workflows could request
+it. The default-branch workflow-run publisher is the only validation consumer.
+The rule must pin the separate App integration ID. These are concrete deployment
+prerequisites, not claims that a secret/environment/App has already been installed.
+Current GitHub credentials could not inspect secrets (403); their presence is
+unknown and no credential values are read or copied. Environment enforcement and
+App provisioning remain unverified external work before acceptance.
+
+The publisher now independently verifies the environment's server policy before
+publishing: custom branch rules are enabled and exactly one rule permits `main`
+as a branch. Broad patterns, tag rules, queue refs, incomplete inventory and
+missing policy reject publication. Fourteen focused aggregate/custody controls
+and workflow/uv/size checks pass. The environment read returned 404; existence or
+administrative access is not established by that response. No general repository
+secret should hold this credential. Main-push reuse remains a separate item.
