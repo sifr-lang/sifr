@@ -1518,3 +1518,22 @@ publisher unit-test invocation used system Python outside the pinned verificatio
 environment and failed importing `sifr_verify`; the preserved v2 invocation uses
 locked uv. Publisher tests and environment controls passed there. Native gates,
 this repair's scoped review and final required-check enforcement remain pending.
+
+## M2 compact policy review correction
+
+The initial compact scheduling review at `83e25b1cd` is NOT SATISFIED:
+`/workspace/validation-work/evidence/sifr-claude.Ig6auj/response.md`.
+It identified an in-scope policy-selection defect: inherited internal scheduling
+variables could lower the default reserve without the explicit compact flag.
+The one-batch correction rejects a policy variable without the explicit option,
+rejects conflicting policy values with it, and rejects any inherited graph
+session so the owned scheduler assigns the UUID. Negative controls cover absent
+options, empty/unknown/default/compact values and inherited sessions.
+Foundation tests construct independent mock profiles, so their subprocess isolates
+these two outer scheduler variables and restores them on both success and failure;
+this does not modify the outer native profile's environment. Six compact controls
+passed, and all 32 foundation groups passed with both internal variables inherited
+by the foundation command. Logs `compact-controls-remediation-final.log` and
+`compact-foundation-remediation.log` remain outside Git. Remediation review and
+native final-candidate gates remain pending; the ongoing native attempt on the
+prior integration candidate is frozen and recorded separately.

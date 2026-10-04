@@ -27,6 +27,18 @@ class CompactChecks(unittest.TestCase):
                 self.assertEqual(compact.env['CARGO_INCREMENTAL'], '0')
             with self.assertRaises(ProfileRunnerError):
                 ProfileRunner('release', ['--compact-resources'])
+        for environment in ({'SIFR_VERIFY_RESOURCE_POLICY':'compact'},
+                            {'SIFR_VERIFY_RESOURCE_POLICY':'cloud'},
+                            {'SIFR_VERIFY_RESOURCE_POLICY':''},
+                            {'SIFR_VERIFY_SYSROOT_GRAPH_SESSION':str(uuid.uuid4())}):
+            with patch.dict(os.environ, environment, clear=True):
+                with self.assertRaises(ProfileRunnerError):
+                    ProfileRunner('cloud', [])
+                if environment.get('SIFR_VERIFY_RESOURCE_POLICY') == 'compact':
+                    self.assertTrue(ProfileRunner('cloud', ['--compact-resources']).compact_resources)
+                else:
+                    with self.assertRaises(ProfileRunnerError):
+                        ProfileRunner('cloud', ['--compact-resources'])
         with patch.dict(os.environ, {'CARGO_PROFILE_DEV_DEBUG': '2'}):
             with self.assertRaises(ProfileRunnerError):
                 ProfileRunner('merge', ['--compact-resources'])
@@ -132,6 +144,22 @@ class CompactChecks(unittest.TestCase):
         self.assertEqual(tools.call_count, len(runner.profile['toolchain_steps']))
         self.assertEqual(events[-1], 'area_performance')
         self.assertEqual(len(events), len(set(events)))
+
+    def test_foundation_isolates_mock_profiles_and_restores_outer_scheduler_environment(self):
+        from . import selftest
+        environment = {'SIFR_VERIFY_RESOURCE_POLICY':'compact',
+                       'SIFR_VERIFY_SYSROOT_GRAPH_SESSION':str(uuid.uuid4())}
+        def foundation():
+            self.assertNotIn('SIFR_VERIFY_RESOURCE_POLICY', os.environ)
+            self.assertNotIn('SIFR_VERIFY_SYSROOT_GRAPH_SESSION', os.environ)
+            return ['passed']
+        with patch.dict(os.environ, environment, clear=True):
+            with patch.object(selftest, '_run_all', side_effect=foundation):
+                self.assertEqual(selftest.run_all(), ['passed'])
+            self.assertEqual(dict(os.environ), environment)
+            with patch.object(selftest, '_run_all', side_effect=RuntimeError('failure')):
+                with self.assertRaises(RuntimeError): selftest.run_all()
+            self.assertEqual(dict(os.environ), environment)
 
     def test_metadata_preparation_does_not_compile_unselected_corpus(self):
         package = producer('package_build')

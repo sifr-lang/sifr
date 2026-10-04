@@ -67,6 +67,16 @@ GOVERNANCE_SCHEMA_COUNT = 20
 
 
 def run_all() -> list[str]:
+    import os
+    variables = ("SIFR_VERIFY_RESOURCE_POLICY", "SIFR_VERIFY_SYSROOT_GRAPH_SESSION")
+    inherited = {name: os.environ.pop(name) for name in variables if name in os.environ}
+    try:
+        return _run_all()
+    finally:
+        os.environ.update(inherited)
+
+
+def _run_all() -> list[str]:
     checks = [
         ("explicit compact execution coverage and graph custody", compact_profile_checks),
         ("conservative commit-bound change selection", change_selection_checks),

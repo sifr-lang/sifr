@@ -100,6 +100,12 @@ class ProfileRunner:
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
+        if "SIFR_VERIFY_SYSROOT_GRAPH_SESSION" in self.env:
+            raise ProfileRunnerError("sysroot graph sessions are assigned by the owned scheduler")
+        inherited_policy = self.env.get("SIFR_VERIFY_RESOURCE_POLICY")
+        if "SIFR_VERIFY_RESOURCE_POLICY" in self.env and (
+                not self.compact_resources or inherited_policy != "compact"):
+            raise ProfileRunnerError("resource policy requires its explicit compact resource option")
         if self.compact_resources:
             for key, value in (("CARGO_PROFILE_DEV_DEBUG", "0"), ("CARGO_INCREMENTAL", "0")):
                 if self.env.get(key) not in (None, value):
