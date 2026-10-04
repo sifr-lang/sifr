@@ -83,7 +83,8 @@ def interpret(rows, output, *, original_output=None):
         if row['cause'] != 'exit' or row['returncode'] != 0 or row['truncated']:
             raise ValueError('required capacity command failed: ' + name)
         tool = row['executable']
-        if (not Path(tool['path']).is_absolute() or not re.fullmatch(r'[0-9a-f]{64}', tool['sha256'])
+        if (not Path(tool['path']).is_absolute() or Path(tool['path']).name != row['argv'][0]
+                or not re.fullmatch(r'[0-9a-f]{64}', tool['sha256'])
                 or row['actual_argv'] != [tool['path'], *row['argv'][1:]]):
             raise ValueError('diagnostic executable identity differs')
         for stream in ('stdout', 'stderr'):
@@ -253,10 +254,19 @@ def check(output, *, root=ROOT, target=None, pending=False):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('observe', 'check'))
+    parser.add_argument('mode', choices=('observe', 'check', 'check-retained'))
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--target', required=True, choices=tuple(TARGETS.values()))
+    parser.add_argument('--commit', help='Externally verified original source SHA for retained-byte audit')
     args = parser.parse_args()
-    result = observe(ROOT, args.output, target=args.target) if args.mode == 'observe' else check(args.output, target=args.target)
+    if args.mode == 'check-retained':
+        if args.commit is None:
+            parser.error('check-retained requires the externally verified --commit')
+        result = check_retained(args.output, args.commit, target=args.target)
+    elif args.mode == 'observe':
+        result = observe(ROOT, args.output, target=args.target)
+    else:
+        result = check(args.output, target=args.target)
     print(json.dumps({'claim': result['claim'], 'runtime_assertions': 0,
-                      'native_qualification': False, 'observations': result['observations']}))
+                      'native_qualification': False, 'audit_mode': args.mode,
+                      'observations': result['observations']}))

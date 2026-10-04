@@ -179,7 +179,8 @@ def validate_capacity_diagnostics(document: dict) -> list[str]:
             or job.get('strategy', {}).get('fail-fast') is not False
             or job.get('timeout-minutes') != 15
             or job.get('env') != {'SIFR_NATIVE_HOST_KIND': 'dedicated-darwin'}
-            or 'permissions' in job or 'environment' in job):
+            or 'permissions' in job or 'environment' in job
+            or 'if' in job or job.get('continue-on-error')):
         errors.append('capacity diagnostics require both bounded standard Darwin hosts')
     steps = job.get('steps', [])
     commands = ['uv python install 3.14.7', *[
@@ -263,7 +264,7 @@ def main() -> None:
         if mutation == 'host': job['strategy']['matrix']['include'][0].pop('host_kind')
         if mutation == 'context': job['env']['SIFR_NATIVE_HOST_KIND'] = "${{ runner.os == 'macOS' && 'dedicated-darwin' || '' }}"
         assert validate_native_qualification(document, invalid_native), mutation
-    for mutation in ('paid', 'source', 'skip', 'write', 'build', 'retention'):
+    for mutation in ('paid', 'source', 'skip', 'write', 'build', 'retention', 'job-skip', 'job-bypass'):
         bad = copy.deepcopy(diagnostic); job = bad['jobs']['observe']
         if mutation == 'paid': job['strategy']['matrix']['include'][0]['runner'] = 'macos-15-xlarge'
         if mutation == 'source': job['steps'][0]['with']['ref'] = 'main'
@@ -271,6 +272,8 @@ def main() -> None:
         if mutation == 'write': bad['permissions']['contents'] = 'write'
         if mutation == 'build': job['steps'].insert(-1, {'run': 'cargo build'})
         if mutation == 'retention': job['steps'][-1].pop('if')
+        if mutation == 'job-skip': job['if'] = 'false'
+        if mutation == 'job-bypass': job['continue-on-error'] = True
         assert validate_capacity_diagnostics(bad), mutation
     print("local-first admission and event/profile contracts passed (including regressions)")
 

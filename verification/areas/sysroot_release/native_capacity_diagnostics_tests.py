@@ -99,11 +99,14 @@ class DiagnosticControls(unittest.TestCase):
 
     def test_commit_producer_command_and_observation_drift_are_rejected(self):
         self.observe(); original = self.report()
-        for mutation in ('source', 'producer', 'command', 'observation', 'duplicate', 'missing'):
+        for mutation in ('source', 'producer', 'command', 'executable', 'observation', 'duplicate', 'missing'):
             report = copy.deepcopy(original)
             if mutation == 'source': report['source']['commit'] = 'b' * 40
             if mutation == 'producer': report['source']['producer_sha256'].pop(probe.PRODUCERS[0])
             if mutation == 'command': report['commands'][-1]['argv'] = ['cargo', 'build']
+            if mutation == 'executable':
+                report['commands'][-1]['executable']['path'] = '/tmp/another-command'
+                report['commands'][-1]['actual_argv'][0] = '/tmp/another-command'
             if mutation == 'observation': report['observations']['memory']['available_bytes'] += 1
             if mutation == 'duplicate': report['commands'].append(report['commands'][-1])
             if mutation == 'missing': report['commands'].pop()
@@ -125,9 +128,11 @@ class DiagnosticControls(unittest.TestCase):
 
     def test_live_checker_rejects_interpreter_change_and_receipt_divergence(self):
         self.observe()
+        substitute = Path(self.temp.name) / 'different-python'
+        substitute.write_bytes(b'existing file with different interpreter bytes')
         with patch.object(probe, 'source_identity', return_value=self.identity), \
-                patch.object(probe.sys, 'executable', str(Path(self.temp.name) / 'wrong-python')):
-            with self.assertRaises(OSError):
+                patch.object(probe.sys, 'executable', str(substitute)):
+            with self.assertRaisesRegex(ValueError, 'interpreter differs'):
                 probe.check(self.output)
         (self.output / 'receipt.json').write_text('{}')
         with self.assertRaisesRegex(ValueError, 'receipt differs'):
