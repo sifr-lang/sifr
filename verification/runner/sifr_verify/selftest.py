@@ -31,6 +31,7 @@ from .profile_results import AreaResultError, validate_area_result
 from .profile_runner import timed_step
 from .reference_admission_checks import policy_checks as reference_admission_policy_checks
 from .cloud_profile_tests import policy_checks as cloud_profile_policy_checks
+from .cloud_receipt_reuse_tests import policy_checks as cloud_receipt_reuse_checks
 from .profiles import (
     ProfileError,
     canonical_step_names,
@@ -92,6 +93,7 @@ def _run_all() -> list[str]:
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),
         ("shared-cloud correctness coverage and outcomes", cloud_profile_policy_checks),
+        ("explicit unchanged-input cloud receipt reuse", cloud_receipt_reuse_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),

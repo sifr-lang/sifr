@@ -4,6 +4,33 @@ status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
 
+## Current bounded item: explicit local performance receipt reuse — 2026-10-04
+
+Own `/workspace/sifr-validation-cloud-receipt-reuse` and branch
+`codex/validation-cloud-receipt-reuse-20261004`, based on
+`5b53dda480d651a89851c5df4c2efb4d1345cc36`. Add an explicit local consumption
+recipe for a preserved measurement worktree, with `SIFR_CLOUD_PERFORMANCE_SOURCE_WORKTREE`.
+Its original full paired checker remains authoritative. No receipt is resealed,
+no sample is regenerated/combined and no runtime assertion is manufactured.
+
+Require a measured ancestor, the same owned Git repository, clean full trees,
+an exact narrowly enumerated set of non-measurement changes, equal actual
+compiler/runtime/corpus trees including ignored source inputs, matching ambient
+Python inputs and identical current/measured compiler bytes/build identity.
+Recheck proof and hashes after the original checker. Record immutable started,
+failed or passed consumption attempts, retaining measured/current commits and
+zero newly executed assertions. Unknown inputs, linked source inputs, sparse
+trees, compiler drift and unqualified original receipts fail closed. Current
+compiler byte changes always require fresh qualification; this recipe does not
+promise reuse of the running capture for a later final candidate.
+
+Named validation: negative source/lock/harness/ignored-input/foreign/sparse,
+compiler/Python drift, original-checker regression and mid-check mutation
+controls; cloud outcome controls; source guardrail; diff check; scoped read-only
+Opus review. Full local PR/final gates and actual paired/platform qualification
+remain pending. The integration worktree stays frozen on `0b7b5b8d3...` during
+the original 65-case/5120-pair capture.
+
 ## M6 input: shared-VM final gate command — 2026-10-04
 
 Document the existing canonical `cloud --require-performance` route as the final
