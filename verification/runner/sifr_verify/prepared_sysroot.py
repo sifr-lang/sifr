@@ -93,13 +93,13 @@ def recipe(kind: str, root: Path, env: dict[str, str], directory: Path):
     if kind == "source":
         build = producer("source_build", root)
         argv, environment, output = build.source_build_configuration(root, env)
-        return argv, environment, output, GRAPH_PATHS[0]
+        return argv, environment, output, str(Path(environment["CARGO_TARGET_DIR"]).relative_to(root))
     if kind == "package":
         build = producer("package_build", root)
         host = build.host_target(env)
         argv, environment = build.package_build_configuration(root, env, host, directory / "archive")
         output = directory / "archive" / f"sifr-{build.RELEASE_VERSION}-{host}.tar.gz"
-        return argv, environment, output, GRAPH_PATHS[1]
+        return argv, environment, output, str(Path(environment["CARGO_TARGET_DIR"]).relative_to(root))
     raise EvidenceError("unknown preparation output kind")
 
 
@@ -179,7 +179,7 @@ def prepare(kind: str, *, root: Path, env: dict[str, str]) -> dict:
                 # Restore only after Cargo has freed the large graph. The
                 # compressed bytes remain durable throughout this transition.
                 retirement["restoration_admission"] = admit(discover(disk_path=root), dict(disk_growth_bytes=4*1024**2,
-                    retained_copy_bytes=copy["decoded_size_bytes"], disk_reserve_bytes=8*1024**3,
+                    retained_copy_bytes=copy["decoded_size_bytes"], disk_reserve_bytes=(2 if env.get("SIFR_VERIFY_RESOURCE_POLICY")=="compact" else 8)*1024**3,
                     memory_peak_bytes=1024**3, tmpfs_growth_bytes=0, memory_reserve_bytes=2*1024**3))
                 output = restore(copy, Path(copy["retained"]["path"]).with_suffix(""))
             else:
@@ -187,7 +187,7 @@ def prepare(kind: str, *, root: Path, env: dict[str, str]) -> dict:
                 # cleaned. The selected output still gets an independent copy.
                 retained = safe_store(directory / "source") / "sifr"
                 retirement["independent_copy_admission"] = admit(discover(disk_path=root), dict(disk_growth_bytes=4*1024**2,
-                    retained_copy_bytes=original["size_bytes"], disk_reserve_bytes=8*1024**3,
+                    retained_copy_bytes=original["size_bytes"], disk_reserve_bytes=(2 if env.get("SIFR_VERIFY_RESOURCE_POLICY")=="compact" else 8)*1024**3,
                     memory_peak_bytes=1024**3, tmpfs_growth_bytes=0, memory_reserve_bytes=2*1024**3))
                 with output.open("rb") as src, retained.open("xb") as dst:
                     shutil.copyfileobj(src, dst)

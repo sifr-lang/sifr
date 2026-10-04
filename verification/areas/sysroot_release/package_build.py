@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import subprocess
+from graph_paths import graph_path
 from producer_snapshot import prepare_source_snapshot
 
 RELEASE_VERSION = "0.1.0-beta.1300"
@@ -22,7 +23,7 @@ def package_compiler_path(root: Path, environment: dict[str, str], host: str) ->
 
 def package_build_configuration(root: Path, original: dict[str, str], host: str,
                                 artifact_dir: Path, *, prepare_only: bool = False):
-    env = dict(original, CARGO_TARGET_DIR=str((root / "target/sysroot_release/cargo-target").resolve()),
+    env = dict(original, CARGO_TARGET_DIR=str(graph_path(root,original,"cargo-target")),
                SIFR_RELEASE_VERSION=RELEASE_VERSION)
     command = ["scripts/distribution/build_release_artifacts.sh", "--version", RELEASE_VERSION,
                "--output-dir", str(artifact_dir), "--target", host, "--cargo-build"]
@@ -40,13 +41,17 @@ def corpus_configuration(root: Path, original: dict[str, str]):
     return command, env, snapshot
 
 
-def prepare_metadata(root: Path, env: dict[str, str], run=subprocess.run):
+def prepare_metadata(root: Path, env: dict[str, str], run=subprocess.run, *, suite=None):
     """Prepare the two library configurations after private graph retirement."""
-    corpus, corpus_env, snapshot = corpus_configuration(root, env)
-    prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
-    run([*corpus[:7], "--no-run"], cwd=root, env=corpus_env, check=True)
-    run(["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--no-run",
-         "metadata_structural_"], cwd=root, env=env, check=True)
+    if suite not in (None,"metadata-corpus","metadata-structural"):
+        raise ValueError("unknown metadata preparation suite")
+    if suite in (None,"metadata-corpus"):
+        corpus, corpus_env, snapshot = corpus_configuration(root, env)
+        prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
+        run([*corpus[:7], "--no-run"], cwd=root, env=corpus_env, check=True)
+    if suite in (None,"metadata-structural"):
+        run(["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--no-run",
+             "metadata_structural_"], cwd=root, env=env, check=True)
 
 
 def prepare(root: Path, env: dict[str, str], run=subprocess.run):
@@ -61,8 +66,13 @@ def prepare(root: Path, env: dict[str, str], run=subprocess.run):
 
 
 if __name__ == "__main__":
-    import sys
-    if sys.argv[1:] not in ([], ["--metadata-only"]):
-        raise SystemExit("usage: package_build.py [--metadata-only]")
-    callback = prepare_metadata if sys.argv[1:] else prepare
-    callback(Path(__file__).resolve().parents[3], dict(os.environ, CARGO_NET_OFFLINE="true"))
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--metadata-only',action='store_true')
+    parser.add_argument('--metadata-suite',choices=('metadata-corpus','metadata-structural'))
+    args=parser.parse_args()
+    if args.metadata_suite:
+        prepare_metadata(Path(__file__).resolve().parents[3],dict(os.environ,CARGO_NET_OFFLINE='true'),suite=args.metadata_suite)
+    else:
+        callback=prepare_metadata if args.metadata_only else prepare
+        callback(Path(__file__).resolve().parents[3],dict(os.environ,CARGO_NET_OFFLINE='true'))

@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations.",
+  "cold_preparation_deadline_seconds": 7200,
+  "assertion_command_deadline_seconds": 2400,
+  "stages": {
+    "dependency-acquisition": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 1073741824,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-source": {
+      "disk_growth_bytes": 2684354560,
+      "retained_copy_bytes": 134217728,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-package": {
+      "disk_growth_bytes": 2684354560,
+      "retained_copy_bytes": 268435456,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 1073741824,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-assertions": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 2147483648,
+      "memory_reserve_bytes": 2147483648
+    },
+    "graph-retirement": {
+      "disk_growth_bytes": 0,
+      "retained_copy_bytes": 268435456,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 1073741824,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "remaining-preparation": {
+      "disk_growth_bytes": 3221225472,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "remaining-assertions": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-metadata": {
+      "disk_growth_bytes": 3221225472,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-metadata-cached": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "preparation-coordination": {
+      "disk_growth_bytes": 268435456,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "preparation-command-cold": {
+      "disk_growth_bytes": 3221225472,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "preparation-command-cached": {
+      "disk_growth_bytes": 1073741824,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    }
+  }
+}

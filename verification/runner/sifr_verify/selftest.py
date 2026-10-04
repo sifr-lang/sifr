@@ -61,12 +61,24 @@ from .validation_contract_checks import policy_checks as validation_contract_che
 from .resource_schedule_checks import policy_checks as resource_schedule_checks
 from .cache_admission_checks import policy_checks as cache_admission_checks
 from .change_selection_checks import policy_checks as change_selection_checks
+from .compact_profile_checks import policy_checks as compact_profile_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
 
 def run_all() -> list[str]:
+    import os
+    variables = ("SIFR_VERIFY_RESOURCE_POLICY", "SIFR_VERIFY_SYSROOT_GRAPH_SESSION")
+    inherited = {name: os.environ.pop(name) for name in variables if name in os.environ}
+    try:
+        return _run_all()
+    finally:
+        os.environ.update(inherited)
+
+
+def _run_all() -> list[str]:
     checks = [
+        ("explicit compact execution coverage and graph custody", compact_profile_checks),
         ("conservative commit-bound change selection", change_selection_checks),
         ("input-bound correctness checkpoint consumption", checkpoint_checks),
         ("audited isolated correctness recipe", checkpoint_recipe_checks),
