@@ -663,3 +663,5 @@ if __name__ == "__main__":
     unittest.main()
 
 from source_binder_acceptance import SourceBinderFeasibilityTests
+
+from include_source_acceptance import IncludeSourceCorrespondenceTests
