@@ -37,5 +37,12 @@
     }
   ],
   "receipt_kind": "preparation-output",
-  "runtime_assertions": 0
+  "runtime_assertions": 0,
+  "installer": {
+    "id": 510759033,
+    "name": "sifr-installer-0.1.0-beta.16",
+    "size": 19617,
+    "digest": "sha256:b28fb92b0344fe3938b797d41416f707f3de63856021c0fa1f70ef467feb8f9a",
+    "browser_download_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.16/sifr-installer-0.1.0-beta.16"
+  }
 }

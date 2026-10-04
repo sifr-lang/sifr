@@ -640,7 +640,10 @@ cleanup() {
   fi
   rm -rf "\${tmp_dir}"
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 archive_path="\${tmp_dir}/\${archive_name}"
 extract_dir="\${tmp_dir}/extract"
@@ -704,6 +707,7 @@ validate_extracted_toolchain() {
   fi
 }
 
+$(cat "${SCRIPT_DIR}/legacy_installation.sh")
 $(cat "${SCRIPT_DIR}/immutable_installation.sh")
 
 echo "installed sifr \${APP_VERSION} to \${install_dir}/sifr"
