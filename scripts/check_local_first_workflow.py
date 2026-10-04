@@ -48,6 +48,15 @@ def validate(document: dict) -> list[str]:
                 if options.get("persist-credentials") is not False or options.get("ref") != CANDIDATE:
                     errors.append(f"{name}: checkout must bind the actual candidate without credentials")
     select = jobs.get("validation-selection", {})
+    if not any(step.get('run') == 'uv run --project verification --locked python scripts/select_ci_validation.py'
+               and step.get('env', {}).get('BASE_SHA') == '${{ github.event.pull_request.base.sha }}'
+               and step.get('env', {}).get('PR_HEAD_SHA') == '${{ github.event.pull_request.head.sha }}'
+               and step.get('env', {}).get('CANDIDATE_SHA') == CANDIDATE for step in select.get('steps', [])):
+        errors.append('PR selection must bind the event base, head and synthetic merge')
+    if not any('python3 scripts/check_validation_pr_candidate.py' in step.get('run', '').splitlines()
+               and 'if' not in step and not step.get('continue-on-error')
+               for step in jobs['uv-toolchain-invariant'].get('steps', [])):
+        errors.append('PR candidate binding regressions must remain blocking')
     if not any(step.get("run") == "uv run --project verification --locked python scripts/select_ci_validation.py"
                and "if" not in step and not step.get("continue-on-error") for step in select.get("steps", [])):
         errors.append("selection must execute the canonical commit-bound selector")
@@ -236,6 +245,17 @@ def main() -> None:
         if step.get("name") == "Run local-first profile":
             step["if"] = "false"
     assert any("must execute" in error for error in validate(skipped))
+    for field in ('BASE_SHA', 'PR_HEAD_SHA', 'CANDIDATE_SHA'):
+        wrong_pr = copy.deepcopy(document)
+        step = next(step for step in wrong_pr['jobs']['validation-selection']['steps']
+                    if step.get('id') == 'select')
+        step['env'][field] = '${{ github.sha }}'
+        assert any('event base, head' in error for error in validate(wrong_pr)), field
+    no_binding_controls = copy.deepcopy(document)
+    for step in no_binding_controls['jobs']['uv-toolchain-invariant']['steps']:
+        if 'check_validation_pr_candidate.py' in step.get('run', ''):
+            step['continue-on-error'] = True
+    assert any('regressions must remain blocking' in error for error in validate(no_binding_controls))
     unprepared = copy.deepcopy(document)
     unprepared["jobs"]["sql-wasi-build"]["steps"] = [
         step for step in unprepared["jobs"]["sql-wasi-build"]["steps"]

@@ -1,5 +1,60 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M3 current PR head/base binding — prospective rescope
+
+Hosted run `37202944076` reported head `98c248a71`, but the retained job log
+`/workspace/validation-work/evidence/hosted-98c248a71-111438291989-complete-log.txt`
+records checkout `1f807ea83a597ffceaeedde99f79adcccc1e967c` and the message
+"Merge 0d8d01e1b852dab31ea9c7be25f1819659255715 into
+0e8bdc47122d2b45fbe6d2b76be5657bda888d75". This demonstrates stale event-selected
+source; it does not establish a stale current API response or a falsely published
+pass. Preserve the failed run and all historical evidence.
+
+The existing exact-current-PR-head/tested-merge contract has a bounded omission:
+checkout/artifact equality and current API head/base comparisons do not prove
+that the selected merge includes that head/base. If the current API still names
+the same stale merge, these identity comparisons alone cannot reject it.
+Bind the raw stored open-PR synthetic merge parents to the exact expected base
+and head, in their GitHub order, both before producer selection/artifact writing
+and independently in the trusted publisher before qualification. Ignore Git
+replacement objects and history grafts when inspecting stored commit headers.
+This applies to open-PR test merges, including fast-forwardable PR branches;
+merged PR squash/rebase identities and merge-group/main paths remain separate.
+Missing or stale objects fail closed. Do not infer a pass from equal trees or
+ancestor relationships, and do not execute candidate code in the publisher.
+
+Own sparse worktree `/workspace/sifr-validation-pr-merge-binding`, branch
+`codex/validation-pr-merge-binding-20261004`, from exact base
+`ba2f15181cc800d360b8184869c4e1e6a7ee5389`. The full current worktree and its
+live gate remain frozen on that base. Deliver through existing draft #4332
+after scoped review and coordinator integration; no protected-main mutation,
+remote native dispatch, broad build or performance capture belongs to this item.
+Named checks: real Git valid/stale head/base, replacement/graft, producer and
+publisher boundary regressions; existing publication/artifact/aggregate and
+reuse controls; workflow and uv controls/invariant; sparse-source file-size
+guardrail and diff check; exact-candidate read-only Opus review. Full candidate
+gates, fresh paired capture, native qualification and enforcement remain required.
+
+Focused controls pass: eight real Git structural/producer/publisher tests plus
+seven existing publisher tests in the enrolled binding command; eight existing
+publication-environment/artifact/aggregate tests; five main-reuse controls;
+workflow controls; 58 uv controls and the maintained six-pin/eight-setup
+invariant; the 272-file sparse-source guardrail and whitespace checks. Raw logs
+are `/workspace/validation-work/evidence/pr-merge-binding-20261004/`.
+This sparse check is not a full-tree validation gate. Exact-candidate review and
+integration remain pending; the frozen base's ongoing gate is independent.
+
+Independent execution on frozen `ba2f15181` has now consumed the registered
+single standard Intel attempt: run `37206639432`, job `111449086363`, passed
+locked source preparation and its checker, then rejected native preparation at
+9,250,066,432 available bytes against the unchanged 9,663,676,416 requirement.
+The 413,609,984-byte shortfall is a capacity blocker, not native qualification;
+no unchanged retry is registered. Raw log:
+`/workspace/validation-work/evidence/hosted-native-ba2-intel-111449086363.log`.
+The ARM job `111449086588` failed before steps because of billing availability.
+Linux jobs remain pending at this record; none of these observations change the
+scope or acceptance of this PR binding repair.
+
 ## M5 single standard Intel qualification attempt — prospective scope
 
 Paid larger runners are unavailable. Register one actual native qualification

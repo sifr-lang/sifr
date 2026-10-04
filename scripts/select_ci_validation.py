@@ -10,6 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "verification/runner"))
 from sifr_verify.change_selection import SHA, selection
+from validation_pr_candidate import verify_pr_candidate
 
 
 def main():
@@ -19,6 +20,7 @@ def main():
         raise ValueError("CI must checkout the actual candidate commit")
     event = os.environ["EVENT_NAME"]
     if event == "pull_request":
+        verify_pr_candidate(ROOT, candidate, os.environ["BASE_SHA"], os.environ["PR_HEAD_SHA"])
         plan = selection(ROOT, os.environ["BASE_SHA"], candidate)
         profile = plan["profile"]
         print(json.dumps(plan, sort_keys=True))

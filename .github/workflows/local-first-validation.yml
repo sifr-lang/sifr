@@ -32,6 +32,7 @@ jobs:
         run: |
           python3 scripts/check_local_first_workflow.py
           python3 scripts/check_validation_main_reuse.py
+          python3 scripts/check_validation_pr_candidate.py
           python3 scripts/check_uv_toolchain.py --self-test
           python3 scripts/check_uv_toolchain.py
 
@@ -79,6 +80,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           CANDIDATE_SHA: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
         run: uv run --project verification --locked python scripts/select_ci_validation.py
       - name: Bind the actual checked-out candidate to the producer attempt

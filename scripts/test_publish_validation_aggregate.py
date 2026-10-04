@@ -83,8 +83,10 @@ class PublisherTests(unittest.TestCase):
                         "base": {"sha": base}, "state": "open"}
             return old_api(path, body)
         with patch.object(self, "api", pr_api), patch.object(publisher, "fetch"), \
+                patch.object(publisher, "verify_pr_candidate") as binding, \
                 patch("sifr_verify.change_selection.selection", return_value={"profile": "create-pr"}):
             self.assertEqual(self.call(), 0)
+            binding.assert_called_once_with(publisher.ROOT, self.candidate, base, branch)
         self.assertEqual(self.published[-1]["head_sha"], branch)
         self.assertTrue(self.published[-1]["external_id"].endswith(self.candidate))
         self.assertIn(self.candidate, self.published[-1]["output"]["summary"])

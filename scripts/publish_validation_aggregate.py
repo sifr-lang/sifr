@@ -18,6 +18,7 @@ import urllib.request
 from validation_aggregate_policy import CONTEXT, WORKFLOW, evaluate
 from validation_candidate_artifact import candidate_identity
 from validation_publication_environment import verify_environment
+from validation_pr_candidate import verify_pr_candidate
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -76,6 +77,7 @@ def main() -> int:
         base = sha(current["base"]["sha"])
         fetch(base)
         fetch(candidate)
+        verify_pr_candidate(ROOT, candidate, base, check_head)
         # Import only the checked-out trusted default-branch selector. Git reads
         # the untrusted commit objects without ever running their source/hooks.
         sys.path.insert(0, str(ROOT / "verification/runner"))
