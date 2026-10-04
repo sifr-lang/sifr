@@ -31,7 +31,8 @@ specific OS-identified guest block-storage authority. Require every identity,
 parent, partition, content, size and driver field; reject missing, contradictory,
 RAM/image and unknown authority. Existing physical-bus and HFS rules remain.
 Named validation: capacity negative controls, native candidate/source dependency
-controls, finite uv matrix controls, source guardrail and diff check; scoped
+controls, finite uv matrix and local-first workflow controls (including runner
+downgrade rejection), source guardrail and diff check; scoped
 read-only Opus review. Actual larger-host qualification and full candidate
 acceptance remain pending. No seven-GiB host admission or platform pass is claimed.
 

@@ -145,7 +145,7 @@ def validate_native_qualification(parent: dict, document: dict) -> list[str]:
     if document.get('permissions') != {'contents': 'read'} or document.get('on', document.get('true')) != {'workflow_call': None, 'workflow_dispatch': None}:
         errors.append('native qualification must remain reusable and read-only')
     native = document['jobs']['native']
-    expected = [('aarch64-apple-darwin', 'macos-15'), ('x86_64-apple-darwin', 'macos-15-intel'),
+    expected = [('aarch64-apple-darwin', 'macos-15-xlarge'), ('x86_64-apple-darwin', 'macos-15-intel'),
                 ('x86_64-unknown-linux-gnu', 'ubuntu-24.04'), ('aarch64-unknown-linux-gnu', 'ubuntu-24.04-arm')]
     matrix = native.get('strategy', {}).get('matrix', {}).get('include', [])
     if [(row.get('target'), row.get('runner')) for row in matrix] != expected or native.get('runs-on') != '${{ matrix.runner }}':
@@ -208,10 +208,11 @@ def main() -> None:
     exposed = copy.deepcopy(publisher)
     exposed["jobs"]["publish"].pop("environment")
     assert any("protected publication environment" in error for error in validate_publisher(exposed))
-    for mutation in ('target', 'source', 'skip', 'write', 'host', 'context'):
+    for mutation in ('target', 'runner', 'source', 'skip', 'write', 'host', 'context'):
         invalid_native = copy.deepcopy(native)
         job = invalid_native['jobs']['native']
         if mutation == 'target': job['strategy']['matrix']['include'].pop()
+        if mutation == 'runner': job['strategy']['matrix']['include'][0]['runner'] = 'macos-15'
         if mutation == 'source': job['steps'][0]['with']['ref'] = 'main'
         if mutation == 'skip':
             for step in job['steps']:
