@@ -2130,3 +2130,30 @@ Linux x64 workflow digests and every native runtime assertion remain unchanged.
 The uv guard self-test passes 54 controls, including the new finite-matrix
 negative controls. Scoped review and an actual corrected hosted rerun remain
 pending. This is a prerequisite repair, not native qualification or final closure.
+
+## M5 persisted math fixture correction — 2026-10-04
+
+The corrected frozen `615fb6bd8cf7ac86ef0b85e5c4f6e09b547c0293` native preparation
+passed. The next actual transition passed published installation/program,
+post-switch migration rollback, restored published program, upgrade, candidate
+version and package integrity. Every persisted user file retained its original
+hash. The candidate program printed `Ok(9)`, however, rather than `9`: the fixture
+used `int(float)`, whose current exact-integer conversion returns a result. The
+math `sqrt` function itself still declares and returns a float. The invocation
+remains failed, with its raw output and unchanged user hashes retained.
+
+Use the shared integer-returning `sifr.math.isqrt` operation instead. An owned
+standalone project initialized by the actual Beta 16 binary ran `isqrt(81)` with
+both the actual published compiler and the prepared candidate. Both native
+processes completed offline with stdout exactly `9`; commands and raw output are
+at `/tmp/sifr-shared-persisted-math-20261004`. This is direct fixture evidence,
+not a complete upgrade qualification. No compiler implementation, public API,
+expected output, runtime command, case count or rollback requirement changes.
+The existing fifteen transition controls still pass. Scoped review and a fresh
+complete transition remain pending.
+
+The corrected hosted macOS ARM job now passed Rust/uv/Python setup and reached
+native preparation. It stopped at the Darwin storage-authority guard. The raw
+job log and downloaded failed state from run `37180131233` are retained outside
+Git. This is a new observed provider classification failure, not an assumed host
+capacity or native execution pass; collect the actual disk authority next.

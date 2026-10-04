@@ -208,7 +208,7 @@ shutil.copyfile(routes[urls[0]],args[args.index('-o')+1])
         report['dependency_preparation']=native_dependency_preparation.prepare(managed,output/'dependency-preparation');save()
         project=output/'user-project'
         run('published-init',[binary,'init','--bin','--name','persisted_upgrade',project])
-        (project/'src/main.sifr').write_text('from sifr.math import sqrt\n\ndef main():\n    print(int(sqrt(81.0)))\n')
+        (project/'src/main.sifr').write_text('from sifr.math import isqrt\n\ndef main():\n    print(isqrt(81))\n')
         (project/'user-state.json').write_text('{"user_owned":true,"revision":1}\n')
         report['user_identity']=user_identity(project)
         def user_run(label):
