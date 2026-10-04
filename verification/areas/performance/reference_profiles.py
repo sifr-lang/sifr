@@ -194,7 +194,7 @@ def validate_compiler_reference(repo_root: Path, commit: str) -> str:
     if merged.returncode != 0:
         raise ReferenceProfileError("reference compiler must be an ancestor of origin/main")
     changed = subprocess.run(
-        ["git", "diff", "--name-only", commit, "HEAD"],
+        ["git", "diff", "--no-renames", "--name-only", commit, "HEAD"],
         cwd=repo_root, capture_output=True, text=True, check=True, timeout=30,
     ).stdout.splitlines()
     forbidden = [
@@ -208,6 +208,10 @@ def validate_compiler_reference(repo_root: Path, commit: str) -> str:
             "reference worktree changes compiler inputs outside benchmark tooling: "
             + ", ".join(forbidden)
         )
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=repo_root,
+                           capture_output=True, text=True, check=True, timeout=30).stdout
+    if dirty:
+        raise ReferenceProfileError("reference compiler worktree must be committed and clean")
     return commit
 
 
