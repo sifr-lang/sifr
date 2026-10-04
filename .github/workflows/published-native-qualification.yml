@@ -97,5 +97,6 @@ jobs:
             ${{ runner.temp }}/published-transition/published/*.json
             ${{ runner.temp }}/published-transition/published/*.stdout
             ${{ runner.temp }}/published-transition/published/*.stderr
+            ${{ runner.temp }}/published-transition/dependency-preparation
           if-no-files-found: error
           retention-days: 30
