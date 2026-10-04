@@ -1749,3 +1749,26 @@ The frozen native create-pr compact run at `15f3944dba9cce1702622684d455abc8144c
 A separate exact-head structural diagnostic passed both selected Rust tests and the metadata-doctor sequence in 28.72 seconds with 247,361,536 bytes maximum process RSS and zero swaps. Raw timing, suite results, and doctor evidence are retained in `/workspace/validation-work/evidence/metadata-structural-15f3944db-v3`. Earlier diagnostic environment-mismatch failures remain failed. The successful attempt used the original preparation's exact PATH and profile settings; receipt identities were not weakened or rewritten.
 
 This bounded item adds a prospective structural-only allocation: two GiB resident peak, 512 MiB additional tmpfs, 256 MiB filesystem growth, and unchanged disk/memory reserves and monitored headroom. It applies only to the exact `metadata-structural` selection in compact execution. Broader, mixed, and unknown selections retain the generic allocation; source preparation remains mandatory because the doctor consumes its actual compiler. No assertions, fixture selections, deadlines, or freshness checks are removed. Targeted controls cover selection preservation, conservative fallback, and the observed capacity boundary. Full candidate create-pr and final merge qualification remain required.
+## M5 single-target native installer fixture
+
+The bounded generator option `--qualification-target` produces an explicitly
+labelled single-target installer from one independently verified native archive.
+It rejects unknown targets and unlisted installation hosts. Default generation
+still requires all four supported target archives; it cannot infer absent native
+qualification or fabricate foreign platform packages. This fixture is for actual
+published-predecessor transition rehearsal before all-platform qualification.
+The new control verifies the default missing-archive refusal, unknown-target
+refusal, matching-target native installation and rejection on another target.
+Its first run expected a different error phrase and failed; the observed
+`unsupported target` refusal is preserved in `m5-native-installer-fixture-controls.log`.
+The corrected control passed at `m5-native-installer-fixture-controls-v2.log`.
+Existing installer/migration controls, scoped review, actual native candidate
+upgrade/persisted-state/reinstall/rollback and platform acceptance remain pending.
+
+### M5 actual native candidate preparation — 2026-10-04
+
+This bounded item prepares one actual native optimized candidate with the canonical release build/package script and the accepted single-target qualification installer generator. It binds the source commit, locked dependency input, actual selected Cargo/rustc/Python bytes, raw native Cargo executable/profile record, packaged compiler, archive/checksum, generated installer, commands and completion. It admits the owned graph before compilation, retains raw failures, independently checks a pending record before exclusive receipt publication, and retires only its successful Linux graph after preserving the compiler. Dedicated Darwin hosts use measured VM capacity; unknown storage/hosts fail closed and their graphs remain retained. No release or version is published.
+
+Five custody controls reject substituted commands, optimization, compiler manifest/source/target, tool identity, locked input, raw output, archive checksum, installer, incomplete processes, unpublished records and failed producer state. These use explicitly synthetic unit bytes and make no native execution claim. An artifact-area case runs those controls with the pinned interpreter. Existing published-installation controls still pass. Actual optimized native preparation, published-predecessor migration, representative persisted user state, reinstall/rollback, and all four native targets remain pending; this preparer is not qualification evidence and always reports zero runtime assertions.
+
+The initial native preparer review found an unexecutable enrolled shell case, a noncanonical compiler CPU flag, and GNU-only Darwin storage inspection. One remediation batch makes the case executable and verifies it through the actual distribution runner, removes the extra CPU flag, and uses BSD `df` plus `diskutil` plist device/filesystem/bus evidence. Darwin requires an explicit dedicated-host operator declaration; RAM disks and unknown storage buses are rejected. Six candidate controls and three capacity controls now cover the corrected recipe, preserved build failures without success publication, failed completed-state rejection, actual cgroup delegation, BSD device queries, and shared/unclassified/RAM-backed Darwin refusal. These are unit observations, not foreign-platform execution.
