@@ -102,7 +102,7 @@ os.execv(os.environ['NATIVE_REAL_CARGO'],[os.environ['NATIVE_REAL_CARGO'],*args]
             'NATIVE_CARGO_EVENTS':str(events),'CARGO_TARGET_DIR':str(graph),'CARGO_NET_OFFLINE':'true',
             'RUSTC':report['tools']['rustc']['path'],
             'CARGO_INCREMENTAL':'0','CARGO_BUILD_JOBS':str(worker_limit(capacity,2)),
-            'RUSTFLAGS':'-C target-cpu=generic','SIFR_VERIFY_DISK_FLOOR_BYTES':str(floor),
+            'SIFR_VERIFY_DISK_FLOOR_BYTES':str(floor),
             'SIFR_VERIFY_DISK_FLOOR_PATH':str(output)}
         def run(label,command):
             result=execute(command,cwd=root,env=env,deadline_seconds=7200,limit_bytes=32*1024**2)

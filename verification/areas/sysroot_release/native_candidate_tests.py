@@ -85,6 +85,25 @@ class CandidateChecks(unittest.TestCase):
         failed=copy.deepcopy(self.report);failed['status']='failed'
         (self.out/'state.json').write_text(json.dumps(failed))
         with self.assertRaises(ValueError): candidate.check(receipt)
+        receipt.write_text(json.dumps(failed))
+        with self.assertRaises(ValueError): candidate.check(receipt)
+
+    def test_failed_build_preserves_state_and_canonical_release_flags(self):
+        from sifr_verify.process_execution import Outcome
+        from sifr_verify.resource_admission import Resources
+        output=self.base/'failed-native-attempt'
+        capacity=Resources(4,4,100*1024**3,100*1024**3,100*1024**3,{},[],{},False)
+        tools={'cargo':{'path':shutil.which('cargo')},'rustc':{'path':shutil.which('rustc')}}
+        def fail_build(argv,**kwargs):
+            self.assertEqual(argv,candidate.commands(self.root,output,self.version,self.target)['build-package'])
+            self.assertNotIn('RUSTFLAGS',kwargs['env'])
+            self.assertEqual(kwargs['env']['RUSTC'],tools['rustc']['path'])
+            return Outcome(1,'exit',b'',b'explicit unit build failure',False,0.01)
+        with patch.object(candidate,'resources',return_value=capacity),patch.object(candidate,'tool_identity',return_value=tools), \
+             patch.object(candidate,'current_host_target',return_value=self.target),patch.object(candidate,'execute',side_effect=fail_build):
+            with self.assertRaises(ValueError): candidate.prepare(self.root,output)
+        self.assertEqual(json.loads((output/'state.json').read_text())['status'],'failed')
+        self.assertFalse((output/'receipt.json').exists())
 
     def test_command_or_profile_or_target_substitution_is_rejected(self):
         for change in ('command','optimization','manifest','target-kind','source'):
