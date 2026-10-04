@@ -111,6 +111,16 @@ def user_identity(root):
     return {name:digest(root/name) for name in USER_FILES}
 
 
+def admission_requirements():
+    # This fixed rehearsal runs one Cargo worker and one small persisted math
+    # program. Three GiB is a prospective combined process estimate; observed
+    # full source preparation had a 1.8-GiB maximum child and structural doctor
+    # execution 247 MiB. This is not a measured transition memory claim.
+    return dict(disk_growth_bytes=3*1024**3,retained_copy_bytes=0,
+        disk_reserve_bytes=2*1024**3,memory_peak_bytes=3*1024**3,
+        tmpfs_growth_bytes=512*1024**2,memory_reserve_bytes=2*1024**3)
+
+
 def qualify(candidate_receipt,archive,installer,output):
     candidate_receipt,archive,installer=(Path(item).resolve(strict=True) for item in (candidate_receipt,archive,installer))
     candidate=native_candidate.check(candidate_receipt)
@@ -143,8 +153,7 @@ def qualify(candidate_receipt,archive,installer,output):
         # Estimates include two retained native generations and both user build
         # configurations. Existing source/compiler preparation is not repeated.
         capacity=resources(output)
-        report['admission']=admit(capacity,dict(disk_growth_bytes=3*1024**3,retained_copy_bytes=0,
-            disk_reserve_bytes=2*1024**3,memory_peak_bytes=6*1024**3,tmpfs_growth_bytes=512*1024**2,memory_reserve_bytes=2*1024**3))
+        report['admission']=admit(capacity,admission_requirements())
         legacy=rehearse(policy,archive=archive,installer=installer,target=target,candidate_version=version,
             output=output/'published',resource_discovery=lambda *,disk_path:resources(disk_path))
         report['published_receipt_sha256']=digest(output/'published/receipt.json')

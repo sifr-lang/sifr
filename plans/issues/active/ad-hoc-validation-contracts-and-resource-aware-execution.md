@@ -2003,3 +2003,22 @@ CLI producer and safe artifact extraction. Raw output is retained in
 Source size and diff checks pass. The earlier missing-file failures remain
 failed; this is synthetic governance coverage, not real package/platform proof.
 Scoped review and required local gates remain pending.
+### M2 bounded native transition allocation — 2026-10-04
+
+The fixed eight-case published transition executes one Cargo worker and one small
+persisted math program. Its prospective combined process estimate is now three
+GiB rather than the generic six-GiB compilation estimate. The actual broader
+source preparation observed a 1.8-GiB maximum child RSS and structural doctor
+execution 247 MiB; those are context for the estimate, not a measurement of this
+transition or simultaneous RSS. Actual transition memory remains to be measured.
+Disk growth (three GiB), temporary growth (512 MiB), both two-GiB reserves, runtime
+commands, assertions, fixed user program and every monitoring floor are unchanged.
+RAM-backed storage still charges its full additional growth to shared memory.
+
+Six transition controls pass. The added admission control admits the fixed RAM
+rehearsal at 8.5 GiB total shared requirement and rejects eight GiB available,
+while preserving the five-GiB disk requirement. Its initial negative test tried
+to mutate the immutable Resources value and failed; the corrected test constructs
+a separate value. This prospective stage policy does not qualify a native run or
+change broad/native-compiler preparation allocation. Scoped review, actual
+transition, empirical peak and required local/native gates remain pending.
