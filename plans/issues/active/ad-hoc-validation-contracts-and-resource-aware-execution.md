@@ -1876,3 +1876,26 @@ separate canonical version selection, authority drift and rejection of placehold
 old predecessor or computed/unknown declarations. Three capacity and five
 transition controls plus workflow/diff checks pass. Actual corrected preparation,
 transition qualification, scoped review, native matrix and broad gates remain open.
+
+### M5 canonical metadata container version repair — 2026-10-04
+
+The actual optimized compiler at ee9426f0f compiled successfully in 12m06s.
+The subsequent canonical package preparation failed because its distribution
+validator and synthetic packaging fixture expected metadata format 4, while the
+actual canonical compiler emits format 5. The full failed native preparation is
+retained under /workspace/validation-work/evidence/native-candidate-ee9426f0f;
+its partial package and generated metadata are preserved. This is a packaging
+failure, not a disk or compiler-build failure and not native qualification.
+
+This bounded repair accepts only canonical format 5, preserving the existing
+identity, digest, directory and size bounds. A control compares the distribution
+version with the compiler's declared authority; old/future format controls
+recompute their digests and still reject. The synthetic fixture emits current
+format 5 explicitly and remains excluded from production Cargo packaging.
+Seven metadata controls pass. The corrected validator also accepted the actual
+6,554,972-byte metadata container produced by the real optimized compiler;
+its diagnostic binds actual compiler, metadata and validator hashes at
+/workspace/validation-work/evidence/native-metadata-format5-diagnostic.json.
+That diagnostic does not qualify the failed 0.0.0 package or a published upgrade.
+Scoped review, canonical corrected native preparation, transition and full
+native/local acceptance remain pending.
