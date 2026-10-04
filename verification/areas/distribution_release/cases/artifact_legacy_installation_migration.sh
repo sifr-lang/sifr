@@ -3,6 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/common.sh"
 
 temporary="$(mktemp -d "${TMPDIR:-/tmp}/sifr-legacy-migration.XXXXXX")"
+temporary="$(cd "$temporary" && pwd -P)"
 trap 'rm -rf "$temporary"' EXIT
 target="x86_64-unknown-linux-gnu"
 previous="0.1.0-beta.2"
@@ -64,11 +65,16 @@ require_failure_contains "complete flat toolchain" env SIFR_MIGRATE_LEGACY=1 \
 assert_flat_restored "$incomplete" "$before"
 
 # Wrong receipt ownership and nested links must refuse before moving payloads.
-for invalid in receipt_target receipt_root nested_link; do
+for invalid in receipt_target receipt_root nested_link special_file wrong_type; do
   root="$temporary/$invalid"
   seed_flat "$root"
   if [[ "$invalid" == nested_link ]]; then
     ln -s "$root/Cargo.lock" "$root/vendor/foreign-link"
+  elif [[ "$invalid" == special_file ]]; then
+    mkfifo "$root/vendor/foreign-pipe"
+  elif [[ "$invalid" == wrong_type ]]; then
+    rm "$root/Cargo.toml"
+    mkdir "$root/Cargo.toml"
   else
     python3 - "$root" "$invalid" <<'PYCONTROL'
 import json,pathlib,sys
@@ -82,7 +88,8 @@ PYCONTROL
   case "$invalid" in
     receipt_target) expected="receipt target differs" ;;
     receipt_root) expected="receipt belongs to another sysroot" ;;
-    nested_link) expected="refuses toolchain symlinks" ;;
+    nested_link|special_file) expected="refuses toolchain symlinks or special files" ;;
+    wrong_type) expected="complete flat toolchain file" ;;
   esac
   require_failure_contains "$expected" env SIFR_MIGRATE_LEGACY=1 \
     SIFR_TARGET="$target" SIFR_INSTALL_DIR="$root/bin" SIFR_NO_MODIFY_PATH=1 sh "$temporary/install.sh"
@@ -97,29 +104,40 @@ real_mv="$(command -v mv)"
 cat >"$faults/cp" <<EOF
 #!/bin/sh
 case "\$1:\$2" in
-  */install.json:*/.sifr-generations/$candidate-*/install.json) exit 71 ;;
+  */install.json:*/.sifr-generations/$candidate-*/install.json)
+    if [ "\${SIFR_TEST_MIGRATION_POINT:-}" = "receipt" ]; then exit 71; fi ;;
 esac
-exec "$real_cp" "\$@"
+"$real_cp" "\$@" || exit \$?
+if [ "\${SIFR_TEST_MIGRATION_POINT:-}" = "stage" ]; then
+  case "\$1:\$3" in -R:*/.sifr-generations/.stage.*) kill -TERM "\$PPID" ;; esac
+fi
+exit 0
 EOF
 cat >"$faults/mv" <<EOF
 #!/bin/sh
 "$real_mv" "\$@" || exit \$?
-if [ "\${SIFR_TEST_MIGRATION_INTERRUPT:-0}" = "1" ]; then
-  case "\$2" in */.sifr-generations/legacy.*/Cargo.lock) kill -TERM "\$PPID"; exit 143 ;; esac
+if [ "\${SIFR_TEST_MIGRATION_POINT:-}" = "rename" ]; then
+  case "\$2" in */.sifr-generations/legacy.*/Cargo.lock) kill -TERM "\$PPID" ;; esac
 fi
+if [ "\${SIFR_TEST_MIGRATION_POINT:-}" = "selector" ]; then
+  for argument in "\$@"; do
+    case "\$argument" in */.sifr-current) kill -TERM "\$PPID" ;; esac
+  done
+fi
+exit 0
 EOF
 chmod 700 "$faults/cp" "$faults/mv"
-for fault in receipt interrupt; do
+for fault in receipt rename stage selector; do
   root="$temporary/$fault"
   seed_flat "$root"
   before="$(snapshot "$root")"
   set +e
   PATH="$faults:$PATH" SIFR_MIGRATE_LEGACY=1 \
-    SIFR_TEST_MIGRATION_INTERRUPT="$([[ "$fault" == interrupt ]] && echo 1 || echo 0)" \
+    SIFR_TEST_MIGRATION_POINT="$fault" \
     run_candidate "$root" >"$temporary/$fault.stdout" 2>"$temporary/$fault.stderr"
   code=$?
   set -e
-  [[ "$code" != 0 ]]
+  if [[ "$fault" == receipt ]]; then [[ "$code" != 0 ]]; else [[ "$code" == 143 ]]; fi
   assert_flat_restored "$root" "$before"
 done
 echo 'legacy migration: explicit ownership, retained payload, refusal and transaction/signal rollback passed'

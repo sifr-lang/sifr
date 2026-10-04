@@ -29,9 +29,13 @@ prepare_legacy_migration() {
   [ "$(toml_string_field target-triple "${sysroot_dir}/sysroot.toml")" = "${target}" ] || fail "legacy sysroot target differs from its receipt"
   for relative in .cargo vendor crates lib Cargo.toml Cargo.lock sysroot.toml bin/sifr; do
     destination="${sysroot_dir}/${relative}"
+    case "${relative}" in
+      .cargo|vendor|crates|lib) [ -d "${destination}" ] || fail "legacy migration requires a complete flat toolchain directory: ${destination}" ;;
+      *) [ -f "${destination}" ] || fail "legacy migration requires a complete flat toolchain file: ${destination}" ;;
+    esac
     [ -e "${destination}" ] && [ ! -L "${destination}" ] || fail "legacy migration requires a complete flat toolchain: ${destination}"
-    if find "${destination}" -type l -print -quit | grep . >/dev/null 2>&1; then
-      fail "legacy migration refuses toolchain symlinks: ${destination}"
+    if find "${destination}" ! -type f ! -type d -print -quit | grep . >/dev/null 2>&1; then
+      fail "legacy migration refuses toolchain symlinks or special files: ${destination}"
     fi
   done
   legacy_backup_root="$(mktemp -d "${sysroot_dir}/.sifr-generations/legacy.XXXXXX")"

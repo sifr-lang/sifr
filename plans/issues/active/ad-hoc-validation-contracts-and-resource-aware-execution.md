@@ -1476,3 +1476,22 @@ Candidate upgrade against this actual predecessor, representative persisted
 state, candidate reinstall/rollback, all four native platforms, compatibility
 qualification, artifact promotion custody and broad gates remain required.
 This primitive does not complete M5, publish a release or satisfy final acceptance.
+
+The first flat-installation/migration review at `0dc8026ce` is NOT SATISFIED:
+`/workspace/validation-work/evidence/sifr-claude.AmrVmu/response.md`.
+It found that a POSIX signal handler invoking cleanup without exiting could
+restore the payload and then continue migration with rollback disabled. The
+initial interruption control's nonzero injected command had masked that defect.
+The one-batch correction uses EXIT cleanup plus explicit HUP/INT/TERM exits.
+Signal controls now inject TERM while their commands return zero, requiring the
+installer itself to exit 143. They cover interruption after a legacy rename,
+after stage copying and after selector publication, with exact old flat payload
+and receipt restoration. Matching directory/file types and rejection of FIFOs or
+other special files strengthen complete-payload preflight. Temporary control roots
+are canonicalized for hosts where TMPDIR has symlink ancestors.
+
+The corrected migration controls, existing immutable install/version controls and
+all nine published-contract controls passed. Logs are
+`m5-migration-remediation-final.log`, `m5-immutable-version-remediation.log` and
+`m5-published-contract-remediation.log` outside Git. Remediation review and the
+larger native transition/platform/broad-gate obligations remain pending.
