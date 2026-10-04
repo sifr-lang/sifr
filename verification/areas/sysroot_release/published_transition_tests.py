@@ -1,5 +1,6 @@
 """Independent raw-evidence controls using synthetic records; no native qualification."""
 import copy
+from dataclasses import replace
 import json
 from pathlib import Path
 import tempfile
@@ -7,9 +8,18 @@ import unittest
 
 import published_transition as transition
 from sifr_verify.errors import VerificationError
+from sifr_verify.resource_admission import Resources,admit,ResourceError
 
 
 class RuntimeEvidenceChecks(unittest.TestCase):
+    def test_native_rehearsal_charges_shared_ram_and_preserves_reserves(self):
+        capacity=Resources(4,4,16*1024**3,9*1024**3,6*1024**3,{},[],{},True)
+        decision=admit(capacity,transition.admission_requirements())
+        self.assertEqual(decision['memory_admitted_bytes'],int(8.5*1024**3))
+        self.assertEqual(decision['disk_admitted_bytes'],5*1024**3)
+        with self.assertRaises(ResourceError):
+            admit(replace(capacity,memory_available_bytes=8*1024**3),transition.admission_requirements())
+
     def setUp(self):
         self.temporary=tempfile.TemporaryDirectory();self.addCleanup(self.temporary.cleanup)
         self.out=Path(self.temporary.name)
