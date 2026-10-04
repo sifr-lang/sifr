@@ -1741,3 +1741,11 @@ reference worktree. A real Git control moves unchanged compiler bytes into the
 allowed tooling directory and requires rejection, then restores the compiler,
 accepts an exact measurement-only overlay and rejects uncommitted tooling bytes.
 Targeted controls, review and actual reference preparation remain pending.
+
+### M2 structural-only assertion allocation — 2026-10-04
+
+The frozen native create-pr compact run at `15f3944dba9cce1702622684d455abc8144cd369` completed source and metadata preparations, then failed memory admission before any area assertions: 11,811,160,064 bytes required versus 11,520,053,248 available. Its failed evidence remains in `/workspace/validation-work/evidence/create-pr-tmpfs-15f3944db`. This was a shared-memory allocation failure, not a disk blocker.
+
+A separate exact-head structural diagnostic passed both selected Rust tests and the metadata-doctor sequence in 28.72 seconds with 247,361,536 bytes maximum process RSS and zero swaps. Raw timing, suite results, and doctor evidence are retained in `/workspace/validation-work/evidence/metadata-structural-15f3944db-v3`. Earlier diagnostic environment-mismatch failures remain failed. The successful attempt used the original preparation's exact PATH and profile settings; receipt identities were not weakened or rewritten.
+
+This bounded item adds a prospective structural-only allocation: two GiB resident peak, 512 MiB additional tmpfs, 256 MiB filesystem growth, and unchanged disk/memory reserves and monitored headroom. It applies only to the exact `metadata-structural` selection in compact execution. Broader, mixed, and unknown selections retain the generic allocation; source preparation remains mandatory because the doctor consumes its actual compiler. No assertions, fixture selections, deadlines, or freshness checks are removed. Targeted controls cover selection preservation, conservative fallback, and the observed capacity boundary. Full candidate create-pr and final merge qualification remain required.
