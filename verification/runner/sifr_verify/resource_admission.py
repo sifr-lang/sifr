@@ -32,9 +32,10 @@ class Resources:
     tmpfs_available_bytes: dict[str, int]
     cgroup_limits: list[dict]
     diagnostics: dict[str, str]
+    disk_memory_backed: bool = False
 
     def identity(self) -> dict:
-        return {"affinity_cpus": self.affinity_cpus, "effective_cpus": self.effective_cpus,
+        return {"disk_memory_backed": self.disk_memory_backed, "affinity_cpus": self.affinity_cpus, "effective_cpus": self.effective_cpus,
                 "memory_limit_bytes": self.memory_limit_bytes, "cgroup_limits": [
                     {key: row[key] for key in ("path", "cpu_max", "memory_max")} for row in self.cgroup_limits]}
 
@@ -59,6 +60,22 @@ def own_cgroup(root: Path, membership: Path = Path("/proc/self/cgroup")) -> Path
     if ".." in relative.parts:
         raise ValueError("cgroup membership escapes its mount")
     return root / relative
+
+
+def memory_backed_storage(path: Path, mountinfo: Path = Path("/proc/self/mountinfo")) -> bool:
+    """Resolve the actual Linux mount, including nested mounts and escaped paths."""
+    import re
+    target = path.resolve(strict=True)
+    matches = []
+    for line in mountinfo.read_text().splitlines():
+        before, after = line.split(" - ", 1)
+        fields = before.split()
+        mount = Path(re.sub(r"\\([0-7]{3})", lambda match: chr(int(match[1], 8)), fields[4]))
+        if target == mount or target.is_relative_to(mount):
+            matches.append((len(mount.parts), int(fields[0]), after.split()[0]))
+    if not matches:
+        raise ValueError("storage mount identity is unavailable")
+    return max(matches)[2] in {"tmpfs", "ramfs"}
 
 
 def discover(*, disk_path: Path, cgroup_root: Path = Path("/sys/fs/cgroup"),
@@ -121,7 +138,7 @@ def discover(*, disk_path: Path, cgroup_root: Path = Path("/sys/fs/cgroup"),
             raise ValueError("cgroup CPU and memory accounting are required on the cloud route")
         tmpfs = {str(path): shutil.disk_usage(path).free for path in tmpfs_paths if path.exists()}
         return Resources(cpus, effective, limit, min(limit, available),
-                         shutil.disk_usage(disk_path).free, tmpfs, rows, diagnostics)
+                         shutil.disk_usage(disk_path).free, tmpfs, rows, diagnostics, memory_backed_storage(disk_path))
     except (OSError, ValueError, KeyError, AttributeError) as error:
         raise ResourceError(f"effective resource discovery unavailable: {error}", "unavailable") from error
 
@@ -134,12 +151,16 @@ def admit(resources: Resources, requirements: dict) -> dict:
         raise ResourceError("stage resource requirements must be explicit nonnegative integer bytes", "unavailable")
     disk = sum(requirements[key] for key in ("disk_growth_bytes", "retained_copy_bytes", "disk_reserve_bytes"))
     memory = sum(requirements[key] for key in ("memory_peak_bytes", "tmpfs_growth_bytes", "memory_reserve_bytes"))
+    storage_memory = (requirements["disk_growth_bytes"] + requirements["retained_copy_bytes"]
+                      if resources.disk_memory_backed else 0)
+    memory += storage_memory
     if disk > resources.disk_available_bytes:
         raise ResourceError(f"disk admission: required={disk} available={resources.disk_available_bytes}", "enospc")
     if memory > resources.memory_available_bytes:
         raise ResourceError(f"shared resident/tmpfs memory admission: required={memory} available={resources.memory_available_bytes}", "admission")
     return {"resources": asdict(resources), "requirements": requirements,
-            "disk_admitted_bytes": disk, "memory_admitted_bytes": memory}
+            "disk_admitted_bytes": disk, "memory_admitted_bytes": memory,
+            "memory_backed_storage_growth_bytes": storage_memory}
 
 
 def worker_limit(resources: Resources, requested: int) -> int:
