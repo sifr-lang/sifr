@@ -1,0 +1,47 @@
+name: native-capacity-diagnostics
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    name: capacity-${{ matrix.target }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+            uv_checksum: 51c6170e8e3a01cef9f33b94f582b7b81ac65046f55d40afb35f9cff5a68c179
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+            uv_checksum: 5296d5aa2b9143360405eea866f8ef4d5dc8986b164eb0dc35e8f876a9304d30
+    runs-on: ${{ matrix.runner }}
+    env:
+      SIFR_NATIVE_HOST_KIND: dedicated-darwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version-file: verification/pyproject.toml
+          checksum: ${{ matrix.uv_checksum }}
+      - name: Install canonical diagnostic interpreter
+        run: uv python install 3.14.7
+      - name: Observe bounded capacity facts without compilation
+        run: uv run --project verification --locked python verification/areas/sysroot_release/native_capacity_diagnostics.py observe --target "${{ matrix.target }}" --output "$RUNNER_TEMP/native-capacity-diagnostics"
+      - name: Independently check retained capacity facts
+        run: uv run --project verification --locked python verification/areas/sysroot_release/native_capacity_diagnostics.py check --target "${{ matrix.target }}" --output "$RUNNER_TEMP/native-capacity-diagnostics"
+      - name: Preserve raw observations and failure state
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-capacity-${{ github.sha }}-${{ matrix.target }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-capacity-diagnostics
+          if-no-files-found: error

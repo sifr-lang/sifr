@@ -165,6 +165,45 @@ def validate_native_qualification(parent: dict, document: dict) -> list[str]:
     return errors
 
 
+def validate_capacity_diagnostics(document: dict) -> list[str]:
+    errors = []
+    if (document.get('on', document.get('true')) != {'workflow_dispatch': None}
+            or document.get('permissions') != {'contents': 'read'}
+            or set(document.get('jobs', {})) != {'observe'}):
+        errors.append('capacity diagnostics must be manual and read-only')
+    job = document.get('jobs', {}).get('observe', {})
+    rows = job.get('strategy', {}).get('matrix', {}).get('include', [])
+    if ([(r.get('target'), r.get('runner')) for r in rows] != [
+            ('aarch64-apple-darwin', 'macos-15'), ('x86_64-apple-darwin', 'macos-15-intel')]
+            or job.get('runs-on') != '${{ matrix.runner }}'
+            or job.get('strategy', {}).get('fail-fast') is not False
+            or job.get('timeout-minutes') != 15
+            or job.get('env') != {'SIFR_NATIVE_HOST_KIND': 'dedicated-darwin'}
+            or 'permissions' in job or 'environment' in job
+            or 'if' in job or job.get('continue-on-error')):
+        errors.append('capacity diagnostics require both bounded standard Darwin hosts')
+    steps = job.get('steps', [])
+    commands = ['uv python install 3.14.7', *[
+        'uv run --project verification --locked python verification/areas/sysroot_release/native_capacity_diagnostics.py '
+        + mode + ' --target "${{ matrix.target }}" --output "$RUNNER_TEMP/native-capacity-diagnostics"'
+        for mode in ('observe', 'check')]]
+    if (len(steps) != 6 or [s.get('run') for s in steps if 'run' in s] != commands
+            or any('if' in s or s.get('continue-on-error') for s in steps[:-1])):
+        errors.append('capacity diagnostics must execute only observation and independent checking')
+    checkout = steps[0] if steps else {}
+    if (not checkout.get('uses', '').startswith('actions/checkout@')
+            or checkout.get('with') != {'ref': '${{ github.sha }}', 'persist-credentials': False}):
+        errors.append('capacity diagnostics must bind exact source without credentials')
+    upload = steps[-1] if steps else {}
+    if (upload.get('if') != 'always()' or upload.get('continue-on-error')
+            or not upload.get('uses', '').startswith('actions/upload-artifact@')
+            or upload.get('with') != {
+                'name': 'native-capacity-${{ github.sha }}-${{ matrix.target }}-${{ github.run_attempt }}',
+                'path': '${{ runner.temp }}/native-capacity-diagnostics', 'if-no-files-found': 'error'}):
+        errors.append('capacity diagnostics must retain source-bound raw facts and failures')
+    return errors
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     document = parse_workflows({WORKFLOW: (root / WORKFLOW).read_text()})[WORKFLOW]
@@ -172,7 +211,10 @@ def main() -> None:
     publisher = parse_workflows({publisher_path: (root / publisher_path).read_text()})[publisher_path]
     native_path = '.github/workflows/published-native-qualification.yml'
     native = parse_workflows({native_path: (root / native_path).read_text()})[native_path]
-    errors = validate(document) + validate_publisher(publisher) + validate_native_qualification(document, native)
+    diagnostic_path = '.github/workflows/native-capacity-diagnostics.yml'
+    diagnostic = parse_workflows({diagnostic_path: (root / diagnostic_path).read_text()})[diagnostic_path]
+    errors = (validate(document) + validate_publisher(publisher)
+              + validate_native_qualification(document, native) + validate_capacity_diagnostics(diagnostic))
     if errors:
         raise SystemExit("\n".join(errors))
     # Regression: the original condition must fail before any runner work.
@@ -222,6 +264,17 @@ def main() -> None:
         if mutation == 'host': job['strategy']['matrix']['include'][0].pop('host_kind')
         if mutation == 'context': job['env']['SIFR_NATIVE_HOST_KIND'] = "${{ runner.os == 'macOS' && 'dedicated-darwin' || '' }}"
         assert validate_native_qualification(document, invalid_native), mutation
+    for mutation in ('paid', 'source', 'skip', 'write', 'build', 'retention', 'job-skip', 'job-bypass'):
+        bad = copy.deepcopy(diagnostic); job = bad['jobs']['observe']
+        if mutation == 'paid': job['strategy']['matrix']['include'][0]['runner'] = 'macos-15-xlarge'
+        if mutation == 'source': job['steps'][0]['with']['ref'] = 'main'
+        if mutation == 'skip': job['steps'][3]['if'] = 'false'
+        if mutation == 'write': bad['permissions']['contents'] = 'write'
+        if mutation == 'build': job['steps'].insert(-1, {'run': 'cargo build'})
+        if mutation == 'retention': job['steps'][-1].pop('if')
+        if mutation == 'job-skip': job['if'] = 'false'
+        if mutation == 'job-bypass': job['continue-on-error'] = True
+        assert validate_capacity_diagnostics(bad), mutation
     print("local-first admission and event/profile contracts passed (including regressions)")
 
 

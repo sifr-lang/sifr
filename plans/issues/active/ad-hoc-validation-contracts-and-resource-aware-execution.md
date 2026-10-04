@@ -1,5 +1,44 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M2/M5 standard macOS capacity observation — prospective scope
+
+The user cannot provision paid larger runners and requested Astra's sizing
+consultation. Its read-only audit found that native preparation's 9 GiB
+admission is an estimate (6 GiB process, 1 GiB temporary memory, 2 GiB reserve),
+not a measured hardware minimum. Preparation currently permits two Cargo workers;
+the published transition permits one. The earlier single-worker preparation
+description was inaccurate and has been corrected in the draft PR record.
+
+The retained standard ARM snapshot has 7 GiB installed but 3,221,258,240 bytes
+available under the existing free/inactive/speculative-page accounting. A smaller
+3.5 GiB process estimate plus the unchanged 2 GiB reserve would still fail
+admission. Historical child RSS does not establish a cold Darwin process-tree
+peak. Do not reduce reserves or classify an unstarted job as qualification.
+
+This bounded item adds a read-only diagnostic workflow on standard macOS ARM and
+Intel runners, with an exact source checkout, pinned Python/uv, bounded raw
+memory/compression/swap/pressure and physical-storage observations, and independent
+retained-byte checks. It adds no compiler build, native runtime assertion, resource
+profile, memory allowance, or qualification waiver. Existing native qualification
+and the frozen original paired capture remain unchanged.
+
+Owned scope: the diagnostic module/tests, diagnostic workflow, its workflow
+contract/control registration, and this plan record. Acceptance requires meaningful
+controls for failed/truncated/missing observations, raw/hash/source drift and
+false qualification claims; an exact-candidate read-only Opus review; actual
+standard-runner diagnostic artifacts; and the still-required full candidate gates.
+Fresh facts decide whether a separately reviewed monitored resource profile can
+be attempted or a real capacity blocker remains.
+
+The diagnostic implementation and six meaningful controls pass. The existing
+native custody, backing-store, recovery and source-dependency controls also pass;
+the actual maintained uv invariant covers six pins/eight setup steps, and all
+56 uv negative controls pass. The workflow contract rejects a paid runner,
+unbound source, skipped observation, write permissions, inserted compilation and
+missing failure retention. The 4,432-file guard and whitespace check pass.
+Exact-candidate review, actual standard-runner observations and full gates are
+pending; no native or performance qualification follows from these controls.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
