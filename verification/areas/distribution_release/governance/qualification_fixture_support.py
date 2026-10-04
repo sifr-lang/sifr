@@ -63,7 +63,7 @@ def metadata_fixture_files(binary: bytes, target: str) -> dict[str, bytes]:
     compiler = hashlib.sha256(binary).hexdigest()
     semantic = metadata.semantic_target_id(target)
     inputs = hashlib.sha256(b"synthetic-governance-fixture-inputs").hexdigest()
-    logical = (b"SIFRMETA" + (4).to_bytes(4, "little") + bytes(4)
+    logical = (b"SIFRMETA" + metadata.CONTAINER_VERSION.to_bytes(4, "little") + bytes(4)
                + bytes.fromhex(compiler + semantic + inputs) + (120).to_bytes(8, "little"))
     frames = (bytes.fromhex("28b52ffd2078c10300") + logical
               + bytes.fromhex("28b52ffd2000010000") * 2)
