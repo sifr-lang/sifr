@@ -10,6 +10,77 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbc bounded trait-header authorization delivery receipt (2026-10-04)
+
+**Authorization delivery complete. After this separate receipt merges, complete
+H03a1hbc is ready for separate assignment under the bounded #4336 contract.**
+[Authorization PR #4338](https://github.com/sifr-lang/sifr/pull/4338) merged at
+2026-10-04 13:55:42 UTC as `3688fdbfc42241a65411b922017f33e4edad52a9`, from
+candidate `e17cfcb55ad2a9b2ca506c5a0333232d7210d97e` on base
+`c3615731b8ab613b12407695c9dbeb74a7233a6d`. The candidate and merge share the
+complete tree `befff4095ef4114d7a8653ae194b0f85fb983d3d`. The authorization
+added 191 lines to this canonical Markdown and preserved every prior byte.
+
+The controlling entry below records the human's exact response to the concrete
+#4336 approval request: “Continue until you're done, figure out any blockers
+solutions”. It honestly records that contextual authorization without inventing
+a literal “approve” quote. The finite prospective change applies only to actual
+shortened compiler trait declaration-header roles: exact native token/subnode
+correspondence to the compiler interval inside the independently resolved and
+source-to-def-roundtripped native trait. All six delivered requirements, exact
+negative cases and independent semantic/source/attribute/context obligations are
+binding. Header, Name, whole native node/declaration and genuine local body/item
+spans remain distinct; dependency whole-body availability is never manufactured.
+Historical pending statements remain history and do not override this decision.
+
+The exact authorization candidate passed:
+
+- `python3 verification/areas/documentation/check_structure.py`, including registered mutation harnesses; log SHA-256 `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`.
+- `python3 scripts/check_file_size_guardrails.py`, 4,358 files, 900-line limit; log SHA-256 `8725f1c681d4c03e082b5417670291ddfb3014fe8bfe24e7b1d126019d0456c4`.
+- Source-link/range/evidence hashes, exact human quotation/context and proposal fidelity, all six requirements and future acceptance reproduced verbatim, historical byte preservation, canonical-only scope, whitespace and clean tree.
+- Exact editor `d6fde7111800349428f63db05a34ca9a32acd576` and nested VS Code `5930dc1a0ccc52d9f382553156e98294a95420d9` gitlinks, prepared only in the owned docs checkout.
+- Scoped SELF **SATISFIED for documentation authorization fidelity only**. No implementation review or capability qualification is claimed.
+
+Evidence remains outside Git at
+`/data/sifr-hbc-header-authorization-20261004/evidence/`:
+`authorization-qualification-final.json` SHA-256
+`df762e4fb574809b8659b856d5291b206da7e6f44d96045cb64faa5158900fc8`;
+`authorization-self-review.json` SHA-256
+`7cdfb9abc33f22aad2f92bd3fff50c4b11b4e07dd52b6b7e4de2c86396c51109`.
+The original source audit remains
+`f5db02e25d04267bcd9b6761e576e0e017dc67e6a9ccffaf405e595c091f265b`, and
+original seven-file evidence audit remains
+`9e3c3d3e99d8562e67f2f2f1d2aa68595bad744dc7f75dc7cfaa6458bb58af6c`.
+Reauthentication was read-only documentation inspection, not new proof. The
+remote HTTPS publication attempt failed for absent credentials; an exclusively
+owned authenticated local bare relay delivered the exact candidate. The failure
+record is preserved and no shared checkout/index was mutated.
+
+This separate receipt uses the same named documentation checks, source/range/hash
+and authorization/proposal-fidelity audits, historical byte preservation,
+canonical-only scope, whitespace/clean-tree checks and scoped SELF. It requires
+no broad gate or external implementation review. Raw history remains remote and
+read-only; this owner created no target and ran no compiler/helper/capability
+experiment, Cargo gate or cleanup.
+
+**Next action after this receipt merges: separately assign complete H03a1hbc
+only.** Run the five exact SourceBinderCapabilityTests individually and the full
+class, all #4336 trait-header acceptance/negatives, affected original regressions,
+the unchanged full fixture union and original thirteen-case plus
+Dynamic/include/source-authority checks, syn::step and all four Linux main/repeat
+contexts. Retain ObjectShapes RA-only rejection and genuine body erasure. The
+unchanged pins, graph/manifests/locks, ownership, disk/RAM/concurrency and operation/
+earlier-parent guard requirements remain binding as recorded below.
+
+HBC remains unaccepted, with **0 accepted final tests/assertions, 0 completed Opus
+cycles and no implementation PR/merge**. The prior donor and all failed
+containment/artifact/setup/resource evidence retain their original status.
+HBS/HBF and HBIP remain accepted dependencies with HBIP `semantic_export: false`.
+Only complete new HBC proof, scoped Opus review, merge and separate receipt unlock
+full H03a1 adapter resumption. Windows, metrics and downstream work remain separate.
+**Delivery and authorization blocker: none. Full H03a1/adapter remains
+dependency-blocked. No next proof batch was started by this documentation owner.**
+
 ## H03a1hbc bounded trait-header contract authorization (2026-10-04)
 
 **Controlling prospective decision: the delivered #4336 bounded trait-header
