@@ -42,8 +42,8 @@ Raw failure log SHA-256:
 ae8c39067ad324479d4ebf40b57ce2292cb0baa46693435a5e3151948af7c448.
 
 For first/second and Two::<'a, 'b, T>::method, the actual resolved
-core::ops::function::FnOnce has StableCrateId13883663866953777888 and
-DefPathHash(Fingerprint13883663866953777888,13488869136715765577).
+core::ops::function::FnOnce has `StableCrateId(13883663866953777888)` and
+`DefPathHash(Fingerprint(13883663866953777888, 13488869136715765577))`.
 In pinned `library/core/src/ops/function.rs`, actual tcx.def_span records
 **8927..8962**, the literal header `pub const trait FnOnce<Args: Tuple>`.
 The independently roundtripped native TRAIT node is **6022..9298** including
