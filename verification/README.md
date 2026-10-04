@@ -130,6 +130,18 @@ This shared-VM command is an acceptance route, not evidence that any candidate
 has passed. It does not waive implementation PR validation, native platform or
 release qualification, external dependency disposition or protected enforcement.
 
+An explicitly preserved local measurement worktree can be named with
+`SIFR_CLOUD_PERFORMANCE_SOURCE_WORKTREE`. This narrow reuse recipe requires both
+clean full worktrees in the same Git repository, an ancestor measured commit,
+unchanged live compiler/runtime/corpus trees and Python context, and identical
+compiler bytes/build identity. Only the recipe's enumerated documentation,
+native-capacity and consumer files may differ; unknown changes invalidate reuse.
+The original worktree's checker must still accept the unchanged complete receipt.
+An immutable consumption record keeps both measured and current commits visible;
+it adds zero execution assertions. A changed compiler binary requires fresh
+qualification even when its source changes appear unrelated. There is no
+guarantee that this route will accept a later candidate.
+
 ## Baselines And Blessing
 
 Verify diagnostics baselines with:
