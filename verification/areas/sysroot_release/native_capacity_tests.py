@@ -11,8 +11,10 @@ import native_capacity as capacity
 
 
 class CapacityChecks(unittest.TestCase):
-    def observe(self,storage=None,*,declared=True):
-        storage=storage or {'FilesystemType':'apfs','BusProtocol':'Apple Fabric'}
+    def observe(self,storage=None,*,declared=True,backing=None):
+        storage=storage or {'FilesystemType':'apfs','BusProtocol':'Apple Fabric',
+                           'APFSPhysicalStores':[{'APFSPhysicalStore':'disk0s2'}]}
+        backing=backing or {'/dev/disk0s2':{'DeviceNode':'/dev/disk0s2','BusProtocol':'Apple Fabric'}}
         calls=[]
         def command(argv,**kwargs):
             calls.append(argv)
@@ -22,6 +24,8 @@ class CapacityChecks(unittest.TestCase):
                 return 'Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free: 100000.\nPages inactive: 200000.\nPages speculative: 10000.\n'
             if argv==['df','-P','/native/output']: return 'Filesystem 512-blocks Used Available Capacity Mounted on\n/dev/disk3s1 1000 10 990 1% /System/Volumes/Data\n'
             if argv==['diskutil','info','-plist','/dev/disk3s1']: return plistlib.dumps(storage)
+            if len(argv)==4 and argv[:3]==['diskutil','info','-plist'] and argv[-1] in backing:
+                return plistlib.dumps(backing[argv[-1]])
             raise AssertionError('unexpected capacity command: '+repr(argv))
         with patch.dict(os.environ,{'SIFR_NATIVE_HOST_KIND':'dedicated-darwin'} if declared else {},clear=True), \
              patch.object(capacity.platform,'system',return_value='Darwin'), \
@@ -37,6 +41,33 @@ class CapacityChecks(unittest.TestCase):
         self.assertEqual(observed.effective_cpus,8)
         self.assertFalse(observed.disk_memory_backed)
         self.assertIn(['diskutil','info','-plist','/dev/disk3s1'],calls)
+        self.assertIn(['diskutil','info','-plist','/dev/disk0s2'],calls)
+
+    def test_apfs_volume_bus_is_not_its_backing_disk_authority(self):
+        storage={'FilesystemType':'apfs','BusProtocol':'',
+                 'APFSPhysicalStores':[{'APFSPhysicalStore':'disk0s2'}]}
+        observed,_=self.observe(storage)
+        self.assertFalse(observed.disk_memory_backed)
+        self.assertEqual(observed.diagnostics['apfs_backing_stores'][0]['BusProtocol'],'Apple Fabric')
+        for bus in ('','Disk Image','Unknown'):
+            with self.subTest(bus=bus),self.assertRaisesRegex(ValueError,'storage memory authority'):
+                self.observe(storage,backing={'/dev/disk0s2':{'DeviceNode':'/dev/disk0s2','BusProtocol':bus}})
+        with self.assertRaisesRegex(ValueError,'storage memory authority'):
+            self.observe(storage,backing={'/dev/disk0s2':{'DeviceNode':'/dev/disk9','BusProtocol':'SATA'}})
+
+    def test_every_apfs_backing_store_must_be_known_and_identified(self):
+        stores=[{'APFSPhysicalStore':'disk0s2'},{'APFSPhysicalStore':'disk1s2'}]
+        storage={'FilesystemType':'apfs','BusProtocol':'SATA','APFSPhysicalStores':stores}
+        backing={'/dev/disk0s2':{'DeviceNode':'/dev/disk0s2','BusProtocol':'SATA'},
+                 '/dev/disk1s2':{'DeviceNode':'/dev/disk1s2','BusProtocol':'Disk Image'}}
+        with self.assertRaisesRegex(ValueError,'storage memory authority'):
+            self.observe(storage,backing=backing)
+        with self.assertRaisesRegex(ValueError,'backing stores are unavailable'):
+            capacity.apfs_store_devices({'APFSPhysicalStores':None})
+        for stores in ('unknown',[],[{}],[{'APFSPhysicalStore':'../disk0'}],
+                       [{'APFSPhysicalStore':'disk0s2'}]*2):
+            with self.subTest(stores=stores),self.assertRaises(ValueError):
+                self.observe({'FilesystemType':'apfs','BusProtocol':'SATA','APFSPhysicalStores':stores})
 
     def test_shared_or_unknown_host_and_ram_disk_are_rejected(self):
         with self.assertRaisesRegex(ValueError,'dedicated'): self.observe(declared=False)

@@ -4,6 +4,27 @@ status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
 
+## Current bounded item: native APFS backing-store authority — 2026-10-04
+
+The hosted ARM Darwin volume reports APFS with an empty volume bus field and an
+explicit backing store `disk0s2`. Classify APFS through every OS-declared backing
+store rather than the synthetic volume's bus label, and retain bounded raw
+`diskutil info -plist` observations for those stores in the existing diagnostic
+upload. Reject missing, malformed, duplicate, mismatched, unknown or memory-backed
+store authority. HFS keeps its device bus authority. Native memory/disk estimates,
+reserves, host ownership, target matrix and runtime assertions are unchanged.
+
+Owned branch/worktree: `codex/validation-native-apfs-stores-20261004` at
+`/workspace/sifr-validation-native-apfs-stores`, based on
+`0b7b5b8d3c3aed0c476826e59c646ba4f19f59fc`. The integration source is frozen for
+its full independent paired capture. Named validation: capacity controls,
+candidate/source-dependency custody controls, diagnostic-program controls, source
+guardrail and diff checks; scoped read-only Opus review follows. Full candidate
+PR/merge acceptance gates and actual native platform qualification remain pending.
+This repair does not grant admission to the seven-GiB ARM host or establish a
+native qualification pass; its unchanged nine-GiB preparation allocation still
+requires a sufficiently provisioned dedicated runner.
+
 ## Objective and authority
 
 Deliver fast PR feedback, authoritative merge safety, continuous hardening, and
