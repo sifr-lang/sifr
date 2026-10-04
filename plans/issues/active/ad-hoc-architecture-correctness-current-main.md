@@ -10,6 +10,77 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbc exact trait declaration-header stop delivery receipt (2026-10-04)
+
+**Stop delivery complete; H03a1hbc remains needs-new-scope, unaccepted and inactive.**
+The documentation-only stop [PR #4334](https://github.com/sifr-lang/sifr/pull/4334)
+merged at 2026-10-04 13:22:52 UTC as
+`acebb55ec4cdd9d0a0b38b084afe8280ee8137eb`, from candidate
+`3c51aa5236902cb3d0c9ec9a01a4d73721bb6bb8` on base
+`0e8bdc47122d2b45fbe6d2b76be5657bda888d75`. Candidate and merge have the identical
+complete tree `88589251414a43ca051bcff30358842f8d3792ca`. This separate canonical-only
+receipt closes that stop's delivery; it supplies no HBC implementation or proof.
+
+The final exact C1
+`SourceBinderCapabilityTests.test_inherited_own_and_hrtb_identity_preserve_declarations`
+failed in setup: **0 actual tests / 0 assertions**, status 1, 78.089145 seconds.
+Five required relations remain recorded: FnOnce for first/second/method, Debug for
+BoundObject, and local BoundObject for BridgeObjectShapes. The compiler header
+and independently roundtripped native whole TRAIT/declaration have distinct
+legitimate intervals; exact compiler/native Name agreement does not resolve that
+contract mismatch. The exact ranges, stable identities and seven-file original
+source/control/replay/inventory manifest remain in the unchanged stop below.
+No header containment, invented AST node or changed source contract is admitted.
+
+Earlier containment-matcher C1/C2 diagnostics (1/1 with 20/24 assertions) are not
+final HBC qualification. The overwritten owned fixture artifact, C4 setup failure,
+and later 8 GiB RAM reserve stop remain failures. C4's successful compiler/native
+captures and later construction-graph/hash changes do not establish a completed
+resource-qualified union. All five final cases/full class, original regression
+union and four Linux main/repeat contexts remain unqualified; C3/C5/full class did
+not run. There are **0 completed Opus cycles and no HBC implementation PR/merge**.
+Unmerged diagnostic `b8ee36b996695c0972bee543e0673a2714e12f50` remains read-only
+material, not an accepted implementation or replay target.
+
+The stop candidate passed documentation structure with its registered mutation
+harness, the 4,358-file size guardrail, whitespace/canonical-only scope, historical
+byte-preservation and clean-tree checks, with scoped SELF **SATISFIED for stop
+accuracy only**. Original failed documentation preparation attempts remain
+preserved. Exact editor gitlink `d6fde7111800349428f63db05a34ca9a32acd576` and nested
+VS Code gitlink `5930dc1a0ccc52d9f382553156e98294a95420d9` were retained.
+The receipt uses its own documentation structure/mutation, file-size, source-range/
+evidence-hash, history/scope/whitespace/clean-tree checks and scoped SELF. It needs
+no broad gate or external implementation review.
+
+Original evidence stays remote under
+`/data/sifr-h03a1hbc-binder-capability-20261004/evidence/`:
+
+- Exact stop report SHA-256: `9d4715a05160fcae82067ce41f9b634941e6ebd6afdceb37935b8531dae2e9dc`.
+- Final raw failure SHA-256: `ae8c39067ad324479d4ebf40b57ce2292cb0baa46693435a5e3151948af7c448`.
+- Frozen stop SELF SHA-256: `527e726139bae993baa3a3228a3234c90c83cc27daea1f207c72e27726aec6c1`.
+- Stop merge audit SHA-256: `ceb2389faf11a6566d5e5ec625a82fe4357d3493628714754edcbc5114b75846`.
+- Successful structure log SHA-256: `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`.
+
+Delivery recovery uses its own branch `codex/hbc-stop-receipt-astra-20261004`,
+worktree `/data/sifr-hbc-stop-receipt-astra-20261004/worktree`, and sibling evidence
+root. Interrupted receipt `ef95fa09807208ff07d94972828358b82e00fdba` and the clean
+interrupted recovery tree remain preserved. Fresh GitHub and local provenance
+checks found no separately delivered receipt; the predecessor cwd/open-handle
+audit found no active validation. No giant archive was copied or rehashed, target
+cleaned, or whole-archive/donor-byte preservation claim made. Historical canonical
+content is preserved byte-for-byte beneath this inserted receipt.
+
+**Next job, after this receipt merges: separately assigned H03a1hbc trait
+declaration-header/source contract adjudication, documentation only.** No separate
+item ID is reserved. The next job's exact dependencies, inputs and checks are in
+the stop below. Any proposed header/token/subnode contract change requires new
+explicit authorization, followed by separately assigned complete HBC proof.
+HBS/HBF and the accepted HBIP amendment/proof #4306 plus receipt #4331 remain
+intact; HBIP retains `semantic_export: false`. This recovery grants no new contract
+or implementation authority. **HBC remains needs-new-scope; full H03a1/adapter
+remains dependency-blocked.** No next adjudication, implementation or adapter batch
+has started. Delivery blocker: none; the recorded HBC contract blocker remains.
+
 ## H03a1hbc exact trait declaration-header correspondence stop (2026-10-04)
 
 **Current controlling HBC state: needs-new-scope, unaccepted and inactive.**
