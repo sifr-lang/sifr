@@ -55,4 +55,4 @@ def prepare_compact(runner):
     if status: return status
     runner.compact_completed_areas={'sysroot_release'}
     return schedule.step('cargo_cache_setup',lambda:prepare_remaining_graphs(profile,env,schedule.prepare_command,
-                         include_sysroot=False),allocation='preparation-coordination',preparation=True,monitor_disk=True)
+                         include_sysroot=False),allocation='preparation-coordination',preparation=True)
