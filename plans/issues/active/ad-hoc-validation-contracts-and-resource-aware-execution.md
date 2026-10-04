@@ -2022,3 +2022,52 @@ to mutate the immutable Resources value and failed; the corrected test construct
 a separate value. This prospective stage policy does not qualify a native run or
 change broad/native-compiler preparation allocation. Scoped review, actual
 transition, empirical peak and required local/native gates remain pending.
+
+## M3 complete exact-commit main profile reuse — 2026-10-04
+
+The earlier six-job reuse implementation still reran the merge profile on main.
+This bounded extension includes `local-first-merge` in the independently verified
+pre-merge producer inventory. The source must have executed the actual profile
+step successfully, completed the full mandatory job inventory within 24 hours,
+and validated the identical commit under the protected workflow bytes. A prior
+create-PR profile, missing/skipped profile step, changed candidate, stale run,
+recursive push producer, or substituted decision never authorizes reuse.
+
+The current matrix still expands and records its explicit reuse marker. Every
+heavy profile step runs when provenance is unavailable or invalid. The trusted
+publisher rechecks the source independently before accepting the current marker;
+selector output alone cannot qualify a skipped runner. This consumes a complete
+prior merge outcome, including its performance gate, rather than combining
+partial captures or deriving a new performance observation from an old sample.
+Cross-commit equivalence remains conservative: an unknown equivalence executes
+fresh validation.
+
+Five provenance suites, three aggregate suites, seven trusted publication suites,
+the workflow regression guard, and the source-size guard pass. Full acceptance
+gates, scoped Opus review, actual hosted reuse, and protected main delivery remain
+open; this record is implementation progress, not phase completion.
+
+## Native execution observations — 2026-10-04
+
+At frozen candidate `2a33012413016e22d8477d555a08eddf4819d35b`, the actual optimized
+native package and installer preparation passed. The qualification-only version
+is `0.1.0-beta.1300`; the source package placeholder remains `0.0.0`. The verified
+archive SHA-256 is `4509783f3b4ef21da61260c7f9d201a9e37c1cea250c2cee83abb744895ee17a`.
+Raw commands, the actual Cargo optimized artifact, custody, and the independent
+prepared receipt are outside Git in `native-candidate-2a3301241`. Preparation
+assertions remain zero. The original failed preparation and graph are retained.
+
+The first actual published transition stopped at an uncached predecessor Rust
+dependency. Thirty-one distinct actual published bridge-probe manifests then
+fetched their locked dependencies without changing their locks. A new invocation
+passed the published program, post-switch migration failure rollback, the restored
+published program, upgrade, new version, and installed integrity. It stopped on
+the expected one-retained-predecessor inventory: rollback left an additional
+legacy directory. Both failed invocations remain failed with raw process output;
+remaining persisted-state/reinstall/rollback assertions are not claimed.
+
+Four native targets were dispatched on the frozen candidate in GitHub Actions
+run `37178223306`; the observed jobs are queued. This is dispatch evidence only.
+Completed review PRs #4315–#4317 were merged into the integration branch, not
+protected main. Their clean owned checkouts were retired after checking their
+PR head identities and ancestry; source commits and review evidence are retained.

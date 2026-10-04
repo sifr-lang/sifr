@@ -12,6 +12,7 @@ PLATFORMS = ("aarch64-apple-darwin", "aarch64-unknown-linux-gnu",
 
 
 def component_steps(name: str) -> set[str]:
+    if name in {'local-first-create-pr', 'local-first-merge'}: return {'Run local-first profile'}
     if not name.startswith('compiler-component-'): return set()
     steps = {'Prepare locked target dependencies', 'Run native compiler component qualification',
              'Run native SQL build qualification'}
@@ -51,9 +52,9 @@ def evaluate(run: dict, jobs: list[dict], *, candidate: str, profile: str,
              now: datetime, reused_jobs: set[str] | None = None) -> list[str]:
     errors = []
     reused_jobs = reused_jobs or set()
-    reusable = {'smoke-fuzz-property', 'sql-build-wasm32-wasip2'} | {'compiler-component-' + target for target in PLATFORMS}
+    reusable = {'local-first-merge', 'smoke-fuzz-property', 'sql-build-wasm32-wasip2'} | {'compiler-component-' + target for target in PLATFORMS}
     if reused_jobs and (run.get('event') != 'push' or not reused_jobs <= reusable):
-        errors.append('reuse is restricted to exact-commit main correctness jobs')
+        errors.append('reuse is restricted to exact-commit main validation jobs')
         reused_jobs = set()
     if not re.fullmatch(r"[0-9a-f]{40}", candidate):
         errors.append("candidate must be a complete commit SHA")
@@ -83,7 +84,7 @@ def evaluate(run: dict, jobs: list[dict], *, candidate: str, profile: str,
         if not job:
             errors.append(f"missing mandatory job: {name}")
             continue
-        expected_conclusion = "skipped" if name in reused_jobs and not name.startswith('compiler-component-') else "success"
+        expected_conclusion = "skipped" if name in reused_jobs and not component_steps(name) else "success"
         if job.get("status") != "completed" or job.get("conclusion") != expected_conclusion:
             errors.append(f"mandatory job did not pass: {name}")
         if job.get("run_id") != run.get("id") or job.get("run_attempt") != run.get("run_attempt"):
@@ -91,7 +92,7 @@ def evaluate(run: dict, jobs: list[dict], *, candidate: str, profile: str,
         if name in reused_jobs:
             # This attempt did not execute the job. The caller independently
             # verifies the original producer's actual execution and freshness.
-            if name.startswith('compiler-component-') and not any(
+            if component_steps(name) and not any(
                     step.get('name') == 'Record exact-commit correctness reuse' and step.get('conclusion') == 'success'
                     for step in job.get('steps', [])):
                 errors.append(f'missing current reuse marker: {name}')
