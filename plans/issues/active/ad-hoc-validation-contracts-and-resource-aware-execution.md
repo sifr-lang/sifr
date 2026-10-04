@@ -9,12 +9,19 @@ assertion safety budget: clean A and unchanged A completed, independent B did
 not, and no SQL preparation ran. Journal
 `aed44a3d-6fe4-4bf5-be30-e40151dbc5fe/0017-sql_build_assertions.json` records
 `timeout` / `safety_deadline`; zero OOM events do not prove parallel memory fit.
-The coordinator records all three same-head hosted native jobs as passed. Those
-native results do not replace the failed local gate or pending full acceptance.
+Hosted run `37235316870` passed Linux x64, Linux ARM and Intel macOS on
+that exact source. ARM macOS failed before steps because of the account
+restriction. These results do not qualify a successor or replace the failed
+local gate and pending full acceptance.
 The separately registered successor below requests two CPU-clamped workers only
 for the admitted SQL clean-build callback, retaining all resource and deadline
 limits. Its 65 focused controls and all six profile contracts pass; full profile and
-stage plans are byte-identical to the base. Exact-candidate review is pending.
+stage plans are byte-identical to the base. Implementation
+`7d3f8d4e8b313bb2f0c04214c0ede0922e551732` received scoped Opus
+SATISFIED with no blockers and was integrated unchanged. The full-checkout
+4,465-file guard and whitespace check pass. Review evidence is retained at
+`/workspace/validation-work/evidence/candidates/7d3f8d4e8b313bb2f0c04214c0ede0922e551732/opus-sql-clean-two-workers.md`.
+The complete successor gate remains required; no parallel fit is claimed.
 
 The separately reviewed exact closed SQL-B completed-cache cleanup removed
 4,032 cache files and verified all 3,113 protected entries unchanged. Observed
@@ -3021,9 +3028,37 @@ All 65 focused controls pass under canonical Python without Cargo/UV/compiler
 execution. Controls include both resource modes, fractional CPU clamping,
 admission failures, exact scope negatives, ordinary and unexpected failures,
 cancellation, post-callback validation, actual area-command environment
-propagation, build-only and nonbuild selections, full19/66/30 selection and
+propagation, build-only and nonbuild selections, full 19/66/30 selection and
 unchanged E2E/preparation workers. Existing aggregate/deadline/floor controls
 also pass. All six profile contracts and complete emitted profile/stage plans
-are unchanged from the base, including all729 full-corpus E2E fixture IDs.
-Source-size and diff checks pass. Exact committed-candidate review and the next
-resource-admitted full gate remain pending; no parallel peak or fit is claimed.
+are unchanged from the base, including all 729 full-corpus E2E fixture IDs.
+Source-size and diff checks pass. Exact implementation `7d3f8d4e8` received
+scoped Opus SATISFIED with no blockers. The full integrated checkout also passes
+the 4,465-file guard. The next resource-admitted full gate remains pending; no
+parallel peak or fit is claimed.
+
+
+The finished isolated worker checkout was removed through ordinary Git worktree
+removal after clean-source, reachable-commit and consumer checks. Its branch,
+commit, external controls and review remain retained; observed recovery was
+91,639,808 bytes. Only its identified orphan review-watchdog sleep was stopped.
+The receipt is
+`/workspace/validation-work/evidence/closed-sql-worker-worktree-removal-20261004.json`.
+
+Astra's next proposed standard ARM experiment is a separate diagnostic of the
+registered beta.16 ARM package compiling and running the existing small offline
+user program, before attempting full compiler construction or a cross-producer
+redesign. It needs a bounded memory observer and fresh admission; it is not yet
+implemented or executed and provides no qualification evidence. Its exact scope
+is retained in
+`/workspace/validation-work/native-standard-arm-runtime-probe-astra-high-20261004.md`.
+A capable authorized Apple Silicon host could instead use the existing route.
+No larger-runner availability or universal hardware minimum is inferred.
+
+
+The closed 1c40 source compiler's redundant expanded copy was retired through
+the existing fixed custody mechanism after full gzip decoding, original lease
+locking and consumer checks. Observed recovery was 107,016,192 bytes; all 25
+pinned gate records, compressed original bytes and the separately admitted
+restoration command remain. The original timeout is unchanged. Receipt:
+`/workspace/validation-work/evidence/closed-1c40-expanded-compiler-custody-20261004/receipt.json`.
