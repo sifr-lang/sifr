@@ -199,7 +199,7 @@ def observe(root, output, *, target):
             raise ValueError('diagnostic source or interpreter changed')
         report.update(status='observed', completed_utc=datetime.now(timezone.utc).isoformat())
         save()
-        check(output, root=root)
+        check(output, root=root, pending=True)
         with (output / 'receipt.json').open('x') as stream:
             stream.write(json.dumps(report, indent=2) + '\n')
         return report
@@ -209,7 +209,7 @@ def observe(root, output, *, target):
         raise
 
 
-def check_retained(output, expected_commit, *, target=None):
+def check_retained(output, expected_commit, *, target=None, pending=False):
     """Portable byte audit; original Python/host are not executed or requalified."""
     output = Path(output).resolve(strict=True)
     report = json.loads((output / 'state.json').read_text())
@@ -231,15 +231,17 @@ def check_retained(output, expected_commit, *, target=None):
             or interpret(report['commands'], output, original_output=original) != report['observations']):
         raise ValueError('capacity observation differs from retained raw evidence')
     receipt = output / 'receipt.json'
+    if not pending and not receipt.is_file():
+        raise ValueError('published capacity receipt missing')
     if receipt.exists() and json.loads(receipt.read_text()) != report:
         raise ValueError('published capacity receipt differs')
     return report
 
 
-def check(output, *, root=ROOT, target=None):
+def check(output, *, root=ROOT, target=None, pending=False):
     output = Path(output).resolve(strict=True)
     identity = source_identity(root)
-    report = check_retained(output, identity['commit'], target=target)
+    report = check_retained(output, identity['commit'], target=target, pending=pending)
     if (identity != report['source'] or digest(sys.executable) != report['python']['sha256']
             or report['original_output'] != str(output)):
         raise ValueError('capacity observation live source/interpreter differs')

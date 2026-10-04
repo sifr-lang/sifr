@@ -132,6 +132,9 @@ class DiagnosticControls(unittest.TestCase):
         (self.output / 'receipt.json').write_text('{}')
         with self.assertRaisesRegex(ValueError, 'receipt differs'):
             probe.check_retained(self.output, 'a' * 40)
+        (self.output / 'receipt.json').unlink()
+        with self.assertRaisesRegex(ValueError, 'receipt missing'):
+            probe.check_retained(self.output, 'a' * 40)
 
 
 if __name__ == '__main__':
