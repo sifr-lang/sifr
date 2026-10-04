@@ -59,17 +59,27 @@ jobs:
           from pathlib import Path
           root=Path(os.environ['RUNNER_TEMP']);out=root/'native-capacity-inputs'
           out.mkdir(mode=0o700,exist_ok=False)
-          commands=[['df','-P',str(root)],['diskutil','info','-plist',str(root)],
+          commands=[['df','-P',str(root)],['diskutil','info','-plist','device-from-df'],
                     ['diskutil','apfs','list','-plist'],['sysctl','-n','hw.memsize'],
                     ['sysctl','-n','hw.logicalcpu'],['vm_stat']]
           records=[]
+          device=None
           for index,command in enumerate(commands):
+              if index==1:
+                  if device is None:
+                      records.append({'argv':command,'cause':'unavailable-storage-device'})
+                      continue
+                  command=[*command[:-1],device]
               result=execute(command,cwd=root,deadline_seconds=30,limit_bytes=16*1024**2)
               hashes={}
               for stream in ('stdout','stderr'):
                   data=getattr(result,stream)
                   (out/f'{index}.{stream}').write_bytes(data)
                   hashes[stream]=hashlib.sha256(data).hexdigest()
+              if index==0 and result.cause=='exit' and result.returncode==0 and not result.truncated:
+                  lines=result.stdout.decode('utf-8',errors='strict').splitlines()
+                  if len(lines)>=2 and lines[-1].split() and lines[-1].split()[0].startswith('/dev/'):
+                      device=lines[-1].split()[0]
               records.append({'argv':command,'cause':result.cause,'returncode':result.returncode,
                               'truncated':result.truncated,'output_sha256':hashes})
           (out/'commands.json').write_text(json.dumps(records,indent=2)+'\n')

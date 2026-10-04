@@ -2169,3 +2169,27 @@ and do not change the storage guard or any runtime requirement. Allow direct
 dispatch of the existing four-native-target workflow so this rehearsal can run
 without also dispatching unrelated parent jobs. Scoped review and actual hosted
 observations remain pending.
+
+## M5 actual Linux native qualification and device probe repair — 2026-10-04
+
+The exact `f02e5b3b80ca9f44014b0cd2b2a9dd395da24c41` Linux bundle preparation
+and fresh published transition passed. The independent receipt checker confirmed
+all eight runtime cases, sixteen commands, unchanged persisted user files, native
+reinstall integrity and both transaction rollback paths. Wall time was 4:41.64,
+maximum child RSS 550328 KiB, with no swaps. Raw commands, receipt and independent
+check remain outside Git. Closed installed payloads and generated native cache
+were archived losslessly; only the successfully qualified intermediate Cargo
+cache was cleaned under its exclusive matching owner lease. Failed graphs and
+all historical failed states remain unchanged. Restoration custody records
+preserve exact historical live paths. This is Linux evidence on that frozen
+candidate, not four-platform or protected-main delivery.
+
+Scoped fixture review was satisfied in #4321; diagnostics review was satisfied
+in #4322. Both are merged only into the integration branch. Direct four-target
+run `37181469650` reached x64 Darwin admission, which observed 9533071360 bytes
+available against the unchanged 9663676416-byte requirement. Its diagnostic
+`diskutil info` invocation rejected the directory path. Resolve the actual
+`/dev/` device from the preceding successful bounded `df` result before querying
+it. Missing or incomplete `df` output leaves an explicit unavailable-device
+observation. No capacity guard, reserve, runtime requirement or numerical budget
+changes. Other native hosts and final acceptance remain pending.
