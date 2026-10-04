@@ -2,15 +2,25 @@
 
 ## Current acceptance checkpoint — 2026-10-04
 
-The full integration tree now contains reviewed CPU-distribution correction
-`eec080d4f8892f88934fc14d5e7e4ced4f855187`, named SQL clean-build allocation
-`13757b167a81532f81c3e7a3bda9eec6190b81e4`, and early whole-SQL scheduling
-`4a77f0f37e99a495ac3119844ef03f098d5ae2b2`. Their exact scoped Opus reviews
-are satisfied. The SQL successor passed 48 focused controls; the integrated
-checkout passes all six profile contracts, its 4,462-file size guard and whitespace
-checks. All 19 SQL suites, 66 cases and 30 unique preparation commands remain.
-The complete create-PR, performance and final compact cloud gates are still open;
-none of these focused checks qualifies the whole candidate.
+The integration tree contains reviewed clean-build-first SQL correction
+`09744e4fcf66568d7477783531f3aaf814e6aff5`. Its scoped Opus review is
+SATISFIED with no blockers. All 56 focused controls and six profile contracts
+pass. All six emitted full-checkout plans are unchanged from `2242202c5`;
+the integrated 4,464-file size guard and whitespace checks pass. All 19 SQL
+suites, 66 cases and 30 preparation commands remain selected. The clean-build
+case now runs before those preparations; both assertion parts share the original
+2,400-second budget, excluding preparation, and retain tighter inherited deadlines.
+Actual same-invocation results aggregate in canonical order. These focused checks
+do not qualify the complete candidate.
+
+The complete `2242202c506aaadf4aa08c4464827d16aad5676d` create-PR gate
+ended at 20:20:31 UTC with exit 2. All 30 SQL preparations passed, but area
+admission required 8,589,934,592 disk bytes and observed 7,432,404,992.
+No SQL assertions executed. That result remains failed. The reviewed successor
+addresses the ordering that accumulated SQL test outputs before an independent
+clean-build case. Full create-PR, performance and final cloud acceptance remain
+open. Review evidence is outside Git at
+`/workspace/validation-work/evidence/candidates/09744e4fcf66568d7477783531f3aaf814e6aff5/opus-sql-clean-first.md`.
 
 A complete download of the declared official CPU wheel independently matched
 SHA-256 `f152f41dc5dc462afe0de780e451ebb47ea8b4451f8f919f9537aa8e2cbe1d7e`
@@ -46,19 +56,61 @@ complete original archive, then removed the remaining 335 groups. It recovered
 root/lease identities remain unchanged and the locks are released. This completes
 the six selected graph custody operations without claiming a validation pass.
 
-Five explicitly selected closed archives were then copied, hash/metadata verified
+Five explicitly selected closed archives were copied, hash/metadata verified
 and placed in RAM storage behind original-path custody symlinks. Their original
-receipts and restore commands remain valid; Cargo-source archives whose restore
+receipts and restore procedures are retained; Cargo-source archives whose restore
 contract rejects such relocation were excluded. Actual physical recovery was
-1,473,261,568 bytes. The 19:03:02 UTC snapshot reports 9,395,503,104 disk bytes
-and 10,954,756,096 available memory bytes: 805,568,512 bytes above SQL's eight-GiB
-entry and 217,337,856 above the ten-GiB sysroot memory entry. The separately
-registered 512-MiB retained-preparation margin is a prospective estimate, not a
-fit guarantee. This stable placement preserves the original two-GiB reserves;
-the canonical stage checks and monitors remain authoritative during execution.
+1,473,261,568 bytes. A later two-archive placement recovered 873,734,144 bytes
+while SQL preparation was active. Those are completed historical observations,
+not fresh capacity measurements. The attempted four-archive v6 placement failed
+preflight without transferring any archive and expired when the 224 gate closed.
 
-The next execution order is measured storage recovery and stable archive
-placement, a fresh complete create-PR gate, candidate endpoint and complete
+After that gate closed, an exact audited cleanup removed 1,402 regeneratable
+SQL preparation cache files and recovered 1,703,485,440 physical bytes. All 86
+protected records/artifacts verified unchanged. An all-features dependency check
+excluded shared dependencies, including AWS-LC/Rustls/shared PostgreSQL inputs.
+Successful no-run commands and failure observations remain retained; future Cargo
+commands must execute again. Three finished source-only worktrees were removed
+through ordinary Git worktree removal after clean/ancestry/consumer checks;
+branches and commits remain reachable. Observed recovery was 98,766,848 bytes,
+including worktree administration and possible concurrent filesystem effects.
+These operations are distinct from historical failure-graph retirement.
+The now-closed 224 source compiler's redundant expanded copy was separately
+retired after exact gzip decoding and lease/consumer checks, recovering
+107,016,192 bytes. Its compressed original bytes, source receipt and all 141
+pinned journal/gate observations remain verified; historical use requires the
+recorded raw-compiler restore command. This does not retire failure evidence.
+
+
+A separate acceptance-98 disposition explicitly supersedes the original future
+byte-complete cache recovery obligation for exactly 556 enumerated intermediate
+objects. Scoped Opus review of the fixed helper/input set is SATISFIED; all 14
+restoration/interruption controls pass. The new 78,927,258-byte retained archive
+was independently decoded and verified before the original full archive was
+retired. All 2,156 other objects, including both actual test executables, remain
+recoverable exactly under the recorded evidence-only restore protocol. Original
+failures, receipts, source/compiler custody and root/lease identities remain.
+Both restore guards prohibit claiming whole-graph reconstruction; regeneration
+of retired caches requires a new separately admitted graph and makes no original
+byte guarantee. The immutable earlier full-custody records remain historical.
+The exact input set is `56bbe99e0921197945e2ec660fcc91bd1c55df92a113d3898ef080fe92a4dea1`;
+registration and completion live under
+`/workspace/validation-work/evidence/acceptance-98-evidence-retention-20261004-v1/`.
+Prepared net savings were 339,054,592 bytes before final registration/commit records;
+the completed operation observed 9,734,676,480 free bytes. This cleanup does not
+qualify the current candidate or reclassify a historical failure.
+
+The selected compact create-PR route requires at most eight GiB of admitted
+memory: source preparation and generic stages use eight GiB, while its exact
+metadata-structural assertions use four and a half GiB. The package stage is not
+selected. The broader sysroot assertion stage's ten-GiB requirement belongs to
+later cloud validation; it is not a create-PR source requirement. Thus reversal
+of the two-archive RAM placement is deferred, preserving physical disk for SQL.
+Fresh stage admission and monitoring remain authoritative. SQL still needs eight
+GiB physical disk at clean-build entry; no reserve or allocation is reduced.
+
+The next execution order is fresh stage admission and a complete create-PR
+gate, candidate endpoint and complete
 65-workload/5,120-pair performance evidence, then the final shared-VM command
 `cloud --require-performance --compact-resources`. Reserves, assertions and
 numerical acceptance rules stay unchanged. The prior interrupted performance
@@ -66,14 +118,16 @@ capture supplies no samples to the new result. Keep the warm target through
 final correctness validation unless a separate bounded consumer audit proves a
 specific obsolete subset.
 
-Predecessor `1fc27615c` completed native qualification on Linux x64, Linux ARM and
-standard Intel macOS in hosted run `37216400938`; ARM macOS failed before steps
-because of the GitHub account restriction. Those historical passes do not qualify
-a successor. The observed standard ARM memory snapshot also does not justify
-waiving admission. Native coverage for the final candidate and effective protected
+Historical candidate `2242202c5` passed native qualification on Linux x64,
+Linux ARM and standard Intel macOS in hosted run `37228208328`. ARM macOS
+failed before steps because of the account billing/spending restriction. The
+three successful jobs do not qualify successor source SHAs; portable artifact
+byte audits remain pending. The observed standard ARM memory snapshot does not
+justify waiving admission. Final native coverage and effective protected
 App/aggregate/merge-queue enforcement remain externally constrained and open.
 SQL #4259 is retained ancestrally in draft replacement #4332 and is to be retired
 only after accepted replacement delivery and the required whole-phase audit.
+
 
 
 ## M2 explicit CPU Python verification distribution — prospective bounded correction
@@ -2870,9 +2924,10 @@ budget, excluding interleaved preparation; tighter inherited absolute deadlines
 continue to win. Preparation retains its own existing limits. Fail-fast and
 no-fail-fast must preserve every failure and exact-once final area accounting.
 No allocation number, reserve, assertion, profile, SQL build recipe or fixture
-changes. Focused controls and exact-candidate review precede integration; no
-build, install, Cargo/UV resolution or Opus review will run here while the old
-gate is active. Actual cold fit and final acceptance remain unproven.
+changes. The original prospective restriction prohibited builds, installation,
+Cargo/UV resolution and Opus review while the old gate was active. That gate
+has since closed; the successor passed focused checks and exact-candidate review
+before integration. Actual cold fit and final acceptance remain unproven.
 
 Any post-gate selective cleanup of successful SQL preparation cache is a separate
 prospective disposition, not GraphLease retirement. It requires a measured
@@ -2895,6 +2950,7 @@ All 56 focused partition/aggregation/deadline, full-route, selection, failure,
 resource and affected Cargo-preparation controls pass under canonical Python.
 They use synthetic command execution and a read-only workspace manifest roster;
 no Cargo metadata, UV, compiler or installation process was launched. Source
-size and diff checks pass. Exact committed-candidate review is pending; actual
-SQL execution, disk fit and final full acceptance remain pending. The original
-224 gate's failed admission remains unchanged evidence.
+size and diff checks pass. Exact candidate `09744e4fc` received scoped Opus
+SATISFIED with no blockers. All six full-checkout emitted plans match `2242202c5`.
+Actual SQL execution, disk fit and final full acceptance remain pending. The
+original 224 gate's failed admission remains unchanged evidence.
