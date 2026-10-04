@@ -192,8 +192,9 @@ def validate_capacity_diagnostics(document: dict) -> list[str]:
         errors.append('capacity diagnostics must execute only observation and independent checking')
     checkout = steps[0] if steps else {}
     if (not checkout.get('uses', '').startswith('actions/checkout@')
-            or checkout.get('with') != {'ref': '${{ github.sha }}', 'persist-credentials': False}):
-        errors.append('capacity diagnostics must bind exact source without credentials')
+            or checkout.get('with') != {'ref': '${{ github.sha }}', 'submodules': 'recursive',
+                                       'persist-credentials': False}):
+        errors.append('capacity diagnostics must bind exact source and recursive submodules without credentials')
     upload = steps[-1] if steps else {}
     if (upload.get('if') != 'always()' or upload.get('continue-on-error')
             or not upload.get('uses', '').startswith('actions/upload-artifact@')
@@ -264,10 +265,13 @@ def main() -> None:
         if mutation == 'host': job['strategy']['matrix']['include'][0].pop('host_kind')
         if mutation == 'context': job['env']['SIFR_NATIVE_HOST_KIND'] = "${{ runner.os == 'macOS' && 'dedicated-darwin' || '' }}"
         assert validate_native_qualification(document, invalid_native), mutation
-    for mutation in ('paid', 'source', 'skip', 'write', 'build', 'retention', 'job-skip', 'job-bypass'):
+    for mutation in ('paid', 'source', 'submodules-missing', 'submodules-shallow',
+                     'skip', 'write', 'build', 'retention', 'job-skip', 'job-bypass'):
         bad = copy.deepcopy(diagnostic); job = bad['jobs']['observe']
         if mutation == 'paid': job['strategy']['matrix']['include'][0]['runner'] = 'macos-15-xlarge'
         if mutation == 'source': job['steps'][0]['with']['ref'] = 'main'
+        if mutation == 'submodules-missing': job['steps'][0]['with'].pop('submodules')
+        if mutation == 'submodules-shallow': job['steps'][0]['with']['submodules'] = True
         if mutation == 'skip': job['steps'][3]['if'] = 'false'
         if mutation == 'write': bad['permissions']['contents'] = 'write'
         if mutation == 'build': job['steps'].insert(-1, {'run': 'cargo build'})

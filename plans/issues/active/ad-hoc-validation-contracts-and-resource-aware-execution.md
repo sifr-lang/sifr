@@ -1,5 +1,26 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M3/M5 diagnostic checkout ownership repair — prospective rescope
+
+Actual hosted merge validation and the local create-PR gate on `0d8d01e1b`
+failed before compiler preparation: the new capacity diagnostic checkout did not
+initialize recursive submodules and was not an existing classified non-source
+checkout. This separate bounded repair adds recursive initialization and makes
+the diagnostic workflow contract reject both missing and nonrecursive settings.
+Keep the existing ownership guard and its classifications unchanged. Named
+checks: actual ownership guard/self-test, local-first workflow controls, uv
+invariant/controls, source guardrail and diff; exact-candidate read-only Opus
+review; the still-required full candidate gates. Historical diagnostic artifacts
+remain observations of their actual execution source, not current qualification.
+
+While creating this repair worktree, an agent command-scoping error temporarily
+enabled sparse checkout in the original frozen measurement worktree. Its worker
+rejected a missing corpus path and stopped with exit 2. Original source is fully
+restored and clean at its unchanged commit. Preserve the incomplete capture as
+infrastructure failure; its samples cannot qualify or be combined. Freeze the
+repaired final candidate, prepare valid matched endpoints and run one complete
+fresh fixed capture. No numerical verdict was produced or retried unchanged.
+
 ## M2/M5 standard macOS capacity observation — prospective scope
 
 The user cannot provision paid larger runners and requested Astra's sizing
