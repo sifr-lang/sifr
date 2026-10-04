@@ -134,6 +134,8 @@ def consume(receipt,source,candidate,compiler,env,run_checker):
         run_checker([sys.executable,str(checker),'check','--receipt',str(receipt)],env=env)
         if equivalence(source,candidate,endpoint['cloud_source'],env)!=proof:
             raise VerificationError('cloud reuse inputs changed during checking')
+        if json.loads(command([sys.executable,'-c',probe],candidate,env))!=context:
+            raise VerificationError('cloud reuse Python context changed during checking')
         if before!={'receipt_sha256':digest(receipt),'compiler_sha256':digest(compiler)}:
             raise VerificationError('cloud reuse artifact or receipt changed during checking')
         record['status']='passed'

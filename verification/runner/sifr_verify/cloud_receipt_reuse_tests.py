@@ -23,7 +23,7 @@ class ReuseChecks(unittest.TestCase):
         self.git(self.source,'config','user.name','Control')
         self.git(self.source,'config','user.email','control@example.invalid')
         (self.source/'AGENTS.md').write_text('old docs\n')
-        (self.source/'.gitignore').write_text('target/\n')
+        (self.source/'.gitignore').write_text('target\n')
         (self.source/'crates').mkdir();(self.source/'crates/compiler.rs').write_text('source\n')
         self.git(self.source,'add','.');self.git(self.source,'commit','-qm','fixture')
         self.observed=self.git(self.source,'rev-parse','HEAD')
@@ -126,6 +126,19 @@ class ReuseChecks(unittest.TestCase):
                  patch.object(reuse,'consume',side_effect=error) as consumer:
                 self.assertEqual(run_cloud_profile(runner),expected)
                 consumer.assert_called_once()
+
+    def test_python_drift_after_checking_cannot_publish_reuse(self):
+        def drift(*args,**kwargs):self.context={'interpreter_sha256':'changed'}
+        with self.assertRaisesRegex(VerificationError,'Python context changed'):
+            self.consume(drift)
+        self.assertFalse(list((self.candidate/'target').rglob('receipt.json')))
+
+    def test_linked_evidence_destination_cannot_touch_another_owner(self):
+        other=self.root/'other';other.mkdir()
+        (self.candidate/'target').symlink_to(other,target_is_directory=True)
+        with self.assertRaisesRegex(VerificationError,'symlink'):
+            self.consume()
+        self.assertEqual(list(other.iterdir()),[])
 
 
 def policy_checks():
