@@ -20,6 +20,8 @@ class CollectorTests(unittest.TestCase):
             project=root/'original';(project/'src').mkdir(parents=True)
             source=project/'src/main.rs'
             source.write_text('fn main() { println!("42"); }\n')
+            (project/'build.rs').write_text('fn main() { println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"); }\n')
+            (project/'.sifr-cargo-resolution').write_text('registered-control-input\n')
             target='sifr_output_1234567890abcdef'
             manifest=project/'Cargo.toml'
             manifest.write_text('[package]\nname="sifr_output"\nversion="0.1.0"\nedition="2024"\n'
@@ -64,13 +66,20 @@ os.execv(sys.argv[1],sys.argv[1:])
                 self.assertIs(captured['numeric_regression_qualification'],False)
                 self.assertGreater(captured['rows'][0]['counts']['allocation_calls'],0)
                 self.assertEqual(allocations.check(receipt)['status'],'captured')
+                self.assertEqual((output/'control/project/build.rs').read_bytes(), (project/'build.rs').read_bytes())
+                self.assertIn('link-arg=-Wl,-rpath,$ORIGIN', captured['rows'][0]['rustc_command'])
+                copied_script=output/'control/project/build.rs'
+                saved_script=copied_script.read_bytes();copied_script.write_bytes(saved_script+b'// changed\n')
+                with self.assertRaises(BenchmarkError): allocations.check(receipt)
+                copied_script.write_bytes(saved_script)
                 original_receipt=receipt.read_bytes()
-                for field in ('status','counts','artifact','source','raw'):
+                for field in ('status','counts','artifact','source','raw','recipe'):
                     altered=copy.deepcopy(captured)
                     if field=='status': altered['status']='failed'
                     elif field=='counts': altered['rows'][0]['counts']['allocation_calls']+=1
                     elif field=='artifact': altered['rows'][0]['binary_sha256']='0'*64
                     elif field=='source': altered['rows'][0]['instrumented_rust_sha256']='0'*64
+                    elif field=='recipe': altered['rows'][0]['rustc_command'].append('-Copt-level=0')
                     else: altered['rows'][0]['observation_process']['output']['stdout']['sha256']='0'*64
                     receipt.write_text(json.dumps(altered))
                     with self.assertRaises(BenchmarkError): allocations.check(receipt)
@@ -83,6 +92,15 @@ os.execv(sys.argv[1],sys.argv[1:])
                 saved=counts.read_bytes();counts.write_text('{}')
                 with self.assertRaises(BenchmarkError): allocations.check(receipt)
                 counts.write_bytes(saved)
+                exact_copy=allocations.copy_package
+                def omit_loader_script(original,destination):
+                    exact_copy(original,destination)
+                    (destination/'build.rs').unlink()
+                with patch.object(allocations,'copy_package',side_effect=omit_loader_script):
+                    changed_recipe=root/'missing-loader-script'
+                    with self.assertRaisesRegex(BenchmarkError, 'rustc recipe differs'):
+                        allocations.collect(prepared,changed_recipe)
+                self.assertFalse((changed_recipe/'receipt.json').exists())
                 with patch.object(allocations,'checked',side_effect=BenchmarkError('controlled incomplete process')):
                     failed_output=root/'failed'
                     with self.assertRaises(BenchmarkError): allocations.collect(prepared,failed_output)

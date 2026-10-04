@@ -1677,3 +1677,19 @@ guardrails and diff checks passed; the retained control log is
 `/workspace/validation-work/evidence/allocation-performance-controls-final.log`.
 Actual fresh Sifr preparation/collection, scoped review and broad gates remain
 pending, as do independent paired compiler performance and final acceptance.
+
+
+The first allocation review at `905f808084219a7187fa91e7e9727fa40a561c19`
+is NOT SATISFIED, retained at
+`/workspace/validation-work/evidence/sifr-claude.3fXfa5/response.md`.
+Fresh actual Sifr preparation and allocation collection completed at that candidate,
+but review found missing generated package inputs: the collector omitted build.rs
+and .sifr-cargo-resolution, losing the original loader link argument. Those
+observations remain historical evidence and do not qualify the corrected recipe.
+The one-batch correction preserves every regular package input except the rewritten
+main and Cargo outputs. Collection and checking compare the actual original and
+instrumented Cargo profiles and rustc arguments, normalizing only Cargo application
+hash fields and relocated output/dependency paths. Loader link flags remain exact.
+The real Cargo control now supplies a loader build script and resolution marker;
+a missing loader script must fail collection without publishing a success receipt.
+Corrected native recollection and remediation review remain pending.

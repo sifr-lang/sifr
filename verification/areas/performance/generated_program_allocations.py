@@ -7,11 +7,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import shutil
 import sys
 import tomllib
 
 from allocation_instrumentation import FIELDS, MODULE, SCOPE, instrument, validate_counts
+from allocation_recipe import copy_package, package_files, require_same_recipe
 from benchmark_manifest import BenchmarkError
 from compiler_lanes import validate_receipt
 from generated_program_metrics import ROOT, POLICY, policy, require_clean_source, digest, dependencies
@@ -109,16 +109,10 @@ def collect(prepared_path, output):
             (directory/'original.rs').write_bytes(source)
             modified = instrument(source)
             (project/'src/main.rs').write_bytes(modified)
-            for name in ('Cargo.toml','Cargo.lock'):
-                shutil.copyfile(manifest.parent/name,project/name)
+            copy_package(manifest.parent,project)
             declared = tomllib.loads((project/'Cargo.toml').read_text())
             if len(declared.get('bin',[])) != 1 or declared['bin'][0]['path'] != 'src/main.rs':
                 raise BenchmarkError('allocation project requires its exact standalone main manifest')
-            configuration=manifest.parent/'.cargo'
-            if configuration.exists():
-                if any(path.is_symlink() or not (path.is_file() or path.is_dir()) for path in (configuration,*configuration.rglob('*'))):
-                    raise BenchmarkError('allocation Cargo configuration must be regular files')
-                shutil.copytree(configuration,project/'.cargo')
             events = directory/'rustc-events.jsonl'
             wrapper = directory/'record-rustc'
             wrapper.write_text('#!'+sys.executable+'\n'+'''import json,os,sys
@@ -139,6 +133,9 @@ os.execv(sys.argv[1],sys.argv[1:])
             artifact, invocation = application_events(cargo_rows,invocations,binary)
             if Path(artifact['manifest_path']) != project/'Cargo.toml' or Path(artifact['target']['src_path']) != project/'src/main.rs':
                 raise BenchmarkError('allocation Cargo events identify another source project')
+            require_same_recipe(original['rustc_command'],invocation)
+            if artifact['profile']!=original['cargo_artifact']['profile']:
+                raise BenchmarkError('instrumented Cargo profile differs from preparation')
             profile = artifact['profile']
             if (profile['opt_level']!='3' or profile['test'] or profile['debug_assertions']
                     or not profile['overflow_checks'] or not target_cpu_generic(invocation)):
@@ -193,18 +190,8 @@ def check(path):
                 or row['instrumented_rust_sha256']!=digest(project/'src/main.rs')
                 or row['original_binary_sha256']!=original['binary_sha256'] or digest(row['binary'])!=row['binary_sha256']):
             raise BenchmarkError('allocation source transformation/artifact differs')
-        for name in ('Cargo.toml','Cargo.lock'):
-            if (project/name).read_bytes()!=(Path(original['cargo_artifact']['manifest_path']).parent/name).read_bytes():
-                raise BenchmarkError('allocation Cargo inputs differ')
-        original_config=Path(original['cargo_artifact']['manifest_path']).parent/'.cargo'
-        copied_config=project/'.cargo'
-        def config_files(directory):
-            if not directory.exists(): return None
-            if any(item.is_symlink() or not (item.is_file() or item.is_dir()) for item in (directory,*directory.rglob('*'))):
-                raise BenchmarkError('allocation Cargo configuration has links or special files')
-            return {str(item.relative_to(directory)):digest(item) for item in directory.rglob('*') if item.is_file()}
-        if config_files(original_config)!=config_files(copied_config):
-            raise BenchmarkError('allocation Cargo configuration differs')
+        if package_files(project)!=package_files(Path(original['cargo_artifact']['manifest_path']).parent):
+            raise BenchmarkError('allocation generated package inputs differ')
         expected_build=['cargo','build','--locked','--offline','--release','--manifest-path',str(project/'Cargo.toml'),
                         '--message-format=json-render-diagnostics']
         if row['build_process']['argv']!=expected_build or row['observation_process']['argv']!=[row['binary']]:
@@ -224,6 +211,9 @@ def check(path):
         artifact, invocation = application_events(cargo_rows,[json.loads(line) for line in events.read_text().splitlines()],row['binary'])
         if Path(artifact['manifest_path']) != project/'Cargo.toml' or Path(artifact['target']['src_path']) != project/'src/main.rs':
             raise BenchmarkError('allocation Cargo events identify another source project')
+        require_same_recipe(original['rustc_command'],invocation)
+        if artifact['profile']!=original['cargo_artifact']['profile']:
+            raise BenchmarkError('instrumented Cargo profile differs from preparation')
         profile = artifact['profile']
         if (artifact!=row['cargo_artifact'] or invocation!=row['rustc_command'] or not target_cpu_generic(invocation)
                 or profile['opt_level']!='3' or profile['test'] or profile['debug_assertions'] or not profile['overflow_checks']
