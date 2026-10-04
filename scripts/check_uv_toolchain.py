@@ -27,19 +27,24 @@ EXCLUDED_PARTS = {
 }
 # Qualified archive SHA-256 from the upstream release checksum asset:
 # https://github.com/astral-sh/uv/releases/download/0.12.10/
-# uv-x86_64-unknown-linux-gnu.tar.gz.sha256
+# uv-<platform>.tar.gz.sha256; added native digests are also registered in
+# the authoritative GitHub release asset metadata (2026-10-04).
 # A version/platform change must add its qualified digest explicitly. Never
 # reuse an old release's digest or infer one from the workflow being checked.
 ARCHIVE_CHECKSUMS = {
     ("0.12.10", "x86_64-unknown-linux-gnu"):
         "173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b",
+    ("0.12.10", "aarch64-apple-darwin"): "51c6170e8e3a01cef9f33b94f582b7b81ac65046f55d40afb35f9cff5a68c179",
+    ("0.12.10", "x86_64-apple-darwin"): "5296d5aa2b9143360405eea866f8ef4d5dc8986b164eb0dc35e8f876a9304d30",
+    ("0.12.10", "aarch64-unknown-linux-gnu"): "9ff6b9d4665edcdd3a88dcc73cd1eb641754deb927f14e8c62ebfde6bf4f5f5e",
 }
-# Only qualified hosted runner identities are accepted. Expressions, custom
-# labels, and new platforms fail clearly until their archive is qualified.
+# Qualified hosted identities and finite explicit include matrices are accepted.
+# Arbitrary expressions, custom labels and unknown platforms fail closed.
 RUNNER_PLATFORMS = {
     "ubuntu-24.04": "x86_64-unknown-linux-gnu",
     "ubuntu-24.04-arm": "aarch64-unknown-linux-gnu",
     "macos-15": "aarch64-apple-darwin",
+    "macos-15-intel": "x86_64-apple-darwin",
     "windows-2025": "x86_64-pc-windows-msvc",
 }
 
@@ -121,6 +126,24 @@ def project_pins(inputs: dict[str, str]) -> tuple[dict[str, str], list[str]]:
     return pins, failures
 
 
+def setup_variants(job: dict, settings: dict):
+    runner = job.get("runs-on")
+    if runner != "${{ matrix.runner }}":
+        return [(runner, settings.get("checksum"))]
+    strategy = job.get('strategy', {})
+    if not isinstance(strategy, dict):
+        raise ValueError('unsupported runner matrix strategy')
+    matrix = strategy.get('matrix', {})
+    rows = matrix.get("include") if isinstance(matrix, dict) else None
+    if (not isinstance(matrix, dict) or set(matrix) != {"include"} or not isinstance(rows, list) or not rows
+            or settings.get("checksum") != "${{ matrix.uv_checksum }}"
+            or any(not isinstance(row, dict) or not isinstance(row.get("runner"), str)
+                   or not isinstance(row.get("uv_checksum"), str) for row in rows)
+            or len({row['runner'] for row in rows}) != len(rows)):
+        raise ValueError("unsupported runner matrix; use unique literal runners and platform checksums")
+    return [(row['runner'], row['uv_checksum']) for row in rows]
+
+
 def validate(inputs: dict[str, str], workflows: dict[str, object]) -> tuple[list[str], int]:
     pins, failures = project_pins(inputs)
     expected = pins.get(CANONICAL_PROJECT)
@@ -160,16 +183,21 @@ def validate(inputs: dict[str, str], workflows: dict[str, object]) -> tuple[list
                     failures.append(f"{label}: version overrides the canonical version-file selection")
                 if "working-directory" in settings:
                     failures.append(f"{label}: working-directory can redirect the version-file")
-                runner = job.get("runs-on")
-                platform = RUNNER_PLATFORMS.get(runner) if isinstance(runner, str) else None
-                if platform is None:
-                    failures.append(f"{label}: unsupported runner platform {runner!r}; qualify it explicitly")
+                try:
+                    variants = setup_variants(job, settings)
+                except ValueError as error:
+                    failures.append(f"{label}: {error}")
                     continue
-                digest = ARCHIVE_CHECKSUMS.get((expected, platform))
-                if digest is None:
-                    failures.append(f"{label}: missing platform checksum for uv {expected} / {platform}")
-                elif settings.get("checksum") != digest:
-                    failures.append(f"{label}: checksum must match uv {expected} / {platform}: {digest}")
+                for runner, observed_checksum in variants:
+                    platform = RUNNER_PLATFORMS.get(runner) if isinstance(runner, str) else None
+                    if platform is None:
+                        failures.append(f"{label}: unsupported runner platform {runner!r}; qualify it explicitly")
+                        continue
+                    digest = ARCHIVE_CHECKSUMS.get((expected, platform))
+                    if digest is None:
+                        failures.append(f"{label}: missing platform checksum for uv {expected} / {platform}")
+                    elif observed_checksum != digest:
+                        failures.append(f"{label}: checksum must match uv {expected} / {platform}: {digest}")
     if not setups:
         failures.append("no maintained setup-uv steps discovered")
     return failures, setups
@@ -226,8 +254,8 @@ def self_test() -> None:
         del changed[name]["jobs"]["check"]["steps"][0]["with"][key]
         check(inputs, changed, key)
     for runner, diagnostic in [
-        ("ubuntu-24.04-arm", "missing platform checksum"),
-        ("macos-15", "missing platform checksum"),
+        ("ubuntu-24.04-arm", "checksum"),
+        ("macos-15", "checksum"),
         ("windows-2025", "missing platform checksum"),
         ("ubuntu-future", "unsupported runner"),
         ("${{ matrix.os }}", "unsupported runner"),
@@ -238,6 +266,24 @@ def self_test() -> None:
         changed[name]["jobs"]["check"]["runs-on"] = runner
         check(inputs, changed, diagnostic)
     check({key: pin.replace(version, "99.0.0") for key in inputs}, workflows, "missing platform checksum")
+    matrix_workflows = copy.deepcopy(workflows)
+    matrix_job = matrix_workflows[name]['jobs']['check']
+    matrix_job.update({'runs-on': '${{ matrix.runner }}', 'strategy': {'matrix': {'include': [
+        {'runner': runner, 'uv_checksum': ARCHIVE_CHECKSUMS[(version, native)]}
+        for runner, native in RUNNER_PLATFORMS.items() if (version, native) in ARCHIVE_CHECKSUMS]}}})
+    matrix_job['steps'][0]['with']['checksum'] = '${{ matrix.uv_checksum }}'
+    check(inputs, matrix_workflows)
+    for mutation in ('checksum', 'runner', 'expression', 'axis', 'empty', 'duplicate', 'malformed'):
+        changed = copy.deepcopy(matrix_workflows)
+        job = changed[name]['jobs']['check']; matrix = job['strategy']['matrix']
+        if mutation == 'checksum': matrix['include'][0]['uv_checksum'] = '0' * 64
+        if mutation == 'runner': matrix['include'][0]['runner'] = 'unknown-host'
+        if mutation == 'expression': job['steps'][0]['with']['checksum'] = '${{ env.CHECKSUM }}'
+        if mutation == 'axis': matrix['runner'] = ['ubuntu-24.04']
+        if mutation == 'empty': matrix['include'] = []
+        if mutation == 'duplicate': matrix['include'].append(copy.deepcopy(matrix['include'][0]))
+        if mutation == 'malformed': matrix['include'][0] = None
+        check(inputs, changed, 'checksum' if mutation == 'checksum' else 'unsupported runner')
     check(inputs, {}, "no maintained setup-uv")
     for bad in [None, [], {"jobs": []}, {"jobs": {"bad": None}}, {"jobs": {"bad": {"steps": "text"}}}]:
         check(inputs, {name: bad}, ":")

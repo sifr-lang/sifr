@@ -2110,3 +2110,23 @@ against the decoded archive before removing its staging copy. Failure states,
 raw commands, user projects, Cargo graphs and original published assets stay in
 place. Custody manifests under `/tmp/sifr-closed-native-payloads-20261004` record
 exact restoration paths. No historical failed result was relabelled as passing.
+
+## M5 native uv platform checksum correction — 2026-10-04
+
+Actual hosted jobs in run `37178223306` failed before native preparation because
+the reusable four-platform workflow supplied the Linux x64 uv checksum to both
+Darwin architectures and Linux ARM. Their GitHub check annotations preserve the
+checksum mismatch and skipped native commands; none is a qualification pass.
+The invariant guard separately rejected the unqualified matrix runner expression.
+
+This bounded repair records each platform's uv 0.12.10 archive digest from the
+upstream GitHub release asset registry and selects it through a finite explicit
+include matrix. The toolchain guard accepts only that literal runner/checksum
+binding, keeps the canonical version-file authority, and rejects unknown runners,
+wrong hashes, arbitrary checksum expressions, empty/duplicate/malformed rows and
+implicit matrix axes. `macos-15-intel` is explicitly mapped to Darwin x64. Existing
+Linux x64 workflow digests and every native runtime assertion remain unchanged.
+
+The uv guard self-test passes 54 controls, including the new finite-matrix
+negative controls. Scoped review and an actual corrected hosted rerun remain
+pending. This is a prerequisite repair, not native qualification or final closure.
