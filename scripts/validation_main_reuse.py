@@ -1,4 +1,4 @@
-"""Exact-commit reuse of prior CI correctness jobs; no profile/performance reuse."""
+"""Exact-commit reuse of prior complete merge validation at the identical commit."""
 from datetime import datetime, timezone
 import hashlib
 import io
@@ -10,7 +10,7 @@ import zipfile
 from validation_aggregate_policy import WORKFLOW, PLATFORMS, evaluate
 from validation_candidate_artifact import candidate_identity, archive_bytes
 
-REUSED_JOBS = frozenset({'smoke-fuzz-property', 'sql-build-wasm32-wasip2'} |
+REUSED_JOBS = frozenset({'local-first-merge', 'smoke-fuzz-property', 'sql-build-wasm32-wasip2'} |
                        {'compiler-component-' + target for target in PLATFORMS})
 
 

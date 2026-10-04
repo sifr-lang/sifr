@@ -44,15 +44,15 @@ class MainReuse(unittest.TestCase):
     def verify(self):
         return reuse.verify(self.api, self.repo, self.sha, 1, now=self.now, identity_reader=self.identity_reader)
 
-    def test_exact_complete_premerge_producer_qualifies_only_correctness_jobs(self):
+    def test_exact_complete_premerge_producer_qualifies_complete_merge_validation(self):
         proof = self.verify()
         self.assertEqual(set(proof['reused_jobs']), reuse.REUSED_JOBS)
-        self.assertNotIn('local-first-merge', proof['reused_jobs'])
+        self.assertIn('local-first-merge', proof['reused_jobs'])
         self.assertEqual(reuse.select(self.api, self.repo, self.sha, 2, now=self.now,
                                      identity_reader=self.identity_reader)['state'], 'reused')
 
     def test_incomplete_stale_foreign_or_recursive_producers_run_fresh(self):
-        for mutation in ('commit', 'artifact', 'event', 'missing', 'duplicate', 'skip', 'failure', 'attempt', 'stale', 'future', 'workflow', 'repository', 'running', 'component-step'):
+        for mutation in ('commit', 'artifact', 'event', 'missing', 'duplicate', 'skip', 'failure', 'attempt', 'stale', 'future', 'workflow', 'repository', 'running', 'component-step', 'profile-step'):
             self.setUp()
             if mutation == 'commit': self.run['head_sha'] = 'b'*40
             if mutation == 'artifact': self.identity['candidate_sha'] = 'b'*40
@@ -68,6 +68,7 @@ class MainReuse(unittest.TestCase):
             if mutation == 'repository': self.run['repository']['full_name'] = 'other/repo'
             if mutation == 'running': self.run['status'] = 'in_progress'
             if mutation == 'component-step': next(job for job in self.jobs if component_steps(job['name']))['steps'][0]['conclusion']='skipped'
+            if mutation == 'profile-step': next(job for job in self.jobs if job['name']=='local-first-merge')['steps'][0]['conclusion']='skipped'
             with self.subTest(mutation=mutation):
                 with self.assertRaises(ValueError): self.verify()
                 self.assertEqual(reuse.select(self.api, self.repo, self.sha, 2, now=self.now,
@@ -96,7 +97,7 @@ class MainReuse(unittest.TestCase):
                   workflow_matches=True, now=self.now)
         self.assertTrue(evaluate(current, jobs, **args))
         self.assertEqual(evaluate(current, jobs, **args, reused_jobs=set(reuse.REUSED_JOBS)), [])
-        self.assertTrue(evaluate(current, jobs, **args, reused_jobs={'local-first-merge'}))
+        self.assertTrue(evaluate(current, jobs, **args, reused_jobs={'local-first-create-pr'}))
         self.assertTrue(evaluate(dict(current,event='merge_group'), jobs, **args, reused_jobs=set(reuse.REUSED_JOBS)))
         jobs[0]['run_attempt']=2
         self.assertTrue(evaluate(current, jobs, **args, reused_jobs=set(reuse.REUSED_JOBS)))
@@ -117,7 +118,7 @@ class MainReuse(unittest.TestCase):
             modified=copy.deepcopy(decision)
             if mutation=='source-attempt': modified['source_run_attempt']=2
             if mutation=='candidate': modified['candidate_sha']='b'*40
-            if mutation=='job': modified['reused_jobs'].append('local-first-merge')
+            if mutation=='job': modified['reused_jobs'].append('local-first-create-pr')
             if mutation=='current-attempt': modified['run_attempt']=2
             if mutation=='source-id': modified['source_run_id']=2
             raw=self.decision_archive(modified)

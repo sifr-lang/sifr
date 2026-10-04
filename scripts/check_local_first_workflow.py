@@ -52,9 +52,17 @@ def validate(document: dict) -> list[str]:
                and "if" not in step and not step.get("continue-on-error") for step in select.get("steps", [])):
         errors.append("selection must execute the canonical commit-bound selector")
     if not any(step.get("run") == 'bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"'
-               and "if" not in step and not step.get("continue-on-error", False)
-               for step in profile["steps"]):
-        errors.append("every selected profile must execute the authoritative runner")
+               and step.get('if') == "needs.validation-selection.outputs.reuse != 'true'" and not step.get('continue-on-error', False)
+               for step in profile['steps']):
+        errors.append("every fresh selected profile must execute the authoritative runner")
+    for step in profile['steps']:
+        expected_condition = ("needs.validation-selection.outputs.reuse == 'true'"
+            if step.get('name') == 'Record exact-commit correctness reuse'
+            else "needs.validation-selection.outputs.reuse != 'true'")
+        if step.get('if') != expected_condition or step.get('continue-on-error'):
+            errors.append('profile steps require complete exact-commit reuse or fresh blocking execution')
+    if not any(step.get('name') == 'Record exact-commit correctness reuse' for step in profile['steps']):
+        errors.append('profile reuse requires its explicit current marker')
     for name, preparation in (
         ("smoke-fuzz-property", "uv run --project verification --locked python -m sifr_verify.ci_smoke_setup"),
         ("compiler-component-targets", 'cargo fetch --locked'),
@@ -178,7 +186,7 @@ def main() -> None:
     narrowed["jobs"]["local-first-profiles"]["strategy"]["matrix"]["profile"] = ["create-pr"]
     assert any("candidate-bound selector" in error for error in validate(narrowed))
     wrong_checkout = copy.deepcopy(document)
-    wrong_checkout["jobs"]["local-first-profiles"]["steps"][0]["with"]["ref"] = "main"
+    wrong_checkout["jobs"]["local-first-profiles"]["steps"][1]["with"]["ref"] = "main"
     assert any("actual candidate" in error for error in validate(wrong_checkout))
     skipped = copy.deepcopy(document)
     for step in skipped["jobs"]["local-first-profiles"]["steps"]:

@@ -107,26 +107,35 @@ jobs:
       matrix:
         profile: ${{ fromJSON(needs.validation-selection.outputs.profiles) }}
     steps:
+      - name: Record exact-commit correctness reuse
+        if: needs.validation-selection.outputs.reuse == 'true'
+        run: echo 'Complete merge validation reused from independently verified exact-commit pre-merge evidence'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.validation-selection.outputs.reuse != 'true'
         with:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
           ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
+        if: needs.validation-selection.outputs.reuse != 'true'
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        if: needs.validation-selection.outputs.reuse != 'true'
         with:
           version-file: verification/pyproject.toml
           checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
       - name: Install canonical Python interpreter
+        if: needs.validation-selection.outputs.reuse != 'true'
         run: uv python install 3.14.7
       - name: Provision Linux host-tool confinement
+        if: needs.validation-selection.outputs.reuse != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install --yes bubblewrap util-linux
           bwrap --version
           prlimit --version
       - name: Run local-first profile
+        if: needs.validation-selection.outputs.reuse != 'true'
         run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
 
   smoke-fuzz-property:
