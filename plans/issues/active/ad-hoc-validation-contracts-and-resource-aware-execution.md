@@ -1,5 +1,70 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M2/M5 physical Darwin temporary storage — prospective bounded correction
+
+The standard Intel attempt on `ba2f15181cc800d360b8184869c4e1e6a7ee5389`
+failed before compilation: 9,250,066,432 bytes available versus the existing
+9,663,676,416-byte admission. Its official retained ZIP SHA-256 is
+`c91995e44c72bd1956b65294e93aef5010d6ee832496efe4625a8b887cafb8b7`.
+Its raw disk facts identify `$RUNNER_TEMP` as physical APFS on SATA `disk0s2`,
+but do not establish the inherited compiler/package temporary paths. Preserve
+that failed observation, its empty command inventory and zero runtime assertions.
+
+Own the handed-off sparse `/workspace/sifr-validation-pr-merge-binding` on
+`codex/validation-native-physical-temp-20261004`, based on reviewed M3 candidate
+`d10121898a904320514fa5b7e867449c755f6095`. The full ba2 checkout and its running
+gate remain untouched. Deliver through existing draft #4332 after focused checks,
+exact scoped review and coordinator integration. This item performs no broad
+compiler build, hosted dispatch, performance capture or remote update.
+
+For the trusted pinned Darwin preparation recipe, bind package/sort/Python and
+Rust temporary APIs (`TMPDIR`, `TMP`, `TEMP`, `RUSTC_TMPDIR`), the Sifr metadata
+cache and Clang module cache to private owned output paths. Bind the offline Cargo
+target and canonical Cargo home. Close Python's cached parent tempfile choice and
+disable later parent/child bytecode writes. Inspect Cargo's source, ancestor and
+home configurations and reject unknown configuration or known external tool/path
+overrides. Recheck actual physical backing stores and same-volume identities for
+source, output, temporary/cache roots and existing Cargo write paths; reject links,
+foreign nested mounts and unknown storage. This is known-path accounting for
+trusted inputs, not adversarial filesystem containment or a new sandbox.
+
+Keep the 6 GiB aggregate prospective process allowance and 2 GiB memory reserve.
+Move the full 1 GiB temporary allowance to physical disk growth, covering package
+temporary files, metadata/Clang caches and additional offline Cargo cache writes:
+3.5 GiB disk growth + 0.25 GiB retained copy + unchanged 2 GiB disk reserve.
+Keep the existing disk floor, worker selection, native assertions and deadlines.
+The resulting memory admission is 8 GiB; the historical snapshot's arithmetic
+surplus of 660,131,840 bytes does not admit a future attempt or establish a pass.
+Linux and owned recovery retain their allocations and process behavior. Include
+the new helper in producer identities and independently recompute storage evidence
+and admission when consuming a Darwin candidate receipt.
+
+Existing M2 acceptance requires prospective per-stage allocation/reserves, explicit
+capacity failures and owned cleanup. The owned-descendant continuation below and
+`verification/README.md` explicitly retain session-group teardown outside Linux.
+No Darwin hard memory limit, aggregate RSS enforcement or escape-proof custody is
+added or claimed. Physical files still cause cache/dirty-page pressure. The prior
+child-RSS figures are not cold Darwin process-tree peaks; no hardware minimum is
+inferred. ARM's observed 2.97 GiB availability still cannot admit this recipe.
+
+Named validation: real parent/child temporary-file and environment controls;
+Cargo/config, link/nested-mount/unknown-topology and private-root negatives;
+exact conserved allocation and observed Intel/ARM admission boundaries; independent
+candidate receipt/path/config/accounting/producer mutation controls; existing native
+candidate, capacity, diagnostic, recovery and dependency controls; affected workflow
+and resource contracts; sparse-source file-size and diff checks; exact-candidate
+read-only Opus review. Required full candidate gates and actual native qualification
+remain with the final integration; this bounded item supplies neither.
+
+Focused controls pass: 40 enrolled native controls (11 new storage/receipt/path
+controls), six directly selected resource-accounting controls, workflow contracts,
+uv 0.12.10 invariant (six pins/eight setup steps), sparse-source file-size guard
+(370 files) and diff check. Initial broader resource-class loading exposed missing
+unrelated sparse manifests; those failed observations are retained and are not a
+full resource-suite pass. External evidence lives in
+`/workspace/validation-work/evidence/native-physical-temp-20261004`.
+Exact-candidate review is pending; no actual Darwin execution is claimed.
+
 ## M3 current PR head/base binding — prospective rescope
 
 Hosted run `37202944076` reported head `98c248a71`, but the retained job log

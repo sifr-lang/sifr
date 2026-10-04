@@ -31,7 +31,8 @@ def inspect(root,previous,tools,target):
                    stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=30)
     producers=old['producer_sha256']
     if set(producers) not in ({'native_candidate.py','native_capacity.py'},
-                             {'native_candidate.py','native_capacity.py','native_recovery.py'}):
+                             {'native_candidate.py','native_capacity.py','native_recovery.py'},
+                             {'native_candidate.py','native_capacity.py','native_recovery.py','native_preparation_storage.py'}):
         raise ValueError('prior native producer inventory is unknown')
     for name,sha in producers.items():
         raw=subprocess.check_output(['git','show',old['source_commit']+':verification/areas/sysroot_release/'+name],cwd=root,timeout=30)

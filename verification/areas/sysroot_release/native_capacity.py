@@ -52,6 +52,29 @@ def apfs_store_devices(storage):
     return devices
 
 
+def storage(path):
+    """Physical Darwin storage authority, reusable for each actual write root."""
+    devices=subprocess.check_output(['df','-P',str(path)],text=True,timeout=30).splitlines()
+    if len(devices)<2 or not devices[-1].split():
+        raise ValueError('native Darwin storage device is unavailable')
+    device=devices[-1].split()[0]
+    if not device.startswith('/dev/'):
+        raise ValueError('native Darwin storage device is unavailable')
+    storage=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',device],timeout=30))
+    filesystem=storage.get('FilesystemType')
+    backing=[]
+    if filesystem=='apfs':
+        for store_device in apfs_store_devices(storage):
+            info=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',store_device],timeout=30))
+            if not known_apfs_store(info,store_device):
+                raise ValueError('unknown native Darwin build storage memory authority')
+            backing.append(info)
+    elif filesystem!='hfs' or storage.get('BusProtocol') not in PHYSICAL_BUSES:
+        raise ValueError('unknown native Darwin build storage memory authority')
+    return {'storage_device':device,'filesystem':filesystem,
+            'volume_bus_protocol':storage.get('BusProtocol'),'apfs_backing_stores':backing}
+
+
 def resources(path):
     if platform.system() == 'Linux':
         return discover(disk_path=path)
@@ -74,24 +97,6 @@ def resources(path):
     limit=sysctl('hw.memsize');cpus=sysctl('hw.logicalcpu')
     if page<=0 or limit<=0 or cpus<=0 or not 0<=available<=limit:
         raise ValueError('native Darwin capacity is invalid')
-    devices=subprocess.check_output(['df','-P',str(path)],text=True,timeout=30).splitlines()
-    if len(devices)<2 or not devices[-1].split():
-        raise ValueError('native Darwin storage device is unavailable')
-    device=devices[-1].split()[0]
-    if not device.startswith('/dev/'):
-        raise ValueError('native Darwin storage device is unavailable')
-    storage=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',device],timeout=30))
-    filesystem=storage.get('FilesystemType')
-    backing=[]
-    if filesystem=='apfs':
-        for store_device in apfs_store_devices(storage):
-            info=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',store_device],timeout=30))
-            if not known_apfs_store(info,store_device):
-                raise ValueError('unknown native Darwin build storage memory authority')
-            backing.append(info)
-    elif filesystem!='hfs' or storage.get('BusProtocol') not in PHYSICAL_BUSES:
-        raise ValueError('unknown native Darwin build storage memory authority')
+    disk=storage(path)
     return Resources(cpus,float(cpus),limit,available,shutil.disk_usage(path).free,{},[],
-                     {'capacity_authority':'declared-dedicated-darwin-vm-stat','vm_stat':text,
-                      'storage_device':device,'filesystem':filesystem,
-                      'volume_bus_protocol':storage.get('BusProtocol'),'apfs_backing_stores':backing},False)
+                     {'capacity_authority':'declared-dedicated-darwin-vm-stat','vm_stat':text,**disk},False)

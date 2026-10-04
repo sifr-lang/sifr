@@ -1,5 +1,6 @@
 """Prepare an optimized actual native candidate bundle; no release publication."""
 from datetime import datetime,timezone
+from contextlib import ExitStack
 import ast
 import hashlib
 import json
@@ -24,8 +25,13 @@ from sifr_verify.process_disk_budget import DiskBudget
 from qualify_stable_target import current_host_target
 from native_capacity import resources
 import native_recovery
+import native_preparation_storage
 from published_predecessor import POLICY,digest,select
 from verify_release_archive import verify_archive
+
+
+def producer_names(target):
+    return ('native_candidate.py','native_capacity.py','native_recovery.py','native_preparation_storage.py')
 
 
 def tool_identity():
@@ -68,10 +74,10 @@ def qualification_version(root):
 def prepare(root,output,*,continue_owned_preparation=None):
     root=root.resolve(strict=True)
     source=clean_source(root)
-    for name in ('native_candidate.py','native_capacity.py','native_recovery.py'):
+    target=current_host_target()
+    for name in producer_names(target):
         if digest(root/'verification/areas/sysroot_release'/name)!=digest(Path(__file__).parent/name):
             raise ValueError('native preparation tooling differs from the source candidate')
-    target=current_host_target()
     version=qualification_version(root)
     cargo=shutil.which('cargo')
     if not cargo: raise ValueError('native Cargo unavailable')
@@ -89,21 +95,27 @@ def prepare(root,output,*,continue_owned_preparation=None):
         'version_role':'qualification-only',
         'source_package_version':tomllib.loads((root/'crates/sifr/Cargo.toml').read_text())['package']['version'],
         'qualification_version_sha256':digest(root/'verification/areas/sysroot_release/package_build.py'),
-        'producer_sha256':{name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py','native_recovery.py')},
+        'producer_sha256':{name:digest(Path(__file__).parent/name) for name in producer_names(target)},
         'tools':None,'started_utc':datetime.now(timezone.utc).isoformat(),'commands':[]}
     def save(): (output/'state.json').write_text(json.dumps(report,indent=2)+'\n')
-    save();lease=None
+    save();lease=None;storage_context=ExitStack()
     try:
         report['tools']=tool_identity();cargo=report['tools']['cargo']['path'];save()
         recovery=None
         if continue_owned_preparation is not None:
             if not sys.platform.startswith('linux'): raise ValueError('owned native continuation requires Linux leases')
             recovery=native_recovery.inspect(root,continue_owned_preparation,report['tools'],target)
+        physical=target.endswith('-apple-darwin')
+        if physical:
+            report['storage_policy']=native_preparation_storage.prepare(root,output,os.environ)
+            storage_context.enter_context(native_preparation_storage.parent_temporary(report['storage_policy']))
         capacity=resources(output)
         if recovery and Path(recovery['root']).stat().st_dev!=output.stat().st_dev:
             raise ValueError('native continuation graph must share the admitted output filesystem')
-        report['admission']=admit(capacity,dict(disk_growth_bytes=1073741824 if recovery else 2684354560,retained_copy_bytes=268435456,
-            disk_reserve_bytes=2147483648,memory_peak_bytes=6442450944,tmpfs_growth_bytes=1073741824,memory_reserve_bytes=2147483648))
+        report['admission']=admit(capacity,native_preparation_storage.requirements(physical=physical,recovery=bool(recovery)))
+        if physical:
+            native_preparation_storage.check(report['storage_policy'],report['admission'],root,output,os.environ)
+        save()
         owner=str(uuid.uuid4())
         lease=(native_recovery.acquire(recovery) if recovery else GraphLease(output,'target/sysroot_release/cargo-target',owner).acquire({'native-bundle'})) if sys.platform.startswith('linux') else None
         graph=Path(recovery['graph']) if recovery else output/'target/sysroot_release/cargo-target';graph.mkdir(parents=True,exist_ok=True)
@@ -132,6 +144,7 @@ os.execv(os.environ['NATIVE_REAL_CARGO'],[os.environ['NATIVE_REAL_CARGO'],*args]
             'CARGO_INCREMENTAL':'0','CARGO_BUILD_JOBS':str(worker_limit(capacity,2)),
             'SIFR_VERIFY_DISK_FLOOR_BYTES':str(floor),
             'SIFR_VERIFY_DISK_FLOOR_PATH':str(output)}
+        if physical: env.update(report['storage_policy']['environment'])
         def run(label,command):
             result=execute(command,cwd=root,env=env,deadline_seconds=7200,limit_bytes=32*1024**2)
             paths={}
@@ -185,7 +198,10 @@ os.execv(os.environ['NATIVE_REAL_CARGO'],[os.environ['NATIVE_REAL_CARGO'],*args]
     except BaseException as error:
         report.update(status='failed',failure=type(error).__name__+': '+str(error),finished_utc=datetime.now(timezone.utc).isoformat());save();raise
     finally:
-        if lease: lease.close()
+        try:
+            if lease: lease.close()
+        finally:
+            storage_context.close()
     return report
 
 
@@ -204,7 +220,7 @@ def check(path,*,_pending=False):
             or report['qualification_version_sha256']!=digest(root/'verification/areas/sysroot_release/package_build.py')
             or report['cargo_lock_sha256']!=digest(root/'Cargo.lock')
             or report['tools']!=tool_identity()
-            or report['producer_sha256']!={name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py','native_recovery.py')}):
+            or report['producer_sha256']!={name:digest(Path(__file__).parent/name) for name in producer_names(report['target'])}):
         raise ValueError('native candidate preparation identity differs')
     for name,value in report['producer_sha256'].items():
         if digest(root/'verification/areas/sysroot_release'/name)!=value:
@@ -214,6 +230,12 @@ def check(path,*,_pending=False):
     if start.utcoffset() is None or finish.utcoffset() is None or not start<=finish<=now or (now-finish).total_seconds()>86400:
         raise ValueError('native candidate preparation is stale or incomplete')
     directory=path.parent
+    if report['target'].endswith('-apple-darwin'):
+        if 'storage_policy' not in report or 'admission' not in report:
+            raise ValueError('native Darwin preparation needs its physical storage admission')
+        native_preparation_storage.check(report['storage_policy'],report['admission'],root,directory,os.environ)
+    elif 'storage_policy' in report:
+        raise ValueError('physical Darwin storage policy cannot authorize another target')
     graph=(native_recovery.check(report['graph_recovery'],directory,root,report['tools'],report['target'])
            if 'graph_recovery' in report else directory/'target/sysroot_release/cargo-target')
     expected_commands=commands(root,directory,report['version'],report['target'])
