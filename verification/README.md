@@ -277,6 +277,20 @@ resource observations; estimates can fail closed and do not promise capacity.
 Generated compiler preparation and assertions both use offline Cargo after
 separate dependency acquisition. Quantitative performance remains last.
 
+The exact `area_sql_platform` selection containing the declared
+`build-qualification` suite uses `sql-build-qualification` admission and disk
+monitoring. Its prospective growth is 6 GiB: compact retains its 2 GiB reserve
+(8 GiB entry), and normal cloud retains its 8 GiB reserve (14 GiB entry).
+The monitored floor is the greater of entry free space minus 6 GiB, the policy
+reserve plus 1 GiB stopping headroom, and any stricter caller floor. Thus an
+8 GiB compact entry allows at most 5 GiB growth before the 3 GiB floor.
+Memory remains 6 GiB resident plus 2 GiB reserve. The SQL tool's independent
+8 GiB clean-build entry guard, native A/reused-A/independent-B commands,
+incremental setting, cases and deadlines stay unchanged. Other or unknown
+selections keep their existing allocations and monitoring behavior. This models
+the existing entry envelope prospectively; actual SQL peak growth, cold fit and
+full acceptance remain unmeasured. It grants no assertion reuse or graph cleanup.
+
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to
 their existing Rust-check, snapshot, formatting and quality obligations. Their

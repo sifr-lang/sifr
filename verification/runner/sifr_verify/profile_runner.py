@@ -13,6 +13,7 @@ from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
     prepare_cargo_cache as prepare_profile_cargo_cache,
 )
+from .assertion_resource_forecast import assertion_allocation
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
@@ -245,7 +246,8 @@ class ProfileRunner:
         schedule = getattr(self, 'compact_schedule', None)
         if schedule is None:
             return self.execute_step(name,callback)
-        return schedule.step(name, callback, allocation='remaining-assertions', monitor_disk=True)
+        return schedule.step(name, callback, allocation=assertion_allocation(name, self.profile),
+                             monitor_disk=True)
 
     def block_step(self, name: str, prerequisite: str) -> None:
         print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")

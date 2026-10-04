@@ -17,6 +17,7 @@ from .sysroot_preparation import producer, protected_compilers
 from .profile_commands import CommandFailed
 from .cargo_setup import acquire_cargo_dependencies
 from .graph_retirement import GRAPH_PATHS, GraphLease
+from .sql_resource_checks import SqlResourceTests
 from .profile_runner import ProfileRunner
 from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit, memory_backed_storage
 
@@ -332,7 +333,7 @@ class ScheduleTests(unittest.TestCase):
 
 def policy_checks():
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (ResourceTests, RetirementTests, ScheduleTests))
+                               for case in (ResourceTests, RetirementTests, ScheduleTests, SqlResourceTests))
     result = unittest.TestResult()
     suite.run(result)
     if not result.wasSuccessful():

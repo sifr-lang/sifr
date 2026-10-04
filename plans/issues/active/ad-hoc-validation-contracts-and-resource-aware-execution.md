@@ -2700,3 +2700,38 @@ hosted build. Initial scoped review was satisfied. Enroll the five control suite
 in the existing executable native-preparation contract; this changes no helper
 mechanism or native qualification assertion. Enrollment review and cold hosted
 execution remain pending.
+
+## M2 selected SQL clean-build allocation — 2026-10-04
+
+Both create-pr and merge/cloud select SQL `build-qualification`. The frozen
+`eec080d4f8892f88934fc14d5e7e4ced4f855187` scheduler classifies that cold
+assertion with generic remaining assertions: compact create-pr imposes a one-GiB
+growth forecast, while staged cloud admits the generic allocation without a new
+area growth floor. No actual SQL failure or pass was observed in the stopped
+whole-gate attempt; its earlier failed Python preparation evidence is retained.
+
+The bounded prospective correction shares one exact selection authority between
+both dispatchers and gives this declared SQL suite a six-GiB growth allocation.
+Compact retains the two-GiB disk reserve, matching the existing eight-GiB entry
+guard; normal cloud retains its eight-GiB reserve. Monitoring retains the reserve
+plus one-GiB stopping headroom and stricter inherited floors, so eight-GiB compact
+entry permits five GiB growth before the three-GiB floor. Memory remains six GiB
+plus two GiB reserve. Generic, unknown and non-build selections stay unchanged.
+All commands, cases, incremental settings, timeouts and the SQL tool's own
+entry guard remain unchanged. This is an explicit envelope, not measured SQL
+growth, proof of cold fit, or a new hardware minimum.
+
+Focused controls cover canonical create-pr/merge/cloud selection, unknown and
+non-build selection, both dispatcher paths, unchanged suite execution, compact
+and normal-cloud reserves, admission boundaries, monitored exhaustion,
+infrastructure classification and caller-floor/deadline restoration. All 34
+focused SQL, cache, compact, admission and scheduling controls pass; the source
+file-size guard and diff checks pass. Scoped review and full candidate acceptance
+remain pending. Disk capacity still blocks
+the next long gate: generated preparation requires six GiB free and SQL requires
+eight GiB under compact policy; the latest approximately five-GiB observation
+cannot qualify either stage. No full build or performance capture ran here.
+
+SQL already retires clean A before creating clean B. Broader generated-graph
+consumer retirement and SQL temporary-directory failure custody are separate
+follow-ups; this item changes neither lifetime scheduling nor cleanup semantics.

@@ -13,6 +13,7 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .assertion_resource_forecast import SQL_BUILD_ALLOCATION, assertion_allocation
 from .cargo_setup import (acquire_cargo_dependencies, enable_offline_cargo,
                           prepare_remaining_graphs)
 from .execution_evidence import write_evidence
@@ -68,7 +69,8 @@ def load_schedule(root: Path = REPO_ROOT, mode: str = "cloud") -> dict:
     expected = {"dependency-acquisition", "sysroot-source", "sysroot-package", "sysroot-assertions",
                 "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions",
                 "sysroot-metadata-cached", "preparation-coordination", "preparation-command-cold",
-                "preparation-command-cached", "generated-preparation", "sysroot-structural-assertions"}
+                "preparation-command-cached", "generated-preparation", "sysroot-structural-assertions",
+                SQL_BUILD_ALLOCATION}
     if policy.get("schema_version") != 1 or set(policy.get("stages", {})) != expected:
         raise ResourceError("cloud resource schedule is incomplete", "unavailable")
     for field in ("cold_preparation_deadline_seconds", "assertion_command_deadline_seconds"):
@@ -280,9 +282,10 @@ def run_staged_cloud(runner, early: set[str]) -> int:
     for area in profile["selected_areas"]:
         if area["area"] == "sysroot_release":
             continue
-        status = schedule.step(step_name("area", area["area"]),
-                               lambda a=area: runner.run_area(a["area"], a["suites"]),
-                               allocation="remaining-assertions")
+        name = step_name("area", area["area"])
+        allocation = assertion_allocation(name, profile)
+        status = schedule.step(name, lambda a=area: runner.run_area(a["area"], a["suites"]),
+                               allocation=allocation, monitor_disk=allocation == SQL_BUILD_ALLOCATION)
         failed = failed or status
         if status and not runner.no_fail_fast:
             return failed

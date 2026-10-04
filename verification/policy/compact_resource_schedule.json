@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations. Partial library-cache hints use the existing one-GiB cached allocation after actual metadata structural test preparation on the owned compiler cache added 869,552,128 net filesystem bytes in 457.74s. Unknown remaining commands use a prospective two-GiB growth attempt with the unchanged reserve/floor; Cargo always executes and wrong forecasts fail closed. Structural-only assertions at native candidate 15f3944dba9cce1702622684d455abc8144cd369 passed in 28.72s with maximum process RSS 247361536 bytes and zero swaps (metadata-structural-15f3944db-v3). The exact structural-only compact selection prospectively allows two GiB resident peak, 512 MiB other tmpfs growth, 256 MiB filesystem growth, and the unchanged reserves; all broader or unknown selections keep the generic allocation. Preparation and assertion commands always execute. Generated materialization/fetch has its own allocation regardless of outer CLI presence: the 90b2b3f57 attempt exhausted the old one-GiB forecast while fetching a new revision. Compact prospectively allows four GiB for the observed approximately 1.8-GiB cold outer compiler, 1.5-GiB Git checkout/submodules and 0.6-GiB native/materialization caches; cloud retains its six-GiB cold-command growth. These are monitored forecasts, not proof of cache completeness or a capacity guarantee; all existing reserves, memory and deadlines remain unchanged.",
+  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations. Partial library-cache hints use the existing one-GiB cached allocation after actual metadata structural test preparation on the owned compiler cache added 869,552,128 net filesystem bytes in 457.74s. Unknown remaining commands use a prospective two-GiB growth attempt with the unchanged reserve/floor; Cargo always executes and wrong forecasts fail closed. Structural-only assertions at native candidate 15f3944dba9cce1702622684d455abc8144cd369 passed in 28.72s with maximum process RSS 247361536 bytes and zero swaps (metadata-structural-15f3944db-v3). The exact structural-only compact selection prospectively allows two GiB resident peak, 512 MiB other tmpfs growth, 256 MiB filesystem growth, and the unchanged reserves; all broader or unknown selections keep the generic allocation. Preparation and assertion commands always execute. Generated materialization/fetch has its own allocation regardless of outer CLI presence: the 90b2b3f57 attempt exhausted the old one-GiB forecast while fetching a new revision. Compact prospectively allows four GiB for the observed approximately 1.8-GiB cold outer compiler, 1.5-GiB Git checkout/submodules and 0.6-GiB native/materialization caches; cloud retains its six-GiB cold-command growth. These are monitored forecasts, not proof of cache completeness or a capacity guarantee; all existing reserves, memory and deadlines remain unchanged. Selected SQL build-qualification has a named six-GiB growth allocation with the unchanged policy reserve: compact admission is eight GiB, matching the existing inner clean-build entry guard; normal cloud admission is fourteen GiB. Monitoring retains reserve plus one GiB stopping headroom and stricter inherited floors. This is a prospective envelope, not measured SQL growth or proof of fit.",
   "cold_preparation_deadline_seconds": 7200,
   "assertion_command_deadline_seconds": 2400,
   "stages": {
@@ -110,6 +110,14 @@
     },
     "generated-preparation": {
       "disk_growth_bytes": 4294967296,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sql-build-qualification": {
+      "disk_growth_bytes": 6442450944,
       "retained_copy_bytes": 0,
       "disk_reserve_bytes": 2147483648,
       "memory_peak_bytes": 6442450944,

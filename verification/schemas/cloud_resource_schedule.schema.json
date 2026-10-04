@@ -40,7 +40,8 @@
         "preparation-command-cold",
         "preparation-command-cached",
         "sysroot-structural-assertions",
-        "generated-preparation"
+        "generated-preparation",
+        "sql-build-qualification"
       ],
       "additionalProperties": false,
       "properties": {
@@ -461,6 +462,38 @@
           }
         },
         "generated-preparation": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sql-build-qualification": {
           "type": "object",
           "required": [
             "disk_growth_bytes",

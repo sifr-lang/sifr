@@ -14,7 +14,7 @@ the existing limit and host availability; dirty/writeback and unevictable bytes
 are excluded. File cache is never an additional capacity allowance.
 Each disk admission includes additional
 allocation, retained copies and an 8 GiB reserve; the existing SQL clean-build
-reserve is preserved. Workers cannot exceed effective CPU quota/affinity.
+entry guard is preserved. Workers cannot exceed effective CPU quota/affinity.
 
 Cold preparation has a prospective two-hour safety deadline per named stage;
 assertions retain a forty-minute command safety deadline and their existing
@@ -70,3 +70,19 @@ Never convert missing results, infrastructure failures, compilation-only work or
 an inconclusive required performance result into a phase-qualified pass. Preserve
 earlier failures and change allocation/deadline policy only prospectively, with
 the recorded cause and new candidate identity.
+
+## Selected SQL clean-build allocation
+
+The exact `area_sql_platform` selection containing the declared
+`build-qualification` suite uses `sql-build-qualification` admission and disk
+monitoring. Its prospective growth is 6 GiB: compact retains its 2 GiB reserve
+(8 GiB entry), and normal cloud retains its 8 GiB reserve (14 GiB entry).
+The monitored floor is the greater of entry free space minus 6 GiB, the policy
+reserve plus 1 GiB stopping headroom, and any stricter caller floor. Thus an
+8 GiB compact entry allows at most 5 GiB growth before the 3 GiB floor.
+Memory remains 6 GiB resident plus 2 GiB reserve. The SQL tool's independent
+8 GiB clean-build entry guard, native A/reused-A/independent-B commands,
+incremental setting, cases and deadlines stay unchanged. Other or unknown
+selections keep their existing allocations and monitoring behavior. This models
+the existing entry envelope prospectively; actual SQL peak growth, cold fit and
+full acceptance remain unmeasured. It grants no assertion reuse or graph cleanup.
