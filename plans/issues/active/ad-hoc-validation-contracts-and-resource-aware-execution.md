@@ -4,6 +4,26 @@ status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
 
+## M6 input: shared-VM final gate command — 2026-10-04
+
+Document the existing canonical `cloud --require-performance` route as the final
+merge acceptance command on a shared Linux VM. Live resolved profile comparison
+found only `name` and `description` differ from `merge`: both select 106 suites,
+the same guardrails, first-party crate tests, E2E corpus, toolchain steps and skip
+rules. Four focused controls verified selection equality and blocking outcomes
+for missing/inconclusive performance, regression and failed correctness. This
+records selection/control evidence, with zero runtime qualification assertions;
+it does not claim full candidate gate execution.
+
+The command is `scripts/run_all_tests.sh --profile cloud --require-performance
+--compact-resources`, with `SIFR_CLOUD_PERFORMANCE_RECEIPT` naming the complete
+fresh candidate-bound independently checked receipt. It uses the existing
+reviewed shared-cloud numerical contract and leaves the controlled-host `merge`
+route intact. Implementation PR gates, native platform requirements, external
+ownership and protected enforcement remain required. The current integration
+source is still frozen for its original 65-case/5120-pair capture; no partial
+capture or configuration-mismatch preparation qualifies performance.
+
 ## Current bounded item: native APFS backing-store authority — 2026-10-04
 
 The hosted ARM Darwin volume reports APFS with an empty volume bus field and an
