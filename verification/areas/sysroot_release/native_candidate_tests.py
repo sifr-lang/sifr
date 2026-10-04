@@ -24,7 +24,7 @@ class CandidateChecks(unittest.TestCase):
         (self.root/'crates/sifr/Cargo.toml').write_text('[package]\nname="sifr"\nversion="0.0.0"\n')
         (self.root/'Cargo.lock').write_text('fixture locked input\n')
         producer=self.root/'verification/areas/sysroot_release';producer.mkdir(parents=True)
-        for name in ('native_candidate.py','native_capacity.py'):
+        for name in ('native_candidate.py','native_capacity.py','native_recovery.py'):
             shutil.copy2(Path(candidate.__file__).parent/name,producer/name)
         shutil.copy2(Path(candidate.__file__).parent/'package_build.py',producer/'package_build.py')
         def git(*argv):
@@ -60,7 +60,7 @@ class CandidateChecks(unittest.TestCase):
             'version':self.version,'version_role':'qualification-only','source_package_version':'0.0.0',
             'qualification_version_sha256':candidate.digest(producer/'package_build.py'),
             'target':self.target,'tools':self.tools,
-            'producer_sha256':{name:candidate.digest(producer/name) for name in ('native_candidate.py','native_capacity.py')},
+            'producer_sha256':{name:candidate.digest(producer/name) for name in ('native_candidate.py','native_capacity.py','native_recovery.py')},
             'cargo_lock_sha256':candidate.digest(self.root/'Cargo.lock'),'started_utc':now,'finished_utc':now,
             'commands':commands,'cargo_artifact':artifact,'cargo_events_sha256':candidate.digest(events),
             'archive':{'path':str(archive),'sha256':candidate.digest(archive)},
