@@ -10,6 +10,241 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbc trait declaration-header/source adjudication proposal (2026-10-04)
+
+**Documentation adjudication delivered as a proposal; contract change pending new
+explicit human authorization. HBC remains needs-new-scope, unaccepted and inactive;
+full H03a1/adapter remains dependency-blocked.** This entry controls the next action
+above the preserved historical records. It neither changes live source admission
+nor marks HBC ready. There is no separate item ID. The authorized investigation
+starts from authenticated origin/main `d097a0957f51e0633b2365497148ce57a774bb1f`,
+after stop #4334 and separate recovery receipt #4335. HBS/HBF #4238/#4258 and the
+human-approved HBIP amendment #4273/#4274, complete proof #4306
+(`d3e46f896ee0b3def5f1695cad0042f2f64b0954`) and receipt #4331 remain dependencies
+already satisfied. HBIP remains `semantic_export: false`; original rustc AttrId,
+attachment, consumed lineage and pre-consumption survival remain unclaimed.
+
+### Read-only finding: local item spans and dependency metadata are different APIs
+
+At the unchanged Rust 1.98.1 commit
+`48a229ceaefd4985c50990b14116b6d856af0985`, the local `def_span` provider calls
+`hir_span(local_def_id_to_hir_id(def_id))`. The trait arm ends at the last bound or
+at `generics.span`, subject to its syntax-context ancestor rule. Separately,
+`hir_span_with_body(HirId)` returns `Item.span`; local `Item` retains `owner_id`,
+`kind` and `span`. Thus an original local HIR trait **does have a public body/item
+span route**. `local_def_id_to_hir_id` and `hir_node_by_def_id` require a local
+identity. Availability is established by source inspection, not a new capture or
+proof that this alternative meets every source/context obligation.
+
+For external traits, the inspected metadata encoder stores `tcx.def_span(local_id)`
+in the `def_span` table (traits are included), and separately stores the identifier
+span. The external query reads those tables. That route does not expose a second
+whole-trait item span. The actual caller's FnOnce/Debug DefIds refer to core, not
+local HIR owners. Calling the local body API with a dependency identity, making a
+source-text hull, or substituting an independently rebuilt core is not a justified
+way to recover the original compiler declaration extent. No authenticated original
+core invocation/local-HIR capture is supplied by these seven fixture records.
+This is a limit of the inspected routes and available evidence, **not a claim
+that every public compiler API lacks every trait body span**.
+
+The unchanged rust-analyzer commit
+`03fcb77246f2568adb0e9b2fa60d19c6cc1686f4`, tree
+`0081a116ddfb9f5c3673eba97df030bea907106f`, exposes `HasSource<Trait, Ast=ast::Trait>`,
+`Semantics::resolve_trait`, `source` and `to_def`/`to_def2`. The native `Trait`
+contains normal name/generic/bounds/visibility/attribute and associated-item-list
+structure. Its syntax tree exposes real descendants/tokens; the inspected generated
+Trait API supplies no separate `TRAIT_HEADER` AST node. These APIs can support a
+prospective exact token/subnode relation without changing the producer, API-6 server
+or pins; source availability is not an executed capability proof.
+
+The following official pinned links and inclusive source line ranges were checked
+against the installed source bytes. Each hash covers the **complete file**;
+`pinned-source-audit.json` also records a SHA-256 of each cited excerpt and its text.
+
+| Source and exact checked lines | Complete-file SHA-256 |
+| --- | --- |
+| [Rust HIR map: local identity 107–109, node 170–174, header helper 920–932, trait arm 990–1008, body API 1039–1048](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/hir/map.rs#L990-L1008) | `92b00217591cb74ff102081965dbec10ca6c307487fa8a0d1600d51472aa9563` |
+| [Rust local providers 452–464](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_middle/src/hir/mod.rs#L452-L464) | `881ff39a0137fcf6d5dcc573a960fcd591e576f9c26a7ee4fb3de173c3f6076a` |
+| [Rust Item 4589–4604](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_hir/src/hir.rs#L4589-L4604) | `3ddab2c542407fcc0cc2f7d21823dc9e026bf18fc4a0ed5b7ba2c607cb4cb26a` |
+| [Rust metadata encoder: Trait inclusion 894–904, span/identifier 1471–1485](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_metadata/src/rmeta/encoder.rs#L1471-L1485) | `150609d7720282abe294270fc81665f04805c7a7010b4185d3ee381a4293f6ab` |
+| [Rust metadata tables 417–426](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_metadata/src/rmeta/mod.rs#L417-L426) | `7602725805b681dc32358717dc21c3fccf59f3e4b0122677d4700aabfa7fc3fe` |
+| [Rust external queries 242–248](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/compiler/rustc_metadata/src/rmeta/decoder/cstore_impl.rs#L242-L248) | `f0b8bef3d76b39a06924947be0344b896dca1eca204a4bd114480536ecb483f1` |
+| [RA Trait source 202–207](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/has_source.rs#L202-L207) | `96d3f907143905ae7bb40329254e5e6d2814eed877e113cd59eb87c94b5cc6b6` |
+| [RA semantic APIs: resolve_trait 1714–1726, to_def 2121–2128, source 2165–2180](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/hir/src/semantics.rs#L1714-L1726) | `659cbc85cdb1ecd3960d34beb21cc9edbcc8a3fb16f728a8425bb28c56303303` |
+| [RA generated Trait 1798–1825](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/syntax/src/ast/generated/nodes.rs#L1798-L1825) | `74286188c61dd1c9fb0d06d9aeab88922dbf1105e154c4772fa38469f7318f83` |
+| [RA actual token traversal 197–211](https://github.com/rust-lang/rust-analyzer/blob/03fcb77246f2568adb0e9b2fa60d19c6cc1686f4/crates/syntax/src/validation.rs#L197-L211) | `493102d2c7332943433091746c89d69eb6ff843b8f534c17e9ae53aaafba5366` |
+| [FnOnce source 235–251, declaration line 242](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/ops/function.rs#L235-L251) | `35369957f4544972df85e2778f15714e3afc4f6a010049f18817aa85eda1521d` |
+| [Debug source 1046–1060, declaration line 1053](https://github.com/rust-lang/rust/blob/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/fmt/mod.rs#L1046-L1060) | `67c9bacb0202a1d75bb1332f9146a904a117fde03e05c6951919d14414196fd2` |
+
+### Authenticated original observations, not new qualification
+
+The original seven-file manifest below was reauthenticated read-only. The successful
+normal Cargo record contains status 0, an actual compiler-artifact event and
+build-finished success. The separate after-analysis capture has status 0 and the
+recorded caller raw hash; its arguments/cwd exactly match the original invocation,
+which has compiler status 0 and no analyzed `RUSTC_BOOTSTRAP`. The complete recorded
+owner inventory reconciles in order to 23 raw owners, 29 parameters, 20 binders,
+40 lifetime occurrences, five trait constraints and 80 types, including each
+owner's raw-record digest. This authenticates the saved observations; it does not
+requalify current artifact freshness or execute the capability assertions.
+
+All five original compiler/native relations and their independent native
+source/to-def roundtrips are retained. Offsets are half-open byte intervals:
+
+| Required relations | Actual compiler header | Native whole TRAIT | Native declaration without direct attrs | Exact Name |
+| --- | --- | --- | --- | --- |
+| first, second, Two method → core FnOnce | 8927..8962 | 6022..9298 | 8927..9298 | 8943..8949 |
+| BoundObject → core Debug | 42825..42854 | 39020..43726 | 42825..43726 | 42835..42840 |
+| BridgeObjectShapes → local BoundObject | 736..778 | 736..795 | 736..795 | 746..757 |
+
+FnOnce's actual compiler `StableCrateId(13883663866953777888)` and
+`DefPathHash(Fingerprint(13883663866953777888, 13488869136715765577))` remain
+independent authority. Debug has the same stable crate and hash second component
+`4925884201349351099`; local BoundObject has stable crate `9362986356028905341`
+and hash second component `13818939132221740313`. Raw IDs, owners, declaration,
+binder/use/index/depth and native identities are preserved, never filled from each
+other. The owned historical fixture source hash remains
+`6b1b5f4e10b3539308c702693892fcce7715aa740311259e195c1f30088064c0`, line 16.
+The exact raw header snippets match their source bytes. Header, whole node,
+declaration and Name remain distinct legitimate facts.
+
+### Proposed bounded amendment — pending authorization
+
+**Only proposed change:** for an actual shortened compiler **trait declaration
+header**, replace the requirement that its interval equal one whole native TRAIT
+or full declaration interval with an exact, role-labelled native token/subnode
+correspondence to that compiler-reported interval inside the independently
+resolved and roundtripped native trait. This changes the counterpart obligation in
+finite-original-authority rule 5 for this trait-header role only. It does not
+assert a new AST node, alter the compiler's interval, substitute the Name for the
+declaration, or change any semantic identity/constraint requirement. Existing
+exact whole-declaration correspondence remains binding for other span roles.
+The current live contract continues to reject the five mismatches until a human
+explicitly authorizes this amendment and a separate proof is delivered.
+
+A future implementation under that authorization must satisfy all of these:
+
+1. Capture the actual compiler stable crate/DefPathHash, declaration/owner/parent,
+   constraint, binder/use/index/depth facts and actual header and identifier spans
+   before projection. Identify the public API/capture role explicitly. Preserve an
+   actually available local item/body span separately; never relabel it as the
+   header or manufacture a dependency body span. Missing or ambiguous required
+   original facts stop. An unavailable dependency body span is explicitly recorded
+   as unavailable, never claimed verified or used to discharge a semantic fact.
+2. Independently resolve the trait from the native constraint path, obtain its
+   source and prove source-to-def equality to that native trait in the exact
+   authenticated crate/context. Relate the independent compiler resolved identity
+   through the existing authenticated package/crate/source relation. Require the
+   exact compiler/native identifier occurrence, header relation and trait source
+   together. Spelling, display paths, same Name alone, raw ID equality across
+   producers, or copying compiler identities into native records prove nothing.
+3. Before selecting the header interval, independently enumerate the full native
+   TRAIT's ordered tokens, trivia and subnodes with real kinds, byte intervals,
+   parent/child ancestry, ordinals and complete dispositions. Preserve whole-node,
+   declaration-without-direct-attrs and exact Name roles separately. The header
+   counterpart is a relation over existing elements, never a synthetic syntax
+   kind. Require exact first/last token boundaries and complete contiguous byte
+   coverage of the compiler-reported interval by actual tokens/trivia, exact text
+   from authenticated original bytes, and all contained subnodes with explicit
+   actual ancestors crossing the boundary. No clipping nontrivia tokens, inferred
+   brace endpoint, string search, broad enclosure, hull or nearest-node matching.
+   Unsupported boundaries stop rather than widening the span. Require unique
+   occurrence under the independently roundtripped trait; ambiguity rejects.
+4. Reconcile full native token/subnode inventories, including attributes, where
+   clauses, associated items and body elements outside the shorter header. They
+   remain source observations with their actual spans; native source coverage does
+   not claim that dependency compiler metadata supplied a whole-body span or
+   replace any required compiler semantic evidence. Preserve all original
+   declaration/parameter/binder/use/trait multisets and required source-kind
+   dispositions. No required owner, context, fixture, field or constraint is dropped.
+5. Preserve the accepted HBIP source/native attribute membership contract and all
+   independent compiler identity/transformed observations. Require exact
+   direct/inner/nested attribute kind/style/order, normalization/raw and official
+   bytes, CRLF/BOM/Unicode mapping, expansion/hygiene/include contexts and complete
+   token/subnode/owner correspondence. This amendment grants no additional AttrId,
+   attachment, consumed-lineage or survival claim and no semantic waiver.
+6. Bind the new closed role/relation records into the versioned isolated schema,
+   caller-held originals and preprojection inventories; reject obsolete, missing,
+   extra, duplicate, orphan or coordinated redigested records. Every consumer,
+   repeat, cache and publication checks original authority and all current
+   compiler/helper/runtime/RA/server, Cargo invocation/environment/cfg/features,
+   graph/lock/registry/source, normalization, extern/artifact/build-input/output,
+   capture stage and successful-control inputs. No accepted partial output.
+
+The best bounded proposal uses existing producer APIs with these additional exact
+source obligations. An unchanged-contract solution is **not established** across
+all five observed relations: the local body API is real but does not supply the
+original core metadata's missing whole-trait extent. Rebuilding core, changing pins
+or producers, guessing extent from associated items, or accepting containment is
+outside this decision. If the proposed exact relation cannot cover a required
+case without another obligation change, the proof worker must record it and stop.
+
+### Required prospective proof and order
+
+After explicit authorization is recorded canonically with a separate receipt,
+separately assign complete H03a1hbc in its already bounded helper/schema/consumer/
+fixture/script scope. No code, fixture, compiler/helper invocation, capability
+experiment, Cargo gate, target cleanup, adapter/metric/SQL/V01/Q01 work occurs here.
+Pins, root/helper manifests/locks/graph and original resource/deadline guards stay
+unchanged; Cargo remains `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`.
+
+Run all five exact SourceBinderCapabilityTests listed below individually and the
+full class, fail fast, with actual test/assertion counts. Add focused acceptance
+within those obligations for the three observed trait identities/five relations,
+local header versus item span, exact native token/subnode/header/Name roles,
+attributes/docs, bounds/generics/where/body distinctions, and LF/CRLF/BOM/Unicode
+and alpha-renamed sources. A whole compiler span, where actually returned, retains
+its own exact role; do not assume all traits have the three observed header shapes.
+
+Required negatives include same-spelled unrelated traits/parameters; wrong
+compiler stable identity or native resolved trait; swapped owner/trait/source;
+Name-only matching; header/whole/Name role substitution; equal enclosing hulls
+with changed tokens, omitted trivia/subnodes/ancestors or altered endpoints;
+fabricated TRAIT_HEADER; copied identities; duplicate/omitted relation or inventory;
+forged binder target/index/depth/ordinal; coordinated redigestion/replaced authority;
+and stale source/normalization/context/artifact/capture stages. Each must reject
+against intact caller-held original authority without partial publication.
+
+The exact C1–C5 names remain `test_inherited_own_and_hrtb_identity_preserve_declarations`,
+`test_alpha_and_exact_source_correspondence_are_authenticated`,
+`test_coordinated_binder_owner_trait_omissions_fail_closed`,
+`test_original_dependency_source_context_and_artifact_drift_rejects`, and
+`test_required_current_syn_and_linux_context_union_repeat`. Keep the entire
+unchanged fixture union, original thirteen-case plus Dynamic/include/source-authority
+regressions, syn::step and all four original Linux production/test main/repeat
+contexts. Preserve ObjectShapes RA-only rejection and genuine body ReErased facts.
+Run affected named original tests/classes; reuse only unchanged validation inputs.
+Complete capability proof, scoped review, merge and separate receipt must precede
+a separately assigned full H03a1 adapter resumption. Windows and the original full
+adapter requirements remain separate and unqualified.
+
+All failed history below is unchanged: final C1 setup 0 tests/0 assertions,
+78.089145s; f25 containment diagnostics; overwritten owned artifact/C4 setup failure;
+d2bc 8 GiB reserve stop at 8293312 KiB versus 8388608 KiB, status -15,
+936.894643s; later graph/hash repairs without a resource-qualified C4/union.
+HBC still has 0 final accepted tests/assertions, 0 completed Opus cycles and no
+implementation PR/merge. Diagnostic `b8ee36b996695c0972bee543e0673a2714e12f50`
+remains unmerged read-only material. No prior failure is reclassified.
+
+Documentation evidence is under
+`/data/sifr-hbc-header-contract-adjudication-20261004/evidence/`.
+Pinned-source audit SHA-256:
+`f5db02e25d04267bcd9b6761e576e0e017dc67e6a9ccffaf405e595c091f265b`;
+original evidence/ordered inventory audit SHA-256:
+`9e3c3d3e99d8562e67f2f2f1d2aa68595bad744dc7f75dc7cfaa6458bb58af6c`.
+This canonical-only proposal and its separate delivery receipt require documentation
+structure/registered-mutation and file-size checks, pinned-source link/range and
+evidence-hash audit, historical byte preservation, whitespace/scope/clean-tree
+checks and scoped SELF. No broad gate or external implementation review is needed.
+
+**Requested authorization:** approve exact token/subnode correspondence for the
+actual compiler trait-header interval, while preserving the separate whole native
+declaration, exact Name, independent semantic identities and every source/context
+obligation above. This proposal is not that approval. Next action after delivery:
+obtain explicit human disposition; only after approval and its recorded receipt
+may a separate complete HBC proof worker be assigned. Delivery blocker: none;
+HBC blocker: unchanged whole-declaration counterpart contract pending authorization.
+
 ## H03a1hbc exact trait declaration-header stop delivery receipt (2026-10-04)
 
 **Stop delivery complete; H03a1hbc remains needs-new-scope, unaccepted and inactive.**
