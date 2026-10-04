@@ -21,17 +21,18 @@ class CandidateChecks(unittest.TestCase):
         self.base=Path(self.temporary.name);self.root=self.base/'source';self.root.mkdir()
         (self.root/'crates/sifr/src').mkdir(parents=True)
         (self.root/'crates/sifr/src/main.rs').write_text('fn main() {}\n')
-        (self.root/'crates/sifr/Cargo.toml').write_text('[package]\nname="sifr"\nversion="0.1.0-beta.17"\n')
+        (self.root/'crates/sifr/Cargo.toml').write_text('[package]\nname="sifr"\nversion="0.0.0"\n')
         (self.root/'Cargo.lock').write_text('fixture locked input\n')
         producer=self.root/'verification/areas/sysroot_release';producer.mkdir(parents=True)
         for name in ('native_candidate.py','native_capacity.py'):
             shutil.copy2(Path(candidate.__file__).parent/name,producer/name)
+        shutil.copy2(Path(candidate.__file__).parent/'package_build.py',producer/'package_build.py')
         def git(*argv):
             return subprocess.check_output(['git',*argv],cwd=self.root,stderr=subprocess.PIPE,text=True).strip()
         git('init','-q');git('add','.')
         git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','-c','commit.gpgsign=false','commit','-qm','fixture')
         self.source=git('rev-parse','HEAD');self.out=self.base/'preparation';self.out.mkdir()
-        self.target='x86_64-unknown-linux-gnu';self.version='0.1.0-beta.17'
+        self.target='x86_64-unknown-linux-gnu';self.version='0.1.0-beta.1300'
         archive=self.out/'artifacts'/f'sifr-{self.version}-{self.target}.tar.gz';archive.parent.mkdir()
         binary=b'unit fixture only: no native compiler execution'
         manifest=f'built-by-compiler-commit="{self.source}"\ncargo-lock-sha256="{candidate.digest(self.root/"Cargo.lock")}"\n'
@@ -56,7 +57,9 @@ class CandidateChecks(unittest.TestCase):
             commands.append({'id':label,'argv':argv,'cause':'exit','returncode':0,'truncated':False,'output':raw})
         self.report={'schema_version':1,'protocol':'native-candidate-preparation-v1','kind':'preparation-output',
             'status':'prepared','runtime_assertions':0,'source_root':str(self.root),'source_commit':self.source,
-            'version':self.version,'target':self.target,'tools':self.tools,
+            'version':self.version,'version_role':'qualification-only','source_package_version':'0.0.0',
+            'qualification_version_sha256':candidate.digest(producer/'package_build.py'),
+            'target':self.target,'tools':self.tools,
             'producer_sha256':{name:candidate.digest(producer/name) for name in ('native_candidate.py','native_capacity.py')},
             'cargo_lock_sha256':candidate.digest(self.root/'Cargo.lock'),'started_utc':now,'finished_utc':now,
             'commands':commands,'cargo_artifact':artifact,'cargo_events_sha256':candidate.digest(events),
@@ -72,6 +75,18 @@ class CandidateChecks(unittest.TestCase):
         with patch.object(candidate,'verify_archive'),patch.object(candidate,'tool_identity',return_value=self.tools), \
              patch.object(candidate,'current_host_target',return_value=self.target):
             return candidate.check(self.path,_pending=True)
+
+    def test_source_placeholder_is_separate_from_canonical_qualification_version(self):
+        self.assertEqual(candidate.qualification_version(self.root),self.version)
+        self.assertEqual(self.check()['source_package_version'],'0.0.0')
+        for field,value in [('version','0.0.0'),('source_package_version',self.version),
+                            ('version_role','published'),('qualification_version_sha256','0'*64)]:
+            changed=copy.deepcopy(self.report);changed[field]=value
+            with self.subTest(field=field),self.assertRaises(ValueError): self.check(changed)
+        declaration=self.root/'verification/areas/sysroot_release/package_build.py'
+        for value in ["'0.0.0'", "'0.1.0-beta.16'", "str('0.1.0-beta.1300')"]:
+            declaration.write_text('RELEASE_VERSION = '+value+'\n')
+            with self.subTest(value=value),self.assertRaises(ValueError): candidate.qualification_version(self.root)
 
     def test_preparation_never_claims_runtime_assertions(self):
         self.assertEqual(self.check()['runtime_assertions'],0)

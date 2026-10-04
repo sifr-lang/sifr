@@ -1853,3 +1853,26 @@ remediation batch declares host_kind on the two Darwin matrix rows and uses the
 allowed matrix context. Regression controls reject a missing Darwin declaration
 and the original forbidden context. Actual native/platform qualification and
 broad gates remain pending; the first candidate is not approved.
+
+### M5 native qualification version authority — 2026-10-04
+
+Actual optimized preparation at ee9426f0f exposed that crates/sifr/Cargo.toml
+contains the source-package placeholder 0.0.0. The preparer had incorrectly used
+that value as the proposed upgrade version. Published-predecessor policy correctly
+refuses it because it predates Beta 16; no upgrade is qualified. The original
+attempt and any resulting preparation-only bytes remain preserved outside Git.
+
+This bounded correction reads the canonical package rehearsal's literal
+RELEASE_VERSION, currently 0.1.0-beta.1300, without executing source expressions.
+It verifies a declared prerelease newer than the registered predecessor before
+building, embeds that exact declared version through the canonical release
+builder, and records qualification-only version role, separate source package
+version and the authority-file hash. The independent checker validates all three.
+This is a prospective qualification fixture, never a claim that Beta 1300 was
+published or that source Cargo version is a released product version.
+
+Seven native candidate controls now include the real 0.0.0 source placeholder,
+separate canonical version selection, authority drift and rejection of placeholder,
+old predecessor or computed/unknown declarations. Three capacity and five
+transition controls plus workflow/diff checks pass. Actual corrected preparation,
+transition qualification, scoped review, native matrix and broad gates remain open.

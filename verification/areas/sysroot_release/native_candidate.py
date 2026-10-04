@@ -1,8 +1,10 @@
 """Prepare an optimized actual native candidate bundle; no release publication."""
 from datetime import datetime,timezone
+import ast
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -21,7 +23,7 @@ from sifr_verify.resource_admission import admit,worker_limit
 from sifr_verify.process_disk_budget import DiskBudget
 from qualify_stable_target import current_host_target
 from native_capacity import resources
-from published_predecessor import digest
+from published_predecessor import POLICY,digest,select
 from verify_release_archive import verify_archive
 
 
@@ -48,6 +50,20 @@ def clean_source(root):
     return subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
 
 
+def qualification_version(root):
+    # Cargo's 0.0.0 is a source-package placeholder. The canonical package
+    # rehearsal declares a prospective version and embeds it in actual bytes.
+    path=root/'verification/areas/sysroot_release/package_build.py'
+    values=[node.value.value for node in ast.parse(path.read_text()).body
+            if isinstance(node,ast.Assign) and len(node.targets)==1
+            and isinstance(node.targets[0],ast.Name) and node.targets[0].id=='RELEASE_VERSION'
+            and isinstance(node.value,ast.Constant) and isinstance(node.value.value,str)]
+    if len(values)!=1 or not re.fullmatch(r'\d+\.\d+\.\d+-(?:alpha|beta)\.\d+',values[0]):
+        raise ValueError('native qualification needs its canonical declared prerelease version')
+    select(json.loads(POLICY.read_text()),current_host_target(),values[0])
+    return values[0]
+
+
 def prepare(root,output):
     root=root.resolve(strict=True)
     source=clean_source(root)
@@ -55,7 +71,7 @@ def prepare(root,output):
         if digest(root/'verification/areas/sysroot_release'/name)!=digest(Path(__file__).parent/name):
             raise ValueError('native preparation tooling differs from the source candidate')
     target=current_host_target()
-    version=tomllib.loads((root/'crates/sifr/Cargo.toml').read_text())['package']['version']
+    version=qualification_version(root)
     cargo=shutil.which('cargo')
     if not cargo: raise ValueError('native Cargo unavailable')
     if any(os.environ.get(name) for name in ('RUSTFLAGS','CARGO_ENCODED_RUSTFLAGS','RUSTC','RUSTC_WRAPPER','RUSTC_WORKSPACE_WRAPPER','CARGO_BUILD_TARGET','CARGO_BUILD_RUSTFLAGS','SIFR_SYSROOT','SIFR_SYSROOT_MODE','SIFR_CARGO','SIFR_RUSTC','LD_PRELOAD','DYLD_INSERT_LIBRARIES')):
@@ -69,6 +85,9 @@ def prepare(root,output):
     report={'schema_version':1,'protocol':'native-candidate-preparation-v1','status':'incomplete',
         'kind':'preparation-output','runtime_assertions':0,'source_root':str(root),'source_commit':source,
         'version':version,'target':target,'cargo_lock_sha256':digest(root/'Cargo.lock'),
+        'version_role':'qualification-only',
+        'source_package_version':tomllib.loads((root/'crates/sifr/Cargo.toml').read_text())['package']['version'],
+        'qualification_version_sha256':digest(root/'verification/areas/sysroot_release/package_build.py'),
         'producer_sha256':{name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py')},
         'tools':None,'started_utc':datetime.now(timezone.utc).isoformat(),'commands':[]}
     def save(): (output/'state.json').write_text(json.dumps(report,indent=2)+'\n')
@@ -168,7 +187,9 @@ def check(path,*,_pending=False):
     if (report['schema_version']!=1 or report['protocol']!='native-candidate-preparation-v1'
             or report['status']!='prepared' or report['kind']!='preparation-output' or report['runtime_assertions']!=0
             or report['source_commit']!=clean_source(root) or report['target']!=current_host_target()
-            or report['version']!=tomllib.loads((root/'crates/sifr/Cargo.toml').read_text())['package']['version']
+            or report['version']!=qualification_version(root) or report['version_role']!='qualification-only'
+            or report['source_package_version']!=tomllib.loads((root/'crates/sifr/Cargo.toml').read_text())['package']['version']
+            or report['qualification_version_sha256']!=digest(root/'verification/areas/sysroot_release/package_build.py')
             or report['cargo_lock_sha256']!=digest(root/'Cargo.lock')
             or report['tools']!=tool_identity()
             or report['producer_sha256']!={name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py')}):
