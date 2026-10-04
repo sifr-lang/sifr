@@ -12,7 +12,9 @@ atomic_generation_switch() {
 }
 rollback_install_transaction() {
   if [ "${rollback_active}" != "1" ]; then return 0; fi
-  if [ -n "${previous_generation}" ]; then
+  if [ -n "${legacy_backup_root:-}" ]; then
+    restore_legacy_installation
+  elif [ -n "${previous_generation}" ]; then
     atomic_generation_switch "${previous_generation}"
   else
     rm -f "${sysroot_dir}/.sifr-current"
@@ -22,15 +24,9 @@ rollback_install_transaction() {
 validate_extracted_toolchain
 acquire_install_lock
 mkdir -p "${install_dir}" "${sysroot_dir}/.sifr-generations"
-# A legacy mutable installation must be moved aside explicitly by its owner.
-# Silently mutating it could break a still-running pre-generation process.
-for relative in .cargo vendor crates lib Cargo.toml Cargo.lock sysroot.toml bin/sifr; do
-  destination="${sysroot_dir}/${relative}"
-  if [ -e "${destination}" ] && [ ! -L "${destination}" ]; then
-    fail "mutable installation at ${destination}; select an empty install root for immutable toolchain generations"
-  fi
-done
 previous_generation=""
+legacy_backup_root=""
+prepare_legacy_migration
 if [ -L "${sysroot_dir}/.sifr-current" ]; then
   previous_generation="$(readlink "${sysroot_dir}/.sifr-current")"
 fi
