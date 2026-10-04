@@ -16,15 +16,17 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             runner: macos-15
+            host_kind: dedicated-darwin
           - target: x86_64-apple-darwin
             runner: macos-15-intel
+            host_kind: dedicated-darwin
           - target: x86_64-unknown-linux-gnu
             runner: ubuntu-24.04
           - target: aarch64-unknown-linux-gnu
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     env:
-      SIFR_NATIVE_HOST_KIND: ${{ runner.os == 'macOS' && 'dedicated-darwin' || '' }}
+      SIFR_NATIVE_HOST_KIND: ${{ matrix.host_kind || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:

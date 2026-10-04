@@ -1762,3 +1762,11 @@ The earlier disk-floor failure remains failed. Its completed owned graph was
 retired only after verifying both protected endpoint binaries, with raw cleanup
 and retained copies under independent-baseline-1e81537db-v2/retirement-after-completed-v3.
 No compiler performance comparison has yet been captured or accepted.
+
+The initial published-transition review is NOT SATISFIED at 9346d06ae:
+/workspace/validation-work/evidence/sifr-claude.l0CH8k/response.md.
+The reusable workflow used the unavailable runner context in job-level env. One
+remediation batch declares host_kind on the two Darwin matrix rows and uses the
+allowed matrix context. Regression controls reject a missing Darwin declaration
+and the original forbidden context. Actual native/platform qualification and
+broad gates remain pending; the first candidate is not approved.

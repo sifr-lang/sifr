@@ -119,6 +119,9 @@ def validate_native_qualification(parent: dict, document: dict) -> list[str]:
     matrix = native.get('strategy', {}).get('matrix', {}).get('include', [])
     if [(row.get('target'), row.get('runner')) for row in matrix] != expected or native.get('runs-on') != '${{ matrix.runner }}':
         errors.append('native qualification requires all four actual host targets')
+    if ([row.get('host_kind', '') for row in matrix] != ['dedicated-darwin', 'dedicated-darwin', '', '']
+            or native.get('env') != {'SIFR_NATIVE_HOST_KIND': "${{ matrix.host_kind || '' }}"}):
+        errors.append('native admission must declare exactly the Darwin hosts using job-allowed matrix context')
     steps = native.get('steps', [])
     checkout = next((step for step in steps if step.get('uses', '').startswith('actions/checkout@')), {})
     if checkout.get('with') != {'ref': '${{ github.sha }}', 'fetch-depth': 0, 'submodules': 'recursive', 'persist-credentials': False}:
@@ -171,7 +174,7 @@ def main() -> None:
     exposed = copy.deepcopy(publisher)
     exposed["jobs"]["publish"].pop("environment")
     assert any("protected publication environment" in error for error in validate_publisher(exposed))
-    for mutation in ('target', 'source', 'skip', 'write'):
+    for mutation in ('target', 'source', 'skip', 'write', 'host', 'context'):
         invalid_native = copy.deepcopy(native)
         job = invalid_native['jobs']['native']
         if mutation == 'target': job['strategy']['matrix']['include'].pop()
@@ -180,6 +183,8 @@ def main() -> None:
             for step in job['steps']:
                 if 'qualify(root/' in step.get('run', ''): step['continue-on-error'] = True
         if mutation == 'write': invalid_native['permissions']['contents'] = 'write'
+        if mutation == 'host': job['strategy']['matrix']['include'][0].pop('host_kind')
+        if mutation == 'context': job['env']['SIFR_NATIVE_HOST_KIND'] = "${{ runner.os == 'macOS' && 'dedicated-darwin' || '' }}"
         assert validate_native_qualification(document, invalid_native), mutation
     print("local-first admission and event/profile contracts passed (including regressions)")
 
