@@ -18,7 +18,7 @@ from .profile_commands import CommandFailed
 from .cargo_setup import acquire_cargo_dependencies
 from .graph_retirement import GRAPH_PATHS, GraphLease
 from .profile_runner import ProfileRunner
-from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit
+from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit, memory_backed_storage
 
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "cloud resource contract is Linux cgroup v2")
@@ -101,6 +101,34 @@ class ResourceTests(unittest.TestCase):
                 own_cgroup(root, membership)
             with self.assertRaises(ResourceError):
                 discover(disk_path=root, cgroup_root=root, cgroup_path=root)
+
+    def test_memory_backed_build_storage_is_charged_with_resident_and_other_tmpfs(self):
+        resources = Resources(4, 4, 100, 20, 100, {}, [], {}, True)
+        requirements = dict(disk_growth_bytes=8, retained_copy_bytes=5, disk_reserve_bytes=8,
+                            memory_peak_bytes=5, tmpfs_growth_bytes=3, memory_reserve_bytes=1)
+        with self.assertRaisesRegex(ResourceError, "shared resident/tmpfs"):
+            admit(resources, requirements)
+        ordinary = Resources(4, 4, 100, 20, 100, {}, [], {})
+        self.assertEqual(admit(ordinary, requirements)["memory_admitted_bytes"], 9)
+        requirements["disk_growth_bytes"] = 6
+        accepted = admit(resources, requirements)
+        self.assertEqual(accepted["memory_admitted_bytes"], 20)
+        self.assertEqual(accepted["memory_backed_storage_growth_bytes"], 11)
+        self.assertEqual(requirements["tmpfs_growth_bytes"], 3)
+
+    def test_nested_mount_resolution_and_escaped_paths(self):
+        with tempfile.TemporaryDirectory(prefix="mount control ") as directory:
+            root = Path(directory)
+            nested = root/"disk";nested.mkdir()
+            mounts = root/"mountinfo"
+            escaped = str(root).replace(" ", r"\040")
+            mounts.write_text("1 0 0:1 / / rw - overlay overlay rw\n"
+                              +f"2 1 0:2 / {escaped} rw - tmpfs tmpfs rw\n"
+                              +f"3 2 0:3 / {escaped}/disk rw - ext4 /dev/test rw\n")
+            self.assertTrue(memory_backed_storage(root, mounts))
+            self.assertFalse(memory_backed_storage(nested, mounts))
+            mounts.write_text("")
+            with self.assertRaises(ValueError): memory_backed_storage(root, mounts)
 
     def test_retained_disk_copies_and_reserve_are_admitted_before_work(self):
         resources = Resources(4, 4, 100, 100, 20, {}, [], {})

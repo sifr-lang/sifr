@@ -118,6 +118,7 @@ class ProgramTests(unittest.TestCase):
         arguments=['--crate-name',target,'--crate-type','bin','-C','target-cpu=generic']
         cargo.write_text(json.dumps(artifact)+'\n');rustc.write_text(json.dumps(arguments)+'\n')
         program.update(cargo_artifact=artifact,rustc_command=arguments,
+                       generated_rust_sha256=programs.digest(project/"src/main.rs"),
                        cargo_events_range=[0,cargo.stat().st_size],rustc_events_range=[0,rustc.stat().st_size])
         prepared=root/'prepared.json'
         prepared.write_text(json.dumps({'kind':'preparation-output','runtime_assertions':0,'optimization':'release',
@@ -146,7 +147,12 @@ class ProgramTests(unittest.TestCase):
         for changed in changes:
             with self.assertRaises(BenchmarkError): check(changed)
         original_prepared=json.loads(prepared.read_text())
-        for key in ('cargo_artifact','rustc_command'):
+        generated_rust=project/'src/main.rs'
+        original_rust=generated_rust.read_bytes()
+        generated_rust.write_bytes(original_rust+b'// changed after preparation\n')
+        with self.assertRaises(BenchmarkError): check(value)
+        generated_rust.write_bytes(original_rust)
+        for key in ('cargo_artifact','rustc_command','generated_rust_sha256'):
             changed=copy.deepcopy(original_prepared);del changed['programs'][0][key]
             prepared.write_text(json.dumps(changed))
             changed_value=value|{'prepared_sha256':programs.digest(prepared)}

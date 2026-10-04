@@ -95,6 +95,8 @@ def verify_preparation_events(path, prepared):
         if (artifact != program['cargo_artifact'] or invocation != program['rustc_command']
                 or not target_cpu_generic(invocation)):
             raise BenchmarkError('actual Cargo artifact or rustc CPU target differs')
+        if digest(artifact['target']['src_path']) != program['generated_rust_sha256']:
+            raise BenchmarkError('generated Rust source bytes differ from preparation')
         profile = artifact['profile']
         if (profile['test'] or profile['opt_level'] != '3' or profile['debug_assertions']
                 or not profile['overflow_checks'] or digest(artifact['executable']) != program['binary_sha256']):

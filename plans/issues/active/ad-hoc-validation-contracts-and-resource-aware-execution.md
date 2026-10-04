@@ -1616,6 +1616,7 @@ all nine published-contract controls passed. Logs are
 `m5-migration-remediation-final.log`, `m5-immutable-version-remediation.log` and
 `m5-published-contract-remediation.log` outside Git. Remediation review and the
 larger native transition/platform/broad-gate obligations remain pending.
+
 ## M2 compact cache-presence forecast refinement
 
 The native gate at `5203f15a083ecc3d07e170e73098b359bf5ea864` passed source
@@ -1654,3 +1655,52 @@ Published migration remediation `977fde39f` received SATISFIED review at
 These bounded approvals do not qualify the failed broad gates, pending allocation
 observations, independent compiler comparison, actual upgrade/platform coverage,
 main evidence reuse, administrative enforcement or final phase acceptance.
+## M4 separate generated-program allocation observations
+
+The bounded allocation protocol builds a separately identified instrumented
+release/generic artifact from the actual prepared generated Rust. System allocator
+counters record successful allocation/reallocation request counts and requested
+bytes plus deallocation calls during generated main. Reporting overhead, libc,
+loader and post-main cleanup are excluded. These single-threaded workload counts
+cannot be transferred to the uninstrumented timed artifact or numeric regression
+qualification. Instrumentation and prospective policy bytes are registered.
+
+Preparation now hashes generated Rust and rejects source substitution. Collection
+retains original/transformed Rust, manifest/lock/config, actual Cargo/rustc events,
+artifact/dependency hashes, bounded process logs, independent output oracles and
+raw counters. An independent check runs before immutable success publication;
+failed attempts retain state without a success receipt. Real Rust allocator
+controls cover allocation, zeroed allocation, reallocation, deallocation and
+reporting failures. A real Cargo collector control explicitly stubs only its CPP
+identity boundary; it does not qualify the Sifr frontend. All 108 performance controls, profile contracts, file-size
+guardrails and diff checks passed; the retained control log is
+`/workspace/validation-work/evidence/allocation-performance-controls-final.log`.
+Actual fresh Sifr preparation/collection, scoped review and broad gates remain
+pending, as do independent paired compiler performance and final acceptance.
+
+
+The first allocation review at `905f808084219a7187fa91e7e9727fa40a561c19`
+is NOT SATISFIED, retained at
+`/workspace/validation-work/evidence/sifr-claude.3fXfa5/response.md`.
+Fresh actual Sifr preparation and allocation collection completed at that candidate,
+but review found missing generated package inputs: the collector omitted build.rs
+and .sifr-cargo-resolution, losing the original loader link argument. Those
+observations remain historical evidence and do not qualify the corrected recipe.
+The one-batch correction preserves every regular package input except the rewritten
+main and Cargo outputs. Collection and checking compare the actual original and
+instrumented Cargo profiles and rustc arguments, normalizing only Cargo application
+hash fields and relocated output/dependency paths. Loader link flags remain exact.
+The real Cargo control now supplies a loader build script and resolution marker;
+a missing loader script must fail collection without publishing a success receipt.
+Corrected native recollection and remediation review remain pending.
+## M2 memory-backed validation storage
+
+The host exposes an 8.8-GiB tmpfs at /tmp in addition to the workspace filesystem.
+The bounded scheduler correction resolves the actual Linux mount for its worktree
+and charges prospective build/retained-copy growth on tmpfs or ramfs against the
+same cgroup memory budget as process RSS and other temporary storage. Disk reserves
+remain unchanged. Controls cover nested disk mounts, escaped mount names, missing
+mount identity and a RAM-backed stage that disk capacity admits but shared memory
+rejects. Eighteen resource controls passed; foundation, native gates and scoped
+review remain pending. This enables using owned temporary capacity without
+cleaning shared targets or treating advertised RAM storage as extra memory.
