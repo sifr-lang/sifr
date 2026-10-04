@@ -1720,3 +1720,9 @@ Its first run expected a different error phrase and failed; the observed
 The corrected control passed at `m5-native-installer-fixture-controls-v2.log`.
 Existing installer/migration controls, scoped review, actual native candidate
 upgrade/persisted-state/reinstall/rollback and platform acceptance remain pending.
+
+### M5 actual native candidate preparation — 2026-10-04
+
+This bounded item prepares one actual native optimized candidate with the canonical release build/package script and the accepted single-target qualification installer generator. It binds the source commit, locked dependency input, actual selected Cargo/rustc/Python bytes, raw native Cargo executable/profile record, packaged compiler, archive/checksum, generated installer, commands and completion. It admits the owned graph before compilation, retains raw failures, independently checks a pending record before exclusive receipt publication, and retires only its successful Linux graph after preserving the compiler. Dedicated Darwin hosts use measured VM capacity; unknown storage/hosts fail closed and their graphs remain retained. No release or version is published.
+
+Five custody controls reject substituted commands, optimization, compiler manifest/source/target, tool identity, locked input, raw output, archive checksum, installer, incomplete processes, unpublished records and failed producer state. These use explicitly synthetic unit bytes and make no native execution claim. An artifact-area case runs those controls with the pinned interpreter. Existing published-installation controls still pass. Actual optimized native preparation, published-predecessor migration, representative persisted user state, reinstall/rollback, and all four native targets remain pending; this preparer is not qualification evidence and always reports zero runtime assertions.
