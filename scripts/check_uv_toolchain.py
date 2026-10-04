@@ -44,6 +44,7 @@ RUNNER_PLATFORMS = {
     "ubuntu-24.04": "x86_64-unknown-linux-gnu",
     "ubuntu-24.04-arm": "aarch64-unknown-linux-gnu",
     "macos-15": "aarch64-apple-darwin",
+    "macos-15-xlarge": "aarch64-apple-darwin",
     "macos-15-intel": "x86_64-apple-darwin",
     "windows-2025": "x86_64-pc-windows-msvc",
 }
@@ -256,6 +257,7 @@ def self_test() -> None:
     for runner, diagnostic in [
         ("ubuntu-24.04-arm", "checksum"),
         ("macos-15", "checksum"),
+        ("macos-15-xlarge", "checksum"),
         ("windows-2025", "missing platform checksum"),
         ("ubuntu-future", "unsupported runner"),
         ("${{ matrix.os }}", "unsupported runner"),

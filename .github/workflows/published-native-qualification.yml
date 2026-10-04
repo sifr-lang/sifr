@@ -17,7 +17,7 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             uv_checksum: 51c6170e8e3a01cef9f33b94f582b7b81ac65046f55d40afb35f9cff5a68c179
-            runner: macos-15
+            runner: macos-15-xlarge
             host_kind: dedicated-darwin
           - target: x86_64-apple-darwin
             uv_checksum: 5296d5aa2b9143360405eea866f8ef4d5dc8986b164eb0dc35e8f876a9304d30
