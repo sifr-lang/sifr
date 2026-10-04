@@ -69,6 +69,29 @@ class CapacityChecks(unittest.TestCase):
             with self.subTest(stores=stores),self.assertRaises(ValueError):
                 self.observe({'FilesystemType':'apfs','BusProtocol':'SATA','APFSPhysicalStores':stores})
 
+    def test_identified_apple_virtio_apfs_partition_is_guest_block_storage(self):
+        info={'DeviceNode':'/dev/disk0s2','DeviceIdentifier':'disk0s2','BusProtocol':'',
+              'DeviceTreePath':'IODeviceTree:/arm-io/pcie@30000000/pci106b,1a00@6/AppleVirtIOStorageDevice',
+              'Content':'Apple_APFS','PartitionMapPartition':True,'ParentWholeDisk':'disk0',
+              'Internal':True,'Size':343073095680,'WritableMedia':True}
+        observed,_=self.observe(backing={'/dev/disk0s2':info})
+        self.assertFalse(observed.disk_memory_backed)
+        self.assertEqual(observed.diagnostics['apfs_backing_stores'],[info])
+        mutations={'DeviceNode':['/dev/disk9s2'],'DeviceIdentifier':['disk9s2'],
+                   'BusProtocol':['Disk Image','Unknown','SCSI Virtual'],
+                   'DeviceTreePath':['','IODeviceTree:/AppleVirtIOStorageDevice',
+                                     info['DeviceTreePath']+'/RAMDisk'],
+                   'Content':['Apple_HFS'],'PartitionMapPartition':[False,1],
+                   'ParentWholeDisk':['disk9'],'Internal':[False,1],
+                   'Size':[0,-1,True,'343073095680'],'WritableMedia':[False,1]}
+        for key,values in mutations.items():
+            for value in values:
+                with self.subTest(key=key,value=value),self.assertRaisesRegex(ValueError,'storage memory authority'):
+                    self.observe(backing={'/dev/disk0s2':{**info,key:value}})
+        for key in info:
+            with self.subTest(missing=key),self.assertRaisesRegex(ValueError,'storage memory authority'):
+                self.observe(backing={'/dev/disk0s2':{k:v for k,v in info.items() if k!=key}})
+
     def test_shared_or_unknown_host_and_ram_disk_are_rejected(self):
         with self.assertRaisesRegex(ValueError,'dedicated'): self.observe(declared=False)
         for bus in ('Disk Image','DiskImage','Unknown'):

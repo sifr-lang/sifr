@@ -12,6 +12,29 @@ from sifr_verify.resource_admission import Resources, discover
 PHYSICAL_BUSES={'PCI-Express','SATA','ATA','USB','Thunderbolt','NVMe','Apple Fabric','SCSI'}
 
 
+def known_apfs_store(info,device):
+    if info.get('DeviceNode')!=device:
+        return False
+    if info.get('BusProtocol') in PHYSICAL_BUSES:
+        return True
+    # Apple's dedicated ARM guest exposes its block disk through VirtIO with
+    # an empty bus field. Require the OS's identified writable APFS partition,
+    # its parent disk and the specific storage driver; an empty bus alone is
+    # never authority. Explicit unknown/image buses cannot use this route.
+    identifier=device.removeprefix('/dev/')
+    parent=re.fullmatch(r'(disk[0-9]+)s[0-9]+',identifier)
+    tree=info.get('DeviceTreePath')
+    return (info.get('BusProtocol')=='' and parent is not None
+            and info.get('DeviceIdentifier')==identifier
+            and info.get('ParentWholeDisk')==parent.group(1)
+            and info.get('Content')=='Apple_APFS'
+            and info.get('PartitionMapPartition') is True
+            and info.get('Internal') is True and info.get('WritableMedia') is True
+            and type(info.get('Size')) is int and info['Size']>0
+            and isinstance(tree,str) and re.fullmatch(
+                r'IODeviceTree:/arm-io/pcie@[0-9a-f]+/pci[0-9a-f]+,[0-9a-f]+@[0-9a-f]+/AppleVirtIOStorageDevice',tree) is not None)
+
+
 def apfs_store_devices(storage):
     """APFS volumes inherit disk authority from every declared backing store."""
     stores=storage.get('APFSPhysicalStores')
@@ -63,7 +86,7 @@ def resources(path):
     if filesystem=='apfs':
         for store_device in apfs_store_devices(storage):
             info=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',store_device],timeout=30))
-            if info.get('DeviceNode')!=store_device or info.get('BusProtocol') not in PHYSICAL_BUSES:
+            if not known_apfs_store(info,store_device):
                 raise ValueError('unknown native Darwin build storage memory authority')
             backing.append(info)
     elif filesystem!='hfs' or storage.get('BusProtocol') not in PHYSICAL_BUSES:

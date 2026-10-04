@@ -4,6 +4,37 @@ status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
 
+## Current bounded item: provisioned Darwin ARM native runner — 2026-10-04
+
+The user authorized a larger GitHub macOS ARM runner and removal of this chat's
+inactive default incremental cache. The incremental-only cleanup completed with
+the retained compiler hash unchanged, leaving 14 GiB free on the workspace disk.
+Its custody record is retained outside Git; no failure graph or active cache was
+removed. Disk capacity no longer blocks the independent remaining work.
+
+Own `/workspace/sifr-validation-native-larger-arm` and branch
+`codex/validation-native-larger-arm-20261004`, based on
+`356168cac9ad5ef2a70289d7693851a1630e4a88`. Select the documented
+`macos-15-xlarge` ARM M2 runner with 14 GB RAM and retain the unchanged native
+admission estimates and reserves. Bind its exact platform checksum through the
+finite toolchain guard. GitHub's hosted-runner API currently returns 404,
+"GitHub hosted runners are not supported for this organization"; runner-group
+administration returns 403, "Resource not accessible by integration". The
+organization's plan is not exposed to this integration. The documented setup
+requires an organization owner and GitHub Team or Enterprise Cloud; selecting a
+label does not establish account availability, admission or qualification.
+
+Actual bounded backing-store diagnostics from failed run `37186236372` show
+`disk0s2`, an internal writable Apple_APFS partition of `disk0`, with an empty
+bus field and the AppleVirtIOStorageDevice PCI device-tree path. Register this
+specific OS-identified guest block-storage authority. Require every identity,
+parent, partition, content, size and driver field; reject missing, contradictory,
+RAM/image and unknown authority. Existing physical-bus and HFS rules remain.
+Named validation: capacity negative controls, native candidate/source dependency
+controls, finite uv matrix controls, source guardrail and diff check; scoped
+read-only Opus review. Actual larger-host qualification and full candidate
+acceptance remain pending. No seven-GiB host admission or platform pass is claimed.
+
 ## Current bounded item: explicit local performance receipt reuse — 2026-10-04
 
 Own `/workspace/sifr-validation-cloud-receipt-reuse` and branch
