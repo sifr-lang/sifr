@@ -1677,3 +1677,15 @@ guardrails and diff checks passed; the retained control log is
 `/workspace/validation-work/evidence/allocation-performance-controls-final.log`.
 Actual fresh Sifr preparation/collection, scoped review and broad gates remain
 pending, as do independent paired compiler performance and final acceptance.
+
+## M2 memory-backed validation storage
+
+The host exposes an 8.8-GiB tmpfs at /tmp in addition to the workspace filesystem.
+The bounded scheduler correction resolves the actual Linux mount for its worktree
+and charges prospective build/retained-copy growth on tmpfs or ramfs against the
+same cgroup memory budget as process RSS and other temporary storage. Disk reserves
+remain unchanged. Controls cover nested disk mounts, escaped mount names, missing
+mount identity and a RAM-backed stage that disk capacity admits but shared memory
+rejects. Eighteen resource controls passed; foundation, native gates and scoped
+review remain pending. This enables using owned temporary capacity without
+cleaning shared targets or treating advertised RAM storage as extra memory.
