@@ -42,6 +42,7 @@ affected checks. Do not run the whole table for every edit.
 | Verification runner or policy | Affected self-tests and area/workflow contracts; file-size guardrail. If profile selection changes, run `uv run --project verification --locked python -m sifr_verify profiles check` and compare emitted plans. |
 | Implementation PR candidate | `scripts/run_all_tests.sh --profile create-pr`. |
 | Final implementation merge candidate | `scripts/run_all_tests.sh --profile merge` once; correct failures and rerun affected checks after relevant changes. |
+| Final implementation merge candidate on a shared Linux VM | `scripts/run_all_tests.sh --profile cloud --require-performance --compact-resources` once, with `SIFR_CLOUD_PERFORMANCE_RECEIPT` pointing to the complete candidate-bound paired receipt; same merge correctness selection. |
 | Actual release or explicit live integration | Required `release`/artifact qualification or `python-interop-live` contract. |
 
 Use the exact tool versions in `verification/pyproject.toml` and
