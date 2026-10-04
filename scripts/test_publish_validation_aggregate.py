@@ -102,6 +102,22 @@ class PublisherTests(unittest.TestCase):
                 publisher.main()
         self.assertEqual(self.published, [])
 
+    def test_main_requires_independent_reuse_verification_before_accepting_skips(self):
+        from validation_main_reuse import REUSED_JOBS
+        self.run.update(event='push', head_branch='main')
+        for job in self.jobs:
+            if job['name'] in REUSED_JOBS:
+                job.update(conclusion='skipped', started_at=None, completed_at=None)
+        with patch('validation_main_reuse.read_decision', return_value=set()):
+            self.assertEqual(self.call(), 1)
+        with patch('validation_main_reuse.read_decision', return_value=set(REUSED_JOBS)) as reader:
+            self.assertEqual(self.call(), 0)
+            reader.assert_called_once()
+        before=len(self.published)
+        with patch('validation_main_reuse.read_decision', side_effect=ValueError('source evidence differs')):
+            with self.assertRaises(ValueError): self.call()
+        self.assertEqual(len(self.published), before)
+
 
 if __name__ == "__main__":
     unittest.main()

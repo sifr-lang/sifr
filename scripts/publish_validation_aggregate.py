@@ -100,9 +100,13 @@ def main() -> int:
         if not response["jobs"] or page >= 100:
             raise ValueError("job inventory is incomplete")
         page += 1
+    reused_jobs = set()
+    if run['event'] == 'push':
+        from validation_main_reuse import read_decision
+        reused_jobs = read_decision(api, prefix, run)
     errors.extend(evaluate(run, jobs, candidate=candidate, profile=profile,
                            repository=repository, workflow_id=workflow["id"],
-                           workflow_matches=matches, now=datetime.now(timezone.utc)))
+                           workflow_matches=matches, now=datetime.now(timezone.utc), reused_jobs=reused_jobs))
     # Missing publication itself leaves a required context absent and blocks.
     conclusion = "failure" if errors else "success"
     summary = ("\n".join(errors) if errors else

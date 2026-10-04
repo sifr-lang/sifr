@@ -60,6 +60,9 @@ def validate(document: dict) -> list[str]:
         ("compiler-component-targets", 'cargo fetch --locked'),
         ("sql-wasi-build", "cargo fetch --locked"),
     ):
+        job = jobs[name]
+        if job.get('needs') != 'validation-selection' or job.get('if') != "needs.validation-selection.outputs.reuse != 'true'":
+            errors.append(f'{name}: only independently verified exact-commit correctness reuse may suppress execution')
         steps = jobs[name]["steps"]
         commands = [step.get("run") for step in steps]
         if preparation not in commands or commands.index(preparation) >= len(steps) - 1:
@@ -67,6 +70,14 @@ def validate(document: dict) -> list[str]:
         elif any(key in steps[commands.index(preparation)] for key in ("if", "continue-on-error")):
             errors.append(f"{name}: preparation must be unconditional and blocking")
     hardening = jobs.get("fuzz-hardening", {})
+    if select.get('permissions') != {'contents': 'read', 'actions': 'read'}:
+        errors.append('reuse discovery requires read-only producer facts')
+    if select.get('outputs', {}).get('reuse') != '${{ steps.select.outputs.reuse }}':
+        errors.append('reuse selection must bind the canonical selector output')
+    if not any(step.get('if') == "github.event_name == 'push'" and
+               step.get('with', {}).get('path') == 'target/validation-candidate/main-reuse.json'
+               for step in select.get('steps', [])):
+        errors.append('main reuse must retain its independent decision artifact')
     if hardening.get("if") != "github.event_name == 'schedule'" or hardening.get("strategy", {}).get("matrix", {}).get("target") != [
             "parser", "lowering", "ownership", "diagnostics", "project_graph"]:
         errors.append("nightly must retain all five explicit fuzz targets")
@@ -168,6 +179,9 @@ def main() -> None:
         if step.get("run") != "cargo fetch --locked"
     ]
     assert any("preparation must precede" in error for error in validate(unprepared))
+    bypassed_reuse = copy.deepcopy(document)
+    bypassed_reuse['jobs']['smoke-fuzz-property']['if'] = "github.event_name != 'push'"
+    assert any('only independently verified' in error for error in validate(bypassed_reuse))
     untrusted = copy.deepcopy(publisher)
     untrusted["jobs"]["publish"]["steps"][0]["with"]["ref"] = CANDIDATE
     assert any("never checkout candidate" in error for error in validate_publisher(untrusted))

@@ -25,6 +25,8 @@ def expected_jobs(event: str, profile: str) -> set[str]:
 
 
 def utc(value: str) -> datetime:
+    if not isinstance(value, str):
+        raise ValueError('timestamp is unavailable')
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.utcoffset() is None:
         raise ValueError("timestamp lacks UTC offset")
@@ -33,8 +35,13 @@ def utc(value: str) -> datetime:
 
 def evaluate(run: dict, jobs: list[dict], *, candidate: str, profile: str,
              repository: str, workflow_id: int, workflow_matches: bool,
-             now: datetime) -> list[str]:
+             now: datetime, reused_jobs: set[str] | None = None) -> list[str]:
     errors = []
+    reused_jobs = reused_jobs or set()
+    reusable = {'smoke-fuzz-property', 'sql-build-wasm32-wasip2'} | {'compiler-component-' + target for target in PLATFORMS}
+    if reused_jobs and (run.get('event') != 'push' or not reused_jobs <= reusable):
+        errors.append('reuse is restricted to exact-commit main correctness jobs')
+        reused_jobs = set()
     if not re.fullmatch(r"[0-9a-f]{40}", candidate):
         errors.append("candidate must be a complete commit SHA")
     if (run.get("repository", {}).get("full_name") != repository
@@ -63,10 +70,15 @@ def evaluate(run: dict, jobs: list[dict], *, candidate: str, profile: str,
         if not job:
             errors.append(f"missing mandatory job: {name}")
             continue
-        if job.get("status") != "completed" or job.get("conclusion") != "success":
+        expected_conclusion = "skipped" if name in reused_jobs else "success"
+        if job.get("status") != "completed" or job.get("conclusion") != expected_conclusion:
             errors.append(f"mandatory job did not pass: {name}")
         if job.get("run_id") != run.get("id") or job.get("run_attempt") != run.get("run_attempt"):
             errors.append(f"job comes from a different run/attempt: {name}")
+        if name in reused_jobs:
+            # This attempt did not execute the job. The caller independently
+            # verifies the original producer's actual execution and freshness.
+            continue
         try:
             completed = utc(job["completed_at"])
             started = utc(job["started_at"])
