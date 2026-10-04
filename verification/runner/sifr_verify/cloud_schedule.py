@@ -68,7 +68,7 @@ def load_schedule(root: Path = REPO_ROOT, mode: str = "cloud") -> dict:
     expected = {"dependency-acquisition", "sysroot-source", "sysroot-package", "sysroot-assertions",
                 "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions",
                 "sysroot-metadata-cached", "preparation-coordination", "preparation-command-cold",
-                "preparation-command-cached"}
+                "preparation-command-cached", "sysroot-structural-assertions"}
     if policy.get("schema_version") != 1 or set(policy.get("stages", {})) != expected:
         raise ResourceError("cloud resource schedule is incomplete", "unavailable")
     for field in ("cold_preparation_deadline_seconds", "assertion_command_deadline_seconds"):

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations. Partial library-cache hints use the existing one-GiB cached allocation after actual metadata structural test preparation on the owned compiler cache added 869,552,128 net filesystem bytes in 457.74s. Unknown remaining commands use a prospective two-GiB growth attempt with the unchanged reserve/floor; Cargo always executes and wrong forecasts fail closed.",
+  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations. Partial library-cache hints use the existing one-GiB cached allocation after actual metadata structural test preparation on the owned compiler cache added 869,552,128 net filesystem bytes in 457.74s. Unknown remaining commands use a prospective two-GiB growth attempt with the unchanged reserve/floor; Cargo always executes and wrong forecasts fail closed. Structural-only assertions at native candidate 15f3944dba9cce1702622684d455abc8144cd369 passed in 28.72s with maximum process RSS 247361536 bytes and zero swaps (metadata-structural-15f3944db-v3). The exact structural-only compact selection prospectively allows two GiB resident peak, 512 MiB other tmpfs growth, 256 MiB filesystem growth, and the unchanged reserves; all broader or unknown selections keep the generic allocation. Preparation and assertion commands always execute.",
   "cold_preparation_deadline_seconds": 7200,
   "assertion_command_deadline_seconds": 2400,
   "stages": {
@@ -98,6 +98,14 @@
       "disk_reserve_bytes": 2147483648,
       "memory_peak_bytes": 6442450944,
       "tmpfs_growth_bytes": 0,
+      "memory_reserve_bytes": 2147483648
+    },
+    "sysroot-structural-assertions": {
+      "disk_growth_bytes": 268435456,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 2147483648,
+      "memory_peak_bytes": 2147483648,
+      "tmpfs_growth_bytes": 536870912,
       "memory_reserve_bytes": 2147483648
     }
   }

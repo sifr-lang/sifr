@@ -46,8 +46,12 @@ def prepare_compact(runner):
                 [sys.executable,str(REPO_ROOT/'verification/areas/sysroot_release/package_build.py'),
                  '--metadata-suite',s],env=env),allocation='sysroot-metadata-cached' if cached else 'sysroot-metadata',preparation=True,monitor_disk=True)
             if status: return status
+    # The structural-only selection executes prepared Rust tests and the
+    # development metadata doctor. Installed/corpus/boundary suites retain the
+    # larger native-compilation allocation, including unknown future suites.
+    allocation='sysroot-structural-assertions' if suites=={'metadata-structural'} else 'sysroot-assertions'
     status=schedule.step('area_sysroot_release',lambda:runner.run_area('sysroot_release',selections[0]['suites']),
-                         allocation='sysroot-assertions',monitor_disk=True)
+                         allocation=allocation,monitor_disk=True)
     if status: return status
     runner.compact_completed_areas={'sysroot_release'}
     return schedule.step('cargo_cache_setup',lambda:prepare_remaining_graphs(profile,env,schedule.prepare_command,

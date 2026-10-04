@@ -173,6 +173,38 @@ class CompactChecks(unittest.TestCase):
         with self.assertRaises(ValueError):
             package.prepare_metadata(Path('/test'), {}, suite='unknown')
 
+    def test_only_structural_selection_uses_smaller_assertion_allocation(self):
+        from .resource_admission import Resources, admit
+        for suites in (['metadata-structural'], ['metadata-corpus'],
+                       ['metadata-structural','boundary-equivalence'], ['future-suite']):
+            runner=ProfileRunner('create-pr',['--compact-resources'])
+            selection=next(row for row in runner.profile['selected_areas'] if row['area']=='sysroot_release')
+            selection['suites']=suites
+            allocations={}
+            class FakeSchedule:
+                owner=graph_owner=str(uuid.uuid4())
+                journal=Path('/test/journal')
+                def __init__(self,runner): pass
+                def record(self,*args,**kwargs): pass
+                def prepare_command(self,*args,**kwargs): pass
+                def step(self,name,callback,**kwargs):
+                    allocations[name]=kwargs['allocation'];callback();return 0
+            with patch('sifr_verify.compact_profile.Schedule',FakeSchedule), \
+                 patch('sifr_verify.compact_profile.acquire_cargo_dependencies'), \
+                 patch('sifr_verify.compact_profile.run_command'), \
+                 patch('sifr_verify.compact_profile.prepare_remaining_graphs'), \
+                 patch.object(runner,'run_area') as area:
+                self.assertEqual(prepare_compact(runner),0)
+            area.assert_called_once_with('sysroot_release',suites)
+            expected='sysroot-structural-assertions' if suites==['metadata-structural'] else 'sysroot-assertions'
+            self.assertEqual(allocations['area_sysroot_release'],expected)
+        stages=load_schedule(mode='compact')['stages']
+        # Capacity of the failed actual compact run. Keep the shared-memory
+        # accounting and reserve; the selected workload estimate changes.
+        capacity=Resources(5,4,16*1024**3,11520053248,6*1024**3,{},[],{},True)
+        admit(capacity,stages['sysroot-structural-assertions'])
+        with self.assertRaises(ResourceError): admit(capacity,stages['sysroot-assertions'])
+
 
 def policy_checks():
     result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(CompactChecks))

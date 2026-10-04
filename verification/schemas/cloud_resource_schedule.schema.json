@@ -38,7 +38,8 @@
         "sysroot-metadata-cached",
         "preparation-coordination",
         "preparation-command-cold",
-        "preparation-command-cached"
+        "preparation-command-cached",
+        "sysroot-structural-assertions"
       ],
       "additionalProperties": false,
       "properties": {
@@ -395,6 +396,38 @@
           }
         },
         "preparation-command-cached": {
+          "type": "object",
+          "required": [
+            "disk_growth_bytes",
+            "retained_copy_bytes",
+            "disk_reserve_bytes",
+            "memory_peak_bytes",
+            "tmpfs_growth_bytes",
+            "memory_reserve_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "disk_growth_bytes": {
+              "type": "integer"
+            },
+            "retained_copy_bytes": {
+              "type": "integer"
+            },
+            "disk_reserve_bytes": {
+              "type": "integer"
+            },
+            "memory_peak_bytes": {
+              "type": "integer"
+            },
+            "tmpfs_growth_bytes": {
+              "type": "integer"
+            },
+            "memory_reserve_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "sysroot-structural-assertions": {
           "type": "object",
           "required": [
             "disk_growth_bytes",
