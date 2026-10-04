@@ -10,6 +10,171 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbip complete source/native diagnostic proof delivery receipt (2026-10-04)
+
+**Current controlling state: H03a1hbip complete diagnostic proof is delivered by
+[PR #4306](https://github.com/sifr-lang/sifr/pull/4306) and this separate receipt.
+After this receipt merges, H03a1hbc alone is ready for a separately assigned
+bridge proof. H03a1/full adapter remains dependency-blocked. semantic_export
+remains false. No HBC, adapter, metrics, Windows, SQL, V01 or Q01 work occurred.**
+
+Exact qualified/reviewed candidate cabc19d0ccb4698d1d72213229feeb878ead79fc
+on base da57229746b0793577d257b29f1382baf60b37b0 merged as
+d3e46f896ee0b3def5f1695cad0042f2f64b0954. All 57 implementation paths
+match the candidate byte-for-byte. Current main before merge was
+2bc2ebfc40db66619ab39134b12e7c9d9817ee7e: its five unrelated documentation
+paths had zero intersections with all fourteen actual proof input inventories.
+The complete candidate/merge trees differ only by those unrelated docs; no
+whole-tree equality claim is made. This receipt changes only canonical Markdown.
+
+The authorized separated source_native_attribute_membership,
+compiler_semantic_owner_identity and transformed_attribute_observations are
+implemented in a closed diagnostic relation. Complete immutable caller-held
+original inventories precede projection; every consumer/cache/repeat/publication
+authenticates current inputs, raw originals and cross-references. Original rustc
+AttrId/attachment, consumed-item lineage and pre-consumption survival remain
+not_claimed_by_authorized_contract. Empty stage attrs are transformed observations.
+Expanded AttrId is stage-only. No compiler/RA producer, root/helper manifest/lock,
+pin, graph or semantic admission change was made.
+
+Actual genuine anchors include SifrIntBindingCollector declaration19..81 /
+physical STRUCT0..81 / direct Default0..18; IncludedBinder left/right original
+17..68 with direct Debug and independently proven include contexts; impl aggregate
+None retained; ScalarCallRewriter original0..307/name7..25 has exhaustive exact
+token/subnode/owner correspondence despite unavailable expanded tokens. Exact
+raw/official normalization, direct/inner/nested attribute kind/style/order,
+tokens/subnodes/trivia/ancestry/include context stay separate from independent
+compiler declaration and final owner/parent/trait/binder/use/index/depth facts.
+Enumerated imports retain exact source-kind dispositions under admitted semantic
+parents, without imported-target substitution or a universal ToDef requirement.
+Dynamic, nonempty HRTB/outlives, inherited/method-own constraints, resolved traits,
+body ReErased and ObjectShapes RA-only negatives remain intact.
+
+### Actual acceptance and original controls
+
+All four exact fail-fast IncludeSourceCorrespondenceTests ran individually:
+
+| Exact case suffix | Actual cases | Actual contract assertions |
+| --- | --- | --- |
+| test_included_impl_and_adt_have_exact_original_semantic_source | 1/1 | 1,801 |
+| test_multi_anchor_normalization_and_context_identity_are_lossless | 1/1 | 336 |
+| test_coordinated_include_source_mutations_fail_closed | 1/1 | 296 |
+| test_required_original_linux_include_context_union_repeats | 1/1 | 8,221 |
+
+The exact full class passes4/4 with10,654 assertions (296/1801/336/8221).
+Individual C4 passes in6094.908985s; full class7077.033882s. Each C4 run
+executes the entire original thirteen-case union13/13/1927:
+49/8/184/24/11/48/32/32/21/1266/48/141/63. These are actual counts, not
+inferred from setUpClass or historical runs. Full-class complete fourteen-context
+union SHA-256 6805b59c66f4011f00f2e0924cb04b3cb7444d9fa5d90f5c67c6ffba2a464170.
+All four genuine Linux main/repeat pairs pass full normalized byte comparison,
+actual corruption rejection and exact restoration. Actual original Linux included
+source, manifest-byte input and cfg-environment mutations independently reject
+publication against intact authority, then restored positives pass.
+
+Exact focused selections20/20 run32 actual cases/3980 assertions: original
+thirteen individuals; Capability full5/276, Inventory full4/133, Extension
+full4/1518; HBF named individuals1/7,1/21,1/35 and full3/63. The original
+normal Linux cargo check --locked lib/tests controls for sifr_codegen and
+sifr_lowering each have actual successful artifacts/build-finished in both owned
+checkouts. Eight legacy original preparations and fourteen source/native
+preparations are independently owned/authenticated; applicable exact syn
+dependency invocations/replay are separate. Four Linux contexts in each checkout
+plus six genuine attribute/HRTB/alpha/CRLF/BOM/Unicode fixtures form the union.
+Helper-only bootstrap build passes; storage tests4/4, cargo fmt --check,
+registered CRLF-aware diff check and900-line guard4358 files pass.
+
+Outside-Git final validation summary:
+evidence/coverage-repair-final-validation-summary.json,
+SHA-256 9bc7260835d2734dcc66ae943410cdbebe0704b5f494e272cd230a9f4a97ce63.
+Full-class raw log SHA-256
+e63666a85dfa3d28d812c45f787eb2e52ed1009a179d94f75a5ef4ed525dff2f.
+Individual C4 raw log SHA-256
+a5ae9ef1f3dc4ca778f5e624801fbbb93fdd0d9ab8b06698b95802dbae1596a3.
+The summary binds every exact command, case, assertion, context inventory,
+original artifact/capture, raw receipt/log hash and failed attempt.
+
+### Scoped review and bounded recovery history
+
+Actual Opus5-5/medium read-only review1 on historical e630 was NOT SATISFIED:
+one valid coverage omission (cfg label was manifest mutation; original Linux
+source/input/cfg negatives absent). Sole correction to acceptance helper adds
+the three actual original-context mutations and honest naming. All affected
+individual/full assertions freshly pass on cabc. Actual complete review2 is
+**SATISFIED**, no blocking finding or new mechanism defect,75.498053s:
+evidence/candidates/cabc19d0ccb4698d1d72213229feeb878ead79fc/review-2.json,
+SHA-256 14a13c4c1a7d6abee7ab7183f3f24e84cca3ba960afa4da62784d9a1ee9a19f1;
+response SHA-256 38128975b9e9bcfc76ef7b40dc142c70bcaf0f8f164d910e197310409189460e.
+Both requests used no-session-persistence and atomic durable outside-Git responses.
+No third review occurred. Suggestions remain follow-up work: narrower impl None
+anchor assertion, hash/read race hardening, repeat hash-field precision, mutation
+interruption recovery and failed-compiler negative precision; none blocked review.
+
+Serialization repairs retain complete original owner/span/site bytes before
+selection, authenticated spool content restored before unchanged semantic
+production, then stream complete JSON atomically. Decoded-cache reauthentication
+and coordinated redigested negatives remain mandatory. Allocation diagnostics
+alone are not admission evidence.
+
+Historical aggregate1200s C4 timeout remains failed with zero completed cases.
+Late serialization/RAM stops, output stops, first current C4 extern-input drift
+(8217 partial assertions/status1), refresh RAM stop8358800KiB/status-15,
+failed selected live case14partial/status1 and all other failed runs remain
+traceable. Exact seven owned Ruff artifacts restored only from hash-matching
+independently held original copies; six cache trees preserved with complete
+manifests. Failed refresh left five MAIN first-party metadata artifacts without
+matching original copies: those were not falsely restored; old raw/cache history
+was preserved and fresh MAIN normal/compiler/native preparation qualified.
+Unused-heap release before unchanged helper invocation reduced allocation without
+dropping authority; fresh preparation294.038757s and all eight actual target
+input sets passed compatibility. Preliminary same-path main/repeat conflict
+inference was explicitly retracted: repeat uses distinct filenames. No receipt
+rebinding, synthesized historical artifacts or changed-input pass reuse.
+
+**Donor evidence incident:** an early copied runner's wrong cwd overwrote three
+historical donor helper-build log/operation/done files. Original manifest hashes
+and overwritten copies are preserved under evidence/runner-incident/. No
+hash-matching originals were found in prior local immutable archive or other
+searched copies; these three files were not restored. Do not claim every donor
+artifact was preserved. No donor source/index/branch changed and the owned runner
+cwd/path/environment was audited before further operations. This is separate
+from two owned invocation-store files later restored exactly from their matching
+own manifest, and from the owned target recovery above.
+
+### Execution clarification, ownership and next boundary
+
+The controlling amendment/resource sections prescribe1200-second expensive
+operations, not an aggregate1200-second unittest containing multiple contexts.
+Every operation retains1200/earlier-parent deadlines, two Cargo jobs/one sequential
+server and12GiB disk/8GiB available RAM. Individual C4's438000 conservative outer
+guard was unchanged. Full-class finite578400 outer guard derives current separate
+C4's360 + C1's10 + C2's17 + C3's90 non-overlapping top-level slots, four bounded
+setup slots and1200 orchestration; nested slots are not counted twice. Actual
+full class474 top-level/3157 nested operations. Earlier estimates/failed attempts
+remain preserved. Focused fixed selectors have their separate finite budget.
+No deadline, resource or assertion-selection waiver occurred.
+
+Owned branch/index/worktrees/evidence:
+codex/h03a1hbip-source-native-proof-20261002 under
+/data/sifr-h03a1hbip-source-native-proof-20261002/, with distinct receipt worktree.
+The inactive architecture-session target
+/data/sifr-h03a1hbip-envelope-target-20261002 was exclusively adopted after owner/
+active-process audit. Donor indexes/raw evidence and unrelated shared checkouts
+were not used as writable resources. Compatible compiler/metadata/fixture/capture
+cache reuse authenticates actual current inputs/configuration; selected assertions
+still ran. No target cleaning, guessed reserve or cold-host performance claim.
+
+This documentation-only receipt runs documentation structure, file guard,
+registered old-byte reconstruction, canonical-only scope, whitespace/gitlink
+checks and SELF-review; no new broad gate or external review. The human-approved
+intermediate policy leaves the full final integration gate to its separate owner.
+Terminal handoff/evidence is copied atomically under
+/Users/yaseralnajjar/.codex/sifr-architecture-evidence/h03a1hbip-source-native-proof-20261002/.
+After this receipt merges, separately assign H03a1hbc only; its five exact cases/
+full class/four contexts/fixtures and review/merge/separate receipt remain required
+before full adapter. Explicit future expanded V01 approval remains required.
+Blocker: none. This worker stops after H03a1hbip and starts no next batch.
+
 ## H03a1hbipau source/native authority amendment delivery receipt (2026-10-02)
 
 **Current controlling state: H03a1hbipau human-approved source/native authority
@@ -5540,8 +5705,8 @@ No compiler test, Cargo build or performance measurement is claimed here.
 | H03a1hbie | #4264 and accepted HBI/HBF/HBS retained; **closed**, scope #4265 at `2cd599e1b7cdf4fbe683bb64ff61b696892987af` and controlling separate receipt above. | Canonical-only authenticated declaration/attribute envelope scope delivered; no producer/capability acceptance. |
 | H03a1hbipa | #4268/#4269/#4270 and accepted HBI/H03a1hbie/HBF/HBS history retained; audit delivered. | Historical needs-new-scope stop remains unaccepted; human-approved H03a1hbipau source/native amendment above prospectively supersedes only attribute authority/readiness. |
 | H03a1hbipau | **Closed, human-approved source/native authority amendment**; #4273 candidate 869b23cb6ef4290fb8d9e0d54adfe56d4e9089e6 / merge 650982fe16d3c6b792ce0b52f9e950bb16501f7a and controlling separate receipt above. | Exact source/native membership plus independent compiler semantic identity; lost original rustc AttrId/attachment/consumed-item lineage/survival explicitly not claimed. No custom compiler, zero proof cases/contexts. |
-| H03a1hbip | Complete HBI/H03a1hbie and #4268/#4269/#4270/#4271/#4272 history retained; **ready for separately assigned proof after approved #4273 amendment and this separate receipt merge**. | Four exact IncludeSourceCorrespondenceTests/full class under amended source membership contract; complete inventories, original four Linux contexts and all semantic/binder/trait/token obligations required. Zero accepted cases/contexts; no HBC/adapter acceptance. |
-| H03a1hbc | Merged HBF #4238/#4258 and complete merged H03a1hbip proof/receipt required; **dependency-blocked**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No new assignment before complete include-source proof/receipt, no adapter resumption. |
+| H03a1hbip | **Closed complete diagnostic proof**, #4306 candidate cabc19d0ccb4698d1d72213229feeb878ead79fc / merge d3e46f896ee0b3def5f1695cad0042f2f64b0954; separate controlling receipt above. | Four individuals1/1 and full4/4/10654; original13/13/1927 union; all four Linux contexts/main-repeat plus six fixtures; source/native membership and independent compiler semantic identity. semantic_export false; no HBC/adapter acceptance. |
+| H03a1hbc | Merged HBF #4238/#4258 and complete H03a1hbip #4306 proof plus separate receipt above; **ready for separately assigned bridge proof after this receipt merges**, #4261 failed attempt retained. | Five named bridge capability tests, unchanged required fixtures and four Linux contexts remain unqualified. No adapter resumption before complete HBC proof/review/merge/separate receipt. |
 | H03a1 | H03a0, accepted H03a1p/H03a1pe and complete merged H03a1hbc proof/receipt; **open, dependency-blocked**, #4234/#4235 stop retained. | Separate full Linux/Windows structural union, external closure and build-input adapter resumption after declaration bridge proof. Original five SemanticInputTests remain mandatory; no metric baseline or compiler behavior change. |
 | H03a | Merged H02h5 and H03a1; **open, dependency-blocked**, normalized-ratchet acceptance open. | Verification tooling: normalized metric/discovery engine, schema, reviewed current baselines and source-bound exception records for `sifr_lowering` and `sifr_codegen` only. No compiler behavior change. |
 | H03b | H03a; waiting. | Codegen API/dead-code evidence: resolve the current codegen public closure, workspace callers, implementation fan-out and every blanket dead-code allowance's suppressed declaration. Produce exact keep/private/removable/unresolved dispositions, without deleting or changing visibility. |
@@ -5555,7 +5720,7 @@ No compiler test, Cargo build or performance measurement is claimed here.
 
 Execute **H03a0, H03a1s, H03a1pi, H03a1pr (closing H03a1p), H03a1pes,
 H03a1pers, H03a1peo, H03a1pets, stopped H03a1pet, H03a1petbs,
-H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbie, H03a1hbipa (historical audit delivered), H03a1hbipau (human-approved source/native amendment and separate receipt), H03a1hbip (separately assigned complete proof only after amendment receipt), H03a1hbc,
+H03a1petb (closing H03a1pe), H03a1hbs, H03a1hbf, H03a1hbi, H03a1hbie, H03a1hbipa (historical audit delivered), H03a1hbipau (human-approved source/native amendment and separate receipt), H03a1hbip (complete proof #4306 and separate receipt), H03a1hbc (separately assigned only after HBIP receipt),
 H03a1, H03a, H03b, H03c, H03d,
 H03ep (H03eps only on a concrete readiness failure), approved full expanded
 V01 capture, H03eq, then H03f**, one independently owned
