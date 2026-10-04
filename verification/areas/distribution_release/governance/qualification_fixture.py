@@ -444,6 +444,8 @@ def write_synthetic_target(
         "Cargo.lock": b"# fixture lock\n",
         ".cargo/config.toml": b"[net]\noffline = true\n",
         "crates/sifr_runtime/Cargo.toml": b'[package]\nname = "sifr_runtime"\n',
+        "crates/sifr_sql_runtime/Cargo.toml": b'[package]\nname = "sifr_sql_runtime"\n',
+        "crates/sifr_sql_sqlite_runtime/Cargo.toml": b'[package]\nname = "sifr_sql_sqlite_runtime"\n',
         "crates/sifr_structural_identity/Cargo.toml": (
             b'[package]\nname = "sifr_structural_identity"\n'
         ),

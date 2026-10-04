@@ -1916,3 +1916,20 @@ producer evidence for reused component jobs. A selector cannot make skipped
 component assertions appear fresh merely by leaving the matrix job successful.
 Controls use this actual expanded-job shape and reject a skipped source assertion.
 All affected controls pass; actual hosted reuse and acceptance gates remain open.
+
+### M5 governance qualification fixture inventory — 2026-10-04
+
+The existing stable-prepare self-test's synthetic archive omitted the two SQL
+runtime Cargo manifests already required by verify_release_archive. This bounded
+fixture-only repair adds those manifests to the explicitly synthetic target
+payload. It changes no SQL compiler/runtime, public support claim or native
+qualification assertion. Digests and manifests continue to derive from actual
+fixture contents; archive requirements remain unchanged.
+
+All eight existing stable publication prepare self-tests now pass, including
+normal/incident preparation, activation recovery, input-drift refusal, summary,
+CLI producer and safe artifact extraction. Raw output is retained in
+/workspace/validation-work/evidence/qualification-fixture-sql-inventory.log.
+Source size and diff checks pass. The earlier missing-file failures remain
+failed; this is synthetic governance coverage, not real package/platform proof.
+Scoped review and required local gates remain pending.
