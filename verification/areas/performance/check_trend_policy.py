@@ -37,6 +37,7 @@ def main() -> int:
     parser.add_argument("--trend-baselines", default=str(DEFAULT_TREND_BASELINES))
     parser.add_argument("--policy", default=str(DEFAULT_POLICY))
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--policy-only", action="store_true", help="Validate structure without qualifying baseline freshness.")
     parser.add_argument("--reference-profile", default=os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
     args = parser.parse_args()
 
@@ -51,9 +52,11 @@ def main() -> int:
         trend_baselines = reference["baseline"] if reference else load_json(Path(args.trend_baselines))
         policy = load_json(Path(args.policy))
         validate_trend_policy(
-            manifest, trend_baselines, policy, manifest_path=Path(args.manifest)
+            manifest, trend_baselines, policy, manifest_path=Path(args.manifest),
+            qualify_baseline=not args.policy_only,
         )
-        print("performance trend policy check passed")
+        print("performance trend policy structure valid; baseline freshness not evaluated"
+              if args.policy_only else "performance trend policy check passed")
         return 0
     except (TrendPolicyError, ReferenceProfileError) as error:
         print(f"performance trend policy error: {error}", file=sys.stderr)
@@ -68,6 +71,7 @@ def validate_trend_policy(
     manifest_path: Path | None = None,
     today: date | None = None,
     now_unix: int | None = None,
+    qualify_baseline: bool = True,
 ) -> None:
     today = today or date.today()
     now_unix = int(datetime.now(tz=UTC).timestamp()) if now_unix is None else now_unix
@@ -78,7 +82,8 @@ def validate_trend_policy(
     validate_manifest_hash(trend_baselines, manifest_path)
     validate_metadata(trend_baselines, validated_policy, deferrals)
     validate_reference_capture(trend_baselines, validated_policy)
-    validate_results(trend_baselines, cases, validated_policy, deferrals, now_unix)
+    validate_results(trend_baselines, cases, validated_policy, deferrals, now_unix,
+                     qualify_baseline=qualify_baseline)
 
 
 def validate_manifest(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -368,6 +373,7 @@ def validate_results(
     policy: dict[str, Any],
     deferrals: list[dict[str, Any]],
     now_unix: int,
+    *, qualify_baseline: bool = True,
 ) -> None:
     entries = trend_baselines.get("results")
     if not isinstance(entries, list):
@@ -395,7 +401,8 @@ def validate_results(
         captured_at = require_int(
             raw, "baseline_captured_at_unix", f"trend baseline result {result_id}"
         )
-        validate_freshness(result_id, captured_at, policy, deferrals, now_unix)
+        if qualify_baseline:
+            validate_freshness(result_id, captured_at, policy, deferrals, now_unix)
     if ids != sorted(ids):
         raise TrendPolicyError(
             "trend baseline results must be sorted lexicographically by benchmark id"
@@ -505,7 +512,7 @@ def run_self_test(reference_profile: str = "") -> None:
     )
     policy = load_json(DEFAULT_POLICY)
     validate_trend_policy(
-        manifest, trend_baselines, policy, manifest_path=DEFAULT_MANIFEST
+        manifest, trend_baselines, policy, manifest_path=DEFAULT_MANIFEST, qualify_baseline=False
     )
     reviewed_at = date.today().isoformat()
     expires = (date.today() + timedelta(days=30)).isoformat()

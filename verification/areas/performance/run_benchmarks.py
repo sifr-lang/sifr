@@ -18,6 +18,7 @@ from typing import Any
 import compiler_lanes
 from benchmark_cli import parse_args
 from reference_host import reference_identity
+from measurement_timer import require_managed_counters
 from reference_profiles import (
     ReferenceProfileError, assert_comparable, assert_producer_unchanged, capture_profile, load_profile, profile_digest,
     validate_compiler_reference, profile_path,
@@ -243,6 +244,8 @@ def main() -> int:
             identity_after = reference_identity(REPO_ROOT, Path(args.manifest), args.controlled_host_mode)
             assert_producer_unchanged(identity, identity_after)
         run_report["metadata"]["sample_scale"] = args.sample_scale
+        run_report["metadata"]["qualification_scope"] = (
+            "smoke-unqualified" if args.sample_scale == "smoke" else "registered-reference-required")
         run_report["metadata"]["reference_compiler_commit"] = compiler_reference
         if identity is not None:
             run_report["metadata"]["host_cpu"] = ", ".join(identity["host"]["cpu_models"])
@@ -672,6 +675,7 @@ def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
         }
     rss_after = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     process_data = parse_process_metrics(completed.stderr)
+    require_managed_counters(process_data)
     peak_rss_bytes = process_data["peak_rss_bytes"]
     if peak_rss_bytes is None:
         peak_rss_bytes = normalize_rss(max(rss_after, rss_before))

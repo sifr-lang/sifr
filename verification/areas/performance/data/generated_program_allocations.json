@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "owner": "compiler/generated-program-performance",
+  "protocol": "rust-globalalloc-main-v1",
+  "scope": "successful Rust GlobalAlloc request deltas while generated main executes; single-threaded registered workloads only; libc/loader and post-main cleanup excluded; separate instrumented artifact, never timed process bytes",
+  "samples_per_case": 1,
+  "numeric_regression_qualification": false,
+  "optimization": "release",
+  "target_cpu": "generic",
+  "instrumentation_sha256": "b08b430dea834f143f5ce2c26e5e97ad8b9bb440f7bb55beefe55f72974bcb4b",
+  "program_policy_sha256": "b4d0162cc32266678a2a97bcf7a8cb51e203e6a5b30912e1cdfa7ec54f295e50",
+  "fields": [
+    "allocation_calls",
+    "allocation_requested_bytes",
+    "reallocation_calls",
+    "reallocation_requested_bytes",
+    "deallocation_calls"
+  ],
+  "notes": "Counters describe actual successful requests by the separately instrumented artifact. Instrumentation may affect optimizer decisions; never transfer these counts to an uninstrumented binary or numeric performance qualification."
+}

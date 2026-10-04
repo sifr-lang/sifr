@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "owner": "compiler/performance",
+  "manifest_sha256": "d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2",
+  "levels": {
+    "smoke": {
+      "cases": [
+        "formatter-corpus-001-project-check",
+        "formatter-large-file-001-check",
+        "incremental-local-loop-001-unchanged-file-update",
+        "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "lsp-query-003-diagnostics"
+      ],
+      "case_count": 5,
+      "sample_scale": "smoke",
+      "requires_reference": false,
+      "allowed_claims": [
+        "runner and selected workload correctness"
+      ],
+      "forbidden_claims": [
+        "numeric regression qualification",
+        "empirical p95 qualification",
+        "paired full-corpus qualification"
+      ]
+    },
+    "representative": {
+      "cases": [
+        "build-project-001-additional-modules",
+        "build-single-file-001-break-continue",
+        "check-project-004-project-graph",
+        "check-single-file-001-arithmetic",
+        "diagnostic-non-regression-002-json-diagnostic-schema",
+        "formatter-corpus-001-project-check",
+        "formatter-large-file-001-check",
+        "incremental-local-loop-001-unchanged-file-update",
+        "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "lsp-query-003-diagnostics"
+      ],
+      "case_count": 10,
+      "sample_scale": "manifest",
+      "requires_reference": true,
+      "allowed_claims": [
+        "selected workloads and eligible named-reference thresholds"
+      ],
+      "forbidden_claims": [
+        "full-corpus qualification",
+        "paired full-corpus qualification without verified receipt"
+      ]
+    },
+    "full": {
+      "cases": "all",
+      "case_count": 65,
+      "sample_scale": "manifest",
+      "requires_reference": true,
+      "allowed_claims": [
+        "all corpus workloads and eligible named-reference thresholds"
+      ],
+      "forbidden_claims": [
+        "paired full-corpus qualification without verified receipt",
+        "population p95 inference from empirical quantiles"
+      ]
+    }
+  },
+  "shared_cloud_full": {
+    "protocol": "shared-cloud-median-v2",
+    "case_count": 65,
+    "fixed_pairs": 5120,
+    "qualification": "independent verified complete receipt only"
+  }
+}

@@ -102,6 +102,27 @@
           "command": "python-script-self-test",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "performance-level-contract",
+          "entry": "verification/areas/performance/performance_levels_tests.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "generated-program-contract",
+          "entry": "verification/areas/performance/generated_program_metrics_tests.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "generated-cargo-artifact-identity",
+          "entry": "verification/areas/performance/program_artifact_identity_tests.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
