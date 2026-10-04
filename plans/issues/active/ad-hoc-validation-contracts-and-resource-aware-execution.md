@@ -1780,3 +1780,35 @@ The native compact create-pr run at `81bc5ca1ecb07e2e24d08dac78db37093b496e3e` p
 The coordinator now performs capacity admission without imposing a cumulative growth floor over its independently admitted and monitored children. Every child retains its original allocation, reserve, stopping headroom and any stricter caller floor. Nested controls prove that a child can grow beyond the coordinator estimate within its own admitted allowance, while a stricter caller floor still rejects the attempt and is restored afterward. Seven compact and nine cache/admission controls passed. This does not change compilation, case selection, assertion reuse or source preparation identities.
 
 The session retired an obsolete successful owned compiler graph after exact retention/restoration of its compiler path, reclaiming 2,590,064,640 bytes before the preserved raw compiler restoration. Failed cleanup-cwd evidence was retained separately. Two clean obsolete owned review worktrees were retired after retaining their ignored target data; their committed branches and remote refs remain available. The independent historical compiler baseline is now preparing into a separate leased disk graph, with all reserves unchanged, rather than adding that graph to the shared RAM filesystem. Its earlier unadmitted and launcher failures remain failed.
+
+### Native execution and completed baseline — 2026-10-04
+
+The compact create-pr invocation at 81bc5ca1ecb07e2e24d08dac78db37093b496e3e
+failed after source preparation and metadata structural assertions passed.
+It ran for 1417 seconds; the structural area completed in 32.468 seconds with
+actual Rust tests and doctor recovery checks. Remaining preparation failed when
+the parent's cumulative coordinator floor overrode the child's admitted floor.
+Raw output, journal and failure observation remain under
+/workspace/validation-work/evidence/create-pr-tmpfs-81bc5ca1e. The separate
+structural diagnostic passed with a 247361536-byte maximum RSS. These results
+qualify neither the complete create-pr profile nor a later candidate.
+
+PR 4310's accepted coordinator correction removes only the outer cumulative
+monitor; child admission, reserves, monitoring and stricter caller floors remain
+mandatory. Its first foundation run failed a pre-existing half-second process
+control under a concurrent compiler build. The serialized foundation rerun now
+passes, retained at
+/workspace/validation-work/evidence/coordination-floor-foundation-serialized.log.
+The original failure remains recorded. Review is SATISFIED at
+/workspace/validation-work/evidence/sifr-claude.8OhqbB/response.md for
+54e4211bdd351006f3825f3b0e746b84a6f7b584. No broad corrected profile has passed.
+
+The independent baseline's compiler and frontend helper are prepared at
+1e81537db6046dbf7381f193152bcf4e7c89ec02, preserving the historical compiler
+5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042 with only reviewed measurement overlays.
+The successful continuation observation is independent-baseline-1e81537db-v3;
+its previous disk-floor failure remains failed. After verifying both output
+binaries, the completed owned preparation graph was retired under its original
+lease, retaining both binaries and raw cleanup evidence. This recovered
+2242191360 bytes. Endpoint copies and their receipt identities are unchanged.
+No paired compiler performance invocation has been captured.
