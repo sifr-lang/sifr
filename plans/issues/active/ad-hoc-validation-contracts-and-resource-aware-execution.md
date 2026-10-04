@@ -1899,3 +1899,18 @@ its diagnostic binds actual compiler, metadata and validator hashes at
 That diagnostic does not qualify the failed 0.0.0 package or a published upgrade.
 Scoped review, canonical corrected native preparation, transition and full
 native/local acceptance remain pending.
+
+The initial format repair review is NOT SATISFIED at b4afce888:
+/workspace/validation-work/evidence/sifr-claude.u6P6ZT/response.md. A second
+synthetic producer in governance/qualification_fixture_support.py still emitted
+format 4. The remediation uses the validator's canonical CONTAINER_VERSION in
+that fixture. All four target fixtures now validate format 5 and the seven
+metadata controls pass. The affected full stable-prepare self-test reaches an
+existing incomplete archive fixture and fails missing
+crates/sifr_sql_runtime/Cargo.toml. The same failure is reproduced with the
+unchanged format-4 validator and governance fixture at base 1edcfa46d; both raw
+logs are preserved (metadata-format-governance-diagnostic.log and
+metadata-format-governance-baseline.log). It is not a format regression and not
+a passing governance gate. The separate distribution qualification fixture
+inventory follow-up must align with the current required SQL runtime payloads;
+no SQL compiler/runtime implementation or externally owned PR is changed here.
