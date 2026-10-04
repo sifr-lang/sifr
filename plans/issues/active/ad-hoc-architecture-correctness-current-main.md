@@ -10,6 +10,70 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbc trait-header adjudication proposal delivery receipt (2026-10-04)
+
+**Proposal delivery complete; explicit human authorization is still pending.**
+The canonical-only adjudication [PR #4336](https://github.com/sifr-lang/sifr/pull/4336)
+merged at 2026-10-04 13:43:19 UTC as
+`f9a86685371e099b5a9432f674c8d50fb95577f7`, from candidate
+`dbdc446249c0c535bac67e14310a7b032eb5fb22` on base
+`d097a0957f51e0633b2365497148ce57a774bb1f`. Candidate and merge have the identical
+complete tree `f546ab9669163b7c3c7b3409955b4dc498ff3d8a`. The proposal added 235
+lines to this document and preserved all previous bytes. This receipt records its
+delivery and supplies no authorization, source admission or capability proof.
+
+The source-supported finding distinguishes an available local HIR item/body span
+API from the inspected dependency trait `def_span` metadata route. No unchanged
+whole-declaration solution is established for all five actual FnOnce/Debug/local
+BoundObject relations. The proposed change is limited to the trait-header
+counterpart obligation: exact native token/subnode coverage of the actual compiler
+header, while retaining the whole native declaration, exact Name, independent
+stable compiler identities and every source/semantic/attribute/context obligation.
+It is explicitly a proposal, not a qualified replacement for the existing contract.
+
+Twelve pinned official source files matched installed bytes; inclusive linked
+ranges and per-excerpt hashes were audited. The original seven-file manifest,
+successful Cargo control/artifact record, exact replay arguments/cwd/status, native
+roundtrips and all five original interval mismatches were authenticated read-only.
+The ordered saved inventory reconciles 23 owners, 29 parameters, 20 binders,
+40 lifetime occurrences, five trait constraints and 80 types. This is saved-record
+inspection, not current artifact freshness or HBC acceptance validation.
+
+The exact proposal candidate passed:
+
+- `python3 verification/areas/documentation/check_structure.py`, including registered mutation harnesses; log SHA-256 `d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0`.
+- `python3 scripts/check_file_size_guardrails.py`, 4,358 files, 900-line limit; log SHA-256 `8725f1c681d4c03e082b5417670291ddfb3014fe8bfe24e7b1d126019d0456c4`.
+- Pinned-source link/range/evidence hashes, canonical-only scope, historical byte preservation, whitespace and clean-tree checks. Exact editor `d6fde7111800349428f63db05a34ca9a32acd576` and nested VS Code `5930dc1a0ccc52d9f382553156e98294a95420d9` gitlinks were retained and prepared only in the owned docs checkout.
+- Scoped SELF **SATISFIED for documentation accuracy and pending-authorization status only**, with no implementation review claim.
+
+Outside-Git evidence remains at
+`/data/sifr-hbc-header-contract-adjudication-20261004/evidence/`:
+`proposal-qualification-final.json` SHA-256
+`0ddf7a061c35f64b7be039dd607a07124bee29b4188bedbb722eea5b308475a7`;
+`proposal-self-review.json` SHA-256
+`65df36e51e3a673340ab194ad1dd847e5b70439f36c0d76703fae2c1f3b5c5b9`;
+`pinned-source-audit.json` SHA-256
+`f5db02e25d04267bcd9b6761e576e0e017dc67e6a9ccffaf405e595c091f265b`;
+`original-evidence-audit.json` SHA-256
+`9e3c3d3e99d8562e67f2f2f1d2aa68595bad744dc7f75dc7cfaa6458bb58af6c`.
+This separate canonical-only receipt uses the same named documentation checks,
+source/evidence audits, historical byte preservation, scope/whitespace/clean-tree
+checks and scoped SELF. No broad gate or external implementation review is required.
+
+**Next action: explicit human disposition of the concrete proposal below.**
+Requested authorization: approve exact token/subnode correspondence for the actual
+compiler trait-header interval while preserving the separate native declaration,
+Name, independent semantic identities and all listed source/context obligations.
+The earlier Continue and this merge do not grant that approval. After approval is
+recorded with its receipt, separately assign the complete HBC proof; otherwise the
+existing exact counterpart blocker stands. No next worker or proof was started.
+HBC remains **needs-new-scope, unaccepted and inactive**, with 0 accepted final
+tests/assertions, 0 completed Opus cycles and no implementation PR/merge.
+All failed containment/C4/resource/strict-C1 history and the unmerged read-only
+diagnostic remain intact. HBS/HBF and accepted HBIP source/native proof/receipt
+remain intact with `semantic_export: false`. Full H03a1/adapter remains
+dependency-blocked. Delivery blocker: none; contract authorization remains pending.
+
 ## H03a1hbc trait declaration-header/source adjudication proposal (2026-10-04)
 
 **Documentation adjudication delivered as a proposal; contract change pending new
