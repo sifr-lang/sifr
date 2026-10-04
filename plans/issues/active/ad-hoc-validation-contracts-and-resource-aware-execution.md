@@ -2157,3 +2157,15 @@ native preparation. It stopped at the Darwin storage-authority guard. The raw
 job log and downloaded failed state from run `37180131233` are retained outside
 Git. This is a new observed provider classification failure, not an assumed host
 capacity or native execution pass; collect the actual disk authority next.
+
+## M5 hosted native capacity diagnostics — 2026-10-04
+
+The observed macOS ARM failure did not preserve the underlying disk authority
+inputs. Collect bounded raw `df`, `diskutil info` and APFS inventory, VM page
+counts and CPU/memory totals before native preparation, and preserve those files
+in the existing always-uploaded evidence. Each command records its exit cause,
+truncation and output digests. These observations grant no resource admission
+and do not change the storage guard or any runtime requirement. Allow direct
+dispatch of the existing four-native-target workflow so this rehearsal can run
+without also dispatching unrelated parent jobs. Scoped review and actual hosted
+observations remain pending.

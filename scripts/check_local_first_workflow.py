@@ -142,7 +142,7 @@ def validate_native_qualification(parent: dict, document: dict) -> list[str]:
     if job != {'if': "github.event_name == 'workflow_dispatch'",
                'uses': './.github/workflows/published-native-qualification.yml'}:
         errors.append('native qualification must use the explicit manual reusable workflow')
-    if document.get('permissions') != {'contents': 'read'} or document.get('on', document.get('true')) != {'workflow_call': None}:
+    if document.get('permissions') != {'contents': 'read'} or document.get('on', document.get('true')) != {'workflow_call': None, 'workflow_dispatch': None}:
         errors.append('native qualification must remain reusable and read-only')
     native = document['jobs']['native']
     expected = [('aarch64-apple-darwin', 'macos-15'), ('x86_64-apple-darwin', 'macos-15-intel'),
