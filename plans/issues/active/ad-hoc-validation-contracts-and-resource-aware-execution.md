@@ -1,5 +1,81 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## Current acceptance checkpoint — 2026-10-04
+
+The full integration tree now contains reviewed CPU-distribution correction
+`eec080d4f8892f88934fc14d5e7e4ced4f855187`, named SQL clean-build allocation
+`13757b167a81532f81c3e7a3bda9eec6190b81e4`, and early whole-SQL scheduling
+`4a77f0f37e99a495ac3119844ef03f098d5ae2b2`. Their exact scoped Opus reviews
+are satisfied. The SQL successor passed 48 focused controls; the integrated
+checkout passes all six profile contracts, its 4,462-file size guard and whitespace
+checks. All 19 SQL suites, 66 cases and 30 unique preparation commands remain.
+The complete create-PR, performance and final compact cloud gates are still open;
+none of these focused checks qualifies the whole candidate.
+
+A complete download of the declared official CPU wheel independently matched
+SHA-256 `f152f41dc5dc462afe0de780e451ebb47ea8b4451f8f919f9537aa8e2cbe1d7e`
+and size 196,260,719 bytes. Its disposable verification copy was retired. This
+extends the earlier metadata-only observation; installed environment growth and
+actual Python/native preparation still require the canonical gate.
+
+The user's owned temporary-artifact cleanup authorization permits a separately
+reviewed, byte-complete archival custody operation on closed historical graphs.
+It does not bypass normal failed-consumer retirement: `GraphLease.retire` remains
+unchanged. Prospective registration, exact helper/input hashes, complete decoded
+archive checks, restore commands and original failures are retained outside Git
+under `/workspace/validation-work/evidence/`. Root, directory and lease identities,
+raw failure evidence, metadata and hardlink topology are preserved as specified;
+removed file inode/ctime and directory ctime limitations are recorded explicitly.
+No historical failure becomes a pass, and archived graphs require restoration
+before use. The earlier prohibition belongs to its original native-continuation
+scope and remains an accurate historical record.
+
+Completed custody of twelve obsolete CUDA extraction directories recovered
+591,888,384 physical bytes; five obsolete native cache families recovered
+562,647,040 bytes. The older acceptance-98 graph recovered 975,503,360 bytes.
+Four closed RAM graphs recovered 2,528,534,528 filesystem bytes while their
+physical archives and custody cost 803,434,496 bytes. Each completed operation
+retained verified restoration bytes and original failure classifications.
+The first native graph's original archival attempt stopped on a concurrent
+`cargo metadata` invocation after 664 of 999 removable groups. Its later resume
+stopped before any additional unlink on directory-access-time drift. Both failed
+administrative attempts remain preserved. The reviewed bounded v2 continuation
+validated the exact 181 observed directory access times, unchanged files and
+complete original archive, then removed the remaining 335 groups. It recovered
+962,519,040 further physical bytes; all original failures, protected evidence and
+root/lease identities remain unchanged and the locks are released. This completes
+the six selected graph custody operations without claiming a validation pass.
+
+Five explicitly selected closed archives were then copied, hash/metadata verified
+and placed in RAM storage behind original-path custody symlinks. Their original
+receipts and restore commands remain valid; Cargo-source archives whose restore
+contract rejects such relocation were excluded. Actual physical recovery was
+1,473,261,568 bytes. The 19:03:02 UTC snapshot reports 9,395,503,104 disk bytes
+and 10,954,756,096 available memory bytes: 805,568,512 bytes above SQL's eight-GiB
+entry and 217,337,856 above the ten-GiB sysroot memory entry. The separately
+registered 512-MiB retained-preparation margin is a prospective estimate, not a
+fit guarantee. This stable placement preserves the original two-GiB reserves;
+the canonical stage checks and monitors remain authoritative during execution.
+
+The next execution order is measured storage recovery and stable archive
+placement, a fresh complete create-PR gate, candidate endpoint and complete
+65-workload/5,120-pair performance evidence, then the final shared-VM command
+`cloud --require-performance --compact-resources`. Reserves, assertions and
+numerical acceptance rules stay unchanged. The prior interrupted performance
+capture supplies no samples to the new result. Keep the warm target through
+final correctness validation unless a separate bounded consumer audit proves a
+specific obsolete subset.
+
+Predecessor `1fc27615c` completed native qualification on Linux x64, Linux ARM and
+standard Intel macOS in hosted run `37216400938`; ARM macOS failed before steps
+because of the GitHub account restriction. Those historical passes do not qualify
+a successor. The observed standard ARM memory snapshot also does not justify
+waiving admission. Native coverage for the final candidate and effective protected
+App/aggregate/merge-queue enforcement remain externally constrained and open.
+SQL #4259 is retained ancestrally in draft replacement #4332 and is to be retired
+only after accepted replacement delivery and the required whole-phase audit.
+
+
 ## M2 explicit CPU Python verification distribution — prospective bounded correction
 
 The exact `1fc27615c0263ecee27ff0372d9b5e1bf9e85bef` create-PR attempt
