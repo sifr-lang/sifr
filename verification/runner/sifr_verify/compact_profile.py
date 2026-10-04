@@ -3,6 +3,7 @@ import sys
 
 from .cargo_setup import acquire_cargo_dependencies, enable_offline_cargo, prepare_remaining_graphs
 from .cloud_schedule import Schedule
+from .early_sql import EarlySqlOutcome, run_early_sql
 from .paths import REPO_ROOT
 from .prepared_sysroot import OWNER_VARIABLE, command
 from .profile_commands import run_command
@@ -13,6 +14,7 @@ from .cargo_resource_forecast import test_cache_hint
 def prepare_compact(runner):
     if not sys.platform.startswith('linux'):
         raise ResourceError('compact resource policy requires Linux cgroup v2','unavailable')
+    runner.early_sql_outcome=EarlySqlOutcome()
     schedule=Schedule(runner)
     env,profile=runner.env,runner.profile
     runner.compact_schedule=schedule
@@ -54,5 +56,9 @@ def prepare_compact(runner):
                          allocation=allocation,monitor_disk=True)
     if status: return status
     runner.compact_completed_areas={'sysroot_release'}
+    runner.early_sql_outcome=run_early_sql(runner,schedule)
+    if runner.early_sql_outcome.status and not runner.no_fail_fast:
+        return runner.early_sql_outcome.status
     return schedule.step('cargo_cache_setup',lambda:prepare_remaining_graphs(profile,env,schedule.prepare_command,
-                         include_sysroot=False),allocation='preparation-coordination',preparation=True)
+                         include_sysroot=False,sql_preparation_handled=runner.early_sql_outcome.selected),
+                         allocation='preparation-coordination',preparation=True)

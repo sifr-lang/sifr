@@ -117,7 +117,9 @@ class CompactChecks(unittest.TestCase):
                     self.assertFalse(getattr(runner, 'compact_completed_areas', set()))
                     continue
                 self.assertEqual(status, 0)
-                area.assert_called_once_with('sysroot_release', selected['suites'])
+                area.assert_any_call('sysroot_release', selected['suites'])
+                self.assertEqual(area.call_count, 2)
+                self.assertTrue(remaining.call_args.kwargs['sql_preparation_handled'])
                 self.assertFalse(remaining.call_args.kwargs['include_sysroot'])
                 self.assertLess(events.index('area_sysroot_release'), events.index('cargo_cache_setup'))
                 metadata = [call.args[0][-1] for call in command.call_args_list if '--metadata-suite' in call.args[0]]
@@ -200,7 +202,8 @@ class CompactChecks(unittest.TestCase):
                  patch('sifr_verify.compact_profile.prepare_remaining_graphs'), \
                  patch.object(runner,'run_area') as area:
                 self.assertEqual(prepare_compact(runner),0)
-            area.assert_called_once_with('sysroot_release',suites)
+            area.assert_any_call('sysroot_release',suites)
+            self.assertEqual(area.call_count,2)
             expected='sysroot-structural-assertions' if suites==['metadata-structural'] else 'sysroot-assertions'
             self.assertEqual(allocations['area_sysroot_release'],expected)
         stages=load_schedule(mode='compact')['stages']

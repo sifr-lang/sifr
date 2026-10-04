@@ -14,6 +14,7 @@ from .cargo_setup import (
     prepare_cargo_cache as prepare_profile_cargo_cache,
 )
 from .assertion_resource_forecast import assertion_allocation
+from .early_sql import EarlySqlOutcome
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
@@ -165,7 +166,8 @@ class ProfileRunner:
             return prepared
         if not prepared and self.profile.get("cargo_policy", {}).get("offline") is True:
             enable_profile_offline_cargo(self.env)
-        failed = prepared
+        early_sql = getattr(self, "early_sql_outcome", EarlySqlOutcome())
+        failed = prepared or early_sql.status
         for guardrail in self.profile["guardrail_steps"]:
             if guardrail in early:
                 continue
@@ -180,7 +182,8 @@ class ProfileRunner:
         for selection in self.profile["selected_areas"]:
             area = str(selection["area"])
             suites = [str(suite) for suite in selection["suites"]]
-            if area in getattr(self, "compact_completed_areas", set()):
+            if (area in getattr(self, "compact_completed_areas", set())
+                    or (area == "sql_platform" and early_sql.selected)):
                 continue
             if area == "performance":
                 suites = [suite for suite in suites if suite not in MEASUREMENT_SUITES]
@@ -253,10 +256,12 @@ class ProfileRunner:
         print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")
         print(f"blocked {name}: prerequisite {prerequisite}")
 
-    def block_steps(self, prerequisite: str) -> None:
-        self.block_step("cargo_cache_setup", prerequisite)
+    def block_steps(self, prerequisite: str, *, handled_areas=(), include_setup=True) -> None:
+        if include_setup:
+            self.block_step("cargo_cache_setup", prerequisite)
         for selection in self.profile["selected_areas"]:
-            self.block_step(step_name("area", str(selection["area"])), prerequisite)
+            if selection["area"] not in handled_areas:
+                self.block_step(step_name("area", str(selection["area"])), prerequisite)
         for name in self.profile["toolchain_steps"]:
             self.block_step(step_name("toolchain", name), prerequisite)
 

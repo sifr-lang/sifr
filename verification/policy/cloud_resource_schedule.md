@@ -24,8 +24,9 @@ safety bounds, not performance thresholds or claims about expected duration.
 
 Execution order is inventory guardrails, locked dependency acquisition, isolated
 sysroot source/package preparation, every selected sysroot assertion, artifact
-retention and eligible graph retirement, remaining canonical preparation, then
-the other original guards, areas and toolchain assertions. Every assertion runs
+retention and eligible graph retirement, selected SQL preparation and its whole
+area, remaining canonical preparation, then the other original guards, areas
+and toolchain assertions. Every assertion runs
 once. A failed prerequisite is blocked; failed/incomplete consumers prohibit
 cleanup. `--no-fail-fast` continues independent remaining work when it can be
 admitted, preserving all failures. Preparation never substitutes for assertions.
@@ -86,3 +87,19 @@ incremental setting, cases and deadlines stay unchanged. Other or unknown
 selections keep their existing allocations and monitoring behavior. This models
 the existing entry envelope prospectively; actual SQL peak growth, cold fit and
 full acceptance remain unmeasured. It grants no assertion reuse or graph cleanup.
+
+## Early whole-area SQL execution
+
+When the selected SQL area includes `build-qualification`, resource-aware source
+execution runs its existing SQL-specific preparation and the entire selected area
+once after successful sysroot assertions, before generated/Python and other
+remaining preparations. All 19 canonical suites, 66 cases and 30 unique declared
+SQL no-run commands remain selected; parser-major and SQLite probe wrappers keep
+their existing assertion-time native work. No profile selection or result file is
+split. Later scheduling omits only SQL already handled in this invocation,
+including a failed or prerequisite-blocked outcome. `--no-fail-fast` preserves
+that failure while continuing independent work; fail-fast stops at the failure.
+The lane report records this actual chronological order. SQL result suite/case
+order remains canonical. This is no cross-run checkpoint or assertion reuse.
+SQL's own preparation may grow the shared target; earlier ordering reduces
+unrelated retention but does not establish eight-GiB admission or cold fit.

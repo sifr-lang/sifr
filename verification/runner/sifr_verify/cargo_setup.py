@@ -74,7 +74,8 @@ def prepare_generated_inputs(profile, env, command_runner) -> None:
         )
 
 
-def prepare_remaining_graphs(profile, env, command_runner, *, include_sysroot=True) -> None:
+def prepare_remaining_graphs(profile, env, command_runner, *, include_sysroot=True,
+                             sql_preparation_handled=False) -> None:
     """Prepare the remaining canonical graphs without duplicating early consumers."""
     prepare_generated_inputs(profile, env, command_runner)
     setup_env = env.copy()
@@ -90,7 +91,8 @@ def prepare_remaining_graphs(profile, env, command_runner, *, include_sysroot=Tr
     if include_sysroot:
         prepare_sysroot_source_binary(profile, setup_env, command_runner)
         prepare_sysroot_package_binary(profile, setup_env, command_runner)
-    prepare_area_graphs(profile, compiler_env, command_runner)
+    prepare_area_graphs(profile, compiler_env, command_runner,
+                        sql_preparation_handled=sql_preparation_handled)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
 
 

@@ -16,6 +16,7 @@ from pathlib import Path
 from .assertion_resource_forecast import SQL_BUILD_ALLOCATION, assertion_allocation
 from .cargo_setup import (acquire_cargo_dependencies, enable_offline_cargo,
                           prepare_remaining_graphs)
+from .early_sql import EarlySqlOutcome, run_early_sql
 from .execution_evidence import write_evidence
 from .execution_identity import artifact_identity
 from .execution_identity import execution_key
@@ -263,13 +264,20 @@ def run_staged_cloud(runner, early: set[str]) -> int:
                                                 "identity": artifact_identity(result)})
     if failed and not runner.no_fail_fast:
         return failed
-    # Every original remaining preparation is retained; only completed sysroot
-    # preparation/consumers move earlier. No selection or timeout assertion changes.
+    early_sql = run_early_sql(runner, schedule) if not failed else EarlySqlOutcome()
+    failed = failed or early_sql.status
+    if early_sql.status and not runner.no_fail_fast:
+        return failed
+    # Retain every other preparation. SQL was handled in this invocation;
+    # its outcome remains authoritative even when independent work continues.
     prepared = schedule.step("cargo_cache_setup", lambda: prepare_remaining_graphs(
-        profile, env, schedule.prepare_command, include_sysroot=False), allocation="preparation-coordination", preparation=True)
+        profile, env, schedule.prepare_command, include_sysroot=False,
+        sql_preparation_handled=early_sql.selected), allocation="preparation-coordination", preparation=True)
     failed = failed or prepared
     if prepared:
-        runner.block_steps("cargo_cache_setup")
+        runner.block_steps("cargo_cache_setup",
+            handled_areas={"sysroot_release"} | ({"sql_platform"} if early_sql.selected else set()),
+            include_setup=False)
         return failed
     for guard in profile["guardrail_steps"]:
         if guard in early:
@@ -280,7 +288,7 @@ def run_staged_cloud(runner, early: set[str]) -> int:
         if status and not runner.no_fail_fast:
             return failed
     for area in profile["selected_areas"]:
-        if area["area"] == "sysroot_release":
+        if area["area"] == "sysroot_release" or (area["area"] == "sql_platform" and early_sql.selected):
             continue
         name = step_name("area", area["area"])
         allocation = assertion_allocation(name, profile)

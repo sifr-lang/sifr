@@ -2735,3 +2735,39 @@ cannot qualify either stage. No full build or performance capture ran here.
 SQL already retires clean A before creating clean B. Broader generated-graph
 consumer retirement and SQL temporary-directory failure custody are separate
 follow-ups; this item changes neither lifetime scheduling nor cleanup semantics.
+
+## M2 early whole-area SQL scheduling — 2026-10-04
+
+Allocation candidate `13757b167a81532f81c3e7a3bda9eec6190b81e4` received a
+satisfied exact-candidate scoped review. It remains intact. This separate bounded
+successor addresses cumulative retained generated/Python preparation before the
+SQL clean build; it changes no allocation, reserve, stopping floor or deadline.
+
+After successful sysroot assertions and private graph retirement, compact source
+and cloud routes now prepare the exact selected SQL test graphs and execute its
+whole area once before unrelated remaining preparations. A finite shared helper
+uses the reviewed exact build-qualification selector. All 19 canonical suites,
+66 cases and 30 unique declared SQL no-run commands remain selected. Parser-major
+and SQLite probe wrappers retain their existing native assertion commands. The
+SQL clean A/reused-A/B recipe, incremental configuration and eight-GiB guard stay
+unchanged. Other preparation commands remain selected even if Cargo finds their
+shared native output fresh.
+
+Per-invocation outcomes distinguish failed preparation, blocked area, failed
+assertion and success. Only the duplicate later SQL preparation/area invocation
+is excluded; no profile, execution key, case or suite inventory changes. Fail-fast
+stops at the actual failure; no-fail-fast keeps its nonzero result while allowing
+independent admitted work. A later preparation failure cannot add a duplicate
+SQL status. Reports show actual chronological execution, while the unchanged
+whole-area result preserves canonical suite/case order and result path. This is
+neither a checkpoint nor reuse of a previous assertion or preparation result.
+
+All 48 focused early-order, selection, failure-accounting, SQL allocation,
+compact/cloud scheduling and affected Cargo preparation controls pass. They
+exercise both fail-fast modes, preparation and assertion failures, a later
+failure, non-build selection, exact-once execution and inherited floor/deadline
+restoration. The source file-size guard and diff checks pass. Exact-candidate
+review and full acceptance remain pending. No build, installation or performance
+capture ran for this item. SQL's own preparations can still grow the shared
+target; neither eight-GiB admission nor cold fit is established. The separate
+custody/capacity work must provide actual admission before the canonical gate.

@@ -99,7 +99,9 @@ class SqlResourceTests(unittest.TestCase):
                         [(row['area'], row['suites']) for row in original['selected_areas']
                          if row['area'] == 'sysroot_release'] +
                         [(row['area'], row['suites']) for row in original['selected_areas']
-                         if row['area'] != 'sysroot_release'])
+                         if build and row['area'] == 'sql_platform'] +
+                        [(row['area'], row['suites']) for row in original['selected_areas']
+                         if row['area'] != 'sysroot_release' and not (build and row['area'] == 'sql_platform')])
 
     def test_policy_preserves_mode_reserves_and_memory(self):
         for mode, reserve in (('compact', 2), ('cloud', 8)):

@@ -27,10 +27,10 @@ def sql_preparation_commands(suites):
     return commands
 
 
-def prepare_area_graphs(profile, env, run):
+def prepare_area_graphs(profile, env, run, *, sql_preparation_handled=False):
     for area in profile.get("selected_areas", []):
         name, suites = area["area"], area["suites"]
-        if name == "sql_platform":
+        if name == "sql_platform" and not sql_preparation_handled:
             for command in sql_preparation_commands(suites):
                 run(command, env=env)
         if name == "fuzz_property" and "fuzz-smoke" in suites:
