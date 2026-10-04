@@ -2213,3 +2213,12 @@ remain nonqualifying. CI preserves preparation failures in the existing upload.
 The offline build and all eight native qualification cases stay unchanged.
 Five focused control suites pass; scoped review and actual cold hosted execution
 remain pending.
+
+The locked source preparation and its independent checker passed locally against
+the unchanged full source at `7eb6d331ce2c2871ff332a6b3887fd80c093e3f3`, using
+the separately committed `faa7620f25454d02cc7cec0ce10d0ca9beea8fba` producer.
+This existing warm cache observation has zero assertions and is not a cold
+hosted build. Initial scoped review was satisfied. Enroll the five control suites
+in the existing executable native-preparation contract; this changes no helper
+mechanism or native qualification assertion. Enrollment review and cold hosted
+execution remain pending.
