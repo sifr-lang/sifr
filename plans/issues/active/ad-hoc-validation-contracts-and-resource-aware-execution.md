@@ -1876,3 +1876,43 @@ separate canonical version selection, authority drift and rejection of placehold
 old predecessor or computed/unknown declarations. Three capacity and five
 transition controls plus workflow/diff checks pass. Actual corrected preparation,
 transition qualification, scoped review, native matrix and broad gates remain open.
+### M3 conservative main correctness-job reuse — 2026-10-04
+
+This bounded item suppresses six duplicated main-push correctness jobs only when
+an independently verified, complete and fresh pre-merge merge-profile producer
+executed the exact resulting commit. It covers smoke fuzz/property, SQL WASI
+build and four compiler-component native targets. The merge profile, guardrails
+and performance remain fresh. This does not claim whole-profile deduplication or
+cross-commit equivalence; those remain open when their dependency closure cannot
+be proved. Unknown, inaccessible, stale, partial or recursive producers execute
+all jobs fresh.
+
+The producer stores its decision in a digest-verified current-attempt artifact.
+The trusted publisher reads that artifact, then independently recomputes source
+workflow, exact executed candidate artifact, merged PR/merge-group provenance,
+complete job inventory, run/attempt identities and 24-hour completion. Skipped
+current jobs count only through that verified source producer; a skipped merge
+profile can never qualify. The selector has read-only Actions access and no
+check/publication credentials. Scheduled hardening and release boundaries are
+unchanged.
+
+Five synthetic provenance tests cover thirteen invalid source mutations, merged
+PR/full-profile requirements, current skipped-job accounting and nine artifact
+substitutions/source-drift controls. Seven publisher controls and three existing
+aggregate controls pass. The skipped-job control exposed a missing-timestamp
+attribute error; unknown timestamps now reject explicitly. Workflow, toolchain,
+profile, size4419 and diff checks pass. These are controls, not an actual hosted
+reuse observation. Scoped review, required local gates, actual trusted publication
+and whole-profile main-push deduplication remain pending.
+
+The initial main-reuse review is NOT SATISFIED at d29f983e5:
+/workspace/validation-work/evidence/sifr-claude.yr3r4H/response.md. Skipping a matrix
+at job level can suppress expansion, leaving four required target jobs absent.
+The remediation keeps all four matrix rows, runs a current reuse marker, and
+skips heavy steps only when reuse is selected. Two nonmatrix jobs remain skipped.
+The aggregate now independently requires each platform's actual mandatory step
+outcomes for fresh/source evidence, or a positive marker plus verified original
+producer evidence for reused component jobs. A selector cannot make skipped
+component assertions appear fresh merely by leaving the matrix job successful.
+Controls use this actual expanded-job shape and reject a skipped source assertion.
+All affected controls pass; actual hosted reuse and acceptance gates remain open.

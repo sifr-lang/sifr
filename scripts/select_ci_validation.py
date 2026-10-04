@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Emit one canonical profile for the actual checked-out CI candidate."""
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -32,8 +33,24 @@ def main():
     receipt.write_text(json.dumps({"candidate_sha": candidate,
                                   "run_id": int(os.environ["GITHUB_RUN_ID"]),
                                   "run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"])}))
+    reuse = False
+    if event == 'push':
+        from validation_main_reuse import api, select
+        decision = {'state': 'fresh', 'candidate_sha': candidate, 'reused_jobs': [],
+                    'reason': ['not the protected main branch']}
+        if os.environ.get('GITHUB_REF') == 'refs/heads/main':
+            try:
+                decision = select(api, os.environ['GITHUB_REPOSITORY'], candidate,
+                                  int(os.environ['GITHUB_RUN_ID']), now=datetime.now(timezone.utc))
+            except Exception as error:
+                decision['reason'] = ['prior producer unavailable: ' + type(error).__name__]
+        decision.update(run_id=int(os.environ['GITHUB_RUN_ID']), run_attempt=int(os.environ['GITHUB_RUN_ATTEMPT']))
+        (receipt.parent / 'main-reuse.json').write_text(json.dumps(decision, indent=2) + '\n')
+        reuse = decision['state'] == 'reused'
+        print(json.dumps(decision, sort_keys=True))
     with open(os.environ["GITHUB_OUTPUT"], "a") as output:
         print("profiles=" + json.dumps([profile]), file=output)
+        print("reuse=" + str(reuse).lower(), file=output)
 
 
 if __name__ == "__main__":
