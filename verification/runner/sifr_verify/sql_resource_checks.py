@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 from .assertion_resource_forecast import SQL_BUILD_ALLOCATION, assertion_allocation
 from .cloud_schedule import Schedule, load_schedule, run_staged_cloud
 from .process_disk_budget import DiskBudget, FLOOR_VARIABLE, PATH_VARIABLE
+from .early_sql import EarlySqlOutcome
 from .profile_runner import ProfileRunner
 from .resource_admission import Resources
 
@@ -78,7 +79,8 @@ class SqlResourceTests(unittest.TestCase):
                             events[name] = kwargs
                             callback()
                             return 0
-                    with patch('sifr_verify.cloud_schedule.REPO_ROOT', root), \
+                    with patch('sifr_verify.cloud_schedule.run_early_sql', return_value=EarlySqlOutcome()), \
+                         patch('sifr_verify.cloud_schedule.REPO_ROOT', root), \
                          patch('sifr_verify.cloud_schedule.Schedule', FakeSchedule), \
                          patch('sifr_verify.cloud_schedule.run_command'), \
                          patch('sifr_verify.cloud_schedule.acquire_cargo_dependencies'), \
@@ -99,9 +101,7 @@ class SqlResourceTests(unittest.TestCase):
                         [(row['area'], row['suites']) for row in original['selected_areas']
                          if row['area'] == 'sysroot_release'] +
                         [(row['area'], row['suites']) for row in original['selected_areas']
-                         if build and row['area'] == 'sql_platform'] +
-                        [(row['area'], row['suites']) for row in original['selected_areas']
-                         if row['area'] != 'sysroot_release' and not (build and row['area'] == 'sql_platform')])
+                         if row['area'] != 'sysroot_release'])
 
     def test_policy_preserves_mode_reserves_and_memory(self):
         for mode, reserve in (('compact', 2), ('cloud', 8)):

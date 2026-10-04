@@ -425,14 +425,14 @@ class ProfileRunner:
         self.run_python(path)
         self.run_python(path, "--self-test")
 
-    def run_area(self, area: str, suites: list[str]) -> None:
+    def run_area(self, area: str, suites: list[str], *, result_slug: str | None = None) -> None:
         if area == "python_interop":
             run_segmented_python_interop(
                 suites=suites, profile_name=self.profile_name,
                 command_runner=lambda command: run_command(command, env=self.env),
             )
             return
-        result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
+        result_slug = result_slug or CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
         if area == "performance" and getattr(self, "performance_result_phase", None):
             result_slug += "-" + self.performance_result_phase
         run_selected_area(

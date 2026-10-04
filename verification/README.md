@@ -277,9 +277,8 @@ resource observations; estimates can fail closed and do not promise capacity.
 Generated compiler preparation and assertions both use offline Cargo after
 separate dependency acquisition. Quantitative performance remains last.
 
-The exact `area_sql_platform` selection containing the declared
-`build-qualification` suite uses `sql-build-qualification` admission and disk
-monitoring. Its prospective growth is 6 GiB: compact retains its 2 GiB reserve
+Selecting `build-qualification` in `area_sql_platform` gives the clean-build
+assertion part `sql-build-qualification` admission and disk monitoring. Its prospective growth is 6 GiB: compact retains its 2 GiB reserve
 (8 GiB entry), and normal cloud retains its 8 GiB reserve (14 GiB entry).
 The monitored floor is the greater of entry free space minus 6 GiB, the policy
 reserve plus 1 GiB stopping headroom, and any stricter caller floor. Thus an
@@ -291,19 +290,33 @@ selections keep their existing allocations and monitoring behavior. This models
 the existing entry envelope prospectively; actual SQL peak growth, cold fit and
 full acceptance remain unmeasured. It grants no assertion reuse or graph cleanup.
 
-When the selected SQL area includes `build-qualification`, resource-aware source
-execution runs its existing SQL-specific preparation and the entire selected area
-once after successful sysroot assertions, before generated/Python and other
-remaining preparations. All 19 canonical suites, 66 cases and 30 unique declared
-SQL no-run commands remain selected; parser-major and SQLite probe wrappers keep
-their existing assertion-time native work. No profile selection or result file is
-split. Later scheduling omits only SQL already handled in this invocation,
-including a failed or prerequisite-blocked outcome. `--no-fail-fast` preserves
-that failure while continuing independent work; fail-fast stops at the failure.
-The lane report records this actual chronological order. SQL result suite/case
-order remains canonical. This is no cross-run checkpoint or assertion reuse.
-SQL's own preparation may grow the shared target; earlier ordering reduces
-unrelated retention but does not establish eight-GiB admission or cold fit.
+When SQL selects `build-qualification`, resource-aware execution runs that actual
+clean-build suite first, immediately after successful sysroot consumers. It needs
+none of the 30 SQL no-run preparations. After its private graphs close, those
+same 30 preparations run, followed by the other 18 suites. This retains all 19
+canonical suites and 66 cases, including parser-major and SQLite probe native
+assertions. The remainder uses the existing `remaining-assertions` allocation;
+both parts keep disk monitoring, policy reserves, stopping headroom and stricter
+caller floors. These are prospective attempts, not measured fit guarantees.
+
+Fresh invocation-owned part results are checked against the exact manifest cases
+and subprocess outcomes, then assembled in canonical suite/case order at the
+original SQL result path. Missing or invalid execution becomes explicitly blocked
+cases with its cause. One canonical area outcome covers the complete selection;
+no part from another invocation can qualify it. An ordinary completed build-case
+failure still runs the other SQL cases, as the existing SQL adapter does, before
+outer fail-fast acts. Infrastructure without complete execution evidence may stop
+earlier; `--no-fail-fast` continues independent admitted work and retains failure.
+Later scheduling omits only this invocation's already handled SQL preparation
+and assertions. Reports show the real phase chronology.
+
+The two assertion commands share the original 2400-second cumulative safety
+budget. Interleaved preparation time is excluded; preparation keeps its existing
+limits. Tighter inherited command, step and absolute deadlines still win, and
+environment limits are restored afterward. Canonical SQL elapsed time sums its
+assertion parts. No profile selection, SQL build recipe, checkpoint, previous-pass
+reuse or cleanup contract changes. SQL preparation and later native assertions
+may still exhaust their forecasts; actual cold fit remains unproven.
 
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to

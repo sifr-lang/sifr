@@ -2847,3 +2847,54 @@ review and full acceptance remain pending. No build, installation or performance
 capture ran for this item. SQL's own preparations can still grow the shared
 target; neither eight-GiB admission nor cold fit is established. The separate
 custody/capacity work must provide actual admission before the canonical gate.
+
+## M2 clean-build-first SQL scheduling — prospective scope, 2026-10-04
+
+The `2242202c506aaadf4aa08c4464827d16aad5676d` gate ended with exit 2 at
+20:20:31 UTC. All 30 SQL no-run preparations passed in 3257569 ms; SQL area
+admission then observed 7432404992 bytes against the unchanged 8589934592-byte
+requirement (journal 0137, enospc). No SQL assertion executed. Raw failure
+evidence remains retained; successful preparation is not qualification.
+The approved whole-area-early schedule still prepares all 30 SQL test commands
+before the area, although build-qualification itself needs none of them.
+
+This separately authorized bounded successor will run the actual clean-build
+suite immediately after successful sysroot consumers, under the unchanged SQL
+allocation. Its private A/B graphs retain existing cleanup semantics. Then all
+30 original preparation commands and the other 18 suites/65 cases execute. A
+fresh same-invocation aggregate must account for every selected suite and case
+in canonical manifest order at the original result path, including explicit
+blocked results for unexecuted cases. No prior-run part or pass is reusable.
+The two assertion parts share the unchanged 2400-second cumulative assertion
+budget, excluding interleaved preparation; tighter inherited absolute deadlines
+continue to win. Preparation retains its own existing limits. Fail-fast and
+no-fail-fast must preserve every failure and exact-once final area accounting.
+No allocation number, reserve, assertion, profile, SQL build recipe or fixture
+changes. Focused controls and exact-candidate review precede integration; no
+build, install, Cargo/UV resolution or Opus review will run here while the old
+gate is active. Actual cold fit and final acceptance remain unproven.
+
+Any post-gate selective cleanup of successful SQL preparation cache is a separate
+prospective disposition, not GraphLease retirement. It requires a measured
+closed-gate outcome, an exact Cargo dry-run path inventory, exclusive ownership,
+protected-artifact and non-SQL dependency exclusions, and review before mutation.
+No such cleanup or byte recovery is authorized or claimed by this source item.
+
+
+The bounded implementation now keeps the clean-build part under the existing
+six-GiB allocation, then runs all 30 preparations and the remainder under the
+existing generic allocation. Both assertion parts stay monitored. Ordinary
+completed build-case assertion failure preserves the legacy adapter's behavior:
+all remaining SQL cases still execute before outer fail-fast. Missing execution,
+resource refusal or preparation failure produces explicit blocked case evidence;
+no-fail-fast permits independent continuation without erasing the failure. The
+single cumulative assertion budget clamps both duration selectors used by the
+command runner, plus any tighter inherited absolute deadline.
+
+All 56 focused partition/aggregation/deadline, full-route, selection, failure,
+resource and affected Cargo-preparation controls pass under canonical Python.
+They use synthetic command execution and a read-only workspace manifest roster;
+no Cargo metadata, UV, compiler or installation process was launched. Source
+size and diff checks pass. Exact committed-candidate review is pending; actual
+SQL execution, disk fit and final full acceptance remain pending. The original
+224 gate's failed admission remains unchanged evidence.

@@ -19,6 +19,8 @@ from .cargo_setup import acquire_cargo_dependencies
 from .graph_retirement import GRAPH_PATHS, GraphLease
 from .sql_resource_checks import SqlResourceTests
 from .early_sql_checks import EarlySqlChecks
+from .sql_partition_checks import PartitionChecks
+from .early_sql import EarlySqlOutcome
 from .profile_runner import ProfileRunner
 from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit, memory_backed_storage
 
@@ -310,7 +312,8 @@ class ScheduleTests(unittest.TestCase):
                     callback()
                     return 0
             preparations = []
-            with patch("sifr_verify.cloud_schedule.REPO_ROOT", root), \
+            with patch("sifr_verify.cloud_schedule.run_early_sql", return_value=EarlySqlOutcome()), \
+                 patch("sifr_verify.cloud_schedule.REPO_ROOT", root), \
                  patch("sifr_verify.cloud_schedule.Schedule", FakeSchedule), \
                  patch("sifr_verify.cloud_schedule.run_command", side_effect=lambda argv, env: preparations.append(argv)), \
                  patch("sifr_verify.cloud_schedule.acquire_cargo_dependencies"), \
@@ -334,7 +337,7 @@ class ScheduleTests(unittest.TestCase):
 
 def policy_checks():
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (ResourceTests, RetirementTests, ScheduleTests, SqlResourceTests, EarlySqlChecks))
+                               for case in (ResourceTests, RetirementTests, ScheduleTests, SqlResourceTests, EarlySqlChecks, PartitionChecks))
     result = unittest.TestResult()
     suite.run(result)
     if not result.wasSuccessful():

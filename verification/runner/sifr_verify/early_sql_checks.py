@@ -18,6 +18,7 @@ from .process_disk_budget import FLOOR_VARIABLE, PATH_VARIABLE
 from .profile_commands import CommandFailed
 from .profile_runner import ProfileRunner
 from .reports import parse_log
+from .sql_partition_checks import write_part
 from .resource_admission import Resources
 
 
@@ -96,6 +97,7 @@ class EarlySqlChecks(unittest.TestCase):
             original = copy.deepcopy(runner.profile)
             commands, events, areas, policies = [], [], [], []
             failed_once = False
+            disk_free = [64*1024**3]
             def native(command, *, env):
                 nonlocal failed_once
                 commands.append((list(command), env.copy()))
@@ -103,7 +105,7 @@ class EarlySqlChecks(unittest.TestCase):
                         and command[:3] == ['cargo', 'test', '--no-run']):
                     failed_once = True
                     raise CommandFailed(101)
-            def area(name, suites):
+            def area(name, suites, *, result_slug=None):
                 areas.append((name, list(suites)))
                 if name == 'sysroot_release':
                     result = root/'target/verification/areas/sysroot-release-cloud-results.json'
@@ -111,6 +113,10 @@ class EarlySqlChecks(unittest.TestCase):
                     result.write_text('{"passed":true}')
                 if name == 'sysroot_release' and failure == 'sysroot-area':
                     raise CommandFailed(5)
+                if name == 'sql_platform' and result_slug and 'build-qualification' in suites and failure == 'sql-build-infrastructure':
+                    raise CommandFailed(124, 'timeout')
+                if name == 'sql_platform' and result_slug:
+                    write_part(root, result_slug, profile_name, suites, fail=failure == 'sql-area')
                 if name == 'sql_platform' and failure == 'sql-area':
                     raise CommandFailed(7)
             def remaining(profile, env, run, **kwargs):
@@ -130,6 +136,8 @@ class EarlySqlChecks(unittest.TestCase):
                 active.index = 0
                 def record(name, payload):
                     active.index += 1
+                    if failure == 'remaining-admission' and name == 'preparation_sql_platform' and payload.get('state') == 'completed':
+                        disk_free[0] = 2*1024**3
                     if payload.get('state') == 'admitted':
                         events.append(name)
                         policies.append((name, payload['requirements']))
@@ -146,8 +154,9 @@ class EarlySqlChecks(unittest.TestCase):
                     stack.enter_context(patch(f'sifr_verify.{module}.prepare_remaining_graphs', side_effect=remaining))
                 stack.enter_context(patch('sifr_verify.cloud_schedule.REPO_ROOT', root))
                 stack.enter_context(patch('sifr_verify.cloud_schedule.inventory', return_value=[]))
-                stack.enter_context(patch('sifr_verify.cloud_schedule.discover', return_value=
-                    Resources(5, 4, 64*1024**3, 64*1024**3, 64*1024**3, {}, [], {})))
+                stack.enter_context(patch('sifr_verify.early_sql.inventory', return_value=[]))
+                stack.enter_context(patch('sifr_verify.cloud_schedule.discover', side_effect=lambda **kwargs:
+                    Resources(5, 4, 64*1024**3, 64*1024**3, disk_free[0], {}, [], {})))
                 for method in ('print_header', 'run_guardrail', 'run_toolchain_step',
                                'run_performance_part', 'admit_performance_reference'):
                     stack.enter_context(patch.object(runner, method))
@@ -155,6 +164,8 @@ class EarlySqlChecks(unittest.TestCase):
                 stack.enter_context(patch('sifr_verify.profile_runner.combine_performance'))
                 stack.enter_context(patch('sifr_verify.profile_runner.performance_result_path', return_value=root/'performance'))
                 status = runner.run()
+            canonical = root/'target/verification/areas'/f'sql-platform-{profile_name}-results.json'
+            payload = json.loads(canonical.read_text()) if canonical.exists() else None
             log = root/'lane.log'
             log.write_text(output.getvalue())
             parsed = parse_log(log)
@@ -162,7 +173,7 @@ class EarlySqlChecks(unittest.TestCase):
             self.assertEqual({key: runner.env.get(key) for key in original_floor}, original_floor)
             self.assertEqual(runner.env['SIFR_VERIFY_SAFETY_DEADLINE_SECONDS'], '17')
             return dict(status=status, functional=runner.functional_exit_status, events=events, commands=commands,
-                        areas=areas, steps=parsed['lane_steps'], profile=original, policies=policies)
+                        areas=areas, steps=parsed['lane_steps'], profile=original, policies=policies, result=payload)
 
     def test_both_routes_execute_complete_sql_once_before_unrelated_preparation(self):
         for profile in ('create-pr', 'merge', 'cloud'):
@@ -171,16 +182,17 @@ class EarlySqlChecks(unittest.TestCase):
                 self.assertEqual(result['status'], 0)
                 events = result['events']
                 self.assertLess(events.index('preparation_dependencies'), events.index('area_sysroot_release'))
-                for first, second in zip(('area_sysroot_release', 'preparation_sql_platform',
-                                           'area_sql_platform', 'generated-preparation'),
-                                         ('preparation_sql_platform', 'area_sql_platform',
-                                           'generated-preparation', 'area_python_interop')):
-                    self.assertLess(events.index(first), events.index(second))
-                expected = [(row['area'], row['suites']) for row in result['profile']['selected_areas']
-                            if profile == 'cloud' or row['area'] != 'performance']
-                self.assertCountEqual(result['areas'], expected)
-                self.assertEqual([name for name, _ in result['areas']].count('sql_platform'), 1)
+                ordered = ['area_sysroot_release', 'sql_build_assertions', 'preparation_sql_platform',
+                           'sql_remaining_assertions', 'generated-preparation', 'area_python_interop']
+                self.assertEqual([events.index(name) for name in ordered], sorted(events.index(name) for name in ordered))
                 sql = next(row for row in result['profile']['selected_areas'] if row['area'] == 'sql_platform')
+                expected = [(row['area'], row['suites']) for row in result['profile']['selected_areas']
+                            if row['area'] != 'sql_platform' and (profile == 'cloud' or row['area'] != 'performance')]
+                expected += [('sql_platform', ['build-qualification']),
+                             ('sql_platform', [s for s in sql['suites'] if s != 'build-qualification'])]
+                self.assertCountEqual(result['areas'], expected)
+                self.assertEqual(result['result']['summary']['total_variants'], 66)
+                self.assertEqual(result['result']['summary']['blocking_failures'], 0)
                 expected_commands = sql_preparation_commands(sql['suites'])
                 self.assertEqual([cmd for cmd, _ in result['commands'] if cmd[:3] == ['cargo', 'test', '--no-run']],
                                  expected_commands)
@@ -201,6 +213,34 @@ class EarlySqlChecks(unittest.TestCase):
         self.assertLess(result['events'].index('generated-preparation'), result['events'].index('area_sql_platform'))
         self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], ['pass'])
 
+    def test_build_infrastructure_failure_controls_continuation_without_false_case_results(self):
+        for profile in ('create-pr', 'cloud'):
+            for no_fail_fast in (False, True):
+                result = self.route(profile, no_fail_fast=no_fail_fast, failure='sql-build-infrastructure')
+                self.assertEqual(result['status'], 124)
+                self.assertEqual('preparation_sql_platform' in result['events'], no_fail_fast)
+                self.assertEqual(result['result']['summary']['total_variants'], 66)
+                self.assertEqual(result['result']['summary']['blocking_failures'], 1 if no_fail_fast else 66)
+                build = next(s for s in result['result']['suites'] if s['name']=='build-qualification')
+                self.assertEqual(build['cases'][0]['variants'][0]['status'], 'blocked')
+                self.assertIn('timeout', build['cases'][0]['variants'][0]['reason'])
+
+    def test_remainder_budget_refusal_blocks_exact_unexecuted_cases_with_cause(self):
+        for profile in ('create-pr', 'cloud'):
+            result = self.route(profile, failure='remaining-admission')
+            self.assertEqual(result['status'], 2)
+            self.assertEqual(result['result']['summary']['total_variants'], 66)
+            self.assertEqual(result['result']['summary']['blocking_failures'], 65)
+            for suite in result['result']['suites']:
+                for case in suite['cases']:
+                    variant = case['variants'][0]
+                    if suite['name'] == 'build-qualification':
+                        self.assertEqual(variant['status'], 'pass')
+                    else:
+                        self.assertEqual(variant['status'], 'blocked')
+                        self.assertIn('enospc', variant['reason'])
+            self.assertEqual([step['status'] for step in result['steps'] if step['name']=='area_sql_platform'], ['fail'])
+
     def test_nonbuild_selection_keeps_later_sql_preparation_and_assertion(self):
         for profile in ('create-pr', 'cloud'):
             result = self.route(profile, build=False)
@@ -213,7 +253,7 @@ class EarlySqlChecks(unittest.TestCase):
     def test_failures_preserve_exactly_one_status_and_no_fail_fast_independence(self):
         for profile in ('create-pr', 'cloud'):
             for no_fail_fast in (False, True):
-                for failure, code, sql_status in (('sql-preparation', 101, 'blocked'),
+                for failure, code, sql_status in (('sql-preparation', 101, 'fail'),
                                                   ('sql-area', 7, 'fail'),
                                                   ('remaining-preparation', 9, 'pass')):
                     with self.subTest(profile=profile, no_fail_fast=no_fail_fast, failure=failure):
@@ -221,8 +261,8 @@ class EarlySqlChecks(unittest.TestCase):
                         self.assertEqual(result['status'], code)
                         self.assertEqual(result['functional'], code)
                         self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], [sql_status])
-                        self.assertEqual(sum(name == 'sql_platform' for name, _ in result['areas']),
-                                         0 if failure == 'sql-preparation' else 1)
+                        count = 1 if failure == 'sql-preparation' else 2
+                        self.assertEqual(sum(name == 'sql_platform' for name, _ in result['areas']), count)
                         if failure != 'remaining-preparation':
                             self.assertEqual('generated-preparation' in result['events'], no_fail_fast)
                             self.assertEqual(any(name == 'python_interop' for name, _ in result['areas']), no_fail_fast)

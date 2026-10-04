@@ -8,6 +8,7 @@ import uuid
 from unittest.mock import patch
 
 from .compact_profile import prepare_compact
+from .early_sql import EarlySqlOutcome
 from .cloud_schedule import load_schedule
 from .graph_retirement import GraphLease, require_owned_path
 from .profile_runner import ProfileRunner, ProfileRunnerError
@@ -104,7 +105,8 @@ class CompactChecks(unittest.TestCase):
                     def assert_coordination_unmonitored(self,kwargs):
                         if kwargs.get('monitor_disk',False):
                             raise AssertionError('coordination must not cap individually monitored children')
-                with patch('sifr_verify.compact_profile.Schedule', FakeSchedule), \
+                with patch('sifr_verify.compact_profile.run_early_sql', return_value=EarlySqlOutcome()), \
+                     patch('sifr_verify.compact_profile.Schedule', FakeSchedule), \
                      patch('sifr_verify.compact_profile.acquire_cargo_dependencies'), \
                      patch('sifr_verify.compact_profile.run_command') as command, \
                      patch('sifr_verify.compact_profile.prepare_remaining_graphs') as remaining, \
@@ -118,8 +120,8 @@ class CompactChecks(unittest.TestCase):
                     continue
                 self.assertEqual(status, 0)
                 area.assert_any_call('sysroot_release', selected['suites'])
-                self.assertEqual(area.call_count, 2)
-                self.assertTrue(remaining.call_args.kwargs['sql_preparation_handled'])
+                self.assertEqual(area.call_count, 1)
+                self.assertFalse(remaining.call_args.kwargs['sql_preparation_handled'])
                 self.assertFalse(remaining.call_args.kwargs['include_sysroot'])
                 self.assertLess(events.index('area_sysroot_release'), events.index('cargo_cache_setup'))
                 metadata = [call.args[0][-1] for call in command.call_args_list if '--metadata-suite' in call.args[0]]
@@ -196,14 +198,15 @@ class CompactChecks(unittest.TestCase):
                 def prepare_command(self,*args,**kwargs): pass
                 def step(self,name,callback,**kwargs):
                     allocations[name]=kwargs['allocation'];callback();return 0
-            with patch('sifr_verify.compact_profile.Schedule',FakeSchedule), \
+            with patch('sifr_verify.compact_profile.run_early_sql',return_value=EarlySqlOutcome()), \
+                 patch('sifr_verify.compact_profile.Schedule',FakeSchedule), \
                  patch('sifr_verify.compact_profile.acquire_cargo_dependencies'), \
                  patch('sifr_verify.compact_profile.run_command'), \
                  patch('sifr_verify.compact_profile.prepare_remaining_graphs'), \
                  patch.object(runner,'run_area') as area:
                 self.assertEqual(prepare_compact(runner),0)
             area.assert_any_call('sysroot_release',suites)
-            self.assertEqual(area.call_count,2)
+            self.assertEqual(area.call_count,1)
             expected='sysroot-structural-assertions' if suites==['metadata-structural'] else 'sysroot-assertions'
             self.assertEqual(allocations['area_sysroot_release'],expected)
         stages=load_schedule(mode='compact')['stages']

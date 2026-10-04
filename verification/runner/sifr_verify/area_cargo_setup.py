@@ -6,13 +6,18 @@ import sys
 from .paths import REPO_ROOT
 
 
-def sql_preparation_commands(suites):
+def sql_runner():
     path = REPO_ROOT / "verification/areas/sql_platform/runner.py"
     spec = importlib.util.spec_from_file_location("_sql_preparation_runner", path)
     if spec is None or spec.loader is None:
         raise AssertionError(f"cannot load {path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    return module
+
+
+def sql_preparation_commands(suites):
+    module = sql_runner()
     manifest = json.loads(module.MANIFEST_PATH.read_text())
     commands = []
     for suite in module.select_suites(manifest, set(suites)):
