@@ -140,6 +140,16 @@ class ReuseChecks(unittest.TestCase):
             self.consume()
         self.assertEqual(list(other.iterdir()),[])
 
+    def test_vendor_source_directory_named_target_is_not_an_artifact_exclusion(self):
+        (self.source/'.git/info/exclude').write_text('vendor/\n')
+        for root in (self.source,self.candidate):
+            path=root/'vendor/cc/src/target/template.rs';path.parent.mkdir(parents=True)
+            path.write_text('same ignored vendor source')
+        reuse.equivalence(self.source,self.candidate,self.observed,self.env)
+        (self.candidate/'vendor/cc/src/target/template.rs').write_text('changed vendor source')
+        with self.assertRaisesRegex(VerificationError,'live compiler/runtime/corpus'):
+            self.consume()
+
 
 def policy_checks():
     result=unittest.TestResult()

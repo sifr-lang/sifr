@@ -54,7 +54,7 @@ def live_inputs(root):
         if path.is_dir():
             inputs[relative]='directory'
             for child in sorted(path.iterdir()):
-                if child.name not in {'.git','target','__pycache__','.venv'}:visit(child)
+                if child.name not in {'.git','__pycache__','.venv'}:visit(child)
         elif path.is_file():inputs[relative]=digest(path)
         elif not path.exists():inputs[relative]='absent'
         else:raise VerificationError('cloud reuse encountered an unknown source input')
