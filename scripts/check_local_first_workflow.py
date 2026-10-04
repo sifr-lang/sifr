@@ -61,13 +61,25 @@ def validate(document: dict) -> list[str]:
         ("sql-wasi-build", "cargo fetch --locked"),
     ):
         job = jobs[name]
-        if job.get('needs') != 'validation-selection' or job.get('if') != "needs.validation-selection.outputs.reuse != 'true'":
+        condition = "needs.validation-selection.outputs.reuse != 'true'"
+        matrix_job = name == 'compiler-component-targets'
+        if job.get('needs') != 'validation-selection' or (not matrix_job and job.get('if') != condition):
             errors.append(f'{name}: only independently verified exact-commit correctness reuse may suppress execution')
+        if matrix_job:
+            if 'if' in job:
+                errors.append('component reuse must expand all four native matrix jobs')
+            for step in job['steps']:
+                if step.get('name') == 'Record exact-commit correctness reuse':
+                    if step.get('if') != "needs.validation-selection.outputs.reuse == 'true'":
+                        errors.append('component reuse requires its explicit current marker')
+                elif not (step.get('if') == condition or str(step.get('if')).startswith(condition+' && matrix.target == ')):
+                    errors.append('component heavy steps must execute unless exact-commit reuse is verified')
         steps = jobs[name]["steps"]
         commands = [step.get("run") for step in steps]
         if preparation not in commands or commands.index(preparation) >= len(steps) - 1:
             errors.append(f"{name}: locked preparation must precede assertions")
-        elif any(key in steps[commands.index(preparation)] for key in ("if", "continue-on-error")):
+        elif steps[commands.index(preparation)].get('continue-on-error') or (
+                'if' in steps[commands.index(preparation)] and not matrix_job):
             errors.append(f"{name}: preparation must be unconditional and blocking")
     hardening = jobs.get("fuzz-hardening", {})
     if select.get('permissions') != {'contents': 'read', 'actions': 'read'}:

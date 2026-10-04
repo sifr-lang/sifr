@@ -3,7 +3,7 @@ import copy
 from datetime import datetime, timezone
 import unittest
 
-from validation_aggregate_policy import WORKFLOW, evaluate, expected_jobs
+from validation_aggregate_policy import WORKFLOW, evaluate, expected_jobs, component_steps
 
 
 class AggregateTests(unittest.TestCase):
@@ -13,7 +13,7 @@ class AggregateTests(unittest.TestCase):
         self.run = {"id": 7, "run_attempt": 2, "repository": {"full_name": "owner/repo"},
                     "workflow_id": 9, "path": WORKFLOW, "event": "merge_group", "head_sha": self.sha,
                     "status": "completed", "conclusion": "success"}
-        self.jobs = [{"name": name, "status": "completed", "conclusion": "success",
+        self.jobs = [{"name": name, "steps": [{"name": step, "conclusion": "success"} for step in component_steps(name)], "status": "completed", "conclusion": "success",
                       "run_id": 7, "run_attempt": 2, "started_at": "2026-10-03T10:00:00Z",
                       "completed_at": "2026-10-03T11:00:00Z"}
                      for name in expected_jobs("merge_group", "merge")]

@@ -1882,3 +1882,15 @@ attribute error; unknown timestamps now reject explicitly. Workflow, toolchain,
 profile, size4419 and diff checks pass. These are controls, not an actual hosted
 reuse observation. Scoped review, required local gates, actual trusted publication
 and whole-profile main-push deduplication remain pending.
+
+The initial main-reuse review is NOT SATISFIED at d29f983e5:
+/workspace/validation-work/evidence/sifr-claude.yr3r4H/response.md. Skipping a matrix
+at job level can suppress expansion, leaving four required target jobs absent.
+The remediation keeps all four matrix rows, runs a current reuse marker, and
+skips heavy steps only when reuse is selected. Two nonmatrix jobs remain skipped.
+The aggregate now independently requires each platform's actual mandatory step
+outcomes for fresh/source evidence, or a positive marker plus verified original
+producer evidence for reused component jobs. A selector cannot make skipped
+component assertions appear fresh merely by leaving the matrix job successful.
+Controls use this actual expanded-job shape and reject a skipped source assertion.
+All affected controls pass; actual hosted reuse and acceptance gates remain open.

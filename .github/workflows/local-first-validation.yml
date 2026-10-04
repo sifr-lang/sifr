@@ -153,7 +153,6 @@ jobs:
 
   compiler-component-targets:
     needs: validation-selection
-    if: needs.validation-selection.outputs.reuse != 'true'
     name: compiler-component-${{ matrix.target }}
     strategy:
       fail-fast: false
@@ -169,22 +168,28 @@ jobs:
             runner: ubuntu-24.04
     runs-on: ${{ matrix.runner }}
     steps:
+      - name: Record exact-commit correctness reuse
+        if: needs.validation-selection.outputs.reuse == 'true'
+        run: echo 'Prior exact-commit producer requires independent publisher verification.'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.validation-selection.outputs.reuse != 'true'
         with:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
           ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
+        if: needs.validation-selection.outputs.reuse != 'true'
         with:
           targets: ${{ matrix.target }}
       - name: Prepare locked target dependencies
+        if: needs.validation-selection.outputs.reuse != 'true'
         run: cargo fetch --locked
       - name: Run Windows native executable selection
-        if: matrix.target == 'x86_64-pc-windows-msvc'
+        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-pc-windows-msvc'
         run: cargo test --locked -p sifr_sysroot --lib --target "${{ matrix.target }}" native_context::windows_tests::windows_path_lookup_resolves_exe_and_keeps_explicit_paths_exact -- --exact
       - name: Run Windows generated Rust formatter and native build script contracts
-        if: matrix.target == 'x86_64-pc-windows-msvc'
+        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-pc-windows-msvc'
         shell: pwsh
         run: |
           $cases = @(
@@ -197,15 +202,16 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Run Unix generated Rust formatter and native build script contracts
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-unknown-linux-gnu'
         run: |
           cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::rust_formatter::tests::generated_rust_uses_the_canonical_toolchain_layout -- --exact
           cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::python_native_loader_materialization_preserves_selection_and_removes_stale_path -- --exact
           cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project -- --exact
       - name: Run native compiler component qualification
+        if: needs.validation-selection.outputs.reuse != 'true'
         run: cargo test --locked -p sifr_compiler_component --target "${{ matrix.target }}"
       - name: Run coupled Windows driver storage and process contracts
-        if: matrix.target == 'x86_64-pc-windows-msvc'
+        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-pc-windows-msvc'
         shell: pwsh
         run: |
           $cases = @(
@@ -233,6 +239,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Run native SQL build qualification
+        if: needs.validation-selection.outputs.reuse != 'true'
         run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target "${{ matrix.target }}"
 
   sql-wasi-build:

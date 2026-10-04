@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
-from validation_aggregate_policy import evaluate, expected_jobs, WORKFLOW
+from validation_aggregate_policy import evaluate, expected_jobs, WORKFLOW, component_steps
 import validation_main_reuse as reuse
 
 
@@ -20,7 +20,7 @@ class MainReuse(unittest.TestCase):
         self.run = {'id': 1, 'run_attempt': 1, 'event': 'merge_group', 'head_sha': self.sha,
                     'repository': {'full_name': self.repo}, 'workflow_id': 3, 'path': WORKFLOW,
                     'status': 'completed', 'conclusion': 'success'}
-        self.jobs = [{'name': name, 'run_id': 1, 'run_attempt': 1, 'status': 'completed', 'conclusion': 'success',
+        self.jobs = [{'name': name, 'steps': [{'name': step, 'conclusion': 'success'} for step in component_steps(name)], 'run_id': 1, 'run_attempt': 1, 'status': 'completed', 'conclusion': 'success',
                       'started_at': (self.now-timedelta(seconds=3)).isoformat(),
                       'completed_at': (self.now-timedelta(seconds=1)).isoformat()}
                      for name in sorted(expected_jobs('merge_group', 'merge'))]
@@ -52,7 +52,7 @@ class MainReuse(unittest.TestCase):
                                      identity_reader=self.identity_reader)['state'], 'reused')
 
     def test_incomplete_stale_foreign_or_recursive_producers_run_fresh(self):
-        for mutation in ('commit', 'artifact', 'event', 'missing', 'duplicate', 'skip', 'failure', 'attempt', 'stale', 'future', 'workflow', 'repository', 'running'):
+        for mutation in ('commit', 'artifact', 'event', 'missing', 'duplicate', 'skip', 'failure', 'attempt', 'stale', 'future', 'workflow', 'repository', 'running', 'component-step'):
             self.setUp()
             if mutation == 'commit': self.run['head_sha'] = 'b'*40
             if mutation == 'artifact': self.identity['candidate_sha'] = 'b'*40
@@ -67,6 +67,7 @@ class MainReuse(unittest.TestCase):
             if mutation == 'workflow': self.workflow_blob = 'untrusted'
             if mutation == 'repository': self.run['repository']['full_name'] = 'other/repo'
             if mutation == 'running': self.run['status'] = 'in_progress'
+            if mutation == 'component-step': next(job for job in self.jobs if component_steps(job['name']))['steps'][0]['conclusion']='skipped'
             with self.subTest(mutation=mutation):
                 with self.assertRaises(ValueError): self.verify()
                 self.assertEqual(reuse.select(self.api, self.repo, self.sha, 2, now=self.now,
@@ -88,7 +89,9 @@ class MainReuse(unittest.TestCase):
         current=dict(self.run, event='push', id=2)
         jobs=[dict(job, run_id=2) for job in self.jobs]
         for job in jobs:
-            if job['name'] in reuse.REUSED_JOBS: job.update(conclusion='skipped', started_at=None, completed_at=None)
+            if job['name'] in reuse.REUSED_JOBS:
+                job.update(conclusion='success' if component_steps(job['name']) else 'skipped', started_at=None, completed_at=None,
+                           steps=[{'name':'Record exact-commit correctness reuse','conclusion':'success'}] if component_steps(job['name']) else [])
         args=dict(candidate=self.sha, profile='merge', repository=self.repo, workflow_id=3,
                   workflow_matches=True, now=self.now)
         self.assertTrue(evaluate(current, jobs, **args))
