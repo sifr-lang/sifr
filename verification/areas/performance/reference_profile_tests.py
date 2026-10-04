@@ -305,8 +305,17 @@ class NamedReferenceTests(unittest.TestCase):
         with patch("reference_profiles.subprocess.run", side_effect=responses):
             self.assertEqual(validate_compiler_reference(Path("."), "a" * 40), "a" * 40)
 
+    def test_only_audited_measurement_runner_closure_is_allowed(self):
+        from measurement_runtime import RUNTIME_PATHS
+        for changed in RUNTIME_PATHS:
+            responses = [CompletedProcess([], 0), CompletedProcess([], 0, changed)]
+            with self.subTest(changed=changed), patch("reference_profiles.subprocess.run", side_effect=responses):
+                self.assertEqual(validate_compiler_reference(Path("."), "a" * 40), "a" * 40)
+
     def test_reference_compiler_or_lock_changes_are_rejected(self):
-        for changed in ("Cargo.toml", "Cargo.lock", "crates/sifr/src/main.rs", "third_party/ruff"):
+        for changed in ("Cargo.toml", "Cargo.lock", "crates/sifr/src/main.rs", "third_party/ruff",
+                        "verification/runner/sifr_verify/cargo_setup.py",
+                        "verification/runner/sifr_verify/profile_runner.py"):
             responses = [CompletedProcess([], 0), CompletedProcess([], 0, changed)]
             with self.subTest(changed=changed), patch("reference_profiles.subprocess.run", side_effect=responses):
                 with self.assertRaisesRegex(ReferenceProfileError, "compiler inputs"):

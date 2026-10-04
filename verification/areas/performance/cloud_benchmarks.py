@@ -18,6 +18,7 @@ from cloud_precision import pairs_for_case
 from cloud_statistics import POLICY_VERSION, schedule
 from reference_host import comparison_mismatches
 from reference_profiles import validate_compiler_reference
+from measurement_runtime import RUNTIME_PATHS
 
 ROOT = Path(__file__).resolve().parents[3]
 AREA = Path(__file__).parent
@@ -32,9 +33,7 @@ def digest(path: Path) -> str:
 def tooling_digest(repo: Path) -> str:
     result = hashlib.sha256()
     paths = list((repo / "verification/areas/performance").glob("*.py"))
-    paths.extend(repo / "verification/runner/sifr_verify" / name for name in (
-        "__init__.py", "process_execution.py", "process_supervisor.py", "process_disk_budget.py",
-    ))
+    paths.extend(repo / relative for relative in RUNTIME_PATHS)
     for path in sorted(paths):
         result.update(str(path.relative_to(repo)).encode() + b"\0" + path.read_bytes())
     return result.hexdigest()
