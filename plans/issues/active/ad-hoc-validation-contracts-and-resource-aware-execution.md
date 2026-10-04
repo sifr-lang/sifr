@@ -1728,3 +1728,45 @@ This bounded item prepares one actual native optimized candidate with the canoni
 Five custody controls reject substituted commands, optimization, compiler manifest/source/target, tool identity, locked input, raw output, archive checksum, installer, incomplete processes, unpublished records and failed producer state. These use explicitly synthetic unit bytes and make no native execution claim. An artifact-area case runs those controls with the pinned interpreter. Existing published-installation controls still pass. Actual optimized native preparation, published-predecessor migration, representative persisted user state, reinstall/rollback, and all four native targets remain pending; this preparer is not qualification evidence and always reports zero runtime assertions.
 
 The initial native preparer review found an unexecutable enrolled shell case, a noncanonical compiler CPU flag, and GNU-only Darwin storage inspection. One remediation batch makes the case executable and verifies it through the actual distribution runner, removes the extra CPU flag, and uses BSD `df` plus `diskutil` plist device/filesystem/bus evidence. Darwin requires an explicit dedicated-host operator declaration; RAM disks and unknown storage buses are rejected. Six candidate controls and three capacity controls now cover the corrected recipe, preserved build failures without success publication, failed completed-state rejection, actual cgroup delegation, BSD device queries, and shared/unclassified/RAM-backed Darwin refusal. These are unit observations, not foreign-platform execution.
+
+### M5 actual published transition qualification — 2026-10-04
+
+This bounded item adds a native rehearsal from the registered, hash-verified
+Beta 16 archive and installer to the exact optimized candidate bundle. It creates
+representative user-owned source, project configuration and persisted state,
+executes the program before and after migration and reinstall, checks package
+integrity, preserves the published payload, and injects failures after the
+transaction switch to verify restoration of the published flat installation and
+of the exact current candidate generation. It does not claim a supported version
+downgrade or publish a release. Eight required runtime cases and sixteen exact
+commands must complete; an independent checker validates raw output, oracles,
+coverage, immutable inputs, selected generations and completed producer state
+before a success receipt can be published.
+
+Five synthetic evidence controls and four existing published-install controls
+pass. The executable distribution-area control also passed through its runner;
+these controls do not qualify a native installation. The explicit manual CI path
+calls a read-only reusable workflow for all four native host targets, builds the
+actual committed optimized candidate, downloads the registered published bytes,
+runs and independently checks the transition, and preserves exact bundles and
+raw success/failure evidence. Workflow regressions reject missing targets,
+substituted source, bypassed qualification and write permissions. Toolchain,
+profile, size and diff checks pass. Scoped review, actual native execution,
+all-platform results, required local gates and release promotion remain pending.
+
+The independent historical compiler endpoint at measurement overlay
+1e81537db6046dbf7381f193152bcf4e7c89ec02 is now prepared, including its actual
+frontend helper. The successful continuation is retained in
+/workspace/validation-work/evidence/independent-baseline-1e81537db-v3/observation.json.
+The earlier disk-floor failure remains failed. Its completed owned graph was
+retired only after verifying both protected endpoint binaries, with raw cleanup
+and retained copies under independent-baseline-1e81537db-v2/retirement-after-completed-v3.
+No compiler performance comparison has yet been captured or accepted.
+
+The initial published-transition review is NOT SATISFIED at 9346d06ae:
+/workspace/validation-work/evidence/sifr-claude.l0CH8k/response.md.
+The reusable workflow used the unavailable runner context in job-level env. One
+remediation batch declares host_kind on the two Darwin matrix rows and uses the
+allowed matrix context. Regression controls reject a missing Darwin declaration
+and the original forbidden context. Actual native/platform qualification and
+broad gates remain pending; the first candidate is not approved.

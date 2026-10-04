@@ -15,6 +15,10 @@ permissions:
   contents: read
 
 jobs:
+  published-predecessor-qualification:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/published-native-qualification.yml
+
   uv-toolchain-invariant:
     name: uv-toolchain-invariant
     runs-on: ubuntu-24.04
