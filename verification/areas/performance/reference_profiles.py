@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from reference_host import comparison_mismatches
+from measurement_runtime import RUNTIME_PATHS
 
 REFERENCE_ROOT = Path(__file__).resolve().parent / "data" / "references"
 
@@ -200,6 +201,7 @@ def validate_compiler_reference(repo_root: Path, commit: str) -> str:
         path for path in changed
         if not path.startswith("verification/areas/performance/")
         and path != "internal_docs/performance_budgets.md"
+        and path not in RUNTIME_PATHS
     ]
     if forbidden:
         raise ReferenceProfileError(

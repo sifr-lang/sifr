@@ -15,7 +15,7 @@ from benchmark_manifest import BenchmarkError
 
 class CollectorTests(unittest.TestCase):
     def test_real_cargo_collection_and_independent_rejection_controls(self):
-        with tempfile.TemporaryDirectory(dir=allocations.ROOT.parent) as temporary:
+        with tempfile.TemporaryDirectory(dir=Path(tempfile.gettempdir()).resolve()) as temporary:
             root=Path(temporary)
             project=root/'original';(project/'src').mkdir(parents=True)
             source=project/'src/main.rs'

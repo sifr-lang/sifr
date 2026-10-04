@@ -1704,3 +1704,26 @@ mount identity and a RAM-backed stage that disk capacity admits but shared memor
 rejects. Eighteen resource controls passed; foundation, native gates and scoped
 review remain pending. This enables using owned temporary capacity without
 cleaning shared targets or treating advertised RAM storage as extra memory.
+
+
+## M4 independent reference measurement runtime
+
+The independent merged compiler reference remains
+`5fbeee50c2f70abd47e5bfcb98d1f1cd0b978042`. Inspection before endpoint preparation exposed
+an admission mismatch in the tooling protocol: paired captures require identical
+reviewed process-custody bytes, but the historical-reference validator allowed only
+the performance directory and rejected those same runner runtime files. The bounded
+correction declares the exact four measurement-only runner files already hashed by
+paired capture. Both endpoint tooling identity and historical-reference admissible
+diff use that same list. Compiler, lock, toolchain, dependency gitlinks, Cargo setup
+and general profile runner changes remain forbidden. Controls and scoped review
+are pending. No reference build, pair capture or performance acceptance is inferred.
+
+
+The first reference-runtime control run failed only the actual Cargo allocation
+control's disk admission: required 3,355,443,200 bytes versus 3,314,692,096
+available. Its control hard-coded the workspace parent for temporary outputs,
+ignoring the available TMPDIR storage. The bounded fixture correction uses the
+canonical configured temporary directory; its collector/admission requirements
+are unchanged. Failed control output remains at
+`/workspace/validation-work/evidence/reference-runtime-performance-controls.log`.
