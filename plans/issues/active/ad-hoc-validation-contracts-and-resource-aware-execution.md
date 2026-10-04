@@ -4,6 +4,27 @@ status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
 
+## Current bounded item: provisioned Darwin x64 native runner — 2026-10-04
+
+Run `37189948998` on reviewed `13a4d7572dacfb69ac0077b385860347b6349699`
+passed x64 locked online/offline source preparation, then stopped before native
+compilation at admission: 9098891264 bytes available against the unchanged
+9663676416-byte requirement. Its log and failed state stay preserved. The prior
+x64 native pass on `886464cad855dae47a26748f1d6528dd32fe1f92` remains specific
+to that frozen candidate and host observation. No unchanged numerical capture
+is retried and no native memory reserve is reduced.
+
+Own branch `codex/validation-native-larger-intel-20261004` in the existing owned
+full worktree `/workspace/sifr-validation-native-larger-arm`, based on `13a4d7572`.
+The earlier ARM branch is retained. Select documented `macos-15-large` x64
+(30 GB RAM), bind its existing canonical Darwin x64 uv checksum, and require
+that exact runner in the native workflow contract. Negative controls reject
+downgrades of both macOS rows. All four native targets, single-worker native
+preparation, runtime assertions, resource estimates/reserves and other workflows
+remain intact. Named checks: uv controls/invariant, local-first workflow controls,
+source guardrail and diff check; scoped read-only Opus review. Larger-runner
+account access, actual qualification and full candidate acceptance remain pending.
+
 ## Current bounded item: provisioned Darwin ARM native runner — 2026-10-04
 
 The user authorized a larger GitHub macOS ARM runner and removal of this chat's
