@@ -2071,3 +2071,42 @@ run `37178223306`; the observed jobs are queued. This is dispatch evidence only.
 Completed review PRs #4315–#4317 were merged into the integration branch, not
 protected main. Their clean owned checkouts were retired after checking their
 PR head identities and ancestry; source commits and review evidence are retained.
+## M5 actual transition prerequisite and retained inventory repair — 2026-10-04
+
+The frozen native rehearsal exposed two concrete qualification omissions. The
+published compiler needs dependency cache preparation before its offline program
+runs. Its successful post-switch rollback intentionally retains a receipt-only
+legacy directory, so a later successful migration has one intact predecessor
+plus that residue, rather than one total legacy directory.
+
+The bounded repair prepares a dependent public-stdlib Cargo project from the
+actual published manifests and seeded lock, fetches online, then checks locked
+and offline. The published package inputs stay byte-identical. Preparation has
+zero runtime assertions, bounded process output/deadline, separate cache-disk
+admission and the unchanged two-GiB reserves. Its exact generated manifest,
+prepared lock, commands and raw output are independently checked against the
+retained published input bytes. Public stdlib features select runtime leaves;
+compiler-private runtime structural support is absent from the published package
+and is not introduced into the user's program. Native CI preserves this nested
+preparation evidence on success or failure.
+
+Migration qualification now requires exactly the known receipt-only rollback
+residue and one independently verified intact predecessor. It rejects extra
+legacy directories, unexpected residue bytes, symlinks, receipt substitution or
+any predecessor payload drift. The actual installer is unchanged; rollback,
+upgrade, user-program, reinstall and integrity commands remain mandatory.
+
+Fifteen focused controls pass (six runtime ledger, five predecessor inventory,
+four dependency-evidence suites). Actual dependency preparation and its checker
+also passed against the unchanged published Beta 16 installation; this is a
+preparation observation with zero runtime assertions. The two earlier native
+transition failures remain failed. Scoped review and the corrected full native
+rehearsal remain pending.
+
+To recover shared memory, the closed test installation payloads from both failed
+rehearsals and the failed packaging staging copy were archived losslessly outside
+Git. Every regular file hash/size/mode, directory and symlink target was compared
+against the decoded archive before removing its staging copy. Failure states,
+raw commands, user projects, Cargo graphs and original published assets stay in
+place. Custody manifests under `/tmp/sifr-closed-native-payloads-20261004` record
+exact restoration paths. No historical failed result was relabelled as passing.

@@ -10,6 +10,8 @@ import time
 import uuid
 
 import native_candidate
+import legacy_transition_inventory
+import native_dependency_preparation
 from native_capacity import resources
 from published_predecessor import POLICY,digest
 from published_installation import payload,rehearse,verify_installed
@@ -77,7 +79,11 @@ def check(path,*,_pending=False):
             or report['source_commit']!=candidate['source_commit'] or report['version']!=candidate['version']
             or report['target']!=candidate['target'] or digest(candidate_path)!=report['candidate_receipt']['sha256']
             or report['producer_sha256']!=digest(Path(__file__)) or report['policy_sha256']!=digest(POLICY)
-            or digest(source/'verification/areas/sysroot_release/published_transition.py')!=report['producer_sha256']):
+            or digest(source/'verification/areas/sysroot_release/published_transition.py')!=report['producer_sha256']
+            or report['inventory_producer_sha256']!=digest(Path(legacy_transition_inventory.__file__))
+            or digest(source/'verification/areas/sysroot_release/legacy_transition_inventory.py')!=report['inventory_producer_sha256']
+            or report['dependency_producer_sha256']!=digest(Path(native_dependency_preparation.__file__))
+            or digest(source/'verification/areas/sysroot_release/native_dependency_preparation.py')!=report['dependency_producer_sha256']):
         raise ValueError('transition source/producer/native input identity differs')
     start,finish=(datetime.fromisoformat(report[field]) for field in ('started_utc','finished_utc'))
     now=datetime.now(timezone.utc)
@@ -97,7 +103,10 @@ def check(path,*,_pending=False):
     legacy=Path(report['retained_predecessor']);managed=output/'published/managed'
     if legacy.parent!=managed/'.sifr-generations' or not legacy.name.startswith('legacy.'):
         raise ValueError('retained predecessor path differs')
-    verify_installed(legacy,rows)
+    if legacy_transition_inventory.predecessor(managed,Path(report['rolled_back_legacy']),
+            report['published_install_manifest_sha256'],rows)!=legacy:
+        raise ValueError('retained published predecessor inventory differs')
+    native_dependency_preparation.check(report['dependency_preparation'],output/'dependency-preparation',managed,legacy)
     if (managed/'.sifr-current').resolve()!=Path(report['reinstalled_generation']) or digest(managed/'bin/sifr')!=candidate['binary_sha256']:
         raise ValueError('selected rollback generation or compiler differs')
     if not Path(report['upgraded_generation']).is_dir() or report['upgraded_generation']==report['reinstalled_generation']:
@@ -138,6 +147,8 @@ def qualify(candidate_receipt,archive,installer,output):
         'published_archive':{'path':str(archive),'sha256':digest(archive)},
         'published_installer':{'path':str(installer),'sha256':digest(installer)},
         'producer_sha256':digest(Path(__file__)),'policy_sha256':digest(POLICY),
+        'inventory_producer_sha256':digest(Path(legacy_transition_inventory.__file__)),
+        'dependency_producer_sha256':digest(Path(native_dependency_preparation.__file__)),
         'started_utc':datetime.now(timezone.utc).isoformat(),'cases':[],'commands':[],'runtime_assertions':0}
     def save(): (output/'state.json').write_text(json.dumps(report,indent=2)+'\n')
     case_clock=time.monotonic()
@@ -194,6 +205,7 @@ shutil.copyfile(routes[urls[0]],args[args.index('-o')+1])
             if result.cause!='exit' or result.truncated or (result.returncode==0)!=success:
                 raise ValueError(name+': incomplete or unexpected native outcome')
             return result.stdout
+        report['dependency_preparation']=native_dependency_preparation.prepare(managed,output/'dependency-preparation');save()
         project=output/'user-project'
         run('published-init',[binary,'init','--bin','--name','persisted_upgrade',project])
         (project/'src/main.sifr').write_text('from sifr.math import sqrt\n\ndef main():\n    print(int(sqrt(81.0)))\n')
@@ -205,6 +217,7 @@ shutil.copyfile(routes[urls[0]],args[args.index('-o')+1])
                 raise ValueError('persisted source/configuration or program result differs')
         user_run('published-user-run');passed('persisted-before')
         initial_receipt=digest(managed/'install.json')
+        report['published_install_manifest_sha256']=initial_receipt
         fault=output/'fault-tools';fault.mkdir();cp=fault/'cp';real_cp=shutil.which('cp')
         cp.write_text('#!'+sys.executable+'\n'+'''import os,pathlib,sys
 args=sys.argv[1:]
@@ -220,7 +233,12 @@ os.execv(os.environ['TRANSITION_REAL_CP'],[os.environ['TRANSITION_REAL_CP'],*arg
                 or (managed/'.sifr-current').exists() or (managed/'.sifr-current').is_symlink()
                 or digest(managed/'install.json')!=initial_receipt):
             raise ValueError('failed migration did not restore the exact published installation')
-        verify_installed(managed,rows);user_run('published-after-rollback');passed('migration-failure-rollback')
+        verify_installed(managed,rows)
+        rollback_roots=list((managed/'.sifr-generations').glob('legacy.*'))
+        if len(rollback_roots)!=1: raise ValueError('failed migration legacy inventory differs')
+        rolled_back=legacy_transition_inventory.rollback_residue(managed,rollback_roots[0],initial_receipt)
+        report['rolled_back_legacy']=str(rolled_back)
+        user_run('published-after-rollback');passed('migration-failure-rollback')
         run('upgrade',['sh',new_installer,'--no-modify-path'],extra={'SIFR_MIGRATE_LEGACY':'1'})
         def selected(label):
             generation=(managed/'.sifr-current').resolve(strict=True)
@@ -231,11 +249,8 @@ os.execv(os.environ['TRANSITION_REAL_CP'],[os.environ['TRANSITION_REAL_CP'],*arg
                 raise ValueError('candidate installed package integrity was not verified')
             return generation
         upgraded=selected('upgraded');report['upgraded_generation']=str(upgraded)
-        legacy_roots=list((managed/'.sifr-generations').glob('legacy.*'))
-        if len(legacy_roots)!=1: raise ValueError('migration did not retain exactly one published payload')
-        verify_installed(legacy_roots[0],rows)
-        if digest(legacy_roots[0]/'install.json')!=initial_receipt: raise ValueError('retained published receipt differs')
-        report['retained_predecessor']=str(legacy_roots[0]);passed('upgrade')
+        legacy_root=legacy_transition_inventory.predecessor(managed,rolled_back,initial_receipt,rows)
+        report['retained_predecessor']=str(legacy_root);passed('upgrade')
         user_run('candidate-user-run');passed('persisted-after')
         run('reinstall',['sh',new_installer,'--force','--no-modify-path'])
         reinstalled=selected('reinstalled')
@@ -248,7 +263,7 @@ os.execv(os.environ['TRANSITION_REAL_CP'],[os.environ['TRANSITION_REAL_CP'],*arg
         if (managed/'.sifr-current').resolve()!=reinstalled or 'rollback_install_transaction' not in (output/'failed-reinstall.stderr').read_text():
             raise ValueError('candidate transaction failure did not roll back the current generation')
         selected('rollback');user_run('rollback-user-run');passed('candidate-failure-rollback')
-        verify_installed(legacy_roots[0],rows)
+        legacy_transition_inventory.predecessor(managed,rolled_back,initial_receipt,rows)
         if native_candidate.check(candidate_receipt)!=candidate or digest(archive)!=report['published_archive']['sha256'] or digest(installer)!=report['published_installer']['sha256']:
             raise ValueError('native qualification inputs changed')
         if lease: lease.passed_consumer('published-transition')
