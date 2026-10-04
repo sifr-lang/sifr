@@ -91,6 +91,7 @@ class CompactChecks(unittest.TestCase):
                     owner = graph_owner = str(uuid.uuid4())
                     journal = Path('/test/journal')
                     def __init__(self, runner): pass
+                    def record(self, *args, **kwargs): pass
                     def prepare_command(self, *args, **kwargs): pass
                     def step(self, step, callback, **kwargs):
                         events.append(step)

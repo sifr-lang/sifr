@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations.",
+  "estimate_basis": "Explicit compact-v1 observations after a cold debug=0/incremental=0 source compiler used 1,915,352,054 bytes in 586.90s. All stages retain two GiB disk reserve plus one GiB monitored stopping headroom; estimates are prospective, never build/assertion reuse. Source/package graphs have unique session roots and retire before library/remaining preparations. Partial library-cache hints use the existing one-GiB cached allocation after actual metadata structural test preparation on the owned compiler cache added 869,552,128 net filesystem bytes in 457.74s. Unknown remaining commands use a prospective two-GiB growth attempt with the unchanged reserve/floor; Cargo always executes and wrong forecasts fail closed.",
   "cold_preparation_deadline_seconds": 7200,
   "assertion_command_deadline_seconds": 2400,
   "stages": {
@@ -85,7 +85,7 @@
       "memory_reserve_bytes": 2147483648
     },
     "preparation-command-cold": {
-      "disk_growth_bytes": 3221225472,
+      "disk_growth_bytes": 2147483648,
       "retained_copy_bytes": 0,
       "disk_reserve_bytes": 2147483648,
       "memory_peak_bytes": 6442450944,

@@ -7,6 +7,8 @@ it cannot turn unexecuted work into a pass.
 from __future__ import annotations
 
 import stat
+import sys
+import re
 from pathlib import Path
 
 
@@ -23,25 +25,36 @@ def regular(path: Path) -> bool:
         return False
 
 
-def test_cache_hint(root: Path, env: dict, package: str) -> bool:
+def test_cache_hint(root: Path, env: dict, package: str, *, include_library: bool = False) -> bool:
     debug = target_root(root, env) / 'debug'
     try:
         if debug.resolve(strict=True) != debug.absolute():
             return False
         name = package.replace('-', '_')
-        return any(regular(path) and not path.suffix for path in (debug / 'deps').glob(name + '-*')) and any(
+        library = include_library and any(regular(path) for path in (debug / 'deps').glob('lib' + name + '-*.rlib')) and any(
+            regular(path) for path in (debug / '.fingerprint').glob(package + '-*/lib-' + name))
+        return library or any(regular(path) and not path.suffix for path in (debug / 'deps').glob(name + '-*')) and any(
             regular(path) for path in (debug / '.fingerprint').glob(package + '-*/test-lib-' + name))
     except OSError:
         return False
 
 
-def command_cache_hint(root: Path, env: dict, command: list[str]) -> bool:
-    if not command or command[0] != 'cargo' or len(command) < 2:
+def command_cache_hint(root: Path, env: dict, command: list[str], *, include_library: bool = False) -> bool:
+    if not command or len(command) < 2:
+        return False
+    if include_library and len(command) == 7 and command[0] == sys.executable and command[1:3] == ['-m','sifr_verify.generated_cargo_setup']:
+        if (command[3]=='--profile' and command[4] in {'create-pr','merge','nightly','cloud'}
+                and command[5]=='--revision' and re.fullmatch('[0-9a-f]{40}',command[6])):
+            return command_cache_hint(root,env,['cargo','build','-p','sifr'])
+    if command[0] != 'cargo':
         return False
     if '--target' in command or '--release' in command or '--manifest-path' in command:
         return False
     if command[1] == 'test' and '-p' in command:
-        index = command.index('-p') + 1
+        indices = [index+1 for index,value in enumerate(command) if value=='-p']
+        if include_library:
+            return all(index<len(command) and test_cache_hint(root,env,command[index],include_library=True) for index in indices)
+        index = indices[0]
         return index < len(command) and test_cache_hint(root, env, command[index])
     if command[1] == 'build':
         if '--bin' in command:

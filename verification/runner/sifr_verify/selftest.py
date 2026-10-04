@@ -65,7 +65,6 @@ from .compact_profile_checks import policy_checks as compact_profile_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
-
 def run_all() -> list[str]:
     import os
     variables = ("SIFR_VERIFY_RESOURCE_POLICY", "SIFR_VERIFY_SYSROOT_GRAPH_SESSION")
@@ -74,7 +73,6 @@ def run_all() -> list[str]:
         return _run_all()
     finally:
         os.environ.update(inherited)
-
 
 def _run_all() -> list[str]:
     checks = [
@@ -119,7 +117,6 @@ def _run_all() -> list[str]:
         check()
         passed.append(name)
     return passed
-
 
 def _schema_self_test() -> None:
     committed = validate_all_committed_schemas()
