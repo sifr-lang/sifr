@@ -12,6 +12,7 @@ import include_source_assertions as assertions
 import include_source_negatives as negatives
 from include_source_authority import read_originals
 from include_source import verify
+import include_source as consumer
 import include_source_union as union
 import include_source_encoding as canonical
 
@@ -159,7 +160,7 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
         record=json.loads(authority.inputs);configuration=Path(record['root'])/'Cargo.toml';original=configuration.read_bytes()
         try:
             configuration.write_bytes(original+b'\n# bounded actual configuration mutation\n')
-            negatives.reject(self,proof,receipt,authority,'actual-cfg-manifest-input-drift')
+            negatives.reject(self,proof,receipt,authority,'actual-manifest-byte-input-drift')
         finally:configuration.write_bytes(original)
         self.require(verify(proof,receipt,authority,b)['diagnostic_relation'],'intact original source/configuration returns to valid diagnostic control')
         del proof,receipt,authority;gc.collect()
@@ -169,6 +170,39 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
         negatives.reject(self,proof,receipt,authority,'official-bom-physical-token-forge',lambda p:bom(p)[0]['physical_token'].update(range=[0,2]))
         negatives.reject(self,proof,receipt,authority,'official-bom-boundary-forge',lambda p:bom(p)[0]['official_boundary'].update(difference=2))
         negatives.reject(self,proof,receipt,authority,'official-bom-context-swap',lambda p:bom(p)[0].update(native_context=p['source_native_attribute_membership']['include_roots'][1]['membership']['native']))
+
+    def reject_current_input(self,proof,receipt,authority,label,reason,changed):
+        destination=self.run_dir/('unpublished-'+label+'.json')
+        self.assertions+=1
+        with self.assertRaisesRegex(b.Unsupported,reason):
+            consumer.publish(proof,receipt,authority,destination,b)
+        self.require(not destination.exists() and not destination.with_suffix('.json.tmp').exists(),'actual current input rejection publishes nothing: '+label)
+        (self.run_dir/('negative-'+label+'.json')).write_bytes(b.encoded({'context':receipt['context'],'root':receipt['inputs']['root'],'intact_proof_digest':receipt['proof_digest'],'intact_original_inventory':receipt['inputs']['original_inventory'],'changed_current_input':changed,'accepted_complete_union':False}))
+
+    def original_context_input_mutations(self,proof,receipt,authority,repeat):
+        _,semantic,_=read_originals(authority)
+        joined,_=assertions.named_join(proof,semantic,'::SifrIntBindingCollector',b)
+        source=Path(joined['source_native_attribute_membership']['file'])
+        self.require(source.is_relative_to(repeat) and receipt['inputs']['root']==str(repeat),'genuine source/input/cfg negatives use the owned original Linux repeat context')
+        for label,path,suffix in [('included-source',source,b'\n// bounded original Linux include source mutation\n'),('manifest-byte-input',repeat/'Cargo.toml',b'\n# bounded original Linux manifest input mutation\n')]:
+            original=path.read_bytes();changed=original+suffix
+            self.require(receipt['inputs']['files'][str(path)]==b.digest(original),'actual original Linux mutation starts from independently authenticated input bytes')
+            try:
+                path.write_bytes(changed)
+                self.reject_current_input(proof,receipt,authority,'original-linux-repeat-'+label+'-drift','original include-source input drift',{'path':str(path),'original_sha256':b.digest(original),'changed_sha256':b.digest(changed)})
+            finally:path.write_bytes(original)
+            self.require(verify(proof,receipt,authority,b)['diagnostic_relation'],'restored original Linux '+label+' input re-verifies intact positive')
+        key='CARGO_ENCODED_RUSTFLAGS';original=os.environ.get(key)
+        self.require('hbip_source_native_cfg_mutation' not in {atom['key'] for atom in proof['transformed_attribute_observations']['stage']['context']['cfg']},'bounded actual cfg probe is absent from the original independently captured compiler cfg')
+        changed=(original+'\x1f' if original else '')+'--cfg\x1fhbip_source_native_cfg_mutation'
+        try:
+            os.environ[key]=changed
+            self.require(os.environ[key]!=original and os.environ[key].split('\x1f')[-2:]==['--cfg','hbip_source_native_cfg_mutation'],'actual Cargo cfg input is changed, independently of manifest byte drift')
+            self.reject_current_input(proof,receipt,authority,'original-linux-repeat-actual-cfg-input-drift','original top-level consumer environment drift',{'environment_key':key,'original':original,'changed':changed,'actual_cfg_argument':['--cfg','hbip_source_native_cfg_mutation']})
+        finally:
+            if original is None:os.environ.pop(key,None)
+            else:os.environ[key]=original
+        self.require(verify(proof,receipt,authority,b)['diagnostic_relation'],'restored original Cargo cfg input re-verifies intact positive')
 
     def test_required_original_linux_include_context_union_repeats(self):
         repeat=Path(os.environ['SIFR_BUILTIN_REPEAT_ROOT']).resolve()
@@ -189,6 +223,7 @@ class IncludeSourceCorrespondenceTests(unittest.TestCase):
             summaries.append({'context':ctx,'owners':len(proof['compiler_semantic_owner_identity']['complete_owner_dispositions']),'required':len(proof['compiler_semantic_owner_identity']['correspondences']),'roots':len(proof['source_native_attribute_membership']['include_roots'])})
             del proof,receipt,authority;gc.collect()
             proof,receipt,authority=self.get(repeat,ctx);assertions.inventories(self,proof,receipt,authority,b)
+            if ctx==capture.context('sifr_codegen'):self.original_context_input_mutations(proof,receipt,authority,repeat)
             qualified.append(union.qualify(proof,receipt,authority,self.last_output,b))
             after=signature_record(proof,receipt,authority,self.run_dir/(label+'-repeat-normalized.json'))
             self.require(signatures_equal(before,after),'fresh unchanged complete source/native and independent compiler owner relation normalizes across owned checkouts')
