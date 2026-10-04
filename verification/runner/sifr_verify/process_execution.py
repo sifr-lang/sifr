@@ -84,6 +84,7 @@ def execute(
     deadline_seconds: float | str = 2400, limit_bytes: int = 1048576,
     emit: Callable[[str, bytes], None] | None = None,
     input_bytes: bytes | None = None,
+    observer: Callable[[int, float], str | None] | None = None,
 ) -> Outcome:
     # signal.signal is main-thread-only. Reject before creating a process that
     # this thread could not own through cancellation and cleanup.
@@ -209,6 +210,15 @@ def execute(
                 # An escaped descendant can retain a pipe indefinitely. On a
                 # safety outcome, keep the bytes already read and close our ends.
                 break
+            if observer is not None:
+                observed_stop = observer(proc.pid, time.monotonic())
+                if observed_stop is not None:
+                    if observed_stop not in {'observer_memory', 'observer_reserve', 'observer_unavailable',
+                                             'observer_evidence_limit'}:
+                        raise ValueError('invalid process observer stop cause')
+                    cause = observed_stop
+                    kill_group(proc.pid)
+                    break
             # A direct child may abandon grandchildren that inherited its pipes.
             exited = child_exited()
             if exited:

@@ -214,6 +214,50 @@ def validate_capacity_diagnostics(document: dict) -> list[str]:
     return errors
 
 
+def validate_runtime_diagnostic(document: dict) -> list[str]:
+    """Fixed one-attempt measurement route; never a native qualification job."""
+    errors = []
+    if (document.get('on', document.get('true')) != {'workflow_dispatch': None}
+            or document.get('permissions') != {'contents': 'read'}
+            or set(document.get('jobs', {})) != {'observe'}):
+        errors.append('runtime diagnostic must be manual and read-only')
+    job = document.get('jobs', {}).get('observe', {})
+    if (job.get('runs-on') != 'macos-15' or job.get('timeout-minutes') != 40
+            or job.get('env') != {'SIFR_NATIVE_HOST_KIND': 'dedicated-darwin'}
+            or set(job)-{'name', 'runs-on', 'timeout-minutes', 'env', 'steps'}):
+        errors.append('runtime diagnostic requires the fixed standard ARM runner')
+    steps = job.get('steps', [])
+    prefix = 'uv run --project verification --locked python verification/areas/sysroot_release/native_runtime_diagnostic.py '
+    commands = ['uv python install 3.14.7', *[prefix + mode +
+                ' --output "$RUNNER_TEMP/native-runtime-diagnostic"' for mode in ('observe', 'check')]]
+    if (len(steps) != 6 or [s.get('run') for s in steps if 'run' in s] != commands
+            or any(s.get('continue-on-error') for s in steps)
+            or any('if' in s for s in steps[:4])
+            or any(s.get('if') != 'always()' for s in steps[4:])):
+        errors.append('runtime diagnostic requires fixed observation, independent checking and failure retention')
+    allowed = ({'name', 'uses', 'with'}, {'name', 'uses', 'with'}, {'name', 'run'},
+               {'name', 'run'}, {'name', 'if', 'run'}, {'name', 'if', 'uses', 'with'})
+    if len(steps) == 6 and any(set(step)-keys for step, keys in zip(steps, allowed)):
+        errors.append('runtime diagnostic cannot add step overrides')
+    bootstrap = steps[1] if len(steps) > 1 else {}
+    if (bootstrap.get('uses') != 'astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d'
+            or bootstrap.get('with') != {'version-file': 'verification/pyproject.toml',
+                'checksum': '51c6170e8e3a01cef9f33b94f582b7b81ac65046f55d40afb35f9cff5a68c179'}):
+        errors.append('runtime diagnostic bootstrap identity differs')
+    checkout = steps[0] if steps else {}
+    if (checkout.get('uses') != 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+            or checkout.get('with') != {'ref': '${{ github.sha }}', 'persist-credentials': False}):
+        errors.append('runtime diagnostic checkout must bind exact source')
+    upload = steps[-1] if steps else {}
+    if (upload.get('uses') != 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+            or upload.get('with') != {
+                'name': 'native-runtime-diagnostic-${{ github.sha }}-aarch64-apple-darwin-${{ github.run_attempt }}',
+                'path': '${{ runner.temp }}/native-runtime-diagnostic/evidence',
+                'if-no-files-found': 'error', 'retention-days': 30}):
+        errors.append('runtime diagnostic evidence identity differs')
+    return errors
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     document = parse_workflows({WORKFLOW: (root / WORKFLOW).read_text()})[WORKFLOW]
@@ -223,8 +267,11 @@ def main() -> None:
     native = parse_workflows({native_path: (root / native_path).read_text()})[native_path]
     diagnostic_path = '.github/workflows/native-capacity-diagnostics.yml'
     diagnostic = parse_workflows({diagnostic_path: (root / diagnostic_path).read_text()})[diagnostic_path]
+    runtime_path = '.github/workflows/native-runtime-diagnostic.yml'
+    runtime = parse_workflows({runtime_path: (root / runtime_path).read_text()})[runtime_path]
     errors = (validate(document) + validate_publisher(publisher)
-              + validate_native_qualification(document, native) + validate_capacity_diagnostics(diagnostic))
+              + validate_native_qualification(document, native) + validate_capacity_diagnostics(diagnostic)
+              + validate_runtime_diagnostic(runtime))
     if errors:
         raise SystemExit("\n".join(errors))
     # Regression: the original condition must fail before any runner work.

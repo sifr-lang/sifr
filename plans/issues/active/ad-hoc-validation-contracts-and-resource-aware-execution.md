@@ -516,6 +516,56 @@ missing failure retention. The 4,432-file guard and whitespace check pass.
 Exact-candidate review, actual standard-runner observations and full gates are
 pending; no native or performance qualification follows from these controls.
 
+## M5 standard ARM published-runtime diagnostic — prospective bounded scope
+
+Add a separate manual standard `macos-15` ARM diagnostic of the registered
+beta.16 package running the persisted offline `isqrt(81)` user program. This
+produces zero qualification assertions. It does not replace native candidate,
+installation, migration, reinstall or rollback qualification, and leaves all
+production allowances, reserves and the four-target workflow unchanged.
+
+Owned scope: diagnostic driver, physical storage policy, sampled observer,
+independent retained-byte checker, an optional executor observer hook, focused
+controls, a fixed manual workflow and its contract. Admit a prospective 768 MiB
+process envelope with the unchanged 2 GiB memory reserve only against fresh
+canonical capacity. Stop at 512 MiB sampled aggregate RSS or 2.25 GiB canonical
+available memory. This is sampled Darwin session-group monitoring, not a hard
+cap or escape-proof custody. Preserve the predecessor's 8 GiB disk reserve and
+declare all acquisition, runtime, cache, temporary and evidence growth.
+
+Acceptance: real tiny process observer/cleanup controls, strict raw parser and
+receipt tamper controls, real path/environment and configuration rejection
+controls, affected native resource/custody controls, workflow/uv contracts and
+file-size guard. Exact scoped review and any single remote diagnostic require
+root coordination after the active e3ca local gate. No local Cargo, UV install,
+compiler build, artifact download or review is authorized during that gate.
+The shared executor change invalidates existing performance-reuse eligibility;
+do not expand reuse exclusions. Applicable final gates remain required.
+
+An actual standard runner/account and sufficient fresh capacity are not assumed.
+Historical diagnostic bytes cannot qualify a current candidate or establish a
+universal machine minimum. Implementation is prepared in an isolated sparse
+worktree; review, actual diagnostic execution and final acceptance remain pending.
+The shared executor hook has no new imports and leaves its default behavior and
+Outcome unchanged. Worker invocation preserves the canonical Python venv path
+while hashing the resolved interpreter bytes. Tighter inherited deadlines and
+same-root disk floors remain authoritative; foreign floor paths are rejected.
+
+Focused new controls, existing native resource/custody controls and workflow/uv
+contracts pass. The sparse file-size guard is not a full-tree gate. Four existing
+profile/process controls require Cargo metadata and remain deferred during the
+active root gate. An existing 0.5-second process-cleanup control returned an
+actual safety-deadline failure under this shared host; its failure is retained
+and its threshold is unchanged. Do not report all affected acceptance passing.
+
+GitHub currently registers only the published-native workflow filename. A new
+manual-only diagnostic filename is not assumed dispatchable. Root may separately
+authorize an exact diagnostic-only branch using that registered path after
+review, as the earlier capacity execution did. Its new branch SHA would be the
+diagnostic producer authority; beta.16 remains the separate publication source.
+The integration four-target workflow remains unchanged. No shim, dispatch,
+source-qualification reuse or actual ARM qualification is delivered here.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress

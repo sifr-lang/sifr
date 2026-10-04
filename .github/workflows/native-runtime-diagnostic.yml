@@ -1,0 +1,39 @@
+name: native-runtime-diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    name: published-runtime-aarch64-apple-darwin
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      SIFR_NATIVE_HOST_KIND: dedicated-darwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version-file: verification/pyproject.toml
+          checksum: 51c6170e8e3a01cef9f33b94f582b7b81ac65046f55d40afb35f9cff5a68c179
+      - name: Install canonical diagnostic interpreter
+        run: uv python install 3.14.7
+      - name: Observe one admitted published runtime workload
+        run: uv run --project verification --locked python verification/areas/sysroot_release/native_runtime_diagnostic.py observe --output "$RUNNER_TEMP/native-runtime-diagnostic"
+      - name: Independently check retained diagnostic evidence
+        if: always()
+        run: uv run --project verification --locked python verification/areas/sysroot_release/native_runtime_diagnostic.py check --output "$RUNNER_TEMP/native-runtime-diagnostic"
+      - name: Preserve bounded observations and failure state
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-runtime-diagnostic-${{ github.sha }}-aarch64-apple-darwin-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-runtime-diagnostic/evidence
+          if-no-files-found: error
+          retention-days: 30
