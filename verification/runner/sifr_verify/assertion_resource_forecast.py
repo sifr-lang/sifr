@@ -5,6 +5,8 @@ from .paths import REPO_ROOT
 from .schemas import load_json
 
 SQL_BUILD_ALLOCATION = "sql-build-qualification"
+# Prospective request for the admitted clean-build callback only; CPU-clamped.
+SQL_BUILD_CARGO_WORKERS = 2
 
 
 def assertion_allocation(name: str, profile: dict) -> str:

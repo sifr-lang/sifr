@@ -18,6 +18,7 @@ from .profile_commands import CommandFailed
 from .cargo_setup import acquire_cargo_dependencies
 from .graph_retirement import GRAPH_PATHS, GraphLease
 from .sql_resource_checks import SqlResourceTests
+from .sql_worker_checks import SqlWorkerChecks
 from .early_sql_checks import EarlySqlChecks
 from .sql_partition_checks import PartitionChecks
 from .early_sql import EarlySqlOutcome

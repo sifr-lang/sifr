@@ -80,7 +80,8 @@ class EarlySqlChecks(unittest.TestCase):
             source.assert_not_called()
             package.assert_not_called()
 
-    def route(self, profile_name, *, no_fail_fast=False, failure=None, build=True, inherited_floor=False):
+    def route(self, profile_name, *, no_fail_fast=False, failure=None, build=True, build_only=False,
+              inherited_floor=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             args = ['--compact-resources'] + (['--no-fail-fast'] if no_fail_fast else [])
@@ -94,8 +95,11 @@ class EarlySqlChecks(unittest.TestCase):
             original_floor = {key: runner.env.get(key) for key in (FLOOR_VARIABLE, PATH_VARIABLE)}
             if not build:
                 next(row for row in runner.profile['selected_areas'] if row['area'] == 'sql_platform')['suites'].remove('build-qualification')
+            if build_only:
+                next(row for row in runner.profile['selected_areas'] if row['area'] == 'sql_platform')['suites'] = ['build-qualification']
             original = copy.deepcopy(runner.profile)
             commands, events, areas, policies = [], [], [], []
+            area_workers = []
             failed_once = False
             disk_free = [64*1024**3]
             def native(command, *, env):
@@ -107,6 +111,7 @@ class EarlySqlChecks(unittest.TestCase):
                     raise CommandFailed(101)
             def area(name, suites, *, result_slug=None):
                 areas.append((name, list(suites)))
+                area_workers.append((name, list(suites), runner.env['CARGO_BUILD_JOBS']))
                 if name == 'sysroot_release':
                     result = root/'target/verification/areas/sysroot-release-cloud-results.json'
                     result.parent.mkdir(parents=True, exist_ok=True)
@@ -172,8 +177,10 @@ class EarlySqlChecks(unittest.TestCase):
             self.assertEqual(runner.profile, original)
             self.assertEqual({key: runner.env.get(key) for key in original_floor}, original_floor)
             self.assertEqual(runner.env['SIFR_VERIFY_SAFETY_DEADLINE_SECONDS'], '17')
+            self.assertEqual(runner.env['CARGO_BUILD_JOBS'], '1')
             return dict(status=status, functional=runner.functional_exit_status, events=events, commands=commands,
-                        areas=areas, steps=parsed['lane_steps'], profile=original, policies=policies, result=payload)
+                        areas=areas, steps=parsed['lane_steps'], profile=original, policies=policies, result=payload,
+                        area_workers=area_workers)
 
     def test_both_routes_execute_complete_sql_once_before_unrelated_preparation(self):
         for profile in ('create-pr', 'merge', 'cloud'):
@@ -199,6 +206,11 @@ class EarlySqlChecks(unittest.TestCase):
                 self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], ['pass'])
                 self.assertTrue(all(env['CARGO_NET_OFFLINE'] == 'true' and env['CARGO_INCREMENTAL'] == '0'
                                     for cmd, env in result['commands'] if cmd in expected_commands))
+                self.assertTrue(all(env['CARGO_BUILD_JOBS'] == '1' for _, env in result['commands']))
+                self.assertEqual([(name, suites) for name, suites, jobs in result['area_workers'] if jobs != '1'],
+                                 [('sql_platform', ['build-qualification'])])
+                self.assertTrue(all(jobs == '2' for name, suites, jobs in result['area_workers']
+                                    if name == 'sql_platform' and suites == ['build-qualification']))
 
     def test_stricter_caller_floor_is_restored_before_independent_work(self):
         for profile in ('create-pr', 'cloud'):
@@ -249,6 +261,18 @@ class EarlySqlChecks(unittest.TestCase):
             self.assertLess(result['events'].index('generated-preparation'), result['events'].index('area_sql_platform'))
             self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], ['pass'])
             self.assertEqual(len([cmd for cmd, _ in result['commands'] if cmd[:3] == ['cargo', 'test', '--no-run']]), 30)
+            self.assertTrue(all(jobs == '1' for _, _, jobs in result['area_workers']))
+            self.assertTrue(all(env['CARGO_BUILD_JOBS'] == '1' for _, env in result['commands']))
+
+    def test_build_only_selection_uses_named_workers_without_adding_preparation(self):
+        for profile in ('create-pr', 'cloud'):
+            result = self.route(profile, build_only=True)
+            self.assertEqual(result['status'], 0)
+            self.assertEqual(result['result']['summary']['total_variants'], 1)
+            self.assertNotIn('preparation_sql_platform', result['events'])
+            self.assertFalse(any(cmd[:3] == ['cargo', 'test', '--no-run'] for cmd, _ in result['commands']))
+            self.assertEqual([row for row in result['area_workers'] if row[0] == 'sql_platform'],
+                             [('sql_platform', ['build-qualification'], '2')])
 
     def test_failures_preserve_exactly_one_status_and_no_fail_fast_independence(self):
         for profile in ('create-pr', 'cloud'):

@@ -80,7 +80,16 @@ assertion part `sql-build-qualification` admission and disk monitoring. Its pros
 The monitored floor is the greater of entry free space minus 6 GiB, the policy
 reserve plus 1 GiB stopping headroom, and any stricter caller floor. Thus an
 8 GiB compact entry allows at most 5 GiB growth before the 3 GiB floor.
-Memory remains 6 GiB resident plus 2 GiB reserve. The SQL tool's independent
+Only the admitted `sql_build_assertions` callback requests two Cargo workers,
+clamped to fresh effective CPU capacity. Its admission and terminal journal
+records state the requested and effective count; its ordinary profile worker
+setting is restored on every exit. Source builds, SQL preparation, remaining
+assertions and E2E pools retain their existing worker policy. The global schedule
+key describes the ordinary environment; the named stage records this explicit
+worker delta. No assertion evidence is reused.
+Memory remains a prospective 6 GiB resident estimate plus 2 GiB reserve; the
+worker request does not prove aggregate memory fit or completion within the
+unchanged deadline. The SQL tool's independent
 8 GiB clean-build entry guard, native A/reused-A/independent-B commands,
 incremental setting, cases and deadlines stay unchanged. Other or unknown
 selections keep their existing allocations and monitoring behavior. This models

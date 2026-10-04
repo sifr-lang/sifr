@@ -13,7 +13,7 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from .assertion_resource_forecast import SQL_BUILD_ALLOCATION, assertion_allocation
+from .assertion_resource_forecast import SQL_BUILD_ALLOCATION, SQL_BUILD_CARGO_WORKERS, assertion_allocation
 from .cargo_setup import (acquire_cargo_dependencies, enable_offline_cargo,
                           prepare_remaining_graphs)
 from .early_sql import EarlySqlOutcome, run_early_sql
@@ -116,7 +116,10 @@ class Schedule:
         monitored_env = self.runner.env if command_env is None else command_env
         saved_disk = {field: monitored_env.get(field) for field in (FLOOR_VARIABLE, PATH_VARIABLE)}
         def admitted():
+            sql_workers = name == "sql_build_assertions" and allocation == SQL_BUILD_ALLOCATION
             try:
+                if sql_workers and (preparation or command_env is not None):
+                    raise ResourceError("SQL build worker policy requires its assertion runner environment", "unavailable")
                 if inventory(self.root) != self.key["inputs"]["source"]:
                     raise ResourceError("validation inputs changed during the owned run", "unavailable")
                 resources = discover(disk_path=self.root)
@@ -130,7 +133,14 @@ class Schedule:
                 self.record(name, {"state": "infrastructure-failure", "classification": error.classification,
                                    "detail": str(error)})
                 raise
-            self.record(name, {"state": "admitted", "e2e_workers": workers, **observation})
+            # The schedule key describes the ordinary profile environment. This
+            # explicit stage delta records the actual bounded callback workers.
+            worker_observation = ({"cargo_workers": {"scope": SQL_BUILD_ALLOCATION,
+                "requested": SQL_BUILD_CARGO_WORKERS,
+                "effective": worker_limit(resources, SQL_BUILD_CARGO_WORKERS),
+                "ordinary": self.runner.env["CARGO_BUILD_JOBS"]}} if sql_workers else {})
+            self.record(name, {"state": "admitted", "e2e_workers": workers,
+                               **observation, **worker_observation})
             try:
                 if monitor_disk:
                     # A bounded attempt always runs the original native command.
@@ -151,9 +161,16 @@ class Schedule:
                     monitored_env[PATH_VARIABLE] = str(self.root.resolve())
                     self.record(name + "-disk-floor", {"floor_bytes": floor, "allocation": allocation,
                         "claim": "bounded-preparation-attempt", "cache_reuse_claim": False})
-                callback()
-                if inventory(self.root) != self.key["inputs"]["source"]:
-                    raise ResourceError("validation inputs changed during step execution", "unavailable")
+                ordinary_jobs = self.runner.env["CARGO_BUILD_JOBS"]
+                try:
+                    if sql_workers:
+                        self.runner.env["CARGO_BUILD_JOBS"] = str(worker_observation["cargo_workers"]["effective"])
+                    callback()
+                    if inventory(self.root) != self.key["inputs"]["source"]:
+                        raise ResourceError("validation inputs changed during step execution", "unavailable")
+                finally:
+                    if sql_workers:
+                        self.runner.env["CARGO_BUILD_JOBS"] = ordinary_jobs
             except BaseException as error:
                 try:
                     after = discover(disk_path=self.root).diagnostics
@@ -161,10 +178,10 @@ class Schedule:
                     after = {"observation_error": str(observation_error)}
                 classification = classify_failure(error, resources.diagnostics, after)
                 self.record(name, {"state": "failed", "classification": classification,
-                                   "detail": str(error), "resources_after": after})
+                                   "detail": str(error), "resources_after": after, **worker_observation})
                 raise
             self.record(name, {"state": "completed", "preparation": preparation,
-                               "resources_after": discover(disk_path=self.root).__dict__})
+                               "resources_after": discover(disk_path=self.root).__dict__, **worker_observation})
         variable = "SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS" if preparation else "SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"
         previous = self.runner.env.get(variable)
         field = "cold_preparation_deadline_seconds" if preparation else "assertion_command_deadline_seconds"

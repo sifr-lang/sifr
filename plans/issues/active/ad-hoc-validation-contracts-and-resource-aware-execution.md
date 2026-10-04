@@ -2,6 +2,28 @@
 
 ## Current acceptance checkpoint — 2026-10-04
 
+The latest complete local gate is frozen
+`1c40af4c09fb567a754f1ad8130868a7695ad8ce`, closed at 22:19:41 UTC with
+exit 124. Its clean SQL build exceeded the unchanged 2400-second cumulative
+assertion safety budget: clean A and unchanged A completed, independent B did
+not, and no SQL preparation ran. Journal
+`aed44a3d-6fe4-4bf5-be30-e40151dbc5fe/0017-sql_build_assertions.json` records
+`timeout` / `safety_deadline`; zero OOM events do not prove parallel memory fit.
+The coordinator records all three same-head hosted native jobs as passed. Those
+native results do not replace the failed local gate or pending full acceptance.
+The separately registered successor below requests two CPU-clamped workers only
+for the admitted SQL clean-build callback, retaining all resource and deadline
+limits. Its 65 focused controls and all six profile contracts pass; full profile and
+stage plans are byte-identical to the base. Exact-candidate review is pending.
+
+The separately reviewed exact closed SQL-B completed-cache cleanup removed
+4,032 cache files and verified all 3,113 protected entries unchanged. Observed
+physical free space increased from 6,916,730,880 to 8,896,864,256 bytes
+(1,980,133,376 bytes, with journal/concurrent filesystem effects recorded).
+Incomplete compiler output and the failed 1c40 observations remain protected;
+all six locks were released. This is a completed cache disposition, not a pass,
+assertion reuse or a forecast of capacity for the next gate.
+
 The integration tree contains reviewed clean-build-first SQL correction
 `09744e4fcf66568d7477783531f3aaf814e6aff5`. Its scoped Opus review is
 SATISFIED with no blockers. All 56 focused controls and six profile contracts
@@ -13,7 +35,7 @@ case now runs before those preparations; both assertion parts share the original
 Actual same-invocation results aggregate in canonical order. These focused checks
 do not qualify the complete candidate.
 
-The complete `2242202c506aaadf4aa08c4464827d16aad5676d` create-PR gate
+The earlier `2242202c506aaadf4aa08c4464827d16aad5676d` create-PR gate
 ended at 20:20:31 UTC with exit 2. All 30 SQL preparations passed, but area
 admission required 8,589,934,592 disk bytes and observed 7,432,404,992.
 No SQL assertions executed. That result remains failed. The reviewed successor
@@ -2954,3 +2976,54 @@ size and diff checks pass. Exact candidate `09744e4fc` received scoped Opus
 SATISFIED with no blockers. All six full-checkout emitted plans match `2242202c5`.
 Actual SQL execution, disk fit and final full acceptance remain pending. The
 original 224 gate's failed admission remains unchanged evidence.
+
+## M2 SQL clean-build worker policy — prospective scope, 2026-10-04
+
+Frozen `1c40af4c09fb567a754f1ad8130868a7695ad8ce` completed its actual gate
+with exit 124 at 22:19:41 UTC. Journal
+`aed44a3d-6fe4-4bf5-be30-e40151dbc5fe/0017-sql_build_assertions.json` records
+`timeout` / `safety_deadline` after 2402527 ms. Clean A and unchanged A
+completed; independent B remained incomplete, and no SQL preparation ran.
+The original failure, raw outputs and unfinished graph remain evidence.
+Individual-child RSS and zero OOM events do not establish aggregate parallel
+memory or successful fit.
+
+This separately authorized bounded successor declares two requested Cargo
+workers only for the resource-scheduled `sql_build_assertions` callback under
+`sql-build-qualification`. Fresh CPU discovery clamps that request; the same
+admission retains the six-GiB resident forecast plus two-GiB reserve. Requested
+and effective workers must be recorded, and the ordinary CPU-clamped Cargo
+worker setting must be restored on every exit, including callback failure and
+post-callback input validation. Other step names, allocations, preparations and
+alternate command environments cannot silently receive this override.
+
+All 19 suites, 66 cases and 30 preparation commands remain required. Global,
+source, preparation, remaining SQL and E2E worker policies stay unchanged, as do
+the 2400-second cumulative assertion budget, stricter inherited deadlines,
+resource forecasts/reserves, disk floors, SQL build recipe and native eight-GiB
+entry guard. No prior assertion is reusable. This is a prospective bounded
+attempt; two-worker memory/disk fit and completion remain unproven.
+
+Scope is the shared named assertion policy, scheduler callback environment and
+focused scope/admission/recording/restoration controls, with these plan and
+resource-policy documentation updates. Intermediate checks and exact committed
+Opus review precede root integration. No Cargo/UV/compiler process, build,
+installation, cleanup, full gate or performance capture is authorized here.
+
+The named policy is now implemented at the shared fresh-admission boundary.
+Only the exact SQL build step/allocation in the assertion runner environment
+receives the CPU-clamped request. Admission and terminal records preserve its
+requested/effective workers; an inner finally restores the ordinary value even
+when post-callback input validation fails. Preparation and alternate command
+environments are rejected for this named override.
+
+All 65 focused controls pass under canonical Python without Cargo/UV/compiler
+execution. Controls include both resource modes, fractional CPU clamping,
+admission failures, exact scope negatives, ordinary and unexpected failures,
+cancellation, post-callback validation, actual area-command environment
+propagation, build-only and nonbuild selections, full19/66/30 selection and
+unchanged E2E/preparation workers. Existing aggregate/deadline/floor controls
+also pass. All six profile contracts and complete emitted profile/stage plans
+are unchanged from the base, including all729 full-corpus E2E fixture IDs.
+Source-size and diff checks pass. Exact committed-candidate review and the next
+resource-admitted full gate remain pending; no parallel peak or fit is claimed.
