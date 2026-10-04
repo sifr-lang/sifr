@@ -1704,3 +1704,19 @@ mount identity and a RAM-backed stage that disk capacity admits but shared memor
 rejects. Eighteen resource controls passed; foundation, native gates and scoped
 review remain pending. This enables using owned temporary capacity without
 cleaning shared targets or treating advertised RAM storage as extra memory.
+
+## M5 single-target native installer fixture
+
+The bounded generator option `--qualification-target` produces an explicitly
+labelled single-target installer from one independently verified native archive.
+It rejects unknown targets and unlisted installation hosts. Default generation
+still requires all four supported target archives; it cannot infer absent native
+qualification or fabricate foreign platform packages. This fixture is for actual
+published-predecessor transition rehearsal before all-platform qualification.
+The new control verifies the default missing-archive refusal, unknown-target
+refusal, matching-target native installation and rejection on another target.
+Its first run expected a different error phrase and failed; the observed
+`unsupported target` refusal is preserved in `m5-native-installer-fixture-controls.log`.
+The corrected control passed at `m5-native-installer-fixture-controls-v2.log`.
+Existing installer/migration controls, scoped review, actual native candidate
+upgrade/persisted-state/reinstall/rollback and platform acceptance remain pending.
