@@ -120,6 +120,39 @@ current main, documentation structure/mutation checks, file-size/scope/whitespac
 and historical byte-preservation checks, and scoped SELF review. It merges no
 implementation and requires no broad gate or external implementation review.
 
+### Next scope-adjudication job and dependencies
+
+The next separately assigned job is **H03a1hbc trait declaration-header/source
+contract adjudication, documentation only**. The phase reserves H03a1hbc for the
+bridge proof but has not reserved a separate item ID for this header adjudication;
+this stop does not invent or authorize one. Its dependencies are the merged HBS
+scope/HBF feasibility, accepted HBIP source/native authority amendment and complete
+proof/receipt, and this stop record plus its separate delivery receipt. Its inputs
+are fresh authenticated current main, the unchanged compiler/RA/server pins, and
+the exact original compiler/native/control/inventory files and hashes above.
+Read-only pinned public-source inspection must distinguish available local HIR
+body spans from dependency trait header spans; it must not generalize this fixture
+mismatch into a claim that every public route lacks a body span.
+
+The unchanged observed facts are the actual resolved stable trait identities,
+compiler declaration-header intervals, exact compiler/native Name equality and
+independently roundtripped native whole-node/declaration intervals. A proposed
+header/token/subnode disposition or change to what counts as the exact declaration
+counterpart is a **contract proposal requiring new explicit authorization**, not
+an accepted source fact or permission granted by this stop. It must preserve the
+independent original compiler identities, binders/uses/depth/owner/trait/source/token
+inventories and all existing source/semantic/attribute/context obligations, with
+no fabricated AST kind, lexical identity, producer/pin substitution or waiver.
+Any authorized contract change still requires a newly assigned complete HBC proof;
+no implementation, capability experiment or adapter work belongs to the docs job.
+
+That job and its separate receipt use exact documentation structure/mutation
+checks (`python3 verification/areas/documentation/check_structure.py`), file-size
+checks (`python3 scripts/check_file_size_guardrails.py`), pinned-source link/range
+and evidence-hash audit, historical byte-preservation, canonical-only scope,
+whitespace/clean-tree checks and scoped SELF review. No broad gate or external
+implementation review is required for those documentation-only records.
+
 **Next action: distinct HBC trait-header/source contract decision only. HBC remains
 needs-new-scope; full H03a1/adapter remains dependency-blocked.** Every original
 semantic/source/attribute/inventory/context/freshness/resource obligation remains
