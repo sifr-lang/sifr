@@ -1616,6 +1616,7 @@ all nine published-contract controls passed. Logs are
 `m5-migration-remediation-final.log`, `m5-immutable-version-remediation.log` and
 `m5-published-contract-remediation.log` outside Git. Remediation review and the
 larger native transition/platform/broad-gate obligations remain pending.
+
 ## M2 compact cache-presence forecast refinement
 
 The native gate at `5203f15a083ecc3d07e170e73098b359bf5ea864` passed source
@@ -1654,3 +1655,25 @@ Published migration remediation `977fde39f` received SATISFIED review at
 These bounded approvals do not qualify the failed broad gates, pending allocation
 observations, independent compiler comparison, actual upgrade/platform coverage,
 main evidence reuse, administrative enforcement or final phase acceptance.
+## M4 separate generated-program allocation observations
+
+The bounded allocation protocol builds a separately identified instrumented
+release/generic artifact from the actual prepared generated Rust. System allocator
+counters record successful allocation/reallocation request counts and requested
+bytes plus deallocation calls during generated main. Reporting overhead, libc,
+loader and post-main cleanup are excluded. These single-threaded workload counts
+cannot be transferred to the uninstrumented timed artifact or numeric regression
+qualification. Instrumentation and prospective policy bytes are registered.
+
+Preparation now hashes generated Rust and rejects source substitution. Collection
+retains original/transformed Rust, manifest/lock/config, actual Cargo/rustc events,
+artifact/dependency hashes, bounded process logs, independent output oracles and
+raw counters. An independent check runs before immutable success publication;
+failed attempts retain state without a success receipt. Real Rust allocator
+controls cover allocation, zeroed allocation, reallocation, deallocation and
+reporting failures. A real Cargo collector control explicitly stubs only its CPP
+identity boundary; it does not qualify the Sifr frontend. All 108 performance controls, profile contracts, file-size
+guardrails and diff checks passed; the retained control log is
+`/workspace/validation-work/evidence/allocation-performance-controls-final.log`.
+Actual fresh Sifr preparation/collection, scoped review and broad gates remain
+pending, as do independent paired compiler performance and final acceptance.

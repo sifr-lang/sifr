@@ -271,3 +271,19 @@ execution, explicit execution kinds, trusted producer expectations, source/runti
 artifact bindings and retained-byte verification. Correctness checkpoints cannot
 qualify paired performance. Resource scheduling and protected CI enforcement are
 separate requirements; a contract plan alone is not an execution receipt.
+
+## Generated-program allocation observations
+
+`verification/areas/performance/generated_program_allocations.py collect
+--prepared <prepared.json> --output <private-external-directory>` builds separately
+instrumented artifacts from the exact release/generic generated Rust preparation.
+`check --output <receipt.json>` independently verifies the retained transformation,
+Cargo/rustc events, artifact and dependency hashes, raw output, program oracle and
+counters. Run both commands with the locked verification Python environment.
+
+The registered `rust-globalalloc-main-v1` protocol counts successful Rust allocator
+requests during generated main for the single-threaded registered workloads.
+It excludes libc/loader allocations and post-main cleanup. Counts belong to the
+instrumented artifact: instrumentation can affect optimization, so these counts
+cannot describe the original timed binary or qualify numeric regressions.
+Incomplete attempts retain state and logs without publishing a success receipt.

@@ -166,6 +166,10 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def run_rules_variants(suite_name: str) -> list[dict[str, Any]]:
     return [
+        run_command_variant(suite_name, "generated-program-allocations",
+                            [sys.executable, str(AREA_ROOT / "generated_program_allocations_tests.py")]),
+        run_command_variant(suite_name, "allocation-instrumentation",
+                            [sys.executable, str(AREA_ROOT / "allocation_instrumentation_tests.py")]),
         run_command_variant(suite_name, "generated-cargo-artifact-identity",
                             [sys.executable, str(AREA_ROOT / "program_artifact_identity_tests.py")]),
         run_command_variant(suite_name, "generated-program-contract",

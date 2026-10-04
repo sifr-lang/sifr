@@ -188,6 +188,7 @@ def prepare(compiler_receipt: Path, output: Path, resource_profile: str = "stand
             if digest(protected)!=digest(binary): raise BenchmarkError('retained native program bytes changed')
             rows.append({'id':case['id'],'binary':str(protected),'binary_sha256':digest(protected),
                          'rustc_command':actual_rustc,
+                         'generated_rust_sha256':digest(artifact['target']['src_path']),
                          'cargo_events_range':[cargo_begin,cargo_end],'rustc_events_range':[rustc_begin,rustc_end],
                          'source_sha256':case['source_sha256'],'compiled_source_path':str(copied),'cargo_artifact':artifact,
                          'runtime_dependencies':dependencies(binary)})
