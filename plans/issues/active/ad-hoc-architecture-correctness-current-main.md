@@ -10,6 +10,122 @@ This is the canonical current-main record for the residual architecture audit. I
 
 The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/projects/sifr/architecture-closure-inputs-20260923/final_recommendations.md, SHA-256 bb2370e7685700456aba35f8b56b11c3ef2433ab6ccba2a1f7254fb8d70a894f). That report contains pinned source links and evidence limitations. Reported Rust reproductions were not rerun for this record. Each row below has one acceptance owner. Existing-owner rows are handoffs, not duplicate implementation authority. A completion claim needs the owner's merge SHA, exact validation and review evidence. A repaired prerequisite is not a passed dependent qualification.
 
+## H03a1hbc exact trait declaration-header correspondence stop (2026-10-04)
+
+**Current controlling HBC state: needs-new-scope, unaccepted and inactive.**
+HBS/HBF and the delivered HBIP source/native proof remain satisfied prerequisites.
+The separately assigned HBC worker stopped at the required exact declaration/source
+boundary. No HBC implementation, accepted complete capability proof, adapter export,
+Windows qualification, metric, SQL, V01, Q01 or whole-phase closure was delivered.
+The accepted HBIP attribute-membership amendment does not authorize replacing a
+compiler trait declaration-header span with a whole native TRAIT declaration.
+
+The worker authenticated current main
+0e8bdc47122d2b45fbe6d2b76be5657bda888d75 and used its own branch
+codex/h03a1hbc-binder-capability-20261004 / worktree
+`/data/sifr-h03a1hbc-binder-capability-20261004/worktree`.
+Unmerged diagnostic candidate b8ee36b996695c0972bee543e0673a2714e12f50
+is retained there as read-only donor material, not accepted work or a replay target.
+Root/helper manifests and locks, compiler/RA/server pins, dependency graph, primary
+checkouts and other owners' source/evidence/targets were not changed. The bounded
+new fixture has its own manifest and lock. All implementation paths remain inside
+the assigned isolated helper/consumer/test scope; none are merged by this record.
+
+### Exact original surface and stop evidence
+
+The exact fail-fast named
+SourceBinderCapabilityTests.test_inherited_own_and_hrtb_identity_preserve_declarations
+stopped in setUpClass with **0 actual tests and 0 assertions**, status1, 78.089145s.
+Original successful normal Cargo control, exact original compiler replay and native
+source capture completed; they are not a successful combined bridge.
+Raw failure log SHA-256:
+ae8c39067ad324479d4ebf40b57ce2292cb0baa46693435a5e3151948af7c448.
+
+For first/second and Two::<'a, 'b, T>::method, the actual resolved
+core::ops::function::FnOnce has StableCrateId13883663866953777888 and
+DefPathHash(Fingerprint13883663866953777888,13488869136715765577).
+In pinned `library/core/src/ops/function.rs`, actual tcx.def_span records
+**8927..8962**, the literal header `pub const trait FnOnce<Args: Tuple>`.
+The independently roundtripped native TRAIT node is **6022..9298** including
+attributes/docs, and its physical declaration without direct attrs is
+**8927..9298**. Its Name **8943..8949** exactly agrees with the compiler Name.
+Those are distinct legitimate span roles. No exact native TRAIT AST occurrence
+has the compiler header interval. Header containment in the whole declaration
+cannot serve as this owner's required exact declaration-node counterpart.
+
+The same audit records core::fmt::Debug **42825..42854** versus native
+**42825..43726**, and local BoundObject **736..778** versus native
+**736..795**, totaling five observed required trait relations in this fixture.
+The local trait has its own original HIR owner; this stop does not assert that all
+public routes lack a trait body span. It records the current header/node contract
+mismatch and does not qualify a new header/token/subnode disposition, synthesize a
+TRAIT_HEADER AST node, substitute a body extent, drop a constraint or infer identity
+from spelling/containment. Exact compiler-resolved identities and actual span facts
+remain intact. Any resumption needs a distinct, source-supported decision for these
+recorded trait-header/source roles under the unchanged pins, followed by new proof.
+
+Outside-Git evidence is retained at
+`/data/sifr-h03a1hbc-binder-capability-20261004/evidence/`.
+`exact-trait-stop-report.json` SHA-256:
+9d4715a05160fcae82067ce41f9b634941e6ebd6afdceb37935b8531dae2e9dc.
+Its complete seven-file source/control/replay/inventory manifest binds the exact
+candidate and all five mismatches. Original caller capture SHA-256:
+72e51052127577d2361a6c47d34d5f94e552f437a0917f1bcd9823ec2b4f9b6d;
+native declarations:
+511f4eda26f4b802d0617d9562abb543389d823b8ed90397b0ed2b454d49734a.
+No large raw archive was copied or rehashed to package this stop.
+
+### Preserved attempts and honest qualification limits
+
+On earlier candidate f25cd4069fa93a59d9902a46f417a333d778df6a, the exact
+inherited/own/HRTB individual ran1/1 with20 assertions and the exact
+alpha/source-correspondence individual ran1/1 with24 assertions. These are
+historical diagnostics from the earlier containment matcher, not complete HBC
+acceptance or evidence reusable for the final strict candidate. Their raw log
+SHA-256 values are respectively
+3f9162f2ab5901617d10d4525152e7a4b4bf3055e391d69106f18fe0e6a7510f and
+f6bc90baf959aa1af968c38cd785fdc5bbe47bf015c4fba1b37ffbabceefd492.
+The earlier schema setup failure remains0 tests/0 assertions. C4
+SourceBinderCapabilityTests.test_original_dependency_source_context_and_artifact_drift_rejects
+then stopped in setup because an owned fixture variant overwrote the own live
+fixture metadata artifact libsource_binder_capability-2e55da2c178af66a.rmeta;
+its diagnostic receipt no longer authenticates. No donor artifact was overwritten
+by this worker. All failed attempts remain preserved; no byte-restoration claim is
+made for that overwritten own artifact.
+
+The harness was repaired to use independent normal targets per capture. On
+candidate d2bc4b5e444b18ad81348c97c113108404d30214, C4 again remained incomplete:
+the 8GiB available-RAM guard stopped it at8293312KiB against8388608KiB required,
+status-15 after936.894643s, with0 passed C4 assertions. Successful original caller
+and syn compiler replays and both native captures were retained. Later bounded
+construction-graph release/streamed-hash changes preserved all facts and did not
+waive the reserve; no completed C4 proof qualifies those changes. The final strict
+candidate's trait stop precedes any claimed resource-qualified complete union.
+The earlier owned current-codegen diagnostic contains9955 caller owners and6752
+syn owners; its read-only audit found3869 required exact original caller declaration
+locations matched to4506 native declarations and no unsupported required semantic
+facts. That source-location census is not semantic admission or a complete context
+qualification and is bound to its earlier actual inputs.
+
+All five named HBC cases/full5-case class, all four Linux main/repeat contexts,
+required unchanged fixture union and original13-case/Dynamic/include/source-authority
+regressions remain unqualified for this implementation. C3/C5/full class did not
+run. No implementation PR or Opus review was opened. There were0 completed external
+review cycles; the second mechanism-defect stop rule remains binding. No full gate
+ran, as authorized for this intermediate assignment. HBF/HBIP and their accepted
+receipts are not reclassified by this HBC stop.
+
+This canonical-only record uses an independent docs worktree/branch based on
+current main, documentation structure/mutation checks, file-size/scope/whitespace
+and historical byte-preservation checks, and scoped SELF review. It merges no
+implementation and requires no broad gate or external implementation review.
+
+**Next action: distinct HBC trait-header/source contract decision only. HBC remains
+needs-new-scope; full H03a1/adapter remains dependency-blocked.** Every original
+semantic/source/attribute/inventory/context/freshness/resource obligation remains
+binding; there is no fallback, private resolver, new producer, pin change, semantic
+waiver or permission to start the adapter or a next batch.
+
 ## H03a1hbip complete source/native diagnostic proof delivery receipt (2026-10-04)
 
 **Current controlling state: H03a1hbip complete diagnostic proof is delivered by
