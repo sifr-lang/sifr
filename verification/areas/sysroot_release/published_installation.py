@@ -79,7 +79,7 @@ def verify_installed(root, rows):
     return len(selected)
 
 
-def rehearse(policy, *, archive, installer, target, candidate_version, output):
+def rehearse(policy, *, archive, installer, target, candidate_version, output, resource_discovery=discover):
     if target != current_host_target():
         raise ValueError('published installation requires its matching native host')
     for path in (archive, installer):
@@ -93,7 +93,7 @@ def rehearse(policy, *, archive, installer, target, candidate_version, output):
         raise ValueError('published installation rehearsal requires a private external output')
     output.parent.mkdir(parents=True, exist_ok=True)
     decoded = sum(row['size_bytes']+8192 for row in rows)
-    resources = discover(disk_path=output.parent)
+    resources = resource_discovery(disk_path=output.parent)
     # This is a bounded native installation observation, not the full cloud gate.
     admission = admit(resources, dict(disk_growth_bytes=decoded*2+asset['size'],retained_copy_bytes=0,
         disk_reserve_bytes=2*1024**3,memory_peak_bytes=1024**3,tmpfs_growth_bytes=0,memory_reserve_bytes=2*1024**3))

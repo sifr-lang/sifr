@@ -1812,3 +1812,44 @@ binaries, the completed owned preparation graph was retired under its original
 lease, retaining both binaries and raw cleanup evidence. This recovered
 2242191360 bytes. Endpoint copies and their receipt identities are unchanged.
 No paired compiler performance invocation has been captured.
+### M5 actual published transition qualification — 2026-10-04
+
+This bounded item adds a native rehearsal from the registered, hash-verified
+Beta 16 archive and installer to the exact optimized candidate bundle. It creates
+representative user-owned source, project configuration and persisted state,
+executes the program before and after migration and reinstall, checks package
+integrity, preserves the published payload, and injects failures after the
+transaction switch to verify restoration of the published flat installation and
+of the exact current candidate generation. It does not claim a supported version
+downgrade or publish a release. Eight required runtime cases and sixteen exact
+commands must complete; an independent checker validates raw output, oracles,
+coverage, immutable inputs, selected generations and completed producer state
+before a success receipt can be published.
+
+Five synthetic evidence controls and four existing published-install controls
+pass. The executable distribution-area control also passed through its runner;
+these controls do not qualify a native installation. The explicit manual CI path
+calls a read-only reusable workflow for all four native host targets, builds the
+actual committed optimized candidate, downloads the registered published bytes,
+runs and independently checks the transition, and preserves exact bundles and
+raw success/failure evidence. Workflow regressions reject missing targets,
+substituted source, bypassed qualification and write permissions. Toolchain,
+profile, size and diff checks pass. Scoped review, actual native execution,
+all-platform results, required local gates and release promotion remain pending.
+
+The independent historical compiler endpoint at measurement overlay
+1e81537db6046dbf7381f193152bcf4e7c89ec02 is now prepared, including its actual
+frontend helper. The successful continuation is retained in
+/workspace/validation-work/evidence/independent-baseline-1e81537db-v3/observation.json.
+The earlier disk-floor failure remains failed. Its completed owned graph was
+retired only after verifying both protected endpoint binaries, with raw cleanup
+and retained copies under independent-baseline-1e81537db-v2/retirement-after-completed-v3.
+No compiler performance comparison has yet been captured or accepted.
+
+The initial published-transition review is NOT SATISFIED at 9346d06ae:
+/workspace/validation-work/evidence/sifr-claude.l0CH8k/response.md.
+The reusable workflow used the unavailable runner context in job-level env. One
+remediation batch declares host_kind on the two Darwin matrix rows and uses the
+allowed matrix context. Regression controls reject a missing Darwin declaration
+and the original forbidden context. Actual native/platform qualification and
+broad gates remain pending; the first candidate is not approved.
