@@ -6,6 +6,16 @@ use syntax::{
 };
 #[path = "ra_common/declarations.rs"]
 mod declarations;
+#[path = "ra_common/include_context.rs"]
+mod include_context;
+#[path = "ra_common/include_diagnostic.rs"]
+mod include_diagnostic;
+#[path = "ra_common/include_generics.rs"]
+mod include_generics;
+#[path = "ra_common/include_inventory.rs"]
+mod include_inventory;
+#[path = "ra_common/include_semantics.rs"]
+mod include_semantics;
 #[path = "ra_common/include_sources.rs"]
 mod include_sources;
 #[path = "ra_common/local_sources.rs"]
@@ -291,8 +301,45 @@ fn main() -> anyhow::Result<()> {
             .collect::<Vec<_>>();
         selected_cfg.sort_by_cached_key(|atom| atom.to_string());
         let context = json!({"kind":"ra-semantic-selected-cargo-target-root","root_file":selected_root.as_str(),"package":package,"crate":capture["context"]["crate"]});
-        if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+        if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some()
+            && env::var_os("SIFR_BUILTIN_INCLUDE_DIAGNOSTIC").is_none()
+        {
             let result = source_binder::capture(&semantics, &db, &files, krate, &args[3])?;
+            println!("{}", serde_json::to_string(&result)?);
+            return Ok(());
+        }
+        if env::var_os("SIFR_BUILTIN_INCLUDE_DIAGNOSTIC").is_some() {
+            let mut result = include_diagnostic::capture(
+                &semantics,
+                &db,
+                &files,
+                krate,
+                &args[3],
+                if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+                    Some(
+                        capture["source_binder_call_suffix"]
+                            .as_str()
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("missing actual dependency bridge suffix")
+                            })?,
+                    )
+                } else {
+                    None
+                },
+            )?;
+            result["context"] = context;
+            result["cfg"] = json!(selected_cfg);
+            result["intrinsic_cfg"] =
+                json!([{ "kind":"intrinsic-true","authority":"pinned-cfg::CfgOptions::default" }]);
+            result["original_syn_correspondence"] =
+                if env::var_os("SIFR_BUILTIN_SOURCE_BINDER_RA").is_some() {
+                    let suffix = capture["source_binder_call_suffix"]
+                        .as_str()
+                        .ok_or_else(|| anyhow::anyhow!("missing actual caller bridge suffix"))?;
+                    source_binder::capture(&semantics, &db, &files, krate, suffix)?
+                } else {
+                    json!(null)
+                };
             println!("{}", serde_json::to_string(&result)?);
             return Ok(());
         }
