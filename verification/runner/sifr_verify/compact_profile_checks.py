@@ -95,10 +95,15 @@ class CompactChecks(unittest.TestCase):
                     def prepare_command(self, *args, **kwargs): pass
                     def step(self, step, callback, **kwargs):
                         events.append(step)
+                        if step=='cargo_cache_setup':
+                            self.assert_coordination_unmonitored(kwargs)
                         if fail and step == 'preparation_sysroot_source':
                             return 2
                         callback()
                         return 0
+                    def assert_coordination_unmonitored(self,kwargs):
+                        if kwargs.get('monitor_disk',False):
+                            raise AssertionError('coordination must not cap individually monitored children')
                 with patch('sifr_verify.compact_profile.Schedule', FakeSchedule), \
                      patch('sifr_verify.compact_profile.acquire_cargo_dependencies'), \
                      patch('sifr_verify.compact_profile.run_command') as command, \

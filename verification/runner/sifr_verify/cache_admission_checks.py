@@ -21,6 +21,36 @@ from .resource_admission import Resources
 
 
 class CacheForecastTests(unittest.TestCase):
+    def test_coordination_does_not_cap_child_growth_and_keeps_caller_floor(self):
+        for caller_floor,expected_status in ((3*1024**3,0),(6*1024**3,2)):
+            with self.subTest(caller_floor=caller_floor),tempfile.TemporaryDirectory() as directory:
+                root=Path(directory);runner=ProfileRunner('create-pr',['--compact-resources'])
+                runner.prepare_step_budget=lambda name:None
+                runner.env.update({FLOOR_VARIABLE:str(caller_floor),PATH_VARIABLE:str(root)})
+                schedule=object.__new__(Schedule)
+                schedule.runner,schedule.root,schedule.policy=runner,root,load_schedule(mode='compact')
+                schedule.key={'inputs':{'source':[]}};schedule.index=0
+                def record(name,payload): schedule.index+=1
+                schedule.record=record
+                capacity=Resources(5,4,32*1024**3,32*1024**3,7*1024**3,{},[],{})
+                floors=[]
+                def native(argv,*,env):
+                    budget=DiskBudget.from_environment(env);floors.append(budget.floor)
+                    # The child may consume more than the coordinator's 256MiB
+                    # while remaining within its own prospectively admitted 2GiB.
+                    with patch('sifr_verify.process_disk_budget.shutil.disk_usage',return_value=SimpleNamespace(free=5*1024**3+512*1024**2)):
+                        budget.check()
+                with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()), \
+                     patch('sifr_verify.cloud_schedule.inventory',return_value=[]), \
+                     patch('sifr_verify.cloud_schedule.discover',return_value=capacity), \
+                     patch('sifr_verify.cloud_schedule.command_cache_hint',return_value=False), \
+                     patch('sifr_verify.cloud_schedule.run_command',side_effect=native):
+                    status=schedule.step('cargo_cache_setup',lambda:schedule.prepare_command(
+                        ['cargo','build','-p','fixture'],env=runner.env),allocation='preparation-coordination',preparation=True)
+                self.assertEqual(status,expected_status)
+                self.assertEqual(floors,[max(5*1024**3,caller_floor)])
+                self.assertEqual(runner.env[FLOOR_VARIABLE],str(caller_floor))
+
     def infrastructure_failure(self, *, drift=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
