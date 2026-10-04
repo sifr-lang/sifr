@@ -704,6 +704,7 @@ validate_extracted_toolchain() {
   fi
 }
 
+$(cat "${SCRIPT_DIR}/legacy_installation.sh")
 $(cat "${SCRIPT_DIR}/immutable_installation.sh")
 
 echo "installed sifr \${APP_VERSION} to \${install_dir}/sifr"

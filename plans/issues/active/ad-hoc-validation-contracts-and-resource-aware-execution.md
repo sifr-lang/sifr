@@ -1418,3 +1418,61 @@ an unparseable test-only version label. Its failed v2 log remains preserved.
 The control now uses an explicit supported version; the corrected v3 full-area
 run passed 101 tests. Earlier runner foundation coverage passed all 31 groups. Broad candidate gates and native Sifr
 qualification remain pending.
+
+The second compiled-program review at `63ef5ebb51649217aacf6635510a7c559443f2bf`
+is NOT SATISFIED, preserved outside Git at
+`/workspace/validation-work/evidence/sifr-claude.1s5cW6/response.md`.
+It found a new mechanism defect: preparation/checking use a literal application
+name even though Sifr generates a hash-suffixed Cargo binary name. The passing
+controls used hand-written events and did not cover that real producer shape.
+Per the phase-closure-loop skill, this observation item stops unaccepted and is
+rescoped. Its source/reviews and failed evidence remain intact. A separate repair
+must derive the delivered application's actual Cargo executable/target and
+matching rustc bin invocation, reject ambiguity/substitution, and validate the
+path against a real Sifr native build before any preparation/capture acceptance.
+No observation PR may merge or satisfy M4 until that repair and native evidence
+are delivered. Work on published predecessor transitions continues independently.
+
+## M5 published flat installation and explicit migration primitive
+
+The registered beta.16 installer is the actual published asset 510759033,
+19,617 bytes, SHA-256
+`b28fb92b0344fe3938b797d41416f707f3de63856021c0fa1f70ef467feb8f9a`.
+The bounded native rehearsal executed those unchanged bytes through an allowlisted
+local transport serving only the independently verified published archive. Install
+and forced reinstall both passed, all 20,386 managed payload files matched the
+archive after each, and the actual predecessor passed its supported version,
+sysroot JSON and doctor JSON assertions. Its receipt and native commands remain
+outside Git at `/workspace/validation-work/published/beta16-native-install-rehearsal/`.
+The producer refuses foreign hosts, altered inputs, extra/missing/changed payloads,
+links and incomplete native processes, preserving failed receipts and raw output.
+Its claim is only published predecessor installation/reinstallation and payload
+identity; it cannot qualify candidate upgrade or modern CLI identity protocols.
+
+The candidate installer continues to reject mutable layouts by default. The
+one-time migration primitive requires `SIFR_MIGRATE_LEGACY=1`, the standard
+root/bin layout, complete regular payloads, and the matching schema-v2 receipt,
+compiler version and sysroot version/target. This is an explicit owner declaration:
+the owner must first stop every old compiler/LSP. An installer lock alone cannot
+make a mutable old compiler root safe. The old payload and exact receipt remain
+retained under a legacy generation. Rollback is armed before the first rename,
+discovers entries by actual presence, and restores the flat payload and receipt
+on partial migration, interruption, or failure after publishing the new receipt.
+Downgrade to an old flat installer requires a separate empty root; overriding the
+immutable installation with those old bytes is not supported or claimed.
+
+Synthetic migration controls passed default refusal, successful migration and
+old-payload retention, missing-member refusal, wrong receipt target/root, nested
+link refusal, a receipt-publication failure and interruption after a rename.
+Existing immutable install/version controls also passed. All nine published
+predecessor/acquisition/installation controls are enrolled in the distribution
+case inventory and passed. Initial prototype/control failures remain retained,
+including a minimal unit fixture missing required managed members; that fixture
+was completed before the passing run. Logs `m5-migration-controls-final.log`,
+`m5-published-contract-controls-final.log`, `m5-existing-install-version-controls.log`
+and `m5-published-native-install-rehearsal.log` remain outside Git.
+
+Candidate upgrade against this actual predecessor, representative persisted
+state, candidate reinstall/rollback, all four native platforms, compatibility
+qualification, artifact promotion custody and broad gates remain required.
+This primitive does not complete M5, publish a release or satisfy final acceptance.
