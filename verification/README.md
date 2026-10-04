@@ -287,3 +287,9 @@ It excludes libc/loader allocations and post-main cleanup. Counts belong to the
 instrumented artifact: instrumentation can affect optimization, so these counts
 cannot describe the original timed binary or qualify numeric regressions.
 Incomplete attempts retain state and logs without publishing a success receipt.
+
+RAM-backed worktrees are admitted by their actual Linux mount identity. Prospective
+build and retained-copy growth on tmpfs/ramfs is added to the resident-process and
+other temporary-storage memory budget. The filesystem disk reserve remains in
+force. Nested disk mounts are resolved separately; advertised tmpfs capacity never
+adds to the cgroup memory limit.
