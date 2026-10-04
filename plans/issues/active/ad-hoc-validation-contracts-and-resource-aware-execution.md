@@ -4,7 +4,7 @@ status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
 
-## M6 shared-VM final gate command — 2026-10-04
+## M6 input: shared-VM final gate command — 2026-10-04
 
 Document the existing canonical `cloud --require-performance` route as the final
 merge acceptance command on a shared Linux VM. Live resolved profile comparison

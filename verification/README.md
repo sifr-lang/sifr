@@ -107,9 +107,7 @@ profile. The coverage matrix cross-checks that first-party compiler crates with
 tests are in merge membership and executed; temporary red blockers are illegal
 at readiness.
 
-## Baselines And Blessing
-
-### Final gate on a shared Linux VM
+## Final gate on a shared Linux VM
 
 Use the existing `cloud` profile with required performance on a shared Linux VM:
 
@@ -118,8 +116,9 @@ SIFR_CLOUD_PERFORMANCE_RECEIPT=/absolute/path/to/receipt.json scripts/run_all_te
 ```
 
 `cloud` inherits all merge selections: the same suites, guardrails, crate tests,
-E2E corpus, toolchain steps and skip rules. The compact option changes scheduling
-and declared preparation allocations. Correctness runs independently of physical
+E2E corpus, toolchain steps and skip rules. The compact option's compiler settings,
+allocation estimates and reserves are documented in the compact-resources
+paragraph below. Correctness runs independently of physical
 host admission; the final gate also requires the independent checker to accept a
 complete, fresh, candidate-bound paired receipt. Missing, invalid, inconclusive or
 regressing performance cannot pass this command. `cloud` without
@@ -130,6 +129,8 @@ route.
 This shared-VM command is an acceptance route, not evidence that any candidate
 has passed. It does not waive implementation PR validation, native platform or
 release qualification, external dependency disposition or protected enforcement.
+
+## Baselines And Blessing
 
 Verify diagnostics baselines with:
 
