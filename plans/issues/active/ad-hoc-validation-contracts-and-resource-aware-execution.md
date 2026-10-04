@@ -1727,3 +1727,17 @@ ignoring the available TMPDIR storage. The bounded fixture correction uses the
 canonical configured temporary directory; its collector/admission requirements
 are unchanged. Failed control output remains at
 `/workspace/validation-work/evidence/reference-runtime-performance-controls.log`.
+
+
+## M4 independent reference input-closure follow-up
+
+Shared measurement runtime `1d3696c0c03755544954ac8365c5e20baef4cc8c` received
+SATISFIED scoped Opus review at `sifr-claude.ZojzFY/response.md`; 109 performance
+controls passed at `reference-runtime-performance-controls-v2.log`. Review raised
+a separate historical-reference blind spot: Git rename detection could hide a
+compiler deletion when its replacement path lies inside allowed tooling.
+The bounded follow-up disables rename folding and requires a committed clean
+reference worktree. A real Git control moves unchanged compiler bytes into the
+allowed tooling directory and requires rejection, then restores the compiler,
+accepts an exact measurement-only overlay and rejects uncommitted tooling bytes.
+Targeted controls, review and actual reference preparation remain pending.
