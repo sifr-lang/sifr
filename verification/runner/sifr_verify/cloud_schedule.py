@@ -26,7 +26,7 @@ from .validation_contracts import stage_plan
 from .schemas import load_schema, validate_data
 from .prepared_sysroot import OWNER_VARIABLE, command as preparation_command
 from .cloud_failure import classify_failure
-from .cargo_resource_forecast import command_cache_hint, test_cache_hint
+from .cargo_resource_forecast import command_cache_hint, generated_preparation, test_cache_hint
 from .process_disk_budget import DiskBudget, FLOOR_VARIABLE, PATH_VARIABLE
 
 WORKER_FLAGS = {"--sifr-jobs": "sifr_jobs", "--rust-jobs": "rust_jobs",
@@ -68,7 +68,7 @@ def load_schedule(root: Path = REPO_ROOT, mode: str = "cloud") -> dict:
     expected = {"dependency-acquisition", "sysroot-source", "sysroot-package", "sysroot-assertions",
                 "graph-retirement", "sysroot-metadata", "remaining-preparation", "remaining-assertions",
                 "sysroot-metadata-cached", "preparation-coordination", "preparation-command-cold",
-                "preparation-command-cached", "sysroot-structural-assertions"}
+                "preparation-command-cached", "generated-preparation", "sysroot-structural-assertions"}
     if policy.get("schema_version") != 1 or set(policy.get("stages", {})) != expected:
         raise ResourceError("cloud resource schedule is incomplete", "unavailable")
     for field in ("cold_preparation_deadline_seconds", "assertion_command_deadline_seconds"):
@@ -197,9 +197,11 @@ class Schedule:
                 self.runner.env[variable] = previous
 
     def prepare_command(self, command, *, env):
-        cached = command_cache_hint(self.root, env, command,
+        generated = generated_preparation(command)
+        cached = not generated and command_cache_hint(self.root, env, command,
                                     include_library=env.get("SIFR_VERIFY_RESOURCE_POLICY") == "compact")
-        allocation = "preparation-command-cached" if cached else "preparation-command-cold"
+        allocation = ("generated-preparation" if generated else
+                      "preparation-command-cached" if cached else "preparation-command-cold")
         self.record("preparation-command", {"argv": command, "allocation": allocation,
                     "cache_presence_hint": cached, "assertion_reuse": False})
         status = self.step(f"preparation_command_{self.index:04d}",

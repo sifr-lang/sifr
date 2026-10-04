@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "estimate_basis": "prospective allocations after measured d5 footprints; source retention compresses into at most512MiB before retirement and admits exact raw restoration separately; library preparation follows both private graph lifetimes; existing metadata preparation measured 68.16s and 17,113,088 additional bytes at 973c821c7; cache hints allow a monitored 2GiB preparation attempt, never skip Cargo; remaining commands admitted individually instead of reserving their summed cold graph growth Structural-only assertions at native candidate 15f3944dba9cce1702622684d455abc8144cd369 passed in 28.72s with maximum process RSS 247361536 bytes and zero swaps (metadata-structural-15f3944db-v3). The exact structural-only compact selection prospectively allows two GiB resident peak, 512 MiB other tmpfs growth, 256 MiB filesystem growth, and the unchanged reserves; all broader or unknown selections keep the generic allocation. Preparation and assertion commands always execute.",
+  "estimate_basis": "prospective allocations after measured d5 footprints; source retention compresses into at most512MiB before retirement and admits exact raw restoration separately; library preparation follows both private graph lifetimes; existing metadata preparation measured 68.16s and 17,113,088 additional bytes at 973c821c7; cache hints allow a monitored 2GiB preparation attempt, never skip Cargo; remaining commands admitted individually instead of reserving their summed cold graph growth Structural-only assertions at native candidate 15f3944dba9cce1702622684d455abc8144cd369 passed in 28.72s with maximum process RSS 247361536 bytes and zero swaps (metadata-structural-15f3944db-v3). The exact structural-only compact selection prospectively allows two GiB resident peak, 512 MiB other tmpfs growth, 256 MiB filesystem growth, and the unchanged reserves; all broader or unknown selections keep the generic allocation. Preparation and assertion commands always execute. Generated materialization/fetch has its own allocation regardless of outer CLI presence: the 90b2b3f57 attempt exhausted the old one-GiB forecast while fetching a new revision. Compact prospectively allows four GiB for the observed approximately 1.8-GiB cold outer compiler, 1.5-GiB Git checkout/submodules and 0.6-GiB native/materialization caches; cloud retains its six-GiB cold-command growth. These are monitored forecasts, not proof of cache completeness or a capacity guarantee; all existing reserves, memory and deadlines remain unchanged.",
   "cold_preparation_deadline_seconds": 7200,
   "assertion_command_deadline_seconds": 2400,
   "stages": {
@@ -106,6 +106,14 @@
       "disk_reserve_bytes": 8589934592,
       "memory_peak_bytes": 2147483648,
       "tmpfs_growth_bytes": 536870912,
+      "memory_reserve_bytes": 2147483648
+    },
+    "generated-preparation": {
+      "disk_growth_bytes": 6442450944,
+      "retained_copy_bytes": 0,
+      "disk_reserve_bytes": 8589934592,
+      "memory_peak_bytes": 6442450944,
+      "tmpfs_growth_bytes": 0,
       "memory_reserve_bytes": 2147483648
     }
   }

@@ -1,5 +1,56 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M2 generated preparation allocation closure — prospective bounded correction
+
+The exact `90b2b3f57664fead12c7abfb1c78f98ccc98f692` create-pr attempt ended
+with status 2 on 2026-10-04 after source preparation, metadata preparation and two
+structural assertions passed. Journal
+`75f5571f-212a-464b-9176-cb394259b2f6`, entries 0016–0020, selected the one-GiB
+cached-command allocation for `sifr_verify.generated_cargo_setup` solely because
+the outer CLI executable existed. That wrapper also materializes generated
+packages and fetches exact-revision Cargo Git sources and submodules. Entry 0017
+observed 9,693,835,264 free bytes; the monitor then correctly rejected
+8,616,095,744 free bytes below its 8,620,093,440-byte floor. The failure was an
+underestimated command closure, not exhaustion of physical storage. The raw
+`acceptance-90b2b3f57-20261004-v1` observation, original journal and all failed or
+incomplete graphs remain retained and unqualified.
+
+This session owns only sparse worktree
+`/workspace/sifr-validation-generated-preparation-forecast` and branch
+`codex/validation-generated-preparation-forecast-20261004`, based on exact `90b2b3f57`.
+The finite canonical generated-wrapper command now receives its own prospective
+allocation regardless of outer binary presence or requested exact revision.
+Compact growth is four GiB, covering the observed approximately 1.8-GiB cold
+outer compiler, 1.5-GiB Cargo revision checkout with submodules and 0.6-GiB native
+and materialization caches. Cloud keeps its existing six-GiB cold-command growth.
+This forecast is a bounded attempt, not proof that a cache is complete or that
+all hosts have capacity. Unknown commands retain their existing cold allocation;
+ordinary Rust test cache hints remain unchanged.
+
+Disk reserves stay two GiB for compact and eight GiB for cloud. The six-GiB
+process allowance, two-GiB memory reserve, inherited deadlines, monitored stopping
+headroom and stricter caller floor stay unchanged. Every original compiler build,
+materialization and locked Cargo fetch still executes. No selection, assertion,
+performance threshold, receipt reuse rule or failed-graph lifetime changes.
+
+Named intermediate checks: cache forecast/admission regressions, generated Cargo
+setup controls, compact profile and resource scheduling/admission controls,
+file-size guardrail and diff check, then exact scoped Opus review. Controls must
+exercise warm outer CLI with absent revision sources, distinct exact revisions,
+finite wrapper lookalikes, admission refusal, growth exceeding the former one-GiB
+allowance, exhaustion of the new allowance, caller-floor preservation and actual
+command execution. Full candidate create-pr, final merge/cloud performance and
+all four native targets remain separate outstanding acceptance obligations.
+
+All 81 focused cache/admission, generated setup, compact profile and resource
+schedule tests pass, including the new generated-closure regressions. The sparse
+file-size guardrail passes on 717 files and the scoped diff check passes. The
+external test harness used actual locked workspace membership from the unchanged
+full base after checking Cargo manifest/lock byte equality, while loading tested
+code and policy from this sparse candidate. Earlier missing sparse fixtures and
+module-path setup failures remain recorded outside Git. Exact scoped review and
+full candidate acceptance remain pending.
+
 ## M2/M5 physical Darwin temporary storage — prospective bounded correction
 
 The standard Intel attempt on `ba2f15181cc800d360b8184869c4e1e6a7ee5389`

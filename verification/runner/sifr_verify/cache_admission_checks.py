@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from .cargo_resource_forecast import command_cache_hint, test_cache_hint
+from .cargo_resource_forecast import command_cache_hint, generated_preparation, test_cache_hint
 from .cloud_schedule import Schedule, load_schedule
 from .process_disk_budget import DiskBudget, FLOOR_VARIABLE, PATH_VARIABLE
 from .process_execution import execute
@@ -131,10 +131,12 @@ class CacheForecastTests(unittest.TestCase):
             (debug/'sifr').write_bytes(b'compiler-presence')
             nested=[sys.executable,'-m','sifr_verify.generated_cargo_setup','--profile','create-pr','--revision','a'*40]
             self.assertFalse(command_cache_hint(root,{},nested))
-            self.assertTrue(command_cache_hint(root,{},nested,include_library=True))
+            self.assertFalse(command_cache_hint(root,{},nested,include_library=True))
+            self.assertTrue(generated_preparation(nested))
             for altered in (["unknown-interpreter",*nested[1:]],nested[:-1]+['invalid-revision'],
                             nested[:4]+['release']+nested[5:],nested+['--extra']):
                 self.assertFalse(command_cache_hint(root,{},altered,include_library=True))
+                self.assertFalse(generated_preparation(altered))
 
     def test_sequential_commands_are_admitted_individually_and_always_executed(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -166,6 +168,108 @@ class CacheForecastTests(unittest.TestCase):
             forecasts = [payload for name, payload in records if name == 'preparation-command']
             self.assertEqual(len(forecasts), 2)
             self.assertTrue(all(payload['assertion_reuse'] is False for payload in forecasts))
+
+
+class GeneratedPreparationForecastTests(unittest.TestCase):
+    def command(self, profile='create-pr', revision='a'*40):
+        return [sys.executable, '-m', 'sifr_verify.generated_cargo_setup',
+                '--profile', profile, '--revision', revision]
+
+    def schedule(self, root, mode):
+        runner = ProfileRunner('create-pr', ['--compact-resources'])
+        runner.prepare_step_budget = lambda name: None
+        runner.env['SIFR_VERIFY_RESOURCE_POLICY'] = mode
+        schedule = object.__new__(Schedule)
+        schedule.runner, schedule.root, schedule.policy = runner, root, load_schedule(mode=mode)
+        schedule.key = {'inputs': {'source': []}}
+        schedule.index = 0
+        records = []
+        def record(name, payload):
+            schedule.index += 1
+            records.append((name, payload))
+        schedule.record = record
+        return schedule, records
+
+    def test_finite_wrapper_requires_exact_interpreter_profile_revision_and_argv(self):
+        for profile in ('create-pr', 'merge', 'nightly', 'cloud'):
+            self.assertTrue(generated_preparation(self.command(profile)))
+        command = self.command()
+        for altered in ([], command[:-1], command + ['--extra'],
+                        ['python', *command[1:]], command[:1] + ['-I'] + command[1:],
+                        command[:2] + ['sifr_verify.generated_cargo_setup_other'] + command[3:],
+                        self.command('release'), self.command(revision='HEAD'),
+                        self.command(revision='a'*39), self.command(revision='A'*40),
+                        command[:3] + ['--revision', 'a'*40, '--profile', 'create-pr']):
+            with self.subTest(argv=altered):
+                self.assertFalse(generated_preparation(altered))
+
+    def test_outer_cli_presence_cannot_discount_revision_sources_or_native_growth(self):
+        for mode, growth, reserve in (('compact', 4, 2), ('cloud', 6, 8)):
+            for warm in (False, True):
+                with self.subTest(mode=mode, warm=warm), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    if warm:
+                        binary = root/'target/debug/sifr'
+                        binary.parent.mkdir(parents=True)
+                        binary.write_bytes(b'outer-compiler-without-revision-checkout')
+                    schedule, records = self.schedule(root, mode)
+                    capacity = Resources(5, 4, 32*1024**3, 32*1024**3, 20*1024**3, {}, [], {})
+                    calls = []
+                    def native(argv, *, env):
+                        calls.append((argv, env.copy()))
+                    with patch('sifr_verify.cloud_schedule.inventory', return_value=[]), \
+                         patch('sifr_verify.cloud_schedule.discover', return_value=capacity), \
+                         patch('sifr_verify.cloud_schedule.run_command', side_effect=native):
+                        # A different exact revision always needs the same closure,
+                        # even when the outer CLI or an earlier revision was present.
+                        for revision in ('a'*40, 'b'*40):
+                            schedule.prepare_command(self.command(revision=revision), env=schedule.runner.env)
+                    self.assertEqual([argv for argv, _ in calls], [self.command(revision=r*40) for r in ('a', 'b')])
+                    forecasts = [p for name, p in records if name == 'preparation-command']
+                    self.assertEqual([p['allocation'] for p in forecasts], ['generated-preparation']*2)
+                    self.assertTrue(all(not p['cache_presence_hint'] and not p['assertion_reuse'] for p in forecasts))
+                    for _, env in calls:
+                        self.assertEqual(int(env[FLOOR_VARIABLE]), (20-growth)*1024**3)
+                        self.assertEqual(float(env['SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS']), 7200)
+                    allocation = schedule.policy['stages']['generated-preparation']
+                    self.assertEqual(allocation, dict(disk_growth_bytes=growth*1024**3,
+                        disk_reserve_bytes=reserve*1024**3, retained_copy_bytes=0,
+                        memory_peak_bytes=6*1024**3, memory_reserve_bytes=2*1024**3, tmpfs_growth_bytes=0))
+                    self.assertNotIn(FLOOR_VARIABLE, schedule.runner.env)
+
+    def test_generated_admission_and_growth_keep_reserve_and_caller_floor(self):
+        # First refuses before execution; the others exercise the actual disk
+        # budget during a command rather than merely asserting a policy number.
+        for available, caller_floor, observed_free, expected in (
+                (6*1024**3-1, None, None, 2),
+                (9*1024**3, None, 7*1024**3, 0),
+                (9*1024**3, None, 5*1024**3-1, 2),
+                (9*1024**3, 8*1024**3, 7*1024**3, 2)):
+            with self.subTest(available=available, caller_floor=caller_floor, free=observed_free), \
+                 tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                schedule, records = self.schedule(root, 'compact')
+                env = schedule.runner.env
+                if caller_floor is not None:
+                    env.update({FLOOR_VARIABLE: str(caller_floor), PATH_VARIABLE: str(root)})
+                capacity = Resources(5, 4, 32*1024**3, 32*1024**3, available, {}, [], {})
+                def native(argv, *, env):
+                    with patch('sifr_verify.process_disk_budget.shutil.disk_usage',
+                               return_value=SimpleNamespace(free=observed_free)):
+                        DiskBudget.from_environment(env).check()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+                     patch('sifr_verify.cloud_schedule.inventory', return_value=[]), \
+                     patch('sifr_verify.cloud_schedule.discover', return_value=capacity), \
+                     patch('sifr_verify.cloud_schedule.run_command', side_effect=native) as execute:
+                    status = schedule.step('cargo_cache_setup', lambda: schedule.prepare_command(
+                        self.command(), env=env), allocation='preparation-coordination', preparation=True)
+                self.assertEqual(status, expected)
+                self.assertEqual(execute.call_count, 0 if observed_free is None else 1)
+                if expected:
+                    failures = [p for _, p in records if p.get('state') in {'failed', 'infrastructure-failure'}]
+                    self.assertTrue(failures)
+                    self.assertTrue(all(p['classification'] == 'enospc' for p in failures))
+                self.assertEqual(env.get(FLOOR_VARIABLE), None if caller_floor is None else str(caller_floor))
 
 
 class DiskBudgetTests(unittest.TestCase):
@@ -206,7 +310,7 @@ class DiskBudgetTests(unittest.TestCase):
 
 def policy_checks():
     result = unittest.TestResult()
-    for case in (CacheForecastTests, DiskBudgetTests):
+    for case in (CacheForecastTests, GeneratedPreparationForecastTests, DiskBudgetTests):
         unittest.defaultTestLoader.loadTestsFromTestCase(case).run(result)
     if not result.wasSuccessful():
         raise AssertionError(result.errors + result.failures)

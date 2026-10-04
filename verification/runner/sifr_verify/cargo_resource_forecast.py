@@ -39,13 +39,24 @@ def test_cache_hint(root: Path, env: dict, package: str, *, include_library: boo
         return False
 
 
+def generated_preparation(command: list[str]) -> bool:
+    """Recognize the complete wrapper, whose growth exceeds its outer CLI build.
+
+    Materialization and locked fetch also populate revision-specific Git sources,
+    submodules and native caches. An existing outer executable cannot forecast
+    that closure; this command always needs its separate preparation allocation.
+    """
+    return (len(command) == 7 and command[0] == sys.executable
+            and command[1:3] == ['-m', 'sifr_verify.generated_cargo_setup']
+            and command[3] == '--profile'
+            and command[4] in {'create-pr', 'merge', 'nightly', 'cloud'}
+            and command[5] == '--revision'
+            and re.fullmatch('[0-9a-f]{40}', command[6]) is not None)
+
+
 def command_cache_hint(root: Path, env: dict, command: list[str], *, include_library: bool = False) -> bool:
     if not command or len(command) < 2:
         return False
-    if include_library and len(command) == 7 and command[0] == sys.executable and command[1:3] == ['-m','sifr_verify.generated_cargo_setup']:
-        if (command[3]=='--profile' and command[4] in {'create-pr','merge','nightly','cloud'}
-                and command[5]=='--revision' and re.fullmatch('[0-9a-f]{40}',command[6])):
-            return command_cache_hint(root,env,['cargo','build','-p','sifr'])
     if command[0] != 'cargo':
         return False
     if '--target' in command or '--release' in command or '--manifest-path' in command:
