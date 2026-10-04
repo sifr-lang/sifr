@@ -105,12 +105,40 @@ def validate_publisher(document: dict) -> list[str]:
     return errors
 
 
+def validate_native_qualification(parent: dict, document: dict) -> list[str]:
+    errors = []
+    job = parent['jobs'].get('published-predecessor-qualification', {})
+    if job != {'if': "github.event_name == 'workflow_dispatch'",
+               'uses': './.github/workflows/published-native-qualification.yml'}:
+        errors.append('native qualification must use the explicit manual reusable workflow')
+    if document.get('permissions') != {'contents': 'read'} or document.get('on', document.get('true')) != {'workflow_call': None}:
+        errors.append('native qualification must remain reusable and read-only')
+    native = document['jobs']['native']
+    expected = [('aarch64-apple-darwin', 'macos-15'), ('x86_64-apple-darwin', 'macos-15-intel'),
+                ('x86_64-unknown-linux-gnu', 'ubuntu-24.04'), ('aarch64-unknown-linux-gnu', 'ubuntu-24.04-arm')]
+    matrix = native.get('strategy', {}).get('matrix', {}).get('include', [])
+    if [(row.get('target'), row.get('runner')) for row in matrix] != expected or native.get('runs-on') != '${{ matrix.runner }}':
+        errors.append('native qualification requires all four actual host targets')
+    steps = native.get('steps', [])
+    checkout = next((step for step in steps if step.get('uses', '').startswith('actions/checkout@')), {})
+    if checkout.get('with') != {'ref': '${{ github.sha }}', 'fetch-depth': 0, 'submodules': 'recursive', 'persist-credentials': False}:
+        errors.append('native qualification must bind the exact committed source without credentials')
+    for phrase in ('native_candidate.py prepare', 'prepare(policy=policy', 'qualify(root/', 'check(root/'):
+        if not any(phrase in step.get('run', '') and 'if' not in step and not step.get('continue-on-error') for step in steps):
+            errors.append('native qualification requires blocking preparation and transition checking: '+phrase)
+    if not any(step.get('if') == 'always()' and step.get('uses', '').startswith('actions/upload-artifact@') for step in steps):
+        errors.append('native qualification must preserve failed evidence and exact bundles')
+    return errors
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     document = parse_workflows({WORKFLOW: (root / WORKFLOW).read_text()})[WORKFLOW]
     publisher_path = ".github/workflows/validation-required.yml"
     publisher = parse_workflows({publisher_path: (root / publisher_path).read_text()})[publisher_path]
-    errors = validate(document) + validate_publisher(publisher)
+    native_path = '.github/workflows/published-native-qualification.yml'
+    native = parse_workflows({native_path: (root / native_path).read_text()})[native_path]
+    errors = validate(document) + validate_publisher(publisher) + validate_native_qualification(document, native)
     if errors:
         raise SystemExit("\n".join(errors))
     # Regression: the original condition must fail before any runner work.
@@ -143,6 +171,16 @@ def main() -> None:
     exposed = copy.deepcopy(publisher)
     exposed["jobs"]["publish"].pop("environment")
     assert any("protected publication environment" in error for error in validate_publisher(exposed))
+    for mutation in ('target', 'source', 'skip', 'write'):
+        invalid_native = copy.deepcopy(native)
+        job = invalid_native['jobs']['native']
+        if mutation == 'target': job['strategy']['matrix']['include'].pop()
+        if mutation == 'source': job['steps'][0]['with']['ref'] = 'main'
+        if mutation == 'skip':
+            for step in job['steps']:
+                if 'qualify(root/' in step.get('run', ''): step['continue-on-error'] = True
+        if mutation == 'write': invalid_native['permissions']['contents'] = 'write'
+        assert validate_native_qualification(document, invalid_native), mutation
     print("local-first admission and event/profile contracts passed (including regressions)")
 
 

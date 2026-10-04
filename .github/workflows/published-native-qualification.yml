@@ -1,0 +1,99 @@
+name: published-native-qualification
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: published-native-${{ matrix.target }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      SIFR_NATIVE_HOST_KIND: ${{ runner.os == 'macOS' && 'dedicated-darwin' || '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e
+        with:
+          targets: ${{ matrix.target }}
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version-file: verification/pyproject.toml
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+      - name: Install canonical Python interpreter
+        run: uv python install 3.14.7
+      - name: Prepare exact native bundle and verify actual published predecessor bytes
+        shell: bash
+        env:
+          NATIVE_TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          uv run --project verification --locked python verification/areas/sysroot_release/native_candidate.py prepare --source-root "$GITHUB_WORKSPACE" --output "$RUNNER_TEMP/native-candidate"
+          uv run --project verification --locked python - <<'PYTHON'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'verification/areas/sysroot_release')
+          from published_predecessor import POLICY,prepare,fetch_archive
+          root=Path(os.environ['RUNNER_TEMP'])
+          policy=json.loads(POLICY.read_text())
+          candidate=json.loads((root/'native-candidate/receipt.json').read_text())
+          assert candidate['target']==os.environ['NATIVE_TARGET']
+          prepare(policy=policy,target=candidate['target'],candidate_version=candidate['version'],output=root/'published-predecessor')
+          fetch_archive(policy['installer'],root/('sifr-installer-'+policy['version']))
+          PYTHON
+      - name: Qualify persisted state, native migration, reinstall and transaction rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --project verification --locked python - <<'PYTHON'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'verification/areas/sysroot_release')
+          from published_predecessor import POLICY
+          from published_transition import qualify,check
+          root=Path(os.environ['RUNNER_TEMP']);policy=json.loads(POLICY.read_text())
+          candidate=json.loads((root/'native-candidate/receipt.json').read_text())
+          archive=root/'published-predecessor'/f"sifr-{policy['version']}-{candidate['target']}.tar.gz"
+          qualify(root/'native-candidate/receipt.json',archive,root/('sifr-installer-'+policy['version']),root/'published-transition')
+          check(root/'published-transition/receipt.json')
+          PYTHON
+      - name: Preserve exact bundles and raw qualification or failure evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: published-native-${{ github.sha }}-${{ matrix.target }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/native-candidate/state.json
+            ${{ runner.temp }}/native-candidate/receipt.json
+            ${{ runner.temp }}/native-candidate/*.stdout
+            ${{ runner.temp }}/native-candidate/*.stderr
+            ${{ runner.temp }}/native-candidate/cargo.jsonl
+            ${{ runner.temp }}/native-candidate/artifacts
+            ${{ runner.temp }}/native-candidate/sifr-installer-*
+            ${{ runner.temp }}/published-transition/*.json
+            ${{ runner.temp }}/published-transition/*.stdout
+            ${{ runner.temp }}/published-transition/*.stderr
+            ${{ runner.temp }}/published-transition/published/*.json
+            ${{ runner.temp }}/published-transition/published/*.stdout
+            ${{ runner.temp }}/published-transition/published/*.stderr
+          if-no-files-found: error
+          retention-days: 30
