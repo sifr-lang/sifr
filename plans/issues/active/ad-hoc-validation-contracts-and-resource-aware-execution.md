@@ -1,5 +1,66 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M5 single standard Intel qualification attempt — prospective scope
+
+Paid larger runners are unavailable. Register one actual native qualification
+attempt on standard `macos-15-intel` for the frozen final candidate, using the
+existing live 9 GiB preparation admission (6 GiB process, 1 GiB temporary memory,
+2 GiB reserve). The audited standard Intel observation at execution source
+`e274dec214e5b45606b711fe6fd70c3449b16426` recorded 9,577,099,264 available
+bytes, 89,577,152 bytes below admission. That snapshot cannot admit a later job
+or establish its rejection. The actual attempt must stop on admission failure;
+do not repeat diagnostics or retry the unchanged attempt in a loop. The runner
+label establishes neither available capacity nor qualification.
+
+Change only the native Darwin x64 row from `macos-15-large` to `macos-15-intel`,
+its exact finite workflow expectation, and focused runner/checksum controls.
+The existing uv mapping binds the standard Intel runner to the canonical Darwin
+x64 archive. Reject paid Intel substitution, an ARM label in the Intel row, and
+the Darwin ARM uv checksum on Intel. This prospectively supersedes the older
+provisioned-Intel selection below; historical failures remain unchanged.
+Preparation still permits two Cargo workers, and the published transition uses
+one. All four native targets, eight runtime cases per target, host/storage
+authority, producer identities, budgets and reserves remain required.
+
+ARM remains an external prerequisite. Keep its current `macos-15-xlarge` row;
+the recorded standard ARM host has only 2.97 GiB admitted available memory.
+Qualification needs an available dedicated Apple Silicon host meeting the
+unchanged 9 GiB preparation admission and physical-storage requirements. The
+suggested 5.5 GiB monitored experiment is unimplemented and does not admit that
+snapshot. Successful Intel execution cannot substitute for ARM assertions.
+
+Own `/workspace/sifr-validation-final-main-integration`, branch
+`codex/validation-final-main-integration-20261004`, based on
+`7424f3934e91125b4bbe607c740c4f79dfef741e`. That clean full candidate integrates
+the diagnostic ownership repair `98c248a7161b478a3bf9360cc54c8535fc2f227c`
+with delivered main `0e8bdc47122d2b45fbe6d2b76be5657bda888d75`: 58 disjoint
+tooling paths, including an intentional byte-exact CRLF fixture. Existing draft
+[#4332](https://github.com/sifr-lang/sifr/pull/4332) carries combined delivery.
+Named checks for this bounded item: local-first workflow controls, uv invariant
+and negative controls, actual submodule ownership guard/self-test, file-size
+guardrail, local links and diff check; exact-candidate read-only Opus review.
+No remote dispatch or broad/compiler gate is part of this implementation step.
+Full local create-PR and final shared-VM cloud/performance acceptance, complete
+four-platform native qualification and protected enforcement remain pending.
+
+Focused validation passed: workflow controls; the maintained uv invariant
+(six exact pins, eight setup steps) and 58 uv controls; actual ownership guard
+and self-test; the 4,452-file guardrail; added plan paths/source identities and
+whitespace checks. Raw logs are outside Git at
+`/workspace/validation-work/evidence/standard-intel-attempt-20261004/`.
+Exact-candidate review is pending; no native runtime assertion was executed.
+
+The latest local create-PR attempt on `98c248a71` passed source preparation,
+metadata preparation and both metadata structural tests, then exited 2 at the
+next disk admission: 4,294,967,296 bytes required, 3,835,068,416 available
+(4 GiB versus 3.57 GiB). Preserve its failed/incomplete evidence in
+`/workspace/validation-work/evidence/acceptance-98c248a71-20261004-v5/`;
+this is not a full gate pass. The original `0b7b5b8d3` capture failed because
+operator command scoping temporarily changed its checkout. Its restored source
+and incomplete evidence remain preserved; its samples cannot qualify or be
+combined. The frozen final candidate requires one complete fresh fixed paired
+capture with valid matched endpoints before final performance acceptance.
+
 ## M3/M5 diagnostic checkout ownership repair — prospective rescope
 
 Actual hosted merge validation and the local create-PR gate on `0d8d01e1b`

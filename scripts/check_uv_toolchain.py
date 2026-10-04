@@ -259,6 +259,7 @@ def self_test() -> None:
         ("ubuntu-24.04-arm", "checksum"),
         ("macos-15", "checksum"),
         ("macos-15-xlarge", "checksum"),
+        ("macos-15-intel", "checksum"),
         ("macos-15-large", "checksum"),
         ("windows-2025", "missing platform checksum"),
         ("ubuntu-future", "unsupported runner"),
@@ -277,6 +278,12 @@ def self_test() -> None:
         for runner, native in RUNNER_PLATFORMS.items() if (version, native) in ARCHIVE_CHECKSUMS]}}})
     matrix_job['steps'][0]['with']['checksum'] = '${{ matrix.uv_checksum }}'
     check(inputs, matrix_workflows)
+    # A standard Intel label must bind the x64 archive even beside Darwin ARM.
+    changed = copy.deepcopy(matrix_workflows)
+    intel = next(row for row in changed[name]['jobs']['check']['strategy']['matrix']['include']
+                 if row['runner'] == 'macos-15-intel')
+    intel['uv_checksum'] = ARCHIVE_CHECKSUMS[(version, 'aarch64-apple-darwin')]
+    check(inputs, changed, 'checksum')
     for mutation in ('checksum', 'runner', 'expression', 'axis', 'empty', 'duplicate', 'malformed'):
         changed = copy.deepcopy(matrix_workflows)
         job = changed[name]['jobs']['check']; matrix = job['strategy']['matrix']

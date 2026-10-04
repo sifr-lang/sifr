@@ -21,7 +21,7 @@ jobs:
             host_kind: dedicated-darwin
           - target: x86_64-apple-darwin
             uv_checksum: 5296d5aa2b9143360405eea866f8ef4d5dc8986b164eb0dc35e8f876a9304d30
-            runner: macos-15-large
+            runner: macos-15-intel
             host_kind: dedicated-darwin
           - target: x86_64-unknown-linux-gnu
             uv_checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
