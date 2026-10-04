@@ -197,7 +197,8 @@ class Schedule:
                 self.runner.env[variable] = previous
 
     def prepare_command(self, command, *, env):
-        cached = command_cache_hint(self.root, env, command)
+        cached = command_cache_hint(self.root, env, command,
+                                    include_library=env.get("SIFR_VERIFY_RESOURCE_POLICY") == "compact")
         allocation = "preparation-command-cached" if cached else "preparation-command-cold"
         self.record("preparation-command", {"argv": command, "allocation": allocation,
                     "cache_presence_hint": cached, "assertion_reuse": False})
