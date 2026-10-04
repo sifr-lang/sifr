@@ -1513,3 +1513,42 @@ by the foundation command. Logs `compact-controls-remediation-final.log` and
 `compact-foundation-remediation.log` remain outside Git. Remediation review and
 native final-candidate gates remain pending; the ongoing native attempt on the
 prior integration candidate is frozen and recorded separately.
+
+## M2 compact cache-presence forecast refinement
+
+The native gate at `5203f15a083ecc3d07e170e73098b359bf5ea864` passed source
+preparation in 1,197.74s, retained the 107,012,216-byte compiler and verified its
+compressed/decoded hashes, then safely retired its UUID-owned graph. It recovered
+1,723,006,976 net filesystem bytes. The gate stopped at metadata admission before
+executing that command: required 5,368,709,120 bytes versus 5,254,221,824 available.
+Its failed gate observation/logs remain outside Git under
+`create-pr-compact-5203f15a0/`; no runtime suite qualification is inferred.
+
+An independently bounded diagnostic ran the exact metadata-structural preparation
+against this session's existing source compiler cache, with debug=0/incremental=0,
+two workers, offline Cargo and the three-GiB monitored floor. It passed in 457.74s,
+adding 869,552,128 net filesystem bytes; zero runtime assertions were executed.
+The command/limits/raw logs are retained under `metadata-structural-5203f15a0/`.
+
+The next bounded refinement uses partial compiled-library presence only for the
+explicit compact policy's existing one-GiB cached growth estimate. Every selected
+Cargo package needs its own regular rlib and fingerprint for grouped test commands.
+The exact generated-graph preparation wrapper can use the compiler-presence hint;
+unknown interpreter/module/options/revision shapes cannot. Cargo always executes
+and validates all native fingerprints, and changed/incorrect hints can only fail
+at the disk floor, never pass an unexecuted assertion. Default policy hints and
+allocations are unchanged. Unknown compact remaining commands use a prospective
+two-GiB growth attempt with the same reserve/headroom; this is no capacity promise.
+Six compact controls and all 32 foundation groups passed, including new partial
+library/group/wrapper/symlink controls. Source whitespace keeps foundation below
+900 lines. Native final-candidate gates and scoped refinement review are pending.
+
+Compact remediation `22f73c131` received SATISFIED Opus review at
+`/workspace/validation-work/evidence/sifr-claude.PMiCAm/response.md`.
+Publisher integration `5203f15a0` received SATISFIED review at
+`/workspace/validation-work/evidence/sifr-claude.sCMDiE/response.md`.
+Published migration remediation `977fde39f` received SATISFIED review at
+`/workspace/validation-work/evidence/sifr-claude.NcstYN/response.md`.
+These bounded approvals do not qualify the failed broad gates, pending allocation
+observations, independent compiler comparison, actual upgrade/platform coverage,
+main evidence reuse, administrative enforcement or final phase acceptance.

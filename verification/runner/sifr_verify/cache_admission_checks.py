@@ -79,6 +79,33 @@ class CacheForecastTests(unittest.TestCase):
             binary.unlink(); binary.symlink_to(fingerprint)
             self.assertFalse(test_cache_hint(root, {}, 'sifr_driver'))
 
+    def test_partial_libraries_only_inform_explicit_compact_forecasts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            debug = root/'target/debug'
+            for package in ('first','second'):
+                library=debug/'deps'/('lib'+package+'-abc.rlib')
+                fingerprint=debug/'.fingerprint'/(package+'-abc')/('lib-'+package)
+                library.parent.mkdir(parents=True,exist_ok=True)
+                fingerprint.parent.mkdir(parents=True)
+                library.write_bytes(b'compiled-library-presence')
+                fingerprint.write_bytes(b'fingerprint-presence')
+            command=['cargo','test','--no-run','-p','first','-p','second']
+            self.assertFalse(command_cache_hint(root,{},command))
+            self.assertTrue(command_cache_hint(root,{},command,include_library=True))
+            (debug/'deps/libsecond-abc.rlib').unlink()
+            self.assertFalse(command_cache_hint(root,{},command,include_library=True))
+            (debug/'deps/libfirst-abc.rlib').unlink()
+            (debug/'deps/libfirst-abc.rlib').symlink_to(debug/'.fingerprint/first-abc/lib-first')
+            self.assertFalse(test_cache_hint(root,{},'first',include_library=True))
+            (debug/'sifr').write_bytes(b'compiler-presence')
+            nested=[sys.executable,'-m','sifr_verify.generated_cargo_setup','--profile','create-pr','--revision','a'*40]
+            self.assertFalse(command_cache_hint(root,{},nested))
+            self.assertTrue(command_cache_hint(root,{},nested,include_library=True))
+            for altered in (["unknown-interpreter",*nested[1:]],nested[:-1]+['invalid-revision'],
+                            nested[:4]+['release']+nested[5:],nested+['--extra']):
+                self.assertFalse(command_cache_hint(root,{},altered,include_library=True))
+
     def test_sequential_commands_are_admitted_individually_and_always_executed(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
