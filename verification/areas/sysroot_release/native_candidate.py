@@ -23,6 +23,7 @@ from sifr_verify.resource_admission import admit,worker_limit
 from sifr_verify.process_disk_budget import DiskBudget
 from qualify_stable_target import current_host_target
 from native_capacity import resources
+import native_recovery
 from published_predecessor import POLICY,digest,select
 from verify_release_archive import verify_archive
 
@@ -64,10 +65,10 @@ def qualification_version(root):
     return values[0]
 
 
-def prepare(root,output):
+def prepare(root,output,*,continue_owned_preparation=None):
     root=root.resolve(strict=True)
     source=clean_source(root)
-    for name in ('native_candidate.py','native_capacity.py'):
+    for name in ('native_candidate.py','native_capacity.py','native_recovery.py'):
         if digest(root/'verification/areas/sysroot_release'/name)!=digest(Path(__file__).parent/name):
             raise ValueError('native preparation tooling differs from the source candidate')
     target=current_host_target()
@@ -88,18 +89,26 @@ def prepare(root,output):
         'version_role':'qualification-only',
         'source_package_version':tomllib.loads((root/'crates/sifr/Cargo.toml').read_text())['package']['version'],
         'qualification_version_sha256':digest(root/'verification/areas/sysroot_release/package_build.py'),
-        'producer_sha256':{name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py')},
+        'producer_sha256':{name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py','native_recovery.py')},
         'tools':None,'started_utc':datetime.now(timezone.utc).isoformat(),'commands':[]}
     def save(): (output/'state.json').write_text(json.dumps(report,indent=2)+'\n')
     save();lease=None
     try:
         report['tools']=tool_identity();cargo=report['tools']['cargo']['path'];save()
+        recovery=None
+        if continue_owned_preparation is not None:
+            if not sys.platform.startswith('linux'): raise ValueError('owned native continuation requires Linux leases')
+            recovery=native_recovery.inspect(root,continue_owned_preparation,report['tools'],target)
         capacity=resources(output)
-        report['admission']=admit(capacity,dict(disk_growth_bytes=2684354560,retained_copy_bytes=268435456,
+        if recovery and Path(recovery['root']).stat().st_dev!=output.stat().st_dev:
+            raise ValueError('native continuation graph must share the admitted output filesystem')
+        report['admission']=admit(capacity,dict(disk_growth_bytes=1073741824 if recovery else 2684354560,retained_copy_bytes=268435456,
             disk_reserve_bytes=2147483648,memory_peak_bytes=6442450944,tmpfs_growth_bytes=1073741824,memory_reserve_bytes=2147483648))
         owner=str(uuid.uuid4())
-        lease=GraphLease(output,'target/sysroot_release/cargo-target',owner).acquire({'native-bundle'}) if sys.platform.startswith('linux') else None
-        graph=output/'target/sysroot_release/cargo-target';graph.mkdir(parents=True,exist_ok=True)
+        lease=(native_recovery.acquire(recovery) if recovery else GraphLease(output,'target/sysroot_release/cargo-target',owner).acquire({'native-bundle'})) if sys.platform.startswith('linux') else None
+        graph=Path(recovery['graph']) if recovery else output/'target/sysroot_release/cargo-target';graph.mkdir(parents=True,exist_ok=True)
+        if recovery:
+            report['graph_recovery']=native_recovery.preserve(recovery,output);save()
         wrappers=output/'transport';wrappers.mkdir()
         events=output/'cargo.jsonl'
         wrapper=wrappers/'cargo'
@@ -155,7 +164,10 @@ os.execv(os.environ['NATIVE_REAL_CARGO'],[os.environ['NATIVE_REAL_CARGO'],*args]
             archive={'path':str(archive),'sha256':digest(archive)},installer={'path':str(installer),'sha256':digest(installer)})
         if clean_source(root)!=source or digest(root/'Cargo.lock')!=report['cargo_lock_sha256'] or tool_identity()!=report['tools']:
             raise ValueError('native source changed during preparation')
-        if lease:
+        if lease and recovery:
+            lease.passed_consumer('native-bundle-continuation')
+            report['graph_retention']='original failed observation preserved; graph not retired'
+        elif lease:
             lease.passed_consumer('native-bundle')
             def clean(command,*,env):
                 result=execute(command,cwd=root,env=env,deadline_seconds=900,limit_bytes=16*1024**2)
@@ -192,7 +204,7 @@ def check(path,*,_pending=False):
             or report['qualification_version_sha256']!=digest(root/'verification/areas/sysroot_release/package_build.py')
             or report['cargo_lock_sha256']!=digest(root/'Cargo.lock')
             or report['tools']!=tool_identity()
-            or report['producer_sha256']!={name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py')}):
+            or report['producer_sha256']!={name:digest(Path(__file__).parent/name) for name in ('native_candidate.py','native_capacity.py','native_recovery.py')}):
         raise ValueError('native candidate preparation identity differs')
     for name,value in report['producer_sha256'].items():
         if digest(root/'verification/areas/sysroot_release'/name)!=value:
@@ -202,6 +214,8 @@ def check(path,*,_pending=False):
     if start.utcoffset() is None or finish.utcoffset() is None or not start<=finish<=now or (now-finish).total_seconds()>86400:
         raise ValueError('native candidate preparation is stale or incomplete')
     directory=path.parent
+    graph=(native_recovery.check(report['graph_recovery'],directory,root,report['tools'],report['target'])
+           if 'graph_recovery' in report else directory/'target/sysroot_release/cargo-target')
     expected_commands=commands(root,directory,report['version'],report['target'])
     for item in report['commands']:
         if item['argv']!=expected_commands.get(item['id']): raise ValueError('native preparation command differs')
@@ -221,7 +235,7 @@ def check(path,*,_pending=False):
             or artifact['manifest_path']!=str(root/'crates/sifr/Cargo.toml')
             or artifact['target']['kind']!=['bin'] or artifact['target']['crate_types']!=['bin']
             or artifact['target']['src_path']!=str(root/'crates/sifr/src/main.rs')
-            or artifact['executable']!=str(directory/'target/sysroot_release/cargo-target'/report['target']/'release/sifr')):
+            or artifact['executable']!=str(graph/report['target']/'release/sifr')):
         raise ValueError('native compiler optimized source/target profile differs')
     if [item['id'] for item in report['commands']]!=['build-package','installer']:
         raise ValueError('native candidate preparation command inventory differs')
@@ -240,6 +254,8 @@ def check(path,*,_pending=False):
     if (manifest['built-by-compiler-commit']!=report['source_commit'] or binary!=report['binary_sha256']
             or manifest['cargo-lock-sha256']!=report['cargo_lock_sha256']):
         raise ValueError('native archive differs from prepared source/compiler')
+    if 'graph_recovery' in report and digest(graph/target/'release/sifr')!=binary:
+        raise ValueError('continued native compiler differs from the prepared archive')
     return report
 
 
@@ -249,6 +265,7 @@ if __name__=='__main__':
     parser.add_argument('command',choices=('prepare','check'))
     parser.add_argument('--source-root',type=Path,default=ROOT)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--continue-owned-preparation',type=Path)
     args=parser.parse_args()
-    if args.command=='prepare': prepare(args.source_root,args.output)
+    if args.command=='prepare': prepare(args.source_root,args.output,continue_owned_preparation=args.continue_owned_preparation)
     else: check(args.output)

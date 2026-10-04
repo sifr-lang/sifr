@@ -1954,3 +1954,36 @@ metadata-format-governance-baseline.log). It is not a format regression and not
 a passing governance gate. The separate distribution qualification fixture
 inventory follow-up must align with the current required SQL runtime payloads;
 no SQL compiler/runtime implementation or externally owned PR is changed here.
+
+### M2/M5 explicit owned native preparation continuation — 2026-10-04
+
+The failed native packaging attempt leaves a successfully compiled optimized
+compiler in its private graph. This bounded continuation requires an explicit
+operator-selected original preparation, its private UID/device/inode/UUID lease,
+recorded failed state, exact locked input and tool/target identity, ancestor source
+and original producer bytes, complete original raw commands, and a unique actual
+optimized Cargo compiler record. Linked, active, unowned or unknown graphs reject.
+It never reuses an assertion or success receipt: actual Cargo, packaging,
+metadata production and installer generation all execute for the current clean
+source and corrected qualification version.
+
+Before cache mutation it retains the original compiler in a bounded, byte-verified
+compressed file and fsyncs the containing directory. The new attempt uses a
+separate output/receipt and binds the original state, events, graph ownership and
+retained bytes; its independent checker revalidates custody and the live compiler
+against the exact packaged compiler. The original failure state is unchanged.
+The continued graph is retained even after success because its original failed
+consumer remains recorded; no failed graph retirement is authorized. Known warm
+continuation admits one GiB of additional growth; memory peak, temporary growth,
+reserves and monitoring floor remain unchanged. Cold preparation retains its
+original allocation and retirement behavior.
+
+Five synthetic ownership/retention controls, seven candidate, three capacity and
+five transition controls pass. The executable artifact case passes through the
+actual distribution runner (native-continuation-case.json). Read-only inspection
+and lease acquisition of the actual original graph also passed and changed no
+compiler bytes or failure state; native-continuation-owned-cache-inspection.json
+records that zero-assertion observation. Initial synthetic busy-lock expectation
+used the wrong exception type and failed; the corrected control accepts the
+framework's actual BlockingIOError. Actual corrected native continuation,
+qualification, scoped review and required local/native gates remain pending.
