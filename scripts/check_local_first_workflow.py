@@ -157,7 +157,7 @@ def validate_native_qualification(parent: dict, document: dict) -> list[str]:
     checkout = next((step for step in steps if step.get('uses', '').startswith('actions/checkout@')), {})
     if checkout.get('with') != {'ref': '${{ github.sha }}', 'fetch-depth': 0, 'submodules': 'recursive', 'persist-credentials': False}:
         errors.append('native qualification must bind the exact committed source without credentials')
-    for phrase in ('native_candidate.py prepare', 'prepare(policy=policy', 'qualify(root/', 'check(root/'):
+    for phrase in ('native_source_dependencies.py prepare', 'native_source_dependencies.py check', 'native_candidate.py prepare', 'prepare(policy=policy', 'qualify(root/', 'check(root/'):
         if not any(phrase in step.get('run', '') and 'if' not in step and not step.get('continue-on-error') for step in steps):
             errors.append('native qualification requires blocking preparation and transition checking: '+phrase)
     if not any(step.get('if') == 'always()' and step.get('uses', '').startswith('actions/upload-artifact@') for step in steps):

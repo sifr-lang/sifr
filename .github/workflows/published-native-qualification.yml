@@ -85,6 +85,12 @@ jobs:
           (out/'commands.json').write_text(json.dumps(records,indent=2)+'\n')
           print('Native capacity inputs captured; this diagnostic does not admit resources.')
           PYTHON
+      - name: Prepare locked native source dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --project verification --locked python verification/areas/sysroot_release/native_source_dependencies.py prepare --source-root "$GITHUB_WORKSPACE" --output "$RUNNER_TEMP/native-source-dependencies"
+          uv run --project verification --locked python verification/areas/sysroot_release/native_source_dependencies.py check --receipt "$RUNNER_TEMP/native-source-dependencies/receipt.json"
       - name: Prepare exact native bundle and verify actual published predecessor bytes
         shell: bash
         env:
@@ -126,6 +132,7 @@ jobs:
         with:
           name: published-native-${{ github.sha }}-${{ matrix.target }}-${{ github.run_attempt }}
           path: |
+            ${{ runner.temp }}/native-source-dependencies
             ${{ runner.temp }}/native-capacity-inputs
             ${{ runner.temp }}/native-candidate/state.json
             ${{ runner.temp }}/native-candidate/receipt.json

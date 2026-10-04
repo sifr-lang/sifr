@@ -2193,3 +2193,23 @@ available against the unchanged 9663676416-byte requirement. Its diagnostic
 it. Missing or incomplete `df` output leaves an explicit unavailable-device
 observation. No capacity guard, reserve, runtime requirement or numerical budget
 changes. Other native hosts and final acceptance remain pending.
+
+## M5 cold native source dependency preparation — 2026-10-04
+
+A fresh x64 Darwin job on `7eb6d331ce2c2871ff332a6b3887fd80c093e3f3`
+passed storage and memory admission, then the actual offline package command
+failed because its fresh Cargo cache lacked `sha2`. Preserve that failed state
+and raw command; successful admission is not a compiler or native pass.
+
+Add explicit locked online source dependency acquisition followed by a locked
+offline availability check before the existing offline native compilation. The
+preparation binds source and producer commits, canonical tool bytes, source
+manifests/lock/config/toolchain, exact commands, bounded raw output and completion.
+It has zero runtime assertions and independently checks its completed receipt.
+Its Cargo-cache filesystem is admitted separately for one GiB prospective growth,
+512 MiB resident peak and the existing two-GiB reserves and three-GiB floor.
+Changed inputs, process failures, truncation or incomplete/resealed receipts
+remain nonqualifying. CI preserves preparation failures in the existing upload.
+The offline build and all eight native qualification cases stay unchanged.
+Five focused control suites pass; scoped review and actual cold hosted execution
+remain pending.
