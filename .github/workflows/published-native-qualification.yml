@@ -54,9 +54,11 @@ jobs:
         run: |
           set -euo pipefail
           uv run --project verification --locked python - <<'PYTHON'
-          import hashlib,json,os
+          import hashlib,json,os,plistlib,sys
           from sifr_verify.process_execution import execute
           from pathlib import Path
+          sys.path.insert(0,'verification/areas/sysroot_release')
+          from native_capacity import apfs_store_devices
           root=Path(os.environ['RUNNER_TEMP']);out=root/'native-capacity-inputs'
           out.mkdir(mode=0o700,exist_ok=False)
           commands=[['df','-P',str(root)],['diskutil','info','-plist','device-from-df'],
@@ -80,6 +82,13 @@ jobs:
                   lines=result.stdout.decode('utf-8',errors='strict').splitlines()
                   if len(lines)>=2 and lines[-1].split() and lines[-1].split()[0].startswith('/dev/'):
                       device=lines[-1].split()[0]
+              if index==1 and result.cause=='exit' and result.returncode==0 and not result.truncated:
+                  try:
+                      storage=plistlib.loads(result.stdout)
+                      if storage.get('FilesystemType')=='apfs':
+                          commands.extend(['diskutil','info','-plist',item] for item in apfs_store_devices(storage))
+                  except (ValueError,plistlib.InvalidFileException):
+                      records.append({'argv':['APFS-backing-store-discovery'],'cause':'unavailable-storage-device'})
               records.append({'argv':command,'cause':result.cause,'returncode':result.returncode,
                               'truncated':result.truncated,'output_sha256':hashes})
           (out/'commands.json').write_text(json.dumps(records,indent=2)+'\n')

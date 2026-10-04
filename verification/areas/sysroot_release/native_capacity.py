@@ -9,6 +9,26 @@ import subprocess
 from sifr_verify.resource_admission import Resources, discover
 
 
+PHYSICAL_BUSES={'PCI-Express','SATA','ATA','USB','Thunderbolt','NVMe','Apple Fabric','SCSI'}
+
+
+def apfs_store_devices(storage):
+    """APFS volumes inherit disk authority from every declared backing store."""
+    stores=storage.get('APFSPhysicalStores')
+    if not isinstance(stores,list) or not stores:
+        raise ValueError('native Darwin APFS backing stores are unavailable')
+    devices=[]
+    for store in stores:
+        identifier=store.get('APFSPhysicalStore') if isinstance(store,dict) else None
+        if not isinstance(identifier,str) or not re.fullmatch(r'disk[0-9]+(?:s[0-9]+)?',identifier):
+            raise ValueError('native Darwin APFS backing store identifier is invalid')
+        device='/dev/'+identifier
+        if device in devices:
+            raise ValueError('native Darwin APFS backing stores are duplicated')
+        devices.append(device)
+    return devices
+
+
 def resources(path):
     if platform.system() == 'Linux':
         return discover(disk_path=path)
@@ -38,9 +58,17 @@ def resources(path):
     if not device.startswith('/dev/'):
         raise ValueError('native Darwin storage device is unavailable')
     storage=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',device],timeout=30))
-    physical_buses={'PCI-Express','SATA','ATA','USB','Thunderbolt','NVMe','Apple Fabric','SCSI'}
-    if storage.get('FilesystemType') not in {'apfs','hfs'} or storage.get('BusProtocol') not in physical_buses:
+    filesystem=storage.get('FilesystemType')
+    backing=[]
+    if filesystem=='apfs':
+        for store_device in apfs_store_devices(storage):
+            info=plistlib.loads(subprocess.check_output(['diskutil','info','-plist',store_device],timeout=30))
+            if info.get('DeviceNode')!=store_device or info.get('BusProtocol') not in PHYSICAL_BUSES:
+                raise ValueError('unknown native Darwin build storage memory authority')
+            backing.append(info)
+    elif filesystem!='hfs' or storage.get('BusProtocol') not in PHYSICAL_BUSES:
         raise ValueError('unknown native Darwin build storage memory authority')
     return Resources(cpus,float(cpus),limit,available,shutil.disk_usage(path).free,{},[],
                      {'capacity_authority':'declared-dedicated-darwin-vm-stat','vm_stat':text,
-                      'storage_device':device,'filesystem':storage['FilesystemType'],'bus_protocol':storage['BusProtocol']},False)
+                      'storage_device':device,'filesystem':filesystem,
+                      'volume_bus_protocol':storage.get('BusProtocol'),'apfs_backing_stores':backing},False)
