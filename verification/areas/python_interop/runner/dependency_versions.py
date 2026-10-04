@@ -11,6 +11,11 @@ from importlib.metadata import version
 from pathlib import Path
 from urllib.parse import urlparse
 
+from dependency_distribution import (
+    is_cpu_project, runtime_distribution_version, validate_distribution_audit,
+    validate_distribution_project, PYPI_SOURCE,
+)
+
 from dependency_requirements import (
     discover_projects, requirements, validate_requirements,
 )
@@ -71,6 +76,7 @@ def release_map(audit: dict[str, object]) -> dict[str, dict[str, object]]:
     expected = frozenset().union(*(frozenset(p["packages"]) for p in audit["projects"]))
     if releases.keys() != expected:
         raise ValueError("audited package set differs from the maintained package set")
+    validate_distribution_audit(releases)
     return releases
 
 
@@ -80,7 +86,7 @@ def runtime_version_marker(*names: str) -> str:
     releases = release_map(audit)
     markers = []
     for name in names:
-        expected = releases[name]["selected_version"]
+        expected = runtime_distribution_version(name, releases)
         installed = version(name)
         if installed != expected:
             raise RuntimeError(
@@ -193,6 +199,7 @@ def validate_project(
     }
     for name in sorted(RETIRED_DISTRIBUTIONS.intersection(locked_names)):
         errors.append(f"{label}: retired package remains locked: {name}")
+    errors.extend(validate_distribution_project(label, project, lock, releases))
     for name in sorted(expected):
         matching = [
             package
@@ -200,6 +207,8 @@ def validate_project(
             if isinstance(package, dict)
             and normalize_name(str(package.get("name", ""))) == name
         ]
+        if name == "torch" and is_cpu_project(project):
+            matching = [p for p in matching if p.get("version") == releases[name]["selected_version"]]
         if len(matching) != 1:
             errors.append(
                 f"{label}: expected one locked {name} package, found {len(matching)}"
@@ -207,6 +216,8 @@ def validate_project(
             continue
         package = matching[0]
         release = releases[name]
+        if package.get("source") != PYPI_SOURCE:
+            errors.append(f"{label}: {name} locked source is not the audited PyPI registry")
         if package.get("version") != release["selected_version"]:
             errors.append(
                 f"{label}: {name} lock version {package.get('version')!r} is not "
@@ -275,6 +286,8 @@ def validate_repository(audit: dict[str, object]) -> list[str]:
             )
         )
         owner = next(owner for owner in audit["projects"] if owner["name"] == name)
+        if is_cpu_project(project) and pyproject_path != releases["torch"]["verification_cpu"]["pyproject"]:
+            errors.append(f"{name}: CPU project path differs from audited owner")
         errors.extend(validate_requirements(name, project, lock, releases, owner["requirements"]))
     errors.extend(validate_service_images(audit))
     return errors
@@ -428,9 +441,10 @@ def main() -> int:
         from test_dependency_versions import (
             DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests,
         )
+        from test_dependency_distribution import CpuDistributionTests
         suite = unittest.TestSuite(
             unittest.defaultTestLoader.loadTestsFromTestCase(case)
-            for case in (DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests)
+            for case in (DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests, CpuDistributionTests)
         )
         result = unittest.TextTestRunner().run(suite)
         if not result.wasSuccessful():

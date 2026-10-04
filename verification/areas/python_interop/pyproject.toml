@@ -34,3 +34,8 @@ dependencies = [
 [tool.uv]
 package = false
 required-version = "==0.12.10"
+
+# The blocking verification lane exercises real CPU tensors. Other platforms
+# retain their existing PyPI distribution; no runtime source fallback is used.
+[tool.uv.sources]
+torch = [{ url = "https://download.pytorch.org/whl/cpu/torch-2.14.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }]

@@ -4897,7 +4897,35 @@
           "yanked": false,
           "requires_python": ">=3.10"
         }
-      ]
+      ],
+      "verification_cpu": {
+        "project": "sifr-python-interop-verification",
+        "pyproject": "verification/areas/python_interop/pyproject.toml",
+        "marker": "sys_platform == 'linux' and platform_machine == 'x86_64'",
+        "distribution_version": "2.14.0+cpu",
+        "upstream_version": "2.14.0",
+        "url": "https://download.pytorch.org/whl/cpu/torch-2.14.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl",
+        "sha256": "f152f41dc5dc462afe0de780e451ebb47ea8b4451f8f919f9537aa8e2cbe1d7e",
+        "size_bytes": 196260719,
+        "index_url": "https://download.pytorch.org/whl/cpu/torch/",
+        "index_sha256": "7983a849e60434c476de7717043e55258011554e1f995b9cba0fdf8637e58660",
+        "observed_at": "2026-10-04",
+        "metadata_url": "https://download.pytorch.org/whl/cpu/torch-2.14.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl.metadata",
+        "metadata_sha256": "6e6cbfdc8067a91fe9fa5068191574caef6d04c743da805707b849396a8834f6",
+        "requires_python": ">=3.10",
+        "requires_dist": [
+          "filelock",
+          "typing-extensions>=4.10.0",
+          "setuptools>=77.0.3",
+          "sympy>=1.13.3",
+          "networkx>=2.5.1",
+          "jinja2",
+          "fsspec>=0.8.5",
+          "optree>=0.13.0; extra == \"optree\"",
+          "opt-einsum>=3.3; extra == \"opt-einsum\"",
+          "pyyaml; extra == \"pyyaml\""
+        ]
+      }
     }
   ],
   "generated_by": "official PyPI metadata and discovered maintained manifests/locks",

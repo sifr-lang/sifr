@@ -1,5 +1,70 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## M2 explicit CPU Python verification distribution — prospective bounded correction
+
+The exact `1fc27615c0263ecee27ff0372d9b5e1bf9e85bef` create-PR attempt
+failed in journal `963628c4-4b15-47ea-b0b8-f38eeda13101`, entries 0112–0116,
+after all selected Rust preparation completed. Arrow example preparation invoked
+the full area's locked Python project and acquired unrelated CUDA dependencies.
+Its unchanged two-GiB growth allowance was exhausted: 4,386,484,224 bytes free
+against a 4,416,139,264-byte monitored floor. Preserve the failed state and cache;
+no whole-gate or performance result follows from this preparation.
+
+Own sparse `/workspace/sifr-validation-python-cpu-distribution` on
+`codex/validation-python-cpu-distribution-20261004`, based on that frozen commit.
+Select only the Python verification area's Linux x86_64 GIL CPython 3.14.7
+Torch distribution from the explicit official CPU artifact, `2.14.0+cpu`.
+Retain all 26 default requirements, existing PyPI selection on other platforms
+and in the DLPack demo, and every suite, fixture marker and assertion.
+The real selected Torch producers use CPU tensors; CUDA stream cases exercise
+synthetic protocol metadata. This does not qualify real GPU interoperability.
+
+The official CPU index authenticates the wheel SHA-256
+`f152f41dc5dc462afe0de780e451ebb47ea8b4451f8f919f9537aa8e2cbe1d7e`.
+The canonical artifact host responds to HEAD with 196,260,719 bytes. Its 37,280-byte
+PEP 658 metadata matches the official index hash and declares no CUDA/Triton
+runtime dependency. Use one explicit canonical URL with no mirror fallback.
+Record upstream release and installed distribution version separately; preserve
+exact source/hash/version/owner/platform checks and unrelated dependency audits.
+The original advertised-host HTTP 403 observations remain retained outside Git.
+
+Named intermediate checks: exact CPU source, lock closure and runtime version
+controls with wrong-owner/platform/marker/hash/source/version negatives; existing
+dependency audit controls, preparation/environment controls, selection/fixture
+invariance, sparse file-size and diff checks; exact committed read-only Opus
+review. Source/lock resolution may read bounded metadata but installs no wheels.
+No runner/profile/resource schedule changes or dependency-group mechanism belongs
+to this item. Full create-PR and final cloud/performance/native obligations remain
+with final integration. Cold environment growth still needs actual monitored
+validation; no smaller storage promise or reserve reduction is made.
+
+
+Focused dependency validation passes 37 controls (13 new CPU-distribution
+controls) plus 42 existing mutation checks. Existing preparation and isolated
+area-environment controls pass; all profile, fixture and demo bytes are unchanged.
+The sparse source-size guard passes on 259 files and whitespace checks pass.
+Initial URL-fragment rejection, direct-URL requirement parsing failure and missing
+sparse shared-helper import failures remain recorded outside Git; the corrections
+retain exact source/hash validation and materialize the unchanged shared helper.
+
+uv 0.12.10 rejects hash fragments in `tool.uv.sources`. The finite new lock
+records were constructed from authenticated CPU metadata and preserved existing
+records, then checked by actual `uv lock --check --offline`, the compiler's
+canonical consistency authority. Actual `uv tree --locked --offline` confirms
+CPU/no-CUDA selection only on Linux x86_64 and retained PyPI selections for
+Darwin ARM64, Windows AMD64 and Linux ARM64. This is coherence-checked lock
+construction, not a claim of fresh online resolution or verified downloaded
+wheel contents. The artifact hash will be enforced during actual locked
+acquisition. No wheel was downloaded or installed in this item.
+
+External evidence is `/workspace/validation-work/evidence/python-cpu-contract-20261004/`.
+Exact-candidate scoped review and full acceptance remain pending. The coordinator's
+prospective capacity snapshot records 4,595,879,936 disk bytes free against
+4.625-GiB source, six-GiB generated and eight-GiB SQL stage admissions. The
+remaining compressed CPU-environment wheels total 246,172,977 bytes; expanded
+installation growth is unmeasured. These are an outstanding capacity blocker,
+not a cold-fit claim or permission to lower reserves.
+
 ## M2 generated preparation allocation closure — prospective bounded correction
 
 The exact `90b2b3f57664fead12c7abfb1c78f98ccc98f692` create-pr attempt ended
