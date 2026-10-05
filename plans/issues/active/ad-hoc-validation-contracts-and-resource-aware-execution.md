@@ -1,6 +1,29 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-05 after M3 review
+## Current acceptance checkpoint — 2026-10-05 after CI candidate correction
+
+CI correction `b100b55ebd44c21b06b253ca790b37792c6bdd17` received scoped
+Opus **SATISFIED** and is integrated unchanged. Actual hosted run
+[37270312121](https://github.com/sifr-lang/sifr/actions/runs/37270312121)
+proved the webhook `pull_request.merge_commit_sha` lagged behind its new PR head,
+while the same event's reusable workflow resolved the correct merge commit.
+All nine checkouts and selector candidate input now use the admitted event SHA
+(or explicit merge-group head). Both workflow validators reject the stale
+expression. Exact ordered parent checks, producer receipts and publisher trust
+remain unchanged. Eight focused command groups passed, including the full
+4,468-file guard; review is
+`/workspace/validation-work/evidence/sifr-claude.g2HPaB/response.md`.
+A fresh hosted selection must still demonstrate the correction operationally.
+
+The superseded `df8f81687` local gate was deliberately cancelled through its
+canonical process handler at 06:08:48 UTC after this confirmed defect required
+a successor. It closed exit 130, cause `cancelled`, during source preparation;
+owned descendants were reaped. Logs and partial evidence remain at
+`/workspace/validation-work/evidence/acceptance-df8f81687-20261005-v1/`.
+It is not a passing gate. The next candidate needs actual acceptance and a new
+explicit baseline applicability record; its original baseline stays unchanged.
+The two v5 archives have been rehydrated to verified physical originals to
+recover memory. The nine v8 archives remain in RAM custody.
 
 M3 implementation `a092146172e97cecc8a2b5e6084f0db8f6893474` received
 scoped Opus **SATISFIED** with no blockers and is integrated unchanged.
