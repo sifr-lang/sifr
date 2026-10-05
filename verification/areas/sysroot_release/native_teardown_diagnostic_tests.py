@@ -139,6 +139,35 @@ class Controls(unittest.TestCase):
         report['status'] = 'observed'
         with self.assertRaises(ValueError): self.check(report)
 
+    def test_complete_receipt_binds_ready_leader_kind_and_actual_term(self):
+        ordinary, _ = self.simulated_case()
+        multi, _ = self.simulated_case(kind='multi-child')
+        original = self.report(ordinary)
+        multi['admission'] = copy.deepcopy(ordinary['admission'])
+        original['cases'].append(multi)
+        original['status'] = 'observed'
+        self.assertEqual(self.check(original)['status'], 'observed')
+        for mutate in (lambda c: c.update(leader=900099, session=900099),
+                       lambda c: c['ready'].update(leader=True),
+                       lambda c: c['ready'].update(kind='multi-child')):
+            changed = copy.deepcopy(original); mutate(changed['cases'][0])
+            with self.subTest(mutation=mutate), self.assertRaisesRegex(ValueError, 'ready fixture identity differs'):
+                self.check(changed)
+        forged = copy.deepcopy(original)
+        case = forged['cases'][0]
+        case.update(leader=900099, session=900099)
+        for event in case['events']:
+            if event['kind'] == 'signal':
+                event.update(attempted=False, reason='group absent')
+        with self.assertRaisesRegex(ValueError, 'ready fixture identity differs'):
+            self.check(forged)
+        omitted = copy.deepcopy(original)
+        term = next(event for event in omitted['cases'][0]['events']
+                    if event['kind'] == 'signal' and event['label'] == 'term')
+        term.update(attempted=False, reason='group absent')
+        with self.assertRaisesRegex(ValueError, 'signal authorization differs'):
+            self.check(omitted)
+
     def test_foreign_member_never_receives_group_kill(self):
         case, calls = self.simulated_case(foreign=True)
         self.assertEqual([args.args[1] for args in calls], [signal.SIGTERM])

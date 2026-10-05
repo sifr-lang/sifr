@@ -193,7 +193,11 @@ def check_case(case, report, evidence):
             rows = process.parse((evidence/name).read_text())
             labels.append(event['label'])
             if event['label'] == 'before-term':
-                identities = process.owned(rows, case['ready'], report['driver']['pid'],
+                ready = case['ready']
+                if (type(ready.get('leader')) is not int or ready['leader'] != leader
+                        or ready.get('kind') != case['kind']):
+                    raise ValueError('ready fixture identity differs from case')
+                identities = process.owned(rows, ready, report['driver']['pid'],
                     report['driver']['uid'], report['driver']['ruid'])
                 if identities != case['identities'] or case['session'] != leader:
                     raise ValueError('fixture ownership identity differs')

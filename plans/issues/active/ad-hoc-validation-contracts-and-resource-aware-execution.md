@@ -681,6 +681,32 @@ Sparse file guard passes for 301 present files; no Darwin execution or complete
 ProcessTests pass is claimed. Exact scoped root-coordinated review and a native
 microprobe observation remain pending. This branch is not for the delivery PR.
 
+
+## M5 microprobe retained readiness binding — scoped review correction
+
+The exact initial Opus review of 11009f730b6e835d3d2a883962c29edb47526b28
+returned NOT SATISFIED for one blocker: the retained checker validated the ready
+record's owned group without binding its leader and fixture kind to the case
+whose signals and cleanup it replayed. Preserve that commit/ref and review as
+historical. Correct only this independent-check omission: require a strict int
+(not bool) ready leader equal to the case leader, and identical fixture kind,
+before ownership replay. Add complete-fixture contradiction controls and verify
+that an observed result cannot omit the actual owned TERM. The five nonblocking
+review follow-ups remain separate; no workflow, fixture, resource, shared
+executor or runtime-workload behavior change belongs in this correction.
+
+Acceptance is the tiny focused suite, file/whitespace guard, exact clean commit
+and external handoff for root's second review against this blocker. No push,
+review, dispatch, installation or build is authorized here. Existing failed and
+deferred ProcessTests and the lack of native execution remain explicit.
+
+The correction now binds the strict ready leader and fixture kind before owned
+identity replay. Fifteen focused controls pass, including a complete observed
+receipt, forged absent leader/no-signal mutations, contradictory readiness and
+an omitted actual TERM. Sparse file guard passes for 301 files and whitespace
+checks pass. The exact successor awaits root's second scoped review; no native
+observation, review acceptance, complete ProcessTests pass or delivery is claimed.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
