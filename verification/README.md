@@ -111,10 +111,15 @@ uv run --project verification --locked python -m sifr_verify changes plan --base
 uv run --project verification --locked python -m sifr_verify changes run --base <base-sha> --head <candidate-sha>
 ```
 
+On a shared Linux VM, append `--compact-resources` to `changes run`. This
+forwards only the existing resource mode to the canonical selected profile;
+`changes plan` remains selection-only. No deadline, reserve or profile override
+is accepted. The optional core command need not precede a change-complete run.
+
 The selector retains the core only for a trusted identical-tree diff or content
 edits to its finite reviewed prose set. Shared inputs, omitted-specialist
 consumers, unknown paths, incomplete diffs, additions/deletions and mode changes
-select complete `merge`. A direct `create-pr` invocation requests feedback;
+select complete `merge`. An optional direct `create-pr` invocation requests feedback;
 it does not certify that omitted SQL qualification is irrelevant. CI independently
 recomputes this same profile from the trusted base and actual merge candidate.
 All native SQL platform CI jobs remain required. Warm/cold end-to-end feedback

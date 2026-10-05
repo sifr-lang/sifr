@@ -61,7 +61,7 @@ not part of the current stable readiness surface.
 
 ## Create-PR Profile
 
-`scripts/run_all_tests.sh --profile create-pr` requests the registered feedback
+The optional `scripts/run_all_tests.sh --profile create-pr` requests the registered feedback
 core. It qualifies its selected behavior, not omitted specialist work or an
 unmeasured latency claim:
 
@@ -81,7 +81,9 @@ The complete core is 96 adapter cases. All existing non-SQL selections and
 mandatory guards/toolchain checks remain. The other 44 SQL cases, including
 clean-build qualification, remain in merge/nightly/release and inherited cloud.
 For change-complete PR qualification, use `sifr_verify changes run --base SHA
---head SHA` on the exact clean candidate. Only the finite reviewed prose closure
+--head SHA` on the exact clean candidate (append `--compact-resources` on a
+shared Linux VM). Do not duplicate optional core feedback before that gate.
+Only the finite reviewed prose closure
 can select this core; shared, specialist, unknown or non-content changes and
 unavailable diffs select full merge. Direct core invocation does not assert that
 specialists are irrelevant. Required native platform CI jobs remain unchanged.

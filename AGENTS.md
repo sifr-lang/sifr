@@ -40,11 +40,15 @@ affected checks. Do not run the whole table for every edit.
 | Planning, prose, or review records only | `git diff --check`; verify changed local links, scope, and status. No compiler build or broad gate. |
 | Rust/compiler code | Focused affected crate/test, e.g. `cargo test -p <crate> <test>`; `cargo fmt --check`; `python3 scripts/check_file_size_guardrails.py`; affected area/regression checks. |
 | Verification runner or policy | Affected self-tests and area/workflow contracts; file-size guardrail. If profile selection changes, run `uv run --project verification --locked python -m sifr_verify profiles check` and compare emitted plans. |
-| Implementation PR feedback | `scripts/run_all_tests.sh --profile create-pr` (registered core; does not qualify omitted specialists). |
+| Optional implementation PR feedback | `scripts/run_all_tests.sh --profile create-pr` (registered core; does not qualify omitted specialists). |
 | Change-complete PR candidate | On the exact clean committed candidate: `uv run --project verification --locked python -m sifr_verify changes run --base <base-sha> --head <candidate-sha>`; uncertain or relevant inputs select full merge. |
 | Final implementation merge candidate | `scripts/run_all_tests.sh --profile merge` once; correct failures and rerun affected checks after relevant changes. |
 | Final implementation merge candidate on a shared Linux VM | `scripts/run_all_tests.sh --profile cloud --require-performance --compact-resources` once, with `SIFR_CLOUD_PERFORMANCE_RECEIPT` pointing to the complete candidate-bound paired receipt; same merge correctness selection. |
 | Actual release or explicit live integration | Required `release`/artifact qualification or `python-interop-live` contract. |
+
+On a shared Linux VM, append `--compact-resources` to `changes run` to use the
+existing compact allocation/reserve policy. The optional core command is for
+intermediate feedback; do not run it again before a change-complete gate.
 
 Use the exact tool versions in `verification/pyproject.toml` and
 `rust-toolchain.toml`. CI mirrors local validation; do not substitute waiting for

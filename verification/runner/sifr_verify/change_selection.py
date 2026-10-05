@@ -110,7 +110,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("command", choices=("plan", "run"))
     parser.add_argument("--base", required=True)
     parser.add_argument("--head", required=True)
+    parser.add_argument("--compact-resources", action="store_true",
+                        help="Run using the canonical compact resource policy (run only).")
     args = parser.parse_args(argv)
+    if args.command == "plan" and args.compact_resources:
+        parser.error("--compact-resources applies only to changes run")
     result = selection(REPO_ROOT, args.base, args.head)
     print(json.dumps(result, indent=2, sort_keys=True), flush=True)
     if args.command == "plan":
@@ -121,4 +125,4 @@ def main(argv: list[str]) -> int:
             or git(REPO_ROOT, "status", "--porcelain", "--untracked-files=all")):
         raise SelectionError("changes run requires the exact clean candidate checkout")
     from .profile_runner import run_profile
-    return run_profile(result["profile"], [])
+    return run_profile(result["profile"], ["--compact-resources"] if args.compact_resources else [])

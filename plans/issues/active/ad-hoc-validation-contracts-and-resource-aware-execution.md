@@ -3438,3 +3438,13 @@ preparation implementation or workflow job selection was changed. The publisher
 control rejects a passing core job set when its trusted selector requires merge.
 `git diff --check` passes on this isolated work; tests, profile-plan comparison,
 full guard and scoped review remain unexecuted while gate 65897 is active.
+
+
+Before handoff, root requested an additive bounded command correction: mark the
+standalone feedback command optional, and expose only `--compact-resources` on
+`changes run` so the minimal shared-Linux recipe preserves the existing resource
+route. `changes plan` rejects that execution-only option. The canonical runner
+receives exactly the selected profile and this one optional flag; no arbitrary
+argument forwarding or numerical policy change is introduced. Dispatch and
+rejection controls are written, not executed, during the active gate. This
+follow-up does not alter the registered 96-case selection or any other profile.

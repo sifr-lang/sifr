@@ -54,6 +54,28 @@ class SelectionTests(unittest.TestCase):
             self.assertEqual(classify([path])["profile"], "create-pr")
             self.assertEqual(classify([path], unsafe_changes=(path,))["profile"], "merge")
 
+    def test_run_dispatch_forwards_only_explicit_resource_mode(self):
+        head, base = "a" * 40, "b" * 40
+        for profile in ("create-pr", "merge"):
+            for options in ([], ["--compact-resources"]):
+                with self.subTest(profile=profile, options=options), \
+                        patch.object(change_selection, "selection", return_value={"profile": profile}), \
+                        patch.object(change_selection, "git", side_effect=[head.encode(), b""]), \
+                        patch("sifr_verify.profile_runner.run_profile", return_value=7) as runner, \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(change_selection.main(
+                        ["run", "--base", base, "--head", head, *options]), 7)
+                    runner.assert_called_once_with(profile, options)
+        for extra in (["--profile", "create-pr"], ["--deadline", "100"], ["--", "--no-fail-fast"]):
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit), \
+                    patch("sifr_verify.profile_runner.run_profile") as runner:
+                change_selection.main(["run", "--base", base, "--head", head, *extra])
+            runner.assert_not_called()
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit), \
+                patch.object(change_selection, "selection") as select:
+            change_selection.main(["plan", "--base", base, "--head", head, "--compact-resources"])
+        select.assert_not_called()
+
     def test_git_regular_content_only_and_mode_or_inventory_changes(self):
         with tempfile.TemporaryDirectory() as raw:
             repo = Path(raw)
