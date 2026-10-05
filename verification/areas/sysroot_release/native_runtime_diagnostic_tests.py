@@ -142,6 +142,65 @@ class ReceiptTests(unittest.TestCase):
         self.assertEqual(selected['path'], str(Path(sys.executable).absolute()))
         self.assertEqual(selected['sha256'], diagnostic.digest(Path(sys.executable).resolve()))
 
+    def test_rustup_symlink_keeps_argv0_multicall_mode(self):
+        target = self.output/'rustup-init'
+        target.write_text('#!/bin/sh\ncase "$0" in */rustup) ;; *) printf "wrong multicall mode\\n" >&2; exit 17;; esac\n'
+                          '[ "$1" = toolchain ] || exit 18\nprintf "selected rustup mode\\n"\n')
+        target.chmod(0o700)
+        invocation = self.output/'rustup'; invocation.symlink_to(target)
+        with patch.object(diagnostic.shutil, 'which', return_value=str(invocation)):
+            identity = diagnostic.rustup_identity()
+        self.assertEqual(identity['path'], str(invocation))
+        self.assertEqual(identity['resolved_path'], str(target))
+        self.assertEqual(identity['sha256'], diagnostic.digest(target))
+        command = diagnostic.command_plan(self.output, identity['path'], sys.executable)['toolchain']
+        good = subprocess.run(command, capture_output=True, timeout=5)
+        wrong = subprocess.run([identity['resolved_path'], *command[1:]], capture_output=True, timeout=5)
+        self.assertEqual((good.returncode, good.stdout), (0, b'selected rustup mode\n'))
+        self.assertEqual(wrong.returncode, 17)
+        self.assertIn(b'wrong multicall mode', wrong.stderr)
+
+    def test_live_identity_diagnostics_name_python_field_and_tool_hash(self):
+        tool = self.output/'selected-tool'; tool.write_bytes(b'original fixture bytes')
+        tools = {'python': diagnostic.python_identity(),
+                 'rustup': {'path': str(tool), 'resolved_path': str(tool), 'sha256': diagnostic.digest(tool)}}
+        diagnostic.check_live_tool_identities(tools)
+        tools['python']['prefix'] = '/different-prefix'
+        tool.write_bytes(b'changed fixture bytes')
+        with self.assertRaisesRegex(ValueError, 'live diagnostic tool identities differ: ') as failure:
+            diagnostic.check_live_tool_identities(tools)
+        detail = json.loads(str(failure.exception).split(': ', 1)[1])
+        self.assertEqual(detail['python_identity']['prefix'],
+                         {'expected': '/different-prefix', 'actual': sys.prefix})
+        self.assertEqual(detail['rustup']['sha256']['actual'], diagnostic.digest(tool))
+        self.assertEqual(detail['rustup']['sha256']['expected'], tools['rustup']['sha256'])
+
+    def test_live_identity_rejects_resolution_change_and_unavailable_tool(self):
+        first = self.output/'first'; first.write_bytes(b'same bytes')
+        second = self.output/'second'; second.write_bytes(b'same bytes')
+        selected = self.output/'selected'; selected.symlink_to(first)
+        tools = {'python': diagnostic.python_identity(), 'rustup': {
+            'path': str(selected), 'resolved_path': str(first), 'sha256': diagnostic.digest(first)}}
+        selected.unlink(); selected.symlink_to(second)
+        with self.assertRaisesRegex(ValueError, 'resolved_path'):
+            diagnostic.check_live_tool_identities(tools)
+        selected.unlink()
+        with self.assertRaisesRegex(ValueError, 'unavailable'):
+            diagnostic.check_live_tool_identities(tools)
+
+    def test_live_identity_diagnostic_is_bounded_without_accepting_mismatch(self):
+        tools = {'python': diagnostic.python_identity()}
+        tools['python']['prefix'] = 'x'*70000
+        with self.assertRaisesRegex(ValueError, 'exceed 65536 bytes') as failure:
+            diagnostic.check_live_tool_identities(tools)
+        self.assertLess(len(str(failure.exception)), 1024)
+
+    def test_unavailable_live_interpreter_is_named_and_rejected(self):
+        tools = {'python': diagnostic.python_identity()}
+        with patch.object(diagnostic, 'python_identity', side_effect=FileNotFoundError(2, 'fixture missing')):
+            with self.assertRaisesRegex(ValueError, 'python_identity.*unavailable'):
+                diagnostic.check_live_tool_identities(tools)
+
     def test_inherited_absolute_deadline_is_preserved(self):
         limit = time.monotonic()+2
         env, actual = diagnostic.deadline_environment({'SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC': repr(limit)}, diagnostic.DEADLINE)

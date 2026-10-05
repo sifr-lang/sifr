@@ -78,6 +78,53 @@ def python_identity():
             'prefix': sys.prefix, 'base_prefix': sys.base_prefix}
 
 
+def rustup_identity():
+    selected = shutil.which('rustup')
+    if not selected:
+        raise ValueError('rustup unavailable')
+    # Homebrew's rustup is a multicall symlink to rustup-init. argv[0] chooses
+    # its mode, so byte resolution must never replace the invocation path.
+    invocation = Path(selected).absolute()
+    binary = invocation.resolve(strict=True)
+    return {'path': str(invocation), 'resolved_path': str(binary), 'sha256': digest(binary)}
+
+
+def check_live_tool_identities(tools):
+    """Keep strict identity checks and report the actual differing fields."""
+    differences = {}
+    try:
+        current_python = python_identity()
+    except OSError as error:
+        differences['python_identity'] = {'unavailable': {'path': str(Path(sys.executable).absolute()),
+            'error': type(error).__name__, 'errno': error.errno}}
+    else:
+        if tools['python'] != current_python:
+            differences['python_identity'] = {field: {'expected': tools['python'].get(field),
+                                                      'actual': current_python.get(field)}
+                for field in sorted(set(tools['python']) | set(current_python))
+                if tools['python'].get(field) != current_python.get(field)
+                or (field in tools['python']) != (field in current_python)}
+    for name, expected in sorted(tools.items()):
+        try:
+            actual = {'sha256': digest(expected['path'])}
+            if 'resolved_path' in expected:
+                actual['resolved_path'] = str(Path(expected['path']).resolve(strict=True))
+            changed = {field: {'expected': expected[field], 'actual': value}
+                       for field, value in actual.items() if expected[field] != value}
+        except OSError as error:
+            changed = {'unavailable': {'path': expected['path'], 'error': type(error).__name__,
+                                       'errno': error.errno}}
+        if changed:
+            differences[name] = changed
+    if differences:
+        detail = json.dumps(differences, sort_keys=True)
+        # Fixed selected-tool identities only: no inherited environment or
+        # arbitrary file contents enter this bounded workflow-log diagnostic.
+        if len(detail.encode()) > 65536:
+            detail = json.dumps({'detail_error': 'tool identity differences exceed 65536 bytes'})
+        raise ValueError('live diagnostic tool identities differ: '+detail)
+
+
 def worker(mode, output):
     """No child processes here: the outer executor owns each workload session."""
     policy = json.loads(POLICY.read_text())
@@ -187,10 +234,8 @@ def observe(root, output):
     asset = select(policy, TARGET, version(root))
     interpreter = python_identity()
     python = interpreter['path']
-    selected = shutil.which('rustup')
-    if not selected:
-        raise ValueError('rustup unavailable')
-    rustup = str(Path(selected).resolve(strict=True))
+    rustup_tool = rustup_identity()
+    rustup = rustup_tool['path']
     env, proof = storage.prepare(output, os.environ)
     # Explicit actual binaries avoid implicit rustup defaults in generated builds.
     toolbin = output/'rustup-home/toolchains'/f'{TOOLCHAIN}-{TARGET}'/'bin'
@@ -205,7 +250,7 @@ def observe(root, output):
               'original_output': str(output), 'source_root': str(root), 'storage': proof,
               'inherited_disk_floor_bytes': int(env['SIFR_VERIFY_DISK_FLOOR_BYTES']),
               'tools': {'python': interpreter,
-                        'rustup': {'path': rustup, 'sha256': digest(rustup)}},
+                        'rustup': rustup_tool},
               'commands': [], 'started': datetime.now(timezone.utc).isoformat()}
     report['tools'].update({name: {'path': path, 'sha256': digest(path)} for name, path in
                            (('ps', '/bin/ps'), ('vm_stat', '/usr/bin/vm_stat'),
@@ -272,8 +317,7 @@ def observe(root, output):
                     raise ValueError('diagnostic program output differs')
         if source_identity(root) != identity:
             raise ValueError('diagnostic source changed')
-        if any(digest(tool['path']) != tool['sha256'] for tool in report['tools'].values()):
-            raise ValueError('diagnostic selected tool bytes changed')
+        check_live_tool_identities(report['tools'])
         storage.check(proof, output, env)
         report['status'] = 'observed'
     except Exception as error:
@@ -418,9 +462,7 @@ def check(evidence, root=ROOT):
     if evidence.resolve() != output/'evidence':
         raise ValueError('live diagnostic checker requires original paths')
     storage.check(report['storage'], output, storage.environment(output, os.environ))
-    if report['tools']['python'] != python_identity() or any(
-            digest(tool['path']) != tool['sha256'] for tool in report['tools'].values()):
-        raise ValueError('live diagnostic tool identities differ')
+    check_live_tool_identities(report['tools'])
     return report
 
 

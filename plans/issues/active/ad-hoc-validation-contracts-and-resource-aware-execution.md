@@ -603,6 +603,42 @@ whitespace check pass. No Darwin execution, formal review or complete affected
 ProcessTests pass is claimed; the earlier deferred cases and timing failure
 remain retained. This operational branch is awaiting root coordination.
 
+## M5 diagnostic rustup invocation correction — prospective successor scope
+
+Reviewed operational candidate `21a286748ef7ff6d15c735ec132a8b3d912781fc`
+was dispatched once in run `37247668853`, job `111568679326`. Fresh admission
+passed: 3,258,253,312 bytes available against 2,952,790,016 required. The first
+toolchain command then failed because resolving the selected `rustup` symlink
+invoked Homebrew's `rustup-init` multicall mode, which rejected `toolchain`.
+This is a tool invocation failure, not an observed memory refusal or native
+qualification. The actual failed state and original review remain historical.
+
+The same run's live checker reported only `live diagnostic tool identities
+differ`; retained evidence has not yet established which identity differed.
+Do not claim that correcting rustup also resolves that separate observation.
+
+Preserve the exact 21a source checkout and ref for historical retained checking.
+In a separate experimental successor, preserve rustup's invocation path while
+recording its resolved byte identity separately; add a real symlink/argv0-mode
+control. Inspect retained identity evidence and add bounded precise live-check
+mismatch diagnostics if the cause remains unknown, without relaxing checks.
+Keep workload, allowances, reserves and both workflow bytes unchanged.
+
+Acceptance is limited to tiny affected Python controls, bounded file/whitespace
+checks, exact committed source custody and a handoff for root review. Existing
+deferred and failing ProcessTests remain unresolved. No Cargo, UV execution,
+installation, compiler, review, push, dispatch or cleanup is authorized here.
+A further changed-source attempt requires exact scoped root-coordinated review.
+
+Successor implementation preserves the selected rustup invocation and records
+resolved bytes separately. The retained live-check evidence cannot identify the
+original differing field; strict checks now report bounded field/tool-specific
+differences. All 15 focused diagnostic controls pass using the existing canonical
+Python, including real symlink invocation and negative identity controls. The
+sparse file-size guard passes for 297 present files. Both workflow files and
+resource/observer/executor inputs remain unchanged from 21a. No native execution
+or complete affected ProcessTests pass is claimed for this successor.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
