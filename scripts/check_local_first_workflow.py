@@ -16,7 +16,8 @@ from check_uv_toolchain import parse_workflows
 
 WORKFLOW = ".github/workflows/local-first-validation.yml"
 SELECTOR = "${{ fromJSON(needs.validation-selection.outputs.profiles) }}"
-CANDIDATE = "${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}"
+# PR webhook merge_commit_sha may describe the previous head; use the admitted event revision.
+CANDIDATE = "${{ github.event.merge_group.head_sha || github.sha }}"
 
 
 def validate(document: dict) -> list[str]:
@@ -240,6 +241,20 @@ def main() -> None:
     wrong_checkout = copy.deepcopy(document)
     wrong_checkout["jobs"]["local-first-profiles"]["steps"][1]["with"]["ref"] = "main"
     assert any("actual candidate" in error for error in validate(wrong_checkout))
+    stale_expression = (
+        "${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}"
+    )
+    for name, job in document["jobs"].items():
+        for index, step in enumerate(job.get("steps", [])):
+            if step.get("uses", "").startswith("actions/checkout@"):
+                stale_checkout = copy.deepcopy(document)
+                stale_checkout["jobs"][name]["steps"][index]["with"]["ref"] = stale_expression
+                assert any("actual candidate" in error for error in validate(stale_checkout)), name
+    stale_selection = copy.deepcopy(document)
+    select = next(step for step in stale_selection["jobs"]["validation-selection"]["steps"]
+                  if step.get("id") == "select")
+    select["env"]["CANDIDATE_SHA"] = stale_expression
+    assert any("event base, head" in error for error in validate(stale_selection))
     skipped = copy.deepcopy(document)
     for step in skipped["jobs"]["local-first-profiles"]["steps"]:
         if step.get("name") == "Run local-first profile":

@@ -140,7 +140,7 @@ class NonSourceCheckout:
 NON_SOURCE_CHECKOUTS = (
     NonSourceCheckout(
         "local-first-validation.yml", "validation-selection", None,
-        {"ref": "${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}",
+        {"ref": "${{ github.event.merge_group.head_sha || github.sha }}",
          "fetch-depth": 0, "persist-credentials": False},
         "candidate-bound validation selection policy without compilation",
     ),
@@ -431,6 +431,12 @@ def run_workflow_self_tests() -> None:
             return json.dumps({"jobs": {job: {"steps": [candidate]}}})
 
         check(owner.purpose, document(step), accepted=True, at=at)
+        if owner.workflow == "local-first-validation.yml":
+            check("stale PR webhook merge cannot select candidate policy", document({
+                **step, "with": {**owner.inputs, "ref": (
+                    "${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}"
+                )},
+            }), at=at)
         if owner.workflow == "release-publication.yml" and not owner.condition:
             check("governance cannot select old source policy", document({
                 **step, "with": {**owner.inputs, "ref": "${{ inputs.source_commit }}"},

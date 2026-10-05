@@ -27,7 +27,7 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - name: Verify canonical uv pins and platform checksums
         run: |
           python3 scripts/check_local_first_workflow.py
@@ -45,7 +45,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
       - name: Rustfmt check (advisory)
@@ -69,7 +69,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
         with:
           version-file: verification/pyproject.toml
@@ -81,7 +81,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          CANDIDATE_SHA: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          CANDIDATE_SHA: ${{ github.event.merge_group.head_sha || github.sha }}
         run: uv run --project verification --locked python scripts/select_ci_validation.py
       - name: Bind the actual checked-out candidate to the producer attempt
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -118,7 +118,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         if: needs.validation-selection.outputs.reuse != 'true'
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
@@ -151,7 +151,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -188,7 +188,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         if: needs.validation-selection.outputs.reuse != 'true'
         with:
@@ -264,7 +264,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: wasm32-wasip2
@@ -283,7 +283,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -307,7 +307,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head_sha || github.sha }}
+          ref: ${{ github.event.merge_group.head_sha || github.sha }}
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
         with:
