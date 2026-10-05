@@ -115,11 +115,14 @@ def compare_hashes(first: dict[str, str], next_build: dict[str, str], mode: str)
         raise BuildError(f"{mode} SQL executable bytes differ: {', '.join(differing)}")
 
 
-def native_settings(first: Path, second: Path) -> dict[str, str]:
+def native_settings(first: Path, second: Path, target: str) -> dict[str, str]:
     """Hold both path maps constant, including the product-identity inputs."""
     encoded = os.environ.get("CARGO_ENCODED_RUSTFLAGS")
     flags = encoded.split("\x1f") if encoded else shlex.split(os.environ.get("RUSTFLAGS", ""))
     flags.extend(f"--remap-path-prefix={path}=/sifr-sql-build" for path in (first, second))
+    if target.endswith("-windows-msvc"):
+        # link.exe otherwise embeds the link time in each independently linked PE.
+        flags.append("-Clink-arg=/Brepro")
     return {"CARGO_ENCODED_RUSTFLAGS": "\x1f".join(flags), "CARGO_PROFILE_DEV_DEBUG": "0"}
 
 
@@ -146,6 +149,8 @@ def check_cross_target(target: str, target_dir: Path) -> int:
 
 
 def self_test() -> None:
+    from unittest.mock import patch
+
     with tempfile.TemporaryDirectory(prefix="sql-build-self-test-") as root:
         target_dir = Path(root)
         target = "x86_64-unknown-linux-gnu"
@@ -190,6 +195,33 @@ def self_test() -> None:
             [message("sifr-sql-mysql", outside), *messages[1:]], target_dir, target, identities))
         if len(mutations) != 7:
             raise BuildError("SQL build mutation coverage is incomplete")
+        first, second = target_dir / "a", target_dir / "b"
+        maps = [f"--remap-path-prefix={path}=/sifr-sql-build" for path in (first, second)]
+        inherited = ["--cfg", 'sql_qualification="kept value"']
+        environments = (
+            {"CARGO_ENCODED_RUSTFLAGS": "\x1f".join(inherited), "RUSTFLAGS": "ignored"},
+            {"RUSTFLAGS": "--cfg 'sql_qualification=\"kept value\"'"},
+        )
+        for environment in environments:
+            with patch.dict(os.environ, environment, clear=True):
+                for selected_target in (target, "aarch64-apple-darwin", "x86_64-pc-windows-gnu",
+                                        "x86_64-pc-windows-msvc"):
+                    settings = native_settings(first, second, selected_target)
+                    expected_flags = inherited + maps
+                    if selected_target.endswith("-windows-msvc"):
+                        expected_flags += ["-Clink-arg=/Brepro"]
+                    if settings != {"CARGO_ENCODED_RUSTFLAGS": "\x1f".join(expected_flags),
+                                    "CARGO_PROFILE_DEV_DEBUG": "0"}:
+                        raise BuildError(f"SQL native settings differ: {selected_target}")
+                    with patch(f"{__name__}.cargo_run", return_value=[]) as run, patch(
+                        f"{__name__}.selected_executables", return_value=expected
+                    ):
+                        for directory in (first, first, second):
+                            build_native(selected_target, directory, identities, settings)
+                    calls = [call.args for call in run.call_args_list]
+                    if ([call[1] for call in calls] != [first, first, second]
+                            or any(call[2] != settings for call in calls)):
+                        raise BuildError("SQL clean/reused/independent builds changed native settings")
     print(f"SQL build qualification self-test ok: mutations={len(mutations)}")
 
 
@@ -219,7 +251,7 @@ def main() -> int:
         second = Path(candidate_dir) / "b"
         if target == context["host"]:
             identities = cargo_metadata()
-            settings = native_settings(first, second)
+            settings = native_settings(first, second, target)
             print("SQL native qualification: clean A", file=sys.stderr, flush=True)
             clean = build_native(target, first, identities, settings)
             print("SQL native qualification: unchanged rebuild A", file=sys.stderr, flush=True)
