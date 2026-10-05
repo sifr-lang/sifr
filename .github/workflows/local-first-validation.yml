@@ -1,339 +1,145 @@
-name: local-first-validation
+name: efbc-determinism-resource-diagnostic
 
+# Diagnostic-only branch: never merge this workflow into the delivery branch.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-  merge_group:
-    types: [checks_requested]
-  schedule:
-    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  published-predecessor-qualification:
-    if: github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/published-native-qualification.yml
-
-  uv-toolchain-invariant:
-    name: uv-toolchain-invariant
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - name: Verify canonical uv pins and platform checksums
-        run: |
-          python3 scripts/check_local_first_workflow.py
-          python3 scripts/check_validation_main_reuse.py
-          python3 scripts/check_validation_pr_candidate.py
-          python3 scripts/check_uv_toolchain.py --self-test
-          python3 scripts/check_uv_toolchain.py
-
-  lint-and-format:
-    name: lint-and-format
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
-      # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
-      - name: Rustfmt check (advisory)
-        continue-on-error: true
-        run: cargo fmt --check
-      - name: Clippy workspace (advisory)
-        continue-on-error: true
-        run: cargo clippy --workspace -- -D warnings
-
-  validation-selection:
-    permissions:
-      contents: read
-      actions: read
-    name: validation-selection
-    runs-on: ubuntu-24.04
-    outputs:
-      profiles: ${{ steps.select.outputs.profiles }}
-      reuse: ${{ steps.select.outputs.reuse }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
-        with:
-          version-file: verification/pyproject.toml
-          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
-      - name: Select complete candidate-bound coverage
-        id: select
-        env:
-          GH_TOKEN: ${{ github.token }}
-          EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          CANDIDATE_SHA: ${{ github.event.merge_group.head_sha || github.sha }}
-        run: uv run --project verification --locked python scripts/select_ci_validation.py
-      - name: Bind the actual checked-out candidate to the producer attempt
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: validation-candidate-${{ github.run_attempt }}
-          path: target/validation-candidate/candidate.json
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Preserve exact main correctness reuse decision
-        if: github.event_name == 'push'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: validation-main-reuse-${{ github.run_attempt }}
-          path: target/validation-candidate/main-reuse.json
-          if-no-files-found: error
-          retention-days: 7
-
-  local-first-profiles:
-    name: local-first-${{ matrix.profile }}
+  deterministic-report-diagnostic:
+    name: deterministic-report-diagnostic-efbc
     runs-on: ubuntu-24.04
     env:
       CARGO_PROFILE_DEV_DEBUG: '0'
-    needs: validation-selection
-    strategy:
-      fail-fast: true
-      matrix:
-        profile: ${{ fromJSON(needs.validation-selection.outputs.profiles) }}
-    steps:
-      - name: Record exact-commit correctness reuse
-        if: needs.validation-selection.outputs.reuse == 'true'
-        run: echo 'Complete merge validation reused from independently verified exact-commit pre-merge evidence'
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: needs.validation-selection.outputs.reuse != 'true'
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
-        if: needs.validation-selection.outputs.reuse != 'true'
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        if: needs.validation-selection.outputs.reuse != 'true'
-        with:
-          version-file: verification/pyproject.toml
-          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
-      - name: Install canonical Python interpreter
-        if: needs.validation-selection.outputs.reuse != 'true'
-        run: uv python install 3.14.7
-      - name: Provision Linux host-tool confinement
-        if: needs.validation-selection.outputs.reuse != 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes bubblewrap util-linux
-          bwrap --version
-          prlimit --version
-      - name: Run local-first profile
-        if: needs.validation-selection.outputs.reuse != 'true'
-        run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
-
-  smoke-fuzz-property:
-    needs: validation-selection
-    if: needs.validation-selection.outputs.reuse != 'true'
-    name: smoke-fuzz-property
-    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
+          ref: efbc1a31659b8e1c204471d93476b4b897d614a1
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version-file: verification/pyproject.toml
           checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
-      - name: Prepare locked smoke dependencies and compiler graphs
-        run: uv run --project verification --locked python -m sifr_verify.ci_smoke_setup
-      - name: Run smoke fuzz/property checks
-        run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
-
-  compiler-component-targets:
-    needs: validation-selection
-    name: compiler-component-${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: aarch64-apple-darwin
-            runner: macos-15
-          - target: aarch64-unknown-linux-gnu
-            runner: ubuntu-24.04-arm
-          - target: x86_64-pc-windows-msvc
-            runner: windows-2025
-          - target: x86_64-unknown-linux-gnu
-            runner: ubuntu-24.04
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Record exact-commit correctness reuse
-        if: needs.validation-selection.outputs.reuse == 'true'
-        run: echo 'Prior exact-commit producer requires independent publisher verification.'
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: needs.validation-selection.outputs.reuse != 'true'
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
-        if: needs.validation-selection.outputs.reuse != 'true'
-        with:
-          targets: ${{ matrix.target }}
-      - name: Prepare locked target dependencies
-        if: needs.validation-selection.outputs.reuse != 'true'
-        run: cargo fetch --locked
-      - name: Run Windows native executable selection
-        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-pc-windows-msvc'
-        run: cargo test --locked -p sifr_sysroot --lib --target "${{ matrix.target }}" native_context::windows_tests::windows_path_lookup_resolves_exe_and_keeps_explicit_paths_exact -- --exact
-      - name: Run Windows generated Rust formatter and native build script contracts
-        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-pc-windows-msvc'
-        shell: pwsh
+      - name: Verify deterministic report signature with resource observations
+        shell: bash
         run: |
-          $cases = @(
-            "build::rust_formatter::tests::windows_generated_build_script_uses_a_real_empty_rustfmt_config",
-            "build::rust_formatter::tests::generated_rust_uses_the_canonical_toolchain_layout",
-            "build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project"
-          )
-          foreach ($case in $cases) {
-            cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" "$case" -- --exact
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/efbc-determinism-diagnostic"
+          mkdir -p "$evidence"
+          git rev-parse HEAD > "$evidence/checkout.txt"
+          test "$(cat "$evidence/checkout.txt")" = efbc1a31659b8e1c204471d93476b4b897d614a1
+          cat > "$evidence/sample.py" <<'PY'
+          import datetime
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import signal
+          import sys
+          import time
+
+          output = Path(sys.argv[1])
+          stopped = False
+
+          def stop(_signum, _frame):
+              global stopped
+              stopped = True
+
+          signal.signal(signal.SIGTERM, stop)
+          signal.signal(signal.SIGINT, stop)
+
+          def read(path):
+              try:
+                  return path.read_text().strip()
+              except OSError as error:
+                  return {"unavailable": type(error).__name__}
+
+          def snapshot():
+              row = {"utc": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+              memory = read(Path("/proc/meminfo"))
+              fields = {"MemTotal", "MemAvailable", "SwapTotal", "SwapFree"}
+              row["host_memory"] = (
+                  {line.split(":", 1)[0]: line.split(":", 1)[1].strip()
+                   for line in memory.splitlines() if line.split(":", 1)[0] in fields}
+                  if isinstance(memory, str) else memory
+              )
+              row["host_memory_pressure"] = read(Path("/proc/pressure/memory"))
+              row["disk_free_bytes"] = shutil.disk_usage(os.environ["GITHUB_WORKSPACE"]).free
+              row["affinity_cpus"] = len(os.sched_getaffinity(0))
+              row["load_average"] = os.getloadavg()
+              membership = read(Path("/proc/self/cgroup"))
+              row["cgroup_membership"] = membership
+              row["cgroups"] = []
+              if isinstance(membership, str):
+                  unified = [line[3:] for line in membership.splitlines() if line.startswith("0::")]
+                  if len(unified) == 1 and unified[0].startswith("/"):
+                      root = Path("/sys/fs/cgroup").resolve()
+                      current = (root / unified[0].lstrip("/")).resolve()
+                      if current.is_relative_to(root):
+                          while True:
+                              record = {"path": str(current)}
+                              for name in ("memory.max", "memory.current", "memory.peak",
+                                           "memory.events", "memory.pressure", "cpu.max"):
+                                  record[name] = read(current / name)
+                              row["cgroups"].append(record)
+                              if current == root:
+                                  break
+                              current = current.parent
+              processes = []
+              for entry in Path("/proc").iterdir():
+                  if not entry.name.isdecimal():
+                      continue
+                  try:
+                      status = dict(line.split(":", 1) for line in (entry / "status").read_text().splitlines())
+                      processes.append({"pid": int(entry.name), "ppid": int(status["PPid"]),
+                                        "rss_kib": int(status.get("VmRSS", "0 kB").split()[0]),
+                                        "comm": status["Name"].strip()})
+                  except (OSError, KeyError, ValueError):
+                      continue
+              row["top_rss_processes"] = sorted(processes, key=lambda p: p["rss_kib"], reverse=True)[:12]
+              return row
+
+          while not stopped:
+              try:
+                  row = snapshot()
+              except Exception as error:
+                  row = {"utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                         "sampler_error": type(error).__name__}
+              encoded = json.dumps(row, sort_keys=True)
+              with output.open("a") as stream:
+                  stream.write(encoded + "\n")
+                  stream.flush()
+              print("[determinism-resources] " + encoded, flush=True)
+              for _ in range(15):
+                  if stopped:
+                      break
+                  time.sleep(1)
+          PY
+          python3 -u "$evidence/sample.py" "$evidence/resources.jsonl" &
+          sampler_pid=$!
+          cleanup_sampler() {
+            kill "$sampler_pid" 2>/dev/null || true
+            wait "$sampler_pid" 2>/dev/null || true
           }
-      - name: Run Unix generated Rust formatter and native build script contracts
-        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-unknown-linux-gnu'
-        run: |
-          cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::rust_formatter::tests::generated_rust_uses_the_canonical_toolchain_layout -- --exact
-          cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::python_native_loader_materialization_preserves_selection_and_removes_stale_path -- --exact
-          cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" build::materialize::tests::source_materialization_writes_a_complete_uncompiled_cargo_project -- --exact
-      - name: Run native compiler component qualification
-        if: needs.validation-selection.outputs.reuse != 'true'
-        run: cargo test --locked -p sifr_compiler_component --target "${{ matrix.target }}"
-      - name: Run coupled Windows driver storage and process contracts
-        if: needs.validation-selection.outputs.reuse != 'true' && matrix.target == 'x86_64-pc-windows-msvc'
-        shell: pwsh
-        run: |
-          $cases = @(
-            "cache_storage::tests::windows_portability_private_acl_alias_and_lock_identity",
-            "cache_storage::tests::windows_portability_extended_cache_path_publication",
-            "cache_storage::tests::windows_portability_pressure_prune_protects_leases_and_winners",
-            "process_execution::tests::windows_portability_timeout_partial_output_and_descendant_cleanup",
-            "process_execution::tests::windows_portability_direct_exit_descendant_pipe_cleanup",
-            "process_execution::tests::windows_portability_cancellation_and_scoped_concurrency",
-            "process_execution::tests::windows_portability_bounded_capture_and_normal_streaming",
-            "project_cache::tests::process_death_and_new_process_restore",
-            "project_cache::tests::windows_portability_concurrent_writer_gc_abandoned_stage_and_winner",
-            "project_cache::tests::windows_portability_workspace_identity_alias_and_orphan_prune",
-            "build::workspace::tests::windows_portability_intact_concurrent_winner_is_adopted",
-            "build::materialize::tests::cache_owned_nested_generated_roots_survive_stale_cleanup_and_test_runner",
-            "project_cache::tests::dx13_c04_full_storage_preserves_source_outcome",
-            "project_cache::tests::dx13_c09_concurrent_process_reader_and_gc",
-            "project_cache::tests::dx13_c09_corrupt_schema_references_and_winners",
-            "metadata_producer::tests::windows_portability_metadata_staged_failure_and_output_acl",
-            "metadata_producer::tests::failure_recovery_stale_override_and_missing_entry",
-            "metadata_producer::tests::threads_share_one_success_and_execute_independent_assertions"
-          )
-          foreach ($case in $cases) {
-            cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" "$case" -- --exact
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
-      - name: Run native SQL build qualification
-        if: needs.validation-selection.outputs.reuse != 'true'
-        run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target "${{ matrix.target }}"
-
-  sql-wasi-build:
-    needs: validation-selection
-    if: needs.validation-selection.outputs.reuse != 'true'
-    name: sql-build-wasm32-wasip2
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
-        with:
-          targets: wasm32-wasip2
-      - name: Prepare locked WASI dependencies
-        run: cargo fetch --locked
-      - name: Run WASI SQL build qualification
-        run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target wasm32-wasip2
-
-  deterministic-report-signature:
-    name: deterministic-report-signature
-    runs-on: ubuntu-24.04
-    env:
-      CARGO_PROFILE_DEV_DEBUG: '0'
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        with:
-          version-file: verification/pyproject.toml
-          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
-      - name: Verify deterministic report signature
-        run: bash verification/runner/e2e/check_report_determinism.sh --profile merge
-
-  fuzz-hardening:
-    name: fuzz-hardening-${{ matrix.target }}
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [parser, lowering, ownership, diagnostics, project_graph]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-          ref: ${{ github.event.merge_group.head_sha || github.sha }}
-      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
-        with:
-          version-file: verification/pyproject.toml
-          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
-      - name: Prepare pinned fuzz engine and instrumented toolchain
-        run: |
-          rustup toolchain install nightly --profile minimal
-          cargo install cargo-fuzz --version 0.13.2 --locked
-          cargo +nightly fetch --locked --manifest-path verification/fuzz/Cargo.toml
-      - name: Run bounded target campaign and preserve owned findings
-        env:
-          FUZZ_TARGET: ${{ matrix.target }}
-        run: |
-          mkdir -p target/verification/fuzz
-          git rev-parse HEAD > target/verification/fuzz/source-commit.txt
-          uv run --project verification --locked python -m sifr_verify.hardening.coverage_fuzz --profile nightly --target "$FUZZ_TARGET" --result-json "target/verification/fuzz/$FUZZ_TARGET.json"
-      - name: Retain receipts, corpora and minimized reproductions
+          trap cleanup_sampler EXIT
+          set +e
+          bash verification/runner/e2e/check_report_determinism.sh --profile merge 2>&1 | tee "$evidence/determinism.log"
+          statuses=("${PIPESTATUS[@]}")
+          set -e
+          printf '%s\n' "${statuses[0]}" > "$evidence/verification-exit-code.txt"
+          if [[ "${statuses[0]}" -ne 0 ]]; then
+            exit "${statuses[0]}"
+          fi
+          exit "${statuses[1]}"
+      - name: Preserve diagnostic observations
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: fuzz-${{ github.sha }}-${{ matrix.target }}-${{ github.run_attempt }}
-          path: target/verification/fuzz
+          name: efbc-determinism-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/efbc-determinism-diagnostic
           if-no-files-found: error
-          retention-days: 30
