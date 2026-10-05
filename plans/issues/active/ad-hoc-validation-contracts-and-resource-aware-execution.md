@@ -532,6 +532,56 @@ missing failure retention. The 4,432-file guard and whitespace check pass.
 Exact-candidate review, actual standard-runner observations and full gates are
 pending; no native or performance qualification follows from these controls.
 
+
+## M5 production Darwin group teardown — prospective bounded correction
+
+Base production e82010547b354d4641627d9af0f9b2bf171ec2b2 retains a Darwin path
+that reaps through proc.poll and unconditionally sends TERM/0.25s/KILL. Exact
+reviewed harmless microprobe11e1/run37251309561 observed stable owned zombie-only
+groups yielding EPERM, while KILL succeeded with a live TERM-resistant child;
+actual reaping was followed by group absence. Its signal_failure is retained.
+
+Implement only self-contained Darwin non-reaping waitid/WNOWAIT child checks
+and bounded identity/state-aware group teardown. Inspect fixed bounded ps only
+during teardown, preserve the leader PID reservation until signaling finishes,
+terminate verified live members, and require direct-child wait plus observed
+group absence before marking cleanup complete. Dead-only EPERM races require
+that full proof; live/unknown/reused identity or unavailable proof remains a
+failure. No blanket EPERM catch and no signal after reaping. A single finite
+5s exceptional cleanup budget spans retry/finally; retain the existing0.25s TERM
+grace, original command deadlines, Linux supervisor semantics and Outcome.
+Preserve the original execution error if Darwin cleanup also fails.
+
+Own a new sparse branch based exactly on e820. Change the shared executor,
+focused pure mechanism controls and this plan; no experimental observer/harness
+or memory budget changes enter production. Register any unavoidable new runtime
+helper in every producer/performance closure, preferring a self-contained file
+below900 lines. Local acceptance is pure affected controls with existing
+canonical Python, file/whitespace checks, and an exact commit for root's scoped
+review. No Cargo/UV installation, heavy gates, review or dispatch here.
+
+Actual Darwin waitid capability and the changed production executor must next
+be validated with a separately reviewed harmless hosted fixture harness. That
+is mechanism validation, not package/runtime qualification. process_execution.py
+is explicitly a performance reuse input, so fresh baseline overlay/endpoint and
+an exact final-candidate correctness gate are required after the runtime change;
+no historical receipt is silently reclassified. Existing failed/deferred checks
+remain visible until actually executed under applicable scope.
+
+Implementation remains self-contained in process_execution.py with no new runtime
+helper import and no observer hook. Sixteen new mechanism controls pass, including
+bounded probe registration/streaming cleanup, missing unreaped anchor, post-reap
+identity rejection, original-error preservation and persistent cleanup deadline.
+Of25 existing pure controls,24 pass after correcting two sparse/cwd setup gaps;
+the previously recorded ignored-TERM pipe-retaining descendant test still returns
+124/safety_deadline instead of0/exit at its unchanged0.5s limit. Its failure is
+retained without retry or assertion relaxation. Four Cargo-touching profile
+controls remain deferred. Initial setup failures and corrected passes are both
+retained externally. Sparse file guard passes for220 present files; whitespace
+checks pass. No complete-suite, actual Darwin executor, native qualification or
+final gate pass is claimed. Exact root-coordinated review and harmless hosted
+validation remain next; the shared runtime change invalidates paired input reuse.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
