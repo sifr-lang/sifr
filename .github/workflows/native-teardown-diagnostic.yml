@@ -1,5 +1,5 @@
 {
-  "name": "native-teardown-diagnostic",
+  "name": "native-production-executor-diagnostic",
   "on": {
     "workflow_dispatch": null
   },
@@ -8,7 +8,7 @@
   },
   "jobs": {
     "observe": {
-      "name": "harmless-teardown-aarch64-apple-darwin",
+      "name": "harmless-production-executor-aarch64-apple-darwin",
       "runs-on": "macos-15",
       "timeout-minutes": 10,
       "env": {

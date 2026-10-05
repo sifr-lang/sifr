@@ -3253,3 +3253,54 @@ locking and consumer checks. Observed recovery was 107,016,192 bytes; all 25
 pinned gate records, compressed original bytes and the separately admitted
 restoration command remain. The original timeout is unchanged. Receipt:
 `/workspace/validation-work/evidence/closed-1c40-expanded-compiler-custody-20261004/receipt.json`.
+
+## M5 actual production Darwin executor harmless-host harness — prospective 2026-10-05
+
+Own the separate `codex/validation-darwin-production-harness-20261005` sparse
+operational branch from exact 11e1ab89f919302cc4e8044a56764f82d385fa2b. The actual
+11e1 run 37251309561 retained signal_failure: owned zombie-only groups returned
+EPERM, direct waits then left empty groups; live checker passed that truthful
+failure classification. Preserve all original refs, reports and failed outcomes.
+
+Bind exact production runtime blobs from
+18b5f6088a5d88570abf7f8ec2f11fd102c10a9a, with no diagnostic modification to
+execute. Root coordinates its pending review and any later rebind. Implement
+only four harmless cases: repeated real waitid/WNOWAIT then reap, natural output
+exit, ordinary deadline TERM, and natural leader exit with a TERM-resistant
+pipe-holding child. Scoped forwarding observation records actual production
+snapshots, signals/errors, waits and final absence; it neither substitutes the
+teardown algorithm nor supplies fabricated outcomes. Retained checking separates
+actual Outcome, cleanup proof and protocol validity, retaining any signal races.
+No package/compiler/runtime assertion or native qualification is claimed.
+
+Keep 11e1's explicit canonical Python3.14.7 invocation, manual standard ARM
+workflow pair, 256 MiB process allowance, 2 GiB memory reserve, physical APFS,
+16 MiB growth plus8 MiB retained copy, 8 GiB disk reserve and60-second overall
+safety deadline. Production5-second cleanup and0.25-second TERM grace remain
+unchanged. Focused pure controls, sparse file/diff checks and an exact handoff
+are authorized now; no Cargo/UV install, build, hosted dispatch, external review,
+production integration or broad gate. Root performs exact scoped review and
+coordinates any host attempt after the actual production candidate settles.
+
+Implementation is now bound to production successor
+75d6d4f7f83d7de2979d7eca98250e483626bd0f (parent18b5), which replaces ambient
+exception-state reads with explicit owned exception tracking; all four runtime
+blobs are exact copies. The harness adds no production hook. Its four fixed
+cases retain actual forwarding observations, independently replay raw snapshots,
+ready ownership, signals/errors, waits, absence and distinct Outcome semantics.
+Darwin waitid constants are checked against the pinned XNU source (WEXITED4,
+WNOHANG1, WNOWAIT32, P_PID1); retained checking remains portable to Linux.
+
+Twenty-three focused pure controls pass, including actual cleanup-algorithm
+execution with synthetic OS/process observations, complete four-case receipt
+replay and rehashed negative mutations, expected versus unexpected deadline
+outcomes, forwarded error-object preservation, exact workflow/interpreter
+contracts, tighter deadline and per-case admission refusal. Sparse file guard
+passes302 present files and whitespace checks pass. These controls do not
+establish Darwin host behavior. Prior11e1 signal_failure, historical timing
+failure and deferred Cargo-touching ProcessTests are unchanged historical facts.
+The new checker module separates retained replay from fixture/observation code
+and is included automatically in the committed producer input map. Actual host
+capability/cleanup observations and exact harness review remain pending root
+coordination; no source integration, build, installation, review or dispatch
+has been performed for this operational candidate.

@@ -10,10 +10,17 @@ import time
 
 import native_runtime_diagnostic as common
 import native_teardown_process as process
+from native_teardown_checker import check_case
 from sifr_verify.process_disk_budget import DiskBudget
 
 ROOT = common.ROOT
-PROTOCOL = 'darwin-owned-fixture-teardown-diagnostic-v1'
+PROTOCOL = 'darwin-production-executor-harmless-v1'
+PRODUCTION_COMMIT = '75d6d4f7f83d7de2979d7eca98250e483626bd0f'
+PRODUCTION_RUNTIME = {
+    'verification/runner/sifr_verify/__init__.py': 'e3081f3db9e711e6b4201ddc2b8b6b4c65efd896c72fd0dd37dbddeda8a76091',
+    'verification/runner/sifr_verify/process_execution.py': 'eb7fdef427352ead7d997fadd7eae116ef23fd4e76be31ad834c24680c98b750',
+    'verification/runner/sifr_verify/process_supervisor.py': '306917639782c13acf88b36c25a83c29860670c72effe9e6792f3921ac1dcf95',
+    'verification/runner/sifr_verify/process_disk_budget.py': '97db8045e181ea0268706fc9feb99a900d8e10c1d8e985d80ac75b5bcbe08cec'}
 WORKFLOWS = ('.github/workflows/native-teardown-diagnostic.yml',
              '.github/workflows/published-native-qualification.yml')
 SPEC = {'fixture_kinds': list(process.KINDS), 'fixture_lifetime_seconds': 8,
@@ -28,15 +35,18 @@ REQUIREMENTS = {key: SPEC[key] for key in ('memory_peak_bytes', 'memory_reserve_
 
 def identity():
     result = common.source_identity(ROOT)
+    if any(common.digest(ROOT/name) != digest for name, digest in PRODUCTION_RUNTIME.items()):
+        raise ValueError('reviewed production runtime bytes differ')
+    result['production'] = {'commit': PRODUCTION_COMMIT, 'runtime_sha256': PRODUCTION_RUNTIME}
     result['producer_sha256'].update({name: common.digest(ROOT/name) for name in WORKFLOWS})
     return result
 
 
 def workflow_document():
     invocation = '"$GITHUB_WORKSPACE/verification/.venv/bin/python" -B verification/areas/sysroot_release/native_teardown_diagnostic.py '
-    return {'name': 'native-teardown-diagnostic', 'on': {'workflow_dispatch': None},
+    return {'name': 'native-production-executor-diagnostic', 'on': {'workflow_dispatch': None},
         'permissions': {'contents': 'read'}, 'jobs': {'observe': {
-            'name': 'harmless-teardown-aarch64-apple-darwin', 'runs-on': 'macos-15',
+            'name': 'harmless-production-executor-aarch64-apple-darwin', 'runs-on': 'macos-15',
             'timeout-minutes': 10, 'env': {'SIFR_NATIVE_HOST_KIND': 'dedicated-darwin',
                                          'PYTHONDONTWRITEBYTECODE': '1'},
             'steps': [
@@ -63,13 +73,24 @@ def validate_workflow(document):
     return [] if document == workflow_document() else ['fixed teardown diagnostic workflow differs']
 
 
-def status(cases):
-    if (len(cases) != len(process.KINDS) or any(not c.get('cleanup_verified') or
-            c.get('failure') or c.get('cleanup_failure') for c in cases)):
-        return 'stopped'
-    if any(e.get('errno') is not None for c in cases for e in c['events'] if e['kind'] == 'signal'):
-        return 'signal_failure'
-    return 'observed'
+def case_validation(case, report):
+    try:
+        passed = check_case(case, report)
+    except (ValueError, KeyError, TypeError) as error:
+        return False, type(error).__name__+': '+str(error)
+    return passed, None
+
+
+def checked_case(case, report):
+    passed, error = case_validation(case, report)
+    if case.get('validation_error') != error:
+        raise ValueError('retained case validation differs')
+    return passed
+
+
+def status(cases, report):
+    results = [checked_case(case, report) for case in cases]
+    return 'observed' if len(cases) == len(process.KINDS) and all(results) else 'stopped'
 
 
 def observe(output):
@@ -93,30 +114,19 @@ def observe(output):
     report['deadline'] = deadline
     disk = DiskBudget.from_environment(env)
     report['inherited_disk_floor_bytes'] = disk.floor
-    serial = 0
-
     def checkpoint():
         if time.monotonic() >= deadline:
             raise ValueError('diagnostic absolute deadline')
         disk.check()
 
-    def snapshot(label):
-        nonlocal serial
-        checkpoint()
-        start = time.monotonic()
-        raw = process.capture()
-        path = evidence/(str(serial).zfill(3)+'-'+label+'.ps')
-        serial += 1
-        used = sum(row['size'] for row in common.file_evidence(evidence).values())
-        if used+len(raw.encode()) > SPEC['evidence_limit_bytes']-65536:
-            raise ValueError('diagnostic evidence bound')
-        path.write_text(raw)
-        return {'file': path.name, 'sha256': common.digest(path), 'started': start,
-                'finished': time.monotonic(), 'raw': raw}
-
     def save():
+        if sum(len(json.dumps(case).encode()) for case in report['cases']) > SPEC['evidence_limit_bytes']-65536:
+            raise ValueError('aggregate diagnostic evidence bound')
         report['files'] = common.file_evidence(evidence)
-        (evidence/'state.json').write_text(json.dumps(report, indent=2)+'\n')
+        encoded = json.dumps(report, separators=(',', ':'))+'\n'
+        if len(encoded.encode()) > SPEC['evidence_limit_bytes']:
+            raise ValueError('diagnostic state exceeds retained bound')
+        (evidence/'state.json').write_text(encoded)
 
     previous_handlers = {}
     def interrupted(signum, frame):
@@ -145,15 +155,20 @@ def observe(output):
                 admission = common.admit(common.resources(output), dict(REQUIREMENTS,
                     disk_growth_bytes=0, retained_copy_bytes=0))
                 case = process.observe_case(kind, output/'temporary', report['tools']['python']['path'],
-                                            snapshot, checkpoint, env)
+                                            checkpoint, env)
                 case['admission'] = admission
-                report['cases'].append(case); save()
-                if not case['cleanup_verified'] or case.get('failure') or case.get('cleanup_failure'):
+                report['cases'].append(case)
+                report['finished'] = time.monotonic()
+                passed, case['validation_error'] = case_validation(case, report)
+                save()
+                if not passed:
                     raise ValueError('fixture cleanup or observation incomplete: '+kind)
         common.check_live_tool_identities(report['tools'])
         if source != identity():
             raise ValueError('diagnostic producer changed')
-        report['status'] = status(report['cases'])
+        checkpoint()
+        report['finished'] = time.monotonic()
+        report['status'] = status(report['cases'], report)
     except Exception as error:
         report['failure'] = type(error).__name__+': '+str(error)
     finally:
@@ -164,84 +179,10 @@ def observe(output):
     return report
 
 
-def check_case(case, report, evidence):
-    leader = case['leader']
-    if type(leader) is not int or leader <= 0 or case['kind'] not in process.KINDS:
-        raise ValueError('invalid case identity')
-    expected_argv = [report['tools']['python']['path'], '-I', '-S', '-B',
-        str(Path(report['source_root'])/'verification/areas/sysroot_release/native_teardown_process.py'),
-        case['kind'], str(Path(report['original_output'])/'temporary'/(case['kind']+'-ready.json'))]
-    if case['argv'] != expected_argv:
-        raise ValueError('fixture command differs')
-    rows = None
-    reaped = False
-    identities = None
-    labels = []
-    last_time = 0
-    signals = []
-    term_finished = None
-    for event in case['events']:
-        if event['kind'] == 'snapshot':
-            record = event['record']
-            name = record['file']
-            if (Path(name).name != name or not name.endswith('.ps') or name not in report['files']
-                    or record['sha256'] != common.digest(evidence/name)
-                    or not last_time <= record['started'] <= record['finished'] <= report['finished']
-                    or record['finished']-record['started'] > 1):
-                raise ValueError('snapshot custody or timing differs')
-            last_time = record['finished']
-            rows = process.parse((evidence/name).read_text())
-            labels.append(event['label'])
-            if event['label'] == 'before-term':
-                ready = case['ready']
-                if (type(ready.get('leader')) is not int or ready['leader'] != leader
-                        or ready.get('kind') != case['kind']):
-                    raise ValueError('ready fixture identity differs from case')
-                identities = process.owned(rows, ready, report['driver']['pid'],
-                    report['driver']['uid'], report['driver']['ruid'])
-                if identities != case['identities'] or case['session'] != leader:
-                    raise ValueError('fixture ownership identity differs')
-        elif event['kind'] == 'signal':
-            signals.append(event['label'])
-            expected_label = {'term': 'before-term', 'kill': 'after-term',
-                              'cleanup-kill': 'cleanup-before-reap'}.get(event['label'])
-            if reaped or identities is None or not labels or labels[-1] != expected_label:
-                raise ValueError('signal lacks fresh owned unreaped anchor')
-            expected_signal = int(signal.SIGTERM if event['label'] == 'term' else signal.SIGKILL)
-            if event['signal'] != expected_signal or event['attempted'] is not process.eligible(rows, identities, leader):
-                raise ValueError('signal authorization differs')
-            if event['label'] == 'kill' and (term_finished is None or last_time-term_finished < .25):
-                raise ValueError('TERM observation interval differs')
-            if event['attempted']:
-                if (not last_time <= event['started'] <= event['finished'] <= report['finished']
-                        or event['errno'] is not None and (type(event['errno']) is not int or event['errno'] <= 0)):
-                    raise ValueError('signal event differs')
-                last_time = event['finished']
-                if event['label'] == 'term':
-                    term_finished = last_time
-            elif event.get('reason') != 'group absent':
-                raise ValueError('signal omission differs')
-        elif event['kind'] == 'reap':
-            if reaped or type(event['returncode']) is not int or not last_time <= event['time'] <= report['finished']:
-                raise ValueError('reap evidence differs')
-            reaped = True
-            last_time = event['time']
-        else:
-            raise ValueError('unknown fixture event')
-    if not case.get('failure') and not case.get('cleanup_failure'):
-        if (labels[:4] != ['before-term', 'after-term', 'after-kill', 'cleanup-before-reap']
-                or signals not in (['term', 'kill'], ['term', 'kill', 'cleanup-kill'])):
-            raise ValueError('fixed observation sequence incomplete')
-    if case.get('cleanup_verified') is True:
-        if (not reaped or not labels[-1].startswith('after-reap-')
-                or any(row['pgid'] == leader for row in rows.values())):
-            raise ValueError('cleanup absence unproven')
-    elif case.get('cleanup_verified') is not False:
-        raise ValueError('cleanup result must be explicit')
-
-
 def check_retained(evidence, commit):
     evidence = evidence.resolve(strict=True)
+    if (evidence/'state.json').is_symlink() or (evidence/'state.json').stat().st_size > SPEC['evidence_limit_bytes']:
+        raise ValueError('retained state bound/type')
     report = json.loads((evidence/'state.json').read_text())
     if (report.get('protocol') != PROTOCOL or report.get('schema_version') != 1
             or report.get('source') != identity() or report['source']['commit'] != commit
@@ -293,8 +234,10 @@ def check_retained(evidence, commit):
         if authority != common.admit(common.Resources(**authority['resources']),
                 dict(REQUIREMENTS, disk_growth_bytes=0, retained_copy_bytes=0)):
             raise ValueError('retained fixture admission differs')
-        check_case(case, report, evidence)
-    expected = 'stopped' if report.get('failure') else status(report['cases'])
+        checked_case(case, report)
+    expected = 'stopped' if report.get('failure') else status(report['cases'], report)
+    if expected == 'observed' and not report['finished'] <= report['deadline']:
+        raise ValueError('observed run exceeded inherited deadline')
     if report['status'] != expected:
         raise ValueError('retained result overstates observed evidence')
     return report
