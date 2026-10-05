@@ -1,6 +1,51 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-05
+## Current acceptance checkpoint — 2026-10-05 after M3 review
+
+M3 implementation `a092146172e97cecc8a2b5e6084f0db8f6893474` received
+scoped Opus **SATISFIED** with no blockers and is integrated unchanged.
+`create-pr` now retains 96 core cases, including 22 SQL cases, all 143 E2E
+fixtures and the existing guards/toolchain. Conservative change selection keeps
+complete merge coverage (331 cases) for relevant, shared or unknown changes.
+The original review found a stale SQL contract consumer; its correction and
+explicit core/specialist omission mutations pass. The stale worker-test
+expectation was corrected to the unchanged merge Rayon limit. Focused profile,
+selection, workflow, publisher and SQL checks, exact emitted-plan comparisons,
+and the full 4,468-file guard pass. Review:
+`/workspace/validation-work/evidence/sifr-claude.OcGD8I/response.md`.
+The initial blocking review and failed test subcases remain preserved.
+No preparation-inclusive speed target or complete candidate acceptance is claimed.
+
+The genuine independent baseline v4 at `7df7bdd8eb3d2c7dc16a784ae3aae98ba1ba8e37`
+completed successfully in 850.21 seconds against compiler reference `5fbeee50c`.
+Its completed private graph was retired, preserving endpoint artifacts and
+original receipts. Applicability to the final documentation/profile successor
+requires a new explicit equivalence record; old receipts are never relabelled.
+The old `e2c2c427a` create-PR gate closed **exit 2** at 05:41 UTC after SQL
+clean-build passed in 1,477,812 ms. Later preparation failed memory admission:
+8,589,934,592 bytes required, 8,573,931,520 available. Its failure remains failed.
+Evidence: `/workspace/validation-work/evidence/acceptance-e2c2c427a-20261005-v1/`.
+
+Main `30d2b39021174684ca9a2e695447d73ecbf25308` is reconciled; its delta
+from the earlier base changes only the architecture plan. The compatibility
+policy now identifies existing OS/libc, editor, Python, Rust, cache and installer
+authorities, ranges, directions and tests. Stable floors stay macOS 15.0 and
+glibc 2.39; this nonpublishing rehearsal adds no exact-minimum-host gate.
+
+Two inactive raw native compiler duplicates were removed only after actual
+restore proofs and 20 passing controls, freeing 214,024,192 allocated tmpfs
+bytes. Compressed copies, original failed evidence, leases and restoration
+obligations remain. Receipt:
+`/workspace/validation-work/evidence/native-raw-duplicate-custody-20261005-v3/receipt.json`.
+
+Final core/economic, endpoint/performance, cloud and four-target native
+qualification remain open, as do actual scheduled hardening and protected
+aggregate/merge-queue enforcement. Standard ARM capacity and the dedicated
+publication App/environment remain unresolved; the authenticated administrative
+API still returns HTTP 403. PR #4332 remains draft. SQL #4259 and original draft
+#3647 disposition follows accepted replacement and whole-plan audit.
+
+## Historical acceptance checkpoint — 2026-10-05 before baseline v4
 
 Exact test-only correction `aa1005326dfb698e3739ba91329882fef51865c6`
 received scoped Opus SATISFIED with no blockers and is integrated unchanged.
@@ -3419,10 +3464,10 @@ Scope includes the canonical profile, SQL/profile qualification contracts and
 meaningful selection/preparation controls, the conservative selector and its
 trusted workflow contract, and minimal command/contract documentation. No
 runtime optimization, timeout/resource relaxation, custom selected-plan
-transport, evidence reuse, or platform-job removal is included. All execution,
-full profile/inventory checks, file-size guard, scoped review and actual cold/
-warm economic qualification remain pending until root retires the active gate
-and schedules them. Only bounded isolated edits, static reads and
+transport, evidence reuse, or platform-job removal is included. At registration, execution, full profile/inventory checks, file-size guard,
+scoped review and actual cold/warm economic qualification were pending.
+The current acceptance checkpoint above records the later focused checks and review;
+actual cold/warm economics and full acceptance remain open. Only bounded isolated edits, static reads and
 `git diff --check` are authorized during that gate; root integration remains a
 later coordinated step.
 
@@ -3436,8 +3481,9 @@ full clean-build assertions; new core controls preserve its 4 SQL no-run command
 and the ordinary CLI preparation already owned by performance smoke. No Cargo
 preparation implementation or workflow job selection was changed. The publisher
 control rejects a passing core job set when its trusted selector requires merge.
-`git diff --check` passes on this isolated work; tests, profile-plan comparison,
-full guard and scoped review remain unexecuted while gate 65897 is active.
+At the isolated handoff, `git diff --check` passed and tests, profile-plan
+comparison, full guard and scoped review were unexecuted while gate 65897 ran.
+The current checkpoint supersedes that execution status.
 
 
 Before handoff, root requested an additive bounded command correction: mark the
@@ -3448,3 +3494,24 @@ receives exactly the selected profile and this one optional flag; no arbitrary
 argument forwarding or numerical policy change is introduced. Dispatch and
 rejection controls are written, not executed, during the active gate. This
 follow-up does not alter the registered 96-case selection or any other profile.
+
+### M3 accepted refinement and M5 policy reconciliation — 2026-10-05
+
+Accepted exact M3 source is `a092146172e97cecc8a2b5e6084f0db8f6893474`.
+Besides the prospective paths above, the SQL `check_contracts.py` consumer now
+uses the canonical core only for create-pr and preserves exact full-suite
+equality for merge/nightly/release. Its ordinary and mutation checks pass,
+including explicit missing-core and missing-specialist rejection. The first
+Opus review at 3e1 correctly blocked this omission; the correction review is
+SATISFIED. Full evidence is retained under
+`/workspace/validation-work/evidence/m3-focused-{38e3b72df,3e1bae0d7,a09214617}-20261005-v1/`.
+The 38e3 worker-count failures remain historical failures; only affected checks
+were repeated after the narrow test correction.
+
+The M5 version table in `verification/policy/validation_contracts.md` consolidates
+existing authorities without changing support promises or introducing universal
+release/live-service requirements. Historical stable 0.1.0 evidence retains its
+original source and Rust 1.94/Python 3.11.14/uv 0.9.28 scope; it is not current
+Rust 1.98.1/Python 3.14.7/uv 0.12.10 qualification. Current nonpublishing native
+rehearsal still requires all four matching targets and the actual published
+predecessor transitions. Exact minimum-host execution is not an added blocker.
