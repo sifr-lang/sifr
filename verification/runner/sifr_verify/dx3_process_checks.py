@@ -190,6 +190,62 @@ class ProcessTests(unittest.TestCase):
         self.assertIsNotNone(children[0].returncode)
         self.assertTrue(children[0].stdout.closed and children[0].stderr.closed)
 
+    def test_darwin_probe_does_not_adopt_callers_handled_exception(self):
+        for owned_failure in (False, True):
+            caller = LookupError('unrelated caller error')
+            primary = ValueError('owned probe error')
+            cleanup = PermissionError(1, 'probe final wait failed')
+            class Probe:
+                def __init__(self):
+                    self.stdout = io.BytesIO(); self.stderr = io.BytesIO(); self.waits = 0
+                def poll(self): return 0
+                def wait(self, **_):
+                    self.waits += 1
+                    if self.waits == 2: raise cleanup
+                    return 0
+            class EmptySelector:
+                def __enter__(self): return self
+                def __exit__(self, *_): pass
+                def register(self, *_): pass
+                def get_map(self): return {}
+            probe = Probe()
+            with self.subTest(owned_failure=owned_failure), \
+                 patch.object(process_execution.subprocess, 'Popen', return_value=probe), \
+                 patch.object(process_execution.selectors, 'SelectSelector', return_value=EmptySelector()), \
+                 patch.object(process_execution, '_darwin_process_rows',
+                              side_effect=primary if owned_failure else None, return_value={991: {}}):
+                try:
+                    raise caller
+                except LookupError:
+                    with self.assertRaises(type(primary if owned_failure else cleanup)) as failure:
+                        process_execution._darwin_snapshot(time.monotonic()+5)
+                self.assertIs(failure.exception, primary if owned_failure else cleanup)
+                self.assertFalse(hasattr(caller, '__notes__'))
+                if owned_failure:
+                    self.assertTrue(any('probe final wait failed' in note for note in primary.__notes__))
+                self.assertTrue(probe.stdout.closed and probe.stderr.closed)
+
+    def test_darwin_execute_does_not_adopt_callers_handled_exception(self):
+        for owned_failure in (False, True):
+            caller = LookupError('unrelated caller error')
+            primary = ValueError('owned signal setup failed')
+            cleanup = PermissionError(1, 'signal restoration failed')
+            effects = [None, primary, cleanup] if owned_failure else [None, None, cleanup]
+            with self.subTest(owned_failure=owned_failure), \
+                 patch.object(process_execution.sys, 'platform', 'darwin'), \
+                 patch.object(process_execution.signal, 'signal', side_effect=effects), \
+                 patch.object(process_execution.subprocess, 'Popen') as spawn:
+                try:
+                    raise caller
+                except LookupError:
+                    with self.assertRaises(type(primary if owned_failure else cleanup)) as failure:
+                        execute(['unused'], cwd=Path.cwd(), env={SAFETY_DEADLINE_ENV: '1'})
+                self.assertIs(failure.exception, primary if owned_failure else cleanup)
+                self.assertFalse(hasattr(caller, '__notes__'))
+                if owned_failure:
+                    self.assertTrue(any('signal restoration failed' in note for note in primary.__notes__))
+                spawn.assert_not_called()
+
     def test_darwin_probe_streaming_cap_is_aggregate_and_reaps_child(self):
         original_spawn = subprocess.Popen; children = []
         def spawn(*args, **kwargs):

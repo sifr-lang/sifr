@@ -127,6 +127,7 @@ def _darwin_snapshot(deadline):
     probe = subprocess.Popen(_DARWIN_PS, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              stdin=subprocess.DEVNULL, env=os.environ | {'LC_ALL': 'C'})
     streams = {'stdout': bytearray(), 'stderr': bytearray()}
+    original_error = None
     try:
         # Keep control-plane probing separate from the command's selector and
         # callback failure paths. Never recursively enter execute here.
@@ -150,8 +151,10 @@ def _darwin_snapshot(deadline):
         if code or streams['stderr']:
             raise ValueError('Darwin teardown process probe failed')
         return _darwin_process_rows(streams['stdout'].decode('utf-8', errors='strict'))
+    except BaseException as error:
+        original_error = error
+        raise
     finally:
-        original_error = sys.exception()
         try:
             try:
                 if probe.poll() is None:
@@ -356,6 +359,7 @@ def execute(
         except ProcessLookupError:
             pass
 
+    original_error = None
     try:
         # A partial signal setup has no child to clean up; the finally block
         # still restores every handler that was installed successfully.
@@ -442,8 +446,10 @@ def execute(
                 raise OSError(number if type(number) is int and number > 0 else errno.EIO, detail)
             if type(status.get("returncode")) is not int or status["returncode"] != code:
                 raise OSError(errno.EIO, "supervisor completion status differs from process exit")
+    except BaseException as error:
+        original_error = error
+        raise
     finally:
-        original_error = sys.exception()
         try:
             try:
                 if proc is not None:

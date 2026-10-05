@@ -582,6 +582,31 @@ checks pass. No complete-suite, actual Darwin executor, native qualification or
 final gate pass is claimed. Exact root-coordinated review and harmless hosted
 validation remain next; the shared runtime change invalidates paired input reuse.
 
+### Scoped follow-up: owned exception tracking — 2026-10-05
+
+Exact 18b5f6088a5d88570abf7f8ec2f11fd102c10a9a received scoped Opus SAT
+with no blockers. Root separately identified and authorized correcting the two
+new Darwin finally paths: sys.exception() can expose an unrelated exception
+being handled by the caller, incorrectly suppressing a cleanup failure after
+successful work. Track only exceptions raised inside each owned try in execute
+and _darwin_snapshot. Preserve an actual owned primary error and attach cleanup
+failure notes; otherwise propagate cleanup failure. Add tiny controls from a
+caller's except block covering successful work plus cleanup failure and owned
+primary plus cleanup failure. Keep probe/time budgets, timing-test expectations,
+Linux behavior and all other review suggestions outside this follow-up. Same
+owned branch, pure affected controls and file/diff checks only; root coordinates
+exact successor review and any hosted action. No heavy checks or dispatch here.
+
+Both new controls reproduced the swallowed cleanup errors before the fix; raw
+failures remain in the external darwin-owned-exception-controls-20261005 evidence
+directory. After explicit owned-error tracking, all 18 Darwin mechanism controls
+pass, including both caller-except cases with and without an actual owned primary
+exception. The unrelated caller error receives no cleanup note; an owned primary
+retains its identity and cleanup note. The 220-file sparse guard and whitespace
+check pass. Historical timing failure and four deferred Cargo controls remain
+unchanged, not rerun or reclassified. Exact successor review and actual Darwin
+host observations are still pending under root coordination.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
