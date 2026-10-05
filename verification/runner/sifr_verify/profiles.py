@@ -26,6 +26,11 @@ PYTHON_INTEROP_CAPABILITY_MATRIX = (
 )
 RUST_INTEROP_MANIFEST = REPO_ROOT / "verification" / "areas" / "rust_interop" / "manifest.json"
 SQL_PLATFORM_MANIFEST = REPO_ROOT / "verification" / "areas" / "sql_platform" / "manifest.json"
+# Registered feedback minimum; complete profiles retain every offline SQL suite.
+SQL_CORE_SUITES = frozenset({
+    "compiler-components", "common-sql", "contracts", "dependency-baseline",
+    "host-tools", "integrated-qualification", "mutation",
+})
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -203,7 +208,7 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                     f"verification suites: {', '.join(missing)}"
                 )
         if area == "sql_platform":
-            required_suites = required_sql_platform_suites()
+            required_suites = required_sql_platform_suites(str(profile.get("name")))
             missing = sorted(required_suites.difference(selected_suites))
             if missing:
                 raise ProfileError(
@@ -227,7 +232,7 @@ def required_rust_interop_suites() -> set[str]:
     return names
 
 
-def required_sql_platform_suites() -> set[str]:
+def required_sql_platform_suites(profile_name: str = "merge") -> set[str]:
     manifest = load_json(SQL_PLATFORM_MANIFEST)
     suites = manifest.get("suites") if isinstance(manifest, dict) else None
     if not isinstance(suites, list) or not suites:
@@ -246,7 +251,9 @@ def required_sql_platform_suites() -> set[str]:
     }
     if len(declared_names) != len(suites):
         raise ProfileError("SQL platform area manifest has invalid or duplicate suites")
-    return names
+    if not SQL_CORE_SUITES.issubset(names):
+        raise ProfileError("SQL platform manifest omits registered core suites")
+    return set(SQL_CORE_SUITES) if profile_name == "create-pr" else names
 
 
 def validate_toolchain_steps(profile: dict[str, Any]) -> None:

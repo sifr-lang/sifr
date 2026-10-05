@@ -3372,3 +3372,69 @@ restoration command remain. The original timeout is unchanged. Receipt:
   No build, gate, push, target mutation or assertion reuse occurred during this
   integration. Next actual successor acceptance, paired performance and final
   cloud remain required.
+
+### 2026-10-05 prospective M3 canonical core refinement
+
+The user authorized completion of the fast-feedback proposal, including moving
+expensive specialist qualification behind conservative change selection. The
+first accepted selector intentionally removed no cases; that accepted increment
+did not complete M3. This bounded successor is based on frozen
+`e2c2c427a980934730a0ee016b9c748ba301e350` in an isolated owned worktree while
+root gate 65897 continues on its unchanged source.
+
+Register `create-pr` as the canonical 96-case feedback core: retain every current
+non-SQL area selection, all 143 E2E fixtures, all guardrail/toolchain selections,
+and these seven SQL suites: `contracts`, `dependency-baseline`,
+`integrated-qualification`, `compiler-components`, `common-sql`, `host-tools`,
+`mutation` (22 SQL cases). Move the other 44 SQL cases to complete `merge`
+selection, which remains unchanged, as do nightly/release/cloud inventories and
+mandatory platform CI jobs. This is an explicit feedback contract change;
+direct `create-pr` does not claim specialist qualification.
+
+The existing two-profile selection and independently recomputed trusted CI
+binding remain the protocol. A complete trusted diff can select the core only
+for a finite set of paths whose known consumers all remain in the core.
+Initially admit regular-file content edits to `README.md`, the HIR and driver
+maintainability checklist pages, and this exact active plan. Shared inputs,
+omitted-specialist consumers, area inputs without proven reverse-consumer
+closure, all other unknown paths, unavailable diffs, additions/deletions and
+file-type changes select full merge. Mixed changes select the union's broader
+profile. Do not treat blanket `plans/` or `internal_docs/` prefixes as prose:
+release JSON and SQL documentation have executable consumers.
+
+External design/evidence: `m3-measured-refinement-design-e2c2c427a-20261005/`
+and `m3-reverse-consumer-closure-e2c2-20261005.json` under
+`/workspace/validation-work/evidence/`. The latter records exact source edges
+and golden path/mixed cases; it is not a test execution claim. Closed historical
+costs, not the running gate's partial output, motivate this change: source
+preparation alone took about 20m44s, SQL preparation 31m58s and SQL clean-build
+assertions 23m55s on the earlier failed compact shared-VM gate (jobs=1 and
+private sysroot graph retirement). These are compact-host costs, not universal
+normal-profile or CI latency. They do not predict linear savings or establish
+the 5-minute warm / 15-minute cold objectives; measure the applicable declared
+cold/warm route. Existing budgets/host scope remain unchanged. No preparation
+or reuse redesign is included.
+
+Scope includes the canonical profile, SQL/profile qualification contracts and
+meaningful selection/preparation controls, the conservative selector and its
+trusted workflow contract, and minimal command/contract documentation. No
+runtime optimization, timeout/resource relaxation, custom selected-plan
+transport, evidence reuse, or platform-job removal is included. All execution,
+full profile/inventory checks, file-size guard, scoped review and actual cold/
+warm economic qualification remain pending until root retires the active gate
+and schedules them. Only bounded isolated edits, static reads and
+`git diff --check` are authorized during that gate; root integration remains a
+later coordinated step.
+
+
+The isolated implementation now changes only `AGENTS.md`, this record,
+`verification/{README.md,policy/{profile_policy.md,validation_contracts.md},profiles/create-pr.json}`,
+the SQL integrated-qualification checker, runner profile/selector contracts and
+their registered controls, plus the trusted publisher's profile-parity control.
+Existing early-SQL partition/resource/worker controls now exercise `merge` for
+full clean-build assertions; new core controls preserve its 4 SQL no-run commands
+and the ordinary CLI preparation already owned by performance smoke. No Cargo
+preparation implementation or workflow job selection was changed. The publisher
+control rejects a passing core job set when its trusted selector requires merge.
+`git diff --check` passes on this isolated work; tests, profile-plan comparison,
+full guard and scoped review remain unexecuted while gate 65897 is active.

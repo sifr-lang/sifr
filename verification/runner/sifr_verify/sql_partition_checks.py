@@ -48,7 +48,7 @@ def write_part(root, slug, profile, names, *, fail=False):
 class PartitionChecks(unittest.TestCase):
     def test_build_suite_has_no_test_preparation_and_partition_preserves_every_command(self):
         from .profiles import load_profile
-        for profile in ('create-pr', 'merge', 'cloud'):
+        for profile in ('merge', 'cloud'):
             suites = next(row['suites'] for row in load_profile(profile)['selected_areas'] if row['area']=='sql_platform')
             self.assertEqual(sql_preparation_commands(['build-qualification']), [])
             rest = [suite for suite in suites if suite != 'build-qualification']
@@ -59,15 +59,15 @@ class PartitionChecks(unittest.TestCase):
 
     def test_complete_result_has_canonical_order_counts_and_fresh_part_paths(self):
         from .profiles import load_profile
-        suites = next(row['suites'] for row in load_profile('create-pr')['selected_areas'] if row['area']=='sql_platform')
+        suites = next(row['suites'] for row in load_profile('merge')['selected_areas'] if row['area']=='sql_platform')
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            first = SqlInvocation('create-pr', suites, root=root)
-            other = SqlInvocation('create-pr', suites, root=root)
+            first = SqlInvocation('merge', suites, root=root)
+            other = SqlInvocation('merge', suites, root=root)
             self.assertNotEqual(first.part_path('build'), other.part_path('build'))
             for label, selected in (('build', ['build-qualification']),
                                     ('remaining', [s for s in suites if s != 'build-qualification'])):
-                write_part(root, first.part_slug(label), 'create-pr', selected)
+                write_part(root, first.part_slug(label), 'merge', selected)
                 self.assertEqual(first.accept(label, selected, 0), 0)
             payload = first.finish(missing_reason='not run')
             expected = part_payload(suites)

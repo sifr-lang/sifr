@@ -23,7 +23,7 @@ class SqlWorkerChecks(unittest.TestCase):
                        inventories=None):
         with tempfile.TemporaryDirectory() as directory, contextlib.ExitStack() as stack:
             root = Path(directory)
-            runner = ProfileRunner('create-pr', ['--compact-resources'])
+            runner = ProfileRunner('merge', ['--compact-resources'])
             runner.execute_step = lambda name, callback: (callback(), 0)[1]
             runner.env['SIFR_VERIFY_SAFETY_DEADLINE_SECONDS'] = '17'
             runner.env[FLOOR_VARIABLE] = str(12*GIB if mode == 'cloud' else 4*GIB)

@@ -39,7 +39,7 @@ class EarlySqlChecks(unittest.TestCase):
             runner.run_area.assert_not_called()
 
     def test_declared_preparation_and_other_areas_are_unchanged(self):
-        profile = ProfileRunner('create-pr', ['--compact-resources']).profile
+        profile = ProfileRunner('merge', ['--compact-resources']).profile
         selection = next(row for row in profile['selected_areas'] if row['area'] == 'sql_platform')
         manifest = json.loads((Path(__file__).resolve().parents[2]/'areas/sql_platform/manifest.json').read_text())
         selected = [suite for suite in manifest['suites'] if suite['name'] in selection['suites']]
@@ -56,7 +56,7 @@ class EarlySqlChecks(unittest.TestCase):
                             sql_preparation_handled=True)
         self.assertEqual(later, [(cmd, active) for cmd, active in calls if cmd not in commands])
         self.assertEqual([cmd for cmd, _ in calls if cmd in commands], commands)
-        self.assertEqual(profile, ProfileRunner('create-pr', ['--compact-resources']).profile)
+        self.assertEqual(profile, ProfileRunner('merge', ['--compact-resources']).profile)
 
     def test_remaining_preparation_preserves_all_other_callbacks_and_offline_env(self):
         names = ['prepare_generated_inputs', 'prepare_crate_test_binaries', 'prepare_authoring_test_binaries',
@@ -189,7 +189,7 @@ class EarlySqlChecks(unittest.TestCase):
                         area_workers=area_workers)
 
     def test_both_routes_execute_complete_sql_once_before_unrelated_preparation(self):
-        for profile in ('create-pr', 'merge', 'cloud'):
+        for profile in ('merge', 'cloud'):
             with self.subTest(profile=profile):
                 result = self.route(profile)
                 self.assertEqual(result['status'], 0)
@@ -222,7 +222,7 @@ class EarlySqlChecks(unittest.TestCase):
                                     if name == 'sql_platform' and suites == ['build-qualification']))
 
     def test_stricter_caller_floor_is_restored_before_independent_work(self):
-        for profile in ('create-pr', 'cloud'):
+        for profile in ('merge', 'cloud'):
             for failure in (None, 'sql-preparation', 'sql-area'):
                 with self.subTest(profile=profile, failure=failure):
                     self.route(profile, no_fail_fast=True, failure=failure, inherited_floor=True)
@@ -235,7 +235,7 @@ class EarlySqlChecks(unittest.TestCase):
         self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], ['pass'])
 
     def test_build_infrastructure_failure_controls_continuation_without_false_case_results(self):
-        for profile in ('create-pr', 'cloud'):
+        for profile in ('merge', 'cloud'):
             for no_fail_fast in (False, True):
                 result = self.route(profile, no_fail_fast=no_fail_fast, failure='sql-build-infrastructure')
                 self.assertEqual(result['status'], 124)
@@ -247,7 +247,7 @@ class EarlySqlChecks(unittest.TestCase):
                 self.assertIn('timeout', build['cases'][0]['variants'][0]['reason'])
 
     def test_remainder_budget_refusal_blocks_exact_unexecuted_cases_with_cause(self):
-        for profile in ('create-pr', 'cloud'):
+        for profile in ('merge', 'cloud'):
             result = self.route(profile, failure='remaining-admission')
             self.assertEqual(result['status'], 2)
             self.assertEqual(result['result']['summary']['total_variants'], 66)
@@ -263,7 +263,7 @@ class EarlySqlChecks(unittest.TestCase):
             self.assertEqual([step['status'] for step in result['steps'] if step['name']=='area_sql_platform'], ['fail'])
 
     def test_nonbuild_selection_keeps_later_sql_preparation_and_assertion(self):
-        for profile in ('create-pr', 'cloud'):
+        for profile in ('merge', 'cloud'):
             result = self.route(profile, build=False)
             self.assertEqual(result['status'], 0)
             self.assertNotIn('preparation_sql_platform', result['events'])
@@ -274,7 +274,7 @@ class EarlySqlChecks(unittest.TestCase):
             self.assertTrue(all(env['CARGO_BUILD_JOBS'] == '1' for _, env in result['commands']))
 
     def test_build_only_selection_uses_named_workers_without_adding_preparation(self):
-        for profile in ('create-pr', 'cloud'):
+        for profile in ('merge', 'cloud'):
             result = self.route(profile, build_only=True)
             self.assertEqual(result['status'], 0)
             self.assertEqual(result['result']['summary']['total_variants'], 1)
@@ -284,7 +284,7 @@ class EarlySqlChecks(unittest.TestCase):
                              [('sql_platform', ['build-qualification'], '2')])
 
     def test_failures_preserve_exactly_one_status_and_no_fail_fast_independence(self):
-        for profile in ('create-pr', 'cloud'):
+        for profile in ('merge', 'cloud'):
             for no_fail_fast in (False, True):
                 for failure, code, sql_status in (('sql-preparation', 101, 'fail'),
                                                   ('sql-cli-preparation', 101, 'fail'),

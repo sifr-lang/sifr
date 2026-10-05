@@ -22,7 +22,7 @@ GIB = 1024**3
 
 class SqlResourceTests(unittest.TestCase):
     def test_exact_selection_preserves_canonical_profiles_and_rejects_unknowns(self):
-        for profile in ('create-pr', 'merge', 'cloud'):
+        for profile in ('merge', 'cloud'):
             runner = ProfileRunner(profile, ['--compact-resources'])
             original = copy.deepcopy(runner.profile)
             self.assertEqual(assertion_allocation('area_sql_platform', runner.profile), SQL_BUILD_ALLOCATION)
@@ -41,7 +41,7 @@ class SqlResourceTests(unittest.TestCase):
                                  'remaining-assertions')
 
     def test_compact_dispatch_keeps_every_callback_and_generic_allocation(self):
-        runner = ProfileRunner('create-pr', ['--compact-resources'])
+        runner = ProfileRunner('merge', ['--compact-resources'])
         calls = []
         runner.compact_schedule = SimpleNamespace(step=lambda name, callback, **kw:
             (calls.append((name, kw)), callback(), 0)[-1])
@@ -126,7 +126,7 @@ class SqlResourceTests(unittest.TestCase):
             with self.subTest(mode=mode, available=available, inherited=inherited, free=free), \
                  tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
-                runner = ProfileRunner('create-pr', ['--compact-resources'])
+                runner = ProfileRunner('merge', ['--compact-resources'])
                 runner.prepare_step_budget = lambda name: None
                 runner.env['SIFR_VERIFY_SAFETY_DEADLINE_SECONDS'] = '17'
                 if inherited is not None:

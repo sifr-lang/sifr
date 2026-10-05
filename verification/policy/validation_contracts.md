@@ -21,13 +21,29 @@ corpus does not mean every corpus entry ran.
 
 | Stage | Acceptance and enforcement |
 |---|---|
-| create-pr | Core/representative feedback and relevant specialist work; selected cases must genuinely pass. |
+| create-pr | Registered 96-case feedback core (22 SQL cases), 143 E2E fixtures and mandatory guards/toolchain; selected cases must genuinely pass. Direct invocation does not qualify omitted specialists. |
 | merge | Complete canonical merge inventory on the actual candidate; trusted required aggregate and repository protection must agree. |
 | nightly | Explicit commit and broader hardening; serious reproduced defects become owned regressions that block affected delivery. |
 | release | Actual release-candidate source qualification; no automatic main-push release qualification. |
 | artifact-qualification | Run hash-verified installed-package/editor consumers; promote the qualified bytes. Source compilation is insufficient. |
 | python-interop-live | Explicit real-service work with declared service/dependency versions; offline fixtures cannot satisfy its claim. |
 | cloud | The live merge correctness inventory under shared-VM execution policy; report performance independently and require it wherever the performance contract says so. |
+
+The SQL feedback core contains `compiler-components`, `common-sql`, `contracts`,
+`dependency-baseline`, `host-tools`, `integrated-qualification` and `mutation`.
+Complete `merge`, `nightly`, `release` and inherited cloud coverage retain every
+offline SQL specialist suite, including actual clean-build qualification.
+The commit-bound `changes run` route selects the whole canonical core only when
+every changed path has a reviewed all-consumers-in-core disposition; shared,
+specialist, unknown, unavailable or non-content changes select whole `merge`.
+No arbitrary subset receipt or separate CI selection protocol is introduced.
+The finite prose closure is `README.md`, the HIR/driver maintainability checklists,
+and the exact active validation plan; blanket documentation prefixes are not safe.
+Existing required native platform jobs remain unchanged. Historical compact
+shared-VM costs (jobs=1, private sysroot graph retirement) motivate this prospective
+selection change; they do not establish normal local/CI latency. The applicable
+route still requires cold/warm preparation-inclusive measurements. Existing
+budgets/host scope remain unchanged; no fast-feedback target is claimed yet.
 
 The cloud contract's correctness selection is derived from `merge`. Adoption of
 PR #4259's execution route, per-stage scheduling, CI aggregate and external branch

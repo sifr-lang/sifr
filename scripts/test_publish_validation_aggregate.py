@@ -75,21 +75,35 @@ class PublisherTests(unittest.TestCase):
         base = "d" * 40
         self.run.update(event="pull_request", head_sha=branch,
                         pull_requests=[{"number": 3, "base": {"sha": base}}])
-        self.jobs = [dict(self.jobs[0], name=name, steps=[{"name": step, "conclusion": "success"} for step in component_steps(name)]) for name in expected_jobs("pull_request", "create-pr")]
         old_api = self.api
         def pr_api(path, body=None):
             if path.endswith("/pulls/3"):
                 return {"merge_commit_sha": self.candidate, "head": {"sha": branch},
                         "base": {"sha": base}, "state": "open"}
             return old_api(path, body)
+        for profile in ("create-pr", "merge"):
+            with self.subTest(profile=profile):
+                self.jobs = [dict(self.jobs[0], name=name,
+                    steps=[{"name": step, "conclusion": "success"} for step in component_steps(name)])
+                    for name in expected_jobs("pull_request", profile)]
+                with patch.object(self, "api", pr_api), patch.object(publisher, "fetch"), \
+                        patch.object(publisher, "verify_pr_candidate") as binding, \
+                        patch("sifr_verify.change_selection.selection", return_value={"profile": profile}):
+                    self.assertEqual(self.call(), 0)
+                    binding.assert_called_once_with(publisher.ROOT, self.candidate, base, branch)
+                self.assertEqual(self.published[-1]["head_sha"], branch)
+                self.assertTrue(self.published[-1]["external_id"].endswith(self.candidate))
+                self.assertIn(self.candidate, self.published[-1]["output"]["summary"])
+        # A complete core run cannot satisfy the trusted selector's broader
+        # specialist decision, even though every reported job itself passed.
+        self.jobs = [dict(self.jobs[0], name=name,
+            steps=[{"name": step, "conclusion": "success"} for step in component_steps(name)])
+            for name in expected_jobs("pull_request", "create-pr")]
         with patch.object(self, "api", pr_api), patch.object(publisher, "fetch"), \
-                patch.object(publisher, "verify_pr_candidate") as binding, \
-                patch("sifr_verify.change_selection.selection", return_value={"profile": "create-pr"}):
-            self.assertEqual(self.call(), 0)
-            binding.assert_called_once_with(publisher.ROOT, self.candidate, base, branch)
-        self.assertEqual(self.published[-1]["head_sha"], branch)
-        self.assertTrue(self.published[-1]["external_id"].endswith(self.candidate))
-        self.assertIn(self.candidate, self.published[-1]["output"]["summary"])
+                patch.object(publisher, "verify_pr_candidate"), \
+                patch("sifr_verify.change_selection.selection", return_value={"profile": "merge"}):
+            self.assertEqual(self.call(), 1)
+            self.assertEqual(self.published[-1]["conclusion"], "failure")
 
     def test_actions_app_identity_cannot_publish_protected_check(self):
         with patch.dict(os.environ, {"CHECK_APP_ID": "15368"}), patch.object(publisher, "api") as api:

@@ -4,7 +4,7 @@ Status: active
 
 Sifr local validation uses four profiles:
 
-- `create-pr`: fast local create-PR signal, target <=5m warm and <=15m cold,
+- `create-pr`: registered local feedback core, target <=5m warm and <=15m cold,
   with blocking per-step budgets for regression control.
 - `merge`: authoritative merge gate for compiler correctness.
 - `nightly`: broad hardening, full generated-code quality, and full e2e pass corpus.
@@ -61,7 +61,9 @@ not part of the current stable readiness surface.
 
 ## Create-PR Profile
 
-`scripts/run_all_tests.sh --profile create-pr` proves fast compiler-relevant behavior:
+`scripts/run_all_tests.sh --profile create-pr` requests the registered feedback
+core. It qualifies its selected behavior, not omitted specialist work or an
+unmeasured latency claim:
 
 - static guardrails and diagnostic registry/docs ruless
 - strict readiness coverage-matrix consistency for shipped guarantees and surfaces
@@ -69,9 +71,27 @@ not part of the current stable readiness surface.
 - static tooling ruless and LSP protocol smoke
 - smoke performance budgets
 - generated-code quality smoke over a bounded fixture subset
-- library crate unit tests, CLI unit tests, and representative e2e pass fixtures
+- library crate unit tests, CLI unit tests, and 143 representative e2e pass fixtures
+- 22 SQL cases in seven suites: compiler-components, common-sql, contracts,
+  dependency-baseline, host-tools, integrated-qualification and mutation
 
 It intentionally excludes editor packaging, editor asset release checks, distribution/self-update checks, LSP stress, LSP large-session smoke, broad verification hardening, broad project-mode matrices, full generated clippy/corpus, full performance budgets, and the slower generated-build crate integration tests.
+
+The complete core is 96 adapter cases. All existing non-SQL selections and
+mandatory guards/toolchain checks remain. The other 44 SQL cases, including
+clean-build qualification, remain in merge/nightly/release and inherited cloud.
+For change-complete PR qualification, use `sifr_verify changes run --base SHA
+--head SHA` on the exact clean candidate. Only the finite reviewed prose closure
+can select this core; shared, specialist, unknown or non-content changes and
+unavailable diffs select full merge. Direct core invocation does not assert that
+specialists are irrelevant. Required native platform CI jobs remain unchanged.
+
+Existing 5/15-minute goals and blocking step budgets retain their declared host
+scope. Closed compact shared-VM measurements (jobs=1, private sysroot graph
+retirement) motivate moving specialist work; they do not measure normal direct
+or CI profile latency. Actual preparation-inclusive cold/warm measurements for
+the applicable route remain required; no speed claim is made by this selection
+change.
 
 Generated-build crate tests use Rust `#[ignore]` only to keep the default smoke
 crate commands fast. They are not disabled tests: full profiles run the

@@ -1,4 +1,4 @@
-"""Conservative commit-bound PR selection using existing complete profiles."""
+"""Commit-bound selection of the registered core or complete merge coverage."""
 from __future__ import annotations
 
 import argparse
@@ -18,26 +18,43 @@ SHARED_FILES = {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".gitmodules"
                 "verification/pyproject.toml", "verification/uv.lock", "AGENTS.md"}
 
 
+# Finite reverse-consumer closure, not a documentation-prefix exemption. These
+# checks remain in the core: taxonomy, stale-drafts and HIR/driver guards. The
+# exact active plan is prose; release requests and unproven records stay broad.
+CORE_PROSE = frozenset({
+    "README.md",
+    "internal_docs/hir_maintainability_guardrails.md",
+    "internal_docs/sifr_driver_maintainability_guardrails.md",
+    "plans/issues/active/ad-hoc-validation-contracts-and-resource-aware-execution.md",
+})
+
+
 class SelectionError(VerificationError):
     """Selected execution is not bound to the observed committed checkout."""
 
 
-def classify(paths: list[str] | None, *, error: str | None = None) -> dict:
-    reasons = ["mandatory create-pr core retained in full"]
+def classify(paths: list[str] | None, *, error: str | None = None,
+             unsafe_changes: tuple[str, ...] = ()) -> dict:
+    reasons = ["registered create-pr feedback core retained in full"]
     broad = paths is None or error is not None
     if broad:
         reasons.append("unavailable diff: conservative merge coverage")
+    if unsafe_changes:
+        broad = True
+        reasons.extend(f"non-content change requires merge coverage: {path}" for path in unsafe_changes)
     for path in sorted(set(paths or [])):
         parts = PurePosixPath(path).parts
         if (not path or path.startswith("/") or ".." in parts or "\\" in path
+                or PurePosixPath(path).as_posix() != path
+                or any(ord(char) < 32 or ord(char) == 127 for char in path)
                 or path in SHARED_FILES or path.startswith(SHARED)):
             broad = True
             reasons.append(f"shared or invalid input: {path}")
-        elif path.startswith(("plans/", "internal_docs/")) or path in {"README.md", "LICENSE"}:
-            reasons.append(f"documentation retains mandatory core: {path}")
+        elif path in CORE_PROSE:
+            reasons.append(f"all declared prose consumers retained in mandatory core: {path}")
         elif len(parts) >= 4 and parts[:2] == ("verification", "areas"):
             broad = True
-            reasons.append(f"area inputs require complete merge coverage until measured refinement: {path}")
+            reasons.append(f"area input has specialist or unproven reverse consumers: {path}")
         else:
             broad = True
             reasons.append(f"unknown input requires merge coverage: {path}")
@@ -61,16 +78,30 @@ def git(repo: Path, *args: str) -> bytes:
 
 
 def selection(repo: Path, base: str, head: str) -> dict:
-    paths, error = None, None
+    paths, error, unsafe_changes = None, None, ()
     try:
         for commit in (base, head):
             if not SHA.fullmatch(commit) or git(repo, "cat-file", "-t", commit).strip() != b"commit":
                 raise ValueError("base/head must identify full existing commit objects")
-        raw = git(repo, "diff", "--no-renames", "--name-only", "-z", base, head, "--")
-        paths = [value.decode("utf-8", "strict") for value in raw.split(b"\0") if value]
+        raw = git(repo, "diff", "--no-renames", "--raw", "--no-abbrev", "-z", base, head, "--")
+        fields = raw.split(b"\0")
+        if fields[-1] != b"" or (len(fields) - 1) % 2:
+            raise ValueError("incomplete raw diff")
+        paths, unsafe = [], []
+        for index in range(0, len(fields) - 1, 2):
+            metadata = fields[index].decode("ascii").split()
+            if len(metadata) != 5 or not metadata[0].startswith(":"):
+                raise ValueError("invalid raw diff metadata")
+            path = fields[index + 1].decode("utf-8", "strict")
+            paths.append(path)
+            # Add/delete, executable modes, symlinks and gitlinks are broader
+            # than the reviewed regular-file content closure, even at a known path.
+            if (metadata[0], metadata[1], metadata[4]) != (":100644", "100644", "M"):
+                unsafe.append(path)
+        unsafe_changes = tuple(unsafe)
     except (OSError, ValueError, subprocess.CalledProcessError) as failure:
         error = type(failure).__name__ + ": cannot establish complete commit diff"
-    result = classify(paths, error=error)
+    result = classify(paths, error=error, unsafe_changes=unsafe_changes)
     return result | {"base_commit": base, "candidate_commit": head}
 
 

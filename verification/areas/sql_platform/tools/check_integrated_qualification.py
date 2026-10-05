@@ -13,6 +13,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(REPO_ROOT / "verification/runner"))
+from sifr_verify.profiles import required_sql_platform_suites
+
 DATA_ROOT = REPO_ROOT / "verification" / "areas" / "sql_platform" / "data"
 QUALIFICATION = DATA_ROOT / "integrated_qualification.json"
 PROVIDER_ROOTS = {
@@ -178,10 +181,13 @@ def validate_build_evidence(
             if row.get("area") == "sql_platform"
         ]
         require(len(sql_rows) == 1, f"{profile} SQL profile entry is not unique")
-        require(
-            evidence["suite"] in sql_rows[0].get("suites", []),
-            f"{profile} omits executable SQL build qualification",
-        )
+        selected = set(sql_rows[0].get("suites", []))
+        if profile == "create-pr":
+            require(selected == required_sql_platform_suites(profile),
+                    "create-pr differs from the registered SQL feedback core")
+        else:
+            require(evidence["suite"] in selected,
+                    f"{profile} omits executable SQL build qualification")
         require(set(sql_rows[0].get("resource_classes", [])) == {"default-local", "long-running"},
                 f"{profile} SQL resource declaration differs from its build suite")
 
@@ -331,6 +337,18 @@ def self_test() -> None:
         ("profile-suite-resource-mismatch", manifest, wrong_profiles,
          "merge SQL resource declaration differs from its build suite"),
     ]
+    wrong_core = copy.deepcopy(profiles)
+    next(row for row in wrong_core["create-pr"]["selected_areas"]
+         if row["area"] == "sql_platform")["suites"].remove("contracts")
+    missing_specialist = copy.deepcopy(profiles)
+    next(row for row in missing_specialist["merge"]["selected_areas"]
+         if row["area"] == "sql_platform")["suites"].remove("build-qualification")
+    resource_mutations.extend([
+        ("missing-core-contract", manifest, wrong_core,
+         "create-pr differs from the registered SQL feedback core"),
+        ("missing-full-specialist", manifest, missing_specialist,
+         "merge omits executable SQL build qualification"),
+    ])
     for label, selected_manifest, selected_profiles, expected_error in resource_mutations:
         try:
             validate_build_evidence(record, manifest_override=selected_manifest,

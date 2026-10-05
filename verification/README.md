@@ -85,7 +85,9 @@ lanes.
 
 ## Profile Ownership
 
-- `create-pr` is a fast representative profile. It selects readiness coverage,
+- `create-pr` is the registered feedback core, not complete specialist
+  qualification. Its 96 adapter cases include 22 SQL cases from seven suites;
+  all 143 E2E fixtures and mandatory guardrails/toolchain steps remain. It selects readiness coverage,
   diagnostics rules, runtime/platform support evidence, algorithmic manifest
   checks, static/LSP smoke tooling, generated-code smoke, performance smoke, and
   stdlib module merge checks.
@@ -101,6 +103,23 @@ lanes.
   Both profiles run the complete pinned algorithm corpus and taxonomy self-test.
   Release and nightly both retain unmodified full generated-code Clippy
   coverage.
+
+For change-complete PR qualification, use a clean committed checkout and run:
+
+```bash
+uv run --project verification --locked python -m sifr_verify changes plan --base <base-sha> --head <candidate-sha>
+uv run --project verification --locked python -m sifr_verify changes run --base <base-sha> --head <candidate-sha>
+```
+
+The selector retains the core only for a trusted identical-tree diff or content
+edits to its finite reviewed prose set. Shared inputs, omitted-specialist
+consumers, unknown paths, incomplete diffs, additions/deletions and mode changes
+select complete `merge`. A direct `create-pr` invocation requests feedback;
+it does not certify that omitted SQL qualification is irrelevant. CI independently
+recomputes this same profile from the trusted base and actual merge candidate.
+All native SQL platform CI jobs remain required. Warm/cold end-to-end feedback
+measurements, including preparation, are still required before claiming the
+5-minute warm / 15-minute cold objectives are met.
 
 Crate test membership is data-owned by `crate_test_membership.suites` in each
 profile. The coverage matrix cross-checks that first-party compiler crates with
