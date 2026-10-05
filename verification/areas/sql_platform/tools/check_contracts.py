@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(REPO_ROOT / "verification/runner"))
+from sifr_verify.profiles import required_sql_platform_suites
+
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "sql_platform"
 DATA_ROOT = AREA_ROOT / "data"
 ARCHITECTURE_PATH = REPO_ROOT / "internal_docs" / "sql_architecture.md"
@@ -386,7 +389,8 @@ def validate_profiles(overrides: dict[str, Any] | None = None) -> None:
         selections = [row for row in payload.get("selected_areas", []) if row.get("area") == "sql_platform"]
         require(len(selections) == 1, f"profile {name} must select sql_platform exactly once")
         row = selections[0]
-        require(set(row.get("suites", [])) == PROFILE_SUITES, f"profile {name} omits an SQL platform suite")
+        required = required_sql_platform_suites(name) if name == "create-pr" else PROFILE_SUITES
+        require(set(row.get("suites", [])) == required, f"profile {name} omits an SQL platform suite")
         require(set(row.get("resource_classes", [])) == {"default-local", "long-running"}, f"profile {name} has invalid SQL resources")
 
 
@@ -444,9 +448,14 @@ def self_test() -> None:
             wrong_sql_resource_class,
         ),
         (
-            "missing-profile-suite",
+            "missing-core-contracts-suite",
             "profiles",
-            remove_sql_profile_suite,
+            lambda value: remove_sql_profile_suite(value, "create-pr", "contracts"),
+        ),
+        (
+            "missing-merge-build-qualification",
+            "profiles",
+            lambda value: remove_sql_profile_suite(value, "merge", "build-qualification"),
         ),
     ]
     accepted: list[str] = []
@@ -455,7 +464,13 @@ def self_test() -> None:
         mutate(candidate)
         try:
             validate_all({key: candidate, "baseline": baseline})
-        except ContractError:
+        except ContractError as error:
+            expected = {
+                "missing-core-contracts-suite": "profile create-pr omits an SQL platform suite",
+                "missing-merge-build-qualification": "profile merge omits an SQL platform suite",
+            }.get(label)
+            if expected is not None:
+                require(str(error) == expected, f"{label} failed at an unrelated guard: {error}")
             continue
         accepted.append(label)
     require(not accepted, f"contract mutations were accepted: {', '.join(accepted)}")
@@ -468,10 +483,10 @@ def wrong_sql_resource_class(profiles: dict[str, Any]) -> None:
     sql_selection["resource_classes"] = ["default-local"]
 
 
-def remove_sql_profile_suite(profiles: dict[str, Any]) -> None:
-    selections = profiles["create-pr"]["selected_areas"]
+def remove_sql_profile_suite(profiles: dict[str, Any], profile: str, suite: str) -> None:
+    selections = profiles[profile]["selected_areas"]
     sql_selection = next(row for row in selections if row.get("area") == "sql_platform")
-    sql_selection["suites"].pop()
+    sql_selection["suites"].remove(suite)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
