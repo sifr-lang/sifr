@@ -28,7 +28,7 @@ SPEC = {'fixture_kinds': list(process.KINDS), 'fixture_lifetime_seconds': 8,
         'evidence_limit_bytes': 8*1024**2, 'ps_output_limit_bytes': process.MAX_CAPTURE,
         'memory_peak_bytes': 256*1024**2, 'memory_reserve_bytes': 2*1024**3,
         'tmpfs_growth_bytes': 0, 'disk_reserve_bytes': 8*1024**3,
-        'disk_growth_bytes': 16*1024**2, 'retained_copy_bytes': 8*1024**2}
+        'disk_growth_bytes': 256*1024**2, 'retained_copy_bytes': 8*1024**2}
 REQUIREMENTS = {key: SPEC[key] for key in ('memory_peak_bytes', 'memory_reserve_bytes',
     'tmpfs_growth_bytes', 'disk_reserve_bytes', 'disk_growth_bytes', 'retained_copy_bytes')}
 

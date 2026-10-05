@@ -283,7 +283,7 @@ class Controls(unittest.TestCase):
                  'paths': {name: {'storage': diagnostic.common.storage.topology(resource.diagnostics)}
                            for name in ('.', *diagnostic.common.storage.NAMES)}}
         env = diagnostic.common.storage.bindings(self.output) | {
-            'SIFR_VERIFY_DISK_FLOOR_BYTES': str(resource.disk_available_bytes-24*1024**2),
+            'SIFR_VERIFY_DISK_FLOOR_BYTES': str(resource.disk_available_bytes-diagnostic.SPEC['disk_growth_bytes']-diagnostic.SPEC['retained_copy_bytes']),
             'SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC': repr(160.)}
         report = self.report(cases) | {'protocol': diagnostic.PROTOCOL, 'schema_version': 1,
             'source': source, 'specification': diagnostic.SPEC, 'requirements': diagnostic.REQUIREMENTS,
@@ -365,6 +365,59 @@ class Controls(unittest.TestCase):
                 self.assertIn('deadline' if mode == 'deadline' else 'per-case', result['failure'])
                 invoke.assert_not_called()
                 self.assertEqual(resources.call_count, 1 if mode == 'deadline' else 2)
+
+    def test_prospective_disk_forecast_and_unchanged_reserves(self):
+        requirements = diagnostic.REQUIREMENTS
+        self.assertEqual(requirements, dict(memory_peak_bytes=256*1024**2,
+            memory_reserve_bytes=2*1024**3, tmpfs_growth_bytes=0, disk_reserve_bytes=8*1024**3,
+            disk_growth_bytes=(16+240)*1024**2, retained_copy_bytes=8*1024**2))
+        resource = Resources(2, 2., 7*1024**3, 3*1024**3, 8866758656, {}, [], TOPOLOGY, False)
+        result = diagnostic.common.admit(resource, requirements)
+        self.assertEqual(result['disk_admitted_bytes'], 8866758656)
+        from dataclasses import replace
+        with self.assertRaises(Exception):
+            diagnostic.common.admit(replace(resource, disk_available_bytes=8866758655), requirements)
+
+    def test_run_wide_floor_survives_changing_case_free_space(self):
+        from dataclasses import replace
+        cases = [self.simulate(kind)[0] for kind in fixture.KINDS]
+        initial = Resources(2, 2., 7*1024**3, 3*1024**3, 40*1024**3, {}, [],
+            TOPOLOGY | {'capacity_authority': 'declared-dedicated-darwin-vm-stat'}, False)
+        resources = [initial]+[replace(initial, disk_available_bytes=initial.disk_available_bytes-(i+1)*1024**2)
+                               for i in range(4)]
+        env = diagnostic.common.storage.bindings(self.output)
+        proof = {'environment': env}
+        seen = []
+        def invoke(kind, directory, python, checkpoint, selected):
+            seen.append(dict(selected))
+            return copy.deepcopy(cases[fixture.KINDS.index(kind)])
+        def deadline_environment(selected, seconds):
+            end = fixture.time.monotonic()+seconds
+            return selected | {'SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC': repr(end)}, end
+        with ExitStack() as stack:
+            for obj, name, value in (
+                (diagnostic.platform, 'system', lambda: 'Darwin'),
+                (diagnostic.platform, 'machine', lambda: 'arm64'),
+                (diagnostic, 'identity', lambda: {'commit': 'a'*40}),
+                (diagnostic.common.storage, 'prepare', lambda *a: (env, proof)),
+                (diagnostic.common.storage, 'check', lambda *a: None),
+                (diagnostic.common, 'parent_temporary', lambda *a: nullcontext()),
+                (diagnostic.common, 'deadline_environment', deadline_environment),
+                (diagnostic.common, 'check_live_tool_identities', lambda *a: None),
+                (diagnostic.DiskBudget, 'from_environment', lambda selected:
+                    SimpleNamespace(floor=int(selected['SIFR_VERIFY_DISK_FLOOR_BYTES']), check=lambda: None)),
+                (fixture, 'observe_case', invoke),
+            ):
+                stack.enter_context(patch.object(obj, name, value))
+            stack.enter_context(patch.dict(os.environ, {'SIFR_NATIVE_HOST_KIND': 'dedicated-darwin'}))
+            probe = stack.enter_context(patch.object(diagnostic.common, 'resources', side_effect=resources))
+            report = diagnostic.observe(self.output)
+        self.assertEqual(report['status'], 'observed', report.get('failure'))
+        self.assertEqual(probe.call_count, 5)
+        floor = initial.disk_available_bytes-(256+8)*1024**2
+        self.assertEqual([int(row['SIFR_VERIFY_DISK_FLOOR_BYTES']) for row in seen], [floor]*4)
+        self.assertEqual([case['admission']['resources']['disk_available_bytes'] for case in report['cases']],
+                         [resource.disk_available_bytes for resource in resources[1:]])
 
 
 if __name__ == '__main__':

@@ -3337,3 +3337,36 @@ rejection. Sparse302-file guard and diff checks pass. Only the checker, tests
 and this plan changed; all production runtime, fixture/observer, workflow and
 resource bytes remain unchanged. Actual execution of the successor remains
 pending exact root-coordinated review and dispatch.
+
+## M5 harmless-host prospective disk forecast — bounded 2026-10-05
+
+Exact b7fe35d4dd7591db16b75657bbc9f898dc36c127 run37256186941 passed actual
+waitid capability and natural-output/exit7. Deadline-term stopped before its
+2-second deadline on the declared-growth monitor: initial free44,663,562,240B,
+floor44,638,396,416B, failure free44,609,089,536B. Production75 preserved that
+original ENOSPC while safely TERM→owned zombie→wait−15→empty group, complete=true,
+without needless KILL or signal errors. No expected deadline Outcome was
+returned; resistant-pipe was unexecuted. Preserve both failed run records and
+successful partial observations; neither is a complete four-case pass.
+
+The volume-wide free-space drop was54,472,704B, not an identified owned-byte
+allocation. Retained state.json395,847B includes340,096B raw ps text; there is no
+complete owned-output byte census or identified external writer. Register only
+a prospective256MiB disk-growth estimate: the original16MiB workload/evidence
+allowance plus240MiB volume-wide headroom. This is not measured consumption or a
+fit guarantee. Initial disk admission becomes8,866,758,656B, with retained8MiB
+and reserve8GiB unchanged. Keep the exact existing
+max(inherited, initial_free-growth-retained) run-wide floor; never reset it per
+case. Initial/per-case admission, all memory/deadline/evidence bounds, four
+fixture assertions, production75, producer/fixture and workflow bytes remain
+unchanged. Scope is SPEC, focused controls and this plan only; no guard formula,
+executor or workflow correction belongs here. Root reviews the clean successor
+before any separately coordinated changed-source attempt; no dispatch here.
+
+The prospective SPEC update is implemented. All27 focused pure controls pass,
+including exact8,866,758,656B admission, one-byte-short refusal and an observed
+four-case synthetic sequence whose changing per-case free-space admissions do
+not reset the initial run-wide floor. Sparse302-file guard and diff checks pass.
+Production code change is exactly one SPEC value; the formula, checker,
+fixture/observer, runtime75 and workflow files are byte-identical to b7. This
+remains an unmeasured forecast awaiting exact root review and native execution.
