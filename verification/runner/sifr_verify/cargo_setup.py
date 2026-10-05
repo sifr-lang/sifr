@@ -130,8 +130,22 @@ def prepare_sysroot_package_binary(profile, env, command_runner) -> None:
                 "host-installed-stdlib-heavy", "metadata-corpus"}
     if any(area["area"] == "sysroot_release" and required.intersection(area["suites"])
            for area in profile.get("selected_areas", [])):
-        command_runner([sys.executable, str(REPO_ROOT /
-            "verification/areas/sysroot_release/package_build.py")], env=env)
+        command = [sys.executable, str(REPO_ROOT /
+            "verification/areas/sysroot_release/package_build.py")]
+        if profile.get("name") != "merge":
+            command_runner(command, env=env)
+            return
+        # Prospective merge scheduling boundary: each exact preparation graph
+        # owns a bounded command; inherited absolute deadlines remain binding.
+        phases = (
+            ("sysroot-package", ["--package-only"]),
+            ("sysroot-metadata-corpus", ["--metadata-suite", "metadata-corpus"]),
+            ("sysroot-metadata-structural", ["--metadata-suite", "metadata-structural"]),
+        )
+        for phase, arguments in phases:
+            invocation = [*command, *arguments]
+            print(f"[sifr-profile-setup] phase={phase} command={shlex.join(invocation)}", flush=True)
+            command_runner(invocation, env=env)
 
 
 def prepare_authoring_test_binaries(profile, env, command_runner) -> None:

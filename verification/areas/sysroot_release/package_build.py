@@ -54,11 +54,15 @@ def prepare_metadata(root: Path, env: dict[str, str], run=subprocess.run, *, sui
              "metadata_structural_"], cwd=root, env=env, check=True)
 
 
-def prepare(root: Path, env: dict[str, str], run=subprocess.run):
+def prepare_package(root: Path, env: dict[str, str], run=subprocess.run):
     host = host_target(env)
     command, build_env = package_build_configuration(
         root, env, host, root / "target/sysroot_release/preparation", prepare_only=True)
     run(command, cwd=root, env=build_env, check=True)
+
+
+def prepare(root: Path, env: dict[str, str], run=subprocess.run):
+    prepare_package(root, env, run)
     # Preserve the selected library graph; filters execute only after preparation.
     # metadata-structural is a distinct source-version test configuration.
     # Prepare it explicitly rather than cold-build it during assertions.
@@ -68,10 +72,15 @@ def prepare(root: Path, env: dict[str, str], run=subprocess.run):
 if __name__ == "__main__":
     import argparse
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--package-only',action='store_true')
     parser.add_argument('--metadata-only',action='store_true')
     parser.add_argument('--metadata-suite',choices=('metadata-corpus','metadata-structural'))
     args=parser.parse_args()
-    if args.metadata_suite:
+    if args.package_only and (args.metadata_only or args.metadata_suite):
+        parser.error('--package-only cannot be combined with metadata preparation')
+    if args.package_only:
+        prepare_package(Path(__file__).resolve().parents[3],dict(os.environ,CARGO_NET_OFFLINE='true'))
+    elif args.metadata_suite:
         prepare_metadata(Path(__file__).resolve().parents[3],dict(os.environ,CARGO_NET_OFFLINE='true'),suite=args.metadata_suite)
     else:
         callback=prepare_metadata if args.metadata_only else prepare

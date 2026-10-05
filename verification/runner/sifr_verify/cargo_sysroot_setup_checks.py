@@ -74,6 +74,105 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         self.assertEqual(prod_env["CARGO_TARGET_DIR"], str(root / "target/sysroot_release/cargo-target"))
         self.assertNotIn("SIFR_RELEASE_VERSION", env)
 
+    def test_merge_sysroot_preparation_declares_three_serial_exact_graphs(self):
+        profile = {"name": "merge", "selected_areas": [{"area": "sysroot_release",
+                   "suites": ["boundary-equivalence", "metadata-corpus", "metadata-structural"]}]}
+        original = {"CARGO_BUILD_JOBS": "1", "CARGO_PROFILE_DEV_DEBUG": "0",
+                    "SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC": "321.0"}
+        env = original.copy()
+        calls = []
+        output = io.StringIO()
+        with redirect_stdout(output):
+            prepare_sysroot_package_binary(profile, env,
+                lambda argv, **kw: calls.append((argv, kw["env"].copy())))
+        script = str(REPO_ROOT / "verification/areas/sysroot_release/package_build.py")
+        self.assertEqual(calls, [
+            ([sys.executable, script, "--package-only"], original),
+            ([sys.executable, script, "--metadata-suite", "metadata-corpus"], original),
+            ([sys.executable, script, "--metadata-suite", "metadata-structural"], original),
+        ])
+        self.assertEqual(env, original)
+        for phase in ("sysroot-package", "sysroot-metadata-corpus", "sysroot-metadata-structural"):
+            self.assertIn("phase=" + phase + " command=", output.getvalue())
+
+    def test_merge_preparation_failure_stops_without_retry_or_later_graphs(self):
+        profile = {"name": "merge", "selected_areas": [{"area": "sysroot_release",
+                   "suites": ["boundary-equivalence", "metadata-corpus", "metadata-structural"]}]}
+        for failed_phase in range(3):
+            calls = []
+            def fail(argv, **kwargs):
+                calls.append(argv)
+                if len(calls) == failed_phase + 1:
+                    raise CommandFailed(124, "safety_deadline")
+            with self.subTest(phase=failed_phase), redirect_stdout(io.StringIO()), \
+                 self.assertRaises(CommandFailed) as observed:
+                prepare_sysroot_package_binary(profile, {}, fail)
+            self.assertEqual((observed.exception.returncode, observed.exception.cause),
+                             (124, "safety_deadline"))
+            self.assertEqual(len(calls), failed_phase + 1)
+
+    def test_split_retains_command_limit_and_existing_absolute_deadline(self):
+        from .profile_commands import run_command
+        profile = {"name": "merge", "selected_areas": [{"area": "sysroot_release",
+                   "suites": ["metadata-corpus", "metadata-structural"]}]}
+        env = {"SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC": "1234.0"}
+        calls = []
+        def execute(argv, **kwargs):
+            calls.append((argv, kwargs))
+            return Outcome(0, "exit", b"", b"", False, 0.0)
+        with patch("sifr_verify.profile_commands.execute", side_effect=execute), \
+             redirect_stdout(io.StringIO()):
+            prepare_sysroot_package_binary(profile, env, run_command)
+        self.assertEqual(len(calls), 3)
+        for _, kwargs in calls:
+            self.assertEqual(kwargs["deadline_seconds"], "2400")
+            self.assertEqual(kwargs["env"], env)
+        from .process_execution import deadline_environment
+        with patch("sifr_verify.process_execution.time.monotonic", return_value=1000.0):
+            for _ in calls:
+                child, deadline = deadline_environment(env, 2400)
+                self.assertEqual(deadline, 1234.0)
+                self.assertEqual(child["SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC"], "1234.0")
+
+    def test_nonmerge_and_unselected_setup_keep_existing_boundary(self):
+        for name in ("nightly", "release", "cloud", "create-pr"):
+            calls = []
+            prepare_sysroot_package_binary({"name": name, "selected_areas": [
+                {"area": "sysroot_release", "suites": ["metadata-corpus"]}]}, {},
+                lambda argv, **kw: calls.append(argv))
+            self.assertEqual(calls, [[sys.executable, str(REPO_ROOT /
+                "verification/areas/sysroot_release/package_build.py")]])
+        calls = []
+        prepare_sysroot_package_binary({"name": "merge", "selected_areas": [
+            {"area": "sysroot_release", "suites": ["metadata-structural"]}]}, {},
+            lambda argv, **kw: calls.append(argv))
+        self.assertEqual(calls, [])
+
+    def test_split_graphs_equal_legacy_commands_and_version_environments(self):
+        sysroot_module()
+        import package_build
+        root = Path("/owned/worktree")
+        env = {"CARGO_PROFILE_DEV_DEBUG": "0", "CARGO_INCREMENTAL": "0",
+               "CARGO_NET_OFFLINE": "true", "SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC": "321.0"}
+        combined, split = [], []
+        def collect(target):
+            return lambda argv, **kw: target.append((argv, kw))
+        with patch.object(package_build.subprocess, "check_output", return_value="host: host\n"), \
+             patch.object(package_build, "prepare_source_snapshot") as snapshot:
+            package_build.prepare(root, env, collect(combined))
+            package_build.prepare_package(root, env, collect(split))
+            self.assertEqual(len(split), 1)
+            package_build.prepare_metadata(root, env, collect(split), suite="metadata-corpus")
+            package_build.prepare_metadata(root, env, collect(split), suite="metadata-structural")
+        self.assertEqual(split, combined)
+        self.assertEqual(len(split), 3)
+        self.assertEqual(split[1][1]["env"]["SIFR_RELEASE_VERSION"], package_build.RELEASE_VERSION)
+        self.assertNotIn("SIFR_RELEASE_VERSION", split[2][1]["env"])
+        self.assertIn("--lib", split[1][0])
+        self.assertNotIn("--lib", split[2][0])
+        self.assertEqual(snapshot.call_count, 2)
+        self.assertNotIn("SIFR_RELEASE_VERSION", env)
+
     def test_selected_area_preparation_preserves_execution_arguments(self):
         from .area_cargo_setup import sql_preparation_commands, prepare_area_graphs
         commands = sql_preparation_commands(["schema-profiles"])
