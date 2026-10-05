@@ -12,8 +12,10 @@ assertion time was 2,406,476 ms against the unchanged 2,400-second limit.
 The failure and immutable reports remain at
 `/workspace/validation-work/evidence/acceptance-e3ca270aa-20261004-v1/`.
 The prospective correction registered below prepares that exact CLI consumer
-before assertions; it does not extend deadlines or reuse assertions. Scoped
-review, the successor gate, paired performance and final cloud remain pending.
+before assertions; it does not extend deadlines or reuse assertions. Exact implementation `d27cefdf2e56601c11f903c9546309d79dd022ac` received
+scoped Opus SATISFIED with no blockers and was fast-forwarded unchanged into
+integration. The full-checkout 4,467-file guard passes; the successor gate, paired
+performance and final cloud remain pending.
 
 The earlier complete local gate was frozen
 `1c40af4c09fb567a754f1ad8130868a7695ad8ce`, closed at 22:19:41 UTC with
@@ -3059,12 +3061,18 @@ commit, external controls and review remain retained; observed recovery was
 The receipt is
 `/workspace/validation-work/evidence/closed-sql-worker-worktree-removal-20261004.json`.
 
-Astra's next proposed standard ARM experiment is a separate diagnostic of the
-registered beta.16 ARM package compiling and running the existing small offline
-user program, before attempting full compiler construction or a cross-producer
-redesign. It needs a bounded memory observer and fresh admission; it is not yet
-implemented or executed and provides no qualification evidence. Its exact scope
-is retained in
+The separately registered standard ARM runtime diagnostic was implemented on
+`21a286748ef7ff6d15c735ec132a8b3d912781fc` and executed as GitHub run
+`37247668853`. Fresh memory admission passed (required 2,952,790,016 bytes,
+available 3,258,253,312), but toolchain preparation exited 1: resolving the
+Homebrew rustup symlink invoked `rustup-init` under that argv0, which rejected
+the toolchain argument. No runtime workload or assertion executed, and this
+failed diagnostic does not qualify ARM or the integration source. The live
+checker reported tool identities differed; exact differing fields are unavailable
+from the retained initial-only identities. The retained checker passed only as
+an accurately stopped run; no live checker pass is inferred. Original evidence:
+`/workspace/validation-work/evidence/native-arm-runtime-21a286748-20261005/observation.json`.
+The original prospective scope is retained in
 `/workspace/validation-work/native-standard-arm-runtime-probe-astra-high-20261004.md`.
 A capable authorized Apple Silicon host could instead use the existing route.
 No larger-runner availability or universal hardware minimum is inferred.
@@ -3120,7 +3128,31 @@ restoration command remain. The original timeout is unchanged. Receipt:
   retaining 143/729 E2E fixture selections. The sparse-checkout 220-file size
   guard and whitespace check passed. Evidence and reproducible pure commands:
   `/workspace/validation-work/evidence/sql-cli-preparation-e3ca-20261005/`.
-- Handoff remains a bounded implementation, not complete acceptance: scoped
-  Opus review, integration, full-checkout guard and actual successor gate are
-  explicitly deferred to the coordinating owner. No build or assertion reuse
+- At isolated-worktree handoff, scoped Opus review, integration, full-checkout
+  guard and actual successor gate were explicitly deferred to the coordinating
+  owner. Review/integration/guard subsequently completed as recorded below;
+  this remains a bounded implementation, not complete acceptance. No build or assertion reuse
   occurred; the e3ca failure is retained unchanged.
+
+### M2 ordinary CLI preparation integration record — 2026-10-05
+
+- Exact scoped Opus review of base
+  `e3ca270aa78e41ffc1667f3c61f481f8a49d1e1f` and implementation
+  `d27cefdf2e56601c11f903c9546309d79dd022ac`: SATISFIED, no blocking
+  findings. The reviewer read the exact diff, runner, gap evidence and pure
+  controls without executing Cargo, UV or compiler commands. Retained review:
+  `/workspace/validation-work/evidence/candidates/d27cefdf2e56601c11f903c9546309d79dd022ac/opus-sql-ordinary-cli-preparation.md`
+  (SHA-256 `76c6a988bd98b8adbb01fe66e1fd35ea6e729046e0ff6186c6fd4ca04756a6dc`).
+  The adjacent JSON record binds base, candidate, changed paths and prior checks.
+- Verified clean integration at e3ca and direct parentage, then fast-forwarded
+  unchanged to d27. The full-checkout 4,467-file source-size guard and
+  whitespace check pass. This
+  successor commit changes only this plan's review and observed-run records;
+  implementation and its 38 controls, six identical profile/stage plans,
+  deadlines, resource reserves and original e3ca timeout evidence remain unchanged.
+- Nonblocking review follow-ups remain separate: later performance preparation
+  can run the same ordinary CLI recipe again, and the pre-existing cached-build
+  estimate uses executable presence. Neither is a new waiver or capacity claim.
+  No build, gate, push, target mutation or assertion reuse occurred during this
+  integration. Next actual successor acceptance, paired performance and final
+  cloud remain required.
