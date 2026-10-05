@@ -63,11 +63,8 @@ fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
     configure_wasi_compiler(&mut build)?;
     // The retained PostgreSQL sources use pre-C23 callback declarations.
     // Select their C dialect explicitly instead of inheriting host defaults.
-    let c_standard = if build.get_compiler().is_like_msvc() {
-        "c17"
-    } else {
-        "gnu17"
-    };
+    let is_msvc = build.get_compiler().is_like_msvc();
+    let c_standard = if is_msvc { "c17" } else { "gnu17" };
     build.std(c_standard);
     if is_wasm_target() {
         build.include(wasi_compatibility_headers()?);
@@ -91,6 +88,13 @@ fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
     }
     if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         build.include(source.join("src/postgres/include/port/win32"));
+        if is_msvc {
+            // Match libpg_query's MSVC headers and legacy variadic macros.
+            // C17 otherwise enables the incompatible conforming preprocessor.
+            build
+                .include(source.join("src/postgres/include/port/win32_msvc"))
+                .flag("/Zc:preprocessor-");
+        }
     }
     add_c_files(&mut build, &source.join("src"))?;
     add_c_files(&mut build, &source.join("src/postgres"))?;
