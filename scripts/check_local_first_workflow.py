@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import re
+import shutil
+import subprocess
+import tempfile
 from pathlib import Path
 
 from check_uv_toolchain import parse_workflows
@@ -234,7 +238,71 @@ def validate_capacity_diagnostics(document: dict) -> list[str]:
     return errors
 
 
+def check_e2e_wrappers(root: Path) -> None:
+    """Exercise shell exit propagation and allocation without compiling fixtures."""
+    with tempfile.TemporaryDirectory(prefix="sifr-wrapper-contract-") as directory:
+        temporary = Path(directory)
+        scripts = temporary / "verification/runner/e2e"
+        scripts.mkdir(parents=True)
+        bin_dir = temporary / "bin"
+        bin_dir.mkdir()
+        uv = bin_dir / "uv"
+        uv.write_text('#!/usr/bin/env bash\necho "${@: -1}"\n')
+        uv.chmod(0o755)
+        env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", TMPDIR=directory)
+        for key in tuple(env):
+            if key.startswith("SIFR_E2E_") or key == "CARGO_BUILD_JOBS":
+                del env[key]
+        check = scripts / "check_report_determinism.sh"
+        run = scripts / "run_e2e_pass.sh"
+        shutil.copyfile(root / "verification/runner/e2e/check_report_determinism.sh", check)
+        for mode, expected, count in (("pass", 0, 2), ("mismatch", 1, 2),
+                                      ("missing", 1, 1), ("failed-signature", 23, 1)):
+            counter = temporary / "count"
+            counter.write_text("0")
+            run.write_text('''#!/usr/bin/env bash
+count_file="${TMPDIR}/count"
+n=$(cat "$count_file")
+n=$((n + 1))
+echo "$n" > "$count_file"
+echo "child-progress-$n"
+case "$WRAPPER_MODE" in
+  pass) echo '[sifr-e2e] report_signature=abc123' ;;
+  mismatch) echo "[sifr-e2e] report_signature=abc$n" ;;
+  missing) : ;;
+  failed-signature) echo '[sifr-e2e] report_signature=abc123'; exit 23 ;;
+esac
+''')
+            result = subprocess.run(["bash", str(check), "--profile", "merge"],
+                                    env=dict(env, WRAPPER_MODE=mode), text=True,
+                                    capture_output=True, timeout=15)
+            assert result.returncode == expected, (mode, result)
+            assert int(counter.read_text()) == count, mode
+            assert "child-progress-1" in result.stderr, mode
+            assert "child-progress" not in result.stdout, mode
+            assert ("signature confirmed" in result.stdout) == (mode == "pass"), mode
+        shutil.copyfile(root / "verification/runner/e2e/run_e2e_pass.sh", run)
+        cargo = bin_dir / "cargo"
+        cargo.write_text('''#!/usr/bin/env bash
+echo "outer=$CARGO_BUILD_JOBS inner=$SIFR_E2E_CARGO_BUILD_JOBS"
+printf 'cargo-arg=%s\\n' "$@"
+''')
+        cargo.chmod(0o755)
+        for extra, overrides, jobs in (([], {}, "1"),
+                                       ([], {"SIFR_E2E_CARGO_BUILD_JOBS": "2"}, "2"),
+                                       (["--cargo-build-jobs", "3"],
+                                        {"SIFR_E2E_CARGO_BUILD_JOBS": "2"}, "3")):
+            result = subprocess.run(["bash", str(run), "--profile", "merge", *extra],
+                                    env=dict(env, **overrides), text=True,
+                                    capture_output=True, timeout=15)
+            assert result.returncode == 0, result
+            assert f"outer={jobs} inner={jobs}" in result.stdout, result
+            assert "cargo-arg=--locked" in result.stdout, result
+            assert "cargo-arg=test_e2e_pass" in result.stdout, result
+
+
 def main() -> None:
+    check_e2e_wrappers(Path(__file__).resolve().parent.parent)
     root = Path(__file__).resolve().parents[1]
     document = parse_workflows({WORKFLOW: (root / WORKFLOW).read_text()})[WORKFLOW]
     publisher_path = ".github/workflows/validation-required.yml"

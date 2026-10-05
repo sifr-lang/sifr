@@ -42,10 +42,16 @@ extract_signature() {
   local log_file
   log_file="$(mktemp "${TMPDIR:-/tmp}/sifr-e2e-determinism-${run_id}.XXXXXX")"
 
-  (
+  if (
     cd "${REPO_ROOT}"
     bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}"
-  ) 2>&1 | tee "${log_file}" >/dev/null
+  ) 2>&1 | tee "${log_file}" >&2; then
+    :
+  else
+    local status=$?
+    echo "e2e run ${run_id} failed with status ${status}; see ${log_file}" >&2
+    return "${status}"
+  fi
 
   local signature
   signature="$(
