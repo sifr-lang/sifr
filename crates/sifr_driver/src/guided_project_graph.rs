@@ -2,8 +2,7 @@
 use crate::{CompilerContext, PackageEntrypoint, check_package_project};
 use serde_json::json;
 use sifr_frontend::{
-    DiskSourceProvider, DocumentVersion, OverlayDocument, OverlaySourceProvider, SourcePath,
-    SourceProvider, SourceText,
+    DocumentVersion, OverlayDocument, OverlaySourceProvider, SourcePath, SourceProvider, SourceText,
 };
 use sifr_package::{CargoLockMode, PackageSourceMap, SifrManifest};
 use std::fmt::Write as _;
@@ -235,12 +234,12 @@ fn replay_with_provider<P: SourceProvider>(
 
 /// All canonical package resolution and compilation reads use the input overlay.
 #[must_use]
-pub fn replay(input: &[u8]) -> ReplayOutcome {
+pub fn replay<P: SourceProvider>(input: &[u8], provider: P) -> ReplayOutcome {
     let Some(tree) = project_tree(input) else {
         return ReplayOutcome::InvalidInput;
     };
     let root = fixture_root();
-    let mut provider = OverlaySourceProvider::new(DiskSourceProvider::new());
+    let mut provider = OverlaySourceProvider::new(provider);
     for (relative, source) in tree.files {
         provider.insert_overlay(OverlayDocument::new(
             SourcePath::new(root.join(relative)),
@@ -255,9 +254,13 @@ pub fn replay(input: &[u8]) -> ReplayOutcome {
 
 /// Recheck a minimized tree from its exported on-disk files.
 #[must_use]
-pub fn replay_exported_tree(input: &[u8], root: &Path) -> ReplayOutcome {
+pub fn replay_exported_tree<P: SourceProvider>(
+    input: &[u8],
+    root: &Path,
+    provider: &mut P,
+) -> ReplayOutcome {
     if project_tree(input).is_none() {
         return ReplayOutcome::InvalidInput;
     }
-    replay_with_provider(input, root, &mut DiskSourceProvider::new())
+    replay_with_provider(input, root, provider)
 }

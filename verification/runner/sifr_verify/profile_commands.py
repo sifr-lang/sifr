@@ -29,7 +29,8 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Out
             line, pending[stream] = pending[stream].split("\n", 1)
             sys.stdout.write(f"[child:{stream}] {json.dumps(line, ensure_ascii=True)}\n")
     outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit,
-                      deadline_seconds=(env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
+                      deadline_seconds=(env or {}).get("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS",
+                          (env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400")))
     for stream, text in pending.items():
         if text:
             sys.stdout.write(f"[child:{stream}] {json.dumps(text, ensure_ascii=True)}\n")

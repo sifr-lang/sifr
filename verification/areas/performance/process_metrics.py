@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import math
+import os
 import platform
 import re
 import statistics
 from pathlib import Path
 from typing import Any
+from measurement_timer import linux_timer
 
 DARWIN_TIME_RE = re.compile(
     r"^\s*(?P<real>[0-9.]+) real\s+(?P<user>[0-9.]+) user\s+(?P<sys>[0-9.]+) sys\s*$"
@@ -15,6 +17,8 @@ DARWIN_TIME_RE = re.compile(
 
 
 def timed_command(command: list[str]) -> list[str]:
+    if platform.system() == "Linux" and os.environ.get("SIFR_PERFORMANCE_HOST_KIND") == "managed-linux":
+        return [str(linux_timer()), "-v", *command]
     if platform.system() == "Darwin" and Path("/usr/bin/time").exists():
         return ["/usr/bin/time", "-l", *command]
     if platform.system() == "Linux" and Path("/usr/bin/time").exists():

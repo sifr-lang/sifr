@@ -26,6 +26,7 @@ from .python_interop_segmentation_checks import policy_checks as python_interop_
 from .profile_results import AreaResultError, validate_area_result
 from .profile_runner import timed_step
 from .reference_admission_checks import policy_checks as reference_admission_policy_checks
+from .cloud_profile_tests import policy_checks as cloud_profile_policy_checks
 from .profiles import (
     ProfileError,
     canonical_step_names,
@@ -52,18 +53,23 @@ from .schemas import (
 )
 from .step_budgets import run_self_test as step_budget_self_test
 from .qualification_profile_checks import policy_checks as qualification_profile_checks
+from .validation_contract_checks import policy_checks as validation_contract_checks
+from .resource_schedule_checks import policy_checks as resource_schedule_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
 
 def run_all() -> list[str]:
     checks = [
+        ("resource admission and owned graph lifetimes", resource_schedule_checks),
+        ("validation contracts and execution evidence", validation_contract_checks),
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),
         ("Python interop segmented profile checks", python_interop_segmentation_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),
+        ("shared-cloud correctness coverage and outcomes", cloud_profile_policy_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
@@ -148,7 +154,7 @@ def _profile_schema_self_test() -> None:
             return
         raise AssertionError(f"{description} was accepted")
 
-    expected = {"create-pr", "merge", "nightly", "python-interop-live", "release"}
+    expected = {"cloud", "create-pr", "merge", "nightly", "python-interop-live", "release"}
     if set(profiles) != expected:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
     for profile_name, profile in profiles.items():

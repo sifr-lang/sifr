@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from compiler_lanes import selection
+from reference_host_allocation import managed_allocation
+from measurement_timer import managed_timer_identity
 
 
 def output(argv: list[str]) -> str:
@@ -42,6 +44,11 @@ def linux_memory() -> dict[str, int]:
 
 
 def cpu_power_policy() -> dict[str, Any]:
+    kind = os.environ.get("SIFR_PERFORMANCE_HOST_KIND", "physical")
+    if kind not in {"physical", "managed-linux"}:
+        raise ValueError(f"unknown performance reference host kind: {kind}")
+    if kind == "managed-linux" and platform.system() != "Linux":
+        raise ValueError("managed-linux reference requires Linux")
     if platform.system() == "Darwin":
         return {"source": "pmset", "configuration": output(["pmset", "-g", "custom"])}
     root = Path("/sys/devices/system/cpu/cpufreq")
@@ -54,19 +61,26 @@ def cpu_power_policy() -> dict[str, Any]:
                 "scaling_min_freq", "scaling_max_freq",
             )
         })
-    if not policies:
+    if not policies and kind == "physical":
         raise ValueError("named reference requires measurable CPU frequency policy")
     boost_paths = (
         root / "boost",
         Path("/sys/devices/system/cpu/intel_pstate/no_turbo"),
     )
-    return {
+    measured = {
         "source": "sysfs",
         "policies": policies,
         "boost_controls": {
             str(path): path.read_text().strip() for path in boost_paths if path.is_file()
         },
     }
+    if kind == "managed-linux":
+        return {
+            "source": "managed-linux", "allocation": managed_allocation(),
+            "affinity_cpus": sorted(os.sched_getaffinity(0)),
+            "frequency_policy": measured if policies else {"source": "unavailable"},
+        }
+    return measured
 
 
 def host_details() -> dict[str, Any]:
@@ -147,7 +161,7 @@ def execution_details(repo_root: Path, manifest_path: Path, mode: str) -> dict[s
     if not target.is_absolute():
         target = repo_root / target
     temporary = Path(os.environ.get("TMPDIR", "/tmp"))
-    return {
+    measured = {
         "rustc": output(["rustc", "--version"]),
         "cargo": output(["cargo", "--version"]),
         "python": platform.python_version(),
@@ -171,6 +185,9 @@ def execution_details(repo_root: Path, manifest_path: Path, mode: str) -> dict[s
             Path(os.environ.get("CARGO_HOME", str(Path.home() / ".cargo"))) / "config.toml"
         ),
     }
+    if os.environ.get("SIFR_PERFORMANCE_HOST_KIND") == "managed-linux":
+        measured["measurement_timer"] = managed_timer_identity()
+    return measured
 
 
 def reference_identity(repo_root: Path, manifest_path: Path, mode: str) -> dict[str, Any]:
@@ -201,6 +218,11 @@ def comparison_mismatches(expected: dict[str, Any], actual: dict[str, Any]) -> l
     actual_lane = actual["execution"].get("compiler_measurement_lane", "contributor-dev")
     if expected_lane != actual_lane:
         mismatches.append("execution.compiler_measurement_lane")
+    if any(isinstance(identity["host"]["cpu_power_policy"], dict)
+           and identity["host"]["cpu_power_policy"].get("source") == "managed-linux"
+           for identity in (expected, actual)):
+        if expected["execution"]["measurement_timer"] != actual["execution"]["measurement_timer"]:
+            mismatches.append("execution.measurement_timer")
     # Tracked compiler inputs, including project Cargo config (for example a
     # native grammar version), are candidate changes to measure. User Cargo
     # config and external build flags remain host configuration. Both project

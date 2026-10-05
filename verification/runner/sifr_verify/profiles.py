@@ -44,6 +44,14 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     payload = load_json(path)
     if not isinstance(payload, dict):
         raise ProfileError(f"profile must be a JSON object: {path}")
+    if "extends" in payload:
+        # Cloud inherits the live merge inventory so new correctness checks
+        # cannot silently disappear from its duplicated selection.
+        if (profile != "cloud" or payload.get("extends") != "merge"
+                or set(payload) != {"extends", "name", "description"}):
+            raise ProfileError("only the cloud profile may inherit the merge inventory")
+        inherited = load_profile("merge", profiles_dir)
+        payload = inherited | {key: value for key, value in payload.items() if key != "extends"}
     validate_data(
         payload,
         load_schema("profile.schema.json"),
@@ -379,6 +387,9 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
 
 def canonical_step_names(profile: dict[str, Any]) -> set[str]:
     names = {"cargo_cache_setup"}
+    if profile.get("name") == "cloud":
+        names.update({"preparation_dependencies", "preparation_sysroot_source", "preparation_sysroot_package",
+                      "retirement_source_cargo_target", "retirement_cargo_target"})
     names.update(
         f"guardrail_{str(step).replace('-', '_')}"
         for step in profile.get("guardrail_steps", [])

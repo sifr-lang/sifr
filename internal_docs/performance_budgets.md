@@ -1,5 +1,93 @@
 # Performance Budgets
 
+## Shared cloud validation
+
+`scripts/run_all_tests.sh --profile cloud` inherits the complete live merge
+correctness inventory. Functional tests and safety deadlines remain blocking;
+host-dependent step timings are recorded separately. Missing or noisy performance
+evidence cannot suppress correctness execution. The final JSON report separates
+`functional_status`, `performance_status` and `qualified`. A correctness pass
+with inconclusive performance is usable, but is not a qualified performance pass.
+
+For phase qualification, use `--profile cloud --require-performance` and set
+`SIFR_CLOUD_PERFORMANCE_RECEIPT` to a complete candidate-bound cloud receipt.
+Existing create-pr/merge/nightly/release controlled-host behavior is unchanged.
+
+The prospective `shared-cloud-median-v2` contract uses the fixed per-case pair
+counts registered in #4277 and encoded in `cloud_precision.py`: 5,120 fresh
+nearby baseline/candidate pairs across all 65 cases. Each case uses balanced
+pseudorandom AB/BA order fixed before samples. Both compilers are prepared from clean source, their
+executable/helper hashes and configuration are recorded, and the independent
+compiler reference must be merged. No optional stopping or selective combining
+of invocations is allowed. Every command is a fresh launch; query endpoints retain
+manifest warmups and internal sample counts but supply one median per process
+for inference. Preparation uses matched endpoint-specific build caches.
+
+Inference measures the median paired budget excess `candidate − T(baseline)`.
+`T` retains each existing budget formula and absolute median cap. Exact binomial
+order-statistic intervals allocate familywise alpha 0.05 across the complete
+median family. An upper bound at or below zero passes; a lower bound above zero
+is a regression; overlapping intervals are inconclusive. These guarantees are
+conditional on independent stationary pair summaries. Prospective rank-based
+temporal-drift, execution-order and serial-dependence permutation screens use
+4095 permutations and Bonferroni correction across three screens per case.
+Detected violations are inconclusive; passing screens does not prove independence.
+
+The observed nearest-rank empirical p95 for candidate editor/formatter samples
+must meet the existing p95 regression formulas and numeric caps. The v1 tail
+family is retained: editor, frontend-query and formatter observations. Other
+command/build/check p95 remains descriptive and unqualified; paired-median
+acceptance still applies. Pooling equally
+sized process groups describes these finite observations; it does not make the
+inner samples independent. Warm LSP samples retain their declared repetition
+averages. Observed RSS/cache limits remain hard checks. Individual-request
+maxima and population p95 are explicitly unqualified. GNU Time CPU counters
+are supplementary; they do not replace latency or unavailable instruction
+counters.
+All required median decisions and observed hard checks must pass for cloud
+qualification. Any required inconclusive result blocks phase closure.
+
+The complete v1 invocation `cloud-1790989457007807051` remains failed and
+unqualified (48 pass, 14 inconclusive, 3 maximum-sample failures). It is pilot
+evidence for this prospective precision plan only. Applying p95 budgets to a
+maximum of hundreds of samples had strengthened their quantile meaning. The v2
+count table targets approximately 99% modeled per-case power from uncertain
+pilot probabilities, not guaranteed power. Every v2 observation must be fresh;
+no v1 cases or partial captures may be promoted or combined.
+
+Prepare each endpoint in its own clean checkout using the verifier's locked
+Python runtime. Use that same runtime for capture and receipt checking; a bare
+system Python may differ from the full profile's interpreter and invalidate the
+measured identity. Select `SIFR_PERFORMANCE_HOST_KIND=managed-linux` and a working
+GNU Time executable through `SIFR_PERFORMANCE_TIME` for managed measurements.
+Use a session-owned verifier environment outside the benchmark checkouts, or
+ensure both checkouts expose identical Python environments to their fixtures.
+For example, set `UV_PROJECT_ENVIRONMENT=/absolute/owned/verification-env` for
+the commands below and the final cloud profile. Nested editor fixtures discover
+ancestor uv projects independently of the runner's `PATH`; a verifier `.venv`
+present in only one checkout changes the editor workload. Cloud identity binds
+the runner interpreter bytes and fixture ancestor uv files, local environment
+configuration and interpreter bytes (including absence). Mismatched or changed
+inputs reject the comparison before measurement or receipt acceptance. The CLI
+read-only fixture honors the explicitly configured verifier environment; Python
+interop preparation and execution retain their separate project environment.
+
+```bash
+uv run --project verification --locked python \
+  verification/areas/performance/cloud_worker.py prepare --output <directory>
+uv run --project verification --locked python \
+  verification/areas/performance/cloud_benchmarks.py capture \
+  --baseline <baseline-receipt.json> --candidate <candidate-receipt.json> \
+  --reference-compiler-commit <merged-sha> --output <new-evidence-directory>
+uv run --project verification --locked python \
+  verification/areas/performance/cloud_benchmarks.py check --receipt <receipt.json>
+```
+
+Keep the same measured environment/affinity and use a functioning process adopter.
+Receipts expire after
+24 hours and reject changed source, tooling, corpus, budgets, artifacts, counters
+or host configuration. Raw measurements and rejected outcomes remain preserved.
+
 frontend query architecture performance policy is local-first and versioned under `verification/areas/performance/`.
 
 ## Files

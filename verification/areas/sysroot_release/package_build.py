@@ -8,6 +8,18 @@ from producer_snapshot import prepare_source_snapshot
 RELEASE_VERSION = "0.1.0-beta.1300"
 
 
+def host_target(environment: dict[str, str]) -> str:
+    identity = subprocess.check_output(["rustc", "-vV"], text=True, env=environment)
+    return next(line.removeprefix("host: ") for line in identity.splitlines() if line.startswith("host: "))
+
+
+def package_compiler_path(root: Path, environment: dict[str, str], host: str) -> Path:
+    command, env = package_build_configuration(root, environment, host,
+                                               root / "target/sysroot_release/preparation", prepare_only=True)
+    target = command[command.index("--target") + 1]
+    return Path(env["CARGO_TARGET_DIR"]) / target / "release/sifr"
+
+
 def package_build_configuration(root: Path, original: dict[str, str], host: str,
                                 artifact_dir: Path, *, prepare_only: bool = False):
     env = dict(original, CARGO_TARGET_DIR=str((root / "target/sysroot_release/cargo-target").resolve()),
@@ -29,8 +41,7 @@ def corpus_configuration(root: Path, original: dict[str, str]):
 
 
 def prepare(root: Path, env: dict[str, str], run=subprocess.run):
-    host = subprocess.check_output(["rustc", "-vV"], text=True, env=env)
-    host = next(line.removeprefix("host: ") for line in host.splitlines() if line.startswith("host: "))
+    host = host_target(env)
     command, build_env = package_build_configuration(
         root, env, host, root / "target/sysroot_release/preparation", prepare_only=True)
     run(command, cwd=root, env=build_env, check=True)
@@ -38,6 +49,10 @@ def prepare(root: Path, env: dict[str, str], run=subprocess.run):
     prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
     # Preserve the selected library graph; filters execute only after preparation.
     run([*corpus[:7], "--no-run"], cwd=root, env=corpus_env, check=True)
+    # metadata-structural is a distinct source-version test configuration.
+    # Prepare it explicitly rather than cold-build it during assertions.
+    run(["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--no-run",
+         "metadata_structural_"], cwd=root, env=env, check=True)
 
 
 if __name__ == "__main__":

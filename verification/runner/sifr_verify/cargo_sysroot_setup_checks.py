@@ -130,7 +130,7 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         self.assertEqual(command, ["cargo", "build", "--locked", "--offline", "-p", "sifr"])
         self.assertEqual(binary, root / "target/sysroot_release/source-cargo-target/debug/sifr")
         self.assertEqual(env, {**original, "CARGO_TARGET_DIR": str(binary.parents[1]),
-                               "CARGO_NET_OFFLINE": "true"})
+                               "CARGO_NET_OFFLINE": "true", "CARGO_INCREMENTAL": "0"})
         self.assertEqual(original["CARGO_NET_OFFLINE"], "false")
         with patch.object(runner, "REPO_ROOT", root), \
              patch.object(runner, "base_env", return_value=original), \

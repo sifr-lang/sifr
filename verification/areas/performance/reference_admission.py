@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from check_budgets import BudgetError, DEFAULT_WAIVERS, check_reference_policy
+from benchmark_manifest import BenchmarkError
 from check_trend_policy import DEFAULT_POLICY, TrendPolicyError, validate_trend_policy
 from reference_host import reference_identity
 from reference_profiles import (
@@ -73,7 +74,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         profile = admit_reference(args.reference_profile)
-    except (ReferenceProfileError, TrendPolicyError, BudgetError, OSError, ValueError, KeyError) as error:
+    except (ReferenceProfileError, TrendPolicyError, BudgetError, BenchmarkError,
+            OSError, ValueError, KeyError) as error:
         print(f"performance qualification unavailable: {error}", file=sys.stderr)
         return 1
     print(f"performance reference admitted: {profile['name']} sha256={profile_digest(profile)}")
