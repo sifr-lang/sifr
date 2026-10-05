@@ -1,5 +1,35 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## Current acceptance checkpoint — 2026-10-05
+
+Exact test-only correction `aa1005326dfb698e3739ba91329882fef51865c6`
+received scoped Opus SATISFIED with no blockers and is integrated unchanged.
+Both new actual cases passed on their first run; both pure deadline controls
+passed; the exact full-checkout file guard passed all 4,467 files. Review evidence:
+`/workspace/validation-work/evidence/candidates/aa1005326dfb698e3739ba91329882fef51865c6/opus-f27-contract-split.md`.
+The four shared runtime files remain exactly reviewed production
+`75d6d4f7f83d7de2979d7eca98250e483626bd0f`, whose actual ARM cleanup proof
+passed all four harmless cases with independent live and retained replay.
+The failed Linux optimization is excluded; all historical failures remain retained.
+
+The candidate is ready for a genuine fresh independent baseline build, followed
+by complete same-candidate create-PR acceptance, new generated/allocation and
+paired performance evidence, and final cloud qualification. None of those new
+executions has passed yet. The reviewed baseline-v4 preparation and performance
+launcher packages have 21 and 22 passing synthetic controls respectively; their
+actual source/receipt bindings must be registered before use. Seven archives were
+rehydrated to their original verified plain-file paths; new placement requires
+fresh post-build capacity and inode bindings.
+
+Full native qualification and protected-check enforcement remain open. A paid
+larger runner is not inherently necessary, but the unchanged ARM preparation
+admission exceeds the observed standard runner's total memory; a qualified
+alternative host or reviewed measured execution policy remains necessary.
+The dedicated publication environment/App and required-check/merge-queue rules
+are still absent. Neither local gates nor harmless ARM cleanup proves those
+obligations complete. PR #4332 stays draft; SQL #4259 disposition follows accepted
+replacement and whole-phase audit.
+
 ## Prospective F27 test-contract split — 2026-10-05
 
 This bounded test-only correction owns branch
@@ -64,7 +94,7 @@ changed source is 811 lines. Root's full-suite/full-tree checks and exact scoped
 review remain pending; no broader acceptance or performance improvement is
 claimed. The failed optimization branch and all historical failures are retained.
 
-## Current acceptance checkpoint — 2026-10-05 03:10 UTC
+## Historical acceptance checkpoint — 2026-10-05 03:10 UTC
 
 Reviewed production process cleanup commits `18b5f6088a5d88570abf7f8ec2f11fd102c10a9a`
 and `75d6d4f7f83d7de2979d7eca98250e483626bd0f` are integrated unchanged.
