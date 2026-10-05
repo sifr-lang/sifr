@@ -175,8 +175,10 @@ def check_case(case, report):
                     and event['pid'] == leader and type(event['idtype']) is int and event['idtype'] == 1
                     and event['flags'] == 0x25, 'WNOWAIT flags or ownership differs')
             value = event['value']
+            # XNU exited waitid zeroes siginfo but never populates si_uid.
+            # Ownership remains the held P_PID plus independent ps UID/RUID.
             require(isinstance(value, dict) and all(type(number) is int for number in value.values())
-                    and value == dict(si_pid=leader, si_uid=driver['uid'], si_signo=20,
+                    and value == dict(si_pid=leader, si_uid=0, si_signo=20,
                                   si_status=7, si_code=1), 'WNOWAIT child status differs')
             waitids.append(value)
         elif tag == 'cleanup-start':

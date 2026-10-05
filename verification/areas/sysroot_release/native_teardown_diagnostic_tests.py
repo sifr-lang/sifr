@@ -90,7 +90,7 @@ class Controls(unittest.TestCase):
                 (production, '_darwin_snapshot', snapshot), (production, 'execute', execute),
                 (fixture.os, 'killpg', killpg), (fixture.subprocess, 'Popen', launch),
                 (fixture, 'capture', lambda: self.raw(state['leader'], state['child'])),
-                (fixture.os, 'waitid', lambda *a: info(self.pid, self.driver['uid'], 20, 7, 1)),
+                (fixture.os, 'waitid', lambda *a: info(self.pid, 0, 20, 7, 1)),
                 (fixture.os, 'WEXITED', 4), (fixture.os, 'WNOHANG', 1), (fixture.os, 'WNOWAIT', 32),
             ):
                 stack.enter_context(patch.object(target, name, value))
@@ -158,6 +158,32 @@ class Controls(unittest.TestCase):
             if change == 'reaped': event['returncode'] = 7
             if change == 'missing-repeat': case['events'].remove(event)
             with self.assertRaises(ValueError): check_case(case, report)
+
+    def test_darwin_zero_uid_is_data_not_ownership_authority(self):
+        original, report = self.simulate('waitid-capability')
+        values = [e['value'] for e in original['events'] if e['kind'] == 'waitid']
+        self.assertEqual([v['si_uid'] for v in values], [0, 0])
+        self.assertTrue(check_case(original, report))
+        for field, value in (('si_uid', 501), ('si_uid', False), ('si_pid', self.child)):
+            case = copy.deepcopy(original)
+            event = next(e for e in case['events'] if e['kind'] == 'waitid')
+            event['value'][field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                check_case(case, report)
+
+    def test_zero_waitid_uid_does_not_waive_inventory_uid_or_ruid(self):
+        original, report = self.simulate('waitid-capability')
+        for column in (3, 4):
+            case = copy.deepcopy(original)
+            event = next(e for e in case['events'] if e['kind'] == 'independent-snapshot')
+            lines = event['raw'].splitlines()
+            fields = lines[-1].split()
+            self.assertEqual(int(fields[0]), self.pid)
+            fields[column] = str(int(fields[column])+1)
+            lines[-1] = ' '.join(fields)
+            event['raw'] = '\n'.join(lines)+'\n'
+            with self.subTest(column=column), self.assertRaisesRegex(ValueError, 'owned identity'):
+                check_case(case, report)
 
     def test_signal_error_retained_after_dead_only_race(self):
         case, report = self.simulate('deadline-term', errno.EPERM)

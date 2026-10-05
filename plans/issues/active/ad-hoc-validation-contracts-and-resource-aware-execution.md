@@ -3304,3 +3304,36 @@ and is included automatically in the committed producer input map. Actual host
 capability/cleanup observations and exact harness review remain pending root
 coordination; no source integration, build, installation, review or dispatch
 has been performed for this operational candidate.
+
+## M5 Darwin waitid unpopulated UID field — bounded harness correction
+
+Exact f8345abb8bb60938df7fcf57f7a28715750b770f run37255078524 stopped in the
+capability checker. Two actual WNOWAIT results retained the same child PID6401,
+status7, code1, signo20 and unpopulated si_uid0, with independent same-start
+PID/PGID6401, parent6161, UID/RUID501 zombie observations. Real wait returned7
+and the group disappeared. The checker incorrectly expected si_uid501. Both
+live and portable retained checkers truthfully accepted the stopped evidence;
+natural-output, deadline-term and resistant-pipe cases were never executed.
+Preserve this run, source, artifact digest, raw observations and failure result.
+
+Pinned public XNU43a90889846e00bfb5cf1d255cdc0a701a1e05a4 kern_exit.c3209 zeroes
+siginfo; the exited waitid branch3222–3239 fills pid/signo/code/status but not
+si_uid. Copyout and CPython expose that zero. The published base tag does not
+claim exact identity with the runner's full kernel patch suffix. Correct only
+this fixed Darwin harness expectation to strict integer si_uid0, with an
+explanatory comment. Keep the actual field, repeated child identity/status,
+P_PID/flags and every independent ps UID/RUID/start/PGID/PPID, reap and absence
+check. Add explicit zero-field acceptance and inventory UID/RUID/child identity
+negative controls. Production75 runtime blobs, workflows, budgets and timing
+remain byte-identical. Run only affected pure controls, sparse guard and diff
+checks, then hand a clean successor to root for exact review and any separately
+coordinated changed-source attempt. No retry or production change is authorized
+by this local correction; f834 is not reclassified as passing.
+
+The fixed-field correction and its controls are implemented. All25 focused pure
+controls pass, including strict integer zero acceptance, nonzero/bool waitid UID
+rejection, changed returned child PID and independent inventory UID/RUID
+rejection. Sparse302-file guard and diff checks pass. Only the checker, tests
+and this plan changed; all production runtime, fixture/observer, workflow and
+resource bytes remain unchanged. Actual execution of the successor remains
+pending exact root-coordinated review and dispatch.
