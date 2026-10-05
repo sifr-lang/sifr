@@ -1,6 +1,54 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-05 after CI candidate correction
+## Current acceptance checkpoint — 2026-10-05 after hosted qualification findings
+
+Hosted run [37271475554](https://github.com/sifr-lang/sifr/actions/runs/37271475554)
+confirmed the corrected event-candidate selection. Toolchain, lint, smoke fuzz,
+WASI SQL and Linux ARM/x64 plus macOS ARM compiler-component jobs passed.
+The run nevertheless failed: determinism received a runner shutdown (exit 143);
+merge preparation hit its unchanged 2,400-second deadline after a 29m05 cold
+compiler build and 76 of 357 generated entries; Windows PostgreSQL compilation
+failed on missing MSVC compatibility headers and incompatible variadic macros.
+These failures remain failures. No assertion or numerical result is reused.
+
+CI allocation correction `f71743febfcc3ca1e390fb1c93dfc9e803d9b840` received
+scoped Opus **SATISFIED**. Only the profile and determinism jobs now set
+`CARGO_PROFILE_DEV_DEBUG=0`, matching the existing compact allocation. Coverage,
+concurrency, assertions and deadlines remain unchanged. Workflow mutation
+controls, the full file-size guard and whitespace checks passed. Review:
+`/workspace/validation-work/evidence/sifr-claude.ZHzp2x/response.md`.
+Actual hosted completion and preparation-inclusive economics remain unproved.
+
+Windows correction `6d3acd27d2324ca6a6b5fb09aa6f43cf207cf7a0` received
+scoped Opus **SATISFIED**. The first-party PostgreSQL build script adds the pinned
+upstream `port/win32_msvc` include path and explicitly retains traditional MSVC
+preprocessing alongside C17. Both additions apply only to Windows/MSVC; no
+third-party source, GNU/Linux/macOS/WASI flags or target selection changed.
+Formatting, the full file-size guard, whitespace and an actual Linux component
+`cargo check` passed. Review:
+`/workspace/validation-work/evidence/sifr-claude.CWXvIP/response.md`.
+Fresh hosted Windows qualification is still required.
+
+The superseded a0a7 local run closed normally as **cancelled, exit 130**, after
+compiler/sysroot and generated preparation passed, during later test preparation.
+Its evidence remains at
+`/workspace/validation-work/evidence/acceptance-a0a7e51c0-20261005-v1/`.
+Two reviewed cache retirements passed 18 controls and recovered an observed
+1,928,757,248 physical bytes, preserving original failures, leases, diagnostic
+records and retained endpoints. No later resource admission is implied.
+
+The unchanged genuine v4 reference baseline is retained. Candidate compiler
+inputs now differ, so final qualification requires a genuinely new candidate
+endpoint and a separately reviewed additive compiler-delta applicability record;
+neither old candidate artifacts nor old registrations qualify this successor.
+The v2 CI-only adapter passed 23 controls; its compiler-path successor is prepared
+and independently reviewed but not yet executed or registered at this checkpoint.
+Final local/cloud, numerical performance, four-target native, scheduled hardening,
+protected publication/enforcement and PR disposition remain open. The actual
+administration HTTP 403 and inadequate standard macOS ARM capacity remain
+external prerequisites. PR #4332 stays draft; no phase closure is claimed.
+
+## Historical acceptance checkpoint — 2026-10-05 after CI candidate correction
 
 CI correction `b100b55ebd44c21b06b253ca790b37792c6bdd17` received scoped
 Opus **SATISFIED** and is integrated unchanged. Actual hosted run
