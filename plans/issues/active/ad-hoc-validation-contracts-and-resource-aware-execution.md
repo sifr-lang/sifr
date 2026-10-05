@@ -1,6 +1,40 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-05
+## Current acceptance checkpoint — 2026-10-05 03:10 UTC
+
+Reviewed production process cleanup commits `18b5f6088a5d88570abf7f8ec2f11fd102c10a9a`
+and `75d6d4f7f83d7de2979d7eca98250e483626bd0f` are integrated unchanged.
+Both scoped Opus reviews are SATISFIED. Eighteen new Darwin controls and four
+formerly deferred Linux profile controls pass; exact full-tree guards pass.
+Actual standard ARM macOS run [37257319934](https://github.com/sifr-lang/sifr/actions/runs/37257319934)
+passed all four harmless cases: repeated non-reaping wait, natural completion,
+deadline TERM, and TERM-resistant descendant cleanup. Live and retained independent
+checks passed against the exact production runtime bytes. The artifact SHA-256 is
+`f08295cb5327c02c658032c25382ff659e251a4e2025d4662bd0d9a14a9811c9`.
+This proves the bounded process mechanism, not compiler/native qualification.
+The report and original artifact are retained in
+`/workspace/validation-work/evidence/native-production-executor-8a4ef0e2c-20261005/`.
+Prior failed observations remain failed.
+
+A separately registered single instrumented Linux F27 observation reproduced
+`124 / safety_deadline` at 0.552 seconds with exact terminal output and no escaped
+marker after two seconds. Its production deadline remained 0.5 seconds. Repeated
+whole-process inventories observed approximately 1,118 processes; timing analysis
+is in progress. Instrumentation overhead prevents treating it as an uninstrumented
+performance measurement. Original evidence is retained in
+`/workspace/validation-work/linux-f27-diagnostic-20261005/observation-20261005-0306/`.
+This issue must be resolved before the final runtime freeze and acceptance gate.
+
+The baseline-v4 preparation package passed 21 synthetic controls and independent
+procedure review. Seven previously relocated archives have been rehydrated and
+verified at their original plain-file paths, freeing memory for the actual cold
+baseline build. No baseline-v4 build, successor full correctness gate, paired
+performance capture or final cloud gate has run. New archive placement requires
+fresh bindings after the actual build; historical capacity is not an admission.
+GitHub CLI authentication works as `yaseralnajjar`; the dedicated publication
+environment and required-check/merge-queue rules remain absent.
+
+## Historical acceptance checkpoint — 2026-10-05
 
 The latest local create-PR gate on frozen
 `e3ca270aa78e41ffc1667f3c61f481f8a49d1e1f` closed with exit 124 at
