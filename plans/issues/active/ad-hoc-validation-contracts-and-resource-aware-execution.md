@@ -639,6 +639,48 @@ sparse file-size guard passes for 297 present files. Both workflow files and
 resource/observer/executor inputs remain unchanged from 21a. No native execution
 or complete affected ProcessTests pass is claimed for this successor.
 
+
+## M5 Darwin teardown microprobe — prospective failure-analysis scope
+
+The reviewed 699cb diagnostic run 37248862495 reached its cold runtime command
+and stopped at 520 MiB sampled RSS against a 512 MiB stop. Darwin group SIGKILL
+after TERM raised EPERM; raw observations do not establish post-TERM ownership
+or absence. The live checker separately identified invocation spelling drift
+between canonical venv python and python3. Preserve exact 699cb refs/evidence.
+
+Prepare a separate experimental sparse branch, at most 32 MiB local scratch,
+with a harmless ordinary fixture and a multi-child fixture. Record bounded
+Darwin PID/start/PGID/UID/state/argv snapshots around TERM, the existing 0.25s
+interval and KILL, signal errno and direct-child reaping. Never signal an
+unowned or changed identity, never reinterpret EPERM as successful teardown,
+and fail any unproven cleanup. This models the existing Darwin signal sequence;
+it does not replace or change the shared executor. No compiler, runtime package,
+Cargo, production allocation or workload diagnostic budget changes belong here.
+
+Use one explicit canonical venv invocation for observe/check in the dedicated
+manual standard-ARM workflow and its registered-path alias. Independently verify
+retained byte/source/fixture/signal/cleanup evidence, with zero qualification
+claims. Reuse pure dependency/source/storage/admission helpers; bind all added
+producer/workflow inputs. Tiny controls, both fixed-workflow negative controls,
+file guard and whitespace checks are the bounded local acceptance. Preserve
+existing deferred/failing ProcessTests without claiming a complete-suite pass.
+No environment install, review, push or dispatch here; root coordinates exact
+review and any remote execution. Production integration and shared runtime
+remain unchanged, so no shared-executor performance closure change is intended.
+
+Implemented only this operational microprobe and its two identical manual
+workflow paths. The initial TERM/0.25s/KILL sequence is modeled with an unreaped
+owned leader; additional fixture cleanup is labeled separately. EPERM remains
+signal_failure even after independently observed post-reap group absence. Actual
+uname, UID/state/start/PGID and OS command names are retained; fixture argv is
+fixed and recorded. Canonical venv invocation is explicit in both observe/check.
+The shared executor and prior runtime driver/observer/storage/workflow bytes
+are unchanged. Fourteen tiny focused controls, including atomic readiness publication, real ordinary fixture,
+identity/receipt/workflow negatives and tighter-deadline/admission refusal, pass.
+Sparse file guard passes for 301 present files; no Darwin execution or complete
+ProcessTests pass is claimed. Exact scoped root-coordinated review and a native
+microprobe observation remain pending. This branch is not for the delivery PR.
+
 status: active
 registered: 2026-10-03
 current_stage: M0 delivered; M1–M5 implementation in progress
