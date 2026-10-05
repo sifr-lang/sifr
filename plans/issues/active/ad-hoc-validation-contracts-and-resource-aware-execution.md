@@ -558,13 +558,50 @@ active root gate. An existing 0.5-second process-cleanup control returned an
 actual safety-deadline failure under this shared host; its failure is retained
 and its threshold is unchanged. Do not report all affected acceptance passing.
 
-GitHub currently registers only the published-native workflow filename. A new
-manual-only diagnostic filename is not assumed dispatchable. Root may separately
-authorize an exact diagnostic-only branch using that registered path after
-review, as the earlier capacity execution did. Its new branch SHA would be the
-diagnostic producer authority; beta.16 remains the separate publication source.
-The integration four-target workflow remains unchanged. No shim, dispatch,
+At intermediate `70ed`, GitHub registered only the published-native workflow
+filename; the new manual-only diagnostic filename was not assumed dispatchable.
+A separate operational branch was still pending authorization. The scope below
+now prepares that branch before its first exact review. Its new branch SHA is
+the diagnostic producer authority; beta.16 remains the separate publication
+source. The integration four-target workflow remains unchanged. No dispatch,
 source-qualification reuse or actual ARM qualification is delivered here.
+
+## M5 standard ARM operational execution branch — prospective scope
+
+This separate diagnostic-execution branch starts at unreviewed intermediate
+`70ed65d409d572be8186d8355ad10cc661ab7497`. It is an operational experiment only,
+not the delivery PR or an integration candidate. Preserve the integration
+four-target workflow. On this branch only, copy the fixed runtime diagnostic
+workflow byte-for-byte onto the already registered
+`published-native-qualification.yml` path. Keep both workflow bytes in producer
+identity and validate both with the fixed diagnostic validator and copy-drift
+and registered-path mutation controls. The global production workflow validator
+remains unchanged and is deliberately not claimed passing on this harness.
+
+Correct the observer parser to permit a well-formed system PID-0 row while
+excluding it from owned RSS totals and requiring positive exact-integer driver,
+collector and owned-group identities. Keep malformed/duplicate rejection and
+all resource reserves and observation limitations unchanged. This is a parser
+contract correction, not evidence that a particular Darwin inventory contains
+PID 0 or that native ARM qualification passed.
+
+Acceptance before coordination: only tiny affected diagnostic controls, both
+workflow documents and registered-path mutation negatives, whitespace and
+bounded source-file checks. Existing deferred Cargo-dependent ProcessTests and
+the retained timing failure remain unresolved. No Cargo, UV execution, compiler
+build, installation, review, push, PR or dispatch is authorized here. The first
+exact Opus review must cover the full `e3ca270aa` to execution-candidate diff
+after the active gate closes. The new exact branch SHA is the diagnostic
+producer authority; beta.16 remains the separate publication source. Retained
+checking must use the exact execution source. No qualification reuse or merge
+claim follows from this experiment.
+
+Implementation and tiny controls are complete: 12 observer controls and 10
+diagnostic controls pass, including both byte-identical workflow documents and
+mutations of the registered-path copy. The sparse source-file guard and
+whitespace check pass. No Darwin execution, formal review or complete affected
+ProcessTests pass is claimed; the earlier deferred cases and timing failure
+remain retained. This operational branch is awaiting root coordination.
 
 status: active
 registered: 2026-10-03

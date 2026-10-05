@@ -187,16 +187,21 @@ class ReceiptTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.seal()
 
     def test_workflow_fixed_standard_arm_and_blocking_checks(self):
-        name = '.github/workflows/native-runtime-diagnostic.yml'
-        workflow = parse_workflows({name: (diagnostic.ROOT/name).read_text()})[name]
-        self.assertFalse(validate_runtime_diagnostic(workflow))
-        for mutate in (lambda w: w['jobs']['observe'].update({'runs-on': 'macos-15-xlarge'}),
-                       lambda w: w['permissions'].update(contents='write'),
-                       lambda w: w['jobs']['observe']['steps'][3].update({'continue-on-error': True}),
-                       lambda w: w['jobs']['observe']['steps'][4].update(run='echo pass'),
-                       lambda w: w['jobs']['observe']['steps'][0]['with'].update(ref='main')):
-            changed = copy.deepcopy(workflow); mutate(changed)
-            self.assertTrue(validate_runtime_diagnostic(changed))
+        names = ('.github/workflows/native-runtime-diagnostic.yml',
+                 '.github/workflows/published-native-qualification.yml')
+        raw = {name: (diagnostic.ROOT/name).read_bytes() for name in names}
+        self.assertEqual(raw[names[0]], raw[names[1]], 'operational workflow copy drifted')
+        workflows = parse_workflows({name: data.decode() for name, data in raw.items()})
+        for name, workflow in workflows.items():
+            with self.subTest(path=name):
+                self.assertFalse(validate_runtime_diagnostic(workflow))
+                for mutate in (lambda w: w['jobs']['observe'].update({'runs-on': 'macos-15-xlarge'}),
+                               lambda w: w['permissions'].update(contents='write'),
+                               lambda w: w['jobs']['observe']['steps'][3].update({'continue-on-error': True}),
+                               lambda w: w['jobs']['observe']['steps'][4].update(run='echo pass'),
+                               lambda w: w['jobs']['observe']['steps'][0]['with'].update(ref='main')):
+                    changed = copy.deepcopy(workflow); mutate(changed)
+                    self.assertTrue(validate_runtime_diagnostic(changed))
 
 
 if __name__ == '__main__': unittest.main()

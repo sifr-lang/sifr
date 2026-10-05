@@ -59,7 +59,7 @@ def parse_process_rows(raw):
         if not match:
             raise ValueError('invalid Darwin ps row')
         pid, parent, group, rss = map(int, match.groups()[:4])
-        if pid <= 0 or group < 0 or pid in rows:
+        if pid < 0 or group < 0 or pid in rows:
             raise ValueError('duplicate or invalid Darwin PID')
         rows[pid] = {'pid': pid, 'ppid': parent, 'pgid': group,
                      'rss_bytes': rss*1024, 'start': match[5]}
@@ -69,11 +69,16 @@ def parse_process_rows(raw):
 
 
 def interpret(row, total):
+    if any(type(row[name]) is not int or row[name] <= 0
+           for name in ('driver_pid', 'collector_pid', 'pgid')):
+        raise ValueError('owned diagnostic process identities must be positive integers')
     rows = parse_process_rows(row['ps'])
     if row['driver_pid'] not in rows or row['collector_pid'] not in rows:
         raise ValueError('driver or observer missing')
-    members = sorted(pid for pid, value in rows.items()
-                     if value['pgid'] == row['pgid'] or pid in (row['driver_pid'], row['collector_pid']))
+    # A system PID-0 row may be present in a host inventory, but cannot be an
+    # owned command, driver or collector, even if its reported group matches.
+    members = sorted(pid for pid, value in rows.items() if pid > 0 and
+                     (value['pgid'] == row['pgid'] or pid in (row['driver_pid'], row['collector_pid'])))
     pages = parse_pages(row['vm_stat'])
     if not 0 <= pages['available_bytes'] <= total:
         raise ValueError('invalid observed memory availability')

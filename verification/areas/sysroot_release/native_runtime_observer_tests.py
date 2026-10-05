@@ -36,12 +36,30 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(observer.interpret(row, 7*1024**3)['stop'], 'observer_reserve')
 
     def test_bad_rows_and_contradictory_memory_reject(self):
-        for text in ('', '1 1 1 -1 today', raw(1, 1)*2, raw(0, 1)):
+        for text in ('', '1 1 1 -1 today', raw(1, 1)*2, raw(-1, 1), raw(1, -1),
+                     raw(0, 0)*2, '0 0 0 invalid Sun Oct  4 12:00:00 2026\n'):
             with self.subTest(text=text), self.assertRaises(ValueError):
                 observer.parse_process_rows(text)
         with self.assertRaises(ValueError):
             observer.interpret({'ps': raw(1, 1), 'vm_stat': PAGES, 'pgid': 1,
                                 'driver_pid': 1, 'collector_pid': 1}, 1024)
+
+    def test_system_pid_zero_never_contributes_owned_rss(self):
+        row = {'ps': raw(0, 77, 2*1024*1024)+raw(1, 77)+raw(2, 77)+raw(3, 99),
+               'vm_stat': PAGES, 'pgid': 77, 'driver_pid': 1, 'collector_pid': 3}
+        self.assertIn(0, observer.parse_process_rows(row['ps']))
+        result = observer.interpret(row, 7*1024**3)
+        self.assertEqual(result['rss_bytes'], 300*1024)
+        self.assertEqual([member['pid'] for member in result['members']], [1, 2, 3])
+        self.assertIsNone(result['stop'])
+
+    def test_owned_identities_require_positive_exact_integers(self):
+        row = {'ps': raw(0, 0)+raw(1, 77)+raw(2, 77)+raw(3, 99),
+               'vm_stat': PAGES, 'pgid': 77, 'driver_pid': 1, 'collector_pid': 3}
+        for name in ('driver_pid', 'collector_pid', 'pgid'):
+            for value in (0, -1, True, 1.0, '1'):
+                with self.subTest(name=name, value=value), self.assertRaisesRegex(ValueError, 'positive integers'):
+                    observer.interpret(row | {name: value}, 7*1024**3)
 
     def test_replay_recomputes_and_rejects_tamper(self):
         with tempfile.TemporaryDirectory() as temporary:
