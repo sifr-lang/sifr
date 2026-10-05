@@ -575,6 +575,21 @@ class ProcessTests(unittest.TestCase):
         self.assertEqual((expired.returncode, expired.cause), (124, "safety_deadline"))
         self.assertLess(expired.elapsed_seconds, 1)
 
+    def test_f27_deadline_construction_keeps_the_tighter_inherited_bound(self):
+        for inherited, expected in ((None, 100.5), ("100.25", 100.25),
+                                    ("101", 100.5), ("99", 99)):
+            with self.subTest(inherited=inherited):
+                env = {"fixture": "preserved"}
+                if inherited is not None:
+                    env[SAFETY_DEADLINE_ENV] = inherited
+                original = env.copy()
+                with patch.object(process_execution.time, "monotonic", return_value=100):
+                    child_env, deadline = process_execution.deadline_environment(env, .5)
+                self.assertEqual(deadline, expected)
+                self.assertEqual(float(child_env[SAFETY_DEADLINE_ENV]), expected)
+                self.assertEqual(child_env["fixture"], "preserved")
+                self.assertEqual(env, original)
+
     def test_f27_invalid_deadlines_rejected_before_spawn(self):
         invalid = ("0", "-1", "nan", "inf", "-inf", "bad", True)
         with patch.object(process_execution.subprocess, "Popen", side_effect=AssertionError("spawned")) as spawn:
@@ -683,24 +698,51 @@ class ProcessTests(unittest.TestCase):
             self.assertNotIn(b"acquired", result.stdout)
             self.assertLess(result.elapsed_seconds, 1)
 
-    def test_f27_ignored_term_and_pipe_retaining_descendant_are_bounded(self):
+    def _f27_resistant_tree(self, *, foreground_wait: bool, deadline_seconds: float):
         with tempfile.TemporaryDirectory() as temporary:
             marker = Path(temporary) / "escaped"
             program = (
                 "import os,signal,time; from pathlib import Path; "
-                "child=os.fork(); "
                 "signal.signal(signal.SIGTERM,signal.SIG_IGN); "
+                "child=os.fork(); "
                 "time.sleep(2) if child==0 else os.write(1,b'terminal output'); "
-                f"Path({str(marker)!r}).write_text('escaped') if child==0 else None"
+                f"Path({str(marker)!r}).write_text('escaped') if child==0 else None; "
+                + ("time.sleep(10) if child!=0 else None" if foreground_wait else "")
             )
-            started = time.monotonic()
-            result = execute([sys.executable, "-c", program], cwd=Path.cwd(),
-                             deadline_seconds=.5)
-            self.assertEqual((result.returncode, result.cause), (0, "exit"))
-            self.assertEqual(result.stdout, b"terminal output")
-            self.assertLess(time.monotonic() - started, 1.5)
-            time.sleep(2)
-            self.assertFalse(marker.exists())
+            failure = None
+            try:
+                started = time.monotonic()
+                result = execute([sys.executable, "-c", program], cwd=Path.cwd(),
+                                 deadline_seconds=deadline_seconds)
+                elapsed = time.monotonic() - started
+                self.assertEqual((result.returncode, result.cause),
+                                 (124, "safety_deadline") if foreground_wait else (0, "exit"))
+                self.assertEqual(result.stdout, b"terminal output")
+                self.assertLess(elapsed, 1.5)
+                if foreground_wait:
+                    self.assertGreaterEqual(result.elapsed_seconds, .5)
+            except BaseException as error:
+                failure = error
+                raise
+            finally:
+                try:
+                    time.sleep(2)
+                    self.assertFalse(marker.exists())
+                except BaseException as marker_error:
+                    if failure is None:
+                        raise
+                    failure.add_note(f"F27 late marker check also failed: {marker_error!r}")
+                else:
+                    if failure is not None:
+                        failure.add_note("F27 late marker check passed: no escaped marker after two seconds")
+
+    def test_f27_natural_exit_preserves_status_and_reaps_resistant_pipe_holder(self):
+        # Cleanup is part of supervisor completion; use the existing total
+        # completion bound instead of imposing a half-second throughput claim.
+        self._f27_resistant_tree(foreground_wait=False, deadline_seconds=1.5)
+
+    def test_f27_deadline_stops_live_resistant_tree_and_preserves_output(self):
+        self._f27_resistant_tree(foreground_wait=True, deadline_seconds=.5)
 
     def test_stdin_large_and_empty_are_delivered_without_pipe_deadlock(self):
         for data in (b"", bytes(range(256)) * 8192):

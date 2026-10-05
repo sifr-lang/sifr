@@ -1,5 +1,69 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
+## Prospective F27 test-contract split — 2026-10-05
+
+This bounded test-only correction owns branch
+`codex/validation-f27-contract-split-20261005` in
+`/workspace/sifr-validation-linux-owned-tree`, based exactly on
+`e2d2da32f4388a027a19aa27809eba53589f7d9e`. Change only the existing
+`verification/runner/sifr_verify/dx3_process_checks.py` and this plan. All
+production runtime files, command deadlines, 0.25-second TERM grace, cleanup
+bounds, resource policy, profiles and shared-cloud performance contracts remain
+byte-identical to that base. The failed runtime optimization
+`ddb200622790a2e605426904a2e3812162edcb95` remains on its original branch;
+none of it is delivered here. Its failed children-file attempt, missing-host-
+primitive probe, revised census-reuse F27 failure and passing controls/recovery
+logs remain in `/workspace/validation-work/linux-owned-tree-20261005/`.
+
+Causal history: original `99f174ab7c92bb03727e436ce963039c363da6f2`
+introduced F27 while the executor observed direct-command exit, then performed
+synchronous group cleanup. That cleanup could cross the half-second deadline
+without another deadline decision if pipes then closed. The later dedicated
+subreaper reports exit only after owned-tree cleanup, so the same test literal
+now includes supervisor startup, mandatory resistant-child grace and whole-/proc
+census work. The existing explicit end-to-end assertion is less than 1.5 seconds.
+The active recovery record already documents an analogous timing-test correction
+for supervisor startup. Retained actual observations demonstrate the original
+fixture's natural exit/output and cleanup can cross 0.5 seconds without an
+escaped marker; they remain failed under their original assertions.
+
+Split the overloaded case into two explicit guarantees. Natural leader exit
+must preserve `(0, "exit")` and exact output, complete in the existing less-than-
+1.5-second bound, and leave no marker after the existing two-second late check;
+its invocation deadline is 1.5 seconds, matching that bound. A separate live
+foreground and pipe-holding child install TERM resistance before fork/output;
+the foreground waits beyond the original 0.5-second deadline. It must return
+`(124, "safety_deadline")`, retain exact early output, take at least 0.5 seconds
+and less than 1.5 seconds, and leave no marker after two seconds. This explicitly
+does not preserve the accidental 0.5-second natural-completion expectation; it
+preserves the production deadline contract and original total cleanup bound.
+Perform the late marker check even after an unexpected outcome where possible,
+retaining any original exception and attaching secondary check evidence.
+
+Existing invalid-deadline tests reject malformed inputs before spawn, and SQL
+checks cover inherited budgets in that workflow, but no direct deterministic
+construction/minimum test covers this API. Add one focused control for local
+half-second deadline construction, tighter/looser/expired inherited deadlines,
+and propagation without mutating the caller's environment. Run that and the
+existing pure invalid-input control, then the two new actual cases once each
+in root's idle window with the canonical Python and existing environment.
+Preserve failures without unchanged retry. Root owns full-suite/full-checkout
+checks and scoped Opus review of the frozen exact test change. No broad gate,
+production optimization, benchmark qualification or child Opus request belongs
+here. New evidence uses `/workspace/validation-work/f27-contract-split-20261005/`.
+
+Focused candidate evidence: the deterministic construction/inherited-min
+control and existing invalid-input control passed (two tests, 0.001 seconds).
+Both new actual cases passed on their first invocation (two tests, 5.346 seconds,
+including both two-second late-marker waits). Thus natural exit/output, the
+unchanged total completion bound, actual half-second expiration without early
+expiry, resistant cleanup and absent late markers were asserted successfully.
+The preflight recorded no tighter inherited deadline and verified all four
+production runtime files byte-for-byte against e2d2. Whitespace passes and the
+changed source is 811 lines. Root's full-suite/full-tree checks and exact scoped
+review remain pending; no broader acceptance or performance improvement is
+claimed. The failed optimization branch and all historical failures are retained.
+
 ## Current acceptance checkpoint — 2026-10-05 03:10 UTC
 
 Reviewed production process cleanup commits `18b5f6088a5d88570abf7f8ec2f11fd102c10a9a`
@@ -16,14 +80,27 @@ The report and original artifact are retained in
 `/workspace/validation-work/evidence/native-production-executor-8a4ef0e2c-20261005/`.
 Prior failed observations remain failed.
 
-A separately registered single instrumented Linux F27 observation reproduced
+The historical instrumented Linux F27 observation reproduced
 `124 / safety_deadline` at 0.552 seconds with exact terminal output and no escaped
-marker after two seconds. Its production deadline remained 0.5 seconds. Repeated
-whole-process inventories observed approximately 1,118 processes; timing analysis
-is in progress. Instrumentation overhead prevents treating it as an uninstrumented
-performance measurement. Original evidence is retained in
+marker after two seconds, against its 0.5-second invocation limit. Repeated
+whole-process inventories observed approximately 1,118 processes; the retained
+trace identified startup, TERM grace and census work before supervisor completion.
+Instrumentation overhead prevents treating it as an uninstrumented performance
+measurement. Original evidence remains in
 `/workspace/validation-work/linux-f27-diagnostic-20261005/observation-20261005-0306/`.
-This issue must be resolved before the final runtime freeze and acceptance gate.
+The subsequent children-file and census-reuse attempts also failed and remain
+preserved; optimization candidate `ddb200622790a2e605426904a2e3812162edcb95`
+is not integrated.
+
+The prospective F27 test-contract correction above preserves production runtime
+bytes and separates natural completion within the existing 1.5-second total bound
+from actual expiration of a live resistant tree at the original 0.5-second deadline.
+Both actual cases passed once, including exact output and late marker absence;
+two pure deadline controls also passed. Their evidence is retained in
+`/workspace/validation-work/f27-contract-split-20261005/`. Exact scoped review,
+full-suite/full-tree checks and final phase acceptance remain pending. Historical
+failed observations remain failed; these focused results do not qualify runtime
+performance or the complete candidate.
 
 The baseline-v4 preparation package passed 21 synthetic controls and independent
 procedure review. Seven previously relocated archives have been rehydrated and
