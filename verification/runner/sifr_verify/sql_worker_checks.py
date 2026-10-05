@@ -52,7 +52,8 @@ class SqlWorkerChecks(unittest.TestCase):
                     def callback():
                         seen.append(runner.env['CARGO_BUILD_JOBS'])
                         self.assertEqual(runner.e2e_worker_limits['cargo_build_jobs'], 1)
-                        self.assertEqual(runner.env['RAYON_NUM_THREADS'], str(min(2, int(cpus))))
+                        # Merge retains its four-thread Rayon policy; only Cargo gets the SQL limit.
+                        self.assertEqual(runner.env['RAYON_NUM_THREADS'], str(min(4, int(cpus))))
                         floor = DiskBudget.from_environment(runner.env).floor
                         self.assertEqual(floor, 58*GIB)
                         self.assertEqual(runner.env['SIFR_VERIFY_SAFETY_DEADLINE_SECONDS'], '17.0')
