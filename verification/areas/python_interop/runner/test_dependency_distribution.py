@@ -8,7 +8,8 @@ from unittest.mock import patch
 
 import dependency_versions as audit_runner
 from dependency_distribution import (
-    CPU_MARKER, PYPI_MARKER, cpu_requirements, runtime_distribution_version,
+    CPU_MARKER, PYPI_MARKER, LOCK_CPU_MARKER, LOCK_PYPI_MARKER,
+    cpu_requirements, runtime_distribution_version,
     validate_distribution_audit, validate_distribution_project,
 )
 from dependency_requirements import validate_requirements
@@ -34,6 +35,42 @@ class CpuDistributionTests(unittest.TestCase):
         self.assertEqual(len(self.cpu["dependencies"]), 7)
         self.assertEqual(validate_requirements("test", self.project, self.lock,
                                               self.releases, self.owner["requirements"]), [])
+
+    def test_resolution_forks_cannot_be_missing_broadened_or_swapped(self):
+        base = next(p for p in self.lock["package"] if p["name"] == "torch" and p["version"] == "2.14.0")
+        for owner in (self.lock, base, self.cpu):
+            original = owner["resolution-markers"]
+            for forks in (None, [], ["sys_platform == 'linux'"], [LOCK_PYPI_MARKER]):
+                owner["resolution-markers"] = forks
+                with self.subTest(owner=owner.get("name", "lock"), forks=forks):
+                    self.assertTrue(any("resolution forks" in error for error in self.errors()))
+            owner["resolution-markers"] = original
+
+    def test_cpu_emitted_metadata_is_bound_to_authenticated_requirements(self):
+        original = copy.deepcopy(self.cpu["metadata"])
+        for mutation in ("missing", "requirement", "version", "optional-marker", "extras", "unknown"):
+            metadata = copy.deepcopy(original)
+            if mutation == "missing":
+                metadata = None
+            elif mutation == "requirement":
+                metadata["requires-dist"].append({"name": "triton"})
+            elif mutation == "version":
+                next(row for row in metadata["requires-dist"] if row["name"] == "sympy")["specifier"] = ">=1"
+            elif mutation == "optional-marker":
+                next(row for row in metadata["requires-dist"] if row["name"] == "optree").pop("marker")
+            elif mutation == "extras":
+                metadata["provides-extras"].append("cuda")
+            else:
+                metadata["unreviewed"] = True
+            self.cpu["metadata"] = metadata
+            with self.subTest(mutation=mutation):
+                self.assertTrue(any("authenticated wheel" in error for error in self.errors()))
+        self.cpu["metadata"] = original
+
+    def test_historical_hand_constructed_lock_is_rejected(self):
+        self.cpu.pop("metadata")
+        self.cpu.pop("resolution-markers")
+        self.assertTrue(self.errors())
 
     def test_audit_restricts_source_owner_platform_and_version(self):
         for key, value in (
@@ -168,7 +205,7 @@ class CpuDistributionTests(unittest.TestCase):
         for row in self.root["metadata"]["requires-dist"]:
             if row["name"] == "torch":
                 original = row["marker"]
-                row["marker"] = CPU_MARKER if original == PYPI_MARKER else PYPI_MARKER
+                row["marker"] = LOCK_CPU_MARKER if original == LOCK_PYPI_MARKER else LOCK_PYPI_MARKER
                 errors = validate_requirements("test", self.project, self.lock,
                                                self.releases, self.owner["requirements"])
                 self.assertIn("test: uv.lock direct requirement metadata differs from manifest", errors)

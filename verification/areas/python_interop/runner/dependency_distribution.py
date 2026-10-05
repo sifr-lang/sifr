@@ -13,6 +13,36 @@ PYPROJECT = "verification/areas/python_interop/pyproject.toml"
 CPU_MARKER = "sys_platform == 'linux' and platform_machine == 'x86_64'"
 PYPI_MARKER = "sys_platform != 'linux' or platform_machine != 'x86_64'"
 PYPI_SOURCE = {"registry": "https://pypi.org/simple"}
+# UV's emitted lock spelling is distinct from the exact manifest/audit spelling.
+LOCK_CPU_MARKER = "platform_machine == 'x86_64' and sys_platform == 'linux'"
+LOCK_PYPI_MARKER = "platform_machine != 'x86_64' or sys_platform != 'linux'"
+PYPI_FORKS = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "(platform_machine != 'x86_64' and sys_platform == 'linux') or "
+    "(sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
+
+
+def cpu_lock_metadata(variant: dict) -> dict:
+    """Bind emitted CPU package metadata to the authenticated wheel requirements."""
+    rows, extras = [], []
+    for raw in variant["requires_dist"]:
+        requirement = Requirement(raw)
+        if requirement.url or requirement.extras:
+            raise ValueError("torch: unexpected CPU metadata requirement source/extras")
+        row = {"name": requirement.name}
+        if requirement.specifier:
+            row["specifier"] = str(requirement.specifier)
+        if requirement.marker:
+            row["marker"] = str(requirement.marker)
+            extra = re.fullmatch(r'extra == "([a-z0-9-]+)"', row["marker"])
+            if extra is None:
+                raise ValueError("torch: unexpected CPU optional dependency marker")
+            if extra[1] not in extras:
+                extras.append(extra[1])
+        rows.append(row)
+    return {"requires-dist": sorted(rows, key=lambda row: row["name"]), "provides-extras": extras}
 
 
 def validate_distribution_audit(releases: dict) -> None:
@@ -98,8 +128,22 @@ def validate_distribution_project(label: str, project: dict, lock: dict, release
         errors.append(f"{label}: CPU locked source differs from audit")
     if package.get("wheels") != [{"url": variant["url"], "hash": "sha256:" + variant["sha256"]}]:
         errors.append(f"{label}: CPU locked wheel/hash differs from audit")
-    if set(package) != {"name", "version", "source", "dependencies", "wheels"}:
+    if set(package) != {"name", "version", "source", "dependencies", "wheels",
+                        "resolution-markers", "metadata"}:
         errors.append(f"{label}: CPU lock has unexpected metadata")
+    if (lock.get("resolution-markers") != [*PYPI_FORKS, LOCK_CPU_MARKER]
+            or base[0].get("resolution-markers") != PYPI_FORKS
+            or package.get("resolution-markers") != [LOCK_CPU_MARKER]):
+        errors.append(f"{label}: CPU/PyPI resolution forks differ from canonical lock")
+    metadata = package.get("metadata")
+    try:
+        normalized = {**metadata, "requires-dist": [
+            {**row, "marker": str(Marker(row["marker"]))} if "marker" in row else row
+            for row in metadata["requires-dist"]]}
+    except (KeyError, TypeError, ValueError):
+        normalized = None
+    if normalized != cpu_lock_metadata(variant):
+        errors.append(f"{label}: CPU lock metadata differs from authenticated wheel")
     requirements = cpu_requirements(variant)
     if package.get("dependencies") != [{"name": name} for name in sorted(requirements)]:
         errors.append(f"{label}: CPU dependency closure differs from authenticated metadata")
@@ -111,9 +155,9 @@ def validate_distribution_project(label: str, project: dict, lock: dict, release
     edges = [edge for p in roots for edge in p.get("dependencies", []) if edge.get("name") == "torch"]
     expected = [
         {"name": "torch", "version": releases["torch"]["selected_version"],
-         "source": PYPI_SOURCE, "marker": PYPI_MARKER},
+         "source": PYPI_SOURCE, "marker": LOCK_PYPI_MARKER},
         {"name": "torch", "version": variant["distribution_version"],
-         "source": {"url": variant["url"]}, "marker": CPU_MARKER},
+         "source": {"url": variant["url"]}, "marker": LOCK_CPU_MARKER},
     ]
     if len(roots) != 1 or edges != expected:
         errors.append(f"{label}: CPU/PyPI direct edge partition differs from audit")
@@ -129,8 +173,8 @@ def distribution_requirement_records(project: dict, records: list[dict], release
         if row["section"] == "project.dependencies" and row["name"] == "torch":
             variant = releases["torch"]["verification_cpu"]
             result.extend([
-                {**row, "marker": str(Marker(PYPI_MARKER))},
-                {**row, "specifier": "", "marker": str(Marker(CPU_MARKER)), "url": variant["url"]},
+                {**row, "marker": str(Marker(LOCK_PYPI_MARKER))},
+                {**row, "specifier": "", "marker": str(Marker(LOCK_CPU_MARKER)), "url": variant["url"]},
             ])
         else:
             result.append(row)
