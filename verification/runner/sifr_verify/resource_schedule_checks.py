@@ -21,6 +21,7 @@ from .sql_resource_checks import SqlResourceTests
 from .sql_worker_checks import SqlWorkerChecks
 from .early_sql_checks import EarlySqlChecks
 from .sql_partition_checks import PartitionChecks
+from .sql_cli_preparation_checks import SqlCliPreparationChecks
 from .early_sql import EarlySqlOutcome
 from .profile_runner import ProfileRunner
 from .resource_admission import ResourceError, Resources, admit, discover, own_cgroup, worker_limit, memory_backed_storage
@@ -338,7 +339,7 @@ class ScheduleTests(unittest.TestCase):
 
 def policy_checks():
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (ResourceTests, RetirementTests, ScheduleTests, SqlResourceTests, EarlySqlChecks, PartitionChecks))
+                               for case in (ResourceTests, RetirementTests, ScheduleTests, SqlResourceTests, EarlySqlChecks, PartitionChecks, SqlCliPreparationChecks))
     result = unittest.TestResult()
     suite.run(result)
     if not result.wasSuccessful():

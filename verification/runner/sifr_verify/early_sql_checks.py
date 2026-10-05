@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 
 from .area_cargo_setup import prepare_area_graphs, sql_preparation_commands
 from .cargo_setup import prepare_remaining_graphs
+from .cargo_cli_command import ordinary_cli_build_command
 from .cloud_schedule import Schedule, load_schedule
 from .early_sql import run_early_sql
 from .process_disk_budget import FLOOR_VARIABLE, PATH_VARIABLE
@@ -44,7 +45,9 @@ class EarlySqlChecks(unittest.TestCase):
         selected = [suite for suite in manifest['suites'] if suite['name'] in selection['suites']]
         self.assertEqual((len(selected), sum(len(suite['cases']) for suite in selected)), (19, 66))
         commands = sql_preparation_commands(selection['suites'])
-        self.assertEqual(len(commands), 30)
+        self.assertEqual(len(commands), 31)
+        self.assertEqual(sum(cmd[:3] == ["cargo", "test", "--no-run"] for cmd in commands), 30)
+        self.assertEqual(commands[-1], ordinary_cli_build_command())
         calls = []
         env = {'CARGO_NET_OFFLINE': 'true', 'CARGO_INCREMENTAL': '0', 'CARGO_PROFILE_DEV_DEBUG': '0'}
         prepare_area_graphs(profile, env, lambda cmd, **kw: calls.append((cmd, kw['env'].copy())))
@@ -105,6 +108,9 @@ class EarlySqlChecks(unittest.TestCase):
             def native(command, *, env):
                 nonlocal failed_once
                 commands.append((list(command), env.copy()))
+                events.append('command:' + ' '.join(command))
+                if failure == 'sql-cli-preparation' and command == ordinary_cli_build_command():
+                    raise CommandFailed(101)
                 if (failure == 'sql-preparation' and not failed_once
                         and command[:3] == ['cargo', 'test', '--no-run']):
                     failed_once = True
@@ -201,8 +207,11 @@ class EarlySqlChecks(unittest.TestCase):
                 self.assertEqual(result['result']['summary']['total_variants'], 66)
                 self.assertEqual(result['result']['summary']['blocking_failures'], 0)
                 expected_commands = sql_preparation_commands(sql['suites'])
-                self.assertEqual([cmd for cmd, _ in result['commands'] if cmd[:3] == ['cargo', 'test', '--no-run']],
+                self.assertEqual([cmd for cmd, _ in result['commands'] if cmd in expected_commands],
                                  expected_commands)
+                cli = 'command:' + ' '.join(ordinary_cli_build_command())
+                self.assertLess(events.index('preparation_sql_platform'), events.index(cli))
+                self.assertLess(events.index(cli), events.index('sql_remaining_assertions'))
                 self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], ['pass'])
                 self.assertTrue(all(env['CARGO_NET_OFFLINE'] == 'true' and env['CARGO_INCREMENTAL'] == '0'
                                     for cmd, env in result['commands'] if cmd in expected_commands))
@@ -278,6 +287,7 @@ class EarlySqlChecks(unittest.TestCase):
         for profile in ('create-pr', 'cloud'):
             for no_fail_fast in (False, True):
                 for failure, code, sql_status in (('sql-preparation', 101, 'fail'),
+                                                  ('sql-cli-preparation', 101, 'fail'),
                                                   ('sql-area', 7, 'fail'),
                                                   ('remaining-preparation', 9, 'pass')):
                     with self.subTest(profile=profile, no_fail_fast=no_fail_fast, failure=failure):
@@ -285,7 +295,13 @@ class EarlySqlChecks(unittest.TestCase):
                         self.assertEqual(result['status'], code)
                         self.assertEqual(result['functional'], code)
                         self.assertEqual([step['status'] for step in result['steps'] if step['name'] == 'area_sql_platform'], [sql_status])
-                        count = 1 if failure == 'sql-preparation' else 2
+                        if failure == 'sql-preparation':
+                            self.assertNotIn(ordinary_cli_build_command(), [cmd for cmd, _ in result['commands']])
+                        if failure == 'sql-cli-preparation':
+                            self.assertEqual(sum(cmd[:3] == ['cargo', 'test', '--no-run']
+                                                 for cmd, _ in result['commands']), 30)
+                            self.assertEqual(result['result']['summary']['blocking_failures'], 65)
+                        count = 1 if failure in ('sql-preparation', 'sql-cli-preparation') else 2
                         self.assertEqual(sum(name == 'sql_platform' for name, _ in result['areas']), count)
                         if failure != 'remaining-preparation':
                             self.assertEqual('generated-preparation' in result['events'], no_fail_fast)

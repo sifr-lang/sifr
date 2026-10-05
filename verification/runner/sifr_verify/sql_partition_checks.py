@@ -53,7 +53,9 @@ class PartitionChecks(unittest.TestCase):
             self.assertEqual(sql_preparation_commands(['build-qualification']), [])
             rest = [suite for suite in suites if suite != 'build-qualification']
             self.assertEqual(sql_preparation_commands(rest), sql_preparation_commands(suites))
-            self.assertEqual(len(sql_preparation_commands(rest)), 30)
+            self.assertEqual(len(sql_preparation_commands(rest)), 31)
+            self.assertEqual(sum(cmd[:3] == ["cargo", "test", "--no-run"]
+                                 for cmd in sql_preparation_commands(rest)), 30)
 
     def test_complete_result_has_canonical_order_counts_and_fresh_part_paths(self):
         from .profiles import load_profile

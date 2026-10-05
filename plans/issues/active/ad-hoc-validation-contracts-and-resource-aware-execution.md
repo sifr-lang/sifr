@@ -1,8 +1,21 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-04
+## Current acceptance checkpoint — 2026-10-05
 
-The latest complete local gate is frozen
+The latest local create-PR gate on frozen
+`e3ca270aa78e41ffc1667f3c61f481f8a49d1e1f` closed with exit 124 at
+`2026-10-05T00:18:03.868558Z`. All 30 SQL test preparations passed in
+1,917,628 ms and SQL clean-build qualification passed in 1,434,803 ms. The
+remaining SQL assertions exhausted their 972,736 ms remainder while the LSP
+development-sysroot test compiled its ordinary CLI dependency graph. Total SQL
+assertion time was 2,406,476 ms against the unchanged 2,400-second limit.
+The failure and immutable reports remain at
+`/workspace/validation-work/evidence/acceptance-e3ca270aa-20261004-v1/`.
+The prospective correction registered below prepares that exact CLI consumer
+before assertions; it does not extend deadlines or reuse assertions. Scoped
+review, the successor gate, paired performance and final cloud remain pending.
+
+The earlier complete local gate was frozen
 `1c40af4c09fb567a754f1ad8130868a7695ad8ce`, closed at 22:19:41 UTC with
 exit 124. Its clean SQL build exceeded the unchanged 2400-second cumulative
 assertion safety budget: clean A and unchanged A completed, independent B did
@@ -21,7 +34,8 @@ stage plans are byte-identical to the base. Implementation
 SATISFIED with no blockers and was integrated unchanged. The full-checkout
 4,465-file guard and whitespace check pass. Review evidence is retained at
 `/workspace/validation-work/evidence/candidates/7d3f8d4e8b313bb2f0c04214c0ede0922e551732/opus-sql-clean-two-workers.md`.
-The complete successor gate remains required; no parallel fit is claimed.
+The subsequent e3ca gate passed SQL clean-build qualification, then failed as
+recorded above. Complete successor acceptance remains required.
 
 The separately reviewed exact closed SQL-B completed-cache cleanup removed
 4,032 cache files and verified all 3,113 protected entries unchanged. Observed
@@ -3062,3 +3076,51 @@ locking and consumer checks. Observed recovery was 107,016,192 bytes; all 25
 pinned gate records, compressed original bytes and the separately admitted
 restoration command remain. The original timeout is unchanged. Receipt:
 `/workspace/validation-work/evidence/closed-1c40-expanded-compiler-custody-20261004/receipt.json`.
+
+### Prospective M2 correction: ordinary CLI in selected SQL preparation (2026-10-05)
+
+- Scope registered before implementation on isolated branch
+  `codex/validation-sql-cli-preparation-20261005`, based on
+  `e3ca270aa78e41ffc1667f3c61f481f8a49d1e1f`. The e3ca create-PR invocation
+  ended with actual exit 124 at `2026-10-05T00:18:03.868558Z`: all 30 SQL
+  test preparations passed (1,917,628 ms), SQL clean-build qualification passed
+  (1,434,803 ms), and the remaining SQL assertions exhausted their remaining
+  972,736 ms while the LSP development-sysroot test compiled the ordinary CLI.
+  Total SQL assertion elapsed time was 2,406,476 ms. These observations remain
+  failed evidence; no assertion result is reused.
+- The selected incremental-editor test invokes ordinary
+  `cargo run --locked -q -p sifr -- --print sysroot --json`. Its ordinary CLI
+  dependency graph is not proven ready by the 30 test-only preparations. Add
+  the existing canonical `cargo build --locked --offline -p sifr` recipe after
+  those preparations and before assertions when that exact consumer is selected,
+  through the existing preparation scheduler, admission and environment. Share
+  the existing recipe authority without adding a fallback.
+- Preserve all 19 suites, 66 cases, 30 existing test preparation commands,
+  assertions, source/native/build-worker policies, resource reserves and the
+  cumulative 2,400-second assertion limit. No compiler/runtime semantics change.
+- This bounded implementation runs pure selection/order/failure/environment
+  controls, profile/stage comparisons and file/diff guards only. Root explicitly
+  retains ownership of scoped Opus review, integration and the next actual gate;
+  no Cargo, UV, compiler, broad gate, review process, push or cleanup is authorized
+  in this worktree. Checkout and scratch stay below 128 MiB.
+
+- Implementation outcome: the exact selected command key
+  `sql-incremental-editor-tests` appends one ordinary CLI build after all selected
+  test preparations. The existing performance and generated preparation consumers
+  now share that same six-argument recipe. Both early and ordinary area routes
+  retain their scheduler and environment; CLI preparation failure blocks the
+  remaining assertions without changing the canonical 66-case result inventory.
+- Focused validation: 38 pure controls passed with every external subprocess
+  forbidden, including selected/unselected/lookalike commands, exact ordering,
+  ordinary CLI failure, inherited environment, worker policy, resources and
+  cumulative assertion deadlines. Workspace membership came directly from the
+  unchanged full-checkout Cargo manifests; no Cargo metadata ran. All six actual
+  full-checkout profile and stage plans match e3ca byte-for-byte (combined SHA-256
+  `18f6ce5bc1469db955aafd8dfaecf52d9b278d721cc63c344557a5848a319613`),
+  retaining 143/729 E2E fixture selections. The sparse-checkout 220-file size
+  guard and whitespace check passed. Evidence and reproducible pure commands:
+  `/workspace/validation-work/evidence/sql-cli-preparation-e3ca-20261005/`.
+- Handoff remains a bounded implementation, not complete acceptance: scoped
+  Opus review, integration, full-checkout guard and actual successor gate are
+  explicitly deferred to the coordinating owner. No build or assertion reuse
+  occurred; the e3ca failure is retained unchanged.

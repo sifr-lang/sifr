@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .paths import REPO_ROOT
+from .cargo_cli_command import ordinary_cli_build_command
 from .cargo_fixture_setup import prepare_locked_fixture_caches
 from .cargo_crate_setup import prepare_crate_test_binaries
 from .area_cargo_setup import prepare_area_graphs
@@ -179,7 +180,7 @@ def prepare_performance_binaries(profile, env, command_runner) -> None:
     commands = []
     if suites.intersection({"smoke", "representative", "full"}):
         commands.extend([
-            ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
+            ordinary_cli_build_command(),
             ["cargo", "build", "--locked", "--offline", "-p", "sifr_frontend",
              "--bin", "frontend_query_bench"],
         ])

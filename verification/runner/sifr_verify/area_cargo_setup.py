@@ -4,6 +4,7 @@ import importlib.util
 import json
 import sys
 from .paths import REPO_ROOT
+from .cargo_cli_command import ordinary_cli_build_command
 
 
 def sql_runner():
@@ -20,15 +21,22 @@ def sql_preparation_commands(suites):
     module = sql_runner()
     manifest = json.loads(module.MANIFEST_PATH.read_text())
     commands = []
+    needs_ordinary_cli = False
     for suite in module.select_suites(manifest, set(suites)):
         for case in suite["cases"]:
             command = module.COMMANDS[case["command"]]
+            if case["command"] == "sql-incremental-editor-tests":
+                needs_ordinary_cli = True
             if command[:2] == ["cargo", "test"]:
                 # Test filters do not change Cargo's compilation graph. Keep
                 # every argument so feature/target selection cannot drift.
                 prepared = [*command[:2], "--no-run", *command[2:]]
                 if prepared not in commands:
                     commands.append(prepared)
+    if needs_ordinary_cli:
+        # The LSP development-sysroot test runs ordinary `cargo run -p sifr`.
+        # A test-only graph does not prove that default CLI graph is prepared.
+        commands.append(ordinary_cli_build_command())
     return commands
 
 
