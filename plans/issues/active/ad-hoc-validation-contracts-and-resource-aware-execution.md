@@ -1,6 +1,69 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-05 after hosted qualification findings
+## Current acceptance checkpoint — 2026-10-05 after completed 44cab qualification
+
+Candidate `44cab341cc51e3444ae5584694c7fc3b7c47fa9d` did not qualify.
+Its local core run closed with exit 2: online `uv run --locked` rejected the
+Python interop lock before Arrow example preparation. Hosted run
+[37277764192](https://github.com/sifr-lang/sifr/actions/runs/37277764192)
+passed selection, toolchain, lint, smoke fuzz, WASI SQL and Linux ARM/x64 plus
+macOS ARM compiler components. Determinism received another runner shutdown
+(143); Windows compiled but its independent SQL rebuild differed byte-for-byte;
+ordinary merge preparation exceeded the combined sysroot wrapper's 2,400 seconds.
+Original logs and failures remain under `/workspace/validation-work/evidence/`.
+
+Four bounded corrections are integrated through `94b9e1e35`:
+
+- Determinism streams child progress to stderr and propagates failed children
+  even when they emit a signature. The selected Cargo limit now reaches both
+  outer and inner builds. Seven shell controls and workflow contracts passed;
+  scoped Opus **SATISFIED**, `sifr-claude.iaiSiC/response.md`.
+- Windows/MSVC SQL qualification adds `/Brepro` equally to clean, reused and
+  independent builds. Exact byte equality remains required. Focused controls
+  passed; Opus **SATISFIED**, `sifr-claude.SQtyIY/response.md`. A fresh Windows
+  run must establish whether this corrects all observed byte differences.
+- Canonical uv resolution fixes missing CPU/PyPI fork and package metadata.
+  All 91 package/version/source identities and the CPU wheel hash are unchanged.
+  Online/offline lock checks, 16 distribution controls and the full dependency
+  audit with 40 self-tests passed; Opus **SATISFIED**,
+  `sifr-claude.5VpoPB/response.md`. No locked-check bypass or dependency upgrade.
+- Ordinary merge schedules its three sysroot preparation graphs separately,
+  under the prospective policy below. Eleven focused controls passed;
+  Opus **SATISFIED**, `sifr-claude.DV1jwa/response.md`.
+
+All review paths above are relative to `/workspace/validation-work/evidence/`.
+The full 4,468-file guard passed. These focused checks do not establish a full
+gate, Windows reproducibility, numerical qualification or profile latency target.
+The additive baseline applicability v4 adapter passed 30 controls and preserves
+the original baseline, runtime/corpus checks and fresh candidate-endpoint
+requirement. Actual final registration and successor gates remain separate steps.
+
+### Prospective ordinary merge sysroot preparation schedule
+
+The plan's cold-preparation policy permits measured prospective schedule changes.
+For ordinary merge, package preparation now uses three serial named commands:
+release-package compilation, metadata-corpus compilation and metadata-structural
+compilation. They retain their exact commands, environment and distinct release
+versus development versions. Each has the existing 2,400-second command limit;
+any earlier inherited absolute deadline still binds and is never reset.
+
+This replaces one combined 2,400-second wrapper limit. Without an enclosing
+absolute deadline, these three commands can take up to 7,200 seconds total.
+This is an explicit preparation-budget change, not an unchanged aggregate limit.
+Failure stops later commands without retry. Preparation timing includes every
+phase. Assertion, performance, compact/cloud resource and deadline contracts,
+selected coverage and profile latency targets remain unchanged. Historical exit
+124 remains a failure; fresh hosted completion within its job limit is required.
+
+Local disk admission is currently unresolved: the audited 4,323,254,272 available
+bytes are below the next source preparation's 4,966,055,936-byte requirement.
+The finite raw-duplicate and completed-object candidates cannot cover that
+deficit; live compiler metadata is not proven obsolete. No speculative deletion
+or resource waiver is authorized by this checkpoint. Final SQL requires still
+more headroom. Native ARM capacity and GitHub administration remain external
+prerequisites. PR #4332 stays draft and all remaining acceptance stays open.
+
+## Historical acceptance checkpoint — 2026-10-05 after hosted qualification findings
 
 Hosted run [37271475554](https://github.com/sifr-lang/sifr/actions/runs/37271475554)
 confirmed the corrected event-candidate selection. Toolchain, lint, smoke fuzz,
