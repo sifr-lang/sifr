@@ -103,6 +103,8 @@ jobs:
   local-first-profiles:
     name: local-first-${{ matrix.profile }}
     runs-on: ubuntu-24.04
+    env:
+      CARGO_PROFILE_DEV_DEBUG: '0'
     needs: validation-selection
     strategy:
       fail-fast: true
@@ -276,6 +278,8 @@ jobs:
   deterministic-report-signature:
     name: deterministic-report-signature
     runs-on: ubuntu-24.04
+    env:
+      CARGO_PROFILE_DEV_DEBUG: '0'
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

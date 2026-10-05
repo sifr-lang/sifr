@@ -27,6 +27,25 @@ def validate(document: dict) -> list[str]:
         # Job-level if is evaluated before the strategy expands the matrix.
         if re.search(r"\bmatrix(?:\.|\[)", str(job.get("if", ""))):
             errors.append(f"{name}: job-level if cannot reference matrix")
+    # Debug information is a hosted build allocation, not an assertion/profile override.
+    debug_key = "CARGO_PROFILE_DEV_DEBUG"
+    debug_jobs = {"local-first-profiles", "deterministic-report-signature"}
+    if debug_key in document.get("env", {}):
+        errors.append("compiler debug allocation must not be workflow-global")
+    for name, job in jobs.items():
+        if name in debug_jobs:
+            if job.get("env") != {debug_key: "0"}:
+                errors.append(f"{name}: hosted compiler allocation must be exactly debug0")
+        elif debug_key in job.get("env", {}):
+            errors.append(f"{name}: compiler debug allocation belongs only to profile/determinism jobs")
+        if any(debug_key in step.get("env", {}) for step in job.get("steps", [])):
+            errors.append(f"{name}: compiler debug allocation must not have step overrides")
+    determinism = jobs["deterministic-report-signature"]
+    if determinism.get("if") != "github.event_name == 'pull_request'" or not any(
+            step.get("run") == 'bash verification/runner/e2e/check_report_determinism.sh --profile merge'
+            and "if" not in step and not step.get("continue-on-error")
+            for step in determinism.get("steps", [])):
+        errors.append("determinism must execute both complete merge runs under one job allocation")
     profile = jobs["local-first-profiles"]
     if "if" in profile:
         errors.append("profile coverage must be selected in the matrix, not a job condition")
@@ -228,6 +247,26 @@ def main() -> None:
               + validate_native_qualification(document, native) + validate_capacity_diagnostics(diagnostic))
     if errors:
         raise SystemExit("\n".join(errors))
+    for name in ("local-first-profiles", "deterministic-report-signature"):
+        for allocation in ({}, {"CARGO_PROFILE_DEV_DEBUG": "2"},
+                           {"CARGO_PROFILE_DEV_DEBUG": "0", "SIFR_VERIFY_SAFETY_DEADLINE_SECONDS": "4800"}):
+            wrong = copy.deepcopy(document)
+            wrong["jobs"][name]["env"] = allocation
+            assert any("exactly debug0" in error for error in validate(wrong)), (name, allocation)
+    for scope in ("global", "other-job", "step"):
+        wrong = copy.deepcopy(document)
+        target = (wrong if scope == "global" else wrong["jobs"]["smoke-fuzz-property"]
+                  if scope == "other-job" else wrong["jobs"]["local-first-profiles"]["steps"][-1])
+        target.setdefault("env", {})["CARGO_PROFILE_DEV_DEBUG"] = "0"
+        assert any("compiler debug allocation" in error for error in validate(wrong)), scope
+    for mutation in ("profile", "skip"):
+        wrong = copy.deepcopy(document)
+        step = wrong["jobs"]["deterministic-report-signature"]["steps"][-1]
+        if mutation == "profile":
+            step["run"] = step["run"].replace("--profile merge", "--profile create-pr")
+        else:
+            step["continue-on-error"] = True
+        assert any("both complete merge runs" in error for error in validate(wrong)), mutation
     # Regression: the original condition must fail before any runner work.
     invalid = copy.deepcopy(document)
     invalid["jobs"]["local-first-profiles"]["if"] = (
