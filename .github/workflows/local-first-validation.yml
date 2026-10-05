@@ -70,6 +70,7 @@ jobs:
               )
               row["host_memory_pressure"] = read(Path("/proc/pressure/memory"))
               row["disk_free_bytes"] = shutil.disk_usage(os.environ["GITHUB_WORKSPACE"]).free
+              row["disk_free_inodes"] = os.statvfs(os.environ["GITHUB_WORKSPACE"]).f_favail
               row["affinity_cpus"] = len(os.sched_getaffinity(0))
               row["load_average"] = os.getloadavg()
               membership = read(Path("/proc/self/cgroup"))
