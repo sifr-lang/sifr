@@ -1,4 +1,4 @@
-name: efbc-determinism-resource-diagnostic
+name: 95ff-determinism-resource-diagnostic
 
 # Diagnostic-only branch: never merge this workflow into the delivery branch.
 on:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   deterministic-report-diagnostic:
-    name: deterministic-report-diagnostic-efbc
+    name: deterministic-report-diagnostic-95ff
     runs-on: ubuntu-24.04
     env:
       CARGO_PROFILE_DEV_DEBUG: '0'
@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
-          ref: efbc1a31659b8e1c204471d93476b4b897d614a1
+          ref: 95ff61d1fa9d5789e6ee988333d827df12d708d8
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -29,10 +29,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          evidence="$RUNNER_TEMP/efbc-determinism-diagnostic"
+          evidence="$RUNNER_TEMP/95ff-determinism-diagnostic"
           mkdir -p "$evidence"
           git rev-parse HEAD > "$evidence/checkout.txt"
-          test "$(cat "$evidence/checkout.txt")" = efbc1a31659b8e1c204471d93476b4b897d614a1
+          test "$(cat "$evidence/checkout.txt")" = 95ff61d1fa9d5789e6ee988333d827df12d708d8
           cat > "$evidence/sample.py" <<'PY'
           import datetime
           import json
@@ -141,6 +141,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: efbc-determinism-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/efbc-determinism-diagnostic
+          name: 95ff-determinism-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/95ff-determinism-diagnostic
           if-no-files-found: error
