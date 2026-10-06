@@ -953,7 +953,13 @@ mod sifr_generated_generated_support {
         mut tokens: Vec<String>,
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
-        tokens.push(value.kind.clone());
+        tokens.push({
+            let mut sifr_generated_concat: String =
+                String::with_capacity(0usize.saturating_add(0usize));
+            sifr_generated_concat.push_str(value.kind.as_str());
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
+        });
         if value.kind == "bool" {
             let bool_value: Option<bool> = value.bool_value;
             if bool_value.is_none() {
@@ -1175,15 +1181,16 @@ mod sifr_generated_project_nominals {
                             &SifrInt::from_i64(1),
                         )
                         .clamp_slice_bound(sifr_generated_slice_len);
-                        sifr_generated_slice_src
-                            .iter()
-                            .skip(sifr_generated_slice_start)
-                            .take(
-                                sifr_generated_slice_stop
-                                    .saturating_sub(sifr_generated_slice_start),
-                            )
-                            .copied()
-                            .collect::<String>()
+                        String::from_iter(
+                            sifr_generated_slice_src
+                                .iter()
+                                .skip(sifr_generated_slice_start)
+                                .take(
+                                    sifr_generated_slice_stop
+                                        .saturating_sub(sifr_generated_slice_start),
+                                )
+                                .copied(),
+                        )
                     }
                     .trim()
                     .to_string();

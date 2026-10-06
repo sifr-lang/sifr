@@ -27,7 +27,7 @@ fn accumulate(values: &[SifrInt]) -> SifrInt {
 fn collect_prefixes(nums: &[SifrInt]) -> Vec<Vec<SifrInt>> {
     fn dfs(i: &SifrInt, nums: &[SifrInt], res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>) {
         if i < &SifrInt::from_i64(0) || i >= &SifrInt::from(nums.len()) {
-            res.push(subset.clone());
+            res.push(subset.to_vec());
             return;
         }
         let Some(sifr_generated_checked_value_0) = ({
@@ -39,7 +39,7 @@ fn collect_prefixes(nums: &[SifrInt]) -> Vec<Vec<SifrInt>> {
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         }) else {
-            res.push(subset.clone());
+            res.push(subset.to_vec());
             return;
         };
         subset.push(sifr_generated_checked_value_0);
@@ -72,7 +72,7 @@ fn collect_value_groups(items: &[SifrInt], limit: &SifrInt) -> Vec<Vec<SifrInt>>
         res: &mut Vec<Vec<SifrInt>>,
     ) {
         if total == limit {
-            res.push(cur.clone());
+            res.push(cur.to_vec());
             return;
         }
         if i < &SifrInt::from_i64(0) || i >= &SifrInt::from(items.len()) || total > limit {

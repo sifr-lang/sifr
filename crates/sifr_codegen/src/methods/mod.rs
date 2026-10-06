@@ -39,11 +39,11 @@ fn lower_method_impl(
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
         (Type::Str | Type::LiteralStr(_), "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(ty, object, args),
-        (Type::Class { .. }, "len") if args.is_empty() => Some(RustExpr::MethodCall {
-            receiver: Box::new(object.clone()),
-            method: "len".to_string(),
-            args: Vec::new(),
-        }),
+        (Type::Class { .. }, "len")
+        | (Type::Enum { .. }, "name" | "value")
+        | (Type::Newtype { .. }, "value") => {
+            common::lower_generated_no_arg_method(object, method, args)
+        }
         (Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Bytes, "len") => {
             common::lower_len(object, args)
         }

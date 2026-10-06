@@ -1,6 +1,54 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current recovery checkpoint — 2026-10-06: original execution state unavailable
+## Current continuation checkpoint — 2026-10-06: companion reconciliation delivered, review blocked
+
+The user explicitly authorized correction of the inherited mismatch and directed
+continuation in this new environment. Missing old execution state does not stop
+fresh implementation and checks. The frozen environment, isolated target,
+resource admissions and actual terminal statuses are retained under
+`/workspace/validation-resume-20261006/`; none replaces an old acceptance receipt.
+
+A locked, offline source build and exhaustive 264-companion scan reproduced the
+43 stale outputs. Individual diff inspection found two invalid generated outputs hidden
+behind successful `emit` exits: enum `name`/`value` and newtype `value` had
+canonical builtin authority but no typed codegen dispatch, producing
+`compile_error!` in `demos/enums` and `demos/protocols`. The bounded fix admits
+only those receiver/method pairs with zero arguments. It preserves strict
+authority checks, generated helper semantics and the existing class `len` case.
+
+All 21 method-authority tests passed, including aliases and rejection of invalid
+arity, receiver and declaration authority. All 10 selected native enum/newtype
+fixtures passed, including borrowed and temporary receivers and single evaluation.
+Both expanded fixtures passed frontend checks. Formatting and the 4,469-file
+size guard passed. Canonical regeneration changed exactly 41 companions; the two
+invalid outputs returned to their committed bytes. All 264 results match the
+inspected expected bytes and contain no `compile_error!`. The second canonical freshness scan passed for
+all 264 companions.
+
+Preserved setup failures: the first test preparation lacked the pinned LeetCode
+corpus; initialization at `cbe3a55465159ae9467a7a25cc89e0066ed84db2` resolved it.
+A redundant Cargo test build with a different feature selection was terminated
+(exit -15). The first direct native launch used the wrong directory and found
+no fixtures (exit 101); the corrected launch uses Cargo's package working
+directory and exact prepared executable. These attempts remain unsuccessful.
+
+Evidence: `companion-inspection/assessment.json`,
+`focused-prepare-v2/status.json`, `focused-tests-v3/authority.log`,
+`focused-native-v4/status.json`, `companion-reconciliation-v2/status.json` and
+`companion-reconciliation-v2/comparison.json`, under the fresh evidence root.
+The coordinator and final candidate/source hashes are retained outside Git.
+
+The required scoped Claude review is blocked: neither the executable nor its
+credentials is configured in this environment. The user was asked whether to
+substitute Astra high; no answer has been received and no substitute review is
+claimed. Next: obtain the required or explicitly authorized replacement review
+on the exact published candidate, then continue fresh correctness, endpoint,
+independent paired performance, compact cloud, native/platform and operational
+qualification. Historical failures and unavailable baseline receipts retain
+their original status. PR #4332 remains draft. No merge, release, numerical
+qualification or phase closure has occurred.
+
+## Historical recovery checkpoint — 2026-10-06: original execution state unavailable
 
 The continuation explicitly authorizes reconciliation of the 43 stale demo
 companions, affected validation and scoped review, then remaining qualification.

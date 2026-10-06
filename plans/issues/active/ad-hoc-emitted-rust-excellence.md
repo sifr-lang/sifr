@@ -1,5 +1,33 @@
 # Ad Hoc Phase: Emitted Rust Excellence
 
+## Authorized companion reconciliation — 2026-10-06
+
+The continuation explicitly authorizes fixing the inherited compiler/companion
+mismatch recorded below. A fresh source build reproduced all 43 stale outputs.
+Individual inspection found missing typed builtin dispatch for enum `name` and
+`value`, and newtype `value`, generating invalid `compile_error!` expressions in
+the enum and protocol demos. The bounded correction admits those generated
+getters with zero arguments while preserving strict receiver and declaration
+authority. No generic fallback or freshness waiver was introduced.
+
+All 21 affected method-authority tests and 10 selected native fixtures passed;
+coverage includes aliases, invalid receiver/arity/authority, borrowed getters,
+string newtype ownership, temporary receivers and single evaluation. Formatting
+and file-size checks passed. Regeneration changes the other 41 companions to
+their inspected current-compiler output; the two defective outputs return to
+their original bytes. All 264 outputs match expected bytes and contain no
+`compile_error!`. The second canonical freshness scan passed for all 264
+companions.
+
+Fresh evidence is under `/workspace/validation-resume-20261006/`, with the
+companion assessment, actual test/build statuses and final comparison retained.
+The [validation plan](ad-hoc-validation-contracts-and-resource-aware-execution.md)
+records setup failures and remaining qualification. Required scoped Claude
+review remains blocked by missing setup; an explicit reviewer substitution is
+pending. The patch does not constitute complete generated-code quality, merge,
+performance, release or phase acceptance. Historical observations below remain
+unchanged.
+
 ## External demo freshness observation — 2026-10-06
 
 Validation-contract delivery candidate

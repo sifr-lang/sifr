@@ -2,7 +2,24 @@
 class Port(int):
     pass
 
+class Label(str):
+    pass
+
+def label_value(label: Label) -> str:
+    return label.value()
+
+def next_label(mut visits: list[int]) -> Label:
+    visits.append(1)
+    return Label("owned")
+
 def main():
     p: Port = Port(8080)
     assert str(p) == '8080'
     assert str(p.value()) == '8080'
+    label: Label = Label("owned")
+    assert label.value() == 'owned'
+    assert label_value(label) == 'owned'
+    assert str(label) == 'owned'
+    visits: list[int] = []
+    assert next_label(visits).value() == 'owned'
+    assert len(visits) == 1

@@ -799,3 +799,5 @@ include!("method_authority_tests/checked_sequence_exit_tests.rs");
 include!("method_authority_tests/nonempty_pop_tests.rs");
 
 include!("method_authority_tests/scalar_deque_representation_tests.rs");
+
+include!("method_authority_tests/nominal_builtin_methods_tests.rs");
