@@ -1,6 +1,36 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-06: inherited demo freshness blocker
+## Current recovery checkpoint — 2026-10-06: original execution state unavailable
+
+The continuation explicitly authorizes reconciliation of the 43 stale demo
+companions, affected validation and scoped review, then remaining qualification.
+The inherited ownership boundary below is therefore no longer a scope blocker.
+
+This continuation received a fresh cloud workspace containing main `30d2b3902`,
+not the prior execution environment. Published checkpoint `12a6b8203` was fetched
+from draft PR #4332 and restored into
+`/workspace/sifr-validation-final-main-integration` on owned branch
+`codex/validation-resume-20261006`. No prior gate or worker was running.
+The complete `/workspace/validation-work` directory and owned
+`target/acceptance-ba2f15181` are absent. In particular, the saved exact PATH,
+environment, coordinator, original failure evidence, independent baseline,
+endpoint instructions and performance receipts have not been recovered.
+The required scoped-review executable `claude` is also unavailable.
+
+The separately seeded compiler reproduces the reported JSON concatenation and
+comparison differences. This is diagnostic-only: that binary has not been
+bound to the restored candidate, and its output is not regeneration authority
+or passing acceptance evidence. Compiler source and companions remain unchanged.
+Recovery observations and diagnostic logs are retained separately under
+`/workspace/validation-resume-20261006/`; these do not replace original receipts.
+
+Next action: recover the original execution state from the source chat
+`simplify-testing`, including the saved environment and original baseline/evidence,
+then resume the authorized reconciliation. Do not relabel the seeded cache,
+reconstruct receipts from prose, or admit performance using failed efbc v5.
+No successor qualification, merge, release or phase closure has occurred.
+
+## Historical acceptance checkpoint — 2026-10-06: inherited demo freshness blocker
 
 The exact candidate `efbc1a31659b8e1c204471d93476b4b897d614a1` remains
 unqualified. Local core v5 completed at 01:36:46 UTC with exit 1 after
