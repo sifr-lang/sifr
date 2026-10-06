@@ -39,6 +39,12 @@ def test_cache_hint(root: Path, env: dict, package: str, *, include_library: boo
         return False
 
 
+def metadata_cache_hint(root: Path, env: dict, suite: str, *, include_library: bool = False) -> bool:
+    from .sysroot_preparation import producer
+    environment = producer("package_build").metadata_environment(root, env, suite)
+    return test_cache_hint(root, environment, "sifr_driver", include_library=include_library)
+
+
 def generated_preparation(command: list[str]) -> bool:
     """Recognize the complete wrapper, whose growth exceeds its outer CLI build.
 

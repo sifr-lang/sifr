@@ -330,10 +330,12 @@ class ScheduleTests(unittest.TestCase):
             self.assertEqual(tools.call_count, len(runner.profile["toolchain_steps"]))
             self.assertEqual(len(events), len(set(events)))
             self.assertLess(events.index("preparation_sysroot_source"), events.index("preparation_sysroot_package"))
-            self.assertLess(events.index("preparation_sysroot_package"), events.index("preparation_sysroot_metadata"))
-            self.assertLess(events.index("preparation_sysroot_metadata"), events.index("area_sysroot_release"))
+            self.assertLess(events.index("preparation_sysroot_package"), events.index("preparation_metadata_corpus"))
+            self.assertLess(events.index("preparation_metadata_corpus"), events.index("preparation_metadata_structural"))
+            self.assertLess(events.index("preparation_metadata_structural"), events.index("area_sysroot_release"))
             self.assertEqual([argv[-2:] for argv in preparations[:2]], [["prepare", "source"], ["prepare", "package"]])
-            self.assertEqual(preparations[2][-1], "--metadata-only")
+            self.assertEqual([argv[-2:] for argv in preparations[2:4]],
+                             [["--metadata-suite", "metadata-corpus"], ["--metadata-suite", "metadata-structural"]])
             self.assertFalse(remaining.call_args.kwargs["include_sysroot"])
 
 

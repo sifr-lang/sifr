@@ -33,9 +33,26 @@ def package_build_configuration(root: Path, original: dict[str, str], host: str,
 
 
 
+def metadata_environment(root: Path, original: dict[str, str], suite: str):
+    if suite not in {"metadata-corpus", "metadata-structural"}:
+        raise ValueError("unknown metadata preparation suite")
+    env = dict(original)
+    if suite == "metadata-corpus":
+        # Cargo build-script environment changes invalidate a shared graph even
+        # when both configurations were prepared. Keep the release-versioned
+        # corpus graph inside the caller's owned target, apart from development.
+        target = Path(original.get("CARGO_TARGET_DIR", root / "target"))
+        if not target.is_absolute():
+            target = root / target
+        env["CARGO_TARGET_DIR"] = str(target / "sysroot-metadata-corpus")
+        env["SIFR_RELEASE_VERSION"] = RELEASE_VERSION
+        env["SIFR_SYSROOT"] = str(root / "target/sysroot_release/corpus-producer-source")
+    return env
+
+
 def corpus_configuration(root: Path, original: dict[str, str]):
     snapshot = root / "target/sysroot_release/corpus-producer-source"
-    env = dict(original, SIFR_RELEASE_VERSION=RELEASE_VERSION, SIFR_SYSROOT=str(snapshot))
+    env = metadata_environment(root, original, "metadata-corpus")
     command = ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--lib",
                "full_corpus_exact_emission", "--", "--ignored", "--nocapture"]
     return command, env, snapshot

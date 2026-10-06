@@ -1,5 +1,53 @@
 # Ad Hoc Phase: Emitted Rust Excellence
 
+## Current continuation checkpoint — 2026-10-07: metadata graph isolation remediation
+
+The reconciliation at `95ff61d1fa9d5789e6ee988333d827df12d708d8`
+received scoped Claude Opus approval (SATISFIED, no blockers). Its 21 authority
+tests, 10 native fixtures and all 264 freshness checks remain recorded as passed.
+That approval covers the reconciliation, not complete phase qualification.
+
+The exact-candidate compact `changes run` was intentionally interrupted with
+actual exit 130 after 2h19m07s. Source preparation (38m08s), release-package
+preparation (46m15s), metadata corpus preparation (25m17s), metadata structural
+preparation (17m18s), boundary equivalence and installed smoke passed. The attempt
+is incomplete; it is not a successful correctness or performance gate.
+
+The subsequent corpus assertion restarted compilation of `sifr_sysroot` and its
+compiler dependents. Corpus preparation sets `SIFR_RELEASE_VERSION` to the
+package version, while structural preparation uses the development environment;
+they shared one Cargo target. Cargo's build-script environment tracking therefore
+invalidated the previously prepared graph when configurations switched.
+
+The bounded correction gives the versioned corpus a separate directory inside
+the caller's owned Cargo target. Preparation and execution use the same authority;
+cache forecasts inspect that directory. Cloud preparation now admits each selected
+metadata configuration separately, as compact change validation already does.
+Assertions, case selection, version expectations, reserves and deadlines remain
+unchanged. No old graph or failure evidence was deleted.
+
+All 88 focused setup, cache-admission, compact and resource-schedule checks pass.
+A real Cargo regression prepares both settings and then proves both executions
+use fresh artifacts with the expected compiled version. A negative control that
+restores the old shared target fails that freshness assertion, as expected.
+Profile validation and the 4,469-file size guard pass. Scoped review of this
+correction and successor qualification are pending.
+
+Evidence is retained under `/workspace/validation-resume-20261006/`, including
+`metadata-rebuild-observation.json`, `metadata-isolation-focused.log`,
+`metadata-isolation-negative-control.log`, and the original gate's terminal
+`candidate-95ff61d1f-changes/status.json`. The diagnostic review queue was stopped
+before launching Claude so remediation remains serialized.
+
+Hosted compiler components on Linux x64/ARM, macOS ARM and Windows, and WASI SQL
+passed. Hosted determinism failed with runner shutdown/exit 143; its cause is
+unproved. Protected publication still requires the separate App and environment;
+Actions configuration reads return HTTP 403, and larger hosted-runner enumeration
+returns HTTP 404 (unsupported organization). These observations do not qualify
+native predecessor transitions or protected enforcement. The required external
+setup has been requested while independent work continues. PR #4332 stays draft;
+no full qualification, merge, release or phase closure is claimed.
+
 ## Authorized companion reconciliation — 2026-10-06
 
 The continuation explicitly authorizes fixing the inherited compiler/companion

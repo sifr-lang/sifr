@@ -28,7 +28,7 @@ from .validation_contracts import stage_plan
 from .schemas import load_schema, validate_data
 from .prepared_sysroot import OWNER_VARIABLE, command as preparation_command
 from .cloud_failure import classify_failure
-from .cargo_resource_forecast import command_cache_hint, generated_preparation, test_cache_hint
+from .cargo_resource_forecast import command_cache_hint, generated_preparation, metadata_cache_hint
 from .process_disk_budget import DiskBudget, FLOOR_VARIABLE, PATH_VARIABLE
 
 WORKER_FLAGS = {"--sifr-jobs": "sifr_jobs", "--rust-jobs": "rust_jobs",
@@ -261,14 +261,17 @@ def run_staged_cloud(runner, early: set[str]) -> int:
             return failed
     # Private graphs now have retained immutable outputs. The large library
     # preparations run after retirement, rather than extending both lifetimes.
-    cached_metadata = test_cache_hint(REPO_ROOT, env, "sifr_driver")
-    schedule.record("metadata-forecast", {"cache_presence_hint": cached_metadata,
-                    "assertion_reuse": False, "native_cache_validation": "Cargo always runs"})
-    metadata = schedule.step("preparation_sysroot_metadata", lambda: run_command(
-        [sys.executable, str(REPO_ROOT / "verification/areas/sysroot_release/package_build.py"),
-         "--metadata-only"], env=env), allocation="sysroot-metadata-cached" if cached_metadata else "sysroot-metadata",
-         preparation=True, monitor_disk=True)
-    failed = failed or metadata
+    for suite in sorted(set(selected[0]["suites"]) & {"metadata-corpus", "metadata-structural"}):
+        cached_metadata = metadata_cache_hint(REPO_ROOT, env, suite)
+        schedule.record("metadata-forecast", {"suite": suite, "cache_presence_hint": cached_metadata,
+                        "assertion_reuse": False, "native_cache_validation": "Cargo always runs"})
+        metadata = schedule.step("preparation_" + suite.replace("-", "_"), lambda s=suite: run_command(
+            [sys.executable, str(REPO_ROOT / "verification/areas/sysroot_release/package_build.py"),
+             "--metadata-suite", s], env=env), allocation="sysroot-metadata-cached" if cached_metadata else "sysroot-metadata",
+             preparation=True, monitor_disk=True)
+        failed = failed or metadata
+        if metadata and not runner.no_fail_fast:
+            break
     if failed:
         runner.block_step("area_sysroot_release", "sysroot-preparation")
     else:

@@ -8,7 +8,7 @@ from .paths import REPO_ROOT
 from .prepared_sysroot import OWNER_VARIABLE, command
 from .profile_commands import run_command
 from .resource_admission import ResourceError
-from .cargo_resource_forecast import test_cache_hint
+from .cargo_resource_forecast import metadata_cache_hint
 
 
 def prepare_compact(runner):
@@ -42,7 +42,7 @@ def prepare_compact(runner):
         # Match each selected library configuration. Do not prepare an unselected
         # corpus solely because the shared package preparer knows about it.
         for suite in sorted(suites.intersection({'metadata-structural','metadata-corpus'})):
-            cached=test_cache_hint(REPO_ROOT,env,'sifr_driver',include_library=True)
+            cached=metadata_cache_hint(REPO_ROOT,env,suite,include_library=True)
             schedule.record('metadata-forecast',{'suite':suite,'cache_presence_hint':cached,'assertion_reuse':False})
             status=schedule.step('preparation_'+suite.replace('-','_'),lambda s=suite: run_command(
                 [sys.executable,str(REPO_ROOT/'verification/areas/sysroot_release/package_build.py'),

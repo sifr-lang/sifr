@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from .cargo_resource_forecast import command_cache_hint, generated_preparation, test_cache_hint
+from .cargo_resource_forecast import command_cache_hint, generated_preparation, metadata_cache_hint, test_cache_hint
 from .cloud_schedule import Schedule, load_schedule
 from .process_disk_budget import DiskBudget, FLOOR_VARIABLE, PATH_VARIABLE
 from .process_execution import execute
@@ -108,6 +108,21 @@ class CacheForecastTests(unittest.TestCase):
             self.assertFalse(command_cache_hint(root, {'CARGO_TARGET_DIR': 'other'}, command))
             binary.unlink(); binary.symlink_to(fingerprint)
             self.assertFalse(test_cache_hint(root, {}, 'sifr_driver'))
+
+    def test_metadata_admission_does_not_borrow_another_configuration_cache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for suffix, corpus_cached in ((Path('target'), False),
+                                           (Path('target/sysroot-metadata-corpus'), True)):
+                debug = root / suffix / 'debug'
+                binary = debug / 'deps/sifr_driver-abc'
+                fingerprint = debug / '.fingerprint/sifr_driver-abc/test-lib-sifr_driver'
+                binary.parent.mkdir(parents=True)
+                fingerprint.parent.mkdir(parents=True)
+                binary.write_bytes(b'native')
+                fingerprint.write_bytes(b'fingerprint')
+                self.assertTrue(metadata_cache_hint(root, {}, 'metadata-structural'))
+                self.assertEqual(metadata_cache_hint(root, {}, 'metadata-corpus'), corpus_cached)
 
     def test_partial_libraries_only_inform_explicit_compact_forecasts(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import json
 import os
 import time
 import sys
@@ -16,7 +17,7 @@ from unittest.mock import patch
 from .cargo_setup import prepare_sysroot_source_binary, prepare_sysroot_package_binary
 from .paths import REPO_ROOT
 from .profile_commands import CommandFailed
-from .process_execution import Outcome
+from .process_execution import Outcome, execute
 
 
 def sysroot_module():
@@ -30,6 +31,45 @@ def sysroot_module():
 
 
 class SysrootSetupPolicyTests(unittest.TestCase):
+    def test_metadata_configurations_remain_warm_after_both_preparations(self):
+        sysroot_module()
+        import package_build
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'src').mkdir()
+            (root / 'Cargo.toml').write_text('[package]\nname="sifr_driver"\nversion="0.0.0"\nedition="2024"\n')
+            (root / 'Cargo.lock').write_text('version = 4\n[[package]]\nname = "sifr_driver"\nversion = "0.0.0"\n')
+            (root / 'build.rs').write_text('fn main() {\n'
+                'println!("cargo:rerun-if-env-changed=SIFR_RELEASE_VERSION");\n'
+                'println!("cargo:rustc-env=FIXTURE_VERSION={}", std::env::var("SIFR_RELEASE_VERSION").unwrap_or("dev".into()));\n}\n')
+            (root / 'src/lib.rs').write_text('#[test]\n#[ignore]\nfn full_corpus_exact_emission() {\n'
+                'assert_eq!(env!("FIXTURE_VERSION"), std::env::var("SIFR_RELEASE_VERSION").unwrap());\n}\n'
+                '#[test]\nfn metadata_structural_version() { assert_eq!(env!("FIXTURE_VERSION"), "dev"); }\n')
+            env = dict(os.environ, CARGO_TARGET_DIR=str(root / 'owned-target'))
+            env.pop('SIFR_RELEASE_VERSION', None)
+            env.pop('SIFR_SYSROOT', None)
+            def run(command, *, cwd, env, check=True):
+                result = execute([*command[:2], '--message-format=json', *command[2:]],
+                                 cwd=cwd, env=env, deadline_seconds=90)
+                self.assertEqual((result.cause, result.returncode), ('exit', 0), result.stderr.decode())
+                return [json.loads(line) for line in result.stdout.decode().splitlines() if line.startswith('{')]
+            with patch.object(package_build, 'prepare_source_snapshot'):
+                package_build.prepare_metadata(root, env, run, suite='metadata-corpus')
+                package_build.prepare_metadata(root, env, run, suite='metadata-structural')
+            corpus, corpus_env, _ = package_build.corpus_configuration(root, env)
+            structural = ['cargo', 'test', '--locked', '--offline', '-p', 'sifr_driver',
+                          'metadata_structural_', '--', '--nocapture']
+            for command, environment in ((corpus, corpus_env), (structural, env)):
+                messages = run(command, cwd=root, env=environment)
+                artifacts = [row for row in messages if row.get('reason') == 'compiler-artifact']
+                self.assertTrue(artifacts)
+                self.assertTrue(all(row['fresh'] for row in artifacts), artifacts)
+            self.assertEqual(env['CARGO_TARGET_DIR'], str(root / 'owned-target'))
+            for original in ({}, {'CARGO_TARGET_DIR': 'relative-target'}):
+                environment = package_build.metadata_environment(root, original, 'metadata-corpus')
+                base = root / original.get('CARGO_TARGET_DIR', 'target')
+                self.assertEqual(environment['CARGO_TARGET_DIR'], str(base / 'sysroot-metadata-corpus'))
+
     def test_only_boundary_equivalence_prepares_the_source_graph_once(self):
         calls = []
         run = lambda args, **kw: calls.append((args, kw["env"]))
