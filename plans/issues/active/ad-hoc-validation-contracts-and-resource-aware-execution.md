@@ -1,6 +1,49 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current acceptance checkpoint — 2026-10-05 after completed 44cab qualification
+## Current acceptance checkpoint — 2026-10-06: inherited demo freshness blocker
+
+The exact candidate `efbc1a31659b8e1c204471d93476b4b897d614a1` remains
+unqualified. Local core v5 completed at 01:36:46 UTC with exit 1 after
+42m37s. Source and metadata preparation, 93 generated materializations,
+crate/tooling preparation, Python Arrow/async/buffer/callback/DLPack examples,
+SQL tools and all 271 maintained Rust demo compilations passed. The following
+`guardrail_demo_emitted_freshness` assertion reported 43 stale `emitted.rs`
+companions. The advisory preparation timing budget was also exceeded.
+No remaining assertions, endpoint or numerical qualification are implied.
+
+The user-authorized obsolete artifact cleanup resolved the observed disk and
+memory admissions for this attempt; approximately 5.4 GiB disk remained at
+failure. Historical failed and incomplete runs retain their actual outcomes.
+Retired obsolete payloads have additive permanent-retirement records; original
+logs, receipts and inventories remain, alongside current inputs and baseline.
+V5 ran in a detached session and produced an actual terminal status:
+`/workspace/validation-work/evidence/acceptance-efbc1a316-20261006-v5/create-pr-status.json`.
+
+The demos, freshness checker and production codegen are identical to included
+main `30d2b39021174684ca9a2e695447d73ecbf25308`. Both the normal prepared
+compiler and freshly isolated source compiler produce the same divergent JSON
+demo output. This is inherited compiler/companion synchronization debt, owned
+by the [Emitted Rust phase](ad-hoc-emitted-rust-excellence.md), not a validation
+implementation regression. Under AGENTS.md, this delivery records the external
+failure without regenerating another phase's outputs or weakening freshness.
+Diagnostic samples remain under
+`/workspace/validation-work/evidence/efbc-demo-freshness-diagnosis-20261006/`.
+The next action is an owner-scoped companion/compiler reconciliation, followed
+by affected freshness checks and a newly bound successor qualification.
+Do not rerun unchanged efbc or use its failed status for candidate preparation.
+
+Hosted efbc qualification also remains failed: Windows SQL reproducibility
+passed, but merge hit the compound advanced-data preparation deadline and
+determinism received runner shutdown (143). The isolated determinism diagnostic
+failed before acquiring a runner and provides no shutdown diagnosis. Matching
+native qualification, complete paired performance and compact cloud correctness,
+nightly/fuzz operation, and protected-publication administration remain open.
+Larger macOS ARM runner access and GitHub administration permissions remain
+unavailable. PR #4332 stays draft; no merge, release or phase closure is claimed.
+The superseded cloud #4259 and SQL #3647 drafts were closed after ancestry/content
+audits; their closure supplies no qualification evidence.
+
+## Historical acceptance checkpoint — 2026-10-05 after completed 44cab qualification
 
 Candidate `44cab341cc51e3444ae5584694c7fc3b7c47fa9d` did not qualify.
 Its local core run closed with exit 2: online `uv run --locked` rejected the

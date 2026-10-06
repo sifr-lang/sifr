@@ -1,5 +1,34 @@
 # Ad Hoc Phase: Emitted Rust Excellence
 
+## External demo freshness observation — 2026-10-06
+
+Validation-contract delivery candidate
+`efbc1a31659b8e1c204471d93476b4b897d614a1`, including main
+`30d2b39021174684ca9a2e695447d73ecbf25308`, failed its actual compact
+create-pr gate at `guardrail_demo_emitted_freshness`: 43 committed demo
+companions differ from fresh emission. The gate completed with exit 1;
+all preparation commands, including 271 maintained Rust demo compilations,
+had passed. This does not establish runtime or complete profile qualification.
+
+All demos, the freshness checker and production codegen are identical between
+that main and the validation candidate. The JSON companion was last regenerated
+in `41b9f9dca`; the normal prepared compiler and the independently rebuilt
+source compiler agree byte-for-byte on fresh JSON emission, differing from its
+committed companion. Observed changes include string concatenation lowering and
+string equality borrowing. This establishes inherited synchronization debt;
+it does not decide whether generated output or compiler behavior should change.
+
+Owner: Emitted Rust/codegen companion governance. Reconcile the compiler and
+committed companions under this phase's scope and validation; then unblock the
+[validation delivery](ad-hoc-validation-contracts-and-resource-aware-execution.md).
+The validation task made no compiler or companion edits and did not bypass the
+freshness assertion. Actual failure and diagnostic samples are preserved at:
+
+- `/workspace/validation-work/evidence/acceptance-efbc1a316-20261006-v5/`
+- `/workspace/validation-work/evidence/efbc-demo-freshness-diagnosis-20261006/`
+
+This observation supplies no phase closure and leaves earlier outcomes intact.
+
 ## External scoped Clippy observation (2026-09-28)
 
 The Architecture E01a owner attempted optional
