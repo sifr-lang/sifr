@@ -1,6 +1,39 @@
 # Ad Hoc Validation Contracts and Resource-Aware Execution
 
-## Current continuation checkpoint — 2026-10-07: metadata graph isolation remediation
+## Current continuation checkpoint — 2026-10-07: installed qualification disk forecast
+
+The metadata graph isolation correction at `ba42dcd5b1366d90eaa932bc9abd1891787951a3`
+received scoped Claude Opus approval (SATISFIED, no blockers). The successor
+compact correctness attempt failed after 2h05m54s with actual exit 2. Source,
+package and both metadata preparations passed; corpus execution reused its
+prepared graph (Cargo finished in 1.36s), and the full corpus test passed in
+136.81s. No complete correctness or performance qualification is claimed.
+
+The sysroot assertion stage exceeded its one-GiB declared growth allowance with
+22,547,042,304 filesystem bytes still free. Installed metadata qualification
+retains an extracted package and two generation copies. The current archive has
+548,480,412 payload bytes, or 605,671,424 bytes rounded to 4-KiB file blocks;
+three copies alone exceed the old allowance. The prospective correction allows
+four GiB for installed/corpus assertions in compact and cloud policies: two GiB
+for package generations/corpus and two GiB for native caches and filesystem
+overhead. It changes no assertion, case selection, reserve, memory allocation,
+stopping headroom or deadline. The structural-only allocation is unchanged.
+This is an estimate awaiting monitored execution, not a claimed measured peak.
+
+The GitHub App and main-only protected publication environment are configured;
+publisher deployment, verification and required-check enforcement remain pending.
+Hosted merge validation exited 124 and determinism exited 143; the instrumented
+diagnostic was cancelled, with root causes unproved. The user explicitly deferred
+macOS ARM qualification capacity to the final outstanding gate. Independent
+correctness, performance, other native platforms and operational work continue.
+
+Evidence remains under `/workspace/validation-resume-20261006/`, including
+`candidate-ba42dcd5b-changes/status.json`, the candidate-keyed scoped review,
+and `publisher-app-setup-observation.json`. Failed and incomplete evidence is
+preserved. Scoped checks/review of this forecast correction and successor
+qualification are pending. PR #4332 remains draft and unmerged.
+
+## Historical continuation checkpoint — 2026-10-07: metadata graph isolation remediation
 
 The reconciliation at `95ff61d1fa9d5789e6ee988333d827df12d708d8`
 received scoped Claude Opus approval (SATISFIED, no blockers). Its 21 authority
