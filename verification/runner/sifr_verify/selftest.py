@@ -21,11 +21,17 @@ from .errors import SchemaError
 from .dx10_profile_checks import policy_checks as dx10_profile_checks
 from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
 from .dx3_process_checks import policy_checks as dx3_process_checks
+from .process_recovery_checks import policy_checks as process_recovery_checks
+from .checkpoint_checks import policy_checks as checkpoint_checks
+from .checkpoint_recipe_checks import policy_checks as checkpoint_recipe_checks
+from .prepared_sysroot_checks import policy_checks as prepared_sysroot_checks
 from .profile_area_steps import run_selected_area
 from .python_interop_segmentation_checks import policy_checks as python_interop_segmentation_checks
 from .profile_results import AreaResultError, validate_area_result
 from .profile_runner import timed_step
 from .reference_admission_checks import policy_checks as reference_admission_policy_checks
+from .cloud_profile_tests import policy_checks as cloud_profile_policy_checks
+from .cloud_receipt_reuse_tests import policy_checks as cloud_receipt_reuse_checks
 from .profiles import (
     ProfileError,
     canonical_step_names,
@@ -52,18 +58,42 @@ from .schemas import (
 )
 from .step_budgets import run_self_test as step_budget_self_test
 from .qualification_profile_checks import policy_checks as qualification_profile_checks
+from .validation_contract_checks import policy_checks as validation_contract_checks
+from .resource_schedule_checks import policy_checks as resource_schedule_checks
+from .cache_admission_checks import policy_checks as cache_admission_checks
+from .change_selection_checks import policy_checks as change_selection_checks
+from .compact_profile_checks import policy_checks as compact_profile_checks
 
 GOVERNANCE_SCHEMA_COUNT = 20
 
-
 def run_all() -> list[str]:
+    import os
+    variables = ("SIFR_VERIFY_RESOURCE_POLICY", "SIFR_VERIFY_SYSROOT_GRAPH_SESSION")
+    inherited = {name: os.environ.pop(name) for name in variables if name in os.environ}
+    try:
+        return _run_all()
+    finally:
+        os.environ.update(inherited)
+
+def _run_all() -> list[str]:
     checks = [
+        ("explicit compact execution coverage and graph custody", compact_profile_checks),
+        ("conservative commit-bound change selection", change_selection_checks),
+        ("input-bound correctness checkpoint consumption", checkpoint_checks),
+        ("audited isolated correctness recipe", checkpoint_recipe_checks),
+        ("immutable sysroot preparation output custody", prepared_sysroot_checks),
+        ("Linux escaped descendant recovery", process_recovery_checks),
+        ("resource admission and owned graph lifetimes", resource_schedule_checks),
+        ("bounded Cargo cache allocation estimates", cache_admission_checks),
+        ("validation contracts and execution evidence", validation_contract_checks),
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),
         ("Python interop segmented profile checks", python_interop_segmentation_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),
+        ("shared-cloud correctness coverage and outcomes", cloud_profile_policy_checks),
+        ("explicit unchanged-input cloud receipt reuse", cloud_receipt_reuse_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
@@ -89,7 +119,6 @@ def run_all() -> list[str]:
         check()
         passed.append(name)
     return passed
-
 
 def _schema_self_test() -> None:
     committed = validate_all_committed_schemas()
@@ -148,7 +177,7 @@ def _profile_schema_self_test() -> None:
             return
         raise AssertionError(f"{description} was accepted")
 
-    expected = {"create-pr", "merge", "nightly", "python-interop-live", "release"}
+    expected = {"cloud", "create-pr", "merge", "nightly", "python-interop-live", "release"}
     if set(profiles) != expected:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
     for profile_name, profile in profiles.items():

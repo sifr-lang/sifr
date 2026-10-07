@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "protocol": "owned-local-correctness-v1",
+  "owner": "verification/runner",
+  "cross_commit_reuse": false,
+  "max_age_seconds": 86400,
+  "max_retained_bytes": 2097152,
+  "disk_reserve_bytes": 8589934592,
+  "unknown_dependencies": "execute-fresh",
+  "recipes": [
+    {
+      "id": "guard/hir-maintainability",
+      "guard": "hir-maintainability",
+      "script": "scripts/check_hir_maintainability_guardrails.py",
+      "audited_script_sha256": "18a2f6ee619bf9432d635a5ac7668b847699549d29762a33317a5222dfcde23a",
+      "execution_kind": "validation",
+      "supported_hosts": [
+        "linux"
+      ],
+      "cadence": [
+        "cloud",
+        "manual-recovery"
+      ],
+      "consumed_paths": [
+        "internal_docs/hir_maintainability_guardrails.md",
+        "crates/sifr_lowering/src/lower.rs",
+        "crates/sifr_lowering/src/stdlib.rs"
+      ],
+      "import_contract": "stdlib-only; top-level declarations/imports; no lazy native loading in main"
+    }
+  ]
+}

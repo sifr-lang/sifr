@@ -85,7 +85,9 @@ lanes.
 
 ## Profile Ownership
 
-- `create-pr` is a fast representative profile. It selects readiness coverage,
+- `create-pr` is the registered feedback core, not complete specialist
+  qualification. Its 96 adapter cases include 22 SQL cases from seven suites;
+  all 143 E2E fixtures and mandatory guardrails/toolchain steps remain. It selects readiness coverage,
   diagnostics rules, runtime/platform support evidence, algorithmic manifest
   checks, static/LSP smoke tooling, generated-code smoke, performance smoke, and
   stdlib module merge checks.
@@ -102,10 +104,67 @@ lanes.
   Release and nightly both retain unmodified full generated-code Clippy
   coverage.
 
+For change-complete PR qualification, use a clean committed checkout and run:
+
+```bash
+uv run --project verification --locked python -m sifr_verify changes plan --base <base-sha> --head <candidate-sha>
+uv run --project verification --locked python -m sifr_verify changes run --base <base-sha> --head <candidate-sha>
+```
+
+On a shared Linux VM, append `--compact-resources` to `changes run`. This
+forwards only the existing resource mode to the canonical selected profile;
+`changes plan` remains selection-only. No deadline, reserve or profile override
+is accepted. The optional core command need not precede a change-complete run.
+
+The selector retains the core only for a trusted identical-tree diff or content
+edits to its finite reviewed prose set. Shared inputs, omitted-specialist
+consumers, unknown paths, incomplete diffs, additions/deletions and mode changes
+select complete `merge`. An optional direct `create-pr` invocation requests feedback;
+it does not certify that omitted SQL qualification is irrelevant. CI independently
+recomputes this same profile from the trusted base and actual merge candidate.
+All native SQL platform CI jobs remain required. Warm/cold end-to-end feedback
+measurements, including preparation, are still required before claiming the
+5-minute warm / 15-minute cold objectives are met.
+
 Crate test membership is data-owned by `crate_test_membership.suites` in each
 profile. The coverage matrix cross-checks that first-party compiler crates with
 tests are in merge membership and executed; temporary red blockers are illegal
 at readiness.
+
+## Final gate on a shared Linux VM
+
+Use the existing `cloud` profile with required performance on a shared Linux VM:
+
+```bash
+SIFR_CLOUD_PERFORMANCE_RECEIPT=/absolute/path/to/receipt.json scripts/run_all_tests.sh --profile cloud --require-performance --compact-resources
+```
+
+`cloud` inherits all merge selections: the same suites, guardrails, crate tests,
+E2E corpus, toolchain steps and skip rules. The compact option's compiler settings,
+allocation estimates and reserves are documented in the compact-resources
+paragraph below. Correctness runs independently of physical
+host admission; the final gate also requires the independent checker to accept a
+complete, fresh, candidate-bound paired receipt. Missing, invalid, inconclusive or
+regressing performance cannot pass this command. `cloud` without
+`--require-performance` remains a correctness command and cannot qualify this
+final gate. The default `merge` command retains its controlled-host performance
+route.
+
+This shared-VM command is an acceptance route, not evidence that any candidate
+has passed. It does not waive implementation PR validation, native platform or
+release qualification, external dependency disposition or protected enforcement.
+
+An explicitly preserved local measurement worktree can be named with
+`SIFR_CLOUD_PERFORMANCE_SOURCE_WORKTREE`. This narrow reuse recipe requires both
+clean full worktrees in the same Git repository, an ancestor measured commit,
+unchanged live compiler/runtime/corpus trees and Python context, and identical
+compiler bytes/build identity. Only the recipe's enumerated documentation,
+native-capacity and consumer files may differ; unknown changes invalidate reuse.
+The original worktree's checker must still accept the unchanged complete receipt.
+An immutable consumption record keeps both measured and current commits visible;
+it adds zero execution assertions. A changed compiler binary requires fresh
+qualification even when its source changes appear unrelated. There is no
+guarantee that this route will accept a later candidate.
 
 ## Baselines And Blessing
 
@@ -186,6 +245,112 @@ baseline. Failed and blocked cases remain failures during collection and bless.
 Raw diagnostics remain in the area report and mismatch artifacts; failures stream
 as each case finishes. Specialized area runners retain their suite selectors.
 
+Linux verification subprocesses use a dedicated child subreaper. It terminates
+and reaps the command's descendants, including descendants that create another
+session, after completion, cancellation, or a safety deadline. PID file
+descriptors prevent cleanup signals from reaching a reused PID. The execution
+host must provide Linux subreaper and pidfd support; startup rejects unavailable
+custody before launching the command. Other hosts retain session-group teardown.
+A private completion channel confirms cleanup and the native command status;
+missing confirmation or supervisor failure is an infrastructure error. A fatal
+supervisor failure cannot establish that escaped descendants were reaped and
+never qualifies a successful run. Unrelated children remain outside this custody.
+Startup blocks cancellation signals until handlers are installed. Linux teardown
+keeps the leader unreaped until its process group has been terminated, so that
+group's identifier cannot be reused during cleanup.
+
+Correctness checkpoints use `policy/correctness_checkpoints.json` and the existing
+input-bound evidence schema. The first audited recipe is the HIR maintainability
+guard; cloud execution and `uv run --project verification --locked python -m
+sifr_verify checkpoints --guard hir-maintainability` can consume it. Other
+assertions execute fresh until their complete dependency closure is declared.
+The recipe pins the guard's audited bytes, consumed document and path absence,
+whole source inventory, commands, interpreter/stdlib/native-library bytes,
+configuration, and a known local producer. Its guard and custody supervisor use
+isolated Python imports and source reads. Changed inputs, expired/tampered output,
+incomplete inventory, duplicate cases, or another producer reject reuse. Partial
+and failed attempts remain retained; runtime/compile/validation kinds stay distinct.
+No checkpoint grants paired-performance acceptance or combines partial captures.
+Checkpoint capacity or unknown dependencies disable reuse and execute the required
+guard fresh. Observations distinguish reuse from new execution. This one recipe
+does not claim dependency closure or checkpoint coverage for the full profile.
+
+Cloud sysroot preparation retains source-bound immutable outputs before running
+the full selected runtime suites. Source compilation retires its private graph
+after bounded lossless compression and byte verification, then separately admits
+restoring the executable. Packaging retains the verified archive and compiler
+before retiring its private release graph. Library corpus/metadata preparation
+follows these lifetimes. Runtime adapters independently recompute the same
+isolated producer identity and rehash the consumed outputs; invalid declared
+receipts fail closed. A preparation receipt records zero runtime assertions.
+Unknown cache owners can be consumed through Cargo but are never cleaned.
+The default cloud policy retains its 8 GiB disk reserve; compression adds no
+acceptance claim.
+
+Linux source profiles can explicitly select `--compact-resources` with
+`create-pr`, `merge`, `nightly` or `cloud`. This prospective policy uses
+`CARGO_PROFILE_DEV_DEBUG=0` and `CARGO_INCREMENTAL=0`, a 2 GiB disk reserve
+and at least 1 GiB additional monitored stopping headroom. Conflicting compiler
+settings fail before execution. It preserves the canonical suite, fixture and
+assertion selections, safety deadlines and performance qualification contracts.
+Each sysroot graph uses a new session UUID; only leased graphs owned by that
+session retire. Selected sysroot assertions run after their graphs retire and
+before the remaining library preparations. Preparation never counts as an
+assertion. Stage journals retain admissions, configuration, failures and actual
+resource observations; estimates can fail closed and do not promise capacity.
+Generated compiler preparation and assertions both use offline Cargo after
+separate dependency acquisition. Quantitative performance remains last.
+
+Selecting `build-qualification` in `area_sql_platform` gives the clean-build
+assertion part `sql-build-qualification` admission and disk monitoring. Its prospective growth is 6 GiB: compact retains its 2 GiB reserve
+(8 GiB entry), and normal cloud retains its 8 GiB reserve (14 GiB entry).
+The monitored floor is the greater of entry free space minus 6 GiB, the policy
+reserve plus 1 GiB stopping headroom, and any stricter caller floor. Thus an
+8 GiB compact entry allows at most 5 GiB growth before the 3 GiB floor.
+Only the admitted `sql_build_assertions` callback requests two Cargo workers,
+clamped to fresh effective CPU capacity. Its admission and terminal journal
+records state the requested and effective count; its ordinary profile worker
+setting is restored on every exit. Source builds, SQL preparation, remaining
+assertions and E2E pools retain their existing worker policy. The global schedule
+key describes the ordinary environment; the named stage records this explicit
+worker delta. No assertion evidence is reused.
+Memory remains a prospective 6 GiB resident estimate plus 2 GiB reserve; the
+worker request does not prove aggregate memory fit or completion within the
+unchanged deadline. The SQL tool's independent
+8 GiB clean-build entry guard, native A/reused-A/independent-B commands,
+incremental setting, cases and deadlines stay unchanged. Other or unknown
+selections keep their existing allocations and monitoring behavior. This models
+the existing entry envelope prospectively; actual SQL peak growth, cold fit and
+full acceptance remain unmeasured. It grants no assertion reuse or graph cleanup.
+
+When SQL selects `build-qualification`, resource-aware execution runs that actual
+clean-build suite first, immediately after successful sysroot consumers. It needs
+none of the 30 SQL no-run preparations. After its private graphs close, those
+same 30 preparations run, followed by the other 18 suites. This retains all 19
+canonical suites and 66 cases, including parser-major and SQLite probe native
+assertions. The remainder uses the existing `remaining-assertions` allocation;
+both parts keep disk monitoring, policy reserves, stopping headroom and stricter
+caller floors. These are prospective attempts, not measured fit guarantees.
+
+Fresh invocation-owned part results are checked against the exact manifest cases
+and subprocess outcomes, then assembled in canonical suite/case order at the
+original SQL result path. Missing or invalid execution becomes explicitly blocked
+cases with its cause. One canonical area outcome covers the complete selection;
+no part from another invocation can qualify it. An ordinary completed build-case
+failure still runs the other SQL cases, as the existing SQL adapter does, before
+outer fail-fast acts. Infrastructure without complete execution evidence may stop
+earlier; `--no-fail-fast` continues independent admitted work and retains failure.
+Later scheduling omits only this invocation's already handled SQL preparation
+and assertions. Reports show the real phase chronology.
+
+The two assertion commands share the original 2400-second cumulative safety
+budget. Interleaved preparation time is excluded; preparation keeps its existing
+limits. Tighter inherited command, step and absolute deadlines still win, and
+environment limits are restored afterward. Canonical SQL elapsed time sums its
+assertion parts. No profile selection, SQL build recipe, checkpoint, previous-pass
+reuse or cleanup contract changes. SQL preparation and later native assertions
+may still exhaust their forecasts; actual cold fit remains unproven.
+
 Generated-code smoke, representative and full modes now run explicit release
 link/runtime assertions for the two safe codegen demo companions in addition to
 their existing Rust-check, snapshot, formatting and quality obligations. Their
@@ -199,3 +364,41 @@ persistent providers are not qualified until their provider qualification suites
 test them. Diagnostic example checks execute explicitly selected standalone
 check-fail/check-pass pairs and their explain/help surface; contextual package and
 runtime examples are not indiscriminately executed.
+
+## Stage contracts and execution evidence
+
+The [validation contracts](policy/validation_contracts.md) derive stage selections
+from canonical profiles/manifests and distinguish selection from execution:
+
+```bash
+uv run --project verification --locked python -m sifr_verify contracts check
+uv run --project verification --locked python -m sifr_verify contracts plan --stage merge
+```
+
+The correctness evidence schema requires complete selected-ID accounting, actual
+execution, explicit execution kinds, trusted producer expectations, source/runtime/
+artifact bindings and retained-byte verification. Correctness checkpoints cannot
+qualify paired performance. Resource scheduling and protected CI enforcement are
+separate requirements; a contract plan alone is not an execution receipt.
+
+## Generated-program allocation observations
+
+`verification/areas/performance/generated_program_allocations.py collect
+--prepared <prepared.json> --output <private-external-directory>` builds separately
+instrumented artifacts from the exact release/generic generated Rust preparation.
+`check --output <receipt.json>` independently verifies the retained transformation,
+Cargo/rustc events, artifact and dependency hashes, raw output, program oracle and
+counters. Run both commands with the locked verification Python environment.
+
+The registered `rust-globalalloc-main-v1` protocol counts successful Rust allocator
+requests during generated main for the single-threaded registered workloads.
+It excludes libc/loader allocations and post-main cleanup. Counts belong to the
+instrumented artifact: instrumentation can affect optimization, so these counts
+cannot describe the original timed binary or qualify numeric regressions.
+Incomplete attempts retain state and logs without publishing a success receipt.
+
+RAM-backed worktrees are admitted by their actual Linux mount identity. Prospective
+build and retained-copy growth on tmpfs/ramfs is added to the resident-process and
+other temporary-storage memory budget. The filesystem disk reserve remains in
+force. Nested disk mounts are resolved separately; advertised tmpfs capacity never
+adds to the cgroup memory limit.

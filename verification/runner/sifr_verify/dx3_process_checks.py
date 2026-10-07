@@ -20,6 +20,291 @@ from .profile_commands import run_command, CommandFailed
 
 
 class ProcessTests(unittest.TestCase):
+    def _darwin_row(self, pid=991, state='S', parent=None, start='Mon Oct 5 00:00:00 2026'):
+        return {'pid': pid, 'parent': os.getpid() if parent is None else parent, 'group': 991,
+                'uid': os.geteuid(), 'ruid': os.getuid(), 'state': state, 'start': start}
+
+    def _darwin_proc(self):
+        proc = type('OwnedChild', (), {'pid': 991, 'returncode': None})()
+        proc.waits = []
+        def wait(timeout=None):
+            proc.waits.append(timeout)
+            proc.returncode = 0
+            return 0
+        proc.wait = wait
+        proc.poll = lambda: self.fail('owned Darwin leader must not be polled/reaped')
+        return proc
+
+    def test_darwin_waitid_preserves_leader_and_rejects_foreign_result(self):
+        proc = self._darwin_proc()
+        result = type('WaitResult', (), {'si_pid': proc.pid})()
+        with patch.object(process_execution.os, 'waitid', side_effect=[None, result]) as wait:
+            self.assertFalse(process_execution._darwin_child_exited(proc))
+            self.assertTrue(process_execution._darwin_child_exited(proc))
+        self.assertEqual(wait.call_args.args, (os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT))
+        self.assertIsNone(proc.returncode)
+        result.si_pid = 992
+        with patch.object(process_execution.os, 'waitid', return_value=result):
+            with self.assertRaisesRegex(OSError, 'identity differs'):
+                process_execution._darwin_child_exited(proc)
+
+    def test_darwin_missing_waitid_refuses_before_spawn(self):
+        with patch.object(process_execution.sys, 'platform', 'darwin'), \
+             patch.object(process_execution.os, 'waitid', None), \
+             patch.object(process_execution.subprocess, 'Popen') as spawn:
+            with self.assertRaisesRegex(RuntimeError, 'waitid/WNOWAIT'):
+                execute(['unused'], cwd=Path.cwd())
+        spawn.assert_not_called()
+
+    def test_darwin_dead_only_group_skips_signals_then_reaps_and_proves_absence(self):
+        proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+        with patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+             patch.object(process_execution, '_darwin_snapshot', side_effect=[{991: self._darwin_row(state='Z<')}, {}]), \
+             patch.object(process_execution.os, 'killpg') as kill:
+            group.cleanup(); group.cleanup()
+        kill.assert_not_called()
+        self.assertTrue(group.complete)
+        self.assertTrue(group.reaped)
+        self.assertEqual(len(proc.waits), 1)
+
+    def test_darwin_live_child_requires_kill_before_reap(self):
+        proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+        live = {991: self._darwin_row(), 992: self._darwin_row(992, parent=991)}
+        resistant = {991: self._darwin_row(state='Z'), 992: self._darwin_row(992, parent=1)}
+        dead = {991: self._darwin_row(state='Z')}
+        def signal_group(pid, number):
+            self.assertIsNone(proc.returncode)
+            self.assertEqual(pid, proc.pid)
+        with patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+             patch.object(process_execution, '_darwin_snapshot', side_effect=[live, resistant, resistant, dead, {}]), \
+             patch.object(process_execution.time, 'sleep'), \
+             patch.object(process_execution.os, 'killpg', side_effect=signal_group) as kill:
+            group.cleanup()
+        self.assertEqual([call.args[1] for call in kill.call_args_list], [signal.SIGTERM, signal.SIGKILL])
+        self.assertTrue(group.complete)
+
+    def test_darwin_eperm_race_needs_dead_only_reap_and_absence(self):
+        proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+        permission = PermissionError(1, 'fixture EPERM')
+        dead = {991: self._darwin_row(state='Z')}
+        with patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+             patch.object(process_execution, '_darwin_snapshot', side_effect=[{991: self._darwin_row()}, dead, dead, {}]), \
+             patch.object(process_execution.time, 'sleep'), \
+             patch.object(process_execution.os, 'killpg', side_effect=permission):
+            group.cleanup()
+        self.assertTrue(group.complete)
+        self.assertEqual(group.signal_errors, [permission])
+        self.assertEqual(len(proc.waits), 1)
+
+    def test_darwin_live_or_changed_identity_eperm_is_never_cleanup_success(self):
+        for changed in (False, True):
+            proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+            initial = {991: self._darwin_row()}
+            after = {991: self._darwin_row(state='Z' if changed else 'S')}
+            if changed: after[991]['uid'] += 1
+            permission = PermissionError(1, 'fixture EPERM')
+            with self.subTest(changed=changed), \
+                 patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+                 patch.object(process_execution, '_darwin_snapshot', side_effect=[initial, after]), \
+                 patch.object(process_execution.os, 'killpg', side_effect=permission):
+                with self.assertRaises(PermissionError) as failure: group.cleanup()
+            self.assertIs(failure.exception, permission)
+            self.assertFalse(group.complete)
+            self.assertFalse(proc.waits)
+
+    def test_darwin_post_reap_reuse_rejects_without_signalling(self):
+        for replacement in ({991: self._darwin_row(start='Mon Oct 5 00:00:01 2026')},
+                            {992: self._darwin_row(992, parent=1)}):
+            proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+            with patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+                 patch.object(process_execution, '_darwin_snapshot', side_effect=[{991: self._darwin_row(state='Z')}, replacement]), \
+                 patch.object(process_execution.os, 'killpg') as kill:
+                with self.assertRaisesRegex(RuntimeError, 'identity changed or unknown'): group.cleanup()
+                with self.assertRaisesRegex(RuntimeError, 'after leader reaping'):
+                    group.send(signal.SIGKILL, list(replacement.values()))
+            kill.assert_not_called()
+            self.assertTrue(group.reaped)
+            self.assertFalse(group.complete)
+
+    def test_darwin_cleanup_deadline_survives_failed_retry(self):
+        proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+        with patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+             patch.object(process_execution, '_darwin_snapshot', side_effect=ValueError('unsupported ps')) as probe:
+            with self.assertRaisesRegex(ValueError, 'unsupported ps'): group.cleanup()
+            deadline = group.deadline
+            with patch.object(process_execution.time, 'monotonic', return_value=deadline+1):
+                with self.assertRaisesRegex(TimeoutError, 'cleanup deadline'): group.cleanup()
+        self.assertEqual(group.deadline, deadline)
+        self.assertEqual(probe.call_count, 1)
+        self.assertFalse(group.complete)
+
+    def test_darwin_parser_rejects_malformed_duplicate_and_allows_system_pid_zero(self):
+        raw = '991 1 991 501 501 Z< Mon Oct  5 00:00:00 2026\n'
+        self.assertEqual(process_execution._darwin_process_rows(raw)[991]['state'], 'Z<')
+        self.assertIn(0, process_execution._darwin_process_rows(raw+'0 0 0 0 0 S Mon Oct  5 00:00:00 2026\n'))
+        for invalid in ('', 'unsupported ps format', raw+raw):
+            with self.assertRaises(ValueError): process_execution._darwin_process_rows(invalid)
+
+    def test_darwin_missing_unreaped_anchor_never_authorizes_signal_or_success(self):
+        proc = self._darwin_proc(); group = process_execution._DarwinGroup(proc)
+        with patch.object(process_execution, '_darwin_child_exited', return_value=True), \
+             patch.object(process_execution, '_darwin_snapshot', return_value={}), \
+             patch.object(process_execution.os, 'killpg') as kill:
+            with self.assertRaisesRegex(RuntimeError, 'anchor unavailable'): group.cleanup()
+        kill.assert_not_called()
+        self.assertFalse(group.complete)
+        self.assertFalse(proc.waits)
+
+    def test_darwin_probe_original_error_survives_its_cleanup_failure(self):
+        primary = RuntimeError('probe registration failed')
+        class Probe:
+            stdout = io.BytesIO(); stderr = io.BytesIO()
+            def poll(self): return None
+            def kill(self): raise PermissionError(1, 'probe cleanup failed')
+        class BrokenSelector:
+            def __enter__(self): return self
+            def __exit__(self, *_): pass
+            def register(self, *_): raise primary
+        probe = Probe()
+        with patch.object(process_execution.subprocess, 'Popen', return_value=probe), \
+             patch.object(process_execution.selectors, 'SelectSelector', return_value=BrokenSelector()):
+            with self.assertRaises(RuntimeError) as failure:
+                process_execution._darwin_snapshot(time.monotonic()+5)
+        self.assertIs(failure.exception, primary)
+        self.assertTrue(any('probe cleanup failed' in note for note in primary.__notes__))
+        self.assertTrue(probe.stdout.closed and probe.stderr.closed)
+
+    def test_darwin_probe_registration_failure_reaps_its_own_child(self):
+        original_spawn = subprocess.Popen; children = []
+        def spawn(*args, **kwargs):
+            child = original_spawn(*args, **kwargs); children.append(child); return child
+        class BrokenSelector:
+            def __enter__(self): return self
+            def __exit__(self, *_): pass
+            def register(self, *_): raise RuntimeError('probe register failed')
+        with patch.object(process_execution.subprocess, 'Popen', side_effect=spawn), \
+             patch.object(process_execution.selectors, 'SelectSelector', return_value=BrokenSelector()):
+            with self.assertRaisesRegex(RuntimeError, 'probe register failed'):
+                process_execution._darwin_snapshot(time.monotonic()+5)
+        self.assertEqual(len(children), 1)
+        self.assertIsNotNone(children[0].returncode)
+        self.assertTrue(children[0].stdout.closed and children[0].stderr.closed)
+
+    def test_darwin_probe_does_not_adopt_callers_handled_exception(self):
+        for owned_failure in (False, True):
+            caller = LookupError('unrelated caller error')
+            primary = ValueError('owned probe error')
+            cleanup = PermissionError(1, 'probe final wait failed')
+            class Probe:
+                def __init__(self):
+                    self.stdout = io.BytesIO(); self.stderr = io.BytesIO(); self.waits = 0
+                def poll(self): return 0
+                def wait(self, **_):
+                    self.waits += 1
+                    if self.waits == 2: raise cleanup
+                    return 0
+            class EmptySelector:
+                def __enter__(self): return self
+                def __exit__(self, *_): pass
+                def register(self, *_): pass
+                def get_map(self): return {}
+            probe = Probe()
+            with self.subTest(owned_failure=owned_failure), \
+                 patch.object(process_execution.subprocess, 'Popen', return_value=probe), \
+                 patch.object(process_execution.selectors, 'SelectSelector', return_value=EmptySelector()), \
+                 patch.object(process_execution, '_darwin_process_rows',
+                              side_effect=primary if owned_failure else None, return_value={991: {}}):
+                try:
+                    raise caller
+                except LookupError:
+                    with self.assertRaises(type(primary if owned_failure else cleanup)) as failure:
+                        process_execution._darwin_snapshot(time.monotonic()+5)
+                self.assertIs(failure.exception, primary if owned_failure else cleanup)
+                self.assertFalse(hasattr(caller, '__notes__'))
+                if owned_failure:
+                    self.assertTrue(any('probe final wait failed' in note for note in primary.__notes__))
+                self.assertTrue(probe.stdout.closed and probe.stderr.closed)
+
+    def test_darwin_execute_does_not_adopt_callers_handled_exception(self):
+        for owned_failure in (False, True):
+            caller = LookupError('unrelated caller error')
+            primary = ValueError('owned signal setup failed')
+            cleanup = PermissionError(1, 'signal restoration failed')
+            effects = [None, primary, cleanup] if owned_failure else [None, None, cleanup]
+            with self.subTest(owned_failure=owned_failure), \
+                 patch.object(process_execution.sys, 'platform', 'darwin'), \
+                 patch.object(process_execution.signal, 'signal', side_effect=effects), \
+                 patch.object(process_execution.subprocess, 'Popen') as spawn:
+                try:
+                    raise caller
+                except LookupError:
+                    with self.assertRaises(type(primary if owned_failure else cleanup)) as failure:
+                        execute(['unused'], cwd=Path.cwd(), env={SAFETY_DEADLINE_ENV: '1'})
+                self.assertIs(failure.exception, primary if owned_failure else cleanup)
+                self.assertFalse(hasattr(caller, '__notes__'))
+                if owned_failure:
+                    self.assertTrue(any('signal restoration failed' in note for note in primary.__notes__))
+                spawn.assert_not_called()
+
+    def test_darwin_probe_streaming_cap_is_aggregate_and_reaps_child(self):
+        original_spawn = subprocess.Popen; children = []
+        def spawn(*args, **kwargs):
+            child = original_spawn(*args, **kwargs); children.append(child); return child
+        command = [sys.executable, '-I', '-S', '-B', '-c', 'import os;os.write(1,b"x"*200);os.write(2,b"y"*200)']
+        with patch.object(process_execution, '_DARWIN_PS', command), \
+             patch.object(process_execution, '_DARWIN_PROBE_BYTES', 256), \
+             patch.object(process_execution.subprocess, 'Popen', side_effect=spawn):
+            with self.assertRaisesRegex(ValueError, 'probe output limit'):
+                process_execution._darwin_snapshot(time.monotonic()+5)
+        self.assertIsNotNone(children[0].returncode)
+        self.assertTrue(children[0].stdout.closed and children[0].stderr.closed)
+
+    def test_darwin_original_error_survives_failed_finally_cleanup(self):
+        original_spawn = subprocess.Popen; children = []
+        def spawn(*args, **kwargs):
+            child = original_spawn(*args, **kwargs); children.append(child); return child
+        primary = RuntimeError('original selector failure')
+        try:
+            with patch.object(process_execution.sys, 'platform', 'darwin'), \
+                 patch.object(process_execution.subprocess, 'Popen', side_effect=spawn), \
+                 patch.object(process_execution.selectors, 'DefaultSelector', side_effect=primary), \
+                 patch.object(process_execution._DarwinGroup, 'cleanup', side_effect=PermissionError(1, 'cleanup failed')):
+                with self.assertRaises(RuntimeError) as failure:
+                    execute([sys.executable, '-I', '-S', '-B', '-c', 'pass'], cwd=Path.cwd())
+            self.assertIs(failure.exception, primary)
+            self.assertTrue(any('cleanup failed' in note for note in primary.__notes__))
+        finally:
+            for child in children:
+                if child.poll() is None: child.kill()
+                child.wait(timeout=2)
+
+    def test_darwin_failed_first_cleanup_is_retried_without_masking_original(self):
+        original_spawn = subprocess.Popen; children = []
+        def spawn(*args, **kwargs):
+            child = original_spawn(*args, **kwargs); children.append(child); return child
+        primary = PermissionError(1, 'original cleanup failure')
+        try:
+            with patch.object(process_execution.sys, 'platform', 'darwin'), \
+                 patch.object(process_execution.subprocess, 'Popen', side_effect=spawn), \
+                 patch.object(process_execution._DarwinGroup, 'cleanup', side_effect=[primary, RuntimeError('retry failed')]) as cleanup:
+                with self.assertRaises(PermissionError) as failure:
+                    execute([sys.executable, '-I', '-S', '-B', '-c', 'pass'], cwd=Path.cwd())
+            self.assertIs(failure.exception, primary)
+            self.assertEqual(cleanup.call_count, 2)
+            self.assertTrue(any('retry failed' in note for note in primary.__notes__))
+        finally:
+            for child in children:
+                if child.poll() is None: child.kill()
+                child.wait(timeout=2)
+
+    def test_darwin_algorithm_real_posix_child_preserves_output_and_exit(self):
+        # This Linux-hosted mechanism control is not a Darwin kernel claim.
+        with patch.object(process_execution.sys, 'platform', 'darwin'):
+            result = execute([sys.executable, '-I', '-S', '-B', '-c',
+                              'import sys; print("owned output"); sys.exit(3)'], cwd=Path.cwd(), deadline_seconds=2)
+        self.assertEqual((result.returncode, result.cause, result.stdout), (3, 'exit', b'owned output\n'))
+        self.assertFalse(result.truncated)
+
     def test_f26_worker_thread_is_rejected_before_spawn(self):
         failures = []
         def worker():
@@ -290,6 +575,21 @@ class ProcessTests(unittest.TestCase):
         self.assertEqual((expired.returncode, expired.cause), (124, "safety_deadline"))
         self.assertLess(expired.elapsed_seconds, 1)
 
+    def test_f27_deadline_construction_keeps_the_tighter_inherited_bound(self):
+        for inherited, expected in ((None, 100.5), ("100.25", 100.25),
+                                    ("101", 100.5), ("99", 99)):
+            with self.subTest(inherited=inherited):
+                env = {"fixture": "preserved"}
+                if inherited is not None:
+                    env[SAFETY_DEADLINE_ENV] = inherited
+                original = env.copy()
+                with patch.object(process_execution.time, "monotonic", return_value=100):
+                    child_env, deadline = process_execution.deadline_environment(env, .5)
+                self.assertEqual(deadline, expected)
+                self.assertEqual(float(child_env[SAFETY_DEADLINE_ENV]), expected)
+                self.assertEqual(child_env["fixture"], "preserved")
+                self.assertEqual(env, original)
+
     def test_f27_invalid_deadlines_rejected_before_spawn(self):
         invalid = ("0", "-1", "nan", "inf", "-inf", "bad", True)
         with patch.object(process_execution.subprocess, "Popen", side_effect=AssertionError("spawned")) as spawn:
@@ -337,11 +637,11 @@ class ProcessTests(unittest.TestCase):
         from .step_budgets import StepBudgetContext
         inherited_deadline = os.environ.get(SAFETY_DEADLINE_ENV)
         runner = ProfileRunner("create-pr", [])
-        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".2"
+        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".6"
         runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
         def step():
             for _ in range(2):
-                run_command([sys.executable, "-c", "import time; time.sleep(.12)"],
+                run_command([sys.executable, "-c", "import time; time.sleep(.35)"],
                             env=runner.env)
         with contextlib.redirect_stdout(io.StringIO()):
             status = runner.execute_step("fixture", step)
@@ -398,24 +698,51 @@ class ProcessTests(unittest.TestCase):
             self.assertNotIn(b"acquired", result.stdout)
             self.assertLess(result.elapsed_seconds, 1)
 
-    def test_f27_ignored_term_and_pipe_retaining_descendant_are_bounded(self):
+    def _f27_resistant_tree(self, *, foreground_wait: bool, deadline_seconds: float):
         with tempfile.TemporaryDirectory() as temporary:
             marker = Path(temporary) / "escaped"
             program = (
                 "import os,signal,time; from pathlib import Path; "
-                "child=os.fork(); "
                 "signal.signal(signal.SIGTERM,signal.SIG_IGN); "
+                "child=os.fork(); "
                 "time.sleep(2) if child==0 else os.write(1,b'terminal output'); "
-                f"Path({str(marker)!r}).write_text('escaped') if child==0 else None"
+                f"Path({str(marker)!r}).write_text('escaped') if child==0 else None; "
+                + ("time.sleep(10) if child!=0 else None" if foreground_wait else "")
             )
-            started = time.monotonic()
-            result = execute([sys.executable, "-c", program], cwd=Path.cwd(),
-                             deadline_seconds=.5)
-            self.assertEqual((result.returncode, result.cause), (0, "exit"))
-            self.assertEqual(result.stdout, b"terminal output")
-            self.assertLess(time.monotonic() - started, 1.5)
-            time.sleep(2)
-            self.assertFalse(marker.exists())
+            failure = None
+            try:
+                started = time.monotonic()
+                result = execute([sys.executable, "-c", program], cwd=Path.cwd(),
+                                 deadline_seconds=deadline_seconds)
+                elapsed = time.monotonic() - started
+                self.assertEqual((result.returncode, result.cause),
+                                 (124, "safety_deadline") if foreground_wait else (0, "exit"))
+                self.assertEqual(result.stdout, b"terminal output")
+                self.assertLess(elapsed, 1.5)
+                if foreground_wait:
+                    self.assertGreaterEqual(result.elapsed_seconds, .5)
+            except BaseException as error:
+                failure = error
+                raise
+            finally:
+                try:
+                    time.sleep(2)
+                    self.assertFalse(marker.exists())
+                except BaseException as marker_error:
+                    if failure is None:
+                        raise
+                    failure.add_note(f"F27 late marker check also failed: {marker_error!r}")
+                else:
+                    if failure is not None:
+                        failure.add_note("F27 late marker check passed: no escaped marker after two seconds")
+
+    def test_f27_natural_exit_preserves_status_and_reaps_resistant_pipe_holder(self):
+        # Cleanup is part of supervisor completion; use the existing total
+        # completion bound instead of imposing a half-second throughput claim.
+        self._f27_resistant_tree(foreground_wait=False, deadline_seconds=1.5)
+
+    def test_f27_deadline_stops_live_resistant_tree_and_preserves_output(self):
+        self._f27_resistant_tree(foreground_wait=True, deadline_seconds=.5)
 
     def test_stdin_large_and_empty_are_delivered_without_pipe_deadlock(self):
         for data in (b"", bytes(range(256)) * 8192):

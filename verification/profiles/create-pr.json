@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "name": "create-pr",
-  "description": "Fast local developer confidence with bounded rule coverage and representative e2e only.",
+  "description": "Registered feedback core with representative E2E and SQL smoke; complete specialist qualification requires conservative change selection or merge.",
   "budgets": {
     "warm_wall_time_minutes": 5,
     "cold_wall_time_minutes": 15
@@ -850,24 +850,12 @@
     {
       "area": "sql_platform",
       "suites": [
-        "build-qualification",
         "compiler-components",
         "common-sql",
         "contracts",
         "dependency-baseline",
         "host-tools",
         "integrated-qualification",
-        "migration-engine",
-        "mysql-provider",
-        "postgresql-compiler",
-        "postgresql-migrations",
-        "postgresql-runtime",
-        "incremental-editor",
-        "query-fragments",
-        "schema-polymorphism",
-        "schema-profiles",
-        "schema-tools",
-        "sqlite-provider",
         "mutation"
       ],
       "resource_classes": [

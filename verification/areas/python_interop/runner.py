@@ -402,6 +402,7 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         ]
         env = os.environ.copy()
         env.pop("VIRTUAL_ENV", None)
+        env["UV_PROJECT_ENVIRONMENT"] = str(AREA_ROOT / ".venv")
     else:
         argv = [sys.executable, str(entry), *COMMAND_ARGS[command]]
     report_path = _command_report_path(command)

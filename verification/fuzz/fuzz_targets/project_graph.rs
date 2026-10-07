@@ -2,6 +2,7 @@
 
 use libfuzzer_sys::fuzz_target;
 use sifr_driver::guided_project_graph::{project_tree, replay};
+use sifr_frontend::DiskSourceProvider;
 
 fuzz_target!(|data: &[u8]| {
     // Export is used only for one-shot post-minimization replay. Sustained fuzz
@@ -14,5 +15,5 @@ fuzz_target!(|data: &[u8]| {
             }
         }
     }
-    let _ = replay(data);
+    let _ = replay(data, DiskSourceProvider::new());
 });

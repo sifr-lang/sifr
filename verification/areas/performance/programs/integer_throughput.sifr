@@ -1,0 +1,5 @@
+def main():
+    total: int = 0
+    for value in range(100000000):
+        total = (total + value) % 1000003
+    print(total)

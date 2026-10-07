@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -12,6 +13,23 @@ import metadata_artifact as metadata
 
 
 class MetadataArtifactTests(unittest.TestCase):
+    def test_container_version_tracks_canonical_compiler_authority(self):
+        root=Path(__file__).resolve().parents[2]
+        source=(root/'crates/sifr_sysroot/src/metadata/container.rs').read_text()
+        declared=re.findall(r'pub\(crate\) const VERSION: u32 = (\d+);',source)
+        self.assertEqual(declared,[str(metadata.CONTAINER_VERSION)])
+
+    def test_foreign_or_old_container_version_rejects_even_with_matching_digest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root,binary=self.fixture(directory);target=metadata.host_target()
+            descriptor=metadata.prepare(binary,root,root,target,True)
+            original=(root/metadata.METADATA_PATH).read_bytes()
+            for version in (4,6):
+                payload=original[:8]+version.to_bytes(4,'little')+original[12:]
+                changed=dict(descriptor,metadata_id=hashlib.sha256(payload).hexdigest())
+                with self.subTest(version=version),self.assertRaisesRegex(ValueError,'incompatible'):
+                    metadata.validate_metadata(payload,changed,metadata.file_digest(binary),target)
+
     def fixture(self, directory):
         root = Path(directory)
         (root / "bin").mkdir()

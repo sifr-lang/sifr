@@ -5,6 +5,16 @@ class HttpStatus(Enum):
     NOT_FOUND = 404
     INTERNAL_ERROR = 500
 
+def status_name(status: HttpStatus) -> str:
+    return status.name()
+
+def status_value(status: HttpStatus) -> int:
+    return status.value()
+
+def next_status(mut visits: list[int]) -> HttpStatus:
+    visits.append(1)
+    return HttpStatus.NOT_FOUND
+
 def main():
     s: HttpStatus = HttpStatus.OK
     assert str(s.value()) == '200'
@@ -15,4 +25,10 @@ def main():
     s3: HttpStatus = HttpStatus.INTERNAL_ERROR
     assert str(s3.value()) == '500'
     assert str(s3.name()) == 'INTERNAL_ERROR'
-
+    assert status_name(s2) == 'NOT_FOUND'
+    assert status_value(s2) == 404
+    visits: list[int] = []
+    assert next_status(visits).name() == 'NOT_FOUND'
+    assert len(visits) == 1
+    assert next_status(visits).value() == 404
+    assert len(visits) == 2

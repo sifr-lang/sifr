@@ -3,6 +3,19 @@
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 use sifr_type_system::Type;
 
+/// Call a generated implementation only after its receiver/method pair is admitted.
+pub(super) fn lower_generated_no_arg_method(
+    object: &RustExpr,
+    method: &str,
+    args: &[RustExpr],
+) -> Option<RustExpr> {
+    args.is_empty().then(|| RustExpr::MethodCall {
+        receiver: Box::new(object.clone()),
+        method: method.to_string(),
+        args: Vec::new(),
+    })
+}
+
 fn exact_int_from_expr(expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![

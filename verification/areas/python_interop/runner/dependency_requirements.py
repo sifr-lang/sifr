@@ -10,6 +10,8 @@ from packaging.specifiers import SpecifierSet
 from packaging.utils import canonicalize_name
 from packaging.version import Version
 
+from dependency_distribution import distribution_requirement_records
+
 PYTHON = "3.14.7"
 EXCLUDED = {"vendor", "third_party", "fixtures", "corpora", "snapshots", "target", ".venv", "plans"}
 
@@ -100,7 +102,7 @@ def locked_requirement(raw: dict, section: str) -> dict:
     specifier = raw.get("specifier", "")
     if "url" in raw:
         specifier = " @ " + raw["url"]
-    marker = "; " + raw["marker"] if raw.get("marker") else ""
+    marker = " ; " + raw["marker"] if raw.get("marker") else ""
     return requirement_record(section, Requirement(name + extras + specifier + marker))
 
 
@@ -168,6 +170,7 @@ def validate_requirements(label: str, project: dict, lock: dict, releases: dict,
             section = "project.dependencies"
         expected.append(requirement_record(section, requirement))
     key = lambda r: (r["section"], r["name"], str(r))
+    expected = distribution_requirement_records(project, expected, releases)
     if sorted(locked, key=key) != sorted(expected, key=key):
         errors.append(f"{label}: uv.lock direct requirement metadata differs from manifest")
     for section, requirement in requirements(project):

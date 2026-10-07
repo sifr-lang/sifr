@@ -523,7 +523,13 @@ mod sifr_generated_generated_support {
         let mut escaped: String = field.to_string();
         if escaped.contains(&quotechar) {
             if dialect.doublequote || dialect.escapechar.is_empty() {
-                escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
+                escaped = escaped.replace(&quotechar, &{
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(quotechar.len().saturating_add(quotechar.len()));
+                    sifr_generated_concat.push_str(quotechar.as_str());
+                    sifr_generated_concat.push_str(quotechar.as_str());
+                    sifr_generated_concat
+                });
             } else {
                 let escapechar_value: String = {
                     let mut sifr_generated_concat: String =
@@ -532,7 +538,14 @@ mod sifr_generated_generated_support {
                     sifr_generated_concat.push_str("");
                     sifr_generated_concat
                 };
-                escaped = escaped.replace(&quotechar, &format!("{escapechar_value}{quotechar}"));
+                escaped = escaped.replace(&quotechar, &{
+                    let mut sifr_generated_concat: String = String::with_capacity(
+                        escapechar_value.len().saturating_add(quotechar.len()),
+                    );
+                    sifr_generated_concat.push_str(escapechar_value.as_str());
+                    sifr_generated_concat.push_str(quotechar.as_str());
+                    sifr_generated_concat
+                });
             }
         }
         {
@@ -554,27 +567,52 @@ mod sifr_generated_generated_support {
     ) -> String {
         let mut result: String = field.to_string();
         if result.contains(dialect.delimiter.as_str()) && !dialect.escapechar.is_empty() {
-            result = result.replace(
-                dialect.delimiter.as_str(),
-                &format!("{}{}", dialect.escapechar, dialect.delimiter),
-            );
+            result = result.replace(dialect.delimiter.as_str(), &{
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(0usize.saturating_add(0usize));
+                sifr_generated_concat.push_str(dialect.escapechar.as_str());
+                sifr_generated_concat.push_str(dialect.delimiter.as_str());
+                sifr_generated_concat
+            });
         }
         if result.contains('\n') && !dialect.escapechar.is_empty() {
-            result = result.replace('\n', &format!("{}\n", dialect.escapechar));
+            result = result.replace('\n', &{
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(0usize.saturating_add(1usize));
+                sifr_generated_concat.push_str(dialect.escapechar.as_str());
+                sifr_generated_concat.push('\n');
+                sifr_generated_concat
+            });
         }
         if result.contains('\r') && !dialect.escapechar.is_empty() {
-            result = result.replace('\r', &format!("{}\r", dialect.escapechar));
+            result = result.replace('\r', &{
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(0usize.saturating_add(1usize));
+                sifr_generated_concat.push_str(dialect.escapechar.as_str());
+                sifr_generated_concat.push('\r');
+                sifr_generated_concat
+            });
         }
         if !dialect.quotechar.is_empty() {
             let quotechar2: String = sifr_generated_quotechar_value(dialect);
             if result.contains(&quotechar2) {
                 if dialect.escapechar.is_empty() {
-                    result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
+                    result = result.replace(&quotechar2, &{
+                        let mut sifr_generated_concat: String = String::with_capacity(
+                            quotechar2.len().saturating_add(quotechar2.len()),
+                        );
+                        sifr_generated_concat.push_str(quotechar2.as_str());
+                        sifr_generated_concat.push_str(quotechar2.as_str());
+                        sifr_generated_concat
+                    });
                 } else {
-                    result = result.replace(
-                        &quotechar2,
-                        &format!("{}{}", dialect.escapechar, quotechar2),
-                    );
+                    result = result.replace(&quotechar2, &{
+                        let mut sifr_generated_concat: String =
+                            String::with_capacity(0usize.saturating_add(quotechar2.len()));
+                        sifr_generated_concat.push_str(dialect.escapechar.as_str());
+                        sifr_generated_concat.push_str(quotechar2.as_str());
+                        sifr_generated_concat
+                    });
                 }
             }
         }
@@ -1389,7 +1427,13 @@ mod sifr_generated_generated_support {
             } else if sifr_generated_chars_part.len() == SifrInt::from_i64(0) {
                 units.push("-".to_string());
             } else {
-                units.push(format!("{part}-"));
+                units.push({
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(part.len().saturating_add(1usize));
+                    sifr_generated_concat.push_str(part.as_str());
+                    sifr_generated_concat.push('-');
+                    sifr_generated_concat
+                });
             }
             index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
         }

@@ -186,7 +186,7 @@ fn collect_actual() -> Vec<bool> {
         &SifrInt::from_i64(0),
         None,
     );
-    actual.push(format!("{left_mut:?}").as_str() == "[1, 3, 3, 3, 5]".to_string().as_str());
+    actual.push(format!("{left_mut:?}") == "[1, 3, 3, 3, 5]");
     let mut right_mut: Vec<SifrInt> = vec![
         SifrInt::from_i64(1),
         SifrInt::from_i64(3),
@@ -199,7 +199,7 @@ fn collect_actual() -> Vec<bool> {
         &SifrInt::from_i64(0),
         None,
     );
-    actual.push(format!("{right_mut:?}").as_str() == "[1, 3, 3, 3, 5]".to_string().as_str());
+    actual.push(format!("{right_mut:?}") == "[1, 3, 3, 3, 5]");
     let mut empty: Vec<SifrInt> = Vec::new();
     actual.push(
         bisect_left(&empty, &SifrInt::from_i64(10), &SifrInt::from_i64(0), None)
@@ -211,7 +211,7 @@ fn collect_actual() -> Vec<bool> {
         &SifrInt::from_i64(0),
         None,
     );
-    actual.push(format!("{empty:?}").as_str() == "[10]".to_string().as_str());
+    actual.push(format!("{empty:?}") == "[10]");
     actual
 }
 fn main() {

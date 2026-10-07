@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .paths import REPO_ROOT
+from .cargo_cli_command import ordinary_cli_build_command
 from .cargo_fixture_setup import prepare_locked_fixture_caches
 from .cargo_crate_setup import prepare_crate_test_binaries
 from .area_cargo_setup import prepare_area_graphs
@@ -41,12 +42,24 @@ def prepare_cargo_cache(
     command_runner: Callable[..., None],
 ) -> None:
     """Populate workspace, selected fixture and generated graphs before offline execution."""
+    acquire_cargo_dependencies(profile, env, command_runner)
+    prepare_remaining_graphs(profile, env, command_runner)
+
+
+def acquire_cargo_dependencies(profile, env, command_runner) -> None:
+    """Acquire exact locked inputs before any explicitly offline preparation."""
     command = cargo_setup_command(profile)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
     print(f"[sifr-profile-setup] command={' '.join(command)}")
     command_runner(command, env=setup_env)
     prepare_locked_fixture_caches(profile, setup_env, command_runner)
+
+
+def prepare_generated_inputs(profile, env, command_runner) -> None:
+    """Materialization needs a compiler build, so it belongs to graph preparation."""
+    setup_env = env.copy()
+    setup_env.pop("CARGO_NET_OFFLINE", None)
     if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
         revision = subprocess.check_output(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
@@ -61,6 +74,13 @@ def prepare_cargo_cache(
             env=setup_env,
         )
 
+
+def prepare_remaining_graphs(profile, env, command_runner, *, include_sysroot=True,
+                             sql_preparation_handled=False) -> None:
+    """Prepare the remaining canonical graphs without duplicating early consumers."""
+    prepare_generated_inputs(profile, env, command_runner)
+    setup_env = env.copy()
+    setup_env.pop("CARGO_NET_OFFLINE", None)
     # Compiler preparation and execution have identical offline build-script
     # environments; dependency acquisition above remains explicitly online.
     compiler_env = setup_env | {"CARGO_NET_OFFLINE": "true"}
@@ -69,9 +89,11 @@ def prepare_cargo_cache(
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
     prepare_performance_binaries(profile, setup_env, command_runner)
     prepare_generated_oracle_binary(profile, setup_env, command_runner)
-    prepare_sysroot_source_binary(profile, setup_env, command_runner)
-    prepare_sysroot_package_binary(profile, setup_env, command_runner)
-    prepare_area_graphs(profile, compiler_env, command_runner)
+    if include_sysroot:
+        prepare_sysroot_source_binary(profile, setup_env, command_runner)
+        prepare_sysroot_package_binary(profile, setup_env, command_runner)
+    prepare_area_graphs(profile, compiler_env, command_runner,
+                        sql_preparation_handled=sql_preparation_handled)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
 
 
@@ -108,8 +130,22 @@ def prepare_sysroot_package_binary(profile, env, command_runner) -> None:
                 "host-installed-stdlib-heavy", "metadata-corpus"}
     if any(area["area"] == "sysroot_release" and required.intersection(area["suites"])
            for area in profile.get("selected_areas", [])):
-        command_runner([sys.executable, str(REPO_ROOT /
-            "verification/areas/sysroot_release/package_build.py")], env=env)
+        command = [sys.executable, str(REPO_ROOT /
+            "verification/areas/sysroot_release/package_build.py")]
+        if profile.get("name") != "merge":
+            command_runner(command, env=env)
+            return
+        # Prospective merge scheduling boundary: each exact preparation graph
+        # owns a bounded command; inherited absolute deadlines remain binding.
+        phases = (
+            ("sysroot-package", ["--package-only"]),
+            ("sysroot-metadata-corpus", ["--metadata-suite", "metadata-corpus"]),
+            ("sysroot-metadata-structural", ["--metadata-suite", "metadata-structural"]),
+        )
+        for phase, arguments in phases:
+            invocation = [*command, *arguments]
+            print(f"[sifr-profile-setup] phase={phase} command={shlex.join(invocation)}", flush=True)
+            command_runner(invocation, env=env)
 
 
 def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
@@ -158,7 +194,7 @@ def prepare_performance_binaries(profile, env, command_runner) -> None:
     commands = []
     if suites.intersection({"smoke", "representative", "full"}):
         commands.extend([
-            ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
+            ordinary_cli_build_command(),
             ["cargo", "build", "--locked", "--offline", "-p", "sifr_frontend",
              "--bin", "frontend_query_bench"],
         ])

@@ -307,19 +307,27 @@ fn main() {
     println!(
         "Union [1,2,3] | [3,4,5]: length = {}",
         SifrInt::from(
-            left.r#union(&right)
-                .cloned()
-                .collect::<std::collections::HashSet<_>>()
-                .len()
+            {
+                let mut sifr_generated_result = left.clone();
+                sifr_generated_result.extend(right.iter().cloned());
+                sifr_generated_result
+            }
+            .len()
         )
     );
     println!(
         "Intersection [1,2,3] & [3,4,5]: length = {}",
         SifrInt::from(
-            left.intersection(&right)
-                .cloned()
-                .collect::<std::collections::HashSet<_>>()
-                .len()
+            {
+                let mut sifr_generated_result = left;
+                let sifr_generated_set_arg_0 =
+                    right.into_iter().collect::<std::collections::HashSet<_>>();
+                sifr_generated_result.retain(|sifr_generated_item| {
+                    sifr_generated_set_arg_0.contains(sifr_generated_item)
+                });
+                sifr_generated_result
+            }
+            .len()
         )
     );
     println!("=== Counter ===");

@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 
@@ -13,6 +13,8 @@ from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
     prepare_cargo_cache as prepare_profile_cargo_cache,
 )
+from .assertion_resource_forecast import assertion_allocation
+from .early_sql import EarlySqlOutcome
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
@@ -21,6 +23,7 @@ from .profile_commands import CommandFailed, cargo_command, run_command, uv_area
 from .profile_reporting import run_profile_with_report
 from .compiler_configuration_plan import configuration_plan
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
+from .performance_partition import MEASUREMENT_SUITES, combine as combine_performance, result_path as performance_result_path
 from .profiles import crate_test_mode, crate_test_suites_for_mode, load_profile, resolve_fixture_manifest
 from .step_budgets import (
     StepBudgetContext,
@@ -56,8 +59,8 @@ def now_ms() -> int:
     return time.monotonic_ns() // 1_000_000
 
 
-def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
-    start_ms = now_ms()
+def timed_step(name: str, callback: Callable[[], None], *, prior_elapsed_ms: int = 0) -> StepResult:
+    start_ms = now_ms() - prior_elapsed_ms
     status = 0
     try:
         callback()
@@ -66,6 +69,9 @@ def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
         status = exc.returncode
     except (VerificationError, AreaResultError) as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
+        status = 2
+    except OSError as exc:
+        print(f"sifr_verify: infrastructure failure: {exc}", file=sys.stderr)
         status = 2
     elapsed_ms = now_ms() - start_ms
     label = "pass" if status == 0 else "fail"
@@ -83,11 +89,35 @@ class ProfileRunner:
     def __init__(self, profile_name: str, forward_args: list[str]) -> None:
         self.profile = load_profile(profile_name)
         self.profile_name = str(self.profile["name"])
+        self.require_performance = "--require-performance" in forward_args
+        if self.require_performance and self.profile_name != "cloud":
+            raise ProfileRunnerError("--require-performance is specific to the cloud profile")
+        forward_args = [arg for arg in forward_args if arg != "--require-performance"]
+        self.compact_resources = "--compact-resources" in forward_args
+        forward_args = [arg for arg in forward_args if arg != "--compact-resources"]
+        if self.compact_resources and self.profile_name not in {"create-pr", "merge", "nightly", "cloud"}:
+            raise ProfileRunnerError("compact resources require a source validation profile")
         self.no_fail_fast = "--no-fail-fast" in forward_args
         self.forward_args = [arg for arg in forward_args if arg != "--no-fail-fast"]
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
+        if "SIFR_VERIFY_SYSROOT_GRAPH_SESSION" in self.env:
+            raise ProfileRunnerError("sysroot graph sessions are assigned by the owned scheduler")
+        inherited_policy = self.env.get("SIFR_VERIFY_RESOURCE_POLICY")
+        if "SIFR_VERIFY_RESOURCE_POLICY" in self.env and (
+                not self.compact_resources or inherited_policy != "compact"):
+            raise ProfileRunnerError("resource policy requires its explicit compact resource option")
+        if self.compact_resources:
+            for key, value in (("CARGO_PROFILE_DEV_DEBUG", "0"), ("CARGO_INCREMENTAL", "0")):
+                if self.env.get(key) not in (None, value):
+                    raise ProfileRunnerError("compact resource compiler configuration conflicts with " + key)
+                self.env[key] = value
+            self.env["SIFR_VERIFY_RESOURCE_POLICY"] = "compact"
+        self.env["SIFR_VALIDATION_PROFILE"] = self.profile_name
+        if self.profile_name == "cloud":
+            # An unrelated physical-host reference must not affect correctness.
+            self.env.pop("SIFR_PERFORMANCE_REFERENCE", None)
         self.env["CARGO_BUILD_JOBS"] = str(self.profile["e2e"]["cargo_build_jobs"])
         self.env["RAYON_NUM_THREADS"] = str(self.profile["resource_policy"]["max_parallel"])
         target_root = Path(self.env.get("CARGO_TARGET_DIR", REPO_ROOT / "target"))
@@ -106,24 +136,17 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
-        if any(
-            area["area"] == "performance"
-            and set(area["suites"]).intersection({"rules", "smoke", "representative", "full"})
-            for area in self.profile["selected_areas"]
-        ):
-            admission = self.execute_step(
-                "performance_reference_admission", self.admit_performance_reference
-            )
-            if admission:
-                return admission
+        performance_elapsed_ms = 0
+        if self.profile_name != "cloud":
+            performance_result_path(self.profile_name).unlink(missing_ok=True)
         early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
                  "submodule-ownership", "stdlib-manifest-schema"}
         failed = 0
         for guardrail in self.profile["guardrail_steps"]:
             if guardrail not in early:
                 continue
-            status = self.execute_step(step_name("guardrail", guardrail),
-                                       lambda g=guardrail: self.run_guardrail(g))
+            status = self.execute_assertion(step_name("guardrail", guardrail),
+                                            lambda g=guardrail: self.run_guardrail(g))
             failed = failed or status
             if status and not self.no_fail_fast:
                 return failed
@@ -131,30 +154,54 @@ class ProfileRunner:
         if failed:
             self.block_steps("invalid-inventory")
             return failed
-        prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
+        if self.profile_name == "cloud":
+            from .cloud_schedule import run_staged_cloud
+            return run_staged_cloud(self, early)
+        if self.compact_resources:
+            from .compact_profile import prepare_compact
+            prepared = prepare_compact(self)
+        else:
+            prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
         if prepared and not self.no_fail_fast:
             return prepared
         if not prepared and self.profile.get("cargo_policy", {}).get("offline") is True:
             enable_profile_offline_cargo(self.env)
-        failed = prepared
+        early_sql = getattr(self, "early_sql_outcome", EarlySqlOutcome())
+        failed = prepared or early_sql.status
         for guardrail in self.profile["guardrail_steps"]:
             if guardrail in early:
                 continue
             if prepared:
                 self.block_step(step_name("guardrail", guardrail), "cargo_cache_setup")
                 continue
-            status = self.execute_step(step_name("guardrail", guardrail),
-                                       lambda g=guardrail: self.run_guardrail(g))
+            status = self.execute_assertion(step_name("guardrail", guardrail),
+                                            lambda g=guardrail: self.run_guardrail(g))
             failed = failed or status
             if status and not self.no_fail_fast:
                 return failed
         for selection in self.profile["selected_areas"]:
             area = str(selection["area"])
             suites = [str(suite) for suite in selection["suites"]]
+            if (area in getattr(self, "compact_completed_areas", set())
+                    or (area == "sql_platform" and early_sql.selected)):
+                continue
+            if area == "performance":
+                suites = [suite for suite in suites if suite not in MEASUREMENT_SUITES]
+                if suites and not prepared:
+                    started = now_ms()
+                    status = self.execute_assertion("area_performance_correctness",
+                        lambda s=suites: self.run_performance_part(s, "correctness"))
+                    performance_elapsed_ms += now_ms() - started
+                    failed = failed or status
+                    if status and not self.no_fail_fast:
+                        return failed
+                elif suites:
+                    self.block_step("area_performance_correctness", "cargo_cache_setup")
+                continue
             if prepared:
                 self.block_step(step_name("area", area), "cargo_cache_setup")
                 continue
-            status = self.execute_step(step_name("area", area),
+            status = self.execute_assertion(step_name("area", area),
                                        lambda a=area, s=suites: self.run_area(a, s))
             failed = failed or status
             if status and not self.no_fail_fast:
@@ -167,31 +214,64 @@ class ProfileRunner:
             if prepared:
                 self.block_step(step_name("toolchain", toolchain_step), "cargo_cache_setup")
                 continue
-            status = self.execute_step(step_name("toolchain", toolchain_step),
+            status = self.execute_assertion(step_name("toolchain", toolchain_step),
                                        lambda t=toolchain_step: self.run_toolchain_step(t))
             failed = failed or status
             if status:
                 failed_toolchain.add(toolchain_step)
             if status and not self.no_fail_fast:
                 return failed
-        return failed
+        # A host-sensitive measurement must not suppress correctness, including
+        # toolchain checks that follow the performance area in the inventory.
+        for selection in self.profile["selected_areas"]:
+            if selection["area"] != "performance":
+                continue
+            if prepared:
+                self.block_step("area_performance", "cargo_cache_setup")
+                continue
+            suites = list(selection["suites"])
+            measured = [suite for suite in suites if suite in MEASUREMENT_SUITES]
+            if measured:
+                admission = self.execute_step("performance_reference_admission",
+                    self.admit_performance_reference, performance=True)
+                if admission:
+                    self.block_step("area_performance", "performance_reference_admission")
+                    continue
+            def finish(selected=suites, measurements=measured):
+                if measurements:
+                    self.run_performance_part(measurements, "measurement")
+                combine_performance(self.profile_name, selected)
+            self.execute_step("area_performance", finish, performance=bool(measured),
+                              prior_elapsed_ms=performance_elapsed_ms)
+        return failed or self.performance_exit_status
+
+    def execute_assertion(self, name, callback):
+        schedule = getattr(self, 'compact_schedule', None)
+        if schedule is None:
+            return self.execute_step(name,callback)
+        return schedule.step(name, callback, allocation=assertion_allocation(name, self.profile),
+                             monitor_disk=True)
 
     def block_step(self, name: str, prerequisite: str) -> None:
         print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")
         print(f"blocked {name}: prerequisite {prerequisite}")
 
-    def block_steps(self, prerequisite: str) -> None:
-        self.block_step("cargo_cache_setup", prerequisite)
+    def block_steps(self, prerequisite: str, *, handled_areas=(), include_setup=True) -> None:
+        if include_setup:
+            self.block_step("cargo_cache_setup", prerequisite)
         for selection in self.profile["selected_areas"]:
-            self.block_step(step_name("area", str(selection["area"])), prerequisite)
+            if selection["area"] not in handled_areas:
+                self.block_step(step_name("area", str(selection["area"])), prerequisite)
         for name in self.profile["toolchain_steps"]:
             self.block_step(step_name("toolchain", name), prerequisite)
 
-    def execute_step(self, name: str, callback: Callable[[], None]) -> int:
+    def execute_step(self, name: str, callback: Callable[[], None], *, performance: bool = False,
+                     prior_elapsed_ms: int = 0) -> int:
         budget = self.prepare_step_budget(name)
         step_seconds = self.env.get("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS")
         if step_seconds is None:
-            result = timed_step(name, callback)
+            result = (timed_step(name, callback, prior_elapsed_ms=prior_elapsed_ms)
+                      if prior_elapsed_ms else timed_step(name, callback))
         else:
             _, deadline = deadline_environment(self.env, step_seconds)
             previous_deadline = self.env.get(SAFETY_DEADLINE_ENV)
@@ -201,7 +281,8 @@ class ProfileRunner:
             # bounded step deadline through those commands as well.
             os.environ[SAFETY_DEADLINE_ENV] = repr(deadline)
             try:
-                result = timed_step(name, callback)
+                result = (timed_step(name, callback, prior_elapsed_ms=prior_elapsed_ms)
+                          if prior_elapsed_ms else timed_step(name, callback))
             finally:
                 if previous_deadline is None:
                     self.env.pop(SAFETY_DEADLINE_ENV, None)
@@ -212,14 +293,25 @@ class ProfileRunner:
                 else:
                     os.environ[SAFETY_DEADLINE_ENV] = previous_process_deadline
         if result.status != 0:
-            self.functional_exit_status = result.status
+            if performance:
+                self.performance_exit_status = result.status
+            else:
+                self.functional_exit_status = result.status
             return result.status
+        if self.profile_name == "cloud" and budget is not None:
+            # Preserve the recorded budget and safety deadline. Scheduling
+            # uncertainty cannot fail or suppress later correctness checks.
+            # These are diagnostic step timings, not the paired benchmark
+            # contract. Only a checked cloud receipt qualifies performance.
+            budget = replace(budget, enforcement="advisory")
         budget_status = enforce_prepared_step_budget(budget, result.elapsed_ms)
         if budget_status != 0:
             self.performance_exit_status = budget_status
         if budget_status == 0:
             record_step_success(budget, result.elapsed_ms)
-        return budget_status
+        # Retain a blocking timing verdict for the final gate, while allowing
+        # subsequent selected correctness assertions to execute.
+        return 0
 
     def admit_performance_reference(self) -> None:
         script = REPO_ROOT / "verification/areas/performance/reference_admission.py"
@@ -263,7 +355,11 @@ class ProfileRunner:
 
     def run_guardrail(self, guardrail: str) -> None:
         if guardrail == "hir-maintainability":
-            self.run_python("scripts/check_hir_maintainability_guardrails.py")
+            if self.profile_name == "cloud":
+                from .checkpoint_recipes import run_guard
+                run_guard(guardrail, env=self.env)
+            else:
+                self.run_python("scripts/check_hir_maintainability_guardrails.py")
         elif guardrail == "method-dispatch-authority":
             self.run_script_with_self_test("scripts/check_method_dispatch_authority.py")
         elif guardrail == "unsafe-abi-contracts":
@@ -329,14 +425,16 @@ class ProfileRunner:
         self.run_python(path)
         self.run_python(path, "--self-test")
 
-    def run_area(self, area: str, suites: list[str]) -> None:
+    def run_area(self, area: str, suites: list[str], *, result_slug: str | None = None) -> None:
         if area == "python_interop":
             run_segmented_python_interop(
                 suites=suites, profile_name=self.profile_name,
                 command_runner=lambda command: run_command(command, env=self.env),
             )
             return
-        result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
+        result_slug = result_slug or CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
+        if area == "performance" and getattr(self, "performance_result_phase", None):
+            result_slug += "-" + self.performance_result_phase
         run_selected_area(
             area=area,
             suites=suites,
@@ -346,6 +444,13 @@ class ProfileRunner:
                 *args, *(["--no-fail-fast"] if self.no_fail_fast else [])),
             command_runner=lambda command: run_command(command, env=self.env),
         )
+
+    def run_performance_part(self, suites: list[str], phase: str) -> None:
+        self.performance_result_phase = phase
+        try:
+            self.run_area("performance", suites)
+        finally:
+            del self.performance_result_phase
 
     def run_toolchain_step(self, toolchain_step: str) -> None:
         if toolchain_step == "cargo-build-release":
@@ -409,7 +514,7 @@ class ProfileRunner:
                 )
 
     def run_e2e_pass_suite(self) -> None:
-        e2e = self.profile["e2e"]
+        e2e = self.profile["e2e"] | getattr(self, "e2e_worker_limits", {})
         args = [
             "--profile",
             self.profile_name,
@@ -442,12 +547,17 @@ def run_profile(
     release_report_out: str | None = None,
 ) -> int:
     runner = ProfileRunner(profile_name, forward_args)
+    run_lane = runner.run
+    if profile_name == "cloud":
+        from .cloud_profile import run_cloud_profile
+        run_lane = lambda: run_cloud_profile(runner)
     return run_profile_with_report(
         profile_name,
-        runner.run,
+        run_lane,
         execution_outcomes=lambda: {
             "functional_exit_status": runner.functional_exit_status,
             "performance_exit_status": runner.performance_exit_status,
+            "worker_limits": getattr(runner, "e2e_worker_limits", None),
         },
         handled_error=ProfileRunnerError,
         release_report_out=release_report_out,

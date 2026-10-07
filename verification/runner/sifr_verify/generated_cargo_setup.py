@@ -12,6 +12,7 @@ import tomllib
 from pathlib import Path
 
 from .paths import REPO_ROOT
+from .cargo_cli_command import ordinary_cli_build_command
 from .profile_commands import run_command
 from .profiles import load_profile
 
@@ -85,7 +86,8 @@ def prepare_generated_graphs(profile: dict, revision: str) -> dict:
               for suite in area["suites"]]
     # This build uses the outer workspace target; generated commands retain
     # their existing separate target through SIFR_GCQ_SHARED_ROOT.
-    run_command(["cargo", "build", "--locked", "-p", "sifr"], env=os.environ.copy())
+    run_command(ordinary_cli_build_command(),
+                env=os.environ.copy() | {"CARGO_NET_OFFLINE":"true"})
     shared_root = quality.shared_artifact_root()
     if shared_root is None:
         raise ValueError("generated Cargo preparation requires its profile-owned artifact root")

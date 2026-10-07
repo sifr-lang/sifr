@@ -1,5 +1,143 @@
 # Ad Hoc Phase: Emitted Rust Excellence
 
+## Current continuation checkpoint — 2026-10-07: installed qualification disk forecast
+
+The metadata graph isolation correction at `ba42dcd5b1366d90eaa932bc9abd1891787951a3`
+received scoped Claude Opus approval (SATISFIED, no blockers). The successor
+compact correctness attempt failed after 2h05m54s with actual exit 2. Source,
+package and both metadata preparations passed; corpus execution reused its
+prepared graph (Cargo finished in 1.36s), and the full corpus test passed in
+136.81s. No complete correctness or performance qualification is claimed.
+
+The sysroot assertion stage exceeded its one-GiB declared growth allowance with
+22,547,042,304 filesystem bytes still free. Installed metadata qualification
+retains an extracted package and two generation copies. The current archive has
+548,480,412 payload bytes, or 605,671,424 bytes rounded to 4-KiB file blocks;
+three copies alone exceed the old allowance. The prospective correction allows
+four GiB for installed/corpus assertions in compact and cloud policies: two GiB
+for package generations/corpus and two GiB for native caches and filesystem
+overhead. It changes no assertion, case selection, reserve, memory allocation,
+stopping headroom or deadline. The structural-only allocation is unchanged.
+This is an estimate awaiting monitored execution, not a claimed measured peak.
+
+The GitHub App and main-only protected publication environment are configured;
+publisher deployment, verification and required-check enforcement remain pending.
+Hosted merge validation exited 124 and determinism exited 143; the instrumented
+diagnostic was cancelled, with root causes unproved. The user explicitly deferred
+macOS ARM qualification capacity to the final outstanding gate. Independent
+correctness, performance, other native platforms and operational work continue.
+
+Evidence remains under `/workspace/validation-resume-20261006/`, including
+`candidate-ba42dcd5b-changes/status.json`, the candidate-keyed scoped review,
+and `publisher-app-setup-observation.json`. Failed and incomplete evidence is
+preserved. Scoped checks/review of this forecast correction and successor
+qualification are pending. PR #4332 remains draft and unmerged.
+
+## Historical continuation checkpoint — 2026-10-07: metadata graph isolation remediation
+
+The reconciliation at `95ff61d1fa9d5789e6ee988333d827df12d708d8`
+received scoped Claude Opus approval (SATISFIED, no blockers). Its 21 authority
+tests, 10 native fixtures and all 264 freshness checks remain recorded as passed.
+That approval covers the reconciliation, not complete phase qualification.
+
+The exact-candidate compact `changes run` was intentionally interrupted with
+actual exit 130 after 2h19m07s. Source preparation (38m08s), release-package
+preparation (46m15s), metadata corpus preparation (25m17s), metadata structural
+preparation (17m18s), boundary equivalence and installed smoke passed. The attempt
+is incomplete; it is not a successful correctness or performance gate.
+
+The subsequent corpus assertion restarted compilation of `sifr_sysroot` and its
+compiler dependents. Corpus preparation sets `SIFR_RELEASE_VERSION` to the
+package version, while structural preparation uses the development environment;
+they shared one Cargo target. Cargo's build-script environment tracking therefore
+invalidated the previously prepared graph when configurations switched.
+
+The bounded correction gives the versioned corpus a separate directory inside
+the caller's owned Cargo target. Preparation and execution use the same authority;
+cache forecasts inspect that directory. Cloud preparation now admits each selected
+metadata configuration separately, as compact change validation already does.
+Assertions, case selection, version expectations, reserves and deadlines remain
+unchanged. No old graph or failure evidence was deleted.
+
+All 88 focused setup, cache-admission, compact and resource-schedule checks pass.
+A real Cargo regression prepares both settings and then proves both executions
+use fresh artifacts with the expected compiled version. A negative control that
+restores the old shared target fails that freshness assertion, as expected.
+Profile validation and the 4,469-file size guard pass. Scoped review of this
+correction and successor qualification are pending.
+
+Evidence is retained under `/workspace/validation-resume-20261006/`, including
+`metadata-rebuild-observation.json`, `metadata-isolation-focused.log`,
+`metadata-isolation-negative-control.log`, and the original gate's terminal
+`candidate-95ff61d1f-changes/status.json`. The diagnostic review queue was stopped
+before launching Claude so remediation remains serialized.
+
+Hosted compiler components on Linux x64/ARM, macOS ARM and Windows, and WASI SQL
+passed. Hosted determinism failed with runner shutdown/exit 143; its cause is
+unproved. Protected publication still requires the separate App and environment;
+Actions configuration reads return HTTP 403, and larger hosted-runner enumeration
+returns HTTP 404 (unsupported organization). These observations do not qualify
+native predecessor transitions or protected enforcement. The required external
+setup has been requested while independent work continues. PR #4332 stays draft;
+no full qualification, merge, release or phase closure is claimed.
+
+## Authorized companion reconciliation — 2026-10-06
+
+The continuation explicitly authorizes fixing the inherited compiler/companion
+mismatch recorded below. A fresh source build reproduced all 43 stale outputs.
+Individual inspection found missing typed builtin dispatch for enum `name` and
+`value`, and newtype `value`, generating invalid `compile_error!` expressions in
+the enum and protocol demos. The bounded correction admits those generated
+getters with zero arguments while preserving strict receiver and declaration
+authority. No generic fallback or freshness waiver was introduced.
+
+All 21 affected method-authority tests and 10 selected native fixtures passed;
+coverage includes aliases, invalid receiver/arity/authority, borrowed getters,
+string newtype ownership, temporary receivers and single evaluation. Formatting
+and file-size checks passed. Regeneration changes the other 41 companions to
+their inspected current-compiler output; the two defective outputs return to
+their original bytes. All 264 outputs match expected bytes and contain no
+`compile_error!`. The second canonical freshness scan passed for all 264
+companions.
+
+Fresh evidence is under `/workspace/validation-resume-20261006/`, with the
+companion assessment, actual test/build statuses and final comparison retained.
+The [validation plan](ad-hoc-validation-contracts-and-resource-aware-execution.md)
+records setup failures and remaining qualification. Required scoped Claude
+review remains blocked by missing setup; an explicit reviewer substitution is
+pending. The patch does not constitute complete generated-code quality, merge,
+performance, release or phase acceptance. Historical observations below remain
+unchanged.
+
+## External demo freshness observation — 2026-10-06
+
+Validation-contract delivery candidate
+`efbc1a31659b8e1c204471d93476b4b897d614a1`, including main
+`30d2b39021174684ca9a2e695447d73ecbf25308`, failed its actual compact
+create-pr gate at `guardrail_demo_emitted_freshness`: 43 committed demo
+companions differ from fresh emission. The gate completed with exit 1;
+all preparation commands, including 271 maintained Rust demo compilations,
+had passed. This does not establish runtime or complete profile qualification.
+
+All demos, the freshness checker and production codegen are identical between
+that main and the validation candidate. The JSON companion was last regenerated
+in `41b9f9dca`; the normal prepared compiler and the independently rebuilt
+source compiler agree byte-for-byte on fresh JSON emission, differing from its
+committed companion. Observed changes include string concatenation lowering and
+string equality borrowing. This establishes inherited synchronization debt;
+it does not decide whether generated output or compiler behavior should change.
+
+Owner: Emitted Rust/codegen companion governance. Reconcile the compiler and
+committed companions under this phase's scope and validation; then unblock the
+[validation delivery](ad-hoc-validation-contracts-and-resource-aware-execution.md).
+The validation task made no compiler or companion edits and did not bypass the
+freshness assertion. Actual failure and diagnostic samples are preserved at:
+
+- `/workspace/validation-work/evidence/acceptance-efbc1a316-20261006-v5/`
+- `/workspace/validation-work/evidence/efbc-demo-freshness-diagnosis-20261006/`
+
+This observation supplies no phase closure and leaves earlier outcomes intact.
+
 ## External scoped Clippy observation (2026-09-28)
 
 The Architecture E01a owner attempted optional

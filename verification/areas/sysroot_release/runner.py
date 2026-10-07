@@ -31,6 +31,7 @@ from package_build import RELEASE_VERSION, package_build_configuration, corpus_c
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
 from sifr_verify.process_execution import execute  # noqa: E402
+from prepared_output import prepared_output  # noqa: E402
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 HEAVY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_heavy_release_smoke.sifr"
@@ -313,6 +314,9 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
 
 
 def build_source_sifr() -> Path:
+    retained = prepared_output("source", REPO_ROOT, base_env())
+    if retained is not None:
+        return retained
     command, env, binary = source_build_configuration(REPO_ROOT, base_env())
     run_checked(
         command,
@@ -618,6 +622,9 @@ def run_host_installed_stdlib_heavy() -> tuple[int, list[str]]:
 
 
 def archive_for_host(host: str) -> Path:
+    retained = prepared_output("package", REPO_ROOT, base_env())
+    if retained is not None:
+        return retained
     artifact_dir = ACTUAL_ROOT / "artifacts"
     archive_path = artifact_dir / f"sifr-{RELEASE_VERSION}-{host}.tar.gz"
     cached = BUILT_ARCHIVES.get(host)

@@ -9,6 +9,23 @@ The single maintained interpreter is GIL-enabled CPython 3.14.7. The area
 project pins it exactly; there is no older compatibility project or fallback
 interpreter lane.
 
+
+The Linux x86_64 verification environment selects the official PyTorch CPU
+`2.14.0+cpu` wheel through one explicit `download.pytorch.org` source. Its
+SHA-256 is pinned in the lock and [dependency audit](data/latest_stable_python.json),
+which also records the authenticated upstream index and wheel metadata. All 26
+default dependencies remain installed. Other platform selections and the DLPack
+demo retain their existing PyPI artifacts. This is an explicit distribution
+contract; no alternate-source retry or version-suffix normalization is used.
+The audit checks the exact source marker, CPU/PyPI lock partition and installed
+version, so feature output records the actual `torch=2.14.0+cpu` identity.
+
+Every existing CPU tensor, DLPack, numerical and compiled example assertion
+remains required. CUDA device/stream protocol controls still use synthetic
+exporters; this CPU environment does not qualify real GPU interoperability.
+The smaller compressed wheel does not establish cold installation capacity;
+preparation retains its existing admission, monitored allowance and reserve.
+
 ## HTTP Client Evidence And Retained Names
 
 The maintained project uses `httpx2` and `httpcore2`. The

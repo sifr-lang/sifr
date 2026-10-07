@@ -301,17 +301,57 @@ class NamedReferenceTests(unittest.TestCase):
                 validate_compiler_reference(Path("."), "a" * 40)
 
     def test_reference_tooling_changes_are_allowed(self):
-        responses = [CompletedProcess([], 0), CompletedProcess([], 0, "verification/areas/performance/runner.py\n")]
+        responses = [CompletedProcess([], 0), CompletedProcess([], 0, "verification/areas/performance/runner.py\n"), CompletedProcess([],0,"")]
         with patch("reference_profiles.subprocess.run", side_effect=responses):
             self.assertEqual(validate_compiler_reference(Path("."), "a" * 40), "a" * 40)
 
+    def test_only_audited_measurement_runner_closure_is_allowed(self):
+        from measurement_runtime import RUNTIME_PATHS
+        for changed in RUNTIME_PATHS:
+            responses = [CompletedProcess([], 0), CompletedProcess([], 0, changed), CompletedProcess([],0,"")]
+            with self.subTest(changed=changed), patch("reference_profiles.subprocess.run", side_effect=responses):
+                self.assertEqual(validate_compiler_reference(Path("."), "a" * 40), "a" * 40)
+
     def test_reference_compiler_or_lock_changes_are_rejected(self):
-        for changed in ("Cargo.toml", "Cargo.lock", "crates/sifr/src/main.rs", "third_party/ruff"):
-            responses = [CompletedProcess([], 0), CompletedProcess([], 0, changed)]
+        for changed in ("Cargo.toml", "Cargo.lock", "crates/sifr/src/main.rs", "third_party/ruff",
+                        "verification/runner/sifr_verify/cargo_setup.py",
+                        "verification/runner/sifr_verify/profile_runner.py"):
+            responses = [CompletedProcess([], 0), CompletedProcess([], 0, changed), CompletedProcess([],0,"")]
             with self.subTest(changed=changed), patch("reference_profiles.subprocess.run", side_effect=responses):
                 with self.assertRaisesRegex(ReferenceProfileError, "compiler inputs"):
                     validate_compiler_reference(Path("."), "a" * 40)
 
+
+    def test_real_reference_rejects_hidden_compiler_rename_and_dirty_tooling(self):
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.check_output(["git", *args], cwd=root, text=True).strip()
+            git("init", "-q")
+            git("config", "user.email", "reference-control@example.invalid")
+            git("config", "user.name", "Reference Control")
+            (root/"crates/compiler").mkdir(parents=True)
+            source = root/"crates/compiler/source.rs"
+            source.write_text("original compiler input\n"*20)
+            git("add", ".");git("commit", "-qm", "merged compiler")
+            reference = git("rev-parse", "HEAD")
+            git("update-ref", "refs/remotes/origin/main", reference)
+            tooling = root/"verification/areas/performance"
+            tooling.mkdir(parents=True)
+            git("mv", "crates/compiler/source.rs", "verification/areas/performance/source.rs")
+            git("commit", "-qm", "rename compiler input into tooling")
+            with self.assertRaisesRegex(ReferenceProfileError, "compiler inputs"):
+                validate_compiler_reference(root, reference)
+            git("mv", "verification/areas/performance/source.rs", "crates/compiler/source.rs")
+            git("commit", "-qm", "restore exact compiler")
+            tool = tooling/"control.py";tool.write_text("registered measurement tool\n")
+            git("add", ".");git("commit", "-qm", "measurement-only overlay")
+            self.assertEqual(validate_compiler_reference(root, reference), reference)
+            tool.write_text("uncommitted replacement\n")
+            with self.assertRaisesRegex(ReferenceProfileError, "committed and clean"):
+                validate_compiler_reference(root, reference)
 
     def test_historical_trend_does_not_compare_unknown_hardware(self):
         run = {"run_id": "test", "metadata": {"reference_profile": "linux", "reference_identity": identity()}}
@@ -367,9 +407,11 @@ class NamedReferenceTests(unittest.TestCase):
 
 def run_self_test():
     from reference_admission_tests import ReferenceAdmissionTests
+    from reference_host_allocation_tests import ManagedAllocationTests
+    from measurement_timer_tests import MeasurementTimerTests
 
     result = unittest.TestResult()
-    for case in (NamedReferenceTests, ReferenceAdmissionTests):
+    for case in (NamedReferenceTests, ReferenceAdmissionTests, ManagedAllocationTests, MeasurementTimerTests):
         unittest.defaultTestLoader.loadTestsFromTestCase(case).run(result)
     if not result.wasSuccessful():
         raise ReferenceProfileError(str(result.errors + result.failures))

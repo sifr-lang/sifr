@@ -62,6 +62,21 @@ sifr self update --channel alpha --force
 Regular newer-version updates within the receipt channel do not require
 `--force`.
 
+Installations made by beta.16 use a flat toolchain layout. Before their first
+update to immutable generations, stop every Sifr compiler and language server
+using that installation, then explicitly permit the one-time migration:
+
+```bash
+SIFR_MIGRATE_LEGACY=1 sifr self update
+```
+
+The installer retains the old payload and restores the original flat layout and
+receipt if the migration transaction fails. Ordinary updates refuse a mutable
+layout. Migration requires a complete standard `root/bin` installation and its
+original receipt. For other layouts, install into an empty root and update PATH.
+After migration, updating back to a release with the older flat installer requires
+a separate empty installation root; it must not overwrite immutable generations.
+
 ## Troubleshooting
 
 `sifr self update` requires a schema-versioned receipt written by the official

@@ -401,7 +401,13 @@ mod sifr_generated_generated_support {
         mut tokens: Vec<String>,
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
-        tokens.push(value.kind.clone());
+        tokens.push({
+            let mut sifr_generated_concat: String =
+                String::with_capacity(0usize.saturating_add(0usize));
+            sifr_generated_concat.push_str(value.kind.as_str());
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
+        });
         if value.kind == "bool" {
             let bool_value: Option<bool> = value.bool_value;
             if bool_value.is_none() {
@@ -675,20 +681,18 @@ fn collect_positive_actual() -> Vec<bool> {
     actual
         .push(
             dumps(
-                    &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0::SifrGeneratedUnionVariant4X3aatom3X3astr(
-                        "hello".to_string(),
-                    ),
-                )
-                .as_str() == "\"hello\"".to_string().as_str(),
+                &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0::SifrGeneratedUnionVariant4X3aatom3X3astr(
+                    "hello".to_string(),
+                ),
+            ) == "\"hello\"",
         );
     actual
         .push(
             dumps(
-                    &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0::SifrGeneratedUnionVariant4X3aatom4X3abool(
-                        false,
-                    ),
-                )
-                .as_str() == "false".to_string().as_str(),
+                &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0::SifrGeneratedUnionVariant4X3aatom4X3abool(
+                    false,
+                ),
+            ) == "false",
         );
     actual
 }

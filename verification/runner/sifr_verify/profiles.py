@@ -26,6 +26,11 @@ PYTHON_INTEROP_CAPABILITY_MATRIX = (
 )
 RUST_INTEROP_MANIFEST = REPO_ROOT / "verification" / "areas" / "rust_interop" / "manifest.json"
 SQL_PLATFORM_MANIFEST = REPO_ROOT / "verification" / "areas" / "sql_platform" / "manifest.json"
+# Registered feedback minimum; complete profiles retain every offline SQL suite.
+SQL_CORE_SUITES = frozenset({
+    "compiler-components", "common-sql", "contracts", "dependency-baseline",
+    "host-tools", "integrated-qualification", "mutation",
+})
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -44,6 +49,14 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     payload = load_json(path)
     if not isinstance(payload, dict):
         raise ProfileError(f"profile must be a JSON object: {path}")
+    if "extends" in payload:
+        # Cloud inherits the live merge inventory so new correctness checks
+        # cannot silently disappear from its duplicated selection.
+        if (profile != "cloud" or payload.get("extends") != "merge"
+                or set(payload) != {"extends", "name", "description"}):
+            raise ProfileError("only the cloud profile may inherit the merge inventory")
+        inherited = load_profile("merge", profiles_dir)
+        payload = inherited | {key: value for key, value in payload.items() if key != "extends"}
     validate_data(
         payload,
         load_schema("profile.schema.json"),
@@ -195,7 +208,7 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                     f"verification suites: {', '.join(missing)}"
                 )
         if area == "sql_platform":
-            required_suites = required_sql_platform_suites()
+            required_suites = required_sql_platform_suites(str(profile.get("name")))
             missing = sorted(required_suites.difference(selected_suites))
             if missing:
                 raise ProfileError(
@@ -219,7 +232,7 @@ def required_rust_interop_suites() -> set[str]:
     return names
 
 
-def required_sql_platform_suites() -> set[str]:
+def required_sql_platform_suites(profile_name: str = "merge") -> set[str]:
     manifest = load_json(SQL_PLATFORM_MANIFEST)
     suites = manifest.get("suites") if isinstance(manifest, dict) else None
     if not isinstance(suites, list) or not suites:
@@ -238,7 +251,9 @@ def required_sql_platform_suites() -> set[str]:
     }
     if len(declared_names) != len(suites):
         raise ProfileError("SQL platform area manifest has invalid or duplicate suites")
-    return names
+    if not SQL_CORE_SUITES.issubset(names):
+        raise ProfileError("SQL platform manifest omits registered core suites")
+    return set(SQL_CORE_SUITES) if profile_name == "create-pr" else names
 
 
 def validate_toolchain_steps(profile: dict[str, Any]) -> None:
@@ -379,6 +394,9 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
 
 def canonical_step_names(profile: dict[str, Any]) -> set[str]:
     names = {"cargo_cache_setup"}
+    if profile.get("name") == "cloud":
+        names.update({"preparation_dependencies", "preparation_sysroot_source", "preparation_sysroot_package",
+                      "retirement_source_cargo_target", "retirement_cargo_target"})
     names.update(
         f"guardrail_{str(step).replace('-', '_')}"
         for step in profile.get("guardrail_steps", [])

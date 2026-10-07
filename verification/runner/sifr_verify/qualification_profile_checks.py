@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from .canonical_core_checks import policy_checks as canonical_core_checks
 from .profiles import (
     ProfileError,
     load_profile,
@@ -16,9 +17,10 @@ from .step_budgets import StepBudgetContext, record_step_success, required_cache
 
 
 def policy_checks() -> None:
+    canonical_core_checks()
     for name in ("create-pr", "merge"):
         profile = load_profile(name)
-        required = required_sql_platform_suites()
+        required = required_sql_platform_suites(name)
         for missing in sorted(required):
             changed = deepcopy(profile)
             for area in changed["selected_areas"]:
