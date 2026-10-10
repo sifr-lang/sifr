@@ -80,6 +80,18 @@ jobs:
       - name: Prepare locked source-reference dependencies
         working-directory: candidate
         run: cargo fetch --locked
+      - name: Prepare exact driver source test graph
+        working-directory: candidate
+        env:
+          CARGO_BUILD_JOBS: "2"
+          CARGO_NET_OFFLINE: "true"
+        run: cargo test --locked --offline -p sifr_driver --lib --no-run
+      - name: Prepare exact LSP source test graph
+        working-directory: candidate
+        env:
+          CARGO_BUILD_JOBS: "2"
+          CARGO_NET_OFFLINE: "true"
+        run: cargo test --locked --offline -p sifr_lsp --lib --no-run
       - name: Measure exact native package modes with current cache contract
         shell: bash
         env:

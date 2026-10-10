@@ -29,6 +29,7 @@ finally:
             "qualification_eligible": False,
             "source_artifact_run": "38074052189",
             "canonical_protocol_status": status,
+            "source_test_preparation": "Exact driver and LSP lib test graphs prepared separately in timed CI steps; all existing test selectors and execution deadlines retained.",
             "harness_sha256": hashlib.sha256(override.read_bytes()).hexdigest(),
             "wrapper_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             "change": "Strict cache inspect JSON/text assertions updated to current root and all eight owner/path/policy entries. Every other assertion and all selected native/source/corpus checks retained.",
