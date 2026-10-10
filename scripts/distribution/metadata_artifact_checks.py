@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -36,6 +37,24 @@ class MetadataArtifactTests(unittest.TestCase):
                 altered[field] = "0" * 64
                 with self.assertRaises(ValueError):
                     metadata.validate_metadata(payload, altered, metadata.file_digest(binary), target)
+
+    def test_fixture_and_packaging_follow_canonical_container_version(self):
+        repo = Path(__file__).resolve().parents[2]
+        container = (repo / "crates/sifr_sysroot/src/metadata/container.rs").read_text()
+        declared = re.search(r"const VERSION: u32 = ([0-9]+);", container)
+        self.assertIsNotNone(declared)
+        version = int(declared.group(1))
+        with tempfile.TemporaryDirectory() as directory:
+            root, binary = self.fixture(directory)
+            target = metadata.host_target()
+            descriptor = metadata.prepare(binary, root, root, target, True)
+            payload = (root / metadata.METADATA_PATH).read_bytes()
+            self.assertEqual(int.from_bytes(payload[8:12], "little"), version)
+            for unsupported in (version - 1, version + 1):
+                changed = payload[:8] + unsupported.to_bytes(4, "little") + payload[12:]
+                rebound = dict(descriptor, metadata_id=hashlib.sha256(changed).hexdigest())
+                with self.assertRaisesRegex(ValueError, "incompatible"):
+                    metadata.validate_metadata(changed, rebound, metadata.file_digest(binary), target)
 
     def test_compatible_source_manifest_is_byte_identical_and_release_is_explicit(self):
         with tempfile.TemporaryDirectory() as directory:

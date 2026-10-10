@@ -18,7 +18,7 @@ elif sys.argv[1:3] == ["sysroot", "build-metadata"]:
         for part in (name.encode(), value):
             digest.update(len(part).to_bytes(8, "little"))
             digest.update(part)
-    logical = (b"SIFRMETA" + (4).to_bytes(4, "little") + bytes(4)
+    logical = (b"SIFRMETA" + (5).to_bytes(4, "little") + bytes(4)
                + bytes.fromhex(identity) + digest.digest()
                + hashlib.sha256(b"explicit-packaging-fixture-inputs").digest()
                + (120).to_bytes(8, "little"))
