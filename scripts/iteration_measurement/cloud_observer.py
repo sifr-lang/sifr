@@ -37,7 +37,8 @@ def main():
 
     manifest = load_manifest(candidate / 'verification/areas/performance/data/benchmark_manifest.json')
     cases = validate_manifest(manifest)
-    chosen = [c for c in cases if c.id.startswith(args.case_prefix)]
+    prefixes = args.case_prefix.split(',')
+    chosen = [c for c in cases if any(c.id.startswith(prefix) for prefix in prefixes)]
     if not chosen:
         raise RuntimeError('Empty requested workload selection')
     if subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=candidate, text=True).strip() != CANDIDATE:
@@ -128,7 +129,7 @@ def main():
                                     'pairs_required': pairs_for_case(case.id), 'readiness': ready})
             continue
         # Leave time for artifact upload rather than lose raw evidence to the job deadline.
-        if time.monotonic() - run_started > 5.5 * 3600:
+        if time.monotonic() - run_started > 5 * 3600:
             report['cases'].append({'case_id': case.id, 'status': 'not-started-job-window',
                                     'seconds': None, 'completed_pairs': 0,
                                     'pairs_required': pairs_for_case(case.id)})
