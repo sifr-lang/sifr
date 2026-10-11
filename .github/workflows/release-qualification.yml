@@ -119,7 +119,11 @@ jobs:
             python "$GITHUB_WORKSPACE/measurement-tools/scripts/iteration_measurement/cloud_observer.py" \
             --candidate "$GITHUB_WORKSPACE/candidate" --baseline "$GITHUB_WORKSPACE/baseline" \
             --evidence "$RUNNER_TEMP/cloud-protocol-observations" --case-prefix "$CASE_PREFIX"
+      - name: Stop any remaining owned observation processes
+        if: always()
+        run: sudo systemctl stop sifr-cost-observation.service || true
       - name: Preserve partial diagnostic evidence
+        timeout-minutes: 30
         if: always()
         shell: bash
         run: |

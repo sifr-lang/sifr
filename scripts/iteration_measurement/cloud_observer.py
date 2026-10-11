@@ -75,10 +75,13 @@ def main():
         print(f'OBSERVATION START {name}; limit=1800s; free_disk={free}', flush=True)
         save(evidence / 'active.json', {'name': name, 'started_unix': time.time(), 'command': command})
         started = time.perf_counter()
-        outcome = execute(command, cwd=cwd, env=env, deadline_seconds=LIMIT, limit_bytes=32 * 1024**2)
+        with (logs / (name + '.stdout')).open('wb') as out, (logs / (name + '.stderr')).open('wb') as err:
+            def emit(channel, data):
+                stream = out if channel == 'stdout' else err
+                stream.write(data)
+                stream.flush()
+            outcome = execute(command, cwd=cwd, env=env, deadline_seconds=LIMIT, limit_bytes=32 * 1024**2, emit=emit)
         elapsed = time.perf_counter() - started
-        (logs / (name + '.stdout')).write_bytes(outcome.stdout)
-        (logs / (name + '.stderr')).write_bytes(outcome.stderr)
         status = 'completed' if outcome.returncode == 0 and outcome.cause == 'exit' and not outcome.truncated else 'failed-incomplete'
         if outcome.cause == 'safety_deadline':
             status = 'cancelled-30-minute-limit'
