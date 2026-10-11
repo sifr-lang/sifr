@@ -108,7 +108,15 @@ jobs:
         run: |
           export PATH="$RUNNER_TEMP/sifr-observation-python/bin:$PATH"
           export LD_LIBRARY_PATH="$(dirname "$(rustup which rustc)")/../lib"
-          python measurement-tools/scripts/iteration_measurement/cloud_observer.py \
+          # Bind actual finite limits before identity admission; no identity checks are bypassed.
+          sudo systemd-run --wait --pipe --collect --unit=sifr-cost-observation \
+            -p "User=$(id -un)" -p "WorkingDirectory=$GITHUB_WORKSPACE" \
+            -p CPUQuota=400% -p MemoryMax=12G \
+            /usr/bin/env "HOME=$HOME" "PATH=$PATH" "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" \
+            CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            SIFR_PERFORMANCE_HOST_KIND=managed-linux SIFR_PERFORMANCE_TIME=/usr/bin/time \
+            PYTHONDONTWRITEBYTECODE=1 \
+            python "$GITHUB_WORKSPACE/measurement-tools/scripts/iteration_measurement/cloud_observer.py" \
             --candidate "$GITHUB_WORKSPACE/candidate" --baseline "$GITHUB_WORKSPACE/baseline" \
             --evidence "$RUNNER_TEMP/cloud-protocol-observations" --case-prefix "$CASE_PREFIX"
       - name: Preserve partial diagnostic evidence

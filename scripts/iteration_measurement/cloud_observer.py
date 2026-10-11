@@ -89,6 +89,11 @@ def main():
         print('OBSERVATION END ' + json.dumps(row), flush=True)
         return row
 
+    # Fail before long preparation if this runner cannot satisfy the real host contract.
+    from reference_host import host_details
+    report['admitted_host_preflight'] = host_details()
+    save(evidence / 'report.json', report)
+
     ready = {}
     detail = str(Path(__file__).with_name('cloud_detail.py').resolve())
     for role, repo in [('baseline', baseline), ('candidate', candidate)]:
