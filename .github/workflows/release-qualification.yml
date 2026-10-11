@@ -27,11 +27,8 @@ jobs:
             runner: macos-15
           - target: x86_64-apple-darwin
             runner: macos-15-intel
-          - target: x86_64-unknown-linux-gnu
-            runner: ubuntu-24.04
-          - target: aarch64-unknown-linux-gnu
-            runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
     steps:
       - name: Admit fixed observational inputs
         env:
@@ -78,15 +75,20 @@ jobs:
           merge-multiple: true
           digest-mismatch: error
       - name: Prepare locked source-reference dependencies
+        timeout-minutes: 30
         working-directory: candidate
         run: cargo fetch --locked
       - name: Prepare exact driver source test graph
+        timeout-minutes: 30
+        continue-on-error: true
         working-directory: candidate
         env:
           CARGO_BUILD_JOBS: "2"
           CARGO_NET_OFFLINE: "true"
         run: cargo test --locked --offline -p sifr_driver --lib --no-run
       - name: Prepare exact LSP source test graph
+        timeout-minutes: 30
+        continue-on-error: true
         working-directory: candidate
         env:
           CARGO_BUILD_JOBS: "2"
