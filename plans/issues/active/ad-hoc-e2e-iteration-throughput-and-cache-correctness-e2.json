@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "scope": "E2 draft implementation evidence; required qualification remains pending",
+  "candidate": "e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db",
+  "base": "9e046cc380052e82ef1be9fa0263150a220de9f7",
+  "binary_sha256": "e2f765d010089483e582c519611b4b74dc01c0dcb29d21c4dd81924dbcd4d605",
+  "bundle": "e2e-phase-e0-20261018-_0pu4sig",
+  "review": {
+    "candidate": "e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db",
+    "verdict": "SATISFIED",
+    "evidence": "e2-review-e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db.md"
+  },
+  "fixture_inventory": {
+    "selected": 729,
+    "edited": 71,
+    "assertions_and_expected_vectors_preserved": true
+  },
+  "checks": [
+    {
+      "label": "e2-verified-execution-controls",
+      "seconds": 3.6083113879976736,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e2-verified-harness-controls",
+      "seconds": 0.601962544998969,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e2-verified-hashlib-first",
+      "seconds": 4.007010222001554,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": {
+        "compile_ms": 3320,
+        "plan_ms": 0,
+        "build_ms": 366,
+        "build_sum_ms": 363,
+        "run_ms": 10,
+        "cache_hits": 1,
+        "groups": 1
+      }
+    },
+    {
+      "label": "e2-verified-hashlib-repeat",
+      "seconds": 3.8066967809972994,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": {
+        "compile_ms": 3386,
+        "plan_ms": 0,
+        "build_ms": 216,
+        "build_sum_ms": 213,
+        "run_ms": 10,
+        "cache_hits": 1,
+        "groups": 1
+      }
+    },
+    {
+      "label": "e2-verified-filesystem-individual",
+      "seconds": 43.47641167199981,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 24452,
+        "plan_ms": 15,
+        "build_ms": 17954,
+        "build_sum_ms": 17909,
+        "run_ms": 697,
+        "cache_hits": 73,
+        "groups": 76
+      }
+    },
+    {
+      "label": "e2-verified-space-quote-cleanup",
+      "seconds": 27.24513823400048,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": {
+        "compile_ms": 5432,
+        "plan_ms": 1,
+        "build_ms": 21473,
+        "build_sum_ms": 21471,
+        "run_ms": 42,
+        "cache_hits": 0,
+        "groups": 8
+      }
+    },
+    {
+      "label": "e2-verified-full-pass",
+      "seconds": 147.65246585099885,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 89211,
+        "plan_ms": 58,
+        "build_ms": 50748,
+        "build_sum_ms": 50635,
+        "run_ms": 2952,
+        "cache_hits": 169,
+        "groups": 185
+      }
+    }
+  ],
+  "filesystem_analysis": {
+    "selected": 76,
+    "counts": [
+      73,
+      3
+    ],
+    "failed": [
+      "async_generator_aclose_before_start",
+      "process_scoped_parent_cancel",
+      "process_scoped_spawn_handle"
+    ],
+    "expected_known_failures": [
+      "async_generator_aclose_before_start",
+      "process_scoped_parent_cancel",
+      "process_scoped_spawn_handle"
+    ],
+    "unexpected_failures": [],
+    "seconds": 43.47641167199981
+  },
+  "full_comparison": {
+    "candidate": "e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db",
+    "selected": 729,
+    "counts": [
+      631,
+      98
+    ],
+    "same_failed_fixture_set": true,
+    "new_failures": [],
+    "removed_failures": [],
+    "seconds": 147.65246585099885,
+    "condition": "warm native dependencies with changed fixture inputs; not paired performance evidence"
+  },
+  "preparation_freshness": [
+    {
+      "candidate": "e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db",
+      "seconds": 6.001659864999965,
+      "rebuilt_targets": [],
+      "same_executable": true,
+      "binary_sha256": "e2f765d010089483e582c519611b4b74dc01c0dcb29d21c4dd81924dbcd4d605",
+      "source_root_unchanged": true
+    },
+    {
+      "candidate": "e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db",
+      "seconds": 6.001814494997234,
+      "rebuilt_targets": [],
+      "same_executable": true,
+      "binary_sha256": "e2f765d010089483e582c519611b4b74dc01c0dcb29d21c4dd81924dbcd4d605",
+      "source_root_unchanged": true
+    }
+  ],
+  "bootstrap": {
+    "elapsed_seconds": 34.00754482100092,
+    "returncode": 0,
+    "stop_reason": null
+  },
+  "typed_binding_followup": {
+    "candidate": "779bb203af6b42ace65ac8b3025dd41fa408dbcf",
+    "filesystem_counts": [
+      71,
+      5
+    ],
+    "in_scope_failures": [
+      "cpython_tempfile_subset",
+      "stdlib_tempfile_consolidated"
+    ],
+    "correction": "Typed fallible binding before optional assignment; cleanup remains outside expected-error block",
+    "evidence": "e2-complete-filesystem-analysis.json"
+  },
+  "historical_failures": {
+    "space_path_reproduction": "e2-space-before/receipt.json",
+    "incomplete_correction_candidate": "6eb8e74ca55c493ac0102336a0b5469365e51b08",
+    "filesystem_counts": [
+      70,
+      6
+    ],
+    "in_scope_regressions": [
+      "cpython_logging_subset",
+      "cpython_shutil_subset",
+      "stdlib_logging_consolidated"
+    ],
+    "review_verdict": "NOT SATISFIED",
+    "preserved": true
+  },
+  "qualification": {
+    "passed_gate": false,
+    "reference_blocker": "https://github.com/sifr-lang/sifr/issues/4347",
+    "compiler_failure_owner": "https://github.com/sifr-lang/sifr/issues/4344",
+    "windows_execution": "pending",
+    "full_counts_interpretation": "631 passed; 19 direct known defects plus 79 fixtures blocked by their native batch failures. No reduced selection or passing gate claim."
+  },
+  "evidence_sha256": {
+    "e2-review-e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db.md": "aaf9d8c6772bcc3197d6609b0bea276a8dd373c83dfb27a833bd164e299247d7",
+    "e2-review-6eb8e74ca55c493ac0102336a0b5469365e51b08.md": "e220eead0614376cf28bd174e6f9a44cba538f4facf6c995d884640d58fb6e1e",
+    "e2-verified-candidate-context.json": "2edce2c45599f5f96b5cc96a4ee8511f1c36ab0c5ca75629386b1048e10ef6bd",
+    "e2-verified-fixture-audit.json": "909d3b1037755498b14ebf1987bea7a42bd37a0987e411eeafa20383a3bf35d9",
+    "e2-verified-filesystem-analysis.json": "5ab8903b8d43b9c1fdfb663defc07fca108a922bd9ca37db6aacb4353a77e3bc",
+    "e2-verified-full-comparison.json": "994eb0c50d4c13ca9a3168f33cd1da859caedf476961631ba373295b5c7cc27a",
+    "e2-verified-source-root-before.json": "93f329bebf0b296753cbfac021b97d13c88ad996b51d31b31cac67481e616ce8",
+    "e2-verified-source-root-after.json": "93f329bebf0b296753cbfac021b97d13c88ad996b51d31b31cac67481e616ce8",
+    "e2-verified-generated-groups.tar.gz": "d23ef7c8f30231f1a41ee2c3b81dc6edd9f1f77a2016c36f31a978c5543d277e",
+    "e2-final-filesystem-analysis.json": "7ec6da8f300e6c668cc9953ab2a0168f89e528c83cee9b3271b4fd957084fd81",
+    "e2-complete-filesystem-analysis.json": "7011e3922e0da3cee5525937e10e26a8e818ec12a8db1dec6f761b81b281f931",
+    "e2-review-779bb203af6b42ace65ac8b3025dd41fa408dbcf.md": "f1f181de84d744fad789d9aa7dc561358084d85094fa21f95b689e76cdc196df",
+    "e2-space-before/receipt.json": "045f2b1787e36eefb02ee10978aa064939aed3a8edcc5583cfc9e0d3c616d8d0",
+    "e2-verified-tempfile-bindings/receipt.json": "3b62e508a6cc68975e19f087d60b8347e341939ebbbf4b5f89f5c15f9eaef64e",
+    "e2-verified-execution-controls/receipt.json": "a18c20e38a472300ad7035695f20333ee0b494931bf571dbe2d8665e34d469dc",
+    "e2-verified-harness-controls/receipt.json": "9c4d1d8bf1d39bb83646b7a920db744f3d5114433955489b566dddda6113a6b3",
+    "e2-verified-hashlib-first/receipt.json": "fd725774ed0bc6d156d7b310d96f0b8072f3af7e6ea94973a31422a7a91b1e89",
+    "e2-verified-hashlib-repeat/receipt.json": "3d2030ed38770a83bcdb1511577c791b830f2221ab9d069014047a593aa38e87",
+    "e2-verified-filesystem-individual/receipt.json": "1d97c1102263157ba087970e21d8443342a1f80ba1ba8b6dcc120fa437f2c4e3",
+    "e2-verified-space-quote-cleanup/receipt.json": "28f0860f3c972fd780b640a1a650a664cfa21775d506cadd4ed7149ebf21aa0d",
+    "e2-verified-full-pass/receipt.json": "c5a3fbb6c7f99d75dc83f7d0c81d8b4a1f25c382fa4f64d49f7ea247395fcb03",
+    "e2-verified-after-hashlib-preparation-freshness.json": "831fecbcf18a490e1fca8fea6f700df6f057398dddbc9dec0b335592360bd50f",
+    "e2-verified-after-full-preparation-freshness.json": "ccad2821744ee70e8f293f345d14abd726c5042d55f6e53ca89779b4c71e46f5"
+  }
+}
