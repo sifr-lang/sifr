@@ -255,3 +255,38 @@ persistent providers are not qualified until their provider qualification suites
 test them. Diagnostic example checks execute explicitly selected standalone
 check-fail/check-pass pairs and their explain/help surface; contextual package and
 runtime examples are not indiscriminately executed.
+
+### E2E native dependency reuse
+
+Every generated run-pass group is validated by Cargo. The owned cache uses a
+`cargo-v3` namespace with a persistent `native-target` across groups; Cargo owns
+source, toolchain, profile, configuration and feature freshness. Generated source
+and manifests are replaced only when their bytes change. Native builds serialize
+with the explicit `--cargo-build-jobs` budget; requested group workers and actual
+workers are printed separately. Fixture selection is unchanged.
+
+Executables are selected from successful Cargo JSON output for the exact package,
+manifest and binary target. Fresh executables also require a matching integrity
+receipt. A failed build, missing executable, malformed result or unexpected bytes
+cannot become a cached pass. If an executable is damaged or an interrupted build
+left no receipt, remove the named executable from this owned cache and retry;
+Cargo will restore it. Retained native dependencies do not need deletion.
+
+`--no-cache` / `SIFR_E2E_DISABLE_CACHE=1` disables the outer success-record tracking
+and TTL retirement for that invocation. It still validates through Cargo, checks
+artifact integrity and reuses native dependencies. A cold diagnostic requires a
+new owned `--cache-dir`; this flag does not claim a cold build.
+
+A checkout ownership record and suite lease protect generated mutations, manifest
+updates, builds and running consumers. Contention fails explicitly instead of
+racing or waiting indefinitely. Native commands use the existing bounded process
+capture with a 30-minute deadline and child cleanup. Completed group retirement
+never removes `native-target`; failed, interrupted and unmarked group directories
+are retained. Do not remove the cache or its permanent lock while consumers exist.
+
+Cargo source freshness is timestamp based, not a claim of content checksum
+validation for all dependency inputs. Generated writes compare bytes even if
+input timestamps are preserved; dependency edits deliberately preserving Cargo's
+freshness metadata require explicit rebuild/new owned cache. Executable integrity
+receipts cover executable bytes, not dependency freshness. Cold bootstraps and
+focused subset runs are not full-gate performance evidence.

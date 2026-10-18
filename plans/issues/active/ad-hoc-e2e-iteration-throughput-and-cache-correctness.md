@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; runner/cache implementation pending
 registered: 2026-10-18
-current_stage: R1 scoped review satisfied; E1 is next; reference qualification remains pending
+current_stage: E1 draft implementation and focused validation; reference qualification remains pending
 
 ## Objective and authority
 
@@ -482,6 +482,36 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   content-bound reuse claim, test content changes with preserved timestamps;
   do not imply Cargo alone proves a stronger contract than it implements.
 
+### E1 implementation progress — 2026-10-18
+
+- Owned stacked branch `phase/e2e-e1-cargo-freshness`, base `76d118be`.
+  R1 remains an unmerged reviewed draft; this is independent implementation work,
+  not acceptance or a gate waiver.
+- Removed the outer success shortcut. Every generated group receives Cargo
+  validation using one persistent native target, serial group builds and the
+  configured inner job budget. Cargo JSON selects the expected executable;
+  integrity receipts reject damaged fresh output. Stable generated writes compare
+  bytes. Existing cache-storage leases and bounded process capture are reused.
+- Cache metadata is retention/reporting only. No-cache disables that tracking and
+  retirement, while retaining Cargo freshness and dependency reuse. Failed,
+  interrupted and unmarked groups survive pruning; native dependencies are never
+  retired with a group. Fixture inventory and compiler semantics are unchanged.
+- Seven controls of the exact production helper, compiled in a disposable small
+  crate, passed in 3.31s. They cover unchanged/source/feature/config/profile runs,
+  a real edited path dependency that must fail, cross-group dependency reuse,
+  missing/corrupt binaries, structured-output selection, byte comparisons with
+  preserved timestamps, ownership/contention and an inherited live-child lease.
+  This isolated compilation is not a substitute for the actual candidate harness.
+- Actual harness bootstrap is pending, using two Cargo jobs, a 30-minute cap,
+  at most 24 GiB additional disk, at least 20 GiB disk and 2 GiB memory reserve.
+  Initial preparation was stopped after 86.017s before compilation to wire bounded
+  process capture and retry offline; cancellation remains incomplete evidence.
+  No cold-build or full-gate speed claim is made.
+- Qualification, additional actual-harness controls and scoped review remain
+  pending. Existing external blockers #4347 and #4344 are unchanged. Cargo's
+  timestamp freshness is explicitly distinguished from content-bound generated
+  writes and executable integrity; no stronger source freshness is claimed.
+
 ### E2 — isolate runtime output from compiler inputs
 
 - Execute each filesystem-writing fixture in a unique owned scratch directory;
@@ -672,7 +702,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
 | R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
 | R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Continue independent E1 work; #4347 still blocks acceptance |
-| E1 | pending | none | none | Cargo authority and shared native dependencies |
+| E1 | draft implementation; validation in progress | branch `phase/e2e-e1-cargo-freshness` | Seven isolated controls pass; actual harness and review pending | Complete candidate checks and scoped review; acceptance remains blocked |
 | E2 | pending | none | none | Isolate fixture outputs |
 | R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
 | E3 | pending | none | none | Early errors and bounded failed-batch isolation |

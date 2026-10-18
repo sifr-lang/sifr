@@ -95,6 +95,7 @@ fn cargo_validates_noop_source_features_configuration_and_profile() {
     assert!(!edited.fresh);
     assert_eq!(run(&edited.path), "two\n");
     assert!(!p.build(&["--features", "changed"]).unwrap().fresh);
+    assert!(p.build(&[]).unwrap().fresh);
     assert!(
         !p.build(&[
             "--config",
