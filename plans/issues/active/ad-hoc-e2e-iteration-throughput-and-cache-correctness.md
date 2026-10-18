@@ -942,3 +942,10 @@ full-corpus oracle compares all output fields and complete negative diagnostics
 against the existing API, then repeats in reverse order. It is an additional
 ignored qualification control, run explicitly for this item; no existing test is
 removed, ignored or reduced. Actual measurements and scoped review follow.
+
+E4 focused controls exposed a pre-existing frontend layering violation: public
+`check`/`type_check_source` reached `compile_single_file_frontend`, which requested
+native setup through the default rooted constructor. Route this frontend helper
+through the same canonical plan with native preparation disabled. Keep the native
+probe assertion; do not weaken it. The initial missing test import and subsequent
+probe failure remain retained evidence. Final controls and corpus comparison follow.

@@ -105,15 +105,18 @@ pub(crate) fn compile_single_file_frontend(
     compiler: &crate::CompilerContext,
     source: &str,
 ) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(
+    let (plan, _, _) = RootedEntrypointPlan::from_entrypoint_with_stages(
         compiler,
         RootedEntrypoint::SingleFile {
             source,
             display_path: "main",
             lowering_options: LoweringOptions::default(),
         },
-    )?
-    .into_single_file_frontend()
+        &mut Vec::new(),
+        false,
+        None,
+    )?;
+    plan.into_single_file_frontend()
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
