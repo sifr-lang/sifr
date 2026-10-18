@@ -133,7 +133,8 @@ pub(crate) fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
             }
         };
 
-        let (rust_source, _, _, _) = match compiled_metadata(session.compile_with_metadata(&source)) {
+        let (rust_source, _, _, _) = match compiled_metadata(session.compile_with_metadata(&source))
+        {
             Ok(result) => result,
             Err(errors) => {
                 failures.push(format!(
