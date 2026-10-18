@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "item": "E0",
+  "date": "2026-10-18",
+  "status": "entry checks complete; implementation pending",
+  "current_base": "6dd858aed266eb39deb74e11577f29ec3ca28507",
+  "source_equivalence_reference": "30d2b39021174684ca9a2e695447d73ecbf25308",
+  "measurement_candidate": "36c87c5b2a0f178f4f590f4f975bb6197c6d43d3",
+  "executable_sha256": "1156a99bce6631bb9a5d6ac7b63ffb95dbcc4d96222dbacf8a35780f311f4113",
+  "protected_input_roots": [
+    "crates",
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    ".cargo",
+    "stdlib",
+    "sysroot.toml",
+    "third_party",
+    "vendor",
+    "verification/runner",
+    "verification/profiles"
+  ],
+  "protected_inputs_changed": false,
+  "fixture_inventory": {
+    "all": 1304,
+    "positive": 729,
+    "all_recorded_bytes_match": true
+  },
+  "direct_failures": {
+    "selected": 19,
+    "native_groups": 19,
+    "passed": 0,
+    "failed": 19,
+    "names": [
+      "async_generator_aclose_before_start",
+      "async_generator_aclose_result",
+      "callable_struct_field",
+      "enum_value_property",
+      "enum_valued",
+      "join_set_add_task_join_all",
+      "join_set_bound_terminal_await",
+      "join_set_cancel_all_evidence",
+      "join_set_cancel_all_task_cancelled",
+      "join_set_spawn_blocking",
+      "join_set_spawn_cpu_join_all_ordered",
+      "network_http_tls_loopback_split",
+      "newtype_basic",
+      "process_scoped_parent_cancel",
+      "process_scoped_spawn_handle",
+      "task_context_propagation_basic",
+      "task_group_spawn_cpu",
+      "task_group_spawn_cpu_user_error",
+      "task_scope_spawn_blocking"
+    ],
+    "tracking_issue": "https://github.com/sifr-lang/sifr/issues/4344",
+    "technical_owner": "Emitted Rust/codegen workstream",
+    "implementation_assignee": "unassigned"
+  },
+  "controls": {
+    "stale_cached_pass_reproduced": true,
+    "cargo_detected_intentional_runtime_error": true,
+    "source_cwd_invalidates_preparation": true,
+    "scratch_cwd_keeps_preparation_fresh": true,
+    "rebuilt_executable_identical": true
+  },
+  "attempts": [
+    {
+      "id": "invalidation-baseline",
+      "seconds": 18.014132530000097,
+      "exit": 0,
+      "cause": "exit",
+      "stages": {
+        "compile_ms": 2923,
+        "plan_ms": 0,
+        "build_ms": 14902,
+        "build_sum_ms": 14901,
+        "run_ms": 1,
+        "cache_hits": 0,
+        "groups": 1
+      },
+      "aggregate": [
+        1,
+        0
+      ]
+    },
+    {
+      "id": "invalidation-unchanged",
+      "seconds": 3.0112480840002718,
+      "exit": 0,
+      "cause": "exit",
+      "stages": {
+        "compile_ms": 2807,
+        "plan_ms": 0,
+        "build_ms": 1,
+        "build_sum_ms": 0,
+        "run_ms": 1,
+        "cache_hits": 1,
+        "groups": 1
+      },
+      "aggregate": [
+        1,
+        0
+      ]
+    },
+    {
+      "id": "invalidation-edited-cached",
+      "seconds": 3.002980295999805,
+      "exit": 0,
+      "cause": "exit",
+      "stages": {
+        "compile_ms": 2814,
+        "plan_ms": 0,
+        "build_ms": 0,
+        "build_sum_ms": 0,
+        "run_ms": 1,
+        "cache_hits": 1,
+        "groups": 1
+      },
+      "aggregate": [
+        1,
+        0
+      ]
+    },
+    {
+      "id": "invalidation-edited-cargo-checked",
+      "seconds": 3.4034388260001833,
+      "exit": 101,
+      "cause": "exit",
+      "stages": {
+        "compile_ms": 2826,
+        "plan_ms": 0,
+        "build_ms": 287,
+        "build_sum_ms": 287,
+        "run_ms": 0,
+        "cache_hits": 0,
+        "groups": 1
+      },
+      "aggregate": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "direct-failures",
+      "seconds": 19.814149212000302,
+      "exit": 101,
+      "cause": "exit",
+      "stages": {
+        "compile_ms": 10279,
+        "plan_ms": 4,
+        "build_ms": 9232,
+        "build_sum_ms": 9224,
+        "run_ms": 0,
+        "cache_hits": 0,
+        "groups": 19
+      },
+      "aggregate": [
+        0,
+        19
+      ]
+    },
+    {
+      "id": "prepare-initial",
+      "seconds": 6.074695387999782,
+      "exit": 0,
+      "cause": "exit",
+      "stages": null,
+      "aggregate": null,
+      "e2e_fresh": true,
+      "rebuilt_targets": [],
+      "same_binary": true
+    },
+    {
+      "id": "prepare-noop",
+      "seconds": 4.238749095999992,
+      "exit": 0,
+      "cause": "exit",
+      "stages": null,
+      "aggregate": null,
+      "e2e_fresh": true,
+      "rebuilt_targets": [],
+      "same_binary": true
+    },
+    {
+      "id": "fixture-source-cwd",
+      "seconds": 0.2011231129999942,
+      "exit": 0,
+      "cause": "exit",
+      "stages": null,
+      "aggregate": null
+    },
+    {
+      "id": "prepare-after-source",
+      "seconds": 45.87252945199998,
+      "exit": 0,
+      "cause": "exit",
+      "stages": null,
+      "aggregate": null,
+      "e2e_fresh": false,
+      "rebuilt_targets": [
+        "e2e",
+        "sifr"
+      ],
+      "same_binary": true
+    },
+    {
+      "id": "fixture-scratch-cwd",
+      "seconds": 0.2014080889998695,
+      "exit": 0,
+      "cause": "exit",
+      "stages": null,
+      "aggregate": null
+    },
+    {
+      "id": "prepare-after-scratch",
+      "seconds": 4.439783435999743,
+      "exit": 0,
+      "cause": "exit",
+      "stages": null,
+      "aggregate": null,
+      "e2e_fresh": true,
+      "rebuilt_targets": [],
+      "same_binary": true
+    }
+  ],
+  "timing_kind": "controller wall time, including process monitoring overhead; raw GNU time records retained separately",
+  "execution_tools": {
+    "rust": "1.98.1",
+    "cargo": "1.98.1",
+    "uv": "0.12.10",
+    "measurement_orchestration_python": "3.14.4",
+    "pinned_verification_python": "3.14.7 found and version-verified; no verification Python suite executed"
+  },
+  "capacity": {
+    "minimum_disk_reserve_gib": 50,
+    "free_disk_gib_at_close": 55.57435607910156,
+    "no_concurrent_builds_at_entry": true,
+    "native_budget": "one outer worker, one Cargo job",
+    "compiler_preparation": "retained owned incremental target; no cold compiler build"
+  },
+  "evidence_bundle": "e2e-phase-e0-20261018-_0pu4sig",
+  "evidence_files": {
+    "invalidation-control.json": "0f66ad6909aa753631e56970af8064fc5de6f35335fa4cec6721e03d58885346",
+    "inventory.json": "c066f795d5517c94f8c59fdcdaaec5290eb619e974750a6487f453362fd19ef1",
+    "pinned-python.json": "e62c421a31c17641ac4ef8a28f79aba6240f4c6bd3b8fe1a2b654f0bea556758",
+    "results.jsonl": "90c919a2a1b8c340eb010e630c3818fea4b4d4af3a40c0955b842552e34f514b",
+    "scratch-control.json": "d4dbc8809e3ab25c909d5c1fc2bdefd4a272733b0e4ff0372a818b0c71947b70",
+    "status.json": "89e942a6523ef3fcb4fa839bb2ae3853fc91347253af58394bd4566291a20406"
+  },
+  "limits": [
+    "Not a full gate or a new compiler implementation qualification.",
+    "No whole-corpus rerun; all recorded fixture bytes compared, 19 direct failures executed individually.",
+    "Historical binary valid for these source-equivalent reproductions only; changed source requires its own build.",
+    "Future preparation in a different worktree or after compiler edits is not guaranteed warm.",
+    "No implementation merge or performance SLA claimed."
+  ]
+}

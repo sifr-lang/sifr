@@ -1,8 +1,8 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: planned; implementation not started
+status: active; E0 complete; implementation pending
 registered: 2026-10-18
-current_stage: measurement complete; bounded implementation entry pending
+current_stage: E0 entry verified; R0 instruction update next
 
 ## Objective and authority
 
@@ -235,7 +235,7 @@ historical logs, active leases, retained consumers or another owner's artifacts.
 
 ## Implementation milestones
 
-All items are pending. Each item must record owned paths, baseline and candidate
+E0 is complete; implementation items remain pending. Each item must record owned paths, baseline and candidate
 SHAs, named checks, evidence locations, review, PR and unresolved dependencies.
 Split a milestone into bounded implementation items when needed; do not implement
 all milestones in one unreviewable change.
@@ -259,6 +259,62 @@ for the primary cache fix.
   preparation is blocked, use the build-blocker strategy rather than a cold gate.
 - Acceptance: reproducible commands, current ownership, source/tool identity,
   selected inventory, blockers, and one concrete E1 implementation slice recorded.
+
+### E0 entry result — 2026-10-18
+
+E0 completed against upstream `6dd858aed266eb39deb74e11577f29ec3ca28507` in an owned
+worktree. [Portable E0 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e0.json)
+records outcomes, input identities and raw-evidence hashes. Evidence bundle:
+`e2e-phase-e0-20261018-_0pu4sig`; commands, stderr, Cargo fingerprints and
+resource samples are preserved outside the reviewed tree. Planning registration
+was merged in [PR #4343](https://github.com/sifr-lang/sifr/pull/4343).
+
+- Compiler, harness, dependency/toolchain, runner/profile and submodule-reference
+  inputs match the measured baseline. All 1,304 recorded fixture files match,
+  including all 729 positive fixtures. Current-main differences are documentation
+  and agent workflow files; no source change was hidden by the retained binary.
+- The retained source digest and executable hash match the original receipt.
+  The isolated measurement candidate still carries only its documented five
+  distribution prerequisites; these are not transferred into the worktree.
+- All 19 direct failures reproduced individually across 19 groups in
+  **19.81s**. No healthy sibling was selected in that run.
+  They are tracked in [issue #4344](https://github.com/sifr-lang/sifr/issues/4344) under the
+  emitted-Rust/codegen workstream; an implementation assignee is still required.
+- The disposable runtime-source control again returned a stale cached pass;
+  forced Cargo validation caught the intentional compilation error. Only the
+  copied runtime changed; the original source remained unchanged.
+- Initial/no-op preparation took **6.07s / 4.24s**, with fresh artifacts.
+  Source-directory fixture output caused a **45.87s** rebuild of `sifr` and
+  `e2e`, producing the identical executable. Scratch output left preparation
+  fresh at **4.44s**. All 11 diagnostic commands finished below the cap.
+- Capacity allowed these sequential controls with a 50 GiB reserve and no other
+  active builds. No cleanup or cold compiler build was necessary. The retained
+  target is usable for baseline diagnosis; a changed candidate still needs its
+  own qualifying preparation and execution.
+- Rust/Cargo 1.98.1 and uv 0.12.10 were verified. The disposable orchestration
+  script used system Python 3.14.4; pinned CPython 3.14.7 was separately located
+  and version-verified for subsequent verification commands. No Python validation
+  suite was run under the system interpreter.
+
+Implementation authority: this phase owns the bounded R0–R3/E1–E4 changes;
+coordinate any overlapping edits with the validation/resource plan's M2/M3.
+That parent plan retains broader selection, cloud and enforcement policy.
+No competing runner or policy is introduced by this entry record.
+
+Concrete next slices:
+
+1. **R0:** add a concise iteration rule to `AGENTS.md` and command guidance to
+   `verification/README.md`; documentation checks only, no changed gate defaults.
+2. **R1:** separate compiler preparation allocation from E2E per-group jobs in
+   existing profile configuration and `ProfileRunner`; preserve the immutable
+   preparation/execution configuration plan and add focused budget/override tests.
+3. **E1:** first replace the outer artifact shortcut with Cargo validation and
+   stable shared native dependency storage in the harness. Consume Cargo artifact
+   records, write inputs only when changed, and keep the real runtime-edit
+   negative control. Do not combine this with compiler defect repairs or crate splits.
+
+The confirmed compiler failures block a full-green E5 qualification, not the
+independent instruction/runner/cache work. This entry record qualifies E0 only.
 
 ### R0 — concise instructions for efficient iterations
 
@@ -543,8 +599,8 @@ If warranted, register a separate bounded item with before/after evidence.
 
 | Item | State | Candidate / PR | Validation / review | Next action |
 |---|---|---|---|---|
-| Planning | recorded and extended 2026-10-18 | none | documentation checks; local links and all 19 recorded failures reconciled | Implementation remains pending |
-| E0 | pending | none | historical evidence retained | Reconcile source/artifacts/ownership and reproduce minimal controls |
+| Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
+| E0 | complete 2026-10-18 | input base `6dd858aed` | Portable E0 receipt; 11 controls; no full-gate claim | R0 next; compiler failures tracked by #4344 |
 | R0 | pending | none | none | Concise agent and verification iteration guidance |
 | R1 | pending | none | none | Separate compiler-preparation and native-batch budgets |
 | E1 | pending | none | none | Cargo authority and shared native dependencies |
@@ -555,9 +611,9 @@ If warranted, register a separate bounded item with before/after evidence.
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
-First implementation session: read this file and linked authorities, inventory
-the current owned checkout and available retained artifacts, then execute E0 only.
-Record the exact R0/R1 and E1 slices and whether compiler preparation is available. Preserve
-the pre-existing dirty `third_party/ruff` worktree; it is not owned by this plan.
+Next implementation session: verify the E0 receipt still applies to current
+inputs, then execute R0 as the next bounded item. The concrete R1/E1 slices and
+usable preparation artifacts are recorded above. Preserve unrelated changes
+and artifacts in other worktrees; they are not owned by this plan.
 No product implementation, compiler defect repair, gate waiver or performance
 guarantee has been delivered by registering this phase.
