@@ -29,12 +29,6 @@ scripts/run_all_tests.sh --profile create-pr
 scripts/run_all_tests.sh --profile merge --emit-plan
 ```
 
-During focused compiler work, run an affected crate/test with `cargo test -p
-<crate> <test>`. The CLI unit-test command excluding the slow E2E pass suite is
-`cargo test -p sifr -- --skip test_e2e_pass`; its standalone E2E entrypoint is
-`verification/runner/e2e/run_e2e_pass.sh`. These commands supplement the applicable
-profile gate rather than replace it.
-
 `scripts/run_all_tests.sh` is a thin public facade over
 `uv run --project verification --locked python -m sifr_verify profiles run`.
 It fail-fasts when `uv` is missing or differs from the exact version so profile
@@ -53,6 +47,40 @@ uv run --project verification --locked python -m sifr_verify profiles compare-pl
 and Cargo availability, `uv` lock status, Cargo offline metadata resolution, and
 host metadata. Optional sanitizer tools are reported as pass or skip for broader
 lanes.
+
+## Development iterations
+
+Start with the smallest check affected by the edit. The public facade defaults
+to `merge`; choose a profile explicitly when preparing a candidate, rather than
+running the full gate after every local edit.
+
+| Change or checkpoint | Next command from the repository root |
+|---|---|
+| One compiler behavior | `cargo test --locked -p <crate> <test-filter>` |
+| CLI tests excluding the E2E pass suite | `cargo test --locked -p sifr -- --skip test_e2e_pass` |
+| Verification runner mechanics | Affected self-tests; the runner foundation suite is `uv run --project verification --locked python -m sifr_verify --self-test` |
+| One verification area/suite | `uv run --project verification --locked python -m sifr_verify areas run --area <area> --suite <suite>` |
+| Full E2E pass corpus | `verification/runner/e2e/run_e2e_pass.sh --profile merge` |
+| Implementation PR candidate | `scripts/run_all_tests.sh --profile create-pr` |
+| Final implementation merge candidate | `scripts/run_all_tests.sh --profile merge` |
+| Planning, prose or review records only | `git diff --check`; verify changed local links, scope and status; no compiler build or broad gate |
+
+Focused commands supplement the affected checks and acceptance gates in
+[AGENTS.md](../AGENTS.md#minimum-validation). A fixture subset is diagnostic
+coverage, not full E2E qualification. Release and live-integration contracts
+remain conditional on the requested work.
+
+Retain session-owned compiler and native-build targets between iterations; do
+not use routine `cargo clean` as a retry strategy. Keep target ownership and the
+compiler/native allocations explicit. Preparation and execution must use matching
+Cargo configurations and features, with Cargo checking freshness. A retained
+baseline executable can reproduce an old failure but cannot qualify new source.
+
+If preparation is slow or fails, preserve the command, input identity, stage,
+logs and outcome before retrying. Check capacity, lock contention, changed inputs
+and Cargo fingerprints; make an evidence-backed correction before repeating an
+unchanged attempt. Follow the active phase's diagnostic cap and ownership rules;
+a timeout or cancellation is incomplete evidence and never a gate pass.
 
 ## Layout
 
