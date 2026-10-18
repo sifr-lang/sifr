@@ -2,6 +2,7 @@
     clippy::print_stderr,
     reason = "explicit invocation-equivalence measurements"
 )]
+use super::e2e_entrypoints::read_dir_file_paths_sorted;
 use super::*;
 use sifr_driver::{CompileResultFull, CompilerContext, SingleFileCompilationSession};
 
@@ -86,6 +87,21 @@ fn test_session_repetition_concurrency_and_changed_metadata_inputs() {
         "earlier owner remains valid",
         &expected[0],
         &session.compile_with_metadata(sources[0]),
+    );
+    // A newly selected root must not reuse the earlier metadata owner, even if
+    // that root becomes unavailable between resolution and compilation.
+    let mut selected = context.sysroot().unwrap().clone();
+    selected.root = temporary.path().join("unavailable-selected-sysroot");
+    let changed_root = CompilerContext::with_sysroot(context.identity().clone(), selected);
+    let baseline = sifr_driver::compile_with_metadata(&changed_root, sources[0]);
+    let errors = match SingleFileCompilationSession::new(changed_root) {
+        Ok(_) => panic!("changed sysroot reused an earlier provider"),
+        Err(errors) => errors,
+    };
+    equivalent(
+        "changed sysroot",
+        &baseline,
+        &CompileResultFull::Errors { errors },
     );
     let refreshed = SingleFileCompilationSession::new(context.refreshed_toolchain()).unwrap();
     equivalent(
