@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E4 reviewed draft; R3 next; acceptance blocked
+current_stage: R3 stage reporting draft; acceptance blocked
 
 ## Objective and authority
 
@@ -975,3 +975,22 @@ On `b0a4dc7d1`, all 1,298 fixtures match the original API across generated Rust,
 Session/isolation/harness/execution controls, formatting, file-size and the additional named contracts are detailed individually in the receipt; failed attempts and externally owned failures remain visible. Six runtime-fail cases pass. The initial relocated dependency contract failed under inherited offline mode; its explicitly online retry is recorded separately. The driver preparation required 970.178s: 237 artifact units were fresh and 83 rebuilt; 18 observed feature/profile variants differed from the earlier E2E graph. Actual driver execution then passed five interop tests in 36.259s, nine Cargo-policy tests in 1.804s, and one frontend parity test in 2.605s. The first Cargo-policy filter selected zero tests and is explicitly incomplete; the corrected filter is separate.
 
 The final caller-only amendment reuses the same session in the complete emitted-safety scan. It takes 79.520s versus 304.669s, preserving exactly the 18 known compiler failures and zero forbidden-pattern findings in successfully emitted output. The driver preparation repeat took 4.001s with no rebuilt units. Its affected checks and delta review bind to their explicitly recorded candidates; earlier full-corpus and driver observations retain their original candidate identity. Source and test inputs were frozen during each validation attempt. Continue R3 observability, followed by E5 matched measurements. Required qualification remains blocked by #4347/#4344; Windows remains unmeasured.
+
+### R3 draft implementation — 2026-10-18
+
+Expose structured start/end spans for discovery, native-cache acquisition, source
+compilation, planning, native setup, cache preparation, original native batches,
+diagnostic isolation, runtime and reporting/retention. Retain unique fixture
+outcomes and every native attempt, including discarded failed original batches.
+Cargo artifact counts describe each attempt; shared dependency observations and
+parallel fixture durations are not additive wall time. Independent linker timing
+is explicitly unknown.
+
+The existing Python process owner emits command receipts and bounded progress
+heartbeats with the last observed compiler/lock/stage message. The unchanged
+standalone Cargo entrypoint gets a whole-shell elapsed receipt at one-second
+resolution; profile command receipts retain finer timing. No new execution
+wrapper or artifact selection authority is added. Missing terminal events remain
+incomplete, and child observations cannot authorize lane or command status.
+Required qualification remains blocked; focused parser/process/harness checks,
+plan comparison and scoped review follow.

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from .process_execution import Outcome, execute
+from .command_progress import CommandProgress
+import os
 import sys
 import json
 
@@ -23,16 +25,26 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Out
     # Prefix every child line, including runner-looking lines. The authoritative
     # events remain emitted solely by the enclosing profile runner.
     pending = {"stdout": "", "stderr": ""}
+    deadline = (env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400")
+    progress = CommandProgress(command, REPO_ROOT, os.environ if env is None else env, deadline)
     def emit(stream: str, data: bytes) -> None:
         pending[stream] += data.decode("utf-8", errors="replace")
         while "\n" in pending[stream]:
             line, pending[stream] = pending[stream].split("\n", 1)
+            progress.observe(line)
             sys.stdout.write(f"[child:{stream}] {json.dumps(line, ensure_ascii=True)}\n")
-    outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit,
-                      deadline_seconds=(env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
+            sys.stdout.flush()
+    try:
+        outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit, heartbeat=progress.heartbeat,
+                          deadline_seconds=deadline)
+    except BaseException as error:
+        progress.error(error)
+        raise
     for stream, text in pending.items():
         if text:
             sys.stdout.write(f"[child:{stream}] {json.dumps(text, ensure_ascii=True)}\n")
+    sys.stdout.flush()
+    progress.finish(outcome)
     if outcome.returncode != 0:
         error = CommandFailed(outcome.returncode, outcome.cause)
         error.outcome = outcome

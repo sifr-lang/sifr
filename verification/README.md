@@ -341,3 +341,27 @@ preparation filesystem errors stop further work. Performance-reference admission
 is unchanged. Structured `[sifr-preparation]` records appear separately in report
 JSON as `preparation_steps`; their times are part of `cargo_cache_setup`, not extra
 wall time to add to that aggregate. Child output cannot forge these results.
+
+### Reading E2E iteration timing
+
+`run_e2e_pass.sh` retains its Cargo test invocation and reports whole-shell time
+with one-second resolution. Profile execution additionally records precise
+`[sifr-command]` start/end events, exit cause and output truncation. Its progress
+heartbeat shows the active command and the last observed compiler, Cargo-lock
+or E2E-stage message with its age. Buffered native Cargo output cannot identify
+a currently active compiler/linker unit; missing output is not evidence of a hang.
+
+`[sifr-e2e-event]` spans separate harness setup, source compilation, native builds,
+diagnostic isolation and execution. The report's `traces.e2e_accounting` sums only
+non-overlapping direct suite stages and retains unattributed time. Whole command
+time also includes Cargo/compiler preparation, shell/profile startup and test
+process teardown outside the measured harness span. Nested process/native-attempt
+spans and per-case worker timings are already included in stage walls: do not add
+them again. Native Cargo counts include original failures and diagnostic retries;
+the same shared dependency may appear in several attempts. Linking remains part
+of native-build time unless independently measured.
+
+Spans without a valid start/end pair are incomplete. Child and nested command
+observations are diagnostic data; the profile runner remains the authority for
+functional and performance-budget results. A test failure, blocked prerequisite,
+safety deadline, cancellation and performance-budget failure remain distinct.
