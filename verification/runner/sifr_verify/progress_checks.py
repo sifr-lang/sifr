@@ -143,7 +143,7 @@ except CommandFailed as error:
         self.assertIsNone(command_accounting(report)[0]["outside_harness_ms"])
 
     def test_malformed_or_orphan_spans_invalidate_stage_and_command_accounting(self):
-        for broken in ("schema", "json", "orphan_suite"):
+        for broken in ("schema", "json", "orphan_suite", "missing_parent"):
             with self.subTest(broken=broken):
                 traces=Traces()
                 self.span(traces,"root","suite",None,0,100000)
@@ -156,13 +156,15 @@ except CommandFailed as error:
                     traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"stage","scope":"source_compile","parent":"root","event":"end","clock_us":50000,"elapsed_us":50000,"status":"pass"}))
                 elif broken == "json":
                     traces.add('[sifr-e2e-event] broken-json')
+                elif broken == "missing_parent":
+                    traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"stage","scope":"source_compile","parent":"absent","event":"end","clock_us":50000,"elapsed_us":50000,"status":"pass"}))
                 else:
                     traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"orphan","scope":"suite","event":"end","clock_us":50000,"elapsed_us":50000,"status":"pass"}))
                 report=traces.report()
-                if broken != "orphan_suite":
+                if broken in ("schema", "json"):
                     self.assertFalse(report["e2e_accounting"][0]["accounting_valid"])
                     self.assertIsNone(report["e2e_accounting"][0]["unattributed_ms"])
-                else:
+                elif broken == "orphan_suite":
                     self.assertFalse(report["e2e_accounting"][1]["accounting_valid"])
                 self.assertFalse(report["command_e2e_accounting"][0]["accounting_valid"])
                 self.assertIsNone(report["command_e2e_accounting"][0]["outside_harness_ms"])

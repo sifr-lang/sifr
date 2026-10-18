@@ -119,6 +119,9 @@ def command_accounting(report):
     # An orphan root has no reliable wall-clock window. Conservatively invalidate
     # command attribution rather than silently charging it to preparation.
     unknown_root = any(not nonnegative((row["start"] or {}).get("unix_ms")) for row in roots)
+    identities = {row["id"] for row in report["e2e_spans"]}
+    unknown_parent = any((row[event] or {}).get("parent") not in identities | {None}
+                         for row in report["e2e_spans"] for event in ("start", "end"))
     malformed = any(error["kind"] == "e2e_spans" for error in report.get("parse_errors", []))
     invalid_suites = {row["id"] for row in report.get("e2e_accounting", []) if not row["accounting_valid"]}
     for command in report["commands"]:
@@ -128,10 +131,10 @@ def command_accounting(report):
             continue
         selected = [row for row in roots if nonnegative((row["start"] or {}).get("unix_ms"))
                     and begin <= row["start"]["unix_ms"] <= finish]
-        if not selected and not (unknown_root or malformed):
+        if not selected and not (unknown_root or unknown_parent or malformed):
             continue
         selected.sort(key=lambda row: row["start"]["unix_ms"])
-        valid = command["status"] != "incomplete" and not unknown_root and not malformed
+        valid = command["status"] != "incomplete" and not unknown_root and not unknown_parent and not malformed
         total, previous_end = 0, begin
         for row in selected:
             if not row["valid_terminal_pair"] or row["status"] == "incomplete" or row["id"] in invalid_suites:
