@@ -36,6 +36,7 @@ pub(super) fn blocked(group: BatchGroup, config: &RunnerConfig, reason: &str) ->
         build_log_path: None,
         build_error: Some(format!("native work blocked: {reason}")),
         source_failure: false,
+        infrastructure_failure: true,
         execution_deadline: None,
         build_ms: 0,
         cache_hit: false,

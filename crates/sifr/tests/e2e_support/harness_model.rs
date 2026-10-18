@@ -137,6 +137,7 @@ impl ToolchainInfo {
 #[derive(Clone, Debug)]
 pub(crate) struct GroupBuildOutcome {
     pub(crate) source_failure: bool,
+    pub(crate) infrastructure_failure: bool,
     pub(crate) execution_deadline: Option<Instant>,
     pub(crate) group_root: PathBuf,
     pub(crate) group: BatchGroup,

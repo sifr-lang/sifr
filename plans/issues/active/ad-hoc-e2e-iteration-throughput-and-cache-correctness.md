@@ -916,3 +916,10 @@ Initial controls caught the old rendered-diagnostics output mode; preserve both
 failed attempts while correcting the structured Cargo invocation. Final focused
 checks, the full 729-fixture diagnostic, and scoped review follow. Qualification
 remains blocked by #4347 and #4344.
+
+E3 review remediation: distinguish known infrastructure stops from unclassified
+ordinary Cargo failures. Uncoded generated-source parse errors no longer block
+unrelated original batches; conservative individual isolation remains disabled
+for mixed/unknown failures. Add real parse-error/healthy-next-group coverage and
+multiple failed-group cap accounting. Preserve the initial NOT SATISFIED review
+and its source candidate; final affected checks and remediation review follow.

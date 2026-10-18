@@ -30,6 +30,7 @@ pub(crate) fn build_batch_group_bounded(
     deadline: std::time::Duration,
 ) -> GroupBuildOutcome {
     let mut source_failure = false;
+    let mut infrastructure_failure = true;
     let started = Instant::now();
     let group_root = config.cache.root.join("groups").join(&group.id);
     let mut build_error = None;
@@ -77,6 +78,11 @@ pub(crate) fn build_batch_group_bounded(
             let build_capture = run_capture_bounded(build_command, deadline);
             source_failure =
                 batch_isolation::is_source_failure(&build_capture, &group.package_name);
+            // Normal Cargo compile errors can be unclassified source/dependency
+            // failures. Only an interrupted/failed launch or non-Cargo exit is a
+            // known infrastructure stop; unclassified diagnostics do not stop
+            // unrelated original groups.
+            infrastructure_failure = !matches!(build_capture.exit_code, Some(0 | 101));
             let selected = native_cache::select_artifact(
                 build_capture.status_ok,
                 &build_capture.stdout,
@@ -137,6 +143,7 @@ pub(crate) fn build_batch_group_bounded(
                     }
                 }
             } else {
+                infrastructure_failure |= build_capture.status_ok;
                 let _ =
                     native_cache::write_changed(&group_root.join("preserve"), b"failed build\n");
                 let log_path = group_root.join(format!(
@@ -161,6 +168,8 @@ pub(crate) fn build_batch_group_bounded(
                 let _ = std::fmt::Write::write_str(&mut diagnostic, "Generated Rust:\n");
                 let _ = std::fmt::Write::write_str(&mut diagnostic, &group.generated_main);
                 if let Err(err) = std::fs::write(&log_path, diagnostic) {
+                    infrastructure_failure = true;
+                    source_failure = false;
                     eprintln!("[sifr-e2e-cache] failed to write build log: {err}");
                 }
                 build_error = Some(format!(
@@ -174,6 +183,7 @@ pub(crate) fn build_batch_group_bounded(
 
     GroupBuildOutcome {
         source_failure,
+        infrastructure_failure,
         execution_deadline: None,
         group_root,
         group,
@@ -211,7 +221,7 @@ pub(crate) fn build_batch_suite(
                 &shared_manifest,
             )
         };
-        stopped |= outcome.build_error.is_some() && !outcome.source_failure;
+        stopped |= outcome.build_error.is_some() && outcome.infrastructure_failure;
         outcomes.push(outcome);
     }
 

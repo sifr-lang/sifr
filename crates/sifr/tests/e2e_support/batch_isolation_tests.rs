@@ -142,6 +142,44 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
         ))
         .is_err()
     );
+    // An uncoded parse error suppresses isolation, not unrelated original groups.
+    let mut parse = build_group_sources(vec![case("parse", "fn main() {}")]).unwrap();
+    parse.generated_main.push_str("\nfn malformed(\n");
+    let healthy = build_group_sources(vec![case("after_parse", "fn main() {}")]).unwrap();
+    let (mixed, _) =
+        build_batch_suite(&[parse, healthy], &config, &toolchain, "control", &manifest);
+    assert!(mixed[0].build_error.is_some());
+    assert!(!mixed[0].source_failure && !mixed[0].infrastructure_failure);
+    assert!(
+        mixed[1].artifact_path.is_some(),
+        "{:?}",
+        mixed[1].build_error
+    );
+    assert!(run_batch_outcomes(&mixed[1])[0].status.is_ok());
+    // Multiple source groups exhaust one shared budget; no member disappears.
+    let mut first = batch_isolation::blocked(group.clone(), &config, "injected source failure");
+    first.source_failure = true;
+    first.infrastructure_failure = false;
+    let mut second = first.clone();
+    second.group.id.push_str("-second");
+    for member in &mut second.group.cases {
+        member.fixture.name.push_str("_second");
+    }
+    let (capped, retained) = batch_isolation::isolate_failed_batches(
+        vec![first, second],
+        &config,
+        &toolchain,
+        "control",
+        &manifest,
+        Duration::ZERO,
+    );
+    assert_eq!(retained.len(), 2);
+    assert_eq!(capped.len(), 4);
+    assert!(
+        capped
+            .iter()
+            .all(|row| row.artifact_path.is_none() && row.build_ms == 0)
+    );
     let unavailable = batch_isolation::blocked(group, &config, "disk unavailable");
     let (attempts, _) = batch_isolation::isolate_failed_batches(
         vec![unavailable],
