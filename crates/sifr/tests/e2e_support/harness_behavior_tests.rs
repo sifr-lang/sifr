@@ -514,77 +514,6 @@ pub(crate) fn sample_cache_root(label: &str) -> PathBuf {
 }
 
 #[test]
-pub(crate) fn test_cache_entry_invalidation_rules() {
-    let case = FixtureCase {
-        name: "fixture-cache-a".to_string(),
-        path: PathBuf::from("tests/e2e/pass/fixture-cache-a.sifr"),
-        source: "print('x')".to_string(),
-        source_hash: deterministic_hash("cache-fixture-a"),
-        _expected_stderr: Vec::new(),
-    };
-    let compiled = compiled_case_for_test(case.clone(), "fn main() {}", HashSet::new());
-    let group = build_group_sources(vec![compiled]).expect("cache sample group");
-    let toolchain = toolchain_info();
-    let env_signature = cache_env_signature();
-
-    let valid_entry = sample_cache_entry(&group, &toolchain, &env_signature);
-    let cache_key = cache_key_for_group(&group, &toolchain, &env_signature);
-    assert!(cache_entry_valid(
-        &valid_entry,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let mut invalid_schema = valid_entry.clone();
-    invalid_schema.schema_version = E2E_CACHE_SCHEMA_VERSION + 1;
-    assert!(!cache_entry_valid(
-        &invalid_schema,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let mut invalid_fixture = valid_entry.clone();
-    invalid_fixture
-        .fixture_sources
-        .iter_mut()
-        .for_each(|item| item.hash.push_str("-changed"));
-    assert!(!cache_entry_valid(
-        &invalid_fixture,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let mut invalid_env = valid_entry.clone();
-    invalid_env.env_signature = "different-env".to_string();
-    assert!(!cache_entry_valid(
-        &invalid_env,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let invalid_path = env::temp_dir()
-        .join("sifr-e2e-missing-artifact")
-        .join("no-file");
-    let mut invalid_artifact = valid_entry.clone();
-    invalid_artifact.artifact_path = invalid_path.to_string_lossy().to_string();
-    assert!(!cache_entry_valid(
-        &invalid_artifact,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-}
-
-#[test]
 pub(crate) fn test_prune_cache_manifest_removes_expired_entries_and_orphan_groups() {
     let root = sample_cache_root("prune-expired");
     let groups_root = cache_groups_root(&root);
@@ -598,6 +527,7 @@ pub(crate) fn test_prune_cache_manifest_removes_expired_entries_and_orphan_group
     for group in [stale_group, live_group, orphan_group] {
         let group_root = cache_group_path(&root, group);
         std::fs::create_dir_all(group_root.join("target")).expect("group root");
+        std::fs::write(group_root.join("completed"), b"completed").unwrap();
     }
 
     let now_unix_secs = 20_000;
@@ -763,4 +693,39 @@ pub(crate) fn test_prune_cache_manifest_keeps_shared_live_group_for_fresh_entry(
     assert!(cache_group_path(&root, shared_group).is_dir());
 
     let _ = std::fs::remove_dir_all(root);
+}
+
+#[test]
+fn test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies() {
+    let root = sample_cache_root("retention");
+    for name in ["failed", "interrupted", "unmarked", "completed"] {
+        let group = cache_group_path(&root, name);
+        std::fs::create_dir_all(&group).unwrap();
+        if name != "unmarked" {
+            std::fs::write(group.join("completed"), b"done").unwrap();
+        }
+        if name == "failed" {
+            std::fs::write(group.join("preserve"), b"failure").unwrap();
+        }
+        if name == "interrupted" {
+            std::fs::write(group.join("pending"), b"pending").unwrap();
+        }
+    }
+    let dependency = root.join("native-target/debug/deps/retained");
+    std::fs::create_dir_all(dependency.parent().unwrap()).unwrap();
+    std::fs::write(&dependency, b"native dependency").unwrap();
+    prune_cache_manifest(
+        &root,
+        CacheManifest {
+            schema_version: E2E_CACHE_SCHEMA_VERSION,
+            entries: BTreeMap::new(),
+        },
+        20000,
+    );
+    for name in ["failed", "interrupted", "unmarked"] {
+        assert!(cache_group_path(&root, name).is_dir());
+    }
+    assert!(!cache_group_path(&root, "completed").exists());
+    assert!(dependency.is_file());
+    std::fs::remove_dir_all(root).unwrap();
 }

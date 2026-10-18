@@ -504,7 +504,11 @@ pub(crate) fn prune_cache_manifest(
                     continue;
                 };
 
-                if live_group_ids.contains(group_id) {
+                if live_group_ids.contains(group_id)
+                    || !path.join("completed").is_file()
+                    || path.join("pending").exists()
+                    || path.join("preserve").exists()
+                {
                     continue;
                 }
 
@@ -572,47 +576,4 @@ pub(crate) fn cache_key_for_group(
         fixture_signature,
         env_signature,
     ))
-}
-
-pub(crate) fn cache_entry_valid(
-    entry: &CacheEntry,
-    group: &BatchGroup,
-    cache_key: &str,
-    toolchain: &ToolchainInfo,
-    env_signature: &str,
-) -> bool {
-    if entry.schema_version != E2E_CACHE_SCHEMA_VERSION {
-        return false;
-    }
-    if entry.cache_key != cache_key || entry.group_id != group.id {
-        return false;
-    }
-    if entry.group_fingerprint != group.fingerprint.signature()
-        || entry.group_rust_hash != group.generated_rust_hash
-    {
-        return false;
-    }
-    if entry.compiler_signature != toolchain.signature()
-        || entry.rustc_v != toolchain.rustc_v
-        || entry.rustc_vv != toolchain.rustc_vv
-        || entry.cargo_v != toolchain.cargo_v
-        || entry.target != toolchain.target
-        || entry.os != toolchain.os
-        || entry.arch != toolchain.arch
-        || entry.env_signature != env_signature
-    {
-        return false;
-    }
-
-    if group.cases.len() != entry.fixture_sources.len() {
-        return false;
-    }
-
-    for (case, saved) in group.cases.iter().zip(entry.fixture_sources.iter()) {
-        if case.fixture.name != saved.fixture || case.fixture.source_hash != saved.hash {
-            return false;
-        }
-    }
-
-    Path::new(&entry.artifact_path).exists()
 }

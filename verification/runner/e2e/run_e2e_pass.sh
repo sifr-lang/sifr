@@ -26,13 +26,13 @@ Profiles:
 Options:
   --profile <create-pr|merge|nightly|release> Local execution profile (default: merge)
   --sifr-jobs <n>              Parallel Sifr compile workers
-  --rust-jobs <n>              Parallel group build workers
+  --rust-jobs <n>              Requested group workers (native builds currently serialize)
   --run-jobs <n>               Parallel group run workers
   --cargo-build-jobs <n>       Cargo jobs per generated group build
   --max-group-fixtures <n>     Maximum fixtures per generated Rust batch group
   --cache-dir <path>           e2e cache directory (default: target/sifr_e2e_cache/<profile>)
   --fixture-manifest <path>    JSON manifest listing the selected e2e pass fixtures
-  --no-cache                   Disable the e2e cache for this run
+  --no-cache                   Disable success-record tracking; Cargo still validates and reuses native dependencies
   --help                       Show this help
 EOF
 }

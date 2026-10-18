@@ -27,35 +27,18 @@ pub(crate) fn build_batch_group(
     let mut artifact = None;
     let mut cache_hit = false;
 
-    if let Err(err) = std::fs::create_dir_all(group_root.join("src")) {
+    if let Err(err) = sifr_cache_storage::directory(&group_root.join("src")) {
         build_error = Some(format!("failed to create batch crate dir: {err}"));
     }
 
     let cache_key = cache_key_for_group(&group, toolchain, env_signature);
-    let cached_entry = if config.cache.enabled {
-        manifest
-            .lock()
-            .ok()
-            .and_then(|stored| stored.entries.get(&cache_key).cloned())
-            .filter(|entry| cache_entry_valid(entry, &group, &cache_key, toolchain, env_signature))
-    } else {
-        None
-    };
-
-    if let Some(entry) = cached_entry {
-        artifact = Some(PathBuf::from(entry.artifact_path));
-        build_log = entry.build_log_path.map(PathBuf::from);
-        cache_hit = true;
-        return GroupBuildOutcome {
-            group,
-            artifact_path: artifact,
-            build_log_path: build_log,
-            build_error: None,
-            build_ms: started.elapsed().as_millis(),
-            cache_hit,
-        };
+    if build_error.is_none() {
+        if let Err(error) =
+            native_cache::write_changed(&group_root.join("pending"), b"build/run in progress\n")
+        {
+            build_error = Some(format!("cannot mark pending group: {error}"));
+        }
     }
-
     if build_error.is_none() {
         let cargo_toml = sifr_driver::generate_dependency_cargo_toml(
             &group.package_name,
@@ -64,9 +47,11 @@ pub(crate) fn build_batch_group(
         let source_path = group_root.join("src").join("main.rs");
         let cargo_toml_path = group_root.join("Cargo.toml");
 
-        if let Err(err) = std::fs::write(&cargo_toml_path, cargo_toml) {
+        if let Err(err) = native_cache::write_changed(&cargo_toml_path, cargo_toml.as_bytes()) {
             build_error = Some(format!("failed to write Cargo.toml: {err}"));
-        } else if let Err(err) = std::fs::write(&source_path, &group.generated_main) {
+        } else if let Err(err) =
+            native_cache::write_changed(&source_path, group.generated_main.as_bytes())
+        {
             build_error = Some(format!("failed to write main.rs: {err}"));
         } else {
             let mut build_command = Command::new("cargo");
@@ -74,17 +59,22 @@ pub(crate) fn build_batch_group(
                 .args(sifr_driver::sysroot_cargo_config_args(
                     &group.dependency_plan,
                 ))
-                .args(["build", "--quiet", "-j"])
+                .args(["build", "--message-format=json-render-diagnostics", "-j"])
                 .arg(config.cargo_build_jobs.to_string())
                 .current_dir(&group_root);
-            // Batch crates are cached by their own `target/` artifact paths.
-            // An inherited outer CARGO_TARGET_DIR moves binaries away from the
-            // recorded cache location and makes the run phase miss them.
             application_profile().configure(&mut build_command);
-            build_command.env_remove("CARGO_TARGET_DIR");
+            build_command.env("CARGO_TARGET_DIR", config.cache.root.join("native-target"));
             let build_capture = run_capture(build_command);
-            if build_capture.status_ok {
-                artifact = Some(build_group_binary_path(&group_root, &group.package_name));
+            let selected = native_cache::select_artifact(
+                build_capture.status_ok,
+                &build_capture.stdout,
+                &group_root,
+                &config.cache.root.join("native-target"),
+                &group.package_name,
+            );
+            if let Ok(selected) = selected.as_ref() {
+                artifact = Some(selected.path.clone());
+                cache_hit = selected.fresh;
                 if let Some(path) = &artifact {
                     if config.cache.enabled {
                         let built_at_unix_secs = SystemTime::now()
@@ -125,7 +115,15 @@ pub(crate) fn build_batch_group(
                     }
                 }
             } else {
-                let log_path = group_root.join("build.log");
+                let _ =
+                    native_cache::write_changed(&group_root.join("preserve"), b"failed build\n");
+                let log_path = group_root.join(format!(
+                    "build-{}.log",
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_nanos()
+                ));
                 let mut diagnostic = String::new();
                 let _ = std::fmt::Write::write_str(
                     &mut diagnostic,
@@ -134,7 +132,7 @@ pub(crate) fn build_batch_group(
                         group.id,
                         group.fingerprint.hash(),
                         build_capture.stdout,
-                        build_capture.stderr
+                        format!("{}\n{}", build_capture.stderr, selected.unwrap_err())
                     ),
                 );
                 let _ = std::fmt::Write::write_str(&mut diagnostic, "Generated Rust:\n");
@@ -171,7 +169,9 @@ pub(crate) fn build_batch_suite(
     let cache_root = manifest.entries.len();
     let _ = cache_root;
     let shared_manifest = Arc::new(Mutex::new(manifest.clone()));
-    let outcomes = run_in_parallel(groups, config.rust_jobs, |group| {
+    // A shared target has one mutable publication namespace. Keep Cargo serial;
+    // the explicit inner job budget controls dependency compilation parallelism.
+    let outcomes = run_in_parallel(groups, 1, |group| {
         build_batch_group(
             group.clone(),
             config,
@@ -511,6 +511,27 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         );
     }
 
+    let lease = match native_cache::NativeCache::acquire(&config.cache.root) {
+        Ok(lease) => lease,
+        Err(error) => {
+            return PassReport {
+                cases: fixtures
+                    .iter()
+                    .map(|fixture| FixtureExecution {
+                        name: fixture.name.clone(),
+                        status: Err(format!("native cache unavailable: {error}")),
+                    })
+                    .collect(),
+            };
+        }
+    };
+    let mut owned_config = config.clone();
+    owned_config.cache.root = lease.root.clone();
+    let config = &owned_config;
+    eprintln!(
+        "[sifr-e2e] native workers: requested={} actual=1 cargo_jobs={}",
+        config.rust_jobs, config.cargo_build_jobs
+    );
     let compile_started = Instant::now();
     let compiled_results = compile_suite_parallel(&fixtures, config.sifr_jobs);
     let compile_ms = compile_started.elapsed().as_millis();
@@ -647,6 +668,23 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         summarize_groups(&top_run)
     );
 
+    // The lease spans consumers too. Failed and interrupted evidence is never
+    // retired by TTL pruning; dependencies live outside the group directory.
+    for outcome in &build_outcomes {
+        let root = config.cache.root.join("groups").join(&outcome.group.id);
+        let succeeded = outcome.build_error.is_none()
+            && outcome.group.cases.iter().all(|case| {
+                all_cases
+                    .iter()
+                    .any(|result| result.name == case.fixture.name && result.status.is_ok())
+            });
+        if succeeded {
+            let _ = std::fs::remove_file(root.join("pending"));
+            let _ = native_cache::write_changed(&root.join("completed"), b"completed\n");
+        } else {
+            let _ = native_cache::write_changed(&root.join("preserve"), b"failed build/run\n");
+        }
+    }
     all_cases.sort_by(|left, right| left.name.cmp(&right.name));
     PassReport { cases: all_cases }
 }
