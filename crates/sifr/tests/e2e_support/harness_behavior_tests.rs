@@ -734,6 +734,16 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
         &manifest,
     );
     assert!(first[0].build_error.is_none(), "{:?}", first[0].build_error);
+    // Keep retirement validation tied to the real production vendor arguments.
+    assert!(
+        !native_cache::retirement_commands(
+            &first[0].group_root,
+            &config.cache.root.join("native-target"),
+            &first[0].group.package_name,
+        )
+        .unwrap()
+        .is_empty()
+    );
     let (fresh, _) = build_batch_suite(
         &[group.clone()],
         &config,
@@ -772,7 +782,15 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     assert!(invalid[0].build_error.is_some());
     assert_eq!(std::fs::read(manifest_path).unwrap(), sentinel);
     assert!(old_group.join("completed").is_file());
-    assert!(config.cache.root.join("native-target/debug/deps").is_dir());
+    assert!(
+        config
+            .cache
+            .root
+            .join("native-target")
+            .join(application_directory())
+            .join("deps")
+            .is_dir()
+    );
 }
 
 #[test]
