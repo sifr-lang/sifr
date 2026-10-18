@@ -49,7 +49,13 @@ def linux_capacity(proc: Path = Path('/proc'), cgroup: Path = Path('/sys/fs/cgro
         if limit_file.exists():
             limit = limit_file.read_text().strip()
             if limit != 'max':
-                used = int((directory / 'memory.current').read_text())
+                current = int((directory / 'memory.current').read_text())
+                stats = dict(line.split() for line in (directory / 'memory.stat').read_text().splitlines())
+                # Warm Cargo cache is reclaimable, not committed process memory.
+                # Keep dirty/writeback pages charged until their I/O completes.
+                reclaimable = max(0, int(stats['inactive_file'])
+                                  - int(stats['file_dirty']) - int(stats['file_writeback']))
+                used = max(0, current - reclaimable)
                 memory = min(memory, max(0, int(limit) - used))
         if directory == cgroup:
             break

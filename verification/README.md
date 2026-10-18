@@ -101,7 +101,8 @@ request is bounded first, then the outer group count.
 Profiles reserve one CPU where more than one is available and 2 GiB of memory,
 and budget 2 GiB per build job. These are conservative admission settings, not a
 measured upper bound on arbitrary compiler workloads or a live resource scheduler.
-Linux admission includes affinity and cgroup v2 ancestor quotas/headroom;
+Linux admission includes affinity and cgroup v2 ancestor quotas/headroom,
+crediting inactive file cache while keeping dirty/writeback pages charged;
 macOS uses available free/inactive pages. Capacity is sampled at profile entry;
 shared-host reservations and changing pressure remain the parent resource-plan's
 responsibility. Insufficient memory for one job plus reserve fails explicitly.

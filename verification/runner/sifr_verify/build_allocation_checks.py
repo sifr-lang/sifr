@@ -139,6 +139,8 @@ class BuildAllocationTests(unittest.TestCase):
             (cg / 'parent/cpu.max').write_text('250000 100000')
             (cg / 'parent/memory.max').write_text(str(8 * GIB))
             (cg / 'parent/memory.current').write_text(str(3 * GIB))
+            stats = cg / 'parent/memory.stat'
+            stats.write_text('inactive_file 0\nfile_dirty 0\nfile_writeback 0\n')
             (cg / 'parent/child/cpu.max').write_text('max 100000')
             (cg / 'parent/child/memory.max').write_text('max')
             with patch('os.sched_getaffinity', return_value=set(range(8)), create=True):
@@ -148,6 +150,28 @@ class BuildAllocationTests(unittest.TestCase):
             (cg / 'parent/memory.current').write_text(str(9 * GIB))
             with patch('os.sched_getaffinity', return_value={0}, create=True):
                 self.assertEqual(linux_capacity(proc, cg).available_memory_bytes, 0)
+            # A full ancestor with clean inactive file cache still has headroom.
+            (cg / 'parent/memory.current').write_text(str(8 * GIB))
+            stats.write_text(f'inactive_file {6 * GIB}\nfile_dirty 0\nfile_writeback 0\n')
+            (cg / 'parent/cpu.max').write_text('max 100000')
+            with patch('os.sched_getaffinity', return_value=set(range(8)), create=True):
+                capacity = linux_capacity(proc, cg)
+                self.assertEqual(capacity.available_memory_bytes, 6 * GIB)
+                self.assertEqual(allocate(load_profile('merge'), {}, {}, capacity).compiler_jobs, 2)
+                # Dirty or writeback cache must not inflate immediate headroom.
+                stats.write_text(f'inactive_file {6 * GIB}\nfile_dirty {GIB}\nfile_writeback {GIB}\n')
+                self.assertEqual(linux_capacity(proc, cg).available_memory_bytes, 4 * GIB)
+                stats.write_text(f'inactive_file {GIB}\nfile_dirty {GIB}\nfile_writeback {GIB}\n')
+                self.assertEqual(linux_capacity(proc, cg).available_memory_bytes, 0)
+                # Child and host availability remain upper bounds.
+                stats.write_text(f'inactive_file {20 * GIB}\nfile_dirty 0\nfile_writeback 0\n')
+                self.assertEqual(linux_capacity(proc, cg).available_memory_bytes, 8 * GIB)
+                (cg / 'parent/child/memory.max').write_text(str(4 * GIB))
+                (cg / 'parent/child/memory.current').write_text(str(2 * GIB))
+                (cg / 'parent/child/memory.stat').write_text('inactive_file 0\nfile_dirty 0\nfile_writeback 0\n')
+                self.assertEqual(linux_capacity(proc, cg).available_memory_bytes, 2 * GIB)
+                (proc / 'meminfo').write_text(f'MemAvailable: {1024 ** 2} kB\n')
+                self.assertEqual(linux_capacity(proc, cg).available_memory_bytes, GIB)
 
 
 def policy_checks() -> None:
