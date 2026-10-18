@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: R3 stage reporting draft; acceptance blocked
+current_stage: R3 reviewed draft; E5 measurements next; acceptance blocked
 
 ## Objective and authority
 
@@ -885,7 +885,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | R2 | reviewed draft; focused validation complete; acceptance pending | [#4351](https://github.com/sifr-lang/sifr/pull/4351) / `b5be3430b` | Self-tests 56.704s; all five plans unchanged; review SATISFIED | E3 next; qualification still blocked |
 | E3 | reviewed draft; focused validation complete; acceptance pending | [#4352](https://github.com/sifr-lang/sifr/pull/4352) / `9472dd478` | 710 pass / same 19 known failures; 79 healthy outcomes recovered; scoped review SATISFIED | E4 next; qualification still blocked |
 | E4 | reviewed draft; focused evidence recorded; acceptance pending | [#4353](https://github.com/sifr-lang/sifr/pull/4353) / `a08c29245` | Full 1,298-fixture equivalence; 729 run-pass outcomes; same 19 known failures | R3 next; qualification still blocked |
-| R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
+| R3 | reviewed draft; focused evidence recorded; acceptance pending | [#4354](https://github.com/sifr-lang/sifr/pull/4354) / `24d849603` | 729-fixture execution, stage reconciliation, nine progress controls; scoped review SATISFIED | E5 next; qualification blocked |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
 R1/E1/E2 source review and focused validation are recorded; acceptance remains
@@ -994,3 +994,28 @@ wrapper or artifact selection authority is added. Missing terminal events remain
 incomplete, and child observations cannot authorize lane or command status.
 Required qualification remains blocked; focused parser/process/harness checks,
 plan comparison and scoped review follow.
+
+### R3 completed focused evidence — 2026-10-18
+
+The [R3 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-r3.json)
+binds the exact implementation and validation candidates. The actual full canonical
+command took **102.794s**, selected all 729 fixtures and returned 710 passes plus
+the same 19 known compiler failures. All 729 source and 710 runtime case observations
+were retained, together with 193 native attempts (two failed); no output truncation
+or parse errors occurred. Harness wall time was 97.466s, direct stage time 97.465s,
+and unattributed harness time 0.865ms. The outer command recorded 5.217s outside
+the harness; this mixes preparation, launch and teardown and is not pure compilation.
+
+All 38 focused harness controls passed. Runner self-tests passed in 58.301s;
+formatting, size, shell syntax and profile checks passed, and all five emitted
+plans are unchanged. The scoped review found malformed stage records could be
+omitted from accounting. The correction binds children through either endpoint,
+invalidates attribution on malformed E2E events and retains orphan suites. All
+nine progress controls pass, and reparsing the original full log still
+reconciles. Scoped remediation review is SATISFIED. This Python-only correction
+retains the earlier actual Rust execution identity; E5 measures the final command.
+
+Missing wall-time budget data is now unknown, not a default pass. Nested diagnostic
+metrics remain observations without gate authority. Existing output limits and
+unknown independent linker timing are explicit follow-ups. Required qualification
+remains blocked by #4344/#4347; continue matched E5 measurements without merging.
