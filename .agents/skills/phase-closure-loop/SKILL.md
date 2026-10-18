@@ -14,7 +14,6 @@ Treat the phase document as the source of truth.
 - Work on one unfinished item or closure task.
 - Keep all changes inside that item's scope.
 - Do not modify another owner's dependency or worktree.
-- Stop after the item is merged, externally blocked, or needs new scope.
 - Start a new session for the next item.
 
 ## Execute the Item
@@ -37,7 +36,6 @@ Do not repeat a failed performance gate on an unchanged candidate without new ev
 - Correct existing failures only when they are inside the item scope.
 - Record out-of-scope failures in their owning issue.
 - Do not absorb unrelated failures into the current item.
-- If an external failure blocks the item, record it and stop.
 
 ## Review
 
@@ -79,15 +77,9 @@ Apply valid blocking findings in one batch.
 
 Repeat review only when code, tests, fixtures, workflows, schemas, or lockfiles change.
 
-If a second review finds a new mechanism-level defect, stop and rescope the item.
-
-If the same finding returns twice, stop and request adjudication.
-
 A timeout, API error, empty response, or incomplete response is not a review pass.
 
 After the initial request fails, retry up to two times with new temporary directories.
-
-If all three requests fail, record the blocker and stop.
 
 Do not create numbered review artifacts for failed requests.
 
