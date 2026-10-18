@@ -1,7 +1,7 @@
 # Adapted CPython shutil subset for sifr.shutil (canonical bool-vector format)
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.io import write_text, read_text, exists
-from sifr.os import mkdir, run_command
+from sifr.os import mkdir
 from sifr.tempfile import mktemp_path
 from sifr.test import assert_bool_vector_eq
 
@@ -99,7 +99,7 @@ def collect_tooling_and_errors_actual() -> list[bool]:
 
     cleaned: bool = False
     try:
-        _cleanup: str = run_command("rm -rf " + base)
+        _cleanup: None = rmtree(base)
         cleaned = not exists(base)
     except IOError as e:
         _ = str(e.message)

@@ -2,7 +2,8 @@
 from sifr.logging import getLogger, Logger, Handler, FileHandler, StreamHandler, NullHandler, Formatter
 from sifr.logging import DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET
 from sifr.io import write_text, read_text, exists
-from sifr.os import run_command
+from sifr.os import mkdir
+from sifr.shutil import rmtree
 from sifr.tempfile import mktemp_path
 from sifr.test import assert_bool_vector_eq
 
@@ -133,7 +134,7 @@ def collect_cleanup_actual(base: str) -> list[bool]:
     actual: list[bool] = []
     cleanup_ok: bool = False
     try:
-        _cleanup: str = run_command("rm -rf " + base)
+        _cleanup: None = rmtree(base)
         cleanup_ok = not exists(base)
     except IOError as e:
         _ = str(e.message)
@@ -152,7 +153,7 @@ def main():
     actual: list[bool] = []
     base: str = mktemp_path("sifr_stdlib_logging_consolidated_")
     try:
-        _mk: str = run_command("mkdir -p " + base)
+        _mk: None = mkdir(base)
     except IOError as e:
         _ = str(e.message)
     append_all(actual, collect_emit_actual(base))
