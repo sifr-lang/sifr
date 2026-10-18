@@ -55,7 +55,7 @@ pub(crate) fn compile_source_with_metadata(source: &str) -> Result<CompiledMetad
     compiled_metadata(compile_source_for_e2e(source))
 }
 
-fn compiled_metadata(
+pub(crate) fn compiled_metadata(
     result: sifr_driver::CompileResultFull,
 ) -> Result<CompiledMetadata, Vec<String>> {
     match result {

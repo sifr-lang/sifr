@@ -110,6 +110,9 @@ pub(crate) fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
         return;
     }
 
+    let session =
+        sifr_driver::SingleFileCompilationSession::new(sifr_driver::CompilerContext::for_test())
+            .unwrap_or_else(|errors| panic!("emitted-safety setup failed: {errors:?}"));
     let mut failures = Vec::new();
     let mut total = 0usize;
 
@@ -130,7 +133,7 @@ pub(crate) fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
             }
         };
 
-        let (rust_source, _, _, _) = match compile_source_with_metadata(&source) {
+        let (rust_source, _, _, _) = match compiled_metadata(session.compile_with_metadata(&source)) {
             Ok(result) => result,
             Err(errors) => {
                 failures.push(format!(

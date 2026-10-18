@@ -963,3 +963,5 @@ size guard then rejected `cargo_resolution.rs` at 903 lines. Move its policy
 definition/constructors into a focused module without changing field values or
 execution. Run cheap size/format checks before the next build; repeat final
 candidate validation and review. Keep the failed guard receipt.
+
+The additional emitted-code safety contract attempted all 729 fixtures in 304.669s, with only the same 18 known lowering failures and no forbidden-pattern findings in emitted output. It still constructed one compiler context per fixture. Reuse the validated invocation session in this caller too, preserving lexical traversal, every safety assertion and the existing diagnostic mapping. Retain the original scan and compare the corrected scan against its exact failure set.
