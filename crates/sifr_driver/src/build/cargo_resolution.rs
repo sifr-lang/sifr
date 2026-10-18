@@ -4,10 +4,10 @@ use super::rust_interop_digest::digest_file_checked;
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_package::{CargoLockMode, cargo::lock_modes::cargo_lock_failure_reason};
+#[cfg(test)]
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 #[path = "cargo_resolution_identity.rs"]
@@ -17,45 +17,7 @@ static PREPARED_LOCK_NONCE: AtomicU64 = AtomicU64::new(0);
 type RegistryEntry = (String, String, String, String);
 type RegistryCompatibilityFamily = (String, String, String);
 
-#[derive(Clone, Debug)]
-pub(crate) struct CargoResolutionPolicy {
-    pub(crate) application_profile: crate::ApplicationProfile,
-    pub(crate) native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
-    pub(crate) lock_mode: CargoLockMode,
-    pub(crate) cargo_vendor_mode: CargoVendorMode,
-    pub(crate) authoritative_locks: Vec<PathBuf>,
-    pub(crate) trusted_vendor_dirs: Vec<PathBuf>,
-}
-
-impl CargoResolutionPolicy {
-    pub(crate) fn resolve_native_toolchain() -> Result<sifr_sysroot::NativeToolchain, String> {
-        let cwd =
-            std::env::current_dir().map_err(|_| "cannot resolve native invocation directory")?;
-        sifr_sysroot::NativeToolchain::resolve_at(&cwd)
-    }
-    pub(crate) fn cargo_command(&self) -> Result<Command, Vec<RenderedDiagnostic>> {
-        self.native_toolchain
-            .as_ref()
-            .map_err(Clone::clone)
-            .and_then(sifr_sysroot::NativeToolchain::cargo_command)
-            .map_err(|error| vec![cargo_resolution_error(error.clone())])
-    }
-
-    pub(crate) fn normal() -> Self {
-        Self {
-            application_profile: crate::ApplicationProfile::Release,
-            native_toolchain: Self::resolve_native_toolchain(),
-            lock_mode: CargoLockMode::Normal,
-            cargo_vendor_mode: CargoVendorMode::SysrootOnly,
-            authoritative_locks: Vec::new(),
-            trusted_vendor_dirs: Vec::new(),
-        }
-    }
-
-    pub(super) const fn uses_sysroot_vendor(&self) -> bool {
-        matches!(self.cargo_vendor_mode, CargoVendorMode::SysrootOnly)
-    }
-}
+pub(crate) use super::cargo_resolution_policy::CargoResolutionPolicy;
 
 pub(crate) struct PreparedCargoResolution {
     lock_path: PathBuf,
@@ -666,7 +628,7 @@ fn bounded_excerpt(stderr: &str) -> String {
         .join(" ")
 }
 
-fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
+pub(super) fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
     diagnostic_with_code(message.into(), DiagnosticCode::RUST_CARGO_METADATA)
 }
 

@@ -4,6 +4,7 @@ mod application_profile_tests;
 mod cargo_invocation_trace;
 mod cargo_manifest;
 mod cargo_resolution;
+mod cargo_resolution_policy;
 mod entrypoint;
 mod entrypoint_artifact;
 mod entrypoint_resolution;
@@ -126,8 +127,9 @@ pub(crate) use entrypoint::{
     RootedEntrypoint, build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
     check_single_file_entrypoint, compile_single_file_entrypoint_with_metadata,
-    compile_single_file_frontend, emit_project_entrypoint,
-    materialize_rooted_entrypoint_rust_project, resolve_package_project_entrypoint_plan,
+    compile_single_file_frontend, compile_single_file_with_prepared_native,
+    emit_project_entrypoint, materialize_rooted_entrypoint_rust_project,
+    resolve_package_project_entrypoint_plan,
 };
 pub(crate) use workspace::{
     ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact,
@@ -142,3 +144,5 @@ pub(crate) use cargo_resolution::{cargo_lock_mode_diagnostic, prepare_cargo_reso
 pub(crate) use entrypoint_resolution::package_cargo_resolution_policy;
 pub(crate) use native_link_policy::validate_test_native_link_evidence;
 pub(crate) use rust_interop_sqlx_offline::configure_hermetic_build_environment;
+
+pub(crate) use single_file_interop_cache::CompiledSingleFileMetadata;

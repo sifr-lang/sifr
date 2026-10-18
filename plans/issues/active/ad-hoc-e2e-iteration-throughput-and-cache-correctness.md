@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E3 reviewed draft; E4 next; acceptance blocked
+current_stage: E4 reviewed draft; R3 next; acceptance blocked
 
 ## Objective and authority
 
@@ -884,7 +884,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | E2 | reviewed draft; focused validation complete; acceptance pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `e6bfdeffb` | Portable E2 receipt; actual filesystem/full comparison; preparation fresh; review SATISFIED | R2 next; #4347 and #4344 still block acceptance |
 | R2 | reviewed draft; focused validation complete; acceptance pending | [#4351](https://github.com/sifr-lang/sifr/pull/4351) / `b5be3430b` | Self-tests 56.704s; all five plans unchanged; review SATISFIED | E3 next; qualification still blocked |
 | E3 | reviewed draft; focused validation complete; acceptance pending | [#4352](https://github.com/sifr-lang/sifr/pull/4352) / `9472dd478` | 710 pass / same 19 known failures; 79 healthy outcomes recovered; scoped review SATISFIED | E4 next; qualification still blocked |
-| E4 | pending | none | none | Invocation-scoped setup reuse |
+| E4 | reviewed draft; focused evidence recorded; acceptance pending | [#4353](https://github.com/sifr-lang/sifr/pull/4353) / `a08c29245` | Full 1,298-fixture equivalence; 729 run-pass outcomes; same 19 known failures | R3 next; qualification still blocked |
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
@@ -927,3 +927,51 @@ and its source candidate; final affected checks and remediation review follow.
 ### E3 completed focused evidence — 2026-10-18
 
 The [E3 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e3.json) records source `9472dd47813fedd73dc67de7b83dcfe27115e8ab`, focused controls and compile-fail corpus validation. All 729 run-pass fixtures have outcomes: **710 pass and exactly the 19 known compiler defects fail**. All 79 previously batch-blocked healthy fixtures now pass. The original failed native batch remains separately nonzero. The first changed-native-input run took 317.747s; the reviewed warm run took 144.050s. These are component diagnostics, not a passing gate. Preserve the initial structured-output failures and NOT SATISFIED scheduling review; remediation review is SATISFIED. A saved exact reference executable supports later matched measurements. Continue E4 invocation-scoped setup reuse. Required qualification remains blocked by #4347/#4344.
+
+### E4 draft implementation — 2026-10-18
+
+A single-file compilation session owns a fresh metadata generation and one native
+selection for a frozen invocation. Mutable parsing/lowering/codegen stays per
+source and uses the canonical rooted entrypoint. Frontend-only `check` and package
+policy remain separate. Run-pass and compile-fail invocations reuse this owner;
+one-off compiler APIs preserve their behavior. No global cache is introduced.
+
+Focused controls cover repetition, concurrency, changed metadata/profile/tool
+configuration, fresh invocation ownership and frontend-only checking. The explicit
+full-corpus oracle compares all output fields and complete negative diagnostics
+against the existing API, then repeats in reverse order. It is an additional
+ignored qualification control, run explicitly for this item; no existing test is
+removed, ignored or reduced. Actual measurements and scoped review follow.
+
+E4 focused controls exposed a pre-existing frontend layering violation: public
+`check`/`type_check_source` reached `compile_single_file_frontend`, which requested
+native setup through the default rooted constructor. Route this frontend helper
+through the same canonical plan with native preparation disabled. Keep the native
+probe assertion; do not weaken it. The initial missing test import and subsequent
+probe failure remain retained evidence. Final controls and corpus comparison follow.
+
+The next E4 native probe exposed an additional resolution in the existing
+interop metadata helper. Thread the prepared native selection through that
+helper while retaining its normal lock mode, release profile, trusted-sysroot
+vendor/probe policies and existing immutable interop-result cache. One-off
+callers retain their existing selection path. Keep the strict per-invocation
+probe assertion and preserve the failed control; final validation follows.
+
+E4's explicit oracle passed all 1,298 pass/fail fixtures and reverse-order repeats
+on `50ca69e4e`, including every output field and complete diagnostics. The source
+size guard then rejected `cargo_resolution.rs` at 903 lines. Move its policy
+definition/constructors into a focused module without changing field values or
+execution. Run cheap size/format checks before the next build; repeat final
+candidate validation and review. Keep the failed guard receipt.
+
+The additional emitted-code safety contract attempted all 729 fixtures in 304.669s, with only the same 18 known lowering failures and no forbidden-pattern findings in emitted output. It still constructed one compiler context per fixture. Reuse the validated invocation session in this caller too, preserving lexical traversal, every safety assertion and the existing diagnostic mapping. Retain the original scan and compare the corrected scan against its exact failure set.
+
+### E4 completed focused evidence — 2026-10-18
+
+The [E4 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e4.json) binds final source `a08c292453cf1e9415008d2a80e8d7b360c407d0` and the SATISFIED scoped review. Invocation-scoped immutable provider/native selection is reused while mutable source analysis stays fresh. Controls found and repaired native preparation in public frontend-only checking and duplicate native selection in interop metadata. Existing policy values and error precedence are retained.
+
+On `b0a4dc7d1`, all 1,298 fixtures match the original API across generated Rust, source maps, metadata and diagnostics, including concurrent and reverse-order repeats. The final oracle measured 729 pass inputs at 94.631s versus 41.448s, and 569 negative inputs at 46.024s versus 0.452s. The actual compile-fail test passes all 569 cases in 3.007s; the actual full run-pass command takes 102.388s with 710 passes and the same 19 known failures. The previous warm E3 component took 144.050s; this is not yet a paired speedup or a passing gate.
+
+Session/isolation/harness/execution controls, formatting, file-size and the additional named contracts are detailed individually in the receipt; failed attempts and externally owned failures remain visible. Six runtime-fail cases pass. The initial relocated dependency contract failed under inherited offline mode; its explicitly online retry is recorded separately. The driver preparation required 970.178s: 237 artifact units were fresh and 83 rebuilt; 18 observed feature/profile variants differed from the earlier E2E graph. Actual driver execution then passed five interop tests in 36.259s, nine Cargo-policy tests in 1.804s, and one frontend parity test in 2.605s. The first Cargo-policy filter selected zero tests and is explicitly incomplete; the corrected filter is separate.
+
+The final caller-only amendment reuses the same session in the complete emitted-safety scan. It takes 79.520s versus 304.669s, preserving exactly the 18 known compiler failures and zero forbidden-pattern findings in successfully emitted output. The driver preparation repeat took 4.001s with no rebuilt units. Its affected checks and delta review bind to their explicitly recorded candidates; earlier full-corpus and driver observations retain their original candidate identity. Source and test inputs were frozen during each validation attempt. Continue R3 observability, followed by E5 matched measurements. Required qualification remains blocked by #4347/#4344; Windows remains unmeasured.

@@ -653,6 +653,15 @@ builds retain this selection and expose its digest in build reports.
 See compiler_dx_architecture.md sections 4.2.2 and 8.1 for the constructor
 inventory and override contract.
 
+`sifr_driver::SingleFileCompilationSession` owns one fresh metadata generation
+and native selection for a frozen single-file invocation. Run-pass and
+compile-fail harness invocations share that immutable setup across sources;
+parsing, lowering and codegen state remain per source through the same rooted
+entrypoint. Sources may differ within an invocation, but changed sysroot files,
+tools, environment, cwd or configuration require a new context/session. No global
+session cache is used. Frontend-only `check` and package-root native authority
+retain their separate existing paths.
+
 ### Generated Artifact Cache Boundary
 
 Generated artifact cache work moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.

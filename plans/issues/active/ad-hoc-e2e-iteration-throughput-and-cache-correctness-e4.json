@@ -1,0 +1,1399 @@
+{
+  "candidate": "a08c292453cf1e9415008d2a80e8d7b360c407d0",
+  "selected": 729,
+  "counts": [
+    710,
+    19
+  ],
+  "failed": [
+    "async_generator_aclose_before_start",
+    "async_generator_aclose_result",
+    "callable_struct_field",
+    "enum_value_property",
+    "enum_valued",
+    "join_set_add_task_join_all",
+    "join_set_bound_terminal_await",
+    "join_set_cancel_all_evidence",
+    "join_set_cancel_all_task_cancelled",
+    "join_set_spawn_blocking",
+    "join_set_spawn_cpu_join_all_ordered",
+    "network_http_tls_loopback_split",
+    "newtype_basic",
+    "process_scoped_parent_cancel",
+    "process_scoped_spawn_handle",
+    "task_context_propagation_basic",
+    "task_group_spawn_cpu",
+    "task_group_spawn_cpu_user_error",
+    "task_scope_spawn_blocking"
+  ],
+  "unexpected": [],
+  "missing_known": [],
+  "seconds": 102.3879072819982,
+  "stages": {
+    "compile_ms": 45473,
+    "plan_ms": 47,
+    "build_ms": 43884,
+    "build_sum_ms": 42919,
+    "run_ms": 7443,
+    "cache_hits": 191,
+    "groups": 192
+  },
+  "original_batch_failure_retained": true,
+  "binary_sha256": "99ca6927170e4206a0fb682c95f86d07cb6ec4350ce63f334220e571efdb233f",
+  "checks": [
+    {
+      "label": "e4-complete-session",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::session_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 10.616890641998907,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-isolation",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::batch_isolation_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 4.007012255999143,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-harness",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::harness_behavior_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 0.8022688490018481,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-execution",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::fixture_execution_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 3.6079062139979214,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-compile-fail",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::e2e_entrypoints::test_e2e_fail",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 3.006693321003695,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-equivalence",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::session_tests::test_session_full_corpus_equivalence",
+        "--exact",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 224.819963654998,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-file-size",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "scripts/check_file_size_guardrails.py"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 2.4044451619993197,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--check"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 6.811316778999753,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null,
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    },
+    {
+      "label": "e4-complete-full",
+      "command": [
+        "bash",
+        "verification/runner/e2e/run_e2e_pass.sh",
+        "--profile",
+        "merge"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 102.3879072819982,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 45473,
+        "plan_ms": 47,
+        "build_ms": 43884,
+        "build_sum_ms": 42919,
+        "run_ms": 7443,
+        "cache_hits": 191,
+        "groups": 192
+      },
+      "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb"
+    }
+  ],
+  "measurement_candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb",
+  "safety_followup": {
+    "candidate": "a08c292453cf1e9415008d2a80e8d7b360c407d0",
+    "scan_executable_candidate": "76323d2af84e3442436d9388025ca537bb899146",
+    "formatting_only_followup_verified": true,
+    "checks": [
+      {
+        "label": "e4-safety-scan",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_emit_pass_fixtures_do_not_include_unwrap_or_expect",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 79.51994960899901,
+        "exit": 101,
+        "cause": "exit",
+        "passed": false,
+        "stages": null
+      },
+      {
+        "label": "e4-final-safety-fmt",
+        "command": [
+          "cargo",
+          "fmt",
+          "--check"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 6.6107831800036365,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e4-final-safety-size",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+          "scripts/check_file_size_guardrails.py"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 2.0037967879979988,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e4-final-safety-negative",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_e2e_fail",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 3.005598691001069,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e4-final-driver-interop",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "stdlib_interop_demand",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 22.435822581996035,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e4-final-driver-cargo-policy",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "build::cargo_resolution::normal_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 1.8039731030003168,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e4-final-driver-frontend",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "test_check_and_project_lowering_share_typecheck_rules",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 2.605077241998515,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      }
+    ],
+    "selected": 729,
+    "same_18_known_compiler_failures": true,
+    "forbidden_pattern_findings": 0,
+    "binary_sha256": "5354f20a20b5cc99805c72fbac3e305d124f4d6929e077534b837d9fee6a37c2",
+    "driver_preparation_repeat": {
+      "kind": "candidate bootstrap, not performance evidence",
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "--no-run",
+        "--message-format=json",
+        "-j",
+        "2"
+      ],
+      "target": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target",
+      "initial_free_bytes": 229952348160,
+      "planned_disk_allocation_gib": 24,
+      "minimum_disk_reserve_gib": 20,
+      "minimum_memory_reserve_gib": 2,
+      "cargo_jobs": 2,
+      "elapsed_seconds": 4.001391901001625,
+      "returncode": 0,
+      "stop_reason": null
+    },
+    "driver_preparation_rebuilt_units": [],
+    "prior_full_corpus_evidence_candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb",
+    "scope": "Focused draft evidence; no full acceptance; exact earlier source identities retained"
+  },
+  "driver_configuration": {
+    "condition": "same target, driver libtest graph after E2E preparation; not unchanged rerun",
+    "seconds": 970.1781358379958,
+    "units": 320,
+    "fresh_units": 237,
+    "rebuilt_units": 83,
+    "unmatched_feature_or_profile_variants": [
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#hashbrown@0.17.1",
+        "target": "hashbrown",
+        "driver": {
+          "features": [
+            "default-hasher",
+            "serde"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "allocator-api2",
+              "default",
+              "default-hasher",
+              "equivalent",
+              "inline-more",
+              "raw-entry",
+              "serde"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [
+              "default-hasher"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#indexmap@2.14.2",
+        "target": "indexmap",
+        "driver": {
+          "features": [
+            "serde",
+            "std"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "serde",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [
+              "serde",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#memchr@2.8.3",
+        "target": "memchr",
+        "driver": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "alloc",
+              "default",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [
+              "alloc",
+              "default",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#compact_str@0.10.0",
+        "target": "compact_str",
+        "driver": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "serde",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#thin-vec@0.2.18",
+        "target": "thin_vec",
+        "driver": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "serde",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#anyhow@1.0.104",
+        "target": "build-script-build",
+        "driver": {
+          "features": [
+            "std"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#crc32fast@1.5.1",
+        "target": "build-script-build",
+        "driver": {
+          "features": [
+            "std"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#anyhow@1.0.104",
+        "target": "anyhow",
+        "driver": {
+          "features": [
+            "std"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#crc32fast@1.5.1",
+        "target": "crc32fast",
+        "driver": {
+          "features": [
+            "std"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#syn@3.0.5",
+        "target": "syn",
+        "driver": {
+          "features": [
+            "clone-impls",
+            "default",
+            "derive",
+            "full",
+            "parsing",
+            "printing",
+            "proc-macro",
+            "visit-mut"
+          ],
+          "profile": {
+            "opt_level": "2",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "clone-impls",
+              "default",
+              "derive",
+              "extra-traits",
+              "full",
+              "parsing",
+              "printing",
+              "proc-macro",
+              "visit",
+              "visit-mut"
+            ],
+            "profile": {
+              "opt_level": "2",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [
+              "clone-impls",
+              "full",
+              "parsing",
+              "printing",
+              "visit",
+              "visit-mut"
+            ],
+            "profile": {
+              "opt_level": "2",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#smallvec@1.15.1",
+        "target": "smallvec",
+        "driver": {
+          "features": [
+            "serde",
+            "union"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "const_generics",
+              "const_new",
+              "serde",
+              "union"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [
+              "const_generics"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "path+file:///home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/third_party/ruff/crates/ruff_text_size#0.0.12",
+        "target": "ruff_text_size",
+        "driver": {
+          "features": [
+            "get-size"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "get-size",
+              "serde"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "path+file:///home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/third_party/ruff/crates/ruff_source_file#0.0.12",
+        "target": "ruff_source_file",
+        "driver": {
+          "features": [],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "get-size",
+              "serde"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#char_str@0.0.2",
+        "target": "char_str",
+        "driver": {
+          "features": [
+            "default",
+            "get-size",
+            "std"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "default",
+              "get-size",
+              "serde",
+              "std"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "registry+https://github.com/rust-lang/crates.io-index#regex-automata@0.4.18",
+        "target": "regex_automata",
+        "driver": {
+          "features": [
+            "dfa-search"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "alloc",
+              "dfa-onepass",
+              "dfa-search",
+              "hybrid",
+              "meta",
+              "nfa",
+              "nfa-backtrack",
+              "nfa-pikevm",
+              "nfa-thompson",
+              "perf",
+              "perf-inline",
+              "perf-literal",
+              "perf-literal-multisubstring",
+              "perf-literal-substring",
+              "std",
+              "syntax",
+              "unicode",
+              "unicode-age",
+              "unicode-bool",
+              "unicode-case",
+              "unicode-gencat",
+              "unicode-perl",
+              "unicode-script",
+              "unicode-segment",
+              "unicode-word-boundary"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          },
+          {
+            "features": [
+              "alloc",
+              "dfa-onepass",
+              "hybrid",
+              "meta",
+              "nfa-backtrack",
+              "nfa-pikevm",
+              "nfa-thompson",
+              "perf-inline",
+              "perf-literal",
+              "perf-literal-multisubstring",
+              "perf-literal-substring",
+              "std",
+              "syntax",
+              "unicode",
+              "unicode-age",
+              "unicode-bool",
+              "unicode-case",
+              "unicode-gencat",
+              "unicode-perl",
+              "unicode-script",
+              "unicode-segment",
+              "unicode-word-boundary"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 0,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "path+file:///home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/third_party/ruff/crates/ruff_python_ast#0.0.12",
+        "target": "ruff_python_ast",
+        "driver": {
+          "features": [
+            "get-size"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [
+              "get-size",
+              "serde"
+            ],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "path+file:///home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_cache_storage#0.0.0",
+        "target": "sifr_cache_storage",
+        "driver": {
+          "features": [
+            "test-support"
+          ],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      },
+      {
+        "package": "path+file:///home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver#0.0.0",
+        "target": "sifr_driver",
+        "driver": {
+          "features": [],
+          "profile": {
+            "opt_level": "1",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          }
+        },
+        "e2e_variants": [
+          {
+            "features": [],
+            "profile": {
+              "opt_level": "1",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            }
+          }
+        ]
+      }
+    ],
+    "caution": "Unmatched variants explain some rebuilds; dependency fingerprints can rebuild units with identical local features/profile. No invented per-unit durations."
+  },
+  "scope": "E4 focused draft evidence; not acceptance",
+  "review": {
+    "verdict": "SATISFIED",
+    "candidate": "a08c292453cf1e9415008d2a80e8d7b360c407d0"
+  },
+  "qualification_blockers": [
+    "#4347",
+    "#4344"
+  ],
+  "additional_contracts": {
+    "candidate": "b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb",
+    "checks": [
+      {
+        "label": "e4-extra-dependency-authority",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::dependency_plan_authority_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 27.042915289996017,
+        "exit": 101,
+        "cause": "exit",
+        "passed": false,
+        "stages": null,
+        "libtest_counts": {
+          "result": "FAILED",
+          "passed": 7,
+          "failed": 1,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-cache-environment",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_cache_root_from_env_resolution",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 0.20136840800114442,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-structured-lowering",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 3.00545260799845,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-codegen-parity",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_codegen_corpus_subset_parity",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 7.812801239997498,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-runtime-fail",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_e2e_runtime_fail",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 7.012013414998364,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-emitted-safety",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::e2e_entrypoints::test_emit_pass_fixtures_do_not_include_unwrap_or_expect",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 304.6689976960042,
+        "exit": 101,
+        "cause": "exit",
+        "passed": false,
+        "stages": null,
+        "libtest_counts": {
+          "result": "FAILED",
+          "passed": 0,
+          "failed": 1,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-driver-interop",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "stdlib_interop_demand",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 36.25875575400278,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-driver-cargo-policy",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "cargo_resolution_normal_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 0.20147129799443064,
+        "exit": 0,
+        "cause": "exit",
+        "passed": false,
+        "stages": null,
+        "status": "incomplete",
+        "reason": "Filter selected zero tests; successful process exit is not test evidence",
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-extra-driver-frontend",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "test_check_and_project_lowering_share_typecheck_rules",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 2.6050039089968777,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0
+        }
+      },
+      {
+        "label": "e4-driver-policy-corrected",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/sifr_driver-93ebc21474f954c1",
+          "build::cargo_resolution::normal_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr_driver",
+        "seconds": 1.8039552789996378,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null,
+        "libtest_counts": {
+          "result": "ok",
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0
+        }
+      }
+    ],
+    "driver_bootstrap": {
+      "kind": "candidate bootstrap, not performance evidence",
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "--no-run",
+        "--message-format=json",
+        "-j",
+        "2"
+      ],
+      "target": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target",
+      "initial_free_bytes": 240140443648,
+      "planned_disk_allocation_gib": 24,
+      "minimum_disk_reserve_gib": 20,
+      "minimum_memory_reserve_gib": 2,
+      "cargo_jobs": 2,
+      "elapsed_seconds": 970.1781358379958,
+      "returncode": 0,
+      "stop_reason": null
+    }
+  },
+  "dependency_online_retry": {
+    "label": "e4-dependency-online",
+    "command": [
+      "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+      "e2e_support::dependency_plan_authority_tests::materialized_project_is_locked_portable_and_relocatable",
+      "--nocapture",
+      "--test-threads=1",
+      "--exact"
+    ],
+    "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+    "seconds": 16.82721609100554,
+    "exit": 0,
+    "cause": "exit",
+    "passed": true,
+    "stages": null
+  },
+  "followups": [
+    "Audit the pre-existing global stdlib interop-value cache identity before widening session lifetime; no new global cache was added.",
+    "Improve native-probe test failure output to print retained temporary evidence paths."
+  ],
+  "equivalence": {
+    "fixtures": 1298,
+    "pass_fixtures": 729,
+    "fail_fixtures": 569,
+    "reverse_order_repeat": true,
+    "all_output_fields_match": true,
+    "pass_baseline_ms": 94631,
+    "pass_session_ms": 41448,
+    "fail_baseline_ms": 46024,
+    "fail_session_ms": 452
+  },
+  "failed_attempts_preserved": [
+    "e4-extra-driver-cargo-policy zero selected tests; corrected filter passed nine",
+    "e4-safety-fmt and NOT SATISFIED formatting review; pinned formatter corrected layout",
+    "e4-initial-bootstrap missing test import",
+    "e4-controls-session public check unexpectedly resolved native toolchain",
+    "e4-final-session interop metadata resolved native toolchain again",
+    "e4-interop-file-size 903-line module; split by responsibility",
+    "e4-extra-dependency-authority offline git dependency unavailable"
+  ],
+  "sha256": {
+    "e4-complete-analysis.json": "d745514c391c03f5093baaa6812d80a89a3a1e9f51aace0bd0bf2f7cf94e55b3",
+    "e4-extra-analysis.json": "6867cd6130dae839afc65123edc304601101b77f7202c73e7dd1d8cc63554877",
+    "e4-safety-analysis.json": "be826c1a676666da1667a9367151c5db3fbab6d542a24cf5f1ae6ae0c25dbcfa",
+    "e4-driver-configuration-analysis.json": "da83c5da3a42097a2fad0cfed31a59357cfc13be65e6fd438e7f62d8e11a5a8c",
+    "e4-dependency-online/receipt.json": "9a06fc34e65b7cf2c04f83ddfa1c73805dd03c3406faa4978aee1c9ad62601d2",
+    "e4-review-a08c292453cf1e9415008d2a80e8d7b360c407d0.md": "45eda8fa04ee3321794def08c75f756edfc5bf4cadb2241af68062ec09895df8",
+    "e4-review-76323d2af84e3442436d9388025ca537bb899146.md": "8741ac9877c1bde9f4d7d852dc91644128eb9fc63706b8c8b77b89360cba3c11",
+    "e4-review-b0a4dc7d1bdbab5f881c5b382488f5004d2ab0eb.md": "71aa516035bd6d14d078847755566ca72149c616d4d04e7f17b81596ad8a7538"
+  }
+}

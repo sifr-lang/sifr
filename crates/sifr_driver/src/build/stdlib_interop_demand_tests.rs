@@ -346,8 +346,8 @@ fn stdlib_interop_demand_cache_disjoint_programs() {
         let (output, stdlib) = generated(source);
         let expected_owners = owners(&output.interop.stdlib_demand);
         let key = stdlib_interop_cache_key(&stdlib.interop, &output.interop);
-        let resolved =
-            resolve_single_file_metadata(output, None, &stdlib.interop).expect("cached resolution");
+        let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, None)
+            .expect("cached resolution");
         assert_eq!(owners(&resolved.interop.rust), expected_owners);
         let fragment = resolved.interop.cache_key_fragment();
         if let Some((prior_key, prior_fragment)) =
@@ -383,7 +383,7 @@ fn stdlib_interop_demand_cache_disjoint_programs() {
         original,
         stdlib_interop_cache_key(&stdlib.interop, &output.interop)
     );
-    let resolved = resolve_single_file_metadata(output, None, &stdlib.interop)
+    let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, None)
         .expect("changed contract resolution");
     assert!(!resolved.interop.rust.trust_requirements.is_empty());
 }
