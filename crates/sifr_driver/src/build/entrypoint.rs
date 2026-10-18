@@ -162,7 +162,12 @@ pub(crate) fn compile_single_file_with_prepared_native(
     let rust_interop_context = plan.rust_interop_context.clone();
     let stdlib = std::sync::Arc::clone(&plan.stdlib);
     let codegen_result = plan.into_single_file_codegen_result()?;
-    resolve_single_file_metadata(codegen_result, rust_interop_context, &stdlib.interop)
+    resolve_single_file_metadata(
+        codegen_result,
+        rust_interop_context,
+        &stdlib.interop,
+        native,
+    )
 }
 
 /// Frontend-only checks never consume the native policy. Actual package checks

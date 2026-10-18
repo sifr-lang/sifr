@@ -949,3 +949,10 @@ native setup through the default rooted constructor. Route this frontend helper
 through the same canonical plan with native preparation disabled. Keep the native
 probe assertion; do not weaken it. The initial missing test import and subsequent
 probe failure remain retained evidence. Final controls and corpus comparison follow.
+
+The next E4 native probe exposed an additional resolution in the existing
+interop metadata helper. Thread the prepared native selection through that
+helper while retaining its normal lock mode, release profile, trusted-sysroot
+vendor/probe policies and existing immutable interop-result cache. One-off
+callers retain their existing selection path. Keep the strict per-invocation
+probe assertion and preserve the failed control; final validation follows.

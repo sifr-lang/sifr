@@ -27,6 +27,7 @@ pub(crate) fn resolve_single_file_metadata(
     codegen_result: CodegenResult,
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
+    native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
     let lowering_stats = codegen_result.lowering_stats;
     if lowering_stats.stmt_lowering_errors != 0
@@ -52,9 +53,9 @@ pub(crate) fn resolve_single_file_metadata(
         && codegen_result.interop.rust == sifr_codegen::RustInteropPlan::default()
         && codegen_result.interop.python == InteropBuildPlan::default().python
     {
-        resolve_cached_stdlib_interop(codegen_result, rust_interop_context, stdlib_interop)?
+        resolve_cached_stdlib_interop(codegen_result, rust_interop_context, stdlib_interop, native)?
     } else {
-        resolve_interop(codegen_result, rust_interop_context, stdlib_interop)?
+        resolve_interop(codegen_result, rust_interop_context, stdlib_interop, native)?
     };
 
     Ok(CompiledSingleFileMetadata {
@@ -70,6 +71,7 @@ fn resolve_cached_stdlib_interop(
     codegen_result: CodegenResult,
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
+    native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
 ) -> ResolvedInterop {
     let key = stdlib_interop_cache_key(stdlib_interop, &codegen_result.interop);
     let cell = {
@@ -83,19 +85,22 @@ fn resolve_cached_stdlib_interop(
                 .or_insert_with(|| Arc::new(OnceLock::new())),
         )
     };
-    cell.get_or_init(|| resolve_interop(codegen_result, rust_interop_context, stdlib_interop))
-        .clone()
+    cell.get_or_init(|| {
+        resolve_interop(codegen_result, rust_interop_context, stdlib_interop, native)
+    })
+    .clone()
 }
 
 fn resolve_interop(
     codegen_result: CodegenResult,
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
+    native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
 ) -> ResolvedInterop {
     let generated = generated_single_file_binary_project(codegen_result);
     let (generated, rust_interop_context) =
         attach_stdlib_rust_interop(generated, rust_interop_context, stdlib_interop);
-    resolve_package_rust_interop_metadata(generated, rust_interop_context)
+    resolve_package_rust_interop_metadata(generated, rust_interop_context, native)
         .map(|generated: GeneratedBinaryProject| generated.interop)
 }
 

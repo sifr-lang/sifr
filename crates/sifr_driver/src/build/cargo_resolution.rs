@@ -42,9 +42,15 @@ impl CargoResolutionPolicy {
     }
 
     pub(crate) fn normal() -> Self {
+        Self::normal_with_native(Self::resolve_native_toolchain())
+    }
+
+    pub(crate) fn normal_with_native(
+        native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
+    ) -> Self {
         Self {
             application_profile: crate::ApplicationProfile::Release,
-            native_toolchain: Self::resolve_native_toolchain(),
+            native_toolchain,
             lock_mode: CargoLockMode::Normal,
             cargo_vendor_mode: CargoVendorMode::SysrootOnly,
             authoritative_locks: Vec::new(),
