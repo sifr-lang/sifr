@@ -36,13 +36,15 @@ def main():
         if exists(missing_parent_path):
             _rm_missing: None = rmtree(missing_parent_path)
         missing_error: bool = False
+        unexpected_file: str | None = None
         try:
-            unexpected_file: str = mkstemp(missing_prefix)
-            _rm_unexpected: None = remove_file(unexpected_file)
+            unexpected_file = mkstemp(missing_prefix)
             missing_error = False
         except IOError as e:
             _ = str(e.message)
             missing_error = True
+        if unexpected_file is not None:
+            _rm_unexpected: None = remove_file(unexpected_file)
         actual.append(missing_error)
 
         _c1: None = remove_file(file_path)

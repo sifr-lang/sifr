@@ -635,12 +635,17 @@ the independent implementation/review slice; required acceptance remains pending
   directory contained spaces: existing fixtures concatenated temporary paths
   into unquoted shell cleanup commands. Moving TMPDIR into the cache made cache
   path spelling relevant, so this is within E2's resource-preservation scope.
-- Replace these cleanup commands in five fixtures with filesystem API calls;
+- Replace these cleanup commands in eight fixtures with filesystem API calls;
   guard removal of deliberately absent directories. Existing assertions and
   expected vectors stay intact. Shorten the scratch prefix and include a space
   in normal execution directories so the regular corpus covers this regression.
-  The original 65 literal-prefix edits remain; three additional fixture files
-  now have cleanup changes. Candidate validation and updated review follow.
+  The original 65 literal-prefix edits remain; six additional fixture files
+  now have cleanup changes. The first space-path run and scoped review found
+  the same missed shell setup/cleanup in two logging fixtures and one shutil
+  fixture; all three are corrected. Temporary-file negative checks keep cleanup
+  outside the expected-error block so a cleanup failure cannot mask unexpected
+  creation success. Failed evidence remains retained; candidate validation and
+  updated review follow.
 
 ### E3 — explicit failures and complete independent feedback
 
