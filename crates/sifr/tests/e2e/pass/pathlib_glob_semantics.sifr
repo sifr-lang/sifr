@@ -8,7 +8,7 @@ def main():
     expected: list[bool] = [True, True, True]
     actual: list[bool] = []
 
-    base: str = "/tmp/sifr_pathlib_glob_semantics_" + str(getpid())
+    base: str = "sifr_pathlib_glob_semantics_" + str(getpid())
     d: Path = Path(base + "")
     missing: Path = Path(base + "_missing")
     try:

@@ -3,7 +3,7 @@ from sifr.os import getpid, remove_file
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_task_scope_unobserved_child_waits_" + str(getpid()) + ".txt"
+    return "sifr_task_scope_unobserved_child_waits_" + str(getpid()) + ".txt"
 
 
 async def write_marker() -> None:

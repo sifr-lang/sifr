@@ -11,7 +11,7 @@ def shell_command(script: str) -> Command:
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_process_scoped_spawn_handle_" + str(getpid()) + ".txt"
+    return "sifr_process_scoped_spawn_handle_" + str(getpid()) + ".txt"
 
 
 async def fail_scoped_process_group() -> Result[int, ValueError]:

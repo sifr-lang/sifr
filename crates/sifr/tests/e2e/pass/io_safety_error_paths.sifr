@@ -8,7 +8,7 @@ def main():
     expected_index: int = 0
     # 1. read_text on non-existent file returns IOError
     try:
-        content: str = read_text("/tmp/sifr_io_safety_nonexistent_file.txt")
+        content: str = read_text("sifr_io_safety_nonexistent_file.txt")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except IOError as e:
@@ -17,7 +17,7 @@ def main():
 
     # 2. read_lines on non-existent file returns IOError
     try:
-        lines: list[str] = read_lines("/tmp/sifr_io_safety_nonexistent_file.txt")
+        lines: list[str] = read_lines("sifr_io_safety_nonexistent_file.txt")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except IOError as e:
@@ -26,7 +26,7 @@ def main():
 
     # 3. listdir on non-existent directory returns IOError
     try:
-        entries: list[str] = listdir("/tmp/sifr_io_safety_nonexistent_dir")
+        entries: list[str] = listdir("sifr_io_safety_nonexistent_dir")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except IOError as e:
@@ -35,7 +35,7 @@ def main():
 
     # 4. rmdir on non-existent directory returns IOError
     try:
-        r: None = rmdir("/tmp/sifr_io_safety_nonexistent_dir")
+        r: None = rmdir("sifr_io_safety_nonexistent_dir")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except IOError as e:
@@ -44,7 +44,7 @@ def main():
 
     # 5. remove_file on non-existent file returns IOError
     try:
-        r2: None = remove_file("/tmp/sifr_io_safety_nonexistent_file.txt")
+        r2: None = remove_file("sifr_io_safety_nonexistent_file.txt")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except IOError as e:
@@ -53,7 +53,7 @@ def main():
 
     # 6. rename non-existent file returns IOError
     try:
-        r3: None = rename("/tmp/sifr_io_safety_nonexistent.txt", "/tmp/sifr_io_safety_dest.txt")
+        r3: None = rename("sifr_io_safety_nonexistent.txt", "sifr_io_safety_dest.txt")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except IOError as e:
@@ -62,11 +62,11 @@ def main():
 
     # 7. Success path: write then read
     try:
-        w: None = write_text("/tmp/sifr_io_safety_test.txt", "safety works")
-        data: str = read_text("/tmp/sifr_io_safety_test.txt")
+        w: None = write_text("sifr_io_safety_test.txt", "safety works")
+        data: str = read_text("sifr_io_safety_test.txt")
         assert str(data) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
-        cleanup: None = remove_file("/tmp/sifr_io_safety_test.txt")
+        cleanup: None = remove_file("sifr_io_safety_test.txt")
     except IOError as e:
         assert str("unexpected error: " + e.message) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1

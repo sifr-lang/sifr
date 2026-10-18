@@ -6,7 +6,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_text_file_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_cpython_io_subset.txt"
+    path: str = "sifr_cpython_io_subset.txt"
     io_roundtrip_ok: bool = False
     append_roundtrip_ok: bool = False
     lines_len_ok: bool = False
@@ -30,7 +30,7 @@ def collect_text_file_actual() -> list[bool]:
     actual.append(io_roundtrip_ok)
     actual.append(append_roundtrip_ok)
     actual.append(exists(path))
-    missing_path_absent: bool = not exists("/tmp/sifr_cpython_io_subset_missing.txt")
+    missing_path_absent: bool = not exists("sifr_cpython_io_subset_missing.txt")
     actual.append(missing_path_absent)
     actual.append(lines_len_ok)
     actual.append(first_line_ok)
@@ -40,8 +40,8 @@ def collect_text_file_actual() -> list[bool]:
 
 def collect_error_and_binary_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_cpython_io_subset.txt"
-    binary_path: str = "/tmp/sifr_cpython_io_subset_bytes.bin"
+    path: str = "sifr_cpython_io_subset.txt"
+    binary_path: str = "sifr_cpython_io_subset_bytes.bin"
 
     missing_open_rejected: bool = False
     invalid_mode_rejected: bool = False
@@ -51,7 +51,7 @@ def collect_error_and_binary_actual() -> list[bool]:
     missing_read_rejected: bool = False
 
     try:
-        _missing = open("/tmp/sifr_cpython_io_subset_missing.txt", "r", encoding="utf-8")
+        _missing = open("sifr_cpython_io_subset_missing.txt", "r", encoding="utf-8")
     except IOError as e:
         _ = str(e.message)
         missing_open_rejected = True
@@ -91,7 +91,7 @@ def collect_error_and_binary_actual() -> list[bool]:
     except IOError as e:
         _ = str(e.message)
 
-    ctx_path: str = "/tmp/sifr_cpython_io_subset_ctx.txt"
+    ctx_path: str = "sifr_cpython_io_subset_ctx.txt"
     try:
         with open(ctx_path, "w", encoding="utf-8") as out:
             _out: None = out.write("ctx")
@@ -100,7 +100,7 @@ def collect_error_and_binary_actual() -> list[bool]:
     except IOError as e:
         _ = str(e.message)
 
-    missing_read_path: str = "/tmp/sifr_cpython_io_subset_missing_read.txt"
+    missing_read_path: str = "sifr_cpython_io_subset_missing_read.txt"
     if exists(missing_read_path):
         try:
             _rm: None = remove_file(missing_read_path)

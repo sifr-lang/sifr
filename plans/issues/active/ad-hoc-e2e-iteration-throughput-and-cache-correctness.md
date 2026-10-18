@@ -561,6 +561,29 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   execution leaves source inputs untouched; subsequent unchanged preparation is
   fresh, with the same executable identity and no unrelated compiler rebuild.
 
+### E2 draft progress — 2026-10-18
+
+- Stage each run-pass execution in its own owned group scratch directory and set
+  its working directory and temporary-directory environment together. Retain
+  interrupted and failed attempts with their fixture name and available output;
+  remove only successful attempts after process cleanup.
+- Replace writable `/tmp/sifr_` fixture paths with relative names. All 65 changed
+  fixtures keep identical assertion lines and expected-vector declarations; the
+  729-fixture inventory and absolute-path parsing assertions are unchanged.
+  Existing tempfile users still exercise absolute temporary paths.
+- Four proposed execution controls and five existing driver process controls
+  passed in an isolated helper build using the actual process/cache modules.
+  They cover simultaneous same-named fixtures and output files, environment and
+  working directory, successful cleanup, retained failures, launch errors,
+  deadlines, descendant cleanup and cancellation. This does not substitute for
+  candidate harness execution. One helper-setup failure (missing test-only
+  `memchr` dependency) is preserved; the disposable setup was corrected without
+  changing repository dependencies.
+- Actual E2 harness, filesystem inventory, full run-pass comparison and fresh
+  subsequent preparation remain pending. E1 candidate validation continues on an
+  unchanged source tree after user-requested cleanup removed its warm targets.
+  Reference admission #4347 and compiler defects #4344 still block acceptance.
+
 ### E3 — explicit failures and complete independent feedback
 
 - Surface nonzero structured lowering-error results through the canonical error

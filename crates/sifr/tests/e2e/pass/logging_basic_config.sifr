@@ -3,7 +3,7 @@ from sifr.io import write_text, read_text
 from sifr.logging import basicConfig, WARNING, Logger
 
 def main():
-    path: str = "/tmp/sifr_logging_basic_config_test.log"
+    path: str = "sifr_logging_basic_config_test.log"
     try:
         _: None = write_text(path, "")
 

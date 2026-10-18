@@ -194,20 +194,6 @@ pub(crate) fn build_batch_suite(
     (outcomes, next_manifest)
 }
 
-pub(crate) fn run_single_case(artifact_path: &Path, fixture_name: &str) -> Result<(), String> {
-    let args = ["--case", fixture_name];
-    let run_capture = command_with_capture(
-        artifact_path.to_str().unwrap_or("sifr_batch_binary"),
-        &args,
-        None,
-    );
-    if !run_capture.status_ok {
-        return Err(format!("binary exited with error:\n{}", run_capture.stderr));
-    }
-
-    Ok(())
-}
-
 pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<FixtureExecution> {
     let group = &group_outcome.group;
     let fixture_names = group
@@ -268,7 +254,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
         .iter()
         .map(|case| {
             let status =
-                match run_single_case(artifact, &case.fixture.name) {
+                match fixture_execution::run_single_case(artifact, &case.fixture.name, &group_outcome.group_root) {
                     Ok(()) => Ok(()),
                     Err(err) => Err(format!(
                         "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",

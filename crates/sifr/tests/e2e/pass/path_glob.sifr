@@ -5,7 +5,7 @@ from sifr.io import write_text
 
 def main():
     try:
-        dir_path: str = "/tmp/sifr_glob_test"
+        dir_path: str = "sifr_glob_test"
         _: None = mkdir(dir_path)
         _2: None = write_text(dir_path + "/test1.txt", "a")
         _3: None = write_text(dir_path + "/test2.txt", "b")

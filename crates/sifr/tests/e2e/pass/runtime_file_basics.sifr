@@ -28,7 +28,7 @@ def main() -> None:
     time_api_ok: bool = False
     cleanup_ok: bool = False
 
-    text_path: str = "/tmp/sifr_runtime_file_basics_text.txt"
+    text_path: str = "sifr_runtime_file_basics_text.txt"
     temp_file: str = ""
     temp_dir: str = ""
     zip_path: str = ""

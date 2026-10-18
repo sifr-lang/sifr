@@ -41,7 +41,7 @@ def main():
     expected: list[bool] = [True, True, True, True, True]
     actual: list[bool] = []
 
-    base: str = "/tmp/sifr_stdlib_glob_consolidated"
+    base: str = "sifr_stdlib_glob_consolidated"
     try:
         _mk: str = run_command("mkdir -p " + base + "/subdir")
         _w1: None = write_text(base + "/a.txt", "a")

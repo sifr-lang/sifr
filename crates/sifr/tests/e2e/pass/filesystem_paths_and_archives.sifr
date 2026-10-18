@@ -12,7 +12,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_io_path_glob_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_filesystem_paths_and_archives_root"
+    base: str = "sifr_filesystem_paths_and_archives_root"
     path: str = base + "/alpha.txt"
     sub_path: str = base + "/sub/beta.txt"
 
@@ -145,7 +145,7 @@ def collect_gzip_zip_actual() -> list[bool]:
         _ = e.message
         invalid_gzip_rejected = True
 
-    zip_path: str = "/tmp/sifr_filesystem_paths_and_archives.zip"
+    zip_path: str = "sifr_filesystem_paths_and_archives.zip"
     archive: ZipFile = ZipFile(zip_path + "")
     try:
         _create: None = archive.create()

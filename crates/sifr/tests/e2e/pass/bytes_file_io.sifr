@@ -4,7 +4,7 @@ from sifr.os import remove_file
 
 
 def main():
-    path: str = "/tmp/sifr_bytes_file_io.bin"
+    path: str = "sifr_bytes_file_io.bin"
     wrote: bool = False
     read_ok: bool = False
     cleanup: bool = False

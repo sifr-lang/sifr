@@ -27,7 +27,7 @@ def cycle_source(path: str) -> Iterator[int]:
 
 
 def main():
-    path: str = "/tmp/sifr_generator_resumption_" + str(getpid()) + ".txt"
+    path: str = "sifr_generator_resumption_" + str(getpid()) + ".txt"
     try:
         if is_file(path):
             _removed_existing: None = remove_file(path)

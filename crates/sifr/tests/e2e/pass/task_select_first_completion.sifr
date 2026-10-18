@@ -3,7 +3,7 @@ from sifr.os import getpid, remove_file
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_task_select_first_completion_" + str(getpid()) + ".txt"
+    return "sifr_task_select_first_completion_" + str(getpid()) + ".txt"
 
 
 async def fast_int() -> int:

@@ -38,7 +38,7 @@ def collect_iterable_input_actual() -> list[bool]:
 
 def collect_runtime_iterator_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_stdlib_parity_iter_fix_6_" + str(getpid())
+    base: str = "sifr_stdlib_parity_iter_fix_6_" + str(getpid())
 
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")

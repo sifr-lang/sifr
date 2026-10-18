@@ -48,7 +48,7 @@ def main():
         _ = e.message
         actual.append(False)
 
-    base: str = "/tmp/sifr_iterator_integration_" + str(getpid())
+    base: str = "sifr_iterator_integration_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")
         _w1: None = write_text(base + "/a.txt", "a")

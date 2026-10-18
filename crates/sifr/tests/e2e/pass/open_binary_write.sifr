@@ -2,7 +2,7 @@
 from sifr.io import read_text
 
 def main():
-    path: str = "/tmp/sifr_open_binary_write_test.txt"
+    path: str = "sifr_open_binary_write_test.txt"
     try:
         f = open(path, "wb")
         data: bytes = b"hello"

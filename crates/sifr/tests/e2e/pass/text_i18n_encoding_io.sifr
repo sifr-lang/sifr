@@ -174,9 +174,9 @@ def collect_encoding_actual() -> list[bool]:
 
 def collect_text_io_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_text_i18n_encoding_io_latin1.txt"
-    builtin_path: str = "/tmp/sifr_text_i18n_builtin_open_latin1.txt"
-    ascii_path: str = "/tmp/sifr_text_i18n_builtin_open_ascii_xml.txt"
+    path: str = "sifr_text_i18n_encoding_io_latin1.txt"
+    builtin_path: str = "sifr_text_i18n_builtin_open_latin1.txt"
+    ascii_path: str = "sifr_text_i18n_builtin_open_ascii_xml.txt"
     roundtrip_ok: bool = False
     builtin_roundtrip_ok: bool = False
     encode_only_write_ok: bool = False

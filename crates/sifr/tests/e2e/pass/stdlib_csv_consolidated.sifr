@@ -42,7 +42,7 @@ def collect_object_api_actual() -> list[bool]:
 
 def collect_file_api_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_stdlib_csv_consolidated.csv"
+    path: str = "sifr_stdlib_csv_consolidated.csv"
     file_roundtrip_ok: bool = False
     missing_path_rejected: bool = False
 
@@ -55,7 +55,7 @@ def collect_file_api_actual() -> list[bool]:
     actual.append(file_roundtrip_ok)
 
     try:
-        _missing_reader: reader = reader_from_path("/tmp/sifr_stdlib_csv_consolidated_missing.csv")
+        _missing_reader: reader = reader_from_path("sifr_stdlib_csv_consolidated_missing.csv")
     except IOError as e:
         _ = str(e.message)
         missing_path_rejected = True

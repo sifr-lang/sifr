@@ -11,7 +11,7 @@ def shell_command(script: str) -> Command:
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_process_scoped_parent_cancel_" + str(getpid()) + ".txt"
+    return "sifr_process_scoped_parent_cancel_" + str(getpid()) + ".txt"
 
 
 async def fail_parent_scope() -> Result[int, ValueError]:

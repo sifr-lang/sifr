@@ -67,7 +67,7 @@ def collect_tooling_and_errors_actual() -> list[bool]:
             usage_ok = total > 0
     actual.append(usage_ok)
 
-    base: str = "/tmp/sifr_stdlib_shutil_consolidated_missing"
+    base: str = "sifr_stdlib_shutil_consolidated_missing"
     missing_copy_rejected: bool = False
     try:
         _bad_copy: None = copy(base + "/missing_src.txt", base + "/missing_dst.txt")

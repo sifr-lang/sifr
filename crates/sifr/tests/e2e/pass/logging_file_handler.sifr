@@ -2,7 +2,7 @@
 from sifr.logging import FileHandler
 
 def main():
-    path: str = "/tmp/sifr_log_fh_test.log"
+    path: str = "sifr_log_fh_test.log"
     handler: FileHandler = FileHandler(path)
     handler.emit("INFO", "test", "hello from file handler")
     assert str("handler emitted ok") == 'handler emitted ok'

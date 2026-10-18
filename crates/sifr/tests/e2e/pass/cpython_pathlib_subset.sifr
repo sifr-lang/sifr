@@ -23,7 +23,7 @@ def collect_function_actual() -> list[bool]:
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_cpython_pathlib_subset_" + str(getpid())
+    base: str = "sifr_cpython_pathlib_subset_" + str(getpid())
     dir_path: str = base + ""
     sub_path: str = base + "/sub"
     f1_path: str = base + "/a.txt"
@@ -87,7 +87,7 @@ def collect_missing_path_actual() -> list[bool]:
     actual: list[bool] = []
     missing_read_rejected: bool = False
     try:
-        _missing_content: str = Path("/tmp/sifr_cpython_pathlib_subset_missing.txt").read_text()
+        _missing_content: str = Path("sifr_cpython_pathlib_subset_missing.txt").read_text()
     except IOError as e:
         _ = str(e.message)
         missing_read_rejected = True

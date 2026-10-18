@@ -55,7 +55,7 @@ def collect_parser_actual() -> list[bool]:
 
     file_read_ok: bool = False
     try:
-        path: str = "/tmp/sifr_cpython_configparser_subset.ini"
+        path: str = "sifr_cpython_configparser_subset.ini"
         _: None = write_text(path, "[app]\nname = sifr\n")
         file_parser: ConfigParser = ConfigParser()
         loaded_paths: list[str] = file_parser.read(path)
