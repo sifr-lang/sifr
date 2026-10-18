@@ -23,3 +23,6 @@ mod native_cache_tests;
 
 mod fixture_execution;
 mod fixture_execution_tests;
+
+mod batch_isolation;
+mod batch_isolation_tests;

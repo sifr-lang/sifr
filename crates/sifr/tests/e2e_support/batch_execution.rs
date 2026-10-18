@@ -11,6 +11,25 @@ pub(crate) fn build_batch_group(
     env_signature: &str,
     manifest: &Arc<Mutex<CacheManifest>>,
 ) -> GroupBuildOutcome {
+    build_batch_group_bounded(
+        group,
+        config,
+        toolchain,
+        env_signature,
+        manifest,
+        std::time::Duration::from_secs(30 * 60),
+    )
+}
+
+pub(crate) fn build_batch_group_bounded(
+    group: BatchGroup,
+    config: &RunnerConfig,
+    toolchain: &ToolchainInfo,
+    env_signature: &str,
+    manifest: &Arc<Mutex<CacheManifest>>,
+    deadline: std::time::Duration,
+) -> GroupBuildOutcome {
+    let mut source_failure = false;
     let started = Instant::now();
     let group_root = config.cache.root.join("groups").join(&group.id);
     let mut build_error = None;
@@ -50,12 +69,14 @@ pub(crate) fn build_batch_group(
                 .args(sifr_driver::sysroot_cargo_config_args(
                     &group.dependency_plan,
                 ))
-                .args(["build", "--message-format=json-render-diagnostics", "-j"])
+                .args(["build", "--message-format=json", "-j"])
                 .arg(config.cargo_build_jobs.to_string())
                 .current_dir(&group_root);
             application_profile().configure(&mut build_command);
             build_command.env("CARGO_TARGET_DIR", config.cache.root.join("native-target"));
-            let build_capture = run_capture(build_command);
+            let build_capture = run_capture_bounded(build_command, deadline);
+            source_failure =
+                batch_isolation::is_source_failure(&build_capture, &group.package_name);
             let selected = native_cache::select_artifact(
                 build_capture.status_ok,
                 &build_capture.stdout,
@@ -152,6 +173,8 @@ pub(crate) fn build_batch_group(
     }
 
     GroupBuildOutcome {
+        source_failure,
+        execution_deadline: None,
         group_root,
         group,
         artifact_path: artifact,
@@ -174,15 +197,23 @@ pub(crate) fn build_batch_suite(
     let shared_manifest = Arc::new(Mutex::new(manifest.clone()));
     // A shared target has one mutable publication namespace. Keep Cargo serial;
     // the explicit inner job budget controls dependency compilation parallelism.
-    let outcomes = run_in_parallel(groups, 1, |group| {
-        build_batch_group(
-            group.clone(),
-            config,
-            toolchain,
-            env_signature,
-            &shared_manifest,
-        )
-    });
+    let mut outcomes = Vec::with_capacity(groups.len());
+    let mut stopped = false;
+    for group in groups {
+        let outcome = if stopped {
+            batch_isolation::blocked(group.clone(), config, "prior native infrastructure failure")
+        } else {
+            build_batch_group(
+                group.clone(),
+                config,
+                toolchain,
+                env_signature,
+                &shared_manifest,
+            )
+        };
+        stopped |= outcome.build_error.is_some() && !outcome.source_failure;
+        outcomes.push(outcome);
+    }
 
     let next_manifest = shared_manifest
         .lock()
@@ -254,7 +285,8 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
         .iter()
         .map(|case| {
             let status =
-                match fixture_execution::run_single_case(artifact, &case.fixture.name, &group_outcome.group_root) {
+                match fixture_execution::run_single_case_bounded(artifact, &case.fixture.name, &group_outcome.group_root,
+                    group_outcome.execution_deadline.map_or(std::time::Duration::from_secs(30 * 60), |end| end.saturating_duration_since(Instant::now()))) {
                     Ok(()) => Ok(()),
                     Err(err) => Err(format!(
                         "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",
@@ -450,7 +482,9 @@ where
         }
 
         for handle in handles {
-            let _ = handle.join();
+            if let Err(payload) = handle.join() {
+                std::panic::resume_unwind(payload);
+            }
         }
     });
 
@@ -463,6 +497,11 @@ where
             ordered.push(value);
         }
     }
+    assert_eq!(
+        ordered.len(),
+        items.len(),
+        "parallel work lost a selected outcome"
+    );
     ordered
 }
 
@@ -504,6 +543,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         Ok(lease) => lease,
         Err(error) => {
             return PassReport {
+                batch_failures: Vec::new(),
                 cases: fixtures
                     .iter()
                     .map(|fixture| FixtureExecution {
@@ -546,12 +586,20 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     let initial_manifest = initial_cache_manifest(config);
 
     let build_started = Instant::now();
-    let (build_outcomes, _updated_manifest) = build_batch_suite(
+    let (original_builds, updated_manifest) = build_batch_suite(
         &groups,
         config,
         &toolchain,
         &env_signature,
         &initial_manifest,
+    );
+    let (build_outcomes, batch_failures) = batch_isolation::isolate_failed_batches(
+        original_builds,
+        config,
+        &toolchain,
+        &env_signature,
+        &updated_manifest,
+        std::time::Duration::from_secs(30 * 60),
     );
     let build_ms = build_started.elapsed().as_millis();
     let observed_build_ms: u128 = build_outcomes.iter().map(|outcome| outcome.build_ms).sum();
@@ -655,7 +703,10 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         }
     }
     all_cases.sort_by(|left, right| left.name.cmp(&right.name));
-    PassReport { cases: all_cases }
+    PassReport {
+        cases: all_cases,
+        batch_failures,
+    }
 }
 
 pub(crate) fn initial_cache_manifest(config: &RunnerConfig) -> CacheManifest {
@@ -787,7 +838,7 @@ pub(crate) fn format_failures(kind: &str, cases: &[FixtureExecution]) -> String 
 }
 
 pub(crate) fn report_signature(kind: &str, report: &PassReport) -> String {
-    let summary = format_failures(kind, &report.cases);
+    let summary = report_summary(kind, report);
     deterministic_hash(&format!(
         "{kind}|{}|{}|{}",
         report.cases.len(),
@@ -797,6 +848,21 @@ pub(crate) fn report_signature(kind: &str, report: &PassReport) -> String {
 }
 
 pub(crate) fn assert_report(label: &str, report: &PassReport) {
-    let summary = format_failures(label, &report.cases);
+    let summary = report_summary(label, report);
     assert!(summary.is_empty(), "{}", summary);
+}
+
+fn report_summary(label: &str, report: &PassReport) -> String {
+    let mut summary = format_failures(label, &report.cases);
+    let mut batches = report.batch_failures.clone();
+    batches.sort();
+    if !batches.is_empty() {
+        summary.push_str(&format!(
+            "\nOriginal native batch failures ({} unique fixtures passed, {} failed):\n{}",
+            report.passed_count(),
+            report.failed_count(),
+            batches.join("\n")
+        ));
+    }
+    summary
 }

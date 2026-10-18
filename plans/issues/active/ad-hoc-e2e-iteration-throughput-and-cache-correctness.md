@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: R2 reviewed draft; E3 next; acceptance blocked
+current_stage: E3 draft implementation and focused validation; acceptance blocked
 
 ## Objective and authority
 
@@ -902,3 +902,17 @@ defects and acceptance qualification remain separately owned.
 ### R2 completed focused evidence — 2026-10-18
 
 The [R2 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-r2.json) records source `b5be3430badb89a525df3aff3f8b2a8035da6f68`: full runner self-tests pass in 56.704s, profile checks in 0.402s and file-size guardrails in 2.004s. All five emitted plans exactly match the base. Scoped review is SATISFIED; the review began before these final checks, which are now recorded separately. Preparation boundaries remain existing areas/toolchain steps. Follow-ups are recorded in the receipt and are not absorbed into E3. Required qualification remains blocked by #4347/#4344; no gate pass or merge is claimed. Continue E3 early structured errors and bounded native-batch isolation in this session.
+
+### E3 draft implementation — 2026-10-18
+
+Nonzero structured statement/expression/item lowering errors now return the
+canonical build-materialization diagnostic before native compilation. Cargo emits
+JSON diagnostics: only typed errors from the generated target permit one bounded
+individual pass, sharing native dependencies. Infrastructure and safety failures
+stop native fan-out. Original failed groups retain their logs and aggregate
+failure even if all isolated members pass. Unique fixture outcomes remain separate
+from attempts, and parallel worker panics cannot silently drop selected work.
+Initial controls caught the old rendered-diagnostics output mode; preserve both
+failed attempts while correcting the structured Cargo invocation. Final focused
+checks, the full 729-fixture diagnostic, and scoped review follow. Qualification
+remains blocked by #4347 and #4344.
