@@ -29,6 +29,11 @@ pub(super) fn is_source_failure(capture: &CommandCapture, package: &str) -> bool
 }
 
 pub(super) fn blocked(group: BatchGroup, config: &RunnerConfig, reason: &str) -> GroupBuildOutcome {
+    telemetry::emit(
+        serde_json::json!({"schema":1,"event":"blocked","scope":"native_attempt",
+        "group":group.id,"selected":group.cases.iter().map(|c|c.fixture.name.as_str()).collect::<Vec<_>>(),
+        "status":"blocked","cause":reason,"attempted":false}),
+    );
     GroupBuildOutcome {
         group_root: config.cache.root.join("groups").join(&group.id),
         group,

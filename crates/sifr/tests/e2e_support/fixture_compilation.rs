@@ -221,6 +221,21 @@ fn compile_fixture_with(
     compile: impl FnOnce(&str) -> sifr_driver::CompileResultFull,
 ) -> Result<CompiledCase, String> {
     let started = Instant::now();
+    let result = compile_fixture_inner(fixture, compile);
+    eprintln!(
+        "[sifr-case-timing] bucket=source_compile case={} elapsed_ms={} status={}",
+        fixture.name,
+        started.elapsed().as_millis(),
+        telemetry::status(result.is_ok())
+    );
+    result
+}
+
+fn compile_fixture_inner(
+    fixture: &FixtureCase,
+    compile: impl FnOnce(&str) -> sifr_driver::CompileResultFull,
+) -> Result<CompiledCase, String> {
+    let started = Instant::now();
     let (rust_source, used_stdlib_modules, required_features, interop) =
         compiled_metadata(compile(&fixture.source))
             .map_err(|errors| format!("sifr compilation failed:\n  {}", errors.join("\n  ")))?;

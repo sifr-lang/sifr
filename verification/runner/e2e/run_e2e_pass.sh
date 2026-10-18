@@ -2,6 +2,15 @@
 
 set -euo pipefail
 
+SIFR_E2E_COMMAND_START_SECONDS=$SECONDS
+printf '[sifr-e2e-shell] {"event":"start","id":"shell-%s","scope":"shell_command","unix_seconds":%s}\n' "$$" "$(date +%s)"
+report_command_end() {
+  local exit_status=$?
+  printf '[sifr-e2e-shell] {"event":"end","id":"shell-%s","scope":"shell_command","elapsed_seconds":%s,"resolution_seconds":1,"exit_code":%s}\n' "$$" "$((SECONDS - SIFR_E2E_COMMAND_START_SECONDS))" "$exit_status"
+  return "$exit_status"
+}
+trap report_command_end EXIT
+
 PROFILE="${SIFR_E2E_PROFILE:-merge}"
 SIFR_JOBS_OVERRIDE=""
 RUST_JOBS_OVERRIDE=""

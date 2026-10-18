@@ -79,6 +79,7 @@ def execute(
     deadline_seconds: float | str = 2400, limit_bytes: int = 1048576,
     emit: Callable[[str, bytes], None] | None = None,
     input_bytes: bytes | None = None,
+    heartbeat: Callable[[float], None] | None = None,
 ) -> Outcome:
     # signal.signal is main-thread-only. Reject before creating a process that
     # this thread could not own through cancellation and cleanup.
@@ -137,6 +138,8 @@ def execute(
         selector.register(proc.stdout, selectors.EVENT_READ, "stdout")
         selector.register(proc.stderr, selectors.EVENT_READ, "stderr")
         while selector.get_map() or proc.poll() is None:
+            if heartbeat is not None:
+                heartbeat(time.monotonic() - start)
             if cancelled or time.monotonic() >= deadline:
                 cause = "cancelled" if cancelled else "safety_deadline"
                 kill_group(proc.pid)

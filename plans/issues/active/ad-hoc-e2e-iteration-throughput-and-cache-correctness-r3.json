@@ -1,0 +1,383 @@
+{
+  "candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10",
+  "checks": [
+    {
+      "label": "r3-progress-controls",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-m",
+        "sifr_verify.progress_checks"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 2.007642343000043,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-report-contract",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-c",
+        "from sifr_verify.selftest import _canonical_report_input_self_test; _canonical_report_input_self_test()"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 0.20142319399747066,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-final-size",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "scripts/check_file_size_guardrails.py"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 2.003860717995849,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-telemetry",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::telemetry_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 0.20147139199980302,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-harness",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::harness_behavior_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 0.8024814550008159,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-execution",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::fixture_execution_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 3.612256991000322,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-isolation",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::batch_isolation_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 4.007135745006963,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-native-cache",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::native_cache_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 2.204516565994709,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-full",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-c",
+        "from sifr_verify.profile_commands import run_command,CommandFailed\nimport os,sys\ntry: run_command(['bash','verification/runner/e2e/run_e2e_pass.sh','--profile','merge'],env=os.environ.copy())\nexcept CommandFailed as error: sys.exit(error.returncode)"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 102.79393249200075,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 46194,
+        "plan_ms": 45,
+        "build_ms": 43581,
+        "build_sum_ms": 43457,
+        "run_ms": 7449,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    }
+  ],
+  "bootstrap": {
+    "kind": "candidate bootstrap, not performance evidence",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "-p",
+      "sifr",
+      "--test",
+      "e2e",
+      "--no-run",
+      "--message-format=json",
+      "-j",
+      "2"
+    ],
+    "target": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target",
+    "initial_free_bytes": 229950676992,
+    "planned_disk_allocation_gib": 24,
+    "minimum_disk_reserve_gib": 20,
+    "minimum_memory_reserve_gib": 2,
+    "cargo_jobs": 2,
+    "elapsed_seconds": 38.00726396399841,
+    "returncode": 0,
+    "stop_reason": null
+  },
+  "selected": 729,
+  "counts": [
+    710,
+    19
+  ],
+  "same_known_failure_set": true,
+  "unexpected": [],
+  "seconds": 102.79393249200075,
+  "stage_accounting": {
+    "id": "671159-0",
+    "status": "fail",
+    "wall_ms": 97465.791,
+    "sequential_stage_ms": 97464.926,
+    "unattributed_ms": 0.865,
+    "accounting_valid": true,
+    "stage_count": 10,
+    "note": "Only direct non-overlapping stages contribute to this sum. Process, native-attempt and per-case times are included observations, not additive wall time."
+  },
+  "command_accounting": {
+    "command_id": "d15f5c2e18164c10a72ae92898ca58ff",
+    "harness_ids": [
+      "671159-0"
+    ],
+    "command_wall_ms": 102683,
+    "harness_wall_ms": 97465.791,
+    "outside_harness_ms": 5217.209000000003,
+    "accounting_valid": true,
+    "note": "Outside harness includes Cargo/compiler preparation, profile/shell startup, libtest and teardown; no pure compilation or linker attribution is inferred."
+  },
+  "native_attempts": 193,
+  "native_attempt_failures": 2,
+  "case_timing_counts": {
+    "source_compile": 729,
+    "runtime": 710
+  },
+  "parse_errors": [],
+  "output_truncated": false,
+  "binary_sha256": "ef7066a19b86aef07c1faa23f030a36bf94c5f8f3e5ac4c4dca585d998581ca3",
+  "measurement_candidate": "7bc8e7e8fda39d143d976f235f5ee44737d1eb08",
+  "remediation": {
+    "candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10",
+    "checks": [
+      {
+        "label": "r3-orphan-progress",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+          "-m",
+          "sifr_verify.progress_checks"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 2.005383894997067,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "r3-orphan-size",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+          "scripts/check_file_size_guardrails.py"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 2.003804959997069,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      }
+    ],
+    "prior_full_reparsed": true,
+    "prior_full_candidate": "7bc8e7e8fda39d143d976f235f5ee44737d1eb08",
+    "accounting": [
+      {
+        "id": "671159-0",
+        "status": "fail",
+        "wall_ms": 97465.791,
+        "sequential_stage_ms": 97464.926,
+        "unattributed_ms": 0.865,
+        "accounting_valid": true,
+        "stage_count": 10,
+        "note": "Only direct non-overlapping stages contribute to this sum. Process, native-attempt and per-case times are included observations, not additive wall time."
+      }
+    ],
+    "command_accounting": [
+      {
+        "command_id": "d15f5c2e18164c10a72ae92898ca58ff",
+        "harness_ids": [
+          "671159-0"
+        ],
+        "command_wall_ms": 102683,
+        "harness_wall_ms": 97465.791,
+        "outside_harness_ms": 5217.209000000003,
+        "accounting_valid": true,
+        "note": "Outside harness includes Cargo/compiler preparation, profile/shell startup, libtest and teardown; no pure compilation or linker attribution is inferred."
+      }
+    ]
+  },
+  "initial_checks": [
+    {
+      "label": "r3-initial-selftest",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-m",
+        "sifr_verify",
+        "--self-test"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 58.30058740399545,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-initial-profiles",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-m",
+        "sifr_verify",
+        "profiles",
+        "check"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 0.401845146996493,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-initial-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--check"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 6.6106258959989646,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-initial-size",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "scripts/check_file_size_guardrails.py"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 2.003820612000709,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r3-initial-shell",
+      "command": [
+        "bash",
+        "-n",
+        "verification/runner/e2e/run_e2e_pass.sh"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 0.2014743680047104,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    }
+  ],
+  "plans": {
+    "candidate": "7bc8e7e8fda39d143d976f235f5ee44737d1eb08",
+    "compared_to": "r2 validated plans; no intervening selection changes",
+    "profiles": {
+      "create-pr": {
+        "identical": true,
+        "sha256": "01aa1ea35c403a7743d89c533d74cb4dddce31ff17c9747c6937289d4a77205d"
+      },
+      "merge": {
+        "identical": true,
+        "sha256": "4794605011c001d3283da921dfff590cbb5eb2d84957a7038c683b90aa29638c"
+      },
+      "nightly": {
+        "identical": true,
+        "sha256": "89ed2e6810e73fefd77a18ba2b9911602c221ec7003ea5b5392cb49e3f63c2f4"
+      },
+      "python-interop-live": {
+        "identical": true,
+        "sha256": "4310582b79e85cdaa3ff0b7fe78752df22e9a46dcdaf25d562563a1db4fd312d"
+      },
+      "release": {
+        "identical": true,
+        "sha256": "d2ac298eb5b9d33de8f07e942b59e6c1a2cb44aa8dc9826a38491536d224ea74"
+      }
+    }
+  },
+  "review": {
+    "candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10",
+    "verdict": "SATISFIED",
+    "sha256": "b0c24b52c80ebbcf756e95e7061ca02ae18e80d0ea5b17e5af214886a11f9199"
+  },
+  "initial_review": {
+    "candidate": "7bc8e7e8fda39d143d976f235f5ee44737d1eb08",
+    "verdict": "NOT SATISFIED",
+    "finding": "Malformed stage starts and orphan ends could produce valid accounting; corrected and covered by focused controls."
+  },
+  "qualification": "Focused draft evidence only; required acceptance blocked by #4344/#4347.",
+  "followups": [
+    "Observe output volume as corpus grows; existing one-MiB stream cap can truncate diagnostics. Actual full run was not truncated.",
+    "Independent linker timing is unavailable and explicitly unknown.",
+    "Missing wall time/budget now reports unknown rather than defaulting to true; nested child metrics remain observations only."
+  ]
+}

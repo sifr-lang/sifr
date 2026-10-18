@@ -28,7 +28,25 @@ pub(crate) fn run_single_case_bounded(
     execute_fixture(command, fixture, group_root, deadline)
 }
 
+#[expect(clippy::print_stderr, reason = "per-fixture execution timing")]
 pub(super) fn execute_fixture(
+    command: Command,
+    fixture: &str,
+    group_root: &Path,
+    deadline: Duration,
+) -> Result<(), String> {
+    let start = std::time::Instant::now();
+    let result = execute_fixture_inner(command, fixture, group_root, deadline);
+    eprintln!(
+        "[sifr-case-timing] bucket=runtime case={} elapsed_ms={} status={}",
+        fixture,
+        start.elapsed().as_millis(),
+        super::telemetry::status(result.is_ok())
+    );
+    result
+}
+
+fn execute_fixture_inner(
     mut command: Command,
     fixture: &str,
     group_root: &Path,
@@ -80,6 +98,14 @@ pub(super) fn execute_fixture(
             })
         }
         result => {
+            let cause = match &result {
+                Ok(output) => {
+                    serde_json::json!({"cause":"correctness","exit_code":output.status.code()})
+                }
+                Err(error) => super::telemetry::failure_details(error),
+            };
+            super::telemetry::emit(serde_json::json!({"schema":1,"event":"fixture_failure",
+                "fixture":fixture,"status":"fail","details":cause,"retained":attempt}));
             let diagnostic = match result {
                 Ok(output) => format!(
                     "status: {}\nstdout:\n{}\nstderr:\n{}",

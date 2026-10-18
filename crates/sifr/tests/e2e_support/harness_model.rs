@@ -209,7 +209,7 @@ pub(crate) fn run_capture_bounded(
     mut command: Command,
     deadline: std::time::Duration,
 ) -> CommandCapture {
-    match sifr_driver::process_execution::output_with_deadline(&mut command, deadline) {
+    match telemetry::output(&mut command, deadline) {
         Ok(output) => CommandCapture {
             exit_code: output.status.code(),
             status_ok: output.status.success(),

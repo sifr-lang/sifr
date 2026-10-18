@@ -28,3 +28,10 @@ mod batch_isolation;
 mod batch_isolation_tests;
 
 mod session_tests;
+
+mod pass_suite;
+mod telemetry;
+pub(crate) use pass_suite::*;
+mod pass_reporting;
+pub(crate) use pass_reporting::*;
+mod telemetry_tests;

@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from .paths import REPO_ROOT
+from .trace_reports import Traces
+from .command_progress import decode_child
 from .profiles import load_profile
 
 ARTIFACT_CACHE_ROOT = Path(os.environ.get("SIFR_CACHE_DIR", (
@@ -188,6 +190,7 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 
 
 def parse_log(path: Path) -> dict[str, Any]:
+    traces = Traces()
     lane_steps: list[dict[str, int | str]] = []
     preparation_steps = []
     lane_step_budgets: dict[str, dict[str, int | str]] = {}
@@ -200,6 +203,8 @@ def parse_log(path: Path) -> dict[str, Any]:
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line:
+            continue
+        if line.startswith("[sifr-command] ") and traces.add(line):
             continue
         if line.startswith("[sifr-preparation] "):
             preparation_steps.append(json.loads(line.removeprefix("[sifr-preparation] ")))
@@ -230,14 +235,10 @@ def parse_log(path: Path) -> dict[str, Any]:
             continue
         # Decode only child metrics after runner-owned status/cache/budget
         # matching. A decoded child can never enter those authoritative branches.
-        if line.startswith(("[child:stdout] ", "[child:stderr] ")):
-            try:
-                decoded = json.loads(line.split("] ", 1)[1])
-            except (ValueError, IndexError):
-                continue
-            if not isinstance(decoded, str):
-                continue
-            line = decoded.strip()
+        child = line.startswith(("[child:stdout] ", "[child:stderr] "))
+        line = decode_child(line)
+        if traces.add(line, child=child):
+            continue
         if match := CASE_TIMING_RE.match(line):
             case_timings.append(
                 {
@@ -286,6 +287,7 @@ def parse_log(path: Path) -> dict[str, Any]:
             cache_dir = match.group(1).strip()
 
     return {
+        "traces": traces.report(),
         "lane_steps": lane_steps,
         "preparation_steps": preparation_steps,
         "lane_step_budgets": lane_step_budgets,
@@ -319,7 +321,7 @@ def summarize(args: argparse.Namespace) -> int:
     sys_seconds = float(time_metrics.get("sys_seconds", 0.0))
     cpu_seconds = user_seconds + sys_seconds
     warm_target_minutes = int(lane.get("warm_wall_time_target_minutes", 0))
-    within_budget = True
+    within_budget = None
     if warm_target_minutes > 0 and real_seconds > 0:
         within_budget = real_seconds <= warm_target_minutes * 60
     workers = lane_workers(lane)
@@ -377,6 +379,7 @@ def summarize(args: argparse.Namespace) -> int:
         "time": time_metrics,
         "cpu_seconds": cpu_seconds,
         "e2e": e2e_metrics,
+        "traces": parsed_log["traces"],
         "observations": {
             "cache_hit_rate": cache_hit_rate,
             "rebuild_groups": rebuild_groups,
@@ -409,7 +412,7 @@ def summarize(args: argparse.Namespace) -> int:
         "  wall_time="
         f"{real_seconds:.2f}s "
         f"cpu={cpu_seconds:.2f}s "
-        f"(warm_target<={warm_target_minutes}m budget_ok={'yes' if within_budget else 'no'})"
+        f"(warm_target<={warm_target_minutes}m budget_ok={'unknown' if within_budget is None else 'yes' if within_budget else 'no'})"
     )
     if "max_rss_bytes" in time_metrics:
         print(
@@ -439,6 +442,14 @@ def summarize(args: argparse.Namespace) -> int:
             f"median_group={e2e.get('median_group_fixtures', 0)}"
             f"{hit_rate_suffix}{rebuilt_groups_suffix}{skew_suffix}"
         )
+    for accounting in parsed_log["traces"]["e2e_accounting"]:
+        print(f"  e2e_harness_wall_ms={accounting['wall_ms']} "
+              f"sequential_stages_ms={accounting['sequential_stage_ms']} "
+              f"unattributed_ms={accounting['unattributed_ms']} status={accounting['status']}")
+    for accounting in parsed_log["traces"]["command_e2e_accounting"]:
+        print(f"  command_to_result_ms={accounting['command_wall_ms']} "
+              f"outside_harness_ms={accounting['outside_harness_ms']} "
+              "(includes preparation, startup and teardown; unknown when None)")
     print(
         "  workers="
         f"sifr={workers['sifr_jobs']} "
