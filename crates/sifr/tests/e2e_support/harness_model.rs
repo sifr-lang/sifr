@@ -94,8 +94,9 @@ pub(crate) struct FixtureExecution {
     pub(crate) status: Result<(), String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct PassReport {
+    pub(crate) batch_failures: Vec<String>,
     pub(crate) cases: Vec<FixtureExecution>,
 }
 
@@ -135,6 +136,9 @@ impl ToolchainInfo {
 
 #[derive(Clone, Debug)]
 pub(crate) struct GroupBuildOutcome {
+    pub(crate) source_failure: bool,
+    pub(crate) infrastructure_failure: bool,
+    pub(crate) execution_deadline: Option<Instant>,
     pub(crate) group_root: PathBuf,
     pub(crate) group: BatchGroup,
     pub(crate) artifact_path: Option<PathBuf>,
@@ -191,22 +195,29 @@ pub(crate) struct FixtureSelectionManifest {
 }
 
 pub(crate) struct CommandCapture {
+    pub(crate) exit_code: Option<i32>,
     pub(crate) status_ok: bool,
     pub(crate) stdout: String,
     pub(crate) stderr: String,
 }
 
-pub(crate) fn run_capture(mut command: Command) -> CommandCapture {
-    match sifr_driver::process_execution::output_with_deadline(
-        &mut command,
-        std::time::Duration::from_secs(30 * 60),
-    ) {
+pub(crate) fn run_capture(command: Command) -> CommandCapture {
+    run_capture_bounded(command, std::time::Duration::from_secs(30 * 60))
+}
+
+pub(crate) fn run_capture_bounded(
+    mut command: Command,
+    deadline: std::time::Duration,
+) -> CommandCapture {
+    match sifr_driver::process_execution::output_with_deadline(&mut command, deadline) {
         Ok(output) => CommandCapture {
+            exit_code: output.status.code(),
             status_ok: output.status.success(),
             stdout: String::from_utf8_lossy(&output.stdout).to_string(),
             stderr: String::from_utf8_lossy(&output.stderr).to_string(),
         },
         Err(error) => CommandCapture {
+            exit_code: None,
             status_ok: false,
             stdout: String::new(),
             stderr: error.to_string(),

@@ -1,6 +1,6 @@
 use super::*;
 
-fn compiled_case_for_test(
+pub(super) fn compiled_case_for_test(
     fixture: FixtureCase,
     rust_source: &str,
     required_features: HashSet<StdlibFeature>,
@@ -204,12 +204,16 @@ pub(crate) fn test_report_signature_is_order_invariant() {
         },
     ];
     let report = PassReport {
+        batch_failures: Vec::new(),
         cases: cases.clone(),
     };
 
     let mut shuffled = cases;
     shuffled.swap(0, 1);
-    let report_shuffled = PassReport { cases: shuffled };
+    let report_shuffled = PassReport {
+        batch_failures: Vec::new(),
+        cases: shuffled,
+    };
 
     assert_eq!(
         report_signature("new", &report),
@@ -220,6 +224,7 @@ pub(crate) fn test_report_signature_is_order_invariant() {
 #[test]
 pub(crate) fn test_report_signature_changes_on_failure_delta() {
     let base = PassReport {
+        batch_failures: Vec::new(),
         cases: vec![
             FixtureExecution {
                 name: "case_a".to_string(),
@@ -232,6 +237,7 @@ pub(crate) fn test_report_signature_changes_on_failure_delta() {
         ],
     };
     let changed = PassReport {
+        batch_failures: Vec::new(),
         cases: vec![
             FixtureExecution {
                 name: "case_a".to_string(),

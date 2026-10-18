@@ -8,12 +8,24 @@ pub(crate) fn run_single_case(
     fixture: &str,
     group_root: &Path,
 ) -> Result<(), String> {
+    run_single_case_bounded(artifact, fixture, group_root, Duration::from_secs(30 * 60))
+}
+
+pub(crate) fn run_single_case_bounded(
+    artifact: &Path,
+    fixture: &str,
+    group_root: &Path,
+    deadline: Duration,
+) -> Result<(), String> {
+    if deadline.is_zero() {
+        return Err("diagnostic isolation deadline exhausted; fixture blocked".to_owned());
+    }
     if !artifact.is_absolute() {
         return Err("fixture executable must have an absolute Cargo-selected path".to_owned());
     }
     let mut command = Command::new(artifact);
     command.args(["--case", fixture]);
-    execute_fixture(command, fixture, group_root, Duration::from_secs(30 * 60))
+    execute_fixture(command, fixture, group_root, deadline)
 }
 
 pub(super) fn execute_fixture(

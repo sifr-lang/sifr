@@ -29,6 +29,21 @@ pub(crate) fn resolve_single_file_metadata(
     stdlib_interop: &StdlibRustInterop,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
     let lowering_stats = codegen_result.lowering_stats;
+    if lowering_stats.stmt_lowering_errors != 0
+        || lowering_stats.expr_lowering_errors != 0
+        || lowering_stats.item_lowering_errors != 0
+    {
+        return Err(vec![crate::diagnostics::diagnostic_with_code(
+            format!(
+                "Rust lowering failed: {} statement, {} expression, {} item error(s)",
+                lowering_stats.stmt_lowering_errors,
+                lowering_stats.expr_lowering_errors,
+                lowering_stats.item_lowering_errors,
+            ),
+            sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+        )]);
+    }
+
     let rust_source = codegen_result.rust_source.clone();
     let used_stdlib_modules = codegen_result.used_stdlib_modules.clone();
     let required_features = codegen_result.required_features.clone();
