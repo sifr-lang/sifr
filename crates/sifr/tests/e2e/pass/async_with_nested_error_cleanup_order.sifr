@@ -7,7 +7,7 @@ class ResourceError(Error):
 
 
 def marker_path(name: str) -> str:
-    return "/tmp/sifr_async_with_nested_error_" + name + "_" + str(getpid()) + ".txt"
+    return "sifr_async_with_nested_error_" + name + "_" + str(getpid()) + ".txt"
 
 
 class OrderedResource:

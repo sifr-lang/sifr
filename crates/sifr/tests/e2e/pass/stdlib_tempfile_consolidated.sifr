@@ -1,7 +1,8 @@
 # Consolidated stdlib tempfile coverage for stdlib_consolidation structure rules
 from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
 from sifr.io import exists
-from sifr.os import run_command
+from sifr.os import remove_file
+from sifr.shutil import rmtree
 from sifr.pathlib import basename, dirname
 from sifr.test import assert_bool_vector_eq
 
@@ -32,27 +33,32 @@ def main():
         missing_parent_name: str = "__sifr_stdlib_tempfile_missing_parent__"
         missing_parent_path: str = temp_root + "/" + missing_parent_name
         missing_prefix: str = missing_parent_name + "/bad_"
-        _rm_missing: str = run_command("rm -rf " + missing_parent_path)
+        if exists(missing_parent_path):
+            _rm_missing: None = rmtree(missing_parent_path)
         missing_error: bool = False
+        unexpected_file: str | None = None
         try:
-            unexpected_file: str = mkstemp(missing_prefix)
-            _rm_unexpected: str = run_command("rm -f " + unexpected_file)
+            created_file: str = mkstemp(missing_prefix)
+            unexpected_file = created_file
             missing_error = False
         except IOError as e:
             _ = str(e.message)
             missing_error = True
+        if unexpected_file is not None:
+            _rm_unexpected: None = remove_file(unexpected_file)
         actual.append(missing_error)
 
-        _c1: str = run_command("rm -f " + file_path)
-        _c2: str = run_command("rm -f " + second_file)
-        _c3: str = run_command("rm -rf " + dir_path)
-        _c4: str = run_command("rm -rf " + missing_parent_path)
+        _c1: None = remove_file(file_path)
+        _c2: None = remove_file(second_file)
+        _c3: None = rmtree(dir_path)
+        if exists(missing_parent_path):
+            _c4: None = rmtree(missing_parent_path)
         cleaned: bool = (not exists(file_path)) and (not exists(second_file)) and (not exists(dir_path))
         actual.append(cleaned)
 
         empty_prefix_file: str = mkstemp("")
         actual.append(exists(empty_prefix_file))
-        _ce: str = run_command("rm -f " + empty_prefix_file)
+        _ce: None = remove_file(empty_prefix_file)
     except IOError as e:
         _ = str(e.message)
         actual = [False, False, False, False, False, False, False]

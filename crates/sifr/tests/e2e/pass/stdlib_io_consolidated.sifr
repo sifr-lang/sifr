@@ -6,7 +6,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_text_roundtrip_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_stdlib_io_consolidated.txt"
+    path: str = "sifr_stdlib_io_consolidated.txt"
 
     text_roundtrip_ok: bool = False
     append_roundtrip_ok: bool = False
@@ -38,8 +38,8 @@ def collect_text_roundtrip_actual() -> list[bool]:
 
 def collect_open_actual() -> list[bool]:
     actual: list[bool] = []
-    text_path: str = "/tmp/sifr_stdlib_io_consolidated_open.txt"
-    binary_path: str = "/tmp/sifr_stdlib_io_consolidated_bytes.bin"
+    text_path: str = "sifr_stdlib_io_consolidated_open.txt"
+    binary_path: str = "sifr_stdlib_io_consolidated_bytes.bin"
 
     open_lines_ok: bool = False
     binary_ok: bool = False
@@ -62,7 +62,7 @@ def collect_open_actual() -> list[bool]:
         _ = str(e.message)
 
     try:
-        _missing = open("/tmp/sifr_stdlib_io_consolidated_missing.txt", "r", encoding="utf-8")
+        _missing = open("sifr_stdlib_io_consolidated_missing.txt", "r", encoding="utf-8")
     except IOError as e:
         _ = str(e.message)
         missing_open_rejected = True

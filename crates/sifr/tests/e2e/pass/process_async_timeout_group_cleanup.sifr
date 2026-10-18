@@ -4,7 +4,7 @@ from sifr.process import Output, ProcessError, async_output_shell_timeout
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_process_async_timeout_group_cleanup_" + str(getpid()) + ".txt"
+    return "sifr_process_async_timeout_group_cleanup_" + str(getpid()) + ".txt"
 
 
 async def main() -> None:

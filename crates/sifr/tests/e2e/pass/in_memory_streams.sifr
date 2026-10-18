@@ -17,7 +17,7 @@ def main() -> None:
     binary_error_kind_ok: bool = False
     cleanup_ok: bool = False
 
-    path: str = "/tmp/sifr_in_memory_streams_binary.bin"
+    path: str = "sifr_in_memory_streams_binary.bin"
 
     try:
         sio: StringIO = StringIO("abc")

@@ -3,7 +3,7 @@ from sifr.os import getpid, remove_file
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_cancellation_cleanup_runs_" + str(getpid()) + ".txt"
+    return "sifr_cancellation_cleanup_runs_" + str(getpid()) + ".txt"
 
 
 async def main() -> Result[None, Error]:

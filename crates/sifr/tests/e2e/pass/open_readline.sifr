@@ -2,7 +2,7 @@
 from sifr.io import read_lines, write_text
 
 def main():
-    path: str = "/tmp/sifr_open_readline_test.txt"
+    path: str = "sifr_open_readline_test.txt"
     try:
         _: None = write_text(path, "first line\nsecond line\n")
         lines: list[str] = read_lines(path)

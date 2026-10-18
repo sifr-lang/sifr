@@ -81,12 +81,12 @@ def collect_translation_actual() -> list[bool]:
 
     missing_path_rejected: bool = False
     try:
-        _missing: Bundle = load_mo_file("/tmp/sifr_text_i18n_missing_catalog.mo")
+        _missing: Bundle = load_mo_file("sifr_text_i18n_missing_catalog.mo")
     except CatalogError as e:
         missing_path_rejected = len(e.message) > 0
     actual.append(missing_path_rejected)
 
-    path: str = "/tmp/sifr_text_i18n_translation_bundle.mo"
+    path: str = "sifr_text_i18n_translation_bundle.mo"
     file_loaded: bool = False
     cleanup_ok: bool = False
     try:

@@ -256,6 +256,25 @@ test them. Diagnostic example checks execute explicitly selected standalone
 check-fail/check-pass pairs and their explain/help surface; contextual package and
 runtime examples are not indiscriminately executed.
 
+### E2E fixture execution directories
+
+Run-pass fixtures execute in individual owned directories beneath their native
+cache group (`runs/<fixture-prefix>-run <unique>/work`). The short prefix includes a space
+so ordinary runs exercise paths that require correct argument handling. Fixture
+cleanup uses filesystem APIs for temporary paths. The working directory and `TMPDIR`,
+`TEMP`, and `TMP` point to that directory; child processes inherit them. Fixtures
+create their data there and must receive any external resources explicitly.
+Writable fixture paths use relative names or `sifr.tempfile`; absolute-path
+parsing assertions remain independent of actual filesystem output.
+
+Successful attempts remove only their own scratch directory after process
+cleanup. A failed launch, nonzero exit, timeout or interruption retains the
+attempt directory, fixture name and available captured output. Failure messages
+identify that directory. Group retention also preserves incomplete attempts.
+Compiler-input tracking is unchanged: test output is moved out of its inputs,
+not excluded from source identity checks. The regular 30-minute subprocess
+safety deadline and child cleanup still apply.
+
 ### E2E native dependency reuse
 
 Every generated run-pass group is validated by Cargo. The owned cache uses a

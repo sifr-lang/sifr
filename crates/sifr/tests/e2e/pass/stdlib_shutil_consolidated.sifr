@@ -1,7 +1,7 @@
 # Consolidated stdlib shutil coverage for stdlib_consolidation structure rules
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.io import write_text, read_text, exists
-from sifr.os import mkdir, run_command
+from sifr.os import mkdir
 from sifr.tempfile import mktemp_path
 from sifr.test import assert_bool_vector_eq
 
@@ -39,7 +39,7 @@ def collect_copy_move_tree_actual() -> list[bool]:
         _rm_tree: None = rmtree(subdir)
         rmtree_ok = not exists(subdir)
 
-        _cleanup: str = run_command("rm -rf " + base)
+        _cleanup: None = rmtree(base)
         cleanup_ok = not exists(base)
     except IOError as e:
         _ = str(e.message)
@@ -67,7 +67,7 @@ def collect_tooling_and_errors_actual() -> list[bool]:
             usage_ok = total > 0
     actual.append(usage_ok)
 
-    base: str = "/tmp/sifr_stdlib_shutil_consolidated_missing"
+    base: str = "sifr_stdlib_shutil_consolidated_missing"
     missing_copy_rejected: bool = False
     try:
         _bad_copy: None = copy(base + "/missing_src.txt", base + "/missing_dst.txt")

@@ -7,7 +7,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_glob_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_cpython_glob_subset_" + str(getpid())
+    base: str = "sifr_cpython_glob_subset_" + str(getpid())
     missing: str = base + "_missing"
     try:
         _mk: str = run_command("mkdir -p " + base + "/subdir")

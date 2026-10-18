@@ -38,7 +38,7 @@ def collect_regex_actual() -> list[bool]:
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_regex_filesystem_iterators_" + str(getpid())
+    base: str = "sifr_regex_filesystem_iterators_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")
         _w1: None = write_text(base + "/a.txt", "a")

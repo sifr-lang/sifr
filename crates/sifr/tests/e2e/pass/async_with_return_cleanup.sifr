@@ -3,7 +3,7 @@ from sifr.os import getpid, remove_file
 
 
 def marker_path(name: str) -> str:
-    return "/tmp/sifr_async_with_return_cleanup_" + name + "_" + str(getpid()) + ".txt"
+    return "sifr_async_with_return_cleanup_" + name + "_" + str(getpid()) + ".txt"
 
 
 class MarkerResource:

@@ -1,7 +1,8 @@
 # Adapted CPython tempfile subset for sifr.tempfile (canonical bool-vector format)
 from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
 from sifr.io import exists, read_text
-from sifr.os import run_command
+from sifr.os import remove_file
+from sifr.shutil import rmtree
 from sifr.pathlib import basename, dirname
 from sifr.test import assert_bool_vector_eq
 
@@ -41,22 +42,27 @@ def collect_tempfile_actual() -> list[bool]:
         missing_parent_name: str = "__sifr_missing_parent__"
         missing_parent_path: str = temp_root + "/" + missing_parent_name
         missing_prefix: str = missing_parent_name + "/tmp_"
-        _rm_missing: str = run_command("rm -rf " + missing_parent_path)
+        if exists(missing_parent_path):
+            _rm_missing: None = rmtree(missing_parent_path)
         missing_file_error: bool = False
+        unexpected_file: str | None = None
         try:
-            unexpected_file: str = mkstemp(missing_prefix)
-            _rm_unexpected_file: str = run_command("rm -f " + unexpected_file)
+            created_file: str = mkstemp(missing_prefix)
+            unexpected_file = created_file
             missing_file_error = False
         except IOError as e:
             _ = str(e.message)
             missing_file_error = True
+        if unexpected_file is not None:
+            _rm_unexpected_file: None = remove_file(unexpected_file)
         actual.append(missing_file_error)
 
-        _c1: str = run_command("rm -f " + p1)
-        _c2: str = run_command("rm -f " + p2)
-        _c3: str = run_command("rm -f " + empty_prefix_path)
-        _c4: str = run_command("rm -rf " + d1)
-        _c5: str = run_command("rm -rf " + missing_parent_path)
+        _c1: None = remove_file(p1)
+        _c2: None = remove_file(p2)
+        _c3: None = remove_file(empty_prefix_path)
+        _c4: None = rmtree(d1)
+        if exists(missing_parent_path):
+            _c5: None = rmtree(missing_parent_path)
         cleaned: bool = (not exists(p1)) and (not exists(p2)) and (not exists(empty_prefix_path)) and (not exists(d1))
         actual.append(cleaned)
     except IOError as e:

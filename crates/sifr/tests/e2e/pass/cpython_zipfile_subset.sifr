@@ -5,7 +5,7 @@ from sifr.os import run_command
 
 
 def main():
-    path: str = "/tmp/sifr_cpython_zipfile_subset.zip"
+    path: str = "sifr_cpython_zipfile_subset.zip"
     zf: ZipFile = ZipFile(path + "")
 
     try:

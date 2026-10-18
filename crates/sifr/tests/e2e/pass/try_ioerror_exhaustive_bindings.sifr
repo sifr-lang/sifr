@@ -3,7 +3,7 @@ from sifr.io import read_text
 
 def load_io(use_subclass: bool) -> Result[str, IOError]:
     if use_subclass:
-        return read_text("/tmp/sifr_try_ioerror_exhaustive_bindings_missing.txt")
+        return read_text("sifr_try_ioerror_exhaustive_bindings_missing.txt")
     raise IOError("other")
 
 

@@ -1,8 +1,8 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: active; E0 and R0 complete; R1/E1 reviewed drafts; acceptance blocked
+status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E1 reviewed draft; E2 source-reviewed draft awaiting actual harness validation
+current_stage: E2 reviewed draft with actual validation; R2 next; acceptance blocked
 
 ## Objective and authority
 
@@ -601,6 +601,89 @@ the independent implementation/review slice; required acceptance remains pending
   execution leaves source inputs untouched; subsequent unchanged preparation is
   fresh, with the same executable identity and no unrelated compiler rebuild.
 
+### E2 draft progress — 2026-10-18
+
+- Stage each run-pass execution in its own owned group scratch directory and set
+  its working directory and temporary-directory environment together. Retain
+  interrupted and failed attempts with their fixture name and available output;
+  remove only successful attempts after process cleanup.
+- Replace writable `/tmp/sifr_` fixture paths with relative names. All 65 changed
+  fixtures keep identical assertion lines and expected-vector declarations; the
+  729-fixture inventory and absolute-path parsing assertions are unchanged.
+  Existing tempfile users still exercise absolute temporary paths.
+- Four proposed execution controls and five existing driver process controls
+  passed in an isolated helper build using the actual process/cache modules.
+  They cover simultaneous same-named fixtures and output files, environment and
+  working directory, successful cleanup, retained failures, launch errors,
+  deadlines, descendant cleanup and cancellation. This does not substitute for
+  candidate harness execution. One helper-setup failure (missing test-only
+  `memchr` dependency) is preserved; the disposable setup was corrected without
+  changing repository dependencies.
+- At the initial draft, actual harness validation and preparation freshness were
+  pending; the completed evidence below supersedes that pending state. Reference
+  admission #4347 and compiler defects #4344 still block acceptance.
+
+### E2 path-handling correction — 2026-10-18
+
+- The initial actual candidate passed four isolation controls, 19 harness checks,
+  73 of 76 individually executed filesystem cases (the three failures are owned
+  by #4344), and the full 729 comparison with identical 631/98 outcomes. Later
+  preparation was fresh in 6.002s with the same executable and unchanged source
+  inputs. Those records bind to `55f9d8776`, not to the correction below.
+- An additional retained-executable control failed when the working/temporary
+  directory contained spaces: existing fixtures concatenated temporary paths
+  into unquoted shell cleanup commands. Moving TMPDIR into the cache made cache
+  path spelling relevant, so this is within E2's resource-preservation scope.
+- Replace these cleanup commands in eight fixtures with filesystem API calls;
+  guard removal of deliberately absent directories. Existing assertions and
+  expected vectors stay intact. Shorten the scratch prefix and include a space
+  in normal execution directories so the regular corpus covers this regression.
+  The original 65 literal-prefix edits remain; six additional fixture files
+  now have cleanup changes. The first space-path run and scoped review found
+  the same missed shell setup/cleanup in two logging fixtures and one shutil
+  fixture; all three are corrected. Temporary-file negative checks keep cleanup
+  outside the expected-error block so a cleanup failure cannot mask unexpected
+  creation success. Failed evidence remains retained; candidate validation and
+  updated review follow.
+
+### E2 actual candidate validation — 2026-10-18
+
+Source candidate `e6bfdeffb110f068f1f7ccbcd7cffe891b9d31db` is reviewed SATISFIED in draft
+[#4350](https://github.com/sifr-lang/sifr/pull/4350). The portable
+[E2 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e2.json)
+binds the candidate, executable hash, timings, review and retained evidence.
+
+- All 729 fixture names remain; 71 edited fixtures preserve their assertion and
+  expected-vector lines. Eight fixtures use filesystem APIs for temporary-path
+  setup/cleanup. Normal execution paths contain spaces, so this coverage persists.
+- Four execution controls and 19 harness controls pass. They cover concurrent
+  same-named output, cleanup ownership, retained failures, launch failure,
+  timeout/descendant cleanup and scratch-path safety.
+- Hashlib passes twice; the repeat takes 3.807s with Cargo reporting
+  its native artifact fresh. Subsequent compiler preparation takes
+  6.002s, rebuilding zero targets with the same executable hash.
+- All 76 filesystem/resource fixtures are attempted individually in 43.476s:
+  73 pass and the same three known compiler defects remain. All eight fixtures
+  with corrected temporary-path handling also pass with a cache path containing
+  both spaces and an apostrophe (27.245s).
+- The complete 729-fixture component takes 147.652s with exactly the E1
+  631-pass/98-reported-failure set: 19 direct known defects and 79 fixtures blocked
+  by their batches. This is warm component evidence, not a passing gate or a
+  paired speedup against the earlier cold-native-target run.
+- Preparation after the full component takes 6.002s, again with zero
+  rebuilt targets, identical executable hash and untouched source-root files.
+  Formatting, file-size guardrails and diff whitespace pass.
+- Preserve the original space-path reproduction, the incomplete correction's
+  70/6 filesystem result and NOT SATISFIED review. The final correction resolves
+  all three new failures without altering assertions or expected vectors. A later
+  71/5 attempt exposed two tempfile binding errors; typed fallible bindings fix
+  those too. Retain that failed attempt alongside the two-fixture passing check.
+- Review follow-ups remain separate: consider filesystem API cleanup for the
+  remaining fixed relative shell paths; exercise Windows when available. No
+  speculative platform result is recorded as passed.
+- R2 is the next bounded item. Required create-pr/merge qualification remains
+  blocked by #4347 and #4344; no acceptance waiver or merge is implied.
+
 ### E3 — explicit failures and complete independent feedback
 
 - Surface nonzero structured lowering-error results through the canonical error
@@ -777,20 +860,22 @@ If warranted, register a separate bounded item with before/after evidence.
 | Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
 | E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
 | R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
-| R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Continue independent E1 work; #4347 still blocks acceptance |
+| R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Qualification still blocked by #4347 |
 | E1 | reviewed draft; focused validation complete; acceptance pending | [#4349](https://github.com/sifr-lang/sifr/pull/4349) / `73b3d33ad` | Portable E1 receipt; source review SATISFIED; full component retains known failures | #4347 and #4344 still block acceptance |
-| E2 | source-reviewed draft; actual validation pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `f6657abfd` | 9 isolated controls; scoped source review SATISFIED | Validate actual harness, filesystem cases and preparation freshness |
+| E2 | reviewed draft; focused validation complete; acceptance pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `e6bfdeffb` | Portable E2 receipt; actual filesystem/full comparison; preparation fresh; review SATISFIED | R2 next; #4347 and #4344 still block acceptance |
 | R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
 | E3 | pending | none | none | Early errors and bounded failed-batch isolation |
 | E4 | pending | none | none | Invocation-scoped setup reuse |
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
-R1 review remediation is complete; its acceptance remains pending. Continue
-independent E2 draft work in this session using focused correctness checks;
-#4347 still blocks full acceptance. R0 is
-merged and preserves all existing acceptance requirements. The concrete R1/E1 slices and
-usable preparation artifacts are recorded above. Preserve unrelated changes
+R1/E1/E2 source review and focused validation are recorded; acceptance remains
+pending. R2 is the next independent bounded item in this session: model exact
+preparation prerequisites, retain fail-fast by default, and allow only independent
+checks to continue under no-fail-fast. Begin with deterministic runner self-tests;
+reuse the owned warm targets and do not start another compiler rebuild without a
+changed compiler input. #4347 and #4344 still block full acceptance. R0 preserves
+all existing acceptance requirements; no gate waiver has been granted. Preserve unrelated changes
 and artifacts in other worktrees; they are not owned by this plan.
-No product implementation, compiler defect repair, gate waiver or performance
-guarantee has been delivered by registering this phase.
+The delivered changes affect verification infrastructure and fixtures; compiler
+defects and acceptance qualification remain separately owned.

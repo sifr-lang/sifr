@@ -6,8 +6,8 @@ from sifr.os import remove_file
 def main():
     expected: list[str] = ["namelist len = 1", "content = hello from zip", "created = true"]
     expected_index: int = 0
-    path: str = "/tmp/sifr_test_zipfile.zip"
-    zf: ZipFile = ZipFile("/tmp/sifr_test_zipfile.zip")
+    path: str = "sifr_test_zipfile.zip"
+    zf: ZipFile = ZipFile("sifr_test_zipfile.zip")
 
     try:
         _: None = zf.create()
@@ -35,6 +35,6 @@ def main():
         expected_index = expected_index + 1
 
     try:
-        _r: None = remove_file("/tmp/sifr_test_zipfile.zip")
+        _r: None = remove_file("sifr_test_zipfile.zip")
     except IOError as e:
         pass

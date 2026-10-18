@@ -5,7 +5,7 @@ from sifr.time import sleep
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_process_timeout_group_cleanup_" + str(getpid()) + ".txt"
+    return "sifr_process_timeout_group_cleanup_" + str(getpid()) + ".txt"
 
 
 def main():

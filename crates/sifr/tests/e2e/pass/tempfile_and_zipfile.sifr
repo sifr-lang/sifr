@@ -22,7 +22,7 @@ def main() -> None:
     zip_is_zipfile_ok: bool = False
     zip_cleanup_ok: bool = False
 
-    zip_path: str = "/tmp/sifr_tempfile_and_zipfile_archive.zip"
+    zip_path: str = "sifr_tempfile_and_zipfile_archive.zip"
 
     try:
         ntf_delete: NamedTemporaryFile = NamedTemporaryFile("w+", True, "sifr_tempfile_and_zipfile_del_")

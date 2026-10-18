@@ -7,7 +7,7 @@ class ResourceError(Error):
 
 
 def marker_path() -> str:
-    return "/tmp/sifr_async_with_ordinary_error_cleanup_" + str(getpid()) + ".txt"
+    return "sifr_async_with_ordinary_error_cleanup_" + str(getpid()) + ".txt"
 
 
 class MarkerResource:

@@ -35,7 +35,7 @@ def collect_runtime_actual() -> list[bool]:
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_cpython_os_subset_" + str(getpid())
+    base: str = "sifr_cpython_os_subset_" + str(getpid())
     file_a: str = base + "/a.txt"
     file_b: str = base + "/b.txt"
 
@@ -89,7 +89,7 @@ def collect_locator_and_errors_actual() -> list[bool]:
 
     missing_rmdir_rejected: bool = False
     try:
-        _r: None = rmdir("/tmp/sifr_cpython_os_subset_missing")
+        _r: None = rmdir("sifr_cpython_os_subset_missing")
     except IOError as e:
         _ = str(e.message)
         missing_rmdir_rejected = True
@@ -97,7 +97,7 @@ def collect_locator_and_errors_actual() -> list[bool]:
 
     missing_chdir_rejected: bool = False
     try:
-        _c: None = chdir("/tmp/sifr_cpython_os_subset_missing")
+        _c: None = chdir("sifr_cpython_os_subset_missing")
     except IOError as e:
         _ = str(e.message)
         missing_chdir_rejected = True
