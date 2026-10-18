@@ -27,7 +27,7 @@ pub(super) fn execute_fixture(
         .map_err(|error| format!("cannot create fixture execution directory: {error}"))?;
     let prefix = fixture
         .chars()
-        .take(80)
+        .take(32)
         .map(|ch| {
             if ch.is_ascii_alphanumeric() || ch == '_' {
                 ch
@@ -37,7 +37,8 @@ pub(super) fn execute_fixture(
         })
         .collect::<String>();
     let attempt = tempfile::Builder::new()
-        .prefix(&format!("{prefix}-"))
+        // Exercise spaces in ordinary runs so fixtures cannot assume shell-safe paths.
+        .prefix(&format!("{prefix}-run "))
         .tempdir_in(&runs)
         .map_err(|error| format!("cannot allocate fixture execution directory: {error}"))?
         // Retain even if the harness is interrupted or unwinds before capture returns.

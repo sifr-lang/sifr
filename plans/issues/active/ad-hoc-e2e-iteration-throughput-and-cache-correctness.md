@@ -624,6 +624,24 @@ the independent implementation/review slice; required acceptance remains pending
   unchanged source tree after user-requested cleanup removed its warm targets.
   Reference admission #4347 and compiler defects #4344 still block acceptance.
 
+### E2 path-handling correction — 2026-10-18
+
+- The initial actual candidate passed four isolation controls, 19 harness checks,
+  73 of 76 individually executed filesystem cases (the three failures are owned
+  by #4344), and the full 729 comparison with identical 631/98 outcomes. Later
+  preparation was fresh in 6.002s with the same executable and unchanged source
+  inputs. Those records bind to `55f9d8776`, not to the correction below.
+- An additional retained-executable control failed when the working/temporary
+  directory contained spaces: existing fixtures concatenated temporary paths
+  into unquoted shell cleanup commands. Moving TMPDIR into the cache made cache
+  path spelling relevant, so this is within E2's resource-preservation scope.
+- Replace these cleanup commands in five fixtures with filesystem API calls;
+  guard removal of deliberately absent directories. Existing assertions and
+  expected vectors stay intact. Shorten the scratch prefix and include a space
+  in normal execution directories so the regular corpus covers this regression.
+  The original 65 literal-prefix edits remain; three additional fixture files
+  now have cleanup changes. Candidate validation and updated review follow.
+
 ### E3 — explicit failures and complete independent feedback
 
 - Surface nonzero structured lowering-error results through the canonical error

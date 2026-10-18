@@ -259,7 +259,9 @@ runtime examples are not indiscriminately executed.
 ### E2E fixture execution directories
 
 Run-pass fixtures execute in individual owned directories beneath their native
-cache group (`runs/<fixture>-<unique>/work`). The working directory and `TMPDIR`,
+cache group (`runs/<fixture-prefix>-run <unique>/work`). The short prefix includes a space
+so ordinary runs exercise paths that require correct argument handling. Fixture
+cleanup uses filesystem APIs for temporary paths. The working directory and `TMPDIR`,
 `TEMP`, and `TMP` point to that directory; child processes inherit them. Fixtures
 create their data there and must receive any external resources explicitly.
 Writable fixture paths use relative names or `sifr.tempfile`; absolute-path

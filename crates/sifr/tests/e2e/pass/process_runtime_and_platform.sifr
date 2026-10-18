@@ -1,5 +1,5 @@
 # Process runtime and platform.
-from sifr.os import run_command, getcwd
+from sifr.os import run_command, getcwd, remove_file
 from sifr.env import getenv, getenv_opt
 from sifr.sys import argv, version, platform, maxsize
 from sifr.logging import getLogger, INFO, Logger
@@ -68,7 +68,7 @@ def collect_process_logging_actual() -> list[bool]:
     actual.append(logging_ok)
 
     try:
-        _rm: str = run_command("rm -f " + log_path)
+        _rm: None = remove_file(log_path)
         _ = _rm
     except IOError as e:
         _ = e.message

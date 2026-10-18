@@ -6,7 +6,7 @@ from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.tempfile import mkdtemp, mkstemp
 from sifr.gzip import compress, decompress
 from sifr.zipfile import ZipFile
-from sifr.os import run_command
+from sifr.os import run_command, remove_file
 from sifr.test import assert_bool_vector_eq
 
 
@@ -106,7 +106,7 @@ def collect_shutil_temp_actual() -> list[bool]:
         except IOError as e:
             _ = e.message
 
-        _cleanup_temp: str = run_command("rm -f " + temp_file)
+        _cleanup_temp: None = remove_file(temp_file)
         temp_cleanup_ok = not exists(temp_file)
     except IOError as e:
         _ = e.message

@@ -87,6 +87,7 @@ fn parallel_fixtures_isolate_identical_output_names_and_retain_failures() {
     assert_eq!(attempts.len(), 2);
     let mut names = Vec::new();
     for attempt in attempts {
+        assert!(attempt.file_name().unwrap().to_string_lossy().contains(' '));
         assert_eq!(
             std::fs::read_to_string(attempt.join("fixture.txt")).unwrap(),
             "same-fixture"
