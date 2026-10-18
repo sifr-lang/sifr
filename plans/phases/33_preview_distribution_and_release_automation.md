@@ -147,7 +147,7 @@ Any implementation that reintroduces a custom JSON manifest protocol must first 
 
 ## `/create-new-version` Workflow Contract
 
-The preview release command is implemented as `.cursor/commands/create-new-version.md` in the compiler repository.
+The preview release command is implemented as `.agents/commands/create-new-version.md` in the compiler repository.
 
 Inputs:
 
@@ -296,7 +296,7 @@ flowchart TD
 
 **Scope:**
 
-- Add `.cursor/commands/create-new-version.md`.
+- Add `.agents/commands/create-new-version.md`.
 - Implement the dry-run planner for `alpha` and `beta`.
 - Implement the authorized real-run workflow for preview releases.
 - Validate version/channel compatibility and reject stable releases.

@@ -548,7 +548,7 @@ bytes. The main
 workflow polls the exact attempt/head/title for at most 20 minutes and requests
 cancellation on timeout. The site workflow never writes release metadata.
 
-The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
+The Cursor command wrapper lives at `.agents/commands/create-new-version.md`.
 
 ## Preview lifecycle validation Validation
 

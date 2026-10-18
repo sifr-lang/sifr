@@ -8050,7 +8050,7 @@ below. Two original findings recur:
    sentence with a site-specific semantic contract.
 
 These repeat original findings (4) and (3). The
-`.cursor/skills/phase-closure-loop/SKILL.md` rule says, "If the same finding returns
+`.agents/skills/phase-closure-loop/SKILL.md` rule says, "If the same finding returns
 twice, stop and request adjudication." This owner stopped implementation and
 review, preserved the exact draft and logs, and did not perform another repair
 or review. A separately assigned scope adjudication must decide the next bounded
@@ -8380,7 +8380,7 @@ normalization and SAFETY-locality mechanisms:
   proof. Stop the run at any earlier comment sharing a line with preceding
   code, and add the continuation negative.
 
-Under `.cursor/skills/phase-closure-loop/SKILL.md`, "If the same finding returns
+Under `.agents/skills/phase-closure-loop/SKILL.md`, "If the same finding returns
 twice, stop and request adjudication." This is that stop: no further code
 repair, third remediation review, implementation merge or next batch is
 accepted by this receipt. **Next action:** separately assign a bounded
@@ -8663,7 +8663,7 @@ these value classes; its real-validator pass did not include third-site binding
 collisions. The sentence-punctuation repair and SAFETY ownership remain reviewed
 as satisfying their criteria, but the complete foundation candidate is unapproved.
 
-Under `.cursor/skills/phase-closure-loop/SKILL.md`, "If a second review finds a
+Under `.agents/skills/phase-closure-loop/SKILL.md`, "If a second review finds a
 new mechanism-level defect, stop and rescope the item." This owner stops here:
 no third repair or review, implementation merge or H02h1 work. **Next action:**
 separately assign a bounded scope decision for comparison symmetry that preserves
