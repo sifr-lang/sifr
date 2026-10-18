@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; runner/cache implementation pending
 registered: 2026-10-18
-current_stage: R1 review remediation; independent draft work may continue while reference qualification is pending
+current_stage: R1 scoped review satisfied; E1 is next; reference qualification remains pending
 
 ## Objective and authority
 
@@ -396,7 +396,9 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   Remediation credits clean inactive file pages at each finite ancestor while
   retaining dirty/writeback pages, child limits and host availability as bounds.
   The focused suite passes with warm-cache, dirty-cache and nested-limit controls;
-  remediation review remains pending. Failed requests and the completed review
+  remediation review on `d7bb0f5c4e5fbef3b1f9da61b9e44b83522fa771` is SATISFIED
+  with no blocking findings. Review receipt: `r1-review-d7bb0f5c4.md` in the
+  owned evidence bundle, outside the reviewed Git tree. Failed requests and the completed review
   remain outside Git, bound to their observed candidates.
 - Review follow-ups: native child Cargo explicitly uses `-j` from the E2E native
   allocation (`batch_execution.rs`), so it does not inherit the compiler job count.
@@ -669,7 +671,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
 | E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
 | R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
-| R1 | draft; acceptance blocked | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / implementation `77a05cf6f` | Eight focused controls and runner foundation suite pass; matched preparation measured; create-pr gate failed; review remediation pending | Finish review remediation; continue independent draft work; #4347 still blocks acceptance |
+| R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Continue independent E1 work; #4347 still blocks acceptance |
 | E1 | pending | none | none | Cargo authority and shared native dependencies |
 | E2 | pending | none | none | Isolate fixture outputs |
 | R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
@@ -678,8 +680,9 @@ If warranted, register a separate bounded item with before/after evidence.
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
-R1 review remediation is the active bounded item. Continue independent draft
-cache work in this session after that correction; #4347 still blocks full acceptance. R0 is
+R1 review remediation is complete; its acceptance remains pending. Continue
+independent E1 draft work in this session using focused correctness checks;
+#4347 still blocks full acceptance. R0 is
 merged and preserves all existing acceptance requirements. The concrete R1/E1 slices and
 usable preparation artifacts are recorded above. Preserve unrelated changes
 and artifacts in other worktrees; they are not owned by this plan.
