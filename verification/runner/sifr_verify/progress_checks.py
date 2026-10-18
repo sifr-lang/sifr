@@ -142,6 +142,31 @@ except CommandFailed as error:
         root["valid_terminal_pair"]=False
         self.assertIsNone(command_accounting(report)[0]["outside_harness_ms"])
 
+    def test_malformed_or_orphan_spans_invalidate_stage_and_command_accounting(self):
+        for broken in ("schema", "json", "orphan_suite"):
+            with self.subTest(broken=broken):
+                traces=Traces()
+                self.span(traces,"root","suite",None,0,100000)
+                traces.rows[("e2e_spans","root")]["start"]["unix_ms"]=1000
+                traces.rows[("commands","outer")]={
+                    "start":{"scope":"command","unix_ms":990},
+                    "end":{"scope":"command","unix_ms":1110,"elapsed_ms":120,"exit_code":0,"status":"pass"}}
+                if broken == "schema":
+                    traces.add('[sifr-e2e-event] '+json.dumps({"schema":2,"id":"stage","scope":"source_compile","parent":"root","event":"start","clock_us":0}))
+                    traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"stage","scope":"source_compile","parent":"root","event":"end","clock_us":50000,"elapsed_us":50000,"status":"pass"}))
+                elif broken == "json":
+                    traces.add('[sifr-e2e-event] broken-json')
+                else:
+                    traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"orphan","scope":"suite","event":"end","clock_us":50000,"elapsed_us":50000,"status":"pass"}))
+                report=traces.report()
+                if broken != "orphan_suite":
+                    self.assertFalse(report["e2e_accounting"][0]["accounting_valid"])
+                    self.assertIsNone(report["e2e_accounting"][0]["unattributed_ms"])
+                else:
+                    self.assertFalse(report["e2e_accounting"][1]["accounting_valid"])
+                self.assertFalse(report["command_e2e_accounting"][0]["accounting_valid"])
+                self.assertIsNone(report["command_e2e_accounting"][0]["outside_harness_ms"])
+
     def test_incomplete_invalid_and_unwound_spans_never_pass(self):
         traces=Traces()
         self.span(traces,"drop","source_compile",None,0,10,"incomplete")

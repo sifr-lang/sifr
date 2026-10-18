@@ -83,12 +83,12 @@ class Traces:
         suites = []
         for row in result["e2e_spans"]:
             start = row["start"] or {}
-            if start.get("scope") != "suite":
+            if start.get("scope") != "suite" and (row["end"] or {}).get("scope") != "suite":
                 continue
             children = [child for child in result["e2e_spans"]
-                        if (child["start"] or {}).get("parent") == row["id"]]
+                        if any((child[event] or {}).get("parent") == row["id"] for event in ("start", "end"))]
             children.sort(key=lambda child: child["start"]["clock_us"] if nonnegative((child["start"] or {}).get("clock_us")) else 0)
-            valid = row["valid_terminal_pair"] and row["status"] != "incomplete" and all(child["valid_terminal_pair"] and child["status"] != "incomplete" for child in children)
+            valid = not any(error["kind"] == "e2e_spans" for error in self.errors) and row["valid_terminal_pair"] and row["status"] != "incomplete" and all(child["valid_terminal_pair"] and child["status"] != "incomplete" for child in children)
             last = start.get("clock_us", 0)
             total = 0
             if valid:
@@ -105,16 +105,22 @@ class Traces:
                 "unattributed_ms":(row["end"]["elapsed_us"] - total) / 1000 if valid else None,
                 "accounting_valid":valid,"stage_count":len(children),
                 "note":"Only direct non-overlapping stages contribute to this sum. Process, native-attempt and per-case times are included observations, not additive wall time."})
-        result["command_e2e_accounting"] = command_accounting(result)
         result.update(e2e_accounting=suites, observations=self.observations, parse_errors=self.errors,
                       authority="Child spans are observations; functional/performance gate status comes from the profile runner.")
+        result["command_e2e_accounting"] = command_accounting(result)
         return result
 
 
 def command_accounting(report):
     """Outside-harness time includes preparation AND launch/teardown overhead."""
     accounts = []
-    roots = [row for row in report["e2e_spans"] if (row["start"] or {}).get("scope") == "suite"]
+    roots = [row for row in report["e2e_spans"]
+             if any((row[event] or {}).get("scope") == "suite" for event in ("start", "end"))]
+    # An orphan root has no reliable wall-clock window. Conservatively invalidate
+    # command attribution rather than silently charging it to preparation.
+    unknown_root = any(not nonnegative((row["start"] or {}).get("unix_ms")) for row in roots)
+    malformed = any(error["kind"] == "e2e_spans" for error in report.get("parse_errors", []))
+    invalid_suites = {row["id"] for row in report.get("e2e_accounting", []) if not row["accounting_valid"]}
     for command in report["commands"]:
         start, end = command["start"] or {}, command["end"] or {}
         begin, finish = start.get("unix_ms"), end.get("unix_ms")
@@ -122,13 +128,13 @@ def command_accounting(report):
             continue
         selected = [row for row in roots if nonnegative((row["start"] or {}).get("unix_ms"))
                     and begin <= row["start"]["unix_ms"] <= finish]
-        if not selected:
+        if not selected and not (unknown_root or malformed):
             continue
         selected.sort(key=lambda row: row["start"]["unix_ms"])
-        valid = command["status"] != "incomplete"
+        valid = command["status"] != "incomplete" and not unknown_root and not malformed
         total, previous_end = 0, begin
         for row in selected:
-            if not row["valid_terminal_pair"] or row["status"] == "incomplete":
+            if not row["valid_terminal_pair"] or row["status"] == "incomplete" or row["id"] in invalid_suites:
                 valid = False
                 break
             root_start, elapsed = row["start"]["unix_ms"], row["elapsed_ms"]
