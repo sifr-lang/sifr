@@ -1,8 +1,8 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: implementation accepted under user-approved merge exception; merges pending; green qualification deferred
+status: implementation closed under user-approved exception; green qualification deferred
 registered: 2026-10-18
-current_stage: merge the reviewed stack under the 2026-10-18 exception below; preserve qualification follow-ups
+current_stage: implementation delivered; closure takes effect with #4355; qualification remains separately owned
 
 ## User-approved merge exception — 2026-10-18
 
@@ -914,31 +914,35 @@ work without changing semantics or increasing coupling. Compare warm edited
 iterations and cold preparation; include linking and feature combinations.
 If warranted, register a separate bounded item with before/after evidence.
 
-## Execution ledger and next action
+## Execution ledger and closure
 
 | Item | State | Candidate / PR | Validation / review | Next action |
 |---|---|---|---|---|
 | Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
 | E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
 | R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
-| R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Resolve #4344/#4347; qualify before merge |
-| E1 | reviewed draft; focused validation complete; acceptance pending | [#4349](https://github.com/sifr-lang/sifr/pull/4349) / `73b3d33ad` | Portable E1 receipt; source review SATISFIED; full component retains known failures | Resolve #4344/#4347; qualify before merge |
-| E2 | reviewed draft; focused validation complete; acceptance pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `e6bfdeffb` | Portable E2 receipt; actual filesystem/full comparison; preparation fresh; review SATISFIED | Resolve #4344/#4347; qualify before merge |
-| R2 | reviewed draft; focused validation complete; acceptance pending | [#4351](https://github.com/sifr-lang/sifr/pull/4351) / `b5be3430b` | Self-tests 56.704s; all five plans unchanged; review SATISFIED | Resolve #4344/#4347; qualify before merge |
-| E3 | reviewed draft; focused validation complete; acceptance pending | [#4352](https://github.com/sifr-lang/sifr/pull/4352) / `9472dd478` | 710 pass / same 19 known failures; 79 healthy outcomes recovered; scoped review SATISFIED | Resolve #4344/#4347; qualify before merge |
-| E4 | reviewed draft; focused evidence recorded; acceptance pending | [#4353](https://github.com/sifr-lang/sifr/pull/4353) / `a08c29245` | Full 1,298-fixture equivalence; 729 run-pass outcomes; same 19 known failures | Resolve #4344/#4347; qualify before merge |
-| R3 | reviewed draft; focused evidence recorded; acceptance pending | [#4354](https://github.com/sifr-lang/sifr/pull/4354) / `24d849603` | 729-fixture execution, stage reconciliation, nine progress controls; scoped review SATISFIED | Resolve #4344/#4347; qualify before merge |
-| E5 | measurements/report complete; final qualification blocked | [#4355](https://github.com/sifr-lang/sifr/pull/4355) / final source `24d849603` | Three matched warm pairs; three canonical commands; full inventories and raw receipts | Resolve #4344/#4347, then required acceptance gates |
+| R1 | merged under approved exception | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Delivered; qualification deferred to owning follow-ups |
+| E1 | merged under approved exception | [#4349](https://github.com/sifr-lang/sifr/pull/4349) / `73b3d33ad` | Portable E1 receipt; source review SATISFIED; full component retains known failures | Delivered; qualification deferred to owning follow-ups |
+| E2 | merged under approved exception | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `e6bfdeffb` | Portable E2 receipt; actual filesystem/full comparison; preparation fresh; review SATISFIED | Delivered; qualification deferred to owning follow-ups |
+| R2 | merged under approved exception | [#4351](https://github.com/sifr-lang/sifr/pull/4351) / `b5be3430b` | Self-tests 56.704s; all five plans unchanged; review SATISFIED | Delivered; qualification deferred to owning follow-ups |
+| E3 | merged under approved exception | [#4352](https://github.com/sifr-lang/sifr/pull/4352) / `9472dd478` | 710 pass / same 19 known failures; 79 healthy outcomes recovered; scoped review SATISFIED | Delivered; qualification deferred to owning follow-ups |
+| E4 | merged under approved exception | [#4353](https://github.com/sifr-lang/sifr/pull/4353) / `a08c29245` | Full 1,298-fixture equivalence; 729 run-pass outcomes; same 19 known failures | Delivered; qualification deferred to owning follow-ups |
+| R3 | merged under approved exception | [#4354](https://github.com/sifr-lang/sifr/pull/4354) / `24d849603` | 729-fixture execution, stage reconciliation, nine progress controls; scoped review SATISFIED | Delivered; qualification deferred to owning follow-ups |
+| E5 | measured handoff delivered; qualification deferred | [#4355](https://github.com/sifr-lang/sifr/pull/4355) / final source `24d849603` | Three matched warm pairs; three canonical commands; full inventories and raw receipts | Close implementation with #4355 under the approved exception |
 
-All implementation milestones R1/E1/E2/R2/E3/E4/R3 are reviewed drafts with
-focused evidence recorded. E5 repeated measurements and the sortable report are
-complete. Required acceptance and implementation merges remain blocked by
-#4344 (emitted-Rust/codegen correctness) and #4347 (performance-reference admission).
-Both owning issues remain open and have no named GitHub assignee. Do not repeat
-unchanged admission failure, weaken coverage, or absorb the compiler repairs here.
-After the owning repairs land, reconcile the base and rerun affected contracts,
-then the required create-pr and merge gates on the actual final candidate.
-R0 grants no acceptance waiver. The phase remains active until qualified and merged.
+All implementation milestones R1/E1/E2/R2/E3/E4/R3 are merged under the explicit
+2026-10-18 user exception. E5 measurements, full accounting and the sortable report
+are delivered. Merge of #4355 makes this implementation closure effective.
+This closes delivery of the reviewed changes, not the original fully green
+qualification objective. The failed and incomplete evidence below remains valid
+as a historical record; its former merge-blocking next actions are superseded by
+the scoped exception above. No additional implementation is queued in this phase.
+
+Compiler correctness (#4344), performance-reference admission (#4347), Windows
+build portability and CI report determinism remain with their named workstreams.
+After those repairs land, qualify the then-current candidate under ordinary policy.
+No unchanged failed gate or 12–13-hour cloud capture is required for this closure.
+Future work receives no exemption from the normal validation requirements.
 
 ### R2 completed focused evidence — 2026-10-18
 
@@ -1104,5 +1108,37 @@ preserved alongside successful reruns.
 The report and raw archive are stored with the session's external evidence under
 `e5/`; content hashes are in the receipt. Report checks verify totals, inventories,
 local links and sorting/filtering behavior. Final delivery links the local artifact.
-No implementation PR is merged while #4344/#4347 remain open. Next work belongs to
-the correctness/reference owners, followed by current-candidate acceptance.
+At the original E5 handoff, implementation PRs remained unmerged pending
+#4344/#4347. The subsequent user-approved exception above supersedes that merge
+restriction; correctness and reference qualification remain with their owners.
+
+
+### Implementation closure under the approved exception — 2026-10-18
+
+The reviewed implementation and recorded candidate trees are preserved exactly by
+normal merge commits; no administrator bypass or branch-protection change is used.
+Each merge verifies its expected head, previous main commit, resulting tree and
+both merge parents. Final implementation source remains
+`24d8496036137efb257fa7ba7cbd83199d78bc10`; subsequent edits change records only.
+
+| Item | PR | Recorded head | Merge commit |
+|---|---|---|---|
+| R1 | [#4348](https://github.com/sifr-lang/sifr/pull/4348) | `76d118be99039389643c3abb903406a34d583b83` | `48c6bd34b96dcbfffa7b731e22d94c41503e6efa` |
+| E1 | [#4349](https://github.com/sifr-lang/sifr/pull/4349) | `9e046cc380052e82ef1be9fa0263150a220de9f7` | `eda01a602419232af955b85eaff792285508e0ac` |
+| E2 | [#4350](https://github.com/sifr-lang/sifr/pull/4350) | `2533f0a0f3baee6cc3d68b5f8c871b441d3551cc` | `793fbb92f39ab85d17b79863d2c90a766df8f2e5` |
+| R2 | [#4351](https://github.com/sifr-lang/sifr/pull/4351) | `b9ffa3619d92c0f7f4c51fad04a5c07a42acb555` | `419fa86aa166cda21ca1413a0f08243dcd7bc60e` |
+| E3 | [#4352](https://github.com/sifr-lang/sifr/pull/4352) | `175b8acbfdc31182875716f7d801c36b57abc2e9` | `df9fbab7f325b811b17642e362e3b40d544793d6` |
+| E4 | [#4353](https://github.com/sifr-lang/sifr/pull/4353) | `56d82474a92b17f94081616483a0bc64c6528625` | `23b966ee49525326ac8a389ec2e2830cfe28a3d0` |
+| R3 | [#4354](https://github.com/sifr-lang/sifr/pull/4354) | `387a6b40eb4d73da19c08c1e733c5c10ea1337d6` | `39351ab590740dbd3bd31327408f4e104adac46b` |
+
+The E5 closure PR is [#4355](https://github.com/sifr-lang/sifr/pull/4355).
+Its merged GitHub record supplies the closure merge identity. Existing scoped
+reviews and execution evidence retain their exact original candidate identities.
+Closure-only validation checks whitespace, local links/anchors, receipt consistency,
+roadmap status and the documentation-only diff; it does not rerun compiler builds.
+The complete measurement report and its original hashes remain unchanged.
+
+Known compiler failures, unexecuted acceptance gates and incomplete determinism
+qualification are still failed/incomplete. There is no passing full-gate claim,
+release qualification or promise that compiler repairs will retain the current
+98.585-second warm median. Delivery is complete; qualification is deferred.

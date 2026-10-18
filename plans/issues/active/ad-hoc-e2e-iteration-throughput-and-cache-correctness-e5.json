@@ -815,5 +815,94 @@
       "windows": "Windows/PostgreSQL build",
       "determinism": "CI/E2E qualification"
     }
+  },
+  "closure": {
+    "date": "2026-10-18",
+    "status": "implementation delivered under explicit exception; full green qualification deferred",
+    "effective_with_pr": "https://github.com/sifr-lang/sifr/pull/4355",
+    "implementation_candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10",
+    "merged_implementation_prs": [
+      {
+        "number": 4348,
+        "url": "https://github.com/sifr-lang/sifr/pull/4348",
+        "head": "76d118be99039389643c3abb903406a34d583b83",
+        "base": "bff09698c21588434472fe40b1ab74505f81c308",
+        "merge_commit_sha": "48c6bd34b96dcbfffa7b731e22d94c41503e6efa",
+        "merged_at": "2026-10-18T21:09:38Z",
+        "tree": "c98bf41a8799e39dce37405c651ad77cd92bfbf0",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed"
+      },
+      {
+        "number": 4349,
+        "url": "https://github.com/sifr-lang/sifr/pull/4349",
+        "head": "9e046cc380052e82ef1be9fa0263150a220de9f7",
+        "base": "48c6bd34b96dcbfffa7b731e22d94c41503e6efa",
+        "merge_commit_sha": "eda01a602419232af955b85eaff792285508e0ac",
+        "merged_at": "2026-10-18T21:09:56Z",
+        "tree": "3da0f93f0e5e12827f010dfe9986a85bc0bc2a30",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed"
+      },
+      {
+        "number": 4350,
+        "url": "https://github.com/sifr-lang/sifr/pull/4350",
+        "head": "2533f0a0f3baee6cc3d68b5f8c871b441d3551cc",
+        "base": "eda01a602419232af955b85eaff792285508e0ac",
+        "merge_commit_sha": "793fbb92f39ab85d17b79863d2c90a766df8f2e5",
+        "merged_at": "2026-10-18T21:10:07Z",
+        "tree": "e8e6fd2f9b944614078d034aaa9ba64c38083b01",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed"
+      },
+      {
+        "number": 4351,
+        "url": "https://github.com/sifr-lang/sifr/pull/4351",
+        "head": "b9ffa3619d92c0f7f4c51fad04a5c07a42acb555",
+        "base": "793fbb92f39ab85d17b79863d2c90a766df8f2e5",
+        "merge_commit_sha": "419fa86aa166cda21ca1413a0f08243dcd7bc60e",
+        "merged_at": "2026-10-18T21:10:29Z",
+        "tree": "ff867fca2b4cd2749b15edf62120627c47975c97",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed",
+        "post_merge_read_recovery": "TLS timeout; recovered through read-only verification"
+      },
+      {
+        "number": 4352,
+        "url": "https://github.com/sifr-lang/sifr/pull/4352",
+        "head": "175b8acbfdc31182875716f7d801c36b57abc2e9",
+        "base": "419fa86aa166cda21ca1413a0f08243dcd7bc60e",
+        "merge_commit_sha": "df9fbab7f325b811b17642e362e3b40d544793d6",
+        "merged_at": "2026-10-18T21:11:07Z",
+        "tree": "53f771715ab9541ac49d9194121b9c6d5257d172",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed"
+      },
+      {
+        "number": 4353,
+        "url": "https://github.com/sifr-lang/sifr/pull/4353",
+        "head": "56d82474a92b17f94081616483a0bc64c6528625",
+        "base": "df9fbab7f325b811b17642e362e3b40d544793d6",
+        "merge_commit_sha": "23b966ee49525326ac8a389ec2e2830cfe28a3d0",
+        "merged_at": "2026-10-18T21:11:17Z",
+        "tree": "8b32af2a6286fd904d0ddde75df0e5f9745f5f5c",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed"
+      },
+      {
+        "number": 4354,
+        "url": "https://github.com/sifr-lang/sifr/pull/4354",
+        "head": "387a6b40eb4d73da19c08c1e733c5c10ea1337d6",
+        "base": "23b966ee49525326ac8a389ec2e2830cfe28a3d0",
+        "merge_commit_sha": "39351ab590740dbd3bd31327408f4e104adac46b",
+        "merged_at": "2026-10-18T21:11:28Z",
+        "tree": "380c467fe12f1fa617558d4b698f15e05803472f",
+        "reviewed_candidate_tree_preserved": true,
+        "policy": "explicit user-approved exception; no gate pass claimed"
+      }
+    ],
+    "all_recorded_test_outcomes_unchanged": true,
+    "original_report_artifacts_unchanged": true,
+    "future_gate_policy": "unchanged"
   }
 }
