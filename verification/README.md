@@ -319,3 +319,25 @@ outside this namespace are left intact for explicit owner-managed retirement.
 Inherited leases may remain busy while a descendant such as a compiler-cache
 server is alive. Preserve such consumers; use a separate owned cache if needed.
 Old failure evidence remains preserved even after a later successful retry.
+
+
+### Preparation failures and independent feedback
+
+Profiles retain default fail-fast execution. With `--no-fail-fast`, preparation
+records each existing adapter stage and blocks only selected checks whose required
+stages did not pass. Workspace fetch is shared; crate-test, generated-code,
+tooling, performance, oracle, sysroot and area preparation have distinct results.
+The current execution boundary remains a selected area or toolchain step; this
+change does not split an area's own suites or a combined crate-test step.
+
+Static guardrails and formatting do not depend on unrelated Cargo builds. Checks
+that run after partial preparation still use the profile's offline policy. Missing
+or blocked prerequisites never count as successful, and any required preparation
+failure leaves the aggregate nonzero. Every selected top-level step receives one
+terminal outcome, including steps blocked by fail-fast or global admission.
+
+Invalid inventories, unsafe compiler identity, cancellation, safety deadlines and
+preparation filesystem errors stop further work. Performance-reference admission
+is unchanged. Structured `[sifr-preparation]` records appear separately in report
+JSON as `preparation_steps`; their times are part of `cargo_cache_setup`, not extra
+wall time to add to that aggregate. Child output cannot forge these results.

@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E2 reviewed draft with actual validation; R2 next; acceptance blocked
+current_stage: R2 reviewed draft; E3 next; acceptance blocked
 
 ## Objective and authority
 
@@ -437,6 +437,25 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   results must leave the aggregate nonzero. Verify complete selection/outcome
   accounting and unchanged coverage in emitted plans.
 
+### R2 draft progress — 2026-10-18
+
+- This phase owns the bounded runner implementation for the related validation
+  plan's M2/M3 preparation dependency slice. No second scheduler or profile
+  authority is introduced; existing adapters and selected checks remain canonical.
+- Record named preparation results and consumer prerequisites. Keep the existing
+  area/toolchain execution boundaries, Cargo commands, feature resolution and
+  configuration-specific preparation; do not deduplicate different graphs.
+- Under no-fail-fast, continue independent selected checks after ordinary build
+  failure, preserving offline policy and aggregate failure. Default fail-fast,
+  global admission, invalid inventory, unsafe identity and interruption remain
+  stopping conditions. Record every selected top-level outcome exactly once.
+- Add deterministic fault injection for independent/shared graphs, partial
+  failure, missing prerequisites, cancellation, deadlines, capacity errors,
+  default fail-fast, offline execution and unchanged all-profile selection.
+- Initial focused run: 55 runner/setup/reference checks passed. Final candidate
+  self-tests, plan comparison, scoped review and receipt follow. Full acceptance
+  remains blocked by #4347 and #4344; this is independent draft work.
+
 ### R3 — make preparation and execution costs visible
 
 - Extend existing runner receipts and E2E stage output to distinguish compiler
@@ -863,7 +882,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Qualification still blocked by #4347 |
 | E1 | reviewed draft; focused validation complete; acceptance pending | [#4349](https://github.com/sifr-lang/sifr/pull/4349) / `73b3d33ad` | Portable E1 receipt; source review SATISFIED; full component retains known failures | #4347 and #4344 still block acceptance |
 | E2 | reviewed draft; focused validation complete; acceptance pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `e6bfdeffb` | Portable E2 receipt; actual filesystem/full comparison; preparation fresh; review SATISFIED | R2 next; #4347 and #4344 still block acceptance |
-| R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
+| R2 | reviewed draft; focused validation complete; acceptance pending | [#4351](https://github.com/sifr-lang/sifr/pull/4351) / `b5be3430b` | Self-tests 56.704s; all five plans unchanged; review SATISFIED | E3 next; qualification still blocked |
 | E3 | pending | none | none | Early errors and bounded failed-batch isolation |
 | E4 | pending | none | none | Invocation-scoped setup reuse |
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
@@ -879,3 +898,7 @@ all existing acceptance requirements; no gate waiver has been granted. Preserve 
 and artifacts in other worktrees; they are not owned by this plan.
 The delivered changes affect verification infrastructure and fixtures; compiler
 defects and acceptance qualification remain separately owned.
+
+### R2 completed focused evidence — 2026-10-18
+
+The [R2 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-r2.json) records source `b5be3430badb89a525df3aff3f8b2a8035da6f68`: full runner self-tests pass in 56.704s, profile checks in 0.402s and file-size guardrails in 2.004s. All five emitted plans exactly match the base. Scoped review is SATISFIED; the review began before these final checks, which are now recorded separately. Preparation boundaries remain existing areas/toolchain steps. Follow-ups are recorded in the receipt and are not absorbed into E3. Required qualification remains blocked by #4347/#4344; no gate pass or merge is claimed. Continue E3 early structured errors and bounded native-batch isolation in this session.

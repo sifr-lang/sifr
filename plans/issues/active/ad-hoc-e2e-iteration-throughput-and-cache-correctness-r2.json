@@ -1,0 +1,94 @@
+{
+  "candidate": "b5be3430badb89a525df3aff3f8b2a8035da6f68",
+  "scope": "R2 focused draft evidence; not acceptance",
+  "checks": [
+    {
+      "label": "r2-runner-selftest",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-m",
+        "sifr_verify",
+        "--self-test"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 56.70386256200436,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r2-profiles",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-m",
+        "sifr_verify",
+        "profiles",
+        "check"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 0.40173454800242325,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "r2-file-size",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "scripts/check_file_size_guardrails.py"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 2.0038427429972216,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    }
+  ],
+  "plan_comparison": {
+    "base": "2533f0a0f3baee6cc3d68b5f8c871b441d3551cc",
+    "candidate": "b5be3430badb89a525df3aff3f8b2a8035da6f68",
+    "profiles": {
+      "create-pr": {
+        "identical": true,
+        "sha256": "ff9908e23a7990f693f60b6e5e74aaf306d7666f3caa69f99b15864645560d56"
+      },
+      "merge": {
+        "identical": true,
+        "sha256": "65269be99c8073d2b28281e3f11202942ab3c39588eaffd6ad96433bd7337c80"
+      },
+      "nightly": {
+        "identical": true,
+        "sha256": "a0e3c5c47b9cf05a71b7a17c3afef1df7950b4a07adacf3fd2d3cee455bb1124"
+      },
+      "python-interop-live": {
+        "identical": true,
+        "sha256": "2a1bf08e44c2789a478591e5e1e17fa4f914f0ade2eee811c412a1c808d90140"
+      },
+      "release": {
+        "identical": true,
+        "sha256": "7e94827d4de41954e8db9b3c8315916f5fd0a60da5d071b8171bb3e056553a04"
+      }
+    }
+  },
+  "review": "SATISFIED",
+  "qualification_blockers": [
+    "#4347",
+    "#4344"
+  ],
+  "followups": [
+    "Separate ordinary compiler build failure from unsafe identity failure.",
+    "Bind hardening-determinism-scale to workspace preparation.",
+    "Document negative child exits as global interruption.",
+    "Account for unexpected adapter exceptions in a separate runner-hardening item."
+  ],
+  "sha256": {
+    "r2-runner-selftest/receipt.json": "b0a60b1effa594258e462daa397a8a86f00665ee73d74b826e31024ebe75d1d8",
+    "r2-profiles/receipt.json": "6b30a47ae4c403b437b572c00dae5dff96962034184b1739ff9f399ddbffbc0e",
+    "r2-file-size/receipt.json": "ba9d1da17f7d504b55ffc9a8ea4548cf1b806041f1533755ec9aea231c900c33",
+    "r2-plan-comparison.json": "f7ec51d0d13d5bff509159b4acf4a08809abcbe7e55365c46b29a6151cb75b43",
+    "r2-review-b5be3430badb89a525df3aff3f8b2a8035da6f68.md": "18dd2c99f08418e9f4bcae0c79d13cf571ac2cb035f49c66f5582cf3bee46f6c"
+  }
+}

@@ -12,9 +12,10 @@ from typing import Callable
 from .build_allocation import E2E_ENV, allocate, extract_overrides
 from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
-    prepare_cargo_cache as prepare_profile_cargo_cache,
+    cargo_preparation_plan,
 )
 from .errors import VerificationError
+from .preparation import PreparationRun
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
 from .process_execution import SAFETY_DEADLINE_ENV, deadline_environment
@@ -43,6 +44,7 @@ class ProfileRunnerError(VerificationError):
 class StepResult:
     status: int
     elapsed_ms: int
+    cause: str | None = None
 
 
 CRITICAL_RESULT_SLUGS = {
@@ -60,18 +62,20 @@ def now_ms() -> int:
 def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
     start_ms = now_ms()
     status = 0
+    cause = None
     try:
         callback()
     except CommandFailed as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
         status = exc.returncode
+        cause = exc.cause
     except (VerificationError, AreaResultError) as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
         status = 2
     elapsed_ms = now_ms() - start_ms
     label = "pass" if status == 0 else "fail"
     print(f"[sifr-lane-step] name={name} elapsed_ms={elapsed_ms} status={label}")
-    return StepResult(status=status, elapsed_ms=elapsed_ms)
+    return StepResult(status=status, elapsed_ms=elapsed_ms, cause=cause)
 
 
 def step_name(kind: str, name: str) -> str:
@@ -86,6 +90,9 @@ class ProfileRunner:
         self.profile_name = str(self.profile["name"])
         self.no_fail_fast = "--no-fail-fast" in forward_args
         self.forward_args = [arg for arg in forward_args if arg != "--no-fail-fast"]
+        self.preparation = None
+        self.completed_steps = set()
+        self.stop_requested = False
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
@@ -111,88 +118,81 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
-        if any(
-            area["area"] == "performance"
-            and set(area["suites"]).intersection({"rules", "smoke", "representative", "full"})
-            for area in self.profile["selected_areas"]
-        ):
-            admission = self.execute_step(
-                "performance_reference_admission", self.admit_performance_reference
-            )
+        if any(area["area"] == "performance" and set(area["suites"]).intersection(
+                {"rules", "smoke", "representative", "full"})
+               for area in self.profile["selected_areas"]):
+            admission = self.execute_step("performance_reference_admission", self.admit_performance_reference)
             if admission:
+                self.block_steps("performance_reference_admission")
                 return admission
         early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
                  "submodule-ownership", "stdlib-manifest-schema"}
         failed = 0
         for guardrail in self.profile["guardrail_steps"]:
-            if guardrail not in early:
-                continue
-            status = self.execute_step(step_name("guardrail", guardrail),
-                                       lambda g=guardrail: self.run_guardrail(g))
-            failed = failed or status
-            if status and not self.no_fail_fast:
-                return failed
-        # Invalid inventories are unsafe preparation inputs.
+            if guardrail in early:
+                status = self.execute_step(step_name("guardrail", guardrail),
+                                           lambda g=guardrail: self.run_guardrail(g))
+                failed = failed or status
+                if self.stop_requested or (status and not self.no_fail_fast):
+                    break
         if failed:
             self.block_steps("invalid-inventory")
             return failed
         prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
-        if prepared and not self.no_fail_fast:
+        if prepared and (not self.no_fail_fast or self.stop_requested or
+                         self.preparation is None or self.preparation.fatal_reason):
+            self.block_steps(self.preparation.fatal_reason if self.preparation and
+                             self.preparation.fatal_reason else "cargo_cache_setup")
             return prepared
-        if not prepared and self.profile.get("cargo_policy", {}).get("offline") is True:
+        # Independent consumers still run offline after partial preparation.
+        if self.profile.get("cargo_policy", {}).get("offline") is True:
             enable_profile_offline_cargo(self.env)
         failed = prepared
-        for guardrail in self.profile["guardrail_steps"]:
-            if guardrail in early:
+        for name, callback in self.selected_steps():
+            if name in self.completed_steps:
                 continue
-            if prepared:
-                self.block_step(step_name("guardrail", guardrail), "cargo_cache_setup")
+            prerequisite = self.preparation.blocked_by(name) if self.preparation else ""
+            if name in {"toolchain_e2e_report_determinism", "toolchain_e2e_sequential_parallel_equivalence"}:
+                if getattr(self, "e2e_failed", False):
+                    prerequisite = "toolchain_e2e_pass"
+            if prerequisite:
+                self.block_step(name, prerequisite)
+                failed = failed or 2
+                self.functional_exit_status = self.functional_exit_status or 2
+                if name == "toolchain_e2e_pass":
+                    self.e2e_failed = True
                 continue
-            status = self.execute_step(step_name("guardrail", guardrail),
-                                       lambda g=guardrail: self.run_guardrail(g))
+            status = self.execute_step(name, callback)
+            if name == "toolchain_e2e_pass":
+                self.e2e_failed = bool(status)
             failed = failed or status
-            if status and not self.no_fail_fast:
-                return failed
-        for selection in self.profile["selected_areas"]:
-            area = str(selection["area"])
-            suites = [str(suite) for suite in selection["suites"]]
-            if prepared:
-                self.block_step(step_name("area", area), "cargo_cache_setup")
-                continue
-            status = self.execute_step(step_name("area", area),
-                                       lambda a=area, s=suites: self.run_area(a, s))
-            failed = failed or status
-            if status and not self.no_fail_fast:
-                return failed
-        failed_toolchain = set()
-        for toolchain_step in self.profile["toolchain_steps"]:
-            if toolchain_step in {"e2e-report-determinism", "e2e-sequential-parallel-equivalence"} and "e2e-pass" in failed_toolchain:
-                self.block_step(step_name("toolchain", toolchain_step), "e2e-pass")
-                continue
-            if prepared:
-                self.block_step(step_name("toolchain", toolchain_step), "cargo_cache_setup")
-                continue
-            status = self.execute_step(step_name("toolchain", toolchain_step),
-                                       lambda t=toolchain_step: self.run_toolchain_step(t))
-            failed = failed or status
-            if status:
-                failed_toolchain.add(toolchain_step)
-            if status and not self.no_fail_fast:
+            if self.stop_requested or (status and not self.no_fail_fast):
+                self.block_steps(name)
                 return failed
         return failed
 
+    def selected_steps(self):
+        steps = [(step_name("guardrail", g), lambda g=g: self.run_guardrail(g))
+                 for g in self.profile["guardrail_steps"]]
+        steps += [(step_name("area", a["area"]),
+                   lambda a=a: self.run_area(str(a["area"]), [str(s) for s in a["suites"]]))
+                  for a in self.profile["selected_areas"]]
+        steps += [(step_name("toolchain", t), lambda t=t: self.run_toolchain_step(t))
+                  for t in self.profile["toolchain_steps"]]
+        return steps
+
     def block_step(self, name: str, prerequisite: str) -> None:
+        self.completed_steps.add(name)
         print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")
         print(f"blocked {name}: prerequisite {prerequisite}")
 
     def block_steps(self, prerequisite: str) -> None:
-        self.block_step("cargo_cache_setup", prerequisite)
-        for selection in self.profile["selected_areas"]:
-            self.block_step(step_name("area", str(selection["area"])), prerequisite)
-        for name in self.profile["toolchain_steps"]:
-            self.block_step(step_name("toolchain", name), prerequisite)
+        for name in ["cargo_cache_setup", *(name for name, _ in self.selected_steps())]:
+            if name not in self.completed_steps:
+                self.block_step(name, prerequisite)
 
     def execute_step(self, name: str, callback: Callable[[], None]) -> int:
+        self.completed_steps.add(name)
         budget = self.prepare_step_budget(name)
         step_seconds = self.env.get("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS")
         if step_seconds is None:
@@ -216,6 +216,8 @@ class ProfileRunner:
                     os.environ.pop(SAFETY_DEADLINE_ENV, None)
                 else:
                     os.environ[SAFETY_DEADLINE_ENV] = previous_process_deadline
+        if result.cause not in (None, "exit") or result.status < 0:
+            self.stop_requested = True
         if result.status != 0:
             self.functional_exit_status = result.status
             return result.status
@@ -230,15 +232,19 @@ class ProfileRunner:
         script = REPO_ROOT / "verification/areas/performance/reference_admission.py"
         run_command([sys.executable, str(script)], env=self.env)
 
+    def prepare_compiler_identity(self):
+        binary = resolve_sifr_binary(REPO_ROOT, env=self.env)
+        for variable in ("SIFR_GCQ_BIN", "SIFR_RUNTIME_PLATFORM_BIN"):
+            if os.environ.get(variable):
+                resolve_sifr_binary(REPO_ROOT, explicit_env_var=variable, env=self.env)
+            self.env[variable] = str(binary)
+
     def prepare_cargo_cache(self) -> None:
         try:
-            prepare_profile_cargo_cache(self.profile, self.env, run_command)
-            # Overrides must identify the same Cargo-prepared candidate.
-            binary = resolve_sifr_binary(REPO_ROOT, env=self.env)
-            for variable in ("SIFR_GCQ_BIN", "SIFR_RUNTIME_PLATFORM_BIN"):
-                if os.environ.get(variable):
-                    resolve_sifr_binary(REPO_ROOT, explicit_env_var=variable, env=self.env)
-                self.env[variable] = str(binary)
+            nodes, consumers = cargo_preparation_plan(
+                self.profile, self.env, run_command, identity=self.prepare_compiler_identity)
+            self.preparation = PreparationRun(nodes, consumers, no_fail_fast=self.no_fail_fast)
+            self.preparation.run()
         except (ValueError, RuntimeError, OSError) as exc:
             raise ProfileRunnerError(str(exc)) from exc
 
