@@ -26,7 +26,7 @@ class Traces:
                 row = json.loads(line[len(prefix):])
                 if not isinstance(row, dict):
                     raise ValueError("event is not an object")
-                if kind != "shell_commands" and row.get("schema") != 1:
+                if kind != "shell_commands" and (type(row.get("schema")) is not int or row["schema"] != 1):
                     raise ValueError("unsupported event schema")
                 event = row.get("event")
                 if event in ("blocked", "fixture_failure") and kind == "e2e_spans":
@@ -87,7 +87,7 @@ class Traces:
                 continue
             children = [child for child in result["e2e_spans"]
                         if (child["start"] or {}).get("parent") == row["id"]]
-            children.sort(key=lambda child: (child["start"] or {}).get("clock_us", 0))
+            children.sort(key=lambda child: child["start"]["clock_us"] if nonnegative((child["start"] or {}).get("clock_us")) else 0)
             valid = row["valid_terminal_pair"] and row["status"] != "incomplete" and all(child["valid_terminal_pair"] and child["status"] != "incomplete" for child in children)
             last = start.get("clock_us", 0)
             total = 0
@@ -105,6 +105,44 @@ class Traces:
                 "unattributed_ms":(row["end"]["elapsed_us"] - total) / 1000 if valid else None,
                 "accounting_valid":valid,"stage_count":len(children),
                 "note":"Only direct non-overlapping stages contribute to this sum. Process, native-attempt and per-case times are included observations, not additive wall time."})
+        result["command_e2e_accounting"] = command_accounting(result)
         result.update(e2e_accounting=suites, observations=self.observations, parse_errors=self.errors,
                       authority="Child spans are observations; functional/performance gate status comes from the profile runner.")
         return result
+
+
+def command_accounting(report):
+    """Outside-harness time includes preparation AND launch/teardown overhead."""
+    accounts = []
+    roots = [row for row in report["e2e_spans"] if (row["start"] or {}).get("scope") == "suite"]
+    for command in report["commands"]:
+        start, end = command["start"] or {}, command["end"] or {}
+        begin, finish = start.get("unix_ms"), end.get("unix_ms")
+        if not (command["valid_terminal_pair"] and nonnegative(begin) and nonnegative(finish)):
+            continue
+        selected = [row for row in roots if nonnegative((row["start"] or {}).get("unix_ms"))
+                    and begin <= row["start"]["unix_ms"] <= finish]
+        if not selected:
+            continue
+        selected.sort(key=lambda row: row["start"]["unix_ms"])
+        valid = command["status"] != "incomplete"
+        total, previous_end = 0, begin
+        for row in selected:
+            if not row["valid_terminal_pair"] or row["status"] == "incomplete":
+                valid = False
+                break
+            root_start, elapsed = row["start"]["unix_ms"], row["elapsed_ms"]
+            # Unix timestamps have millisecond resolution; do not manufacture
+            # precision or accept materially overlapping/escaped intervals.
+            if root_start + 1 < previous_end or root_start + elapsed > finish + 1:
+                valid = False
+                break
+            previous_end = root_start + elapsed
+            total += elapsed
+        outside = command["elapsed_ms"] - total
+        valid = valid and outside >= 0
+        accounts.append({"command_id":command["id"],"harness_ids":[row["id"] for row in selected],
+            "command_wall_ms":command["elapsed_ms"],"harness_wall_ms":total if valid else None,
+            "outside_harness_ms":outside if valid else None,"accounting_valid":valid,
+            "note":"Outside harness includes Cargo/compiler preparation, profile/shell startup, libtest and teardown; no pure compilation or linker attribution is inferred."})
+    return accounts

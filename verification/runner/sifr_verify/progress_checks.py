@@ -130,11 +130,24 @@ except CommandFailed as error:
         self.assertFalse(traces.report()["e2e_accounting"][0]["accounting_valid"])
         self.assertIsNone(traces.report()["e2e_accounting"][0]["unattributed_ms"])
 
+    def test_command_wall_retains_preparation_and_overhead_without_nested_double_count(self):
+        from .trace_reports import command_accounting
+        command={"id":"outer","valid_terminal_pair":True,"status":"fail","elapsed_ms":100,
+                 "start":{"unix_ms":1000},"end":{"unix_ms":1100}}
+        root={"id":"suite","valid_terminal_pair":True,"status":"fail","elapsed_ms":60,
+              "start":{"scope":"suite","unix_ms":1020},"end":{}}
+        report={"commands":[command],"e2e_spans":[root],"observed_child_commands":[command]}
+        account=command_accounting(report)[0]
+        self.assertEqual((account["command_wall_ms"],account["harness_wall_ms"],account["outside_harness_ms"]),(100,60,40))
+        root["valid_terminal_pair"]=False
+        self.assertIsNone(command_accounting(report)[0]["outside_harness_ms"])
+
     def test_incomplete_invalid_and_unwound_spans_never_pass(self):
         traces=Traces()
         self.span(traces,"drop","source_compile",None,0,10,"incomplete")
         traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"missing","scope":"suite","event":"start","clock_us":0}))
         traces.add('[sifr-e2e-event] '+json.dumps({"schema":1,"id":"orphan","scope":"suite","event":"end","clock_us":10,"elapsed_us":10,"status":"pass"}))
+        traces.add('[sifr-e2e-event] '+json.dumps({'schema':1,'event':'start','id':'malformed','scope':'child','parent':'missing','clock_us':'bad'}))
         traces.add('[sifr-e2e-event] not-json')
         self.assertEqual({r["status"] for r in traces.report()["e2e_spans"]},{"incomplete"})
         self.assertTrue(traces.report()["parse_errors"])

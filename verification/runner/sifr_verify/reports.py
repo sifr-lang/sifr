@@ -442,6 +442,14 @@ def summarize(args: argparse.Namespace) -> int:
             f"median_group={e2e.get('median_group_fixtures', 0)}"
             f"{hit_rate_suffix}{rebuilt_groups_suffix}{skew_suffix}"
         )
+    for accounting in parsed_log["traces"]["e2e_accounting"]:
+        print(f"  e2e_harness_wall_ms={accounting['wall_ms']} "
+              f"sequential_stages_ms={accounting['sequential_stage_ms']} "
+              f"unattributed_ms={accounting['unattributed_ms']} status={accounting['status']}")
+    for accounting in parsed_log["traces"]["command_e2e_accounting"]:
+        print(f"  command_to_result_ms={accounting['command_wall_ms']} "
+              f"outside_harness_ms={accounting['outside_harness_ms']} "
+              "(includes preparation, startup and teardown; unknown when None)")
     print(
         "  workers="
         f"sifr={workers['sifr_jobs']} "
