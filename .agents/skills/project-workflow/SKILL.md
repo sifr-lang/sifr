@@ -21,7 +21,7 @@ Both types are added to the board via `/add-ticket`, which handles GitHub issue 
 
 ## PRDS (PRD + Solution Design)
 
-A combined document covering product requirements (problem, goals, scope, acceptance criteria) and the technical solution design (architecture, data model, API, testing). Created with `/create-prds` using the template at `.cursor/references/prd-solution-design-template.md`. Every Epic should have a PRDS.
+A combined document covering product requirements (problem, goals, scope, acceptance criteria) and the technical solution design (architecture, data model, API, testing). Created with `/create-prds` using the template at `.agents/references/prd-solution-design-template.md`. Every Epic should have a PRDS.
 
 ## Board Columns
 

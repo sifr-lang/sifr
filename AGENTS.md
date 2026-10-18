@@ -8,7 +8,7 @@ Sifr compiles Python syntax to native binaries through Rust. See
 ## Working rules
 
 - Work on one bounded item at a time and fix its root cause. Follow the
-  [phase closure loop](.cursor/skills/phase-closure-loop/SKILL.md) for phase work.
+  [phase closure loop](.agents/skills/phase-closure-loop/SKILL.md) for phase work.
   Follow the user's authorized scope and sequencing when it spans multiple items.
 - Own your branch, index, worktree, temporary paths, and build artifacts. Preserve
   unrelated changes; do not clean shared targets or another session's inputs.

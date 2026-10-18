@@ -33,7 +33,7 @@ the applicable policy and enforcement process.
 - [Roadmap](../../roadmap.md) owns sequencing. This plan extends the historical
   [PR gate rebalancing work](../archive/ad-hoc-pr-gate-speed-and-validation-lane-rebalancing.md);
   it does not reopen its merged changes or treat its old measurements as current.
-- [Phase closure loop](../../../.cursor/skills/phase-closure-loop/SKILL.md)
+- [Phase closure loop](../../../.agents/skills/phase-closure-loop/SKILL.md)
   governs bounded implementation and review. The existing
   [agent instructions](../../../AGENTS.md) govern work until M0 updates them.
 - The SQL cloud candidate in [PR #4259](https://github.com/sifr-lang/sifr/pull/4259)
@@ -251,7 +251,7 @@ here rather than treating the plan itself as execution evidence.
   `/workspace/validation-work/evidence/m0-review-blocker.json`, with the three
   separate `sifr-claude.*` request directories. No numbered review artifact was
   created for these failed requests.
-- Blocking instruction: the [phase closure loop](../../../.cursor/skills/phase-closure-loop/SKILL.md)
+- Blocking instruction: the [phase closure loop](../../../.agents/skills/phase-closure-loop/SKILL.md)
   says, “If all three requests fail, record the blocker and stop.” M0 delivery and
   progression were paused for authenticated review or explicit user amendment.
   Claude CLI is installed session-locally; the missing prerequisite is account

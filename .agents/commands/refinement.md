@@ -11,7 +11,7 @@ gh project item-list 2 --owner sifr-lang
 
 ## Available field-id and single-selection-option-id
 
-Check @.cursor/references/available-field-id-and-single-selection-option-id.md
+Check @.agents/references/available-field-id-and-single-selection-option-id.md
 
 ## Refinement of items/tickets
 
