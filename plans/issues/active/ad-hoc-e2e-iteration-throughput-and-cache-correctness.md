@@ -956,3 +956,10 @@ helper while retaining its normal lock mode, release profile, trusted-sysroot
 vendor/probe policies and existing immutable interop-result cache. One-off
 callers retain their existing selection path. Keep the strict per-invocation
 probe assertion and preserve the failed control; final validation follows.
+
+E4's explicit oracle passed all 1,298 pass/fail fixtures and reverse-order repeats
+on `50ca69e4e`, including every output field and complete diagnostics. The source
+size guard then rejected `cargo_resolution.rs` at 903 lines. Move its policy
+definition/constructors into a focused module without changing field values or
+execution. Run cheap size/format checks before the next build; repeat final
+candidate validation and review. Keep the failed guard receipt.
