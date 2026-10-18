@@ -1,8 +1,50 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: active; implementation milestones reviewed as drafts; E5 measurements complete; acceptance blocked
+status: implementation accepted under user-approved merge exception; merges pending; green qualification deferred
 registered: 2026-10-18
-current_stage: E5 measured handoff complete; correctness/reference dependencies block final qualification and merge
+current_stage: merge the reviewed stack under the 2026-10-18 exception below; preserve qualification follow-ups
+
+## User-approved merge exception — 2026-10-18
+
+After reviewing the incomplete acceptance evidence, the user explicitly approved
+moving forward with the reviewed fixes: “It's okay we have to move forward and get
+things done, the long e2e wouldn't make sense to fix now. So it's okay”. This follows
+the request to merge the fixes and close the phase when its delivery is complete.
+
+This one-time decision accepts the implementation stack #4348–#4354 and its E5
+handoff #4355 using the recorded focused checks, full fixture accounting, matched
+measurements and SATISFIED scoped reviews. It waives waiting for the outstanding
+create-pr/merge acceptance gates for these candidates only. It supersedes the
+no-merge-until-qualified instructions and pending-acceptance next actions recorded
+below; those historical results remain unchanged. It does not change AGENTS.md,
+verification profiles, test selection, failure semantics or future phase policy.
+
+The final implementation is `24d8496036137efb257fa7ba7cbd83199d78bc10`.
+All changes from each reviewed source to its recorded PR head are documentation
+only. The current full E2E measurements select 729 fixtures, pass 710 and retain
+exactly the 19 known failures; median command time is 98.585 seconds. No failed,
+blocked, unexecuted or incomplete check is promoted to passing.
+
+Deferred qualification remains separately owned:
+
+- [#4344](https://github.com/sifr-lang/sifr/issues/4344): emitted-Rust/codegen owner;
+  repair the 19 known compiler failures and re-run the affected correctness checks.
+- [#4347](https://github.com/sifr-lang/sifr/issues/4347): validation/performance owner;
+  restore an independently governed comparable reference and run acceptance gates
+  on the then-current candidate. No reference is replaced to manufacture a pass.
+- Windows/PostgreSQL build owner: existing libpg_query C compilation cannot find
+  `unistd.h`/`dirent.h`; the same failure is present in already-merged R0 CI.
+- CI/E2E qualification owner: report determinism remains unqualified. The local
+  failed suites assert before emitting a signature, as on the baseline. The CI
+  wrapper's missing-signature message alone does not establish its inner cause.
+  Continue this under the existing
+  [CI determinism investigation](ad-hoc-ci-determinism-runner-interruption.md).
+
+The 12–13-hour cloud paired capture remains outside scope. This decision does not
+require that capture or claim it was accelerated. Once all items are merged,
+close this implementation phase as delivered with qualification deferred. The
+original fully passing warm-E2E objective remains unproven until its separately
+owned correctness and qualification dependencies are resolved.
 
 ## Objective and authority
 

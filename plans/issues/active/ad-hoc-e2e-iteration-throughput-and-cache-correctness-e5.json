@@ -799,5 +799,21 @@
     "Preserve the existing one-MiB stream truncation signal; monitor diagnostic volume as corpus grows.",
     "Malformed non-string telemetry parent can abort report parsing; no valid accounting is produced. Future parser-hardening item, not a gate waiver.",
     "Independent linker timing remains unknown."
-  ]
+  ],
+  "merge_exception": {
+    "date": "2026-10-18",
+    "authority": "Explicit user approval in this conversation after the merge-readiness report",
+    "scope": "PRs #4348\u2013#4355 only; outstanding acceptance gates deferred",
+    "implementation_candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10",
+    "failed_results_preserved": true,
+    "full_green_qualification": false,
+    "phase_closure": "implementation delivery only after all items merge; qualification remains deferred",
+    "future_gate_policy": "unchanged",
+    "deferred_owners": {
+      "4344": "emitted-Rust/codegen",
+      "4347": "validation/performance reference",
+      "windows": "Windows/PostgreSQL build",
+      "determinism": "CI/E2E qualification"
+    }
+  }
 }
