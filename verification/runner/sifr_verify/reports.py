@@ -189,6 +189,7 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 
 def parse_log(path: Path) -> dict[str, Any]:
     lane_steps: list[dict[str, int | str]] = []
+    preparation_steps = []
     lane_step_budgets: dict[str, dict[str, int | str]] = {}
     lane_step_cache: dict[str, dict[str, str]] = {}
     case_timings: list[dict[str, int | str]] = []
@@ -199,6 +200,9 @@ def parse_log(path: Path) -> dict[str, Any]:
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line:
+            continue
+        if line.startswith("[sifr-preparation] "):
+            preparation_steps.append(json.loads(line.removeprefix("[sifr-preparation] ")))
             continue
         if match := LANE_STEP_RE.match(line):
             lane_steps.append(
@@ -283,6 +287,7 @@ def parse_log(path: Path) -> dict[str, Any]:
 
     return {
         "lane_steps": lane_steps,
+        "preparation_steps": preparation_steps,
         "lane_step_budgets": lane_step_budgets,
         "lane_step_cache": lane_step_cache,
         "case_timings": case_timings,
@@ -380,6 +385,7 @@ def summarize(args: argparse.Namespace) -> int:
         },
         "advisories": advisories,
         "lane_steps": lane_steps,
+        "preparation_steps": parsed_log["preparation_steps"],
         "lane_step_budgets": lane_step_budgets,
         "lane_step_cache": lane_step_cache,
         "case_timings": case_timings,

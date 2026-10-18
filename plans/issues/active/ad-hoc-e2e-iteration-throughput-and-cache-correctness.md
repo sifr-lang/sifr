@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E2 reviewed draft with actual validation; R2 next; acceptance blocked
+current_stage: R2 dependency-aware preparation draft; acceptance blocked
 
 ## Objective and authority
 
@@ -436,6 +436,25 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   default fail-fast and no-fail-fast execution. Missing, failed or blocked required
   results must leave the aggregate nonzero. Verify complete selection/outcome
   accounting and unchanged coverage in emitted plans.
+
+### R2 draft progress — 2026-10-18
+
+- This phase owns the bounded runner implementation for the related validation
+  plan's M2/M3 preparation dependency slice. No second scheduler or profile
+  authority is introduced; existing adapters and selected checks remain canonical.
+- Record named preparation results and consumer prerequisites. Keep the existing
+  area/toolchain execution boundaries, Cargo commands, feature resolution and
+  configuration-specific preparation; do not deduplicate different graphs.
+- Under no-fail-fast, continue independent selected checks after ordinary build
+  failure, preserving offline policy and aggregate failure. Default fail-fast,
+  global admission, invalid inventory, unsafe identity and interruption remain
+  stopping conditions. Record every selected top-level outcome exactly once.
+- Add deterministic fault injection for independent/shared graphs, partial
+  failure, missing prerequisites, cancellation, deadlines, capacity errors,
+  default fail-fast, offline execution and unchanged all-profile selection.
+- Initial focused run: 55 runner/setup/reference checks passed. Final candidate
+  self-tests, plan comparison, scoped review and receipt follow. Full acceptance
+  remains blocked by #4347 and #4344; this is independent draft work.
 
 ### R3 — make preparation and execution costs visible
 

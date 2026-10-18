@@ -35,44 +35,88 @@ def cargo_setup_command(profile: dict[str, Any]) -> list[str]:
     return shlex.split(CANONICAL_SETUP_COMMAND)
 
 
-def prepare_cargo_cache(
-    profile: dict[str, Any],
-    env: dict[str, str],
-    command_runner: Callable[..., None],
-) -> None:
-    """Populate workspace, selected fixture and generated graphs before offline execution."""
+def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
+    """Keep existing adapter boundaries and bind each selected consumer explicitly."""
+    from .preparation import Preparation
+    from .profiles import crate_test_mode
+
     command = cargo_setup_command(profile)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
-    print(f"[sifr-profile-setup] command={' '.join(command)}")
-    command_runner(command, env=setup_env)
-    prepare_locked_fixture_caches(profile, setup_env, command_runner)
-    if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
-        revision = subprocess.check_output(
-            ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
-        ).strip()
-        # A source-identical later commit still names a different Cargo Git source.
-        shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{profile['name']}.{revision}.shared"
-        env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root)
-        setup_env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root)
-        command_runner(
-            [sys.executable, "-m", "sifr_verify.generated_cargo_setup",
-             "--profile", str(profile["name"]), "--revision", revision],
-            env=setup_env,
-        )
-
-    # Compiler preparation and execution have identical offline build-script
-    # environments; dependency acquisition above remains explicitly online.
     compiler_env = setup_env | {"CARGO_NET_OFFLINE": "true"}
-    prepare_crate_test_binaries(profile, compiler_env, command_runner)
-    prepare_authoring_test_binaries(profile, setup_env, command_runner)
-    prepare_tooling_test_binaries(profile, setup_env, command_runner)
-    prepare_performance_binaries(profile, setup_env, command_runner)
-    prepare_generated_oracle_binary(profile, setup_env, command_runner)
-    prepare_sysroot_source_binary(profile, setup_env, command_runner)
-    prepare_sysroot_package_binary(profile, setup_env, command_runner)
-    prepare_area_graphs(profile, compiler_env, command_runner)
-    prepare_maintained_demo_cache(profile, setup_env, command_runner)
+    nodes = []
+    consumers = {}
+    for guard in profile.get("guardrail_steps", []):
+        consumers[f"guardrail_{guard.replace('-', '_')}"] = []
+    for area in profile.get("selected_areas", []):
+        consumers[f"area_{area['area']}"] = ["workspace"]
+    for step in profile.get("toolchain_steps", []):
+        consumers[f"toolchain_{step.replace('-', '_')}"] = (
+            [] if step == "cargo-fmt-check" else ["workspace"])
+
+    def add(name, requires, callback, owners=(), unsafe=False):
+        nodes.append(Preparation(name, tuple(requires), callback, unsafe))
+        for owner in owners:
+            if owner in consumers:
+                consumers[owner].append(name)
+
+    add("workspace", (), lambda: command_runner(command, env=setup_env))
+    crate_owners = [name for name in consumers if name in {
+        "toolchain_cargo_test_sifr_smoke", "toolchain_cargo_test_sifr_full"}]
+    add("fixtures", ("workspace",),
+        lambda: prepare_locked_fixture_caches(profile, setup_env, command_runner))
+
+    def generated():
+        if not any(area["area"] == "generated_code_quality"
+                   for area in profile.get("selected_areas", [])):
+            return
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT,
+            text=True).strip()
+        shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{profile['name']}.{revision}.shared"
+        for target_env in (env, setup_env, compiler_env):
+            target_env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root)
+        command_runner([sys.executable, "-m", "sifr_verify.generated_cargo_setup",
+                        "--profile", str(profile["name"]), "--revision", revision], env=setup_env)
+
+    add("generated", ("workspace",), generated, ("area_generated_code_quality",))
+    if crate_test_mode(profile) is not None:
+        add("crate_tests", ("workspace", "fixtures"),
+            lambda: prepare_crate_test_binaries(profile, compiler_env, command_runner), crate_owners)
+    adapters = (
+        ("authoring", prepare_authoring_test_binaries, "python_interop"),
+        ("tooling", prepare_tooling_test_binaries, "developer_tooling"),
+        ("performance", prepare_performance_binaries, "performance"),
+        ("oracle", prepare_generated_oracle_binary, "cpython_differential"),
+        ("sysroot_source", prepare_sysroot_source_binary, "sysroot_release"),
+        ("sysroot_package", prepare_sysroot_package_binary, "sysroot_release"),
+    )
+    for name, adapter, area in adapters:
+        if f"area_{area}" in consumers:
+            add(name, ("workspace",),
+                lambda fn=adapter: fn(profile, setup_env, command_runner), (f"area_{area}",))
+    for area in profile.get("selected_areas", []):
+        if area["area"] in {"sql_platform", "fuzz_property", "python_interop"}:
+            selected = profile | {"selected_areas": [area]}
+            add("area_graph_" + area["area"], ("workspace",),
+                lambda p=selected: prepare_area_graphs(p, compiler_env, command_runner),
+                (f"area_{area['area']}",))
+    if "area_rust_interop" in consumers:
+        add("maintained_demos", ("workspace",),
+            lambda: prepare_maintained_demo_cache(profile, setup_env, command_runner),
+            ("area_rust_interop",))
+    if identity is not None:
+        owners = [name for name in consumers if name.startswith("area_")]
+        owners.append("guardrail_demo_emitted_freshness")
+        add("compiler_identity", ("workspace",), identity, owners, unsafe=True)
+    return nodes, consumers
+
+
+def prepare_cargo_cache(profile, env, command_runner):
+    """Run the same preparation plan with the documented fail-fast default."""
+    from .preparation import PreparationRun
+    nodes, consumers = cargo_preparation_plan(profile, env, command_runner)
+    PreparationRun(nodes, consumers).run()
 
 
 def prepare_generated_oracle_binary(profile, env, command_runner) -> None:
