@@ -1,8 +1,8 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: active; E0 and R0 complete; runner/cache implementation pending
+status: active; E0 and R0 complete; R1/E1 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E1 draft implementation and focused validation; reference qualification remains pending
+current_stage: E1 reviewed draft; E2 source-reviewed draft awaiting actual harness validation
 
 ## Objective and authority
 
@@ -502,13 +502,13 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   missing/corrupt binaries, structured-output selection, byte comparisons with
   preserved timestamps, ownership/contention and an inherited live-child lease.
   This isolated compilation is not a substitute for the actual candidate harness.
-- Actual harness bootstrap is pending, using two Cargo jobs, a 30-minute cap,
+- At the initial draft, actual harness bootstrap was pending, using two Cargo jobs, a 30-minute cap,
   at most 24 GiB additional disk, at least 20 GiB disk and 2 GiB memory reserve.
   Initial preparation was stopped after 86.017s before compilation to wire bounded
   process capture and retry offline; cancellation remains incomplete evidence.
   No cold-build or full-gate speed claim is made.
-- Qualification, additional actual-harness controls and scoped review remain
-  pending. Existing external blockers #4347 and #4344 are unchanged. Cargo's
+- At the initial draft, qualification, additional actual-harness controls and scoped review were
+  pending; the completed scoped results follow below. Existing external blockers #4347 and #4344 are unchanged. Cargo's
   timestamp freshness is explicitly distinguished from content-bound generated
   writes and executable integrity; no stronger source freshness is claimed.
 
@@ -545,8 +545,48 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   failed attempt is counted as validation success.
 - Runner foundation self-tests, formatting, file-size guardrail, shell syntax,
   diff whitespace and changed-document local links passed on the initial draft.
-  Changed focused checks and the actual harness will be rerun on remediation;
+  Final actual-harness checks are recorded below;
   required admission/merge qualification and Windows execution remain pending.
+
+### E1 focused validation and review result — 2026-10-18
+
+Source candidate `73b3d33ad50bbfce42efb621b6b227ebd4872522` is reviewed SATISFIED in draft
+[#4349](https://github.com/sifr-lang/sifr/pull/4349), stacked on R1.
+The [portable E1 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e1.json)
+binds candidate, executable, test outcomes and raw-evidence hashes. This closes
+the independent implementation/review slice; required acceptance remains pending.
+
+- The full 729-fixture component diagnostic completed in 549.089s:
+  631 passed and 98 failed in batches containing the same 19 known compiler
+  defects; 79 other fixtures remain collateral-blocked. No failed build group
+  lacks a recorded defect, and no additional failing group or runtime failure was
+  observed. Collateral fixtures were not independently executed in this run.
+  This is a failed component run, not a passing merge gate or a warm-performance
+  comparison. The native target was empty after cleanup.
+- The newly built executable passed 9 native-cache controls, 19 harness controls,
+  8 dependency-plan controls, the cache-root control, and the no-cache release
+  control. All 6 runtime-fail fixtures and 8 codegen-parity cases also passed.
+  Actual copied-runtime controls reject an edited Rust dependency, including with
+  no-cache; restoration passes; a missing artifact is restored and validated;
+  preserved-timestamp corruption fails. Original repository runtime inputs are unchanged.
+- The earlier full attempt was stopped at the user's request after 517.632s and
+  remains incomplete. Cleanup removed warm targets; restoring the unchanged
+  candidate took 1250.225s under the 30-minute cap.
+  This cold bootstrap is separate from suite time. The rebuilt executable has
+  its own observed hash; focused controls and the full run bind to that artifact.
+  Earlier failed/canceled preparation and offline-relocation evidence is retained.
+- The full run rewrote the existing hashlib output beneath the source package,
+  confirming E2's remaining isolation problem. E2's separate source draft is
+  [#4350](https://github.com/sifr-lang/sifr/pull/4350); its runtime validation follows.
+- Formatting, file-size, runner foundation, shell syntax and source checks passed
+  on unchanged inputs; this record needs documentation checks only. Source review
+  of `440d84fda` resolved the three initial findings; the final test-only follow-up
+  `73b3d33ad` is also SATISFIED. Review evidence remains outside the reviewed tree.
+- [#4347](https://github.com/sifr-lang/sifr/issues/4347) still blocks required
+  reference admission, and [#4344](https://github.com/sifr-lang/sifr/issues/4344)
+  owns the compiler defects. Both remain open. No unchanged broad admission gate
+  or 12-hour capture was retried. Windows execution and full acceptance remain
+  pending. Continue independent E2 work without representing these failures as passes.
 
 ### E2 — isolate runtime output from compiler inputs
 
@@ -761,8 +801,8 @@ If warranted, register a separate bounded item with before/after evidence.
 | E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
 | R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
 | R1 | reviewed draft; acceptance pending | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / `d7bb0f5c4` | Focused controls pass; scoped review SATISFIED; required reference qualification remains pending | Continue independent E1 work; #4347 still blocks acceptance |
-| E1 | draft implementation; validation in progress | branch `phase/e2e-e1-cargo-freshness` | Seven isolated controls pass; actual harness and review pending | Complete candidate checks and scoped review; acceptance remains blocked |
-| E2 | pending | none | none | Isolate fixture outputs |
+| E1 | reviewed draft; focused validation complete; acceptance pending | [#4349](https://github.com/sifr-lang/sifr/pull/4349) / `73b3d33ad` | Portable E1 receipt; source review SATISFIED; full component retains known failures | #4347 and #4344 still block acceptance |
+| E2 | source-reviewed draft; actual validation pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `f6657abfd` | 9 isolated controls; scoped source review SATISFIED | Validate actual harness, filesystem cases and preparation freshness |
 | R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
 | E3 | pending | none | none | Early errors and bounded failed-batch isolation |
 | E4 | pending | none | none | Invocation-scoped setup reuse |
@@ -770,7 +810,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
 R1 review remediation is complete; its acceptance remains pending. Continue
-independent E1 draft work in this session using focused correctness checks;
+independent E2 draft work in this session using focused correctness checks;
 #4347 still blocks full acceptance. R0 is
 merged and preserves all existing acceptance requirements. The concrete R1/E1 slices and
 usable preparation artifacts are recorded above. Preserve unrelated changes
