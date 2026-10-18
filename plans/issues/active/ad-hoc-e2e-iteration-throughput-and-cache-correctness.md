@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; runner/cache implementation pending
 registered: 2026-10-18
-current_stage: R1 allocation implementation under qualification; E1 not started
+current_stage: R1 draft blocked on reference qualification and reviewer access; E1 not started
 
 ## Objective and authority
 
@@ -382,6 +382,23 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
 - Raw commands, identities, stderr, allocation tests and the machine-readable
   measurement receipt remain in the owned `e2e-phase-e0-20261018-_0pu4sig` evidence
   bundle. Full gates and scoped review remain required before R1 acceptance.
+- Required `scripts/run_all_tests.sh --profile create-pr` on implementation
+  candidate `77a05cf6f46d2ea83b3673b3ef2eaca73b92cdcf` exited 1 in **2.504s**,
+  before compilation. Reference admission reports drift in kernel, CPU power
+  policy, benchmark inputs and temporary storage. The previous one-job setting
+  reproduces all four mismatches; performance-area code is unchanged from base
+  `bff09698c21588434472fe40b1ab74505f81c308`. Owner: compiler/performance and
+  validation/reference qualification, tracked in [#4347](https://github.com/sifr-lang/sifr/issues/4347).
+  No reference was replaced and no gate requirement was waived.
+- All three permitted external review requests failed authentication before
+  producing a review. Credentials require renewal; no verdict or approval exists.
+  Failed request output is retained outside Git, bound to the implementation SHA.
+- The final merge gate has not run: repeating the same failed admission would
+  provide no new evidence. R1 remains an unmerged draft; E1 and later items have
+  not started. After reference qualification and reviewer access are restored,
+  review the unchanged implementation, run the required create-pr and final merge
+  gates on the candidate, then continue sequentially in this session. This is an
+  external acceptance dependency, not a session-boundary requirement.
 
 ### R2 — preparation failures block only their dependents
 
@@ -636,7 +653,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
 | E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
 | R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
-| R1 | implementation under qualification | R1 candidate; publication record follows | Eight focused controls, runner foundation suite, profile validation, unchanged merge plan and matched preparation measurements | Required gate and scoped review; not accepted yet |
+| R1 | draft; acceptance blocked | [#4348](https://github.com/sifr-lang/sifr/pull/4348) / implementation `77a05cf6f` | Eight focused controls and runner foundation suite pass; matched preparation measured; create-pr gate failed; external review unavailable | Resolve #4347 and reviewer authentication, then qualify; not accepted |
 | E1 | pending | none | none | Cargo authority and shared native dependencies |
 | E2 | pending | none | none | Isolate fixture outputs |
 | R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
@@ -645,7 +662,8 @@ If warranted, register a separate bounded item with before/after evidence.
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
-Continue in this session with R1 qualification as the active bounded item. R0 is
+R1 qualification remains the active bounded item in this session; dependent
+acceptance is blocked by #4347 and external-review authentication. R0 is
 merged and preserves all existing acceptance requirements. The concrete R1/E1 slices and
 usable preparation artifacts are recorded above. Preserve unrelated changes
 and artifacts in other worktrees; they are not owned by this plan.
