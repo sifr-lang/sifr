@@ -10,6 +10,9 @@ Sifr compiles Python syntax to native binaries through Rust. See
 - Work on one bounded item at a time and fix its root cause. Follow the
   [phase closure loop](.agents/skills/phase-closure-loop/SKILL.md) for phase work.
   Follow the user's authorized scope and sequencing when it spans multiple items.
+- Start with the smallest affected check, retain owned build targets, and diagnose
+  slow or failed preparation before repeating it unchanged. See the
+  [development iteration procedure](verification/README.md#development-iterations).
 - Own your branch, index, worktree, temporary paths, and build artifacts. Preserve
   unrelated changes; do not clean shared targets or another session's inputs.
 - Do not let another session mutate owned paths during validation or review.

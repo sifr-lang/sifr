@@ -1,8 +1,8 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: active; E0 complete; implementation pending
+status: active; E0 and R0 complete; runner/cache implementation pending
 registered: 2026-10-18
-current_stage: E0 entry verified; R0 instruction update next
+current_stage: R0 guidance delivered; R1 allocation separation next
 
 ## Objective and authority
 
@@ -235,7 +235,7 @@ historical logs, active leases, retained consumers or another owner's artifacts.
 
 ## Implementation milestones
 
-E0 is complete; implementation items remain pending. Each item must record owned paths, baseline and candidate
+E0 and R0 are complete; runner/cache implementation items remain pending. Each item must record owned paths, baseline and candidate
 SHAs, named checks, evidence locations, review, PR and unresolved dependencies.
 Split a milestone into bounded implementation items when needed; do not implement
 all milestones in one unreviewable change.
@@ -244,7 +244,8 @@ Default order: E0, R0, R1, E1, E2, R2, E3, E4, R3, E5. R1 is early because it
 may unblock implementation preparation. Coordinate R1–R3 with the existing
 validation/resource plan's M2/M3 owner and record one implementation authority;
 do not create competing schedulers or duplicate policies. Adjust order only for
-recorded dependencies, keeping one bounded item active. Existing reported stages
+recorded dependencies, keeping one bounded item active. The user authorized continuing sequential items
+in the current session; a new session is not required between items. Existing reported stages
 can support measurements before R3; a reporting redesign is not a prerequisite
 for the primary cache fix.
 
@@ -601,7 +602,7 @@ If warranted, register a separate bounded item with before/after evidence.
 |---|---|---|---|---|
 | Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
 | E0 | complete 2026-10-18 | input base `6dd858aed` | Portable E0 receipt; 11 controls; no full-gate claim | R0 next; compiler failures tracked by #4344 |
-| R0 | pending | none | none | Concise agent and verification iteration guidance |
+| R0 | complete 2026-10-18 | R0 documentation candidate (PR recorded after publication) | Diff whitespace, changed links/anchors, commands and scope verified; no broad build required | R1 next; gate requirements unchanged |
 | R1 | pending | none | none | Separate compiler-preparation and native-batch budgets |
 | E1 | pending | none | none | Cargo authority and shared native dependencies |
 | E2 | pending | none | none | Isolate fixture outputs |
@@ -611,8 +612,8 @@ If warranted, register a separate bounded item with before/after evidence.
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
-Next implementation session: verify the E0 receipt still applies to current
-inputs, then execute R0 as the next bounded item. The concrete R1/E1 slices and
+Continue in this session with R1 as the next bounded item. R0 adds concise
+iteration guidance and preserves all existing acceptance requirements. The concrete R1/E1 slices and
 usable preparation artifacts are recorded above. Preserve unrelated changes
 and artifacts in other worktrees; they are not owned by this plan.
 No product implementation, compiler defect repair, gate waiver or performance
