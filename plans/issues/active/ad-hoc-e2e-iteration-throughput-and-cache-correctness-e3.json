@@ -1,0 +1,317 @@
+{
+  "candidate": "9472dd47813fedd73dc67de7b83dcfe27115e8ab",
+  "selected": 729,
+  "counts": [
+    710,
+    19
+  ],
+  "failed": [
+    "async_generator_aclose_before_start",
+    "async_generator_aclose_result",
+    "callable_struct_field",
+    "enum_value_property",
+    "enum_valued",
+    "join_set_add_task_join_all",
+    "join_set_bound_terminal_await",
+    "join_set_cancel_all_evidence",
+    "join_set_cancel_all_task_cancelled",
+    "join_set_spawn_blocking",
+    "join_set_spawn_cpu_join_all_ordered",
+    "network_http_tls_loopback_split",
+    "newtype_basic",
+    "process_scoped_parent_cancel",
+    "process_scoped_spawn_handle",
+    "task_context_propagation_basic",
+    "task_group_spawn_cpu",
+    "task_group_spawn_cpu_user_error",
+    "task_scope_spawn_blocking"
+  ],
+  "unexpected": [],
+  "missing_known": [],
+  "seconds": 144.05023509000603,
+  "stages": {
+    "compile_ms": 87305,
+    "plan_ms": 51,
+    "build_ms": 43605,
+    "build_sum_ms": 42938,
+    "run_ms": 7413,
+    "cache_hits": 191,
+    "groups": 192
+  },
+  "original_batch_failure_retained": true,
+  "binary_sha256": "78c81c0c0d402593aded4c69abfe0be0935eeaf4509e025147bf8dd12b04455d",
+  "checks": [
+    {
+      "label": "e3-reviewed-isolation",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::batch_isolation_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 4.207475559000159,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e3-reviewed-harness",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::harness_behavior_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 0.8027305259965942,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e3-reviewed-execution",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::fixture_execution_tests",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 3.607991363001929,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e3-reviewed-compile-fail",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+        "e2e_support::e2e_entrypoints::test_e2e_fail",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 152.03578091799864,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e3-reviewed-file-size",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "scripts/check_file_size_guardrails.py"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 2.4044724679988576,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e3-reviewed-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--check"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 6.811318842002947,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e3-reviewed-full",
+      "command": [
+        "bash",
+        "verification/runner/e2e/run_e2e_pass.sh",
+        "--profile",
+        "merge"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 144.05023509000603,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 87305,
+        "plan_ms": 51,
+        "build_ms": 43605,
+        "build_sum_ms": 42938,
+        "run_ms": 7413,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    }
+  ],
+  "scope": "E3 focused draft evidence; not acceptance",
+  "review": {
+    "verdict": "SATISFIED",
+    "candidate": "9472dd47813fedd73dc67de7b83dcfe27115e8ab"
+  },
+  "qualification_blockers": [
+    "#4347",
+    "#4344"
+  ],
+  "first_run": {
+    "candidate": "06e23f22c4e61e6d94745be9aa83b3a7878a2fa2",
+    "selected": 729,
+    "counts": [
+      710,
+      19
+    ],
+    "failed": [
+      "async_generator_aclose_before_start",
+      "async_generator_aclose_result",
+      "callable_struct_field",
+      "enum_value_property",
+      "enum_valued",
+      "join_set_add_task_join_all",
+      "join_set_bound_terminal_await",
+      "join_set_cancel_all_evidence",
+      "join_set_cancel_all_task_cancelled",
+      "join_set_spawn_blocking",
+      "join_set_spawn_cpu_join_all_ordered",
+      "network_http_tls_loopback_split",
+      "newtype_basic",
+      "process_scoped_parent_cancel",
+      "process_scoped_spawn_handle",
+      "task_context_propagation_basic",
+      "task_group_spawn_cpu",
+      "task_group_spawn_cpu_user_error",
+      "task_scope_spawn_blocking"
+    ],
+    "unexpected": [],
+    "missing_known": [],
+    "seconds": 317.74697710700275,
+    "stages": {
+      "compile_ms": 86437,
+      "plan_ms": 57,
+      "build_ms": 177553,
+      "build_sum_ms": 176902,
+      "run_ms": 7464,
+      "cache_hits": 0,
+      "groups": 192
+    },
+    "original_batch_failure_retained": true,
+    "binary_sha256": "d6612295f28ca5912599db2826f583fb3388a47f258d993cc0eb5dd508d4300f",
+    "checks": [
+      {
+        "label": "e3-final-isolation",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::batch_isolation_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 3.8073240909943706,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e3-final-harness",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::harness_behavior_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 0.6019898410013411,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e3-final-execution",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/r1-representative-target/debug/deps/e2e-08cfa10c25f7b81e",
+          "e2e_support::fixture_execution_tests",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+        "seconds": 3.608466777004651,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e3-final-file-size",
+        "command": [
+          "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+          "scripts/check_file_size_guardrails.py"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 2.2041539319980075,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e3-final-fmt",
+        "command": [
+          "cargo",
+          "fmt",
+          "--check"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 6.812412879000476,
+        "exit": 0,
+        "cause": "exit",
+        "passed": true,
+        "stages": null
+      },
+      {
+        "label": "e3-final-full",
+        "command": [
+          "bash",
+          "verification/runner/e2e/run_e2e_pass.sh",
+          "--profile",
+          "merge"
+        ],
+        "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+        "seconds": 317.74697710700275,
+        "exit": 101,
+        "cause": "exit",
+        "passed": false,
+        "stages": {
+          "compile_ms": 86437,
+          "plan_ms": 57,
+          "build_ms": 177553,
+          "build_sum_ms": 176902,
+          "run_ms": 7464,
+          "cache_hits": 0,
+          "groups": 192
+        }
+      }
+    ]
+  },
+  "followups": [
+    "Refine unknown Cargo infrastructure diagnostics only with typed evidence; current conservative isolation never turns failure into pass.",
+    "Consider more precise individual parse-error diagnosis; retain blocked status meanwhile."
+  ],
+  "sha256": {
+    "e3-reviewed-analysis.json": "4ba7f0515648d3a7146e81d953b0dec0e48a963e691d97e0273a1cc6909264fb",
+    "e3-final-analysis.json": "27fbd3e280ae994936a6b7726ee2c36a3bfd1e69ad455e15f050fa4d4b921e4f",
+    "e3-review-9472dd47813fedd73dc67de7b83dcfe27115e8ab.md": "a073f14aba32e2f7d5772c302f8aed39c34d28569c3d84ea910079231cc2be58",
+    "e3-review-06e23f22c4e61e6d94745be9aa83b3a7878a2fa2.md": "79d79e35f907e467063f27f518d7c644ef16d4c3f1a06479eeb2f1de0c092407",
+    "e3-initial-isolation/receipt.json": "ea98926977e6bb48ba0cfd1ad16b2ba0ae8e8519c9effdd3df357e423e553726",
+    "e3-control-isolation/receipt.json": "58213eb6b28a4135ff873dc30a4c461f74b44092659c4e89564c9d2b5d38cdd7"
+  },
+  "reference_binary_sha256": "78c81c0c0d402593aded4c69abfe0be0935eeaf4509e025147bf8dd12b04455d"
+}

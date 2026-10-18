@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E3 draft implementation and focused validation; acceptance blocked
+current_stage: E3 reviewed draft; E4 next; acceptance blocked
 
 ## Objective and authority
 
@@ -883,7 +883,7 @@ If warranted, register a separate bounded item with before/after evidence.
 | E1 | reviewed draft; focused validation complete; acceptance pending | [#4349](https://github.com/sifr-lang/sifr/pull/4349) / `73b3d33ad` | Portable E1 receipt; source review SATISFIED; full component retains known failures | #4347 and #4344 still block acceptance |
 | E2 | reviewed draft; focused validation complete; acceptance pending | [#4350](https://github.com/sifr-lang/sifr/pull/4350) / `e6bfdeffb` | Portable E2 receipt; actual filesystem/full comparison; preparation fresh; review SATISFIED | R2 next; #4347 and #4344 still block acceptance |
 | R2 | reviewed draft; focused validation complete; acceptance pending | [#4351](https://github.com/sifr-lang/sifr/pull/4351) / `b5be3430b` | Self-tests 56.704s; all five plans unchanged; review SATISFIED | E3 next; qualification still blocked |
-| E3 | pending | none | none | Early errors and bounded failed-batch isolation |
+| E3 | reviewed draft; focused validation complete; acceptance pending | [#4352](https://github.com/sifr-lang/sifr/pull/4352) / `9472dd478` | 710 pass / same 19 known failures; 79 healthy outcomes recovered; scoped review SATISFIED | E4 next; qualification still blocked |
 | E4 | pending | none | none | Invocation-scoped setup reuse |
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
@@ -923,3 +923,7 @@ unrelated original batches; conservative individual isolation remains disabled
 for mixed/unknown failures. Add real parse-error/healthy-next-group coverage and
 multiple failed-group cap accounting. Preserve the initial NOT SATISFIED review
 and its source candidate; final affected checks and remediation review follow.
+
+### E3 completed focused evidence — 2026-10-18
+
+The [E3 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e3.json) records source `9472dd47813fedd73dc67de7b83dcfe27115e8ab`, focused controls and compile-fail corpus validation. All 729 run-pass fixtures have outcomes: **710 pass and exactly the 19 known compiler defects fail**. All 79 previously batch-blocked healthy fixtures now pass. The original failed native batch remains separately nonzero. The first changed-native-input run took 317.747s; the reviewed warm run took 144.050s. These are component diagnostics, not a passing gate. Preserve the initial structured-output failures and NOT SATISFIED scheduling review; remediation review is SATISFIED. A saved exact reference executable supports later matched measurements. Continue E4 invocation-scoped setup reuse. Required qualification remains blocked by #4347/#4344.
