@@ -1,0 +1,803 @@
+{
+  "implementation_candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10",
+  "record_base": "387a6b40eb4d73da19c08c1e733c5c10ea1337d6",
+  "reference_candidate": "9472dd47813fedd73dc67de7b83dcfe27115e8ab",
+  "candidate_binary_sha256": "ef7066a19b86aef07c1faa23f030a36bf94c5f8f3e5ac4c4dca585d998581ca3",
+  "reference_binary_sha256": "78c81c0c0d402593aded4c69abfe0be0935eeaf4509e025147bf8dd12b04455d",
+  "fixture_inventory_sha256": "bb7e712a020b39471e6f100b7ff13f3150775374493c91838cf74bee22799686",
+  "summary": {
+    "reference": {
+      "samples_seconds": [
+        142.65596044799895,
+        143.2558775370053,
+        144.86540345699905
+      ],
+      "median_seconds": 143.2558775370053,
+      "min_seconds": 142.65596044799895,
+      "max_seconds": 144.86540345699905
+    },
+    "candidate": {
+      "samples_seconds": [
+        92.77590998999949,
+        89.16171926000243,
+        92.77551789700374
+      ],
+      "median_seconds": 92.77551789700374,
+      "min_seconds": 89.16171926000243,
+      "max_seconds": 92.77590998999949
+    },
+    "canonical": {
+      "samples_seconds": [
+        101.99471978599468,
+        97.18034168099985,
+        98.58476000900555
+      ],
+      "median_seconds": 98.58476000900555,
+      "min_seconds": 97.18034168099985,
+      "max_seconds": 101.99471978599468
+    },
+    "paired_median_reduction_percent": 35.23789774486682
+  },
+  "representative_sample": "e5-canonical-3",
+  "stage_rows": [
+    {
+      "stage": "discovery",
+      "seconds": 0.008863,
+      "status": "pass"
+    },
+    {
+      "stage": "cache_lease",
+      "seconds": 0.00014299999999999998,
+      "status": "pass"
+    },
+    {
+      "stage": "source_compile",
+      "seconds": 45.956824,
+      "status": "fail"
+    },
+    {
+      "stage": "planning",
+      "seconds": 0.046053,
+      "status": "pass"
+    },
+    {
+      "stage": "native_setup",
+      "seconds": 0.05228,
+      "status": "pass"
+    },
+    {
+      "stage": "cache_prepare",
+      "seconds": 0.006592,
+      "status": "pass"
+    },
+    {
+      "stage": "native_build",
+      "seconds": 38.253402,
+      "status": "fail"
+    },
+    {
+      "stage": "native_isolation",
+      "seconds": 2.335187,
+      "status": "fail"
+    },
+    {
+      "stage": "runtime",
+      "seconds": 7.314602,
+      "status": "fail"
+    },
+    {
+      "stage": "reporting_and_retention",
+      "seconds": 0.013711000000000001,
+      "status": "pass"
+    },
+    {
+      "stage": "unattributed harness residual",
+      "seconds": 0.000861,
+      "status": "measured residual"
+    },
+    {
+      "stage": "outside harness: preparation/startup/teardown",
+      "seconds": 4.384482000000004,
+      "status": "measured mixed overhead"
+    },
+    {
+      "stage": "diagnostic supervisor residual",
+      "seconds": 0.2117600090055447,
+      "status": "measurement overhead"
+    }
+  ],
+  "stage_sum_seconds": 98.58476000900555,
+  "category_rows": [
+    {
+      "category": "Compiler E2E correctness",
+      "test": "canonical-3",
+      "seconds": 98.58476000900555,
+      "status": "FAIL \u2014 known compiler dependency",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-canonical-3/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-c",
+        "from sifr_verify.profile_commands import run_command,CommandFailed\nimport os,sys\ntry: run_command(['bash','verification/runner/e2e/run_e2e_pass.sh','--profile','merge'],env=os.environ.copy())\nexcept CommandFailed as error: sys.exit(error.returncode)"
+      ]
+    },
+    {
+      "category": "Compiler E2E correctness",
+      "test": "negative",
+      "seconds": 3.0054086219970486,
+      "status": "PASS",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-negative/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_fail",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "category": "Compiler E2E correctness",
+      "test": "runtime-fail",
+      "seconds": 7.011737988003006,
+      "status": "PASS",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-runtime-fail/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_runtime_fail",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "category": "Compiler E2E correctness",
+      "test": "codegen-parity",
+      "seconds": 7.813020773995959,
+      "status": "PASS",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-codegen-parity/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_codegen_corpus_subset_parity",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "category": "Compiler E2E correctness",
+      "test": "structured-lowering",
+      "seconds": 2.8053757029992994,
+      "status": "PASS",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-structured-lowering/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "category": "Compiler E2E correctness",
+      "test": "cache-environment",
+      "seconds": 0.20141139399493113,
+      "status": "PASS",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-cache-environment/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_cache_root_from_env_resolution",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "category": "Compiler E2E correctness",
+      "test": "emitted-safety",
+      "seconds": 78.71871318099875,
+      "status": "FAIL \u2014 known compiler dependency",
+      "receipt": {
+        "label": "evidence",
+        "href": "evidence/e5-emitted-safety/receipt.json"
+      },
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_emit_pass_fixtures_do_not_include_unwrap_or_expect",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ]
+    }
+  ],
+  "category_sum_seconds": 198.14042767099454,
+  "checks": [
+    {
+      "label": "e5-warmup-reference",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e3-reviewed-reference-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 144.45761921800295,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 93308,
+        "plan_ms": 60,
+        "build_ms": 43208,
+        "build_sum_ms": 42457,
+        "run_ms": 7329,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-warmup-candidate",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 94.97943981400022,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 44716,
+        "plan_ms": 46,
+        "build_ms": 42374,
+        "build_sum_ms": 42243,
+        "run_ms": 7325,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-pair-1-reference",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e3-reviewed-reference-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 142.65596044799895,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 94856,
+        "plan_ms": 54,
+        "build_ms": 40100,
+        "build_sum_ms": 39585,
+        "run_ms": 7327,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-pair-1-candidate",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 92.77590998999949,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 44738,
+        "plan_ms": 46,
+        "build_ms": 40331,
+        "build_sum_ms": 40203,
+        "run_ms": 7318,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-pair-2-candidate",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 89.16171926000243,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 40497,
+        "plan_ms": 46,
+        "build_ms": 40945,
+        "build_sum_ms": 40820,
+        "run_ms": 7319,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-pair-2-reference",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e3-reviewed-reference-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 143.2558775370053,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 94975,
+        "plan_ms": 59,
+        "build_ms": 40529,
+        "build_sum_ms": 40014,
+        "run_ms": 7315,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-pair-3-reference",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e3-reviewed-reference-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 144.86540345699905,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 96590,
+        "plan_ms": 57,
+        "build_ms": 40517,
+        "build_sum_ms": 39997,
+        "run_ms": 7315,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-pair-3-candidate",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_pass",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 92.77551789700374,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 44810,
+        "plan_ms": 45,
+        "build_ms": 40268,
+        "build_sum_ms": 40130,
+        "run_ms": 7305,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-canonical-1",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-c",
+        "from sifr_verify.profile_commands import run_command,CommandFailed\nimport os,sys\ntry: run_command(['bash','verification/runner/e2e/run_e2e_pass.sh','--profile','merge'],env=os.environ.copy())\nexcept CommandFailed as error: sys.exit(error.returncode)"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 101.99471978599468,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 47926,
+        "plan_ms": 47,
+        "build_ms": 40858,
+        "build_sum_ms": 40733,
+        "run_ms": 7330,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-canonical-2",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-c",
+        "from sifr_verify.profile_commands import run_command,CommandFailed\nimport os,sys\ntry: run_command(['bash','verification/runner/e2e/run_e2e_pass.sh','--profile','merge'],env=os.environ.copy())\nexcept CommandFailed as error: sys.exit(error.returncode)"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 97.18034168099985,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 44855,
+        "plan_ms": 45,
+        "build_ms": 40307,
+        "build_sum_ms": 40171,
+        "run_ms": 7328,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-canonical-3",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/verification/.venv/bin/python3",
+        "-c",
+        "from sifr_verify.profile_commands import run_command,CommandFailed\nimport os,sys\ntry: run_command(['bash','verification/runner/e2e/run_e2e_pass.sh','--profile','merge'],env=os.environ.copy())\nexcept CommandFailed as error: sys.exit(error.returncode)"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo",
+      "seconds": 98.58476000900555,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": {
+        "compile_ms": 45956,
+        "plan_ms": 46,
+        "build_ms": 40588,
+        "build_sum_ms": 40452,
+        "run_ms": 7314,
+        "cache_hits": 191,
+        "groups": 192
+      }
+    },
+    {
+      "label": "e5-negative",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_fail",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 3.0054086219970486,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e5-runtime-fail",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_e2e_runtime_fail",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 7.011737988003006,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e5-codegen-parity",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_codegen_corpus_subset_parity",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 7.813020773995959,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e5-structured-lowering",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 2.8053757029992994,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e5-cache-environment",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_cache_root_from_env_resolution",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 0.20141139399493113,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e5-emitted-safety",
+      "command": [
+        "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/e5-candidate-e2e",
+        "e2e_support::e2e_entrypoints::test_emit_pass_fixtures_do_not_include_unwrap_or_expect",
+        "--exact",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/yaser5/projects/sifr/e2e-phase-e0-20261018-_0pu4sig/repo/crates/sifr",
+      "seconds": 78.71871318099875,
+      "exit": 101,
+      "cause": "exit",
+      "passed": false,
+      "stages": null
+    }
+  ],
+  "safety_validation": {
+    "same_known_failures": true,
+    "failed_fixture_paths": [
+      "tests/e2e/pass/async_generator_aclose_before_start.sifr",
+      "tests/e2e/pass/async_generator_aclose_result.sifr",
+      "tests/e2e/pass/enum_value_property.sifr",
+      "tests/e2e/pass/enum_valued.sifr",
+      "tests/e2e/pass/join_set_add_task_join_all.sifr",
+      "tests/e2e/pass/join_set_bound_terminal_await.sifr",
+      "tests/e2e/pass/join_set_cancel_all_evidence.sifr",
+      "tests/e2e/pass/join_set_cancel_all_task_cancelled.sifr",
+      "tests/e2e/pass/join_set_spawn_blocking.sifr",
+      "tests/e2e/pass/join_set_spawn_cpu_join_all_ordered.sifr",
+      "tests/e2e/pass/network_http_tls_loopback_split.sifr",
+      "tests/e2e/pass/newtype_basic.sifr",
+      "tests/e2e/pass/process_scoped_parent_cancel.sifr",
+      "tests/e2e/pass/process_scoped_spawn_handle.sifr",
+      "tests/e2e/pass/task_context_propagation_basic.sifr",
+      "tests/e2e/pass/task_group_spawn_cpu.sifr",
+      "tests/e2e/pass/task_group_spawn_cpu_user_error.sifr",
+      "tests/e2e/pass/task_scope_spawn_blocking.sifr"
+    ],
+    "selected": 729,
+    "emitted_outputs_scanned": 711,
+    "forbidden_pattern_findings": 0,
+    "candidate": "24d8496036137efb257fa7ba7cbd83199d78bc10"
+  },
+  "report_validation": {
+    "passed": true,
+    "checks": [
+      "eleven complete full-corpus samples including two warmups",
+      "three samples in each measured condition",
+      "canonical observations all below300seconds",
+      "wall stages reconcile",
+      "category sums reconcile",
+      "729source and710runtime observations",
+      "all193native attempts retained",
+      "no measurement capped or infra interrupted",
+      "fixture inventory includes729positive569negative6runtime",
+      "safety same18known failures",
+      "all safety failures are compilation diagnostics",
+      "local link ../../iteration-measurement-20261010-yr3_l_4h/e2e-deep-20261014/report.html",
+      "local link report.json",
+      "local link evidence/e5-analysis.json",
+      "local link evidence/e5-context.json",
+      "local link evidence-manifest.json",
+      "local link evidence/e5-canonical-3/receipt.json",
+      "local link evidence/e5-negative/receipt.json",
+      "local link evidence/e5-runtime-fail/receipt.json",
+      "local link evidence/e5-codegen-parity/receipt.json",
+      "local link evidence/e5-structured-lowering/receipt.json",
+      "local link evidence/e5-cache-environment/receipt.json",
+      "local link evidence/e5-emitted-safety/receipt.json",
+      "nine sortable report tables",
+      "all raw files match hashes"
+    ],
+    "interactive_sort_filter": {
+      "passed": true,
+      "tables": 9,
+      "ascending_checks": 9,
+      "descending_checks": 9,
+      "filter_zero_results_checks": 9,
+      "filters_cleared": true,
+      "screenshot": "report-preview.png"
+    }
+  },
+  "sample_outcomes": [
+    {
+      "label": "e5-warmup-reference",
+      "kind": "reference",
+      "group": "warmup",
+      "seconds": 144.45761921800295,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-warmup-candidate",
+      "kind": "candidate",
+      "group": "warmup",
+      "seconds": 94.97943981400022,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-pair-1-reference",
+      "kind": "reference",
+      "group": "pair-1",
+      "seconds": 142.65596044799895,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-pair-1-candidate",
+      "kind": "candidate",
+      "group": "pair-1",
+      "seconds": 92.77590998999949,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-pair-2-candidate",
+      "kind": "candidate",
+      "group": "pair-2",
+      "seconds": 89.16171926000243,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-pair-2-reference",
+      "kind": "reference",
+      "group": "pair-2",
+      "seconds": 143.2558775370053,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-pair-3-reference",
+      "kind": "reference",
+      "group": "pair-3",
+      "seconds": 144.86540345699905,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-pair-3-candidate",
+      "kind": "candidate",
+      "group": "pair-3",
+      "seconds": 92.77551789700374,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-canonical-1",
+      "kind": "canonical",
+      "group": "canonical",
+      "seconds": 101.99471978599468,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-canonical-2",
+      "kind": "canonical",
+      "group": "canonical",
+      "seconds": 97.18034168099985,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    },
+    {
+      "label": "e5-canonical-3",
+      "kind": "canonical",
+      "group": "canonical",
+      "seconds": 98.58476000900555,
+      "selected": 729,
+      "passed": 710,
+      "failed": 19,
+      "same_known_failures": true
+    }
+  ],
+  "qualification": {
+    "4344": {
+      "assignees": [],
+      "number": 4344,
+      "state": "OPEN",
+      "title": "Track 19 reproduced E2E compiler failures blocking green throughput qualification",
+      "updatedAt": "2026-10-18T06:41:00Z",
+      "url": "https://github.com/sifr-lang/sifr/issues/4344"
+    },
+    "4347": {
+      "assignees": [],
+      "number": 4347,
+      "state": "OPEN",
+      "title": "E2E iteration R1 qualification blocked by performance-reference drift",
+      "updatedAt": "2026-10-18T06:56:10Z",
+      "url": "https://github.com/sifr-lang/sifr/issues/4347"
+    },
+    "main": "bff09698c21588434472fe40b1ab74505f81c308"
+  },
+  "limitations": [
+    "All run-pass samples remain failed: 710 passes, same 19known compiler failures. No full green-gate SLA.",
+    "E3 reference already includes E1\u2013E3 optimizations; paired comparison isolates the later E4/R3 changes, not the entire phase.",
+    "Cold observations, first configuration builds and warm runs are different conditions.",
+    "Independent linker time unknown. Native Cargo units are per-attempt artifact observations, not unique workspace compilation counts.",
+    "Parallel per-case durations overlap and cannot be added to wall time. Stage medians need not sum to median total.",
+    "Windows and cloud paired performance protocol are not qualified by these measurements."
+  ],
+  "measurement_supervisor_correction": "Initial warm-up succeeded as a known-failure diagnostic, but the measurement parser incorrectly required a literal729 in old E3 output. It reports710+19 instead. Corrected parser reused the exact immutable receipt/command/context; no failed test was converted into a pass.",
+  "report_artifacts": {
+    "report.html": "7e39ffcf39e65f4ab09c2ccee9560b11989a5c28f3a08732584dd1d41df299b7",
+    "report.json": "e545b35e0fa7b95900d1dbdf35560301c248c2fae8494dbeeb0e79ea542b4a94",
+    "evidence-manifest.json": "a4b9ac98729db12e83c3754f5cc00b04f83e22c1ee457133395c5d40f62a2fae",
+    "evidence.tar.gz": "1c29fcda733af431e1c0abf722ea19077b2896a203b8f7f33b8f3eb157ce5c89"
+  },
+  "review_followups": [
+    "Preserve the existing one-MiB stream truncation signal; monitor diagnostic volume as corpus grows.",
+    "Malformed non-string telemetry parent can abort report parsing; no valid accounting is produced. Future parser-hardening item, not a gate waiver.",
+    "Independent linker timing remains unknown."
+  ]
+}

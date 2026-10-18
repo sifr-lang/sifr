@@ -1,8 +1,8 @@
 # Ad Hoc Phase: E2E Iteration Throughput and Cache Correctness
 
-status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
+status: active; implementation milestones reviewed as drafts; E5 measurements complete; acceptance blocked
 registered: 2026-10-18
-current_stage: R3 reviewed draft; E5 measurements next; acceptance blocked
+current_stage: E5 measured handoff complete; correctness/reference dependencies block final qualification and merge
 
 ## Objective and authority
 
@@ -886,18 +886,17 @@ If warranted, register a separate bounded item with before/after evidence.
 | E3 | reviewed draft; focused validation complete; acceptance pending | [#4352](https://github.com/sifr-lang/sifr/pull/4352) / `9472dd478` | 710 pass / same 19 known failures; 79 healthy outcomes recovered; scoped review SATISFIED | E4 next; qualification still blocked |
 | E4 | reviewed draft; focused evidence recorded; acceptance pending | [#4353](https://github.com/sifr-lang/sifr/pull/4353) / `a08c29245` | Full 1,298-fixture equivalence; 729 run-pass outcomes; same 19 known failures | R3 next; qualification still blocked |
 | R3 | reviewed draft; focused evidence recorded; acceptance pending | [#4354](https://github.com/sifr-lang/sifr/pull/4354) / `24d849603` | 729-fixture execution, stage reconciliation, nine progress controls; scoped review SATISFIED | E5 next; qualification blocked |
-| E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
+| E5 | measurements/report complete; final qualification blocked | Final source `24d849603` | Three matched warm pairs; three canonical commands; full inventories and raw receipts | Resolve #4344/#4347, then required acceptance gates |
 
-R1/E1/E2 source review and focused validation are recorded; acceptance remains
-pending. R2 is the next independent bounded item in this session: model exact
-preparation prerequisites, retain fail-fast by default, and allow only independent
-checks to continue under no-fail-fast. Begin with deterministic runner self-tests;
-reuse the owned warm targets and do not start another compiler rebuild without a
-changed compiler input. #4347 and #4344 still block full acceptance. R0 preserves
-all existing acceptance requirements; no gate waiver has been granted. Preserve unrelated changes
-and artifacts in other worktrees; they are not owned by this plan.
-The delivered changes affect verification infrastructure and fixtures; compiler
-defects and acceptance qualification remain separately owned.
+All implementation milestones R1/E1/E2/R2/E3/E4/R3 are reviewed drafts with
+focused evidence recorded. E5 repeated measurements and the sortable report are
+complete. Required acceptance and implementation merges remain blocked by
+#4344 (emitted-Rust/codegen correctness) and #4347 (performance-reference admission).
+Both owning issues remain open and have no named GitHub assignee. Do not repeat
+unchanged admission failure, weaken coverage, or absorb the compiler repairs here.
+After the owning repairs land, reconcile the base and rerun affected contracts,
+then the required create-pr and merge gates on the actual final candidate.
+R0 grants no acceptance waiver. The phase remains active until qualified and merged.
 
 ### R2 completed focused evidence — 2026-10-18
 
@@ -1019,3 +1018,49 @@ Missing wall-time budget data is now unknown, not a default pass. Nested diagnos
 metrics remain observations without gate authority. Existing output limits and
 unknown independent linker timing are explicit follow-ups. Required qualification
 remains blocked by #4344/#4347; continue matched E5 measurements without merging.
+
+### E5 measured engineering handoff — 2026-10-18
+
+The [E5 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e5.json)
+binds final implementation `24d8496036137efb257fa7ba7cbd83199d78bc10`, saved reference
+`9472dd47813fedd73dc67de7b83dcfe27115e8ab`, executable hashes, unchanged
+fixture-input inventory, resources and all commands. Both prepared executables
+were warmed first; three reference/candidate pairs alternate order and preserve
+identical profile, resource budgets and native-cache conditions.
+
+| Condition | Three measured samples (seconds) | Median | Range |
+|---|---|---|---|
+| Prepared E3 reference | 142.656, 143.256, 144.865 | 143.256s | 142.656–144.865s |
+| Prepared final candidate | 92.776, 89.162, 92.776 | 92.776s | 89.162–92.776s |
+| Full canonical Cargo command | 101.995, 97.180, 98.585 | 98.585s | 97.180–101.995s |
+
+The prepared median reduction versus E3 is **35.2%**.
+Every full sample selects all 729fixtures and retains 710passes plus the same 19known
+compiler failures. There is no passing full-gate claim, percentile claim or cloud
+protocol speed claim. Repairs may add execution previously blocked by errors.
+The canonical-command samples are all below five minutes, but correctness and
+reference-admission qualification remain prerequisites to the objective.
+
+The sortable report contains direct-stage sums, all 193native attempts including
+failed originals/retries,729 source observations,710 runtime observations, fixture
+hashes, resources and raw receipts. The representative full command sums to
+98.585s. One canonical sample plus the final named E2E
+contracts totals 198.140s; this selected component cycle
+is not the complete merge gate. Nested attempts and parallel case observations
+are explicitly excluded from additive wall totals. Independent linker time is
+unknown. Earlier first-configuration/cold/warm observations retain their conditions.
+
+Final named contracts retain their full selections. The emitted-safety scan retains
+the same 18known lowering failures; no forbidden emitted pattern is found in the 711
+successfully emitted outputs. The record contains exact check outcomes rather than
+promoting known failures to passes. Earlier focused driver and harness evidence
+retains its observed candidate and input identity; no unchanged broad rebuild was
+added for this record-only handoff. The initial old-output supervisor assertion,
+zero-selected driver attempt, formatting failure and review corrections remain
+preserved alongside successful reruns.
+
+The report and raw archive are stored with the session's external evidence under
+`e5/`; content hashes are in the receipt. Report checks verify totals, inventories,
+local links and sorting/filtering behavior. Final delivery links the local artifact.
+No implementation PR is merged while #4344/#4347 remain open. Next work belongs to
+the correctness/reference owners, followed by current-candidate acceptance.
