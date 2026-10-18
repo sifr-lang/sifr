@@ -52,7 +52,13 @@ pub(crate) fn match_compile_failure_expectations(
 }
 
 pub(crate) fn compile_source_with_metadata(source: &str) -> Result<CompiledMetadata, Vec<String>> {
-    match compile_source_for_e2e(source) {
+    compiled_metadata(compile_source_for_e2e(source))
+}
+
+fn compiled_metadata(
+    result: sifr_driver::CompileResultFull,
+) -> Result<CompiledMetadata, Vec<String>> {
+    match result {
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
@@ -207,9 +213,16 @@ pub(crate) fn build_rust_source_from_module(raw: &str, entry_fn: &str) -> Result
 }
 
 pub(crate) fn compile_fixture(fixture: &FixtureCase) -> Result<CompiledCase, String> {
+    compile_fixture_with(fixture, compile_source_for_e2e)
+}
+
+fn compile_fixture_with(
+    fixture: &FixtureCase,
+    compile: impl FnOnce(&str) -> sifr_driver::CompileResultFull,
+) -> Result<CompiledCase, String> {
     let started = Instant::now();
     let (rust_source, used_stdlib_modules, required_features, interop) =
-        compile_source_with_metadata(&fixture.source)
+        compiled_metadata(compile(&fixture.source))
             .map_err(|errors| format!("sifr compilation failed:\n  {}", errors.join("\n  ")))?;
     let dependency_plan = sifr_driver::try_generate_standalone_dependency_plan(
         &used_stdlib_modules,
@@ -241,8 +254,15 @@ pub(crate) fn compile_suite_parallel(
     fixtures: &[FixtureCase],
     workers: usize,
 ) -> Vec<(FixtureCase, Result<CompiledCase, String>)> {
+    let session =
+        sifr_driver::SingleFileCompilationSession::new(sifr_driver::CompilerContext::for_test());
     run_in_parallel(fixtures, workers, |fixture| {
-        let result = compile_fixture(fixture);
+        let result = compile_fixture_with(fixture, |source| match &session {
+            Ok(session) => session.compile_with_metadata(source),
+            Err(errors) => sifr_driver::CompileResultFull::Errors {
+                errors: errors.clone(),
+            },
+        });
         (fixture.clone(), result)
     })
 }

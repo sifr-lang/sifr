@@ -69,6 +69,12 @@ pub fn compile_with_metadata(compiler: &crate::CompilerContext, source: &str) ->
         Err(errors) => return CompileResultFull::Errors { errors },
     };
 
+    metadata_result(codegen_result)
+}
+
+pub(super) fn metadata_result(
+    codegen_result: crate::build::CompiledSingleFileMetadata,
+) -> CompileResultFull {
     CompileResultFull::Success {
         generated_source_map: generated_source_map_files(&codegen_result.rust_source),
         rust_source: codegen_result.rust_source,

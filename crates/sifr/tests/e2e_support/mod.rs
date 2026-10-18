@@ -26,3 +26,5 @@ mod fixture_execution_tests;
 
 mod batch_isolation;
 mod batch_isolation_tests;
+
+mod session_tests;

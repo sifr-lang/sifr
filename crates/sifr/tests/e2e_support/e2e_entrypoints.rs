@@ -296,9 +296,12 @@ pub(crate) fn test_e2e_fail() {
         format_expectation_rules_errors(&rules_errors)
     );
 
+    let session =
+        sifr_driver::SingleFileCompilationSession::new(sifr_driver::CompilerContext::for_test())
+            .unwrap_or_else(|errors| panic!("compile-fail setup failed: {errors:?}"));
     let mut failures = 0usize;
     for (path, source, expected) in fail_cases {
-        match compile_source(&source) {
+        match compile_source_in_session(&session, &source) {
             Ok(rust_source) => {
                 panic!(
                     "FAIL test {} should have failed but compiled successfully:\n{}",

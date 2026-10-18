@@ -440,6 +440,19 @@ pub(crate) fn compile_source(source: &str) -> Result<String, Vec<CompiledFailure
     }
 }
 
+pub(crate) fn compile_source_in_session(
+    session: &sifr_driver::SingleFileCompilationSession,
+    source: &str,
+) -> Result<String, Vec<CompiledFailure>> {
+    match session.compile_with_metadata(source) {
+        sifr_driver::CompileResultFull::Success { rust_source, .. } => Ok(rust_source),
+        sifr_driver::CompileResultFull::Errors { errors } => Err(errors
+            .into_iter()
+            .map(compiled_failure_from_rendered)
+            .collect()),
+    }
+}
+
 pub(crate) fn compiled_failure_from_rendered(
     diagnostic: sifr_diagnostics::RenderedDiagnostic,
 ) -> CompiledFailure {

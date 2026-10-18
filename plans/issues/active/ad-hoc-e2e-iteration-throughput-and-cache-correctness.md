@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; R1/E1/E2 reviewed drafts; acceptance blocked
 registered: 2026-10-18
-current_stage: E3 reviewed draft; E4 next; acceptance blocked
+current_stage: E4 invocation-scoped setup draft; acceptance blocked
 
 ## Objective and authority
 
@@ -927,3 +927,18 @@ and its source candidate; final affected checks and remediation review follow.
 ### E3 completed focused evidence — 2026-10-18
 
 The [E3 receipt](ad-hoc-e2e-iteration-throughput-and-cache-correctness-e3.json) records source `9472dd47813fedd73dc67de7b83dcfe27115e8ab`, focused controls and compile-fail corpus validation. All 729 run-pass fixtures have outcomes: **710 pass and exactly the 19 known compiler defects fail**. All 79 previously batch-blocked healthy fixtures now pass. The original failed native batch remains separately nonzero. The first changed-native-input run took 317.747s; the reviewed warm run took 144.050s. These are component diagnostics, not a passing gate. Preserve the initial structured-output failures and NOT SATISFIED scheduling review; remediation review is SATISFIED. A saved exact reference executable supports later matched measurements. Continue E4 invocation-scoped setup reuse. Required qualification remains blocked by #4347/#4344.
+
+### E4 draft implementation — 2026-10-18
+
+A single-file compilation session owns a fresh metadata generation and one native
+selection for a frozen invocation. Mutable parsing/lowering/codegen stays per
+source and uses the canonical rooted entrypoint. Frontend-only `check` and package
+policy remain separate. Run-pass and compile-fail invocations reuse this owner;
+one-off compiler APIs preserve their behavior. No global cache is introduced.
+
+Focused controls cover repetition, concurrency, changed metadata/profile/tool
+configuration, fresh invocation ownership and frontend-only checking. The explicit
+full-corpus oracle compares all output fields and complete negative diagnostics
+against the existing API, then repeats in reverse order. It is an additional
+ignored qualification control, run explicitly for this item; no existing test is
+removed, ignored or reduced. Actual measurements and scoped review follow.
