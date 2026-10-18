@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .build_allocation import validate_build_policy
 from .errors import VerificationError
 from .paths import PROFILES_DIR, REPO_ROOT
 from .schemas import load_json, load_schema, validate_data
@@ -51,6 +52,7 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     )
     if payload.get("name") != profile:
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
+    validate_build_policy(payload["resource_policy"])
     validate_selected_area_suites(payload)
     validate_toolchain_steps(payload)
     validate_crate_test_membership(payload)

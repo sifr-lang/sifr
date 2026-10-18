@@ -21,7 +21,11 @@
     ],
     "max_parallel": 1,
     "thermal_policy": "explicit-container-runtime-opt-in",
-    "memory_policy": "single-live-suite"
+    "memory_policy": "single-live-suite",
+    "compiler_build_jobs": 1,
+    "reserved_cpus": 1,
+    "reserved_memory_mib": 2048,
+    "memory_per_build_job_mib": 2048
   },
   "network_policy": {
     "mode": "live",

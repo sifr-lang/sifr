@@ -2,7 +2,7 @@
 
 status: active; E0 and R0 complete; runner/cache implementation pending
 registered: 2026-10-18
-current_stage: R0 guidance delivered; R1 allocation separation next
+current_stage: R1 allocation implementation under qualification; E1 not started
 
 ## Objective and authority
 
@@ -350,6 +350,39 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   the previous and new allocation under matched inputs, recording memory and
   elapsed time. A performance improvement is not assumed from source inspection.
 
+### R1 implementation evidence — 2026-10-18
+
+- The Python runner and E2E shell wrapper both coupled compiler jobs to native
+  per-batch jobs. Separate settings now preserve the resolved compiler allocation
+  across preparation and execution, including the shell boundary.
+- Profile requests, environment overrides and E2E job flags have explicit
+  precedence. The receipt reports requests, sources, declared reserves, observed
+  capacity and bounded allocations. Native outer workers multiplied by inner
+  Cargo jobs cannot exceed the admitted slot budget. Selection and Cargo feature
+  configurations are unchanged; the emitted merge plans compare equal.
+- Eight focused controls pass, including a real shell boundary with fake Cargo,
+  nested cgroup ancestor limits, override precedence, invalid requests, allocation
+  products and preparation/execution environment identity. The runner foundation
+  suite passes after updating the one test that asserted the old coupling.
+- Matched warm-dependency preparation of `sifr_type_system` and `sifr_syntax`
+  took **6.161s / 5.906s** with one job and **5.143s / 5.134s** with four jobs
+  (ABBA order). The control touched the two owned `src/lib.rs` timestamps without
+  changing bytes, forcing preparation while retaining incremental dependencies.
+  Mean time fell from **6.034s to 5.139s**, about **15% in this diagnostic case**.
+  Two observations per allocation do not establish a full-gate performance claim.
+- A **58.482s** cold warm-up is excluded from that comparison. Sampled aggregate
+  process-group RSS peaked at approximately **485 MiB** in serial observations
+  and **477 MiB** in parallel observations; the cold warm-up reached **1.32 GiB**.
+  Sampling was every 250ms and is not an exact instantaneous peak measurement.
+- The initial preparation failed before compilation because the owned worktree's
+  pinned submodules were uninitialized. That evidence was retained; initialization
+  at the recorded revisions corrected the prerequisite, with no submodule-reference
+  changes. All five successful preparation attempts finished below the cap and
+  preserved the declared 50 GiB disk reserve. No historical target was cleaned.
+- Raw commands, identities, stderr, allocation tests and the machine-readable
+  measurement receipt remain in the owned `e2e-phase-e0-20261018-_0pu4sig` evidence
+  bundle. Full gates and scoped review remain required before R1 acceptance.
+
 ### R2 — preparation failures block only their dependents
 
 - Express the required preparation for selected checks using existing execution
@@ -601,9 +634,9 @@ If warranted, register a separate bounded item with before/after evidence.
 | Item | State | Candidate / PR | Validation / review | Next action |
 |---|---|---|---|---|
 | Planning | merged | [#4343](https://github.com/sifr-lang/sifr/pull/4343) / `ff0bd51af` | Documentation checks | Complete |
-| E0 | complete 2026-10-18 | input base `6dd858aed` | Portable E0 receipt; 11 controls; no full-gate claim | R0 next; compiler failures tracked by #4344 |
-| R0 | complete 2026-10-18 | R0 documentation candidate (PR recorded after publication) | Diff whitespace, changed links/anchors, commands and scope verified; no broad build required | R1 next; gate requirements unchanged |
-| R1 | pending | none | none | Separate compiler-preparation and native-batch budgets |
+| E0 | complete 2026-10-18 | [#4345](https://github.com/sifr-lang/sifr/pull/4345) / `7c3af29ab` | Portable E0 receipt; 11 controls; no full-gate claim | Compiler failures tracked by #4344 |
+| R0 | merged | [#4346](https://github.com/sifr-lang/sifr/pull/4346) / `b40b90c12` | Diff whitespace, 33 local links/anchors, commands and scope verified; docs-only review | Complete; gate requirements unchanged |
+| R1 | implementation under qualification | R1 candidate; publication record follows | Eight focused controls, runner foundation suite, profile validation, unchanged merge plan and matched preparation measurements | Required gate and scoped review; not accepted yet |
 | E1 | pending | none | none | Cargo authority and shared native dependencies |
 | E2 | pending | none | none | Isolate fixture outputs |
 | R2 | pending | none | none | Dependency-aware preparation and independent failure handling |
@@ -612,8 +645,8 @@ If warranted, register a separate bounded item with before/after evidence.
 | R3 | pending | none | none | Stage reporting, actionable progress and cancellation evidence |
 | E5 | pending | none | none | Resolve qualification dependencies and measure final candidate |
 
-Continue in this session with R1 as the next bounded item. R0 adds concise
-iteration guidance and preserves all existing acceptance requirements. The concrete R1/E1 slices and
+Continue in this session with R1 qualification as the active bounded item. R0 is
+merged and preserves all existing acceptance requirements. The concrete R1/E1 slices and
 usable preparation artifacts are recorded above. Preserve unrelated changes
 and artifacts in other worktrees; they are not owned by this plan.
 No product implementation, compiler defect repair, gate waiver or performance
