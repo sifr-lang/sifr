@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from .build_allocation import E2E_ENV, allocate, extract_overrides
 from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
     prepare_cargo_cache as prepare_profile_cargo_cache,
@@ -88,8 +89,12 @@ class ProfileRunner:
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
-        self.env["CARGO_BUILD_JOBS"] = str(self.profile["e2e"]["cargo_build_jobs"])
-        self.env["RAYON_NUM_THREADS"] = str(self.profile["resource_policy"]["max_parallel"])
+        overrides, self.forward_args = extract_overrides(self.forward_args)
+        self.build_allocation = allocate(self.profile, self.env, overrides)
+        self.env["CARGO_BUILD_JOBS"] = str(self.build_allocation.compiler_jobs)
+        self.env["RAYON_NUM_THREADS"] = str(self.build_allocation.sifr_jobs)
+        for field, variable in E2E_ENV.items():
+            self.env[variable] = str(getattr(self.build_allocation, field))
         target_root = Path(self.env.get("CARGO_TARGET_DIR", REPO_ROOT / "target"))
         if not target_root.is_absolute():
             target_root = REPO_ROOT / target_root
@@ -247,6 +252,7 @@ class ProfileRunner:
         )
 
     def print_header(self) -> None:
+        print(self.build_allocation.report())
         budgets = self.profile["budgets"]
         policy = self.profile["resource_policy"]
         print("Running local-first validation")
@@ -414,13 +420,13 @@ class ProfileRunner:
             "--profile",
             self.profile_name,
             "--sifr-jobs",
-            str(e2e["sifr_jobs"]),
+            str(self.build_allocation.sifr_jobs),
             "--rust-jobs",
-            str(e2e["rust_jobs"]),
+            str(self.build_allocation.rust_jobs),
             "--run-jobs",
-            str(e2e["run_jobs"]),
+            str(self.build_allocation.run_jobs),
             "--cargo-build-jobs",
-            str(e2e["cargo_build_jobs"]),
+            str(self.build_allocation.cargo_build_jobs),
             "--max-group-fixtures",
             str(e2e["max_group_fixtures"]),
         ]

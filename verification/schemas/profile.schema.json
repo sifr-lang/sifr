@@ -48,7 +48,8 @@
     },
     "resource_policy": {
       "type": "object",
-      "required": ["classes", "max_parallel", "thermal_policy", "memory_policy"],
+      "required": ["classes", "max_parallel", "thermal_policy", "memory_policy",
+                   "compiler_build_jobs", "reserved_cpus", "reserved_memory_mib", "memory_per_build_job_mib"],
       "additionalProperties": false,
       "properties": {
         "classes": {
@@ -66,6 +67,10 @@
             ]
           }
         },
+        "compiler_build_jobs": {"type": "integer"},
+        "reserved_cpus": {"type": "integer"},
+        "reserved_memory_mib": {"type": "integer"},
+        "memory_per_build_job_mib": {"type": "integer"},
         "max_parallel": {
           "type": "integer"
         },

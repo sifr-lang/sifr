@@ -32,7 +32,11 @@
     ],
     "max_parallel": 6,
     "thermal_policy": "opt-in-broad",
-    "memory_policy": "opt-in-broad"
+    "memory_policy": "opt-in-broad",
+    "compiler_build_jobs": 6,
+    "reserved_cpus": 1,
+    "reserved_memory_mib": 2048,
+    "memory_per_build_job_mib": 2048
   },
   "network_policy": {
     "mode": "offline",

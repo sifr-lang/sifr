@@ -14,6 +14,7 @@ from typing import Any
 
 from verification.json_schema_202012 import lint_schema
 
+from .build_allocation_checks import policy_checks as build_allocation_checks
 from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
 from .generated_cargo_setup_checks import policy_checks as generated_cargo_setup_policy_checks
@@ -58,6 +59,7 @@ GOVERNANCE_SCHEMA_COUNT = 20
 
 def run_all() -> list[str]:
     checks = [
+        ("compiler and native build allocation checks", build_allocation_checks),
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),

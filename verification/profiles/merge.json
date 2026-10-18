@@ -31,7 +31,11 @@
     ],
     "max_parallel": 4,
     "thermal_policy": "balanced-merge-gate",
-    "memory_policy": "bounded-merge-gate"
+    "memory_policy": "bounded-merge-gate",
+    "compiler_build_jobs": 4,
+    "reserved_cpus": 1,
+    "reserved_memory_mib": 2048,
+    "memory_per_build_job_mib": 2048
   },
   "network_policy": {
     "mode": "offline",

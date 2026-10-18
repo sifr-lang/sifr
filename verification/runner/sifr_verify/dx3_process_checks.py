@@ -145,8 +145,8 @@ class ProcessTests(unittest.TestCase):
     def test_b10_profile_bounds_nested_cargo(self):
         from .profile_runner import ProfileRunner
         runner = ProfileRunner("create-pr", [])
-        self.assertEqual(runner.env["CARGO_BUILD_JOBS"], str(runner.profile["e2e"]["cargo_build_jobs"]))
-        self.assertEqual(runner.env["RAYON_NUM_THREADS"], str(runner.profile["resource_policy"]["max_parallel"]))
+        self.assertEqual(runner.env["CARGO_BUILD_JOBS"], str(runner.build_allocation.compiler_jobs))
+        self.assertEqual(runner.env["RAYON_NUM_THREADS"], str(runner.build_allocation.sifr_jobs))
 
     def test_r01_child_cannot_forge_runner_events(self):
         stream = io.StringIO()

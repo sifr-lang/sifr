@@ -82,6 +82,34 @@ and Cargo fingerprints; make an evidence-backed correction before repeating an
 unchanged attempt. Follow the active phase's diagnostic cap and ownership rules;
 a timeout or cancellation is incomplete evidence and never a gate pass.
 
+### Build allocations
+
+The profile runner keeps compiler Cargo jobs separate from native E2E jobs.
+`resource_policy.compiler_build_jobs` requests the compiler allocation;
+`CARGO_BUILD_JOBS` overrides that request. The same resolved value is used during
+preparation and execution. The E2E wrapper preserves it rather than overwriting
+it with the per-batch native setting.
+
+For E2E workers, forwarded job flags take precedence over `SIFR_E2E_*_JOBS`
+environment values, which take precedence over profile `e2e` values. All job
+requests must be positive integers. Requests are capped by `max_parallel`,
+effective CPU capacity and the declared memory allowance. Native build workers
+multiply by native Cargo jobs to consume the budget; compiler preparation and
+native execution run in separate stages. Within native builds, the inner Cargo
+request is bounded first, then the outer group count.
+
+Profiles reserve one CPU where more than one is available and 2 GiB of memory,
+and budget 2 GiB per build job. These are conservative admission settings, not a
+measured upper bound on arbitrary compiler workloads or a live resource scheduler.
+Linux admission includes affinity and cgroup v2 ancestor quotas/headroom,
+crediting inactive file cache while keeping dirty/writeback pages charged;
+macOS uses available free/inactive pages. Capacity is sampled at profile entry;
+shared-host reservations and changing pressure remain the parent resource-plan's
+responsibility. Insufficient memory for one job plus reserve fails explicitly.
+The `[sifr-build-allocation]` receipt records requests, override sources, policy,
+capacity and resolved allocations. Standalone E2E commands retain their explicit
+worker controls; use the profile runner for capacity-bounded admission.
+
 ## Layout
 
 - `runner/sifr_verify/` contains runner code and self-tests.
