@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "scope": "E1 draft implementation evidence; required qualification remains pending",
+  "candidate": "73b3d33ad50bbfce42efb621b6b227ebd4872522",
+  "binary_sha256": "d83ef6c050688ec30d0ae61e353ece41d06994e1a1575c26bdb7e5f390a48246",
+  "bundle": "e2e-phase-e0-20261018-_0pu4sig",
+  "review": {
+    "verdict": "SATISFIED",
+    "candidate": "73b3d33ad50bbfce42efb621b6b227ebd4872522",
+    "evidence": "e1-review-73b3d33ad50bbfce42efb621b6b227ebd4872522.md"
+  },
+  "full_run": {
+    "selected": 729,
+    "passed": 631,
+    "failed": 98,
+    "known_direct_defects": 19,
+    "collateral_blocked": 79,
+    "seconds": 549.0891681339999,
+    "stages": {
+      "compile_ms": 95167,
+      "plan_ms": 62,
+      "build_ms": 444283,
+      "build_sum_ms": 444171,
+      "run_ms": 2818,
+      "cache_hits": 0,
+      "groups": 185
+    },
+    "passed_gate": false,
+    "failure_owner": "https://github.com/sifr-lang/sifr/issues/4344"
+  },
+  "focused_checks": [
+    {
+      "label": "e1-resumed-native-controls",
+      "seconds": 2.20431800300139,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e1-resumed-harness-behavior",
+      "seconds": 0.6020343700001831,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e1-resumed-cache-root",
+      "seconds": 0.20142144700002973,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e1-resumed-dependency-authority",
+      "seconds": 35.05473780600005,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e1-resumed-no-cache-release",
+      "seconds": 0.6021157319992199,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e1-resumed-test_e2e_runtime_fail",
+      "seconds": 57.691523707999295,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    },
+    {
+      "label": "e1-resumed-test_codegen_corpus_subset_parity",
+      "seconds": 67.70672334600022,
+      "exit": 0,
+      "cause": "exit",
+      "passed": true,
+      "stages": null
+    }
+  ],
+  "runtime_controls": {
+    "candidate": "73b3d33ad50bbfce42efb621b6b227ebd4872522",
+    "binary_sha256": "d83ef6c050688ec30d0ae61e353ece41d06994e1a1575c26bdb7e5f390a48246",
+    "real_runtime_edit_rejected": true,
+    "no_cache_does_not_skip_cargo": true,
+    "missing_artifact_restored_and_validated": true,
+    "corrupt_artifact_with_preserved_timestamp_rejected": true,
+    "original_repository_runtime_unchanged": true
+  },
+  "source_root_changes": {
+    "crates/sifr/tmp_hashlib_api_subset.txt": {
+      "before": {
+        "size": 9,
+        "mtime_ns": 1792305385106012813,
+        "sha256": "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57"
+      },
+      "after": {
+        "size": 9,
+        "mtime_ns": 1792327632629682508,
+        "sha256": "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57"
+      }
+    }
+  },
+  "user_pause": {
+    "seconds": 517.632,
+    "status": "cancelled; incomplete"
+  },
+  "post_cleanup_bootstrap": {
+    "seconds": 1250.2253489159993,
+    "passed": true,
+    "condition": "cold after removed targets; not performance evidence"
+  },
+  "qualification": {
+    "status": "blocked; no waiver",
+    "owner": "https://github.com/sifr-lang/sifr/issues/4347",
+    "windows_execution": "pending"
+  },
+  "evidence_sha256": {
+    "e1-full-analysis.json": "65c6f329e8a55eef1559253e64381e0a71f5d79a2d724f960171131fd72df47e",
+    "e1-full-generated-groups.tar.gz": "9edb041b4d7222d5af6713cccdeb821d6d8b28bf3ad60ed19337d7515ee25eaf",
+    "e1-full-resumed-inventory.json": "2dbfa2fc076fd27e847e55488164fc594d73f110dc067d5e8b460a6ae4a9f8f5",
+    "e1-resumed-context.json": "375a2e2203e57389b289ad0ee4bda8f3721b72b65bf9fbc9396f5b4509efd749",
+    "e1-resume-bootstrap.json": "033e7a8037487536386d7c7a94cdfd3b77980191f0d316dd7a7e782931e067bc",
+    "e1-resumed-runtime-controls.json": "ec3deac92aaa6b19831b431deec8b4bc51aec98e10b23044baa204417668695e",
+    "e1-review-73b3d33ad50bbfce42efb621b6b227ebd4872522.md": "7c793241f4bbe4b9192dd811c415b9d49933cd39b016b3f140f2477204735937",
+    "e1-full-pass/receipt.json": "e6aab6621c274e52efff3cfcf830b0a443fa9991c8a60c342cf082a264ad35fa",
+    "user-pause.json": "57d7321f4457a1453243686fc407f3a04e715a2af3fc5da5dca14120a6c0661b",
+    "e1-resumed-native-controls/receipt.json": "f01d62aa72a47880ecb11970c99f8603704fc22435e09500ff4db0d625ce351d",
+    "e1-resumed-harness-behavior/receipt.json": "d13dab476a61002dbd6e15116626baf321165b9768a7130a3e8cfff7bedd1883",
+    "e1-resumed-cache-root/receipt.json": "381cfb7d7e15e32417cfc9aecddbd14eec3923f1b8626beab8f47b69a8d13eb8",
+    "e1-resumed-dependency-authority/receipt.json": "aa9f7952f7fb36a03e590cd554eeccbc32809f572016b42725231ab2965b4028",
+    "e1-resumed-no-cache-release/receipt.json": "ac0d64de27f3e65bc5d69e2034010d9dcc66ac62e0384357b7ce3d9daf18af0e",
+    "e1-resumed-test_e2e_runtime_fail/receipt.json": "db97a6833968dc90dc5a94af7f9bc12009f5d5966d0b7713d7416ca305018713",
+    "e1-resumed-test_codegen_corpus_subset_parity/receipt.json": "230bad22bca485001932373a8d92d276ac55412f0e21d8a13f9b4f6115461714"
+  }
+}

@@ -135,6 +135,7 @@ impl ToolchainInfo {
 
 #[derive(Clone, Debug)]
 pub(crate) struct GroupBuildOutcome {
+    pub(crate) group_root: PathBuf,
     pub(crate) group: BatchGroup,
     pub(crate) artifact_path: Option<PathBuf>,
     pub(crate) build_log_path: Option<PathBuf>,
@@ -196,7 +197,10 @@ pub(crate) struct CommandCapture {
 }
 
 pub(crate) fn run_capture(mut command: Command) -> CommandCapture {
-    match command.output() {
+    match sifr_driver::process_execution::output_with_deadline(
+        &mut command,
+        std::time::Duration::from_secs(30 * 60),
+    ) {
         Ok(output) => CommandCapture {
             status_ok: output.status.success(),
             stdout: String::from_utf8_lossy(&output.stdout).to_string(),

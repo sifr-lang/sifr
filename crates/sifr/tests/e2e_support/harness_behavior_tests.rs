@@ -463,125 +463,11 @@ pub(crate) fn test_batch_group_dispatch_uses_entry_termination_trait() {
     assert!(!group.generated_main.contains("pub async fn"));
 }
 
-pub(crate) fn sample_cache_entry(
-    group: &BatchGroup,
-    toolchain: &ToolchainInfo,
-    env_signature: &str,
-) -> CacheEntry {
-    let key = cache_key_for_group(group, toolchain, env_signature);
-    let artifact_path = env::temp_dir().join("sifr-e2e-cache-key-sample").join(&key);
-
-    std::fs::create_dir_all(&artifact_path).expect("cache sample dir");
-    let binary_path = artifact_path.join(format!("{}.bin", group.package_name));
-    std::fs::write(&binary_path, b"cache-test").expect("cache sample binary");
-
-    CacheEntry {
-        schema_version: E2E_CACHE_SCHEMA_VERSION,
-        cache_key: key.clone(),
-        group_id: group.id.clone(),
-        group_fingerprint: group.fingerprint.signature(),
-        group_rust_hash: group.generated_rust_hash.clone(),
-        fixture_sources: group
-            .cases
-            .iter()
-            .map(|case| FixtureSourceHash {
-                fixture: case.fixture.name.clone(),
-                hash: case.fixture.source_hash.clone(),
-            })
-            .collect(),
-        compiler_signature: toolchain.signature(),
-        rustc_v: toolchain.rustc_v.clone(),
-        rustc_vv: toolchain.rustc_vv.clone(),
-        cargo_v: toolchain.cargo_v.clone(),
-        target: toolchain.target.clone(),
-        os: toolchain.os.clone(),
-        arch: toolchain.arch.clone(),
-        env_signature: env_signature.to_string(),
-        artifact_path: binary_path.to_string_lossy().to_string(),
-        build_log_path: None,
-        built_at_unix_secs: SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_secs())
-            .unwrap_or_default(),
-    }
-}
-
 pub(crate) fn sample_cache_root(label: &str) -> PathBuf {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
     env::temp_dir().join(format!("sifr-e2e-cache-test-{label}-{}", now.as_nanos()))
-}
-
-#[test]
-pub(crate) fn test_cache_entry_invalidation_rules() {
-    let case = FixtureCase {
-        name: "fixture-cache-a".to_string(),
-        path: PathBuf::from("tests/e2e/pass/fixture-cache-a.sifr"),
-        source: "print('x')".to_string(),
-        source_hash: deterministic_hash("cache-fixture-a"),
-        _expected_stderr: Vec::new(),
-    };
-    let compiled = compiled_case_for_test(case.clone(), "fn main() {}", HashSet::new());
-    let group = build_group_sources(vec![compiled]).expect("cache sample group");
-    let toolchain = toolchain_info();
-    let env_signature = cache_env_signature();
-
-    let valid_entry = sample_cache_entry(&group, &toolchain, &env_signature);
-    let cache_key = cache_key_for_group(&group, &toolchain, &env_signature);
-    assert!(cache_entry_valid(
-        &valid_entry,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let mut invalid_schema = valid_entry.clone();
-    invalid_schema.schema_version = E2E_CACHE_SCHEMA_VERSION + 1;
-    assert!(!cache_entry_valid(
-        &invalid_schema,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let mut invalid_fixture = valid_entry.clone();
-    invalid_fixture
-        .fixture_sources
-        .iter_mut()
-        .for_each(|item| item.hash.push_str("-changed"));
-    assert!(!cache_entry_valid(
-        &invalid_fixture,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let mut invalid_env = valid_entry.clone();
-    invalid_env.env_signature = "different-env".to_string();
-    assert!(!cache_entry_valid(
-        &invalid_env,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
-
-    let invalid_path = env::temp_dir()
-        .join("sifr-e2e-missing-artifact")
-        .join("no-file");
-    let mut invalid_artifact = valid_entry.clone();
-    invalid_artifact.artifact_path = invalid_path.to_string_lossy().to_string();
-    assert!(!cache_entry_valid(
-        &invalid_artifact,
-        &group,
-        &cache_key,
-        &toolchain,
-        &env_signature,
-    ));
 }
 
 #[test]
@@ -598,6 +484,7 @@ pub(crate) fn test_prune_cache_manifest_removes_expired_entries_and_orphan_group
     for group in [stale_group, live_group, orphan_group] {
         let group_root = cache_group_path(&root, group);
         std::fs::create_dir_all(group_root.join("target")).expect("group root");
+        std::fs::write(group_root.join("completed"), b"completed").unwrap();
     }
 
     let now_unix_secs = 20_000;
@@ -682,7 +569,7 @@ pub(crate) fn test_prune_cache_manifest_removes_expired_entries_and_orphan_group
         ]),
     };
 
-    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs);
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs, |_| Ok(()));
     assert_eq!(pruned.entries.len(), 1);
     assert!(pruned.entries.contains_key("live-key"));
     assert!(cache_group_path(&root, live_group).is_dir());
@@ -757,10 +644,170 @@ pub(crate) fn test_prune_cache_manifest_keeps_shared_live_group_for_fresh_entry(
         ]),
     };
 
-    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs);
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs, |_| Ok(()));
     assert_eq!(pruned.entries.len(), 1);
     assert!(pruned.entries.contains_key("fresh-key"));
     assert!(cache_group_path(&root, shared_group).is_dir());
 
     let _ = std::fs::remove_dir_all(root);
+}
+
+#[test]
+fn test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies() {
+    let root = sample_cache_root("retention");
+    for name in ["failed", "interrupted", "unmarked", "completed"] {
+        let group = cache_group_path(&root, name);
+        std::fs::create_dir_all(&group).unwrap();
+        if name != "unmarked" {
+            std::fs::write(group.join("completed"), b"done").unwrap();
+        }
+        if name == "failed" {
+            std::fs::write(group.join("preserve"), b"failure").unwrap();
+        }
+        if name == "interrupted" {
+            std::fs::write(group.join("pending"), b"pending").unwrap();
+        }
+    }
+    let dependency = root.join("native-target/debug/deps/retained");
+    std::fs::create_dir_all(dependency.parent().unwrap()).unwrap();
+    std::fs::write(&dependency, b"native dependency").unwrap();
+    prune_cache_manifest(
+        &root,
+        CacheManifest {
+            schema_version: E2E_CACHE_SCHEMA_VERSION,
+            entries: BTreeMap::new(),
+        },
+        20000,
+        |_| Ok(()),
+    );
+    for name in ["failed", "interrupted", "unmarked"] {
+        assert!(cache_group_path(&root, name).is_dir());
+    }
+    assert!(!cache_group_path(&root, "completed").exists());
+    assert!(dependency.is_file());
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().canonicalize().unwrap();
+    let lease = native_cache::NativeCache::acquire(&root).unwrap();
+    let config = RunnerConfig {
+        sifr_jobs: 1,
+        rust_jobs: 2,
+        run_jobs: 1,
+        cargo_build_jobs: 1,
+        cache: CacheConfig {
+            enabled: false,
+            root: lease.root.clone(),
+        },
+    };
+    let old_group = cache_group_path(&config.cache.root, "completed-old-group");
+    sifr_cache_storage::directory(&old_group).unwrap();
+    std::fs::write(old_group.join("completed"), b"old evidence").unwrap();
+    let manifest_path = cache_manifest_path(&config.cache.root);
+    let sentinel = b"existing invalid success manifest must remain untouched";
+    native_cache::write_changed(&manifest_path, sentinel).unwrap();
+    let manifest = initial_cache_manifest(&config);
+    assert!(manifest.entries.is_empty());
+    let case = FixtureCase {
+        name: "no_cache_control".into(),
+        path: PathBuf::from("no_cache_control.sifr"),
+        source: "def main(): pass".into(),
+        source_hash: "no-cache-control".into(),
+        _expected_stderr: Vec::new(),
+    };
+    let mut group = build_group_sources(vec![compiled_case_for_test(
+        case,
+        "fn main() {}",
+        HashSet::new(),
+    )])
+    .unwrap();
+    let toolchain = toolchain_info();
+    let env_signature = cache_env_signature();
+    let (first, _) = build_batch_suite(
+        &[group.clone()],
+        &config,
+        &toolchain,
+        &env_signature,
+        &manifest,
+    );
+    assert!(first[0].build_error.is_none(), "{:?}", first[0].build_error);
+    // Keep retirement validation tied to the real production vendor arguments.
+    assert!(
+        !native_cache::retirement_commands(
+            &first[0].group_root,
+            &config.cache.root.join("native-target"),
+            &first[0].group.package_name,
+        )
+        .unwrap()
+        .is_empty()
+    );
+    let (fresh, _) = build_batch_suite(
+        &[group.clone()],
+        &config,
+        &toolchain,
+        &env_signature,
+        &manifest,
+    );
+    assert!(fresh[0].cache_hit);
+    std::fs::write(
+        fresh[0].artifact_path.as_ref().unwrap(),
+        b"damaged native executable",
+    )
+    .unwrap();
+    let (corrupt, _) = build_batch_suite(
+        &[group.clone()],
+        &config,
+        &toolchain,
+        &env_signature,
+        &manifest,
+    );
+    assert!(corrupt[0].artifact_path.is_none());
+    assert!(corrupt[0].build_error.is_some());
+    let failure = run_batch_outcomes(&corrupt[0]);
+    assert!(
+        failure[0]
+            .status
+            .as_ref()
+            .unwrap_err()
+            .contains(&corrupt[0].group_root.display().to_string())
+    );
+    group
+        .generated_main
+        .push_str("\ncompile_error!(\"no-cache must validate Cargo\");\n");
+    let (invalid, _) = build_batch_suite(&[group], &config, &toolchain, &env_signature, &manifest);
+    assert!(invalid[0].artifact_path.is_none());
+    assert!(invalid[0].build_error.is_some());
+    assert_eq!(std::fs::read(manifest_path).unwrap(), sentinel);
+    assert!(old_group.join("completed").is_file());
+    assert!(
+        config
+            .cache
+            .root
+            .join("native-target")
+            .join(application_directory())
+            .join("deps")
+            .is_dir()
+    );
+}
+
+#[test]
+fn test_failed_native_retirement_keeps_completed_group_evidence() {
+    let root = sample_cache_root("retirement-failed");
+    let group = cache_group_path(&root, "completed");
+    std::fs::create_dir_all(&group).unwrap();
+    std::fs::write(group.join("completed"), b"done").unwrap();
+    prune_cache_manifest(
+        &root,
+        CacheManifest {
+            schema_version: E2E_CACHE_SCHEMA_VERSION,
+            entries: BTreeMap::new(),
+        },
+        20000,
+        |_| Err("intentional retirement failure".into()),
+    );
+    assert!(group.is_dir());
+    std::fs::remove_dir_all(root).unwrap();
 }
