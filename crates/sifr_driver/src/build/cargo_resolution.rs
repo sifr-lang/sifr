@@ -4,10 +4,10 @@ use super::rust_interop_digest::digest_file_checked;
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_package::{CargoLockMode, cargo::lock_modes::cargo_lock_failure_reason};
+#[cfg(test)]
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 #[path = "cargo_resolution_identity.rs"]
