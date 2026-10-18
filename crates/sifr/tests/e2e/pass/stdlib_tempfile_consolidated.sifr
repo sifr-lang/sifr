@@ -38,7 +38,8 @@ def main():
         missing_error: bool = False
         unexpected_file: str | None = None
         try:
-            unexpected_file = mkstemp(missing_prefix)
+            created_file: str = mkstemp(missing_prefix)
+            unexpected_file = created_file
             missing_error = False
         except IOError as e:
             _ = str(e.message)

@@ -47,7 +47,8 @@ def collect_tempfile_actual() -> list[bool]:
         missing_file_error: bool = False
         unexpected_file: str | None = None
         try:
-            unexpected_file = mkstemp(missing_prefix)
+            created_file: str = mkstemp(missing_prefix)
+            unexpected_file = created_file
             missing_file_error = False
         except IOError as e:
             _ = str(e.message)
