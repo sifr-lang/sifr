@@ -135,6 +135,7 @@ impl ToolchainInfo {
 
 #[derive(Clone, Debug)]
 pub(crate) struct GroupBuildOutcome {
+    pub(crate) group_root: PathBuf,
     pub(crate) group: BatchGroup,
     pub(crate) artifact_path: Option<PathBuf>,
     pub(crate) build_log_path: Option<PathBuf>,

@@ -4,15 +4,6 @@
 )]
 
 use super::*;
-pub(crate) fn build_group_binary_path(group_root: &Path, package_name: &str) -> PathBuf {
-    let debug_dir = group_root.join("target").join(application_directory());
-    if cfg!(target_os = "windows") {
-        debug_dir.join(format!("{package_name}.exe"))
-    } else {
-        debug_dir.join(package_name)
-    }
-}
-
 pub(crate) fn build_batch_group(
     group: BatchGroup,
     config: &RunnerConfig,
@@ -23,7 +14,7 @@ pub(crate) fn build_batch_group(
     let started = Instant::now();
     let group_root = config.cache.root.join("groups").join(&group.id);
     let mut build_error = None;
-    let mut build_log = None;
+    let mut build_log: Option<PathBuf> = None;
     let mut artifact = None;
     let mut cache_hit = false;
 
@@ -71,7 +62,17 @@ pub(crate) fn build_batch_group(
                 &group_root,
                 &config.cache.root.join("native-target"),
                 &group.package_name,
-            );
+            )
+            .and_then(|selected| {
+                native_cache::record_retirement(
+                    &group_root,
+                    &config.cache.root.join("native-target"),
+                    &sifr_driver::sysroot_cargo_config_args(&group.dependency_plan),
+                    &selected.path,
+                )
+                .map_err(|error| error.to_string())?;
+                Ok(selected)
+            });
             if let Ok(selected) = selected.as_ref() {
                 artifact = Some(selected.path.clone());
                 cache_hit = selected.fresh;
@@ -128,11 +129,12 @@ pub(crate) fn build_batch_group(
                 let _ = std::fmt::Write::write_str(
                     &mut diagnostic,
                     &format!(
-                        "Rust build failed for {} ({})\n\nSTDOUT:\n{}\n\nSTDERR:\n{}\n",
+                        "Rust build failed for {} ({})\n\nSTDOUT:\n{}\n\nSTDERR:\n{}\n{}\n",
                         group.id,
                         group.fingerprint.hash(),
                         build_capture.stdout,
-                        format!("{}\n{}", build_capture.stderr, selected.unwrap_err())
+                        build_capture.stderr,
+                        selected.unwrap_err()
                     ),
                 );
                 let _ = std::fmt::Write::write_str(&mut diagnostic, "Generated Rust:\n");
@@ -150,6 +152,7 @@ pub(crate) fn build_batch_group(
     }
 
     GroupBuildOutcome {
+        group_root,
         group,
         artifact_path: artifact,
         build_log_path: build_log,
@@ -227,7 +230,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
                     group.id,
                     fixture_names,
                     group.fingerprint.hash(),
-                    config_cache_root().join("groups").join(&group.id).display(),
+                    group_outcome.group_root.display(),
                     group_outcome
                         .build_log_path
                         .as_ref()
@@ -254,7 +257,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
                     message,
                     group.id,
                     group.fingerprint.hash(),
-                    config_cache_root().join("groups").join(&group.id).display(),
+                    group_outcome.group_root.display(),
                 )),
             })
             .collect();
@@ -273,7 +276,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
                         err,
                         group.id,
                         group.fingerprint.hash(),
-                        config_cache_root().join("groups").join(&group.id).display(),
+                        group_outcome.group_root.display(),
                         artifact.display(),
                     )),
                 };
@@ -554,27 +557,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
 
     let toolchain = toolchain_info();
     let env_signature = cache_env_signature();
-    let initial_manifest = if config.cache.enabled {
-        if let Err(err) = std::fs::create_dir_all(&config.cache.root) {
-            eprintln!("[sifr-e2e-cache] cannot create cache root: {err}");
-        }
-        let manifest = read_cache_manifest(&config.cache.root);
-        let pruned_manifest = prune_cache_manifest(
-            &config.cache.root,
-            manifest,
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map(|duration| duration.as_secs())
-                .unwrap_or_default(),
-        );
-        write_cache_manifest(&config.cache.root, &pruned_manifest);
-        pruned_manifest
-    } else {
-        CacheManifest {
-            schema_version: E2E_CACHE_SCHEMA_VERSION,
-            entries: BTreeMap::new(),
-        }
-    };
+    let initial_manifest = initial_cache_manifest(config);
 
     let build_started = Instant::now();
     let (build_outcomes, _updated_manifest) = build_batch_suite(
@@ -689,8 +672,57 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     PassReport { cases: all_cases }
 }
 
-pub(crate) fn config_cache_root() -> PathBuf {
-    Path::new(E2E_CACHE_DIR).to_path_buf()
+pub(crate) fn initial_cache_manifest(config: &RunnerConfig) -> CacheManifest {
+    if !config.cache.enabled {
+        return CacheManifest {
+            schema_version: E2E_CACHE_SCHEMA_VERSION,
+            entries: BTreeMap::new(),
+        };
+    }
+    let manifest = read_cache_manifest(&config.cache.root);
+    let pruned = prune_cache_manifest(
+        &config.cache.root,
+        manifest,
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or_default(),
+        |group_root| {
+            for args in native_cache::retirement_commands(
+                group_root,
+                &config.cache.root.join("native-target"),
+                &package_name_from_id(
+                    group_root
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .ok_or("invalid group path")?,
+                ),
+            )
+            .map_err(|e| e.to_string())?
+            {
+                let mut command = Command::new("cargo");
+                command.args(args).current_dir(group_root);
+                let capture = run_capture(command);
+                if !capture.status_ok {
+                    let log = group_root.join(format!(
+                        "retirement-failure-{}.log",
+                        SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap_or_default()
+                            .as_nanos()
+                    ));
+                    let _ = std::fs::write(&log, format!("{}\n{}", capture.stdout, capture.stderr));
+                    return Err(format!(
+                        "package retirement failed; retained {}",
+                        log.display()
+                    ));
+                }
+            }
+            Ok(())
+        },
+    );
+    write_cache_manifest(&config.cache.root, &pruned);
+    pruned
 }
 
 pub(crate) fn failure_group(reason: &str) -> &'static str {

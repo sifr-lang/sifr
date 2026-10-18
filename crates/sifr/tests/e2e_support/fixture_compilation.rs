@@ -467,6 +467,7 @@ pub(crate) fn prune_cache_manifest(
     root: &Path,
     manifest: CacheManifest,
     now_unix_secs: u64,
+    mut retire: impl FnMut(&Path) -> Result<(), String>,
 ) -> CacheManifest {
     let groups_root = cache_groups_root(root);
     let cutoff_unix_secs = now_unix_secs.saturating_sub(E2E_CACHE_TTL_SECS);
@@ -512,6 +513,11 @@ pub(crate) fn prune_cache_manifest(
                     continue;
                 }
 
+                if let Err(error) = retire(&path) {
+                    let _ = native_cache::write_changed(&path.join("preserve"), error.as_bytes());
+                    eprintln!("[sifr-e2e-cache] keeping {}: {error}", path.display());
+                    continue;
+                }
                 if let Err(err) = std::fs::remove_dir_all(&path) {
                     eprintln!(
                         "[sifr-e2e-cache] cannot remove stale group dir {}: {err}",

@@ -113,6 +113,11 @@ fn cargo_validates_noop_source_features_configuration_and_profile() {
             .any(|c| c.as_os_str() == "release")
     );
     assert!(p.build(&["--release"]).unwrap().fresh);
+    assert!(
+        p.build(&["--config", "build.rustc='e1-nonexistent-rustc'"])
+            .unwrap_err()
+            .contains("Cargo failed")
+    );
 }
 
 #[test]
@@ -177,6 +182,45 @@ fn failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_share
     assert!(p.target.join("debug/deps").is_dir());
     std::fs::write(runtime.join("src/lib.rs"), "pub fn value() -> u8 { 2 }\n").unwrap();
     assert_eq!(run(&p.build(&[]).unwrap().path), "2\n");
+    super::native_cache::record_retirement(&p.project, &p.target, &[], &first.path).unwrap();
+    let dependency_files = String::from_utf8_lossy(&second.stdout)
+        .lines()
+        .filter_map(|line| {
+            let v: serde_json::Value = serde_json::from_str(line).unwrap();
+            (v["reason"] == "compiler-artifact" && v["target"]["name"] == "runtime_probe").then(
+                || {
+                    v["filenames"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|p| PathBuf::from(p.as_str().unwrap()))
+                        .collect::<Vec<_>>()
+                },
+            )
+        })
+        .flatten()
+        .collect::<Vec<_>>();
+    assert!(!dependency_files.is_empty());
+    for args in super::native_cache::retirement_commands(&p.project, &p.target, "probe").unwrap() {
+        let output = Command::new("cargo")
+            .args(args)
+            .current_dir(&p.project)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    assert!(!first.path.exists());
+    assert!(dependency_files.iter().all(|path| path.is_file()));
+    let second_output: serde_json::Value = String::from_utf8_lossy(&second.stdout)
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+        .find(|v| v["reason"] == "compiler-artifact" && v["target"]["name"] == "second")
+        .unwrap();
+    assert!(Path::new(second_output["executable"].as_str().unwrap()).is_file());
 }
 
 #[test]
@@ -187,8 +231,28 @@ fn missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass() {
     // Cargo either rebuilds or the selector rejects a missing fresh receipt.
     let rebuilt = p.build(&[]).unwrap();
     assert_eq!(run(&rebuilt.path), "one\n");
+    let modified = std::fs::metadata(&rebuilt.path)
+        .unwrap()
+        .modified()
+        .unwrap();
     std::fs::write(&rebuilt.path, b"corrupt executable").unwrap();
+    std::fs::File::options()
+        .write(true)
+        .open(&rebuilt.path)
+        .unwrap()
+        .set_times(std::fs::FileTimes::new().set_modified(modified))
+        .unwrap();
     assert!(p.build(&[]).unwrap_err().contains("integrity mismatch"));
+    super::native_cache::record_retirement(&p.project, &p.target, &[], &rebuilt.path).unwrap();
+    for args in super::native_cache::retirement_commands(&p.project, &p.target, "probe").unwrap() {
+        let output = Command::new("cargo")
+            .args(args)
+            .current_dir(&p.project)
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+    }
+    assert_eq!(run(&p.build(&[]).unwrap().path), "one\n");
 }
 
 #[test]
@@ -242,4 +306,65 @@ fn interrupted_owner_cannot_release_a_live_native_child_lease() {
     child.kill().unwrap();
     child.wait().unwrap();
     assert!(NativeCache::acquire(&root).is_ok());
+}
+
+#[test]
+fn retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles() {
+    use super::native_cache::{record_retirement, retirement_commands};
+    let p = Project::new();
+    let first = p.build(&[]).unwrap();
+    let release = p.build(&["--release"]).unwrap();
+    record_retirement(&p.project, &p.target, &[], &first.path).unwrap();
+    record_retirement(&p.project, &p.target, &[], &release.path).unwrap();
+    let dependency = p.target.join("debug/deps/retained_dependency.rlib");
+    std::fs::write(&dependency, b"shared dependency control").unwrap();
+    let other = p.target.join("debug/another_group");
+    std::fs::write(&other, b"another active group control").unwrap();
+    for args in retirement_commands(&p.project, &p.target, "probe").unwrap() {
+        let output = Command::new("cargo")
+            .args(args)
+            .current_dir(&p.project)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    assert!(!first.path.exists());
+    assert!(!release.path.exists());
+    assert_eq!(
+        std::fs::read(&dependency).unwrap(),
+        b"shared dependency control"
+    );
+    assert!(other.is_file());
+    for profile in ["debug", "release"] {
+        for area in ["deps", ".fingerprint", "incremental"] {
+            let area = p.target.join(profile).join(area);
+            if area.exists() {
+                assert!(!std::fs::read_dir(area).unwrap().any(|e| {
+                    e.unwrap()
+                        .file_name()
+                        .to_string_lossy()
+                        .starts_with("probe-")
+                }));
+            }
+        }
+    }
+}
+
+#[test]
+fn invalid_retirement_records_cannot_select_other_packages_or_targets() {
+    use super::native_cache::retirement_commands;
+    let p = Project::new();
+    std::fs::create_dir(&p.target).unwrap();
+    for record in [
+        r#"[{"config":["--target-dir","/elsewhere"],"profile":"dev","target":null}]"#,
+        r#"[{"config":[],"profile":"dev","target":"../../elsewhere"}]"#,
+        r#"[{"config":[],"profile":"../elsewhere","target":null}]"#,
+    ] {
+        write_changed(&p.project.join("retirement.json"), record.as_bytes()).unwrap();
+        assert!(retirement_commands(&p.project, &p.target, "probe").is_err());
+    }
 }

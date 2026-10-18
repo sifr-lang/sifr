@@ -512,6 +512,42 @@ independent instruction/runner/cache work. This entry record qualifies E0 only.
   timestamp freshness is explicitly distinguished from content-bound generated
   writes and executable integrity; no stronger source freshness is claimed.
 
+### E1 scoped-review remediation — 2026-10-18
+
+- Draft [#4349](https://github.com/sifr-lang/sifr/pull/4349) is stacked on R1.
+  Review of `62d1e517a` returned NOT SATISFIED with three bounded findings:
+  retired groups leaked their own native outputs, no-cache lacked a direct test,
+  and failure messages used the old group location. Review evidence is retained
+  outside the Git tree by that candidate SHA.
+- Remediation delegates retirement of the generated package to Cargo with its
+  recorded profile/target configuration. It preserves shared dependencies and
+  other groups, retains failed cleanup evidence, and validates retirement records.
+  No-cache now has a direct harness regression covering unchanged manifest and
+  group retention, Cargo execution, artifact corruption and build failure.
+  Outcomes carry their actual leased group directory. Obsolete helpers and the
+  flagged nested formatting were removed.
+- Nine controls of the exact production helper passed in 4.36s after remediation;
+  they include actual dependency preservation, profile retirement, preserved-
+  timestamp executable corruption and package-scoped repair. The repair control
+  demonstrated that deleting only the visible executable can restore damaged
+  linked bytes; documentation now requires package-scoped cleanup instead.
+- A disposable Cargo control switched 1.98.1 to the already-installed 1.98.0 and
+  back. The changed compiler rebuilt; restoring the pinned compiler reused the
+  original matching bytes. A metadata-preserving source edit demonstrably remained
+  stale under Cargo; explicit package cleanup restored correctness. This is a
+  measured contract limit, not a stronger content-freshness claim. An initial
+  test oracle incorrectly required rebuilding on return to the original compiler;
+  its failed attempt is retained and the corrected identity assertion passed.
+- Initial actual harness preparation finished after 1226.223s with a harness type
+  inference error after the shortcut removal. The log-path type is now explicit.
+  This failed attempt remains evidence; dependencies are retained for the next
+  candidate. Earlier canceled attempts were 86.017s and 12.003s. No canceled or
+  failed attempt is counted as validation success.
+- Runner foundation self-tests, formatting, file-size guardrail, shell syntax,
+  diff whitespace and changed-document local links passed on the initial draft.
+  Changed focused checks and the actual harness will be rerun on remediation;
+  required admission/merge qualification and Windows execution remain pending.
+
 ### E2 — isolate runtime output from compiler inputs
 
 - Execute each filesystem-writing fixture in a unique owned scratch directory;

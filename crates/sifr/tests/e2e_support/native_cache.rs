@@ -159,7 +159,7 @@ pub(crate) fn select_artifact(
     let receipt = project.join(format!("artifact-{path_id}-{digest}.sha256"));
     if artifact.fresh && std::fs::read(&receipt).ok().as_deref() != Some(digest.as_bytes()) {
         return Err(format!(
-            "fresh artifact integrity mismatch or missing receipt: {}; remove this owned executable to rebuild",
+            "fresh artifact integrity mismatch or missing receipt: {}; clean this generated Cargo package in the owned native target and retry",
             artifact.path.display()
         ));
     }
@@ -188,4 +188,108 @@ fn hex_digest(bytes: &[u8]) -> String {
         let _ = write!(result, "{byte:02x}");
     }
     result
+}
+
+#[derive(serde::Serialize, serde::Deserialize, PartialEq)]
+struct RetirementContext {
+    config: Vec<String>,
+    profile: String,
+    target: Option<String>,
+}
+
+/// Cargo removes the retired package's outputs, never its dependencies. Retain
+/// each observed profile/target, but derive package and target-dir from the owned
+/// group at retirement rather than accepting executable commands from a record.
+pub(crate) fn record_retirement(
+    project: &Path,
+    target: &Path,
+    config: &[String],
+    artifact: &Path,
+) -> io::Result<()> {
+    let target = target.canonicalize()?;
+    let relative = artifact.strip_prefix(&target).map_err(io::Error::other)?;
+    let parts = relative.iter().collect::<Vec<_>>();
+    if !(2..=3).contains(&parts.len()) {
+        return Err(io::Error::other("unexpected Cargo executable layout"));
+    }
+    let profile = match parts[parts.len() - 2].to_str() {
+        Some("debug") => "dev",
+        Some("release") => "release",
+        _ => return Err(io::Error::other("unexpected generated application profile")),
+    };
+    let context = RetirementContext {
+        config: config.to_vec(),
+        profile: profile.into(),
+        target: if parts.len() == 3 {
+            Some(
+                parts[0]
+                    .to_str()
+                    .ok_or_else(|| io::Error::other("non-UTF8 target"))?
+                    .into(),
+            )
+        } else {
+            None
+        },
+    };
+    let path = project.join("retirement.json");
+    let mut contexts: Vec<RetirementContext> = match std::fs::read(&path) {
+        Ok(bytes) => serde_json::from_slice(&bytes)?,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Vec::new(),
+        Err(error) => return Err(error),
+    };
+    if !contexts.contains(&context) {
+        contexts.push(context);
+    }
+    write_changed(&path, &serde_json::to_vec(&contexts)?)
+}
+
+pub(crate) fn retirement_commands(
+    project: &Path,
+    target: &Path,
+    package: &str,
+) -> io::Result<Vec<Vec<String>>> {
+    sifr_cache_storage::check_owned(&project.join("retirement.json"))?;
+    let contexts: Vec<RetirementContext> =
+        serde_json::from_slice(&std::fs::read(project.join("retirement.json"))?)?;
+    if contexts.is_empty() {
+        return Err(io::Error::other("missing package retirement contexts"));
+    }
+    let target = target.canonicalize()?;
+    contexts
+        .into_iter()
+        .map(|context| {
+            let config = &context.config;
+            let valid_config = config.is_empty()
+                || (config.len() == 4
+                    && config[0] == "--config"
+                    && config[1] == "source.crates-io.replace-with=\"sifr-vendor\""
+                    && config[2] == "--config"
+                    && config[3].starts_with("source.sifr-vendor.directory="));
+            if !valid_config || !matches!(context.profile.as_str(), "dev" | "release") {
+                return Err(io::Error::other("invalid native retirement configuration"));
+            }
+            let mut args = context.config;
+            args.extend([
+                "clean".into(),
+                "--frozen".into(),
+                "--package".into(),
+                package.into(),
+                "--target-dir".into(),
+                target.to_string_lossy().into_owned(),
+                "--profile".into(),
+                context.profile,
+            ]);
+            if let Some(triple) = context.target {
+                if triple.is_empty()
+                    || !triple
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+                {
+                    return Err(io::Error::other("invalid native retirement target"));
+                }
+                args.extend(["--target".into(), triple]);
+            }
+            Ok(args)
+        })
+        .collect()
 }
