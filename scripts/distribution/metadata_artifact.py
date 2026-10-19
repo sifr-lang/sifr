@@ -10,6 +10,9 @@ import subprocess
 import tomllib
 from pathlib import Path
 
+# Physical format owned by sifr_sysroot::metadata::container.
+# metadata_artifact_checks verifies producer/packager/fixture parity.
+METADATA_FORMAT_VERSION = 5
 METADATA_PATH = "lib/sifr/stdlib.sifrmeta"
 DESCRIPTOR_PATH = "lib/sifr/stdlib.metadata.json"
 FIELDS = {"schema_version", "compiler_identity", "semantic_target", "semantic_target_id",
@@ -94,7 +97,7 @@ def validate_metadata(metadata: bytes, descriptor: dict, binary_digest: str, tar
         raise ValueError("metadata descriptor does not bind the packaged compiler bytes")
     if not 128 <= len(metadata) <= 256 * 1024 * 1024 or metadata[:8] != b"SIFRMETA":
         raise ValueError("missing or invalid bounded metadata container")
-    if int.from_bytes(metadata[8:12], "little") != 4 or int.from_bytes(metadata[112:120], "little") != len(metadata):
+    if int.from_bytes(metadata[8:12], "little") != METADATA_FORMAT_VERSION or int.from_bytes(metadata[112:120], "little") != len(metadata):
         raise ValueError("incompatible or incomplete metadata container")
     count = int.from_bytes(metadata[12:16], "little")
     expanded = int.from_bytes(metadata[120:128], "little")

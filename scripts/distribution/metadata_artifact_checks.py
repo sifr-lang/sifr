@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -36,6 +37,27 @@ class MetadataArtifactTests(unittest.TestCase):
                 altered[field] = "0" * 64
                 with self.assertRaises(ValueError):
                     metadata.validate_metadata(payload, altered, metadata.file_digest(binary), target)
+
+    def test_packaging_accepts_only_the_current_producer_format(self):
+        repo = Path(__file__).resolve().parents[2]
+        source = (repo / "crates/sifr_sysroot/src/metadata/container.rs").read_text()
+        version = re.search(r"pub\(crate\) const VERSION: u32 = (\d+);", source)
+        self.assertIsNotNone(version, "canonical producer version declaration missing")
+        current = int(version.group(1))
+        with tempfile.TemporaryDirectory() as directory:
+            root, binary = self.fixture(directory)
+            target = metadata.host_target()
+            descriptor = metadata.prepare(binary, root, root, target, True)
+            payload = (root / metadata.METADATA_PATH).read_bytes()
+            self.assertEqual(int.from_bytes(payload[8:12], "little"), current,
+                             "packaging fixture drifted from the real producer")
+            for candidate in (0, current - 1, current + 1, 2**32 - 1):
+                with self.subTest(version=candidate):
+                    altered = bytearray(payload)
+                    altered[8:12] = candidate.to_bytes(4, "little")
+                    bound = dict(descriptor, metadata_id=hashlib.sha256(altered).hexdigest())
+                    with self.assertRaisesRegex(ValueError, "incompatible"):
+                        metadata.validate_metadata(altered, bound, metadata.file_digest(binary), target)
 
     def test_compatible_source_manifest_is_byte_identical_and_release_is_explicit(self):
         with tempfile.TemporaryDirectory() as directory:

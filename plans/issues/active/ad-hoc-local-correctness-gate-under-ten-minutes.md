@@ -1,9 +1,9 @@
 # Ad Hoc Phase: Complete Local Correctness Gate Within Ten Minutes
 
-status: planned; implementation and integrated acceptance pending
+status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: phase registration takes effect with PR #4356; first implementation item is V0
+current_stage: V0.1 packaging metadata producer/consumer contract repair
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -130,6 +130,53 @@ positive interval included inside it. These are different measurements and
 neither demonstrates full green verification. Four of 87 native roles also fail.
 The separate session-equivalence oracle took 224.78s and applies to affected
 session/provider changes; it is not silently part of an unchanged merge total.
+
+## Implementation work log — 2026-10-20
+
+The user authorized continuing the phase sequentially on the remote execution
+host until complete, using pragmatic diagnostics while preserving final correctness.
+This supersedes the per-item new-session pause for this execution; it does not
+waive candidate gates, review, coverage or final timing acceptance. Work remains
+bounded and sequential. No implementation item is accepted yet.
+
+| Item | Bounded ownership / prerequisite | Status |
+| --- | --- | --- |
+| V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Implemented; focused checks pass; independent review/candidate gates pending |
+| V0.2 | SQL provenance and moved-source qualification guards | Pending |
+| V0.3 | Canonical launch context and Python runtime registry/fixture admission | Pending |
+| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Pending |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
+| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
+| V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
+| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
+| V0.10 | CLI eager/deferred schema parity | Pending |
+| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
+| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
+| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
+| V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
+
+V0.1 starts with packaging Python regressions before any compiler rebuild. Its
+scope includes matching the canonical format, keeping unsupported-format rejection,
+and making synthetic fixtures follow the real producer contract. Required evidence:
+focused producer/binding/corruption tests, applicable distribution contracts, and
+real retained compiler metadata admitted by the repaired packaging boundary.
+A retained compiler can qualify unchanged compiler bytes only; it does not qualify
+subsequent compiler edits. All final installed assertions and full gates remain open.
+
+V0.1 evidence: the new producer-version regression failed before the repair
+(format 4 versus producer format 5), then all six focused packaging checks passed
+in 0.74s. A real retained compiler produced 51,025 records / 6,556,655 bytes;
+packaging admitted format 5 and rejected rebound format 4/6 mutations (29.735s
+including production). File-size guardrails passed. A complete distribution-full
+run took 102.757s: 66/71 variants passed; five governance fixtures fail before
+their intended assertions because required SQL runtime files are absent (V0.4).
+The focused regression is now enrolled in the canonical distribution case scan.
+Two earlier diagnostic attempts were explicitly stopped, preserved and not passed:
+one launched a cold self-update target despite retained owned artifacts, and one
+retry began before cross-filesystem target restoration completed. Retained build
+selection and pinned Node were then restored without production scope changes.
+Evidence bundle: `local-gate-implementation-20261020`, receipts `v01-*`.
 
 ## Execution stages
 
