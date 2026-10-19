@@ -56,6 +56,13 @@ An explicitly applicable canonical phase exception overrides the PR/merge rows.
 The approved [Phase DX policy](plans/issues/archive/ad-hoc-compiler-dx-and-toolchain-reuse.md#global-execution-rules)
 retains named intermediate checks/review and a final phase merge gate. It does
 not waive other phases' requirements. Record-only updates need docs checks only.
+The active [LOCAL-GATE phase](plans/issues/active/ad-hoc-local-correctness-gate-under-ten-minutes.md#user-approved-prospective-execution-policy--2026-10-20)
+records its separate user-approved intermediate policy. For its local correctness
+scope use `--correctness-only` with `create-pr` or `merge`; inspect `--emit-plan`
+and keep scoped evidence distinct from full-profile acceptance. Use
+`--no-fail-fast` when shared preparation makes broad failure discovery worthwhile.
+Final phase gates and complete coverage/timing qualification remain required.
+
 
 Before long builds, check free disk, target size, effective CPU/memory, and the
 planned allocation/reserve. Reclaim only inactive, obsolete, session-owned

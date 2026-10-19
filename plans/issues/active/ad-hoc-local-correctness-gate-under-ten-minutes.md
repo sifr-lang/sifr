@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.1/V0.4 reviewed; V4a correctness-only selection next
+current_stage: V0.1/V0.4 merged; V4a correctness-only selection under validation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -69,9 +69,9 @@ must be preserved, with the new regression enrolled as additional coverage.
 
 The final integrated implementation must pass the complete create-PR and merge
 gates under the explicitly governed final profile policy, plus V5's full timing,
-edit/invalidation and coverage matrix. V4 still owns the approved correctness-only
-selection boundary; benchmark/reference or foreign execution is not silently
-removed by this intermediate policy. An unavailable mandatory final prerequisite
+edit/invalidation and coverage matrix. V4a delivers the explicit correctness-only
+selection boundary described below; benchmark/reference or foreign execution is
+not silently removed by this intermediate policy. An unavailable mandatory final prerequisite
 leaves final acceptance open. No full-gate pass or performance-reference pass is
 inferred from focused tests.
 
@@ -169,14 +169,14 @@ host until complete, using pragmatic diagnostics while preserving final correctn
 This supersedes the per-item new-session pause for this execution. The approved
 prospective policy above governs candidate-gate timing; review, coverage and final
 timing acceptance remain required. Work remains
-bounded and sequential. V0.1/V0.4 acceptance becomes effective when PR #4357 merges.
+bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a6c4aebf2651b50d9c`.
 
 | Item | Bounded ownership / prerequisite | Status |
 | --- | --- | --- |
-| V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Validated and independently approved; effective on #4357 merge |
+| V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
 | V0.2 | SQL provenance and moved-source qualification guards | Pending |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Pending |
-| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Validated and independently approved; effective on #4357 merge |
+| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
@@ -239,7 +239,7 @@ claimed. Nonblocking suggestions about compiler-reported format discovery and
 standalone fixture constant sharing are deferred to future format-contract work;
 the enrolled regression already fails closed on producer/fixture drift.
 
-Next bounded item **V4a** is brought forward to support the user's approved broad
+Current bounded item **V4a** is brought forward to support the user's approved broad
 failure-discovery approach: derive an explicit correctness-only selection from
 canonical delivery profiles, preserving all correctness suites, crate configurations,
 guardrails and E2E semantics. Separate its evidence identity from full profiles;
@@ -249,6 +249,18 @@ profile schema validation, emitted-plan comparisons with the frozen scope,
 facade argument forwarding, and affected workflow contracts. Then use broad
 no-fail-fast diagnostics to collect independent failures under the existing
 per-subcategory 30-minute/resource caps. Complete final acceptance remains open.
+
+V4a implementation evidence: ten focused scope/admission tests pass (1.202s
+outer command); all 26 runner foundation groups pass (57.729s). Profile schemas
+pass (0.746s), local-first workflow admission and event/profile contracts pass
+(0.758s), and file-size guardrails pass (5.737s). Real facade-emitted plans retain
+all nonselection fields and remove exactly one benchmark suite per local profile:
+create-pr 72 → 71 area suites; merge 106 → 105. The frozen correctness scope,
+17 Cargo configurations, 15 guardrails and complete merge E2E corpus are retained.
+Reports and area results use a distinct correctness identity; full-profile
+reference admission remains tested. Independent review is pending. No whole-gate
+pass or timing claim follows from these runner checks. Receipts: `v4a-*` in the
+implementation evidence bundle.
 
 ## Execution stages
 
@@ -706,11 +718,20 @@ uv run --project verification --locked python -m sifr_verify profiles check
 ```
 
 The planning PR did not modify these commands or profiles. The approved prospective
-policy above now governs intermediate implementation candidates. Until V4 explicitly
-changes the governing contract, current full create-pr/merge requirements remain
-applicable to the final integrated candidate. No extra duplicate full gate should survive the
-approved integration merely because a new entry point was added. CI mirroring and
-foreign-platform/benchmark optimization remain later work.
+policy above now governs intermediate implementation candidates. On V4a merge,
+the explicit final LOCAL-GATE commands become:
+
+```sh
+scripts/run_all_tests.sh --profile create-pr --correctness-only
+scripts/run_all_tests.sh --profile merge --correctness-only
+```
+
+These execute the complete selected correctness scope. The ordinary full profiles
+remain available and unchanged for other contracts; this phase does not require a
+duplicate benchmark-containing gate to qualify its explicitly benchmark-excluded
+goal. V5 still requires complete passing evidence across every listed scenario,
+including preparation, timing and cleanup. CI mirroring and foreign-platform or
+benchmark optimization remain later work.
 
 ## Review, merge and completion record
 

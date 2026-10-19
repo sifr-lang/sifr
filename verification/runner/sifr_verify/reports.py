@@ -14,6 +14,7 @@ from .paths import REPO_ROOT
 from .trace_reports import Traces
 from .command_progress import decode_child
 from .profiles import load_profile
+from .execution_scope import scope_metadata
 
 ARTIFACT_CACHE_ROOT = Path(os.environ.get("SIFR_CACHE_DIR", (
     str(Path.home() / "Library/Caches/sifr") if sys.platform == "darwin" else
@@ -60,6 +61,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     summarize = subparsers.add_parser("summarize")
     summarize.add_argument("--profile", required=True)
+    summarize.add_argument("--correctness-only", action="store_true")
     summarize.add_argument("--log", required=True)
     summarize.add_argument("--time-file", required=True)
     summarize.add_argument(
@@ -301,6 +303,7 @@ def parse_log(path: Path) -> dict[str, Any]:
 
 def summarize(args: argparse.Namespace) -> int:
     profile, lane = resolve_profile(args.profile)
+    scope = scope_metadata(load_profile(args.profile), getattr(args, "correctness_only", False))
     log_path = Path(args.log).resolve()
     time_path = Path(args.time_file).resolve()
 
@@ -362,9 +365,10 @@ def summarize(args: argparse.Namespace) -> int:
     )[:10]
 
     payload = {
+        **scope,
         "profile": profile,
         "requested_profile": args.profile,
-        "lane": lane.get("name", profile),
+        "lane": scope["evidence_name"],
         "description": lane.get("description", ""),
         "budget": {
             "warm_wall_time_target_minutes": warm_target_minutes,
@@ -408,6 +412,7 @@ def summarize(args: argparse.Namespace) -> int:
 
     print("Validation lane report")
     print(f"  profile={profile}")
+    print(f"  execution_scope={scope['execution_scope']}")
     print(
         "  wall_time="
         f"{real_seconds:.2f}s "

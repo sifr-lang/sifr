@@ -15,6 +15,7 @@ from .cargo_setup import (
     cargo_preparation_plan,
 )
 from .errors import VerificationError
+from .execution_scope import evidence_name, scope_name, select_execution_scope
 from .preparation import PreparationRun
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
@@ -85,8 +86,10 @@ def step_name(kind: str, name: str) -> str:
 class ProfileRunner:
     """Run one profile from selected areas, guardrails, and toolchain steps."""
 
-    def __init__(self, profile_name: str, forward_args: list[str]) -> None:
-        self.profile = load_profile(profile_name)
+    def __init__(self, profile_name: str, forward_args: list[str], *, correctness_only: bool = False) -> None:
+        self.profile = select_execution_scope(load_profile(profile_name), correctness_only)
+        self.correctness_only = correctness_only
+        self.evidence_name = evidence_name(profile_name, correctness_only)
         self.profile_name = str(self.profile["name"])
         self.no_fail_fast = "--no-fail-fast" in forward_args
         self.forward_args = [arg for arg in forward_args if arg != "--no-fail-fast"]
@@ -113,7 +116,7 @@ class ProfileRunner:
         )
         self.env.setdefault("SIFR_GCQ_BIN", str(sifr_binary))
         self.env.setdefault("SIFR_RUNTIME_PLATFORM_BIN", str(sifr_binary))
-        probe_cache_root = REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / self.profile_name
+        probe_cache_root = REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / self.evidence_name
         self.env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
 
     def run(self) -> int:
@@ -252,7 +255,7 @@ class ProfileRunner:
         return prepare_step_budget(
             repo_root=REPO_ROOT,
             profile=self.profile,
-            profile_name=self.profile_name,
+            profile_name=self.evidence_name,
             name=name,
             env=self.env,
         )
@@ -263,7 +266,8 @@ class ProfileRunner:
         policy = self.profile["resource_policy"]
         print("Running local-first validation")
         print(f"  profile={self.profile_name}")
-        print(f"  lane={self.profile_name}")
+        print(f"  lane={self.evidence_name}")
+        print(f"  execution_scope={scope_name(self.correctness_only)}")
         print(
             f"  budget=warm<={budgets['warm_wall_time_minutes']}m "
             f"cold<={budgets['cold_wall_time_minutes']}m"
@@ -344,7 +348,7 @@ class ProfileRunner:
     def run_area(self, area: str, suites: list[str]) -> None:
         if area == "python_interop":
             run_segmented_python_interop(
-                suites=suites, profile_name=self.profile_name,
+                suites=suites, profile_name=self.evidence_name,
                 command_runner=lambda command: run_command(command, env=self.env),
             )
             return
@@ -352,7 +356,7 @@ class ProfileRunner:
         run_selected_area(
             area=area,
             suites=suites,
-            profile_name=self.profile_name,
+            profile_name=self.evidence_name,
             result_slug=result_slug,
             command_builder=lambda *args: uv_area_command(
                 *args, *(["--no-fail-fast"] if self.no_fail_fast else [])),
@@ -452,8 +456,11 @@ def run_profile(
     forward_args: list[str],
     *,
     release_report_out: str | None = None,
+    correctness_only: bool = False,
 ) -> int:
-    runner = ProfileRunner(profile_name, forward_args)
+    if correctness_only and release_report_out is not None:
+        raise ProfileRunnerError("correctness-only execution cannot produce release evidence")
+    runner = ProfileRunner(profile_name, forward_args, correctness_only=correctness_only)
     return run_profile_with_report(
         profile_name,
         runner.run,
@@ -463,4 +470,5 @@ def run_profile(
         },
         handled_error=ProfileRunnerError,
         release_report_out=release_report_out,
+        correctness_only=correctness_only,
     )

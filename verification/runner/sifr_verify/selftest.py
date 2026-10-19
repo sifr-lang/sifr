@@ -21,6 +21,7 @@ from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
 from .generated_cargo_setup_checks import policy_checks as generated_cargo_setup_policy_checks
 from .errors import SchemaError
+from .execution_scope_checks import policy_checks as execution_scope_checks
 from .dx10_profile_checks import policy_checks as dx10_profile_checks
 from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
 from .dx3_process_checks import policy_checks as dx3_process_checks
@@ -70,6 +71,7 @@ def run_all() -> list[str]:
         ("Python interop segmented profile checks", python_interop_segmentation_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),
+        ("local correctness selection and evidence", execution_scope_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
