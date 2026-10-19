@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4a reviewed; V0.15 source-direction admission next
+current_stage: V0.15 independently approved; V0.3a native launch context next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -260,8 +260,9 @@ create-pr 72 → 71 area suites; merge 106 → 105. The frozen correctness scope
 Reports and area results use a distinct correctness identity; full-profile
 reference admission remains tested. Independent review SATISFIED, no blockers, on candidate
 `429882fe25f0afd2f723be9b680808d26452e8d0`, base
-`ae729a7c7aa4b4e0d38aa4a6c4aebf2651b50d9c`; effective on
-[#4358](https://github.com/sifr-lang/sifr/pull/4358) merge. Raw review is retained
+`ae729a7c7aa4b4e0d38aa4a6c4aebf2651b50d9c`; merged in
+[#4358](https://github.com/sifr-lang/sifr/pull/4358) at
+`1e27d55d660f90222d6ee785db546d2d9ab30b80`. Raw review is retained
 externally under `reviews/429882fe25f0afd2f723be9b680808d26452e8d0/review.md`.
 No whole-gate
 pass or timing claim follows from these runner checks. Receipts: `v4a-*` in the
@@ -284,6 +285,71 @@ boundary without permitting provider construction in lower services generally.
 Run guard positive/negative self-tests, real repository guard, file-size and
 relevant workflow/foundation checks. This bounded prerequisite repair precedes the
 next broad diagnostic; unrelated compiler changes remain separate V0 items.
+
+V0.15 implementation: extend existing test-source ownership through literal
+include chains, with production include/module reachability taking precedence.
+Keep unknown include expressions scanned. Register the actual guided-replay
+composition boundary and moved SQL editor root; begin scanning compiler_services
+for illegal provider construction too. No Rust behavior, imports, assertions or
+crate dependency rules change. The guard passes on repository sources; negative
+controls retain rejection for shared production fragments (include, default module
+and path-attribute module) and lower-service provider construction. An initial
+classifier attempt still rejected the three test includes because it followed the
+test-root declaration from lib.rs; its failed receipt is retained, and the corrected
+classifier respects the guard's existing test-root classification. Final validation:
+repository guard passes (4.192s); all guard self-tests pass (0.740s), including
+mixed production ownership and both lower-service construction controls; file-size
+guardrails pass (5.722s), workflow contracts pass (0.740s), and whitespace/local
+links pass. No Rust source changes require a compiler rebuild. Initial independent review on `fce96a6c233af77b90b0f90a768ec8b9e23fa4d4`
+reported SATISFIED, but its note about same-line and inline-module shared
+production use identifies an in-scope classifier gap introduced here. A new
+regression demonstrates the false exclusion; the remediation conservatively
+retains every matching production module filename, same-line literal includes,
+and all candidate fragments when a production include expression is unresolved.
+These new controls must pass before a fresh scoped review; the initial verdict
+alone does not approve the remediation. Five fragments are newly classified:
+four codegen method-authority includes plus sysroot metadata test_dispatch.rs,
+all reached exclusively from existing test roots in this repository.
+Remediation validated in an owned isolated checkout while the broad diagnostic
+kept its original candidate unchanged: real guard passes (8.522s), full guard
+self-tests including new controls pass (1.710s), and file-size passes (5.320s).
+These are diagnostic wall times under concurrent host activity, not performance
+qualification. Workflow evidence is reused because its inputs are unchanged;
+record-only local links and whitespace pass. The remediation review of
+`aa5cec1ee996e2425323683e7286c4b226e7847b` was NOT SATISFIED: conditional
+path attributes and inline-relative paths could still hide shared production
+fragments. The correction matches path assignments including cfg_attr and raw
+strings, conservatively retains all matching basenames, and recognizes raw module
+identifiers. New negative controls cover each form. Final real guard passes
+(5.061s), all guard regressions pass (1.095s), and file-size passes (3.063s).
+Unresolved production include expressions deliberately retain all fragments for
+scanning, so future unrecognized syntax fails closed. Final independent review SATISFIED, no blockers, on
+`0fe59a9320967e958c6b4edabd328cf32de509c4`; effective when
+[#4359](https://github.com/sifr-lang/sifr/pull/4359) merges. Final raw review is
+external at `reviews/0fe59a9320967e958c6b4edabd328cf32de509c4/review.md`.
+Evidence: `v015-path-*`, earlier `v015-final-*` and unchanged `v015-workflow`.
+The existing file-wide composition-root exemption is retained; tightening it to
+functions is separate future guard design work, not required for this repair.
+
+**Next bounded item V0.3a — selected native toolchain launch context.**
+The current broad diagnostic confirms generated-code preparation fails when nested
+Cargo build scripts launch rustc without its selected toolchain loader environment.
+A minimal independent probe reproduces this without the compiler: both version
+queries pass; direct Cargo build fails with missing libLLVM; the same selected
+Cargo launched through `rustup run` passes and its binary prints the expected
+output. Separate build targets prevent cache reuse hiding the failure. Evidence:
+`native-launch-probe-confirmed/results.json`; the first probe's incorrect expectation
+that a direct version query should also fail is retained as a failed diagnostic.
+
+Preserve the canonical rustup-selected execution context for version discovery and
+Cargo children, keep exact selected Cargo/rustc paths and captured caller settings,
+and bind the launcher into native build identity. Keep explicit paired executables
+and non-rustup installations direct; no fallback, global environment mutation or
+component removal. Required controls: subprocess-isolated launcher/selection tests,
+missing-tool and explicit-pair behavior, configuration/identity regression tests,
+a real nested build-script integration, focused sysroot tests, fmt/size checks,
+and rerun the affected generated-code preparation. Python fixture/registry and
+permission repairs remain separate V0.3/V0.6 work. Final complete gates stay open.
 
 ## Execution stages
 
@@ -795,6 +861,7 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V4a, repair V0.15 source-direction admission,
-then resume broad independent failure discovery and bounded V0 repairs. Preserve
+**Next action:** merge reviewed V0.15 and implement V0.3a; let the original
+broad diagnostic finish or hit its cap without mutating its candidate. Continue
+bounded V0 repairs and preserve all incomplete evidence. Preserve
 this investigation's baseline and failures while collecting current evidence.

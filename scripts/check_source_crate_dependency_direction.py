@@ -12,6 +12,8 @@ import sys
 import tempfile
 import tomllib
 
+from source_test_includes import exclusively_test_includes
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SELF_TEST_TMP_ROOT = REPO_ROOT / "target"
@@ -110,6 +112,7 @@ GENERATED_DEPENDENCY_SPEC_DEFINITION_PATTERNS = (
 )
 
 PROVIDER_CONSTRUCTION_SCAN_CRATES = (
+    "sifr_compiler_services",
     "sifr_analysis",
     "sifr_driver",
     "sifr_format",
@@ -122,7 +125,9 @@ INLINE_TEST_MODULE_PATTERN = re.compile(
     r"(?m)^#\[cfg\(test\)\]\s*(?:#\[path\s*=\s*\"[^\"]+\"\]\s*)?mod\s+\w+\s*\{"
 )
 PROVIDER_COMPOSITION_ROOTS = {
-    Path("crates/sifr_driver/src/build/sql_profiles.rs"),
+    # These entry points assemble providers, then pass them into lower services.
+    Path("crates/sifr_compiler_services/src/sql_editor.rs"),
+    Path("crates/sifr_driver/src/guided_project_graph.rs"),
     Path("crates/sifr_frontend/src/workspace_session.rs"),
 }
 
@@ -324,7 +329,9 @@ def crate_source_files(
             if (crate_root / relative).is_file()
         )
     if skip_test_sources:
-        files = {path for path in files if not is_test_source(path.relative_to(crate_root))}
+        is_test = lambda path: is_test_source(path.relative_to(crate_root))
+        split_test_files = exclusively_test_includes(files, is_test)
+        files = {path for path in files if not is_test(path) and path not in split_test_files}
     return sorted(files)
 
 
@@ -568,7 +575,10 @@ def assert_self_test_case(
 
 
 def run_self_test() -> int:
+    from source_direction_checks import check_split_sources_and_composition_roots
+
     failures: list[str] = []
+    check_split_sources_and_composition_roots(sys.modules[__name__], failures)
     SELF_TEST_TMP_ROOT.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(dir=SELF_TEST_TMP_ROOT) as tmp:
         root = Path(tmp)
