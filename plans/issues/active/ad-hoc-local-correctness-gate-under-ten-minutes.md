@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.1/V0.4 distribution admission repairs validated; review/candidate gates pending
+current_stage: V0.1/V0.4 reviewed; V4a correctness-only selection next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -169,14 +169,14 @@ host until complete, using pragmatic diagnostics while preserving final correctn
 This supersedes the per-item new-session pause for this execution. The approved
 prospective policy above governs candidate-gate timing; review, coverage and final
 timing acceptance remain required. Work remains
-bounded and sequential. No implementation item is accepted yet.
+bounded and sequential. V0.1/V0.4 acceptance becomes effective when PR #4357 merges.
 
 | Item | Bounded ownership / prerequisite | Status |
 | --- | --- | --- |
-| V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Implemented; focused checks pass; independent review/candidate gates pending |
+| V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Validated and independently approved; effective on #4357 merge |
 | V0.2 | SQL provenance and moved-source qualification guards | Pending |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Pending |
-| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Implemented; affected full/qualification suites pass; review/candidate gates pending |
+| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Validated and independently approved; effective on #4357 merge |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
@@ -225,6 +225,30 @@ in 0.677s before compilation; the reference remains owned by #4347. All downstre
 steps are blocked, not passed. This failure is retained as
 `v01-v04-create-pr`, and the approved intermediate policy avoids repeating it
 unchanged while phase repairs proceed. No reference was fabricated or substituted.
+
+V0.1/V0.4 closure: [#4357](https://github.com/sifr-lang/sifr/pull/4357),
+reviewed candidate `027f6f752edcde539596386bc296576aadb1cf1c`, base
+`59ff7f254aab2385e6196abec12265b1ced6ba26`. Independent review SATISFIED,
+no blocking findings; raw review is outside Git in the implementation bundle at
+`reviews/027f6f752edcde539596386bc296576aadb1cf1c/review.md`.
+All named focused/area checks above passed; final file-size guardrail passed in
+6.684s, changed local links and whitespace passed, and inventory comparison
+confirms no original distribution variant removed. Final record-only changes do
+not alter reviewed implementation inputs. No full gate or timing acceptance is
+claimed. Nonblocking suggestions about compiler-reported format discovery and
+standalone fixture constant sharing are deferred to future format-contract work;
+the enrolled regression already fails closed on producer/fixture drift.
+
+Next bounded item **V4a** is brought forward to support the user's approved broad
+failure-discovery approach: derive an explicit correctness-only selection from
+canonical delivery profiles, preserving all correctness suites, crate configurations,
+guardrails and E2E semantics. Separate its evidence identity from full profiles;
+keep benchmark admission mandatory whenever benchmarks remain selected. Do not
+change default full-profile behavior. Required checks: runner/profile self-tests,
+profile schema validation, emitted-plan comparisons with the frozen scope,
+facade argument forwarding, and affected workflow contracts. Then use broad
+no-fail-fast diagnostics to collect independent failures under the existing
+per-subcategory 30-minute/resource caps. Complete final acceptance remains open.
 
 ## Execution stages
 
@@ -727,7 +751,6 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** start V0 in a new session, regenerate selection at the current
-candidate, assign the thirteen repair families to bounded owners/items, and begin
-the first owned prerequisite repair with its focused regression check. Preserve
+**Next action:** finish the V0.1/V0.4 merge, implement V4a as registered above,
+then collect broad independent failures and continue bounded V0 repairs. Preserve
 this investigation's baseline and failures while collecting current evidence.
