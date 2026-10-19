@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4a merged; V0.15 source-direction admission under validation
+current_stage: V0.15 independently approved; V0.3a native launch context next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -323,7 +323,33 @@ strings, conservatively retains all matching basenames, and recognizes raw modul
 identifiers. New negative controls cover each form. Final real guard passes
 (5.061s), all guard regressions pass (1.095s), and file-size passes (3.063s).
 Unresolved production include expressions deliberately retain all fragments for
-scanning, so future unrecognized syntax fails closed. Fresh review remains required. Evidence: `v015-final-*` and `v015-workflow`.
+scanning, so future unrecognized syntax fails closed. Final independent review SATISFIED, no blockers, on
+`0fe59a9320967e958c6b4edabd328cf32de509c4`; effective when
+[#4359](https://github.com/sifr-lang/sifr/pull/4359) merges. Final raw review is
+external at `reviews/0fe59a9320967e958c6b4edabd328cf32de509c4/review.md`.
+Evidence: `v015-path-*`, earlier `v015-final-*` and unchanged `v015-workflow`.
+The existing file-wide composition-root exemption is retained; tightening it to
+functions is separate future guard design work, not required for this repair.
+
+**Next bounded item V0.3a — selected native toolchain launch context.**
+The current broad diagnostic confirms generated-code preparation fails when nested
+Cargo build scripts launch rustc without its selected toolchain loader environment.
+A minimal independent probe reproduces this without the compiler: both version
+queries pass; direct Cargo build fails with missing libLLVM; the same selected
+Cargo launched through `rustup run` passes and its binary prints the expected
+output. Separate build targets prevent cache reuse hiding the failure. Evidence:
+`native-launch-probe-confirmed/results.json`; the first probe's incorrect expectation
+that a direct version query should also fail is retained as a failed diagnostic.
+
+Preserve the canonical rustup-selected execution context for version discovery and
+Cargo children, keep exact selected Cargo/rustc paths and captured caller settings,
+and bind the launcher into native build identity. Keep explicit paired executables
+and non-rustup installations direct; no fallback, global environment mutation or
+component removal. Required controls: subprocess-isolated launcher/selection tests,
+missing-tool and explicit-pair behavior, configuration/identity regression tests,
+a real nested build-script integration, focused sysroot tests, fmt/size checks,
+and rerun the affected generated-code preparation. Python fixture/registry and
+permission repairs remain separate V0.3/V0.6 work. Final complete gates stay open.
 
 ## Execution stages
 
@@ -835,6 +861,7 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V4a, repair V0.15 source-direction admission,
-then resume broad independent failure discovery and bounded V0 repairs. Preserve
+**Next action:** merge reviewed V0.15 and implement V0.3a; let the original
+broad diagnostic finish or hit its cap without mutating its candidate. Continue
+bounded V0 repairs and preserve all incomplete evidence. Preserve
 this investigation's baseline and failures while collecting current evidence.
