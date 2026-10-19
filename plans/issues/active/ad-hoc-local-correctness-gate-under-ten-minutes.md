@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.15 independently approved; V0.3a native launch context next
+current_stage: V0.3a focused checks pass; generated preparation and review pending
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -324,8 +324,9 @@ identifiers. New negative controls cover each form. Final real guard passes
 (5.061s), all guard regressions pass (1.095s), and file-size passes (3.063s).
 Unresolved production include expressions deliberately retain all fragments for
 scanning, so future unrecognized syntax fails closed. Final independent review SATISFIED, no blockers, on
-`0fe59a9320967e958c6b4edabd328cf32de509c4`; effective when
-[#4359](https://github.com/sifr-lang/sifr/pull/4359) merges. Final raw review is
+`0fe59a9320967e958c6b4edabd328cf32de509c4`; merged in
+[#4359](https://github.com/sifr-lang/sifr/pull/4359) at
+`a36a01f926c3d59f147e138b982f691d3c50233c`. Final raw review is
 external at `reviews/0fe59a9320967e958c6b4edabd328cf32de509c4/review.md`.
 Evidence: `v015-path-*`, earlier `v015-final-*` and unchanged `v015-workflow`.
 The existing file-wide composition-root exemption is retained; tightening it to
@@ -350,6 +351,43 @@ missing-tool and explicit-pair behavior, configuration/identity regression tests
 a real nested build-script integration, focused sysroot tests, fmt/size checks,
 and rerun the affected generated-code preparation. Python fixture/registry and
 permission repairs remain separate V0.3/V0.6 work. Final complete gates stay open.
+
+### V0.3a implementation and focused evidence
+
+Rustup-resolved toolchains now retain the selected launcher for version discovery
+and Cargo execution. Cargo/rustc paths remain exact; explicit paired tools and
+non-rustup installations remain direct. The native identity domain is version 2
+and includes launcher mode, path, content digest and selection. Existing native
+artifacts therefore require requalification under the new identity; this is not
+claimed as a cache speedup. Captured caller environment and Cargo configuration
+validation remain unchanged.
+
+Subprocess-isolated regression controls cover the nested rustc launch, launcher
+byte invalidation, missing selection rejection, explicit pairs and direct tools.
+The nested-launch regression fails before the repair (`v03a-nested-regression-before`,
+9.150s, one selected test). All 50 sysroot tests pass afterward
+(`v03a-sysroot-final`, 14.157s including incremental preparation; 1.35s test runtime).
+The real `NativeToolchain` API also builds a fresh tiny Cargo project whose build
+script invokes rustc with an initially narrow loader path; the generated program
+prints `native-api-ok` (`v03a-api-integration`, 2.632s overall). This uses the
+actual modified library, not a separately implemented launcher. Formatting passes
+(`v03a-fmt`, 17.195s) and size guardrails pass (`v03a-file-size`, 4.174s).
+
+Preserved diagnostics: the first 310.246s build selected zero tests because its
+exact filter lacked the module prefix, so it is preparation only. The corrected
+initial launcher regression fails in 2.113s. The first complete post-repair run
+passes 49/50 in 202.796s including compilation; its new identity test incorrectly
+expected libtest output to start at column zero. Correcting that output parser
+produces the full 50/50 result above without further production changes. The
+queued API probe correctly did not execute while that suite was failing.
+
+The original broad merge-correctness diagnostic continues against its frozen
+`fce96a6c233af77b90b0f90a768ec8b9e23fa4d4` candidate, separately from this worktree.
+Its generated preparation fails in 34.950s at the nested toolchain boundary,
+and advanced native preparation remains expensive. That run is diagnostic only;
+its timing and preparation cannot qualify this newer implementation. Rerun the
+affected generated preparation and complete scoped independent review before
+merging V0.3a. Complete phase gates and the ten-minute objective remain open.
 
 ## Execution stages
 
@@ -861,7 +899,7 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V0.15 and implement V0.3a; let the original
+**Next action:** qualify and review V0.3a; let the original
 broad diagnostic finish or hit its cap without mutating its candidate. Continue
 bounded V0 repairs and preserve all incomplete evidence. Preserve
 this investigation's baseline and failures while collecting current evidence.
