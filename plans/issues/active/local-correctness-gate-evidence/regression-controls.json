@@ -1,0 +1,145 @@
+{
+  "scope": "Source-verified starting commands and representative existing controls, not the exhaustive acceptance selection and not proof of execution. Bind filters to emitted test IDs and reject zero tests. Include all ignored/conditional tests required by the canonical selection; add targeted cache-hit/miss/eviction controls for new mechanisms.",
+  "rows": [
+    {
+      "work": "V2 metadata",
+      "focused_command": "cargo test --locked --offline -p sifr_sysroot metadata::",
+      "source": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "existing_controls": [
+        {
+          "name": "nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject",
+          "line": 249
+        },
+        {
+          "name": "checks_corrupt_reference_ids_even_when_payload_digest_matches",
+          "line": 483
+        },
+        {
+          "name": "bounded_retention_evicts_only_unreferenced_records",
+          "line": 626
+        },
+        {
+          "name": "dx15_payload_frame_is_demand_loaded_once_without_decoding_unrequested_records",
+          "line": 787
+        }
+      ]
+    },
+    {
+      "work": "V2 metadata demand",
+      "focused_command": "cargo test --locked --offline -p sifr_driver --lib metadata_reader::",
+      "source": "crates/sifr_driver/src/metadata_reader/tests.rs",
+      "existing_controls": [
+        {
+          "name": "check_demands_semantics_without_rust_or_unrelated_modules",
+          "line": 3
+        },
+        {
+          "name": "failed_override_retries_and_never_reuses_another_owner",
+          "line": 162
+        },
+        {
+          "name": "metadata_structural_complete_canonical_metadata_inventory",
+          "line": 377
+        }
+      ]
+    },
+    {
+      "work": "V2 metadata production",
+      "focused_command": "cargo test --locked --offline -p sifr_driver --lib metadata_producer::",
+      "source": "crates/sifr_driver/src/metadata_producer/tests.rs",
+      "existing_controls": [
+        {
+          "name": "failure_recovery_stale_override_and_missing_entry",
+          "line": 232
+        },
+        {
+          "name": "source_mutation_cannot_publish_mislabeled_metadata",
+          "line": 279
+        },
+        {
+          "name": "threads_share_one_success_and_execute_independent_assertions",
+          "line": 315
+        }
+      ]
+    },
+    {
+      "work": "V2 full metadata corpus",
+      "focused_command": "cargo test --locked --offline -p sifr_driver --lib full_corpus_exact_emission -- --ignored",
+      "source": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "existing_controls": [
+        {
+          "name": "full_corpus_exact_emission",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "work": "V2 component execution",
+      "focused_command": "cargo test --locked --offline -p sifr_compiler_component",
+      "source": "crates/sifr_compiler_component/src/tests.rs",
+      "existing_controls": [
+        {
+          "name": "ambient_wasi_import_is_denied_by_the_empty_linker",
+          "line": 255
+        },
+        {
+          "name": "fuel_and_output_bounds_fail_without_panics",
+          "line": 291
+        },
+        {
+          "name": "cached_responses_obey_the_current_host_output_limit",
+          "line": 396
+        },
+        {
+          "name": "closed_envelopes_reject_unknown_fields_and_noncanonical_records",
+          "line": 528
+        }
+      ]
+    },
+    {
+      "work": "V2 history",
+      "focused_command": "cargo test --locked --offline -p sifr_driver --lib project_cache::",
+      "source": "crates/sifr_driver/src/project_cache/history_tests.rs",
+      "existing_controls": [
+        {
+          "name": "history_over_4096_keeps_publishing_and_recent_aba",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "work": "V3 E2E cache",
+      "focused_command": "cargo test --locked --offline -p sifr --test e2e native_cache_tests::",
+      "source": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "existing_controls": [
+        {
+          "name": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+          "line": 227
+        },
+        {
+          "name": "suite_lease_excludes_another_run_and_checks_checkout_ownership",
+          "line": 285
+        },
+        {
+          "name": "interrupted_owner_cannot_release_a_live_native_child_lease",
+          "line": 299
+        }
+      ]
+    },
+    {
+      "work": "V3 process leases",
+      "focused_command": "cargo test --locked --offline -p sifr_cache_storage",
+      "source": "crates/sifr_cache_storage/src/unix.rs",
+      "existing_controls": [
+        {
+          "name": "idle_and_live_lease_waits_remain_bounded",
+          "line": 334
+        },
+        {
+          "name": "cancelled_wait_preserves_owner",
+          "line": 388
+        }
+      ]
+    }
+  ]
+}

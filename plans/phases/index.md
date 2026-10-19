@@ -65,6 +65,12 @@ successor and is summarized here.
 | PY-1V | Python Interop Verification Productionization | complete (area migration PR #2680, live policy PR #2681, testcontainers examples PR #2682, closeout-progress PR #2683, final status evidence complete) | [../issues/archive/python-interop-verification-production.md](../issues/archive/python-interop-verification-production.md) |
 | PY-2 | Complete Declaration-First Python Interop | complete through PR #3000 (M0-M17; repeated agent High whole-phase review satisfied; authoritative closure gate passed Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures) | [../issues/archive/ad-hoc-declaration-first-python-interop.md](../issues/archive/ad-hoc-declaration-first-python-interop.md) |
 
+## Ad hoc local correctness gate phase
+
+| Phase | Status | Plan |
+| --- | --- | --- |
+| LOCAL-GATE | Planned; implementation and integrated acceptance pending | [Complete local correctness within ten minutes](../issues/active/ad-hoc-local-correctness-gate-under-ten-minutes.md) |
+
 ## Ad hoc compiler DX phase
 
 | Phase | Status | Architecture | Release checkpoints |

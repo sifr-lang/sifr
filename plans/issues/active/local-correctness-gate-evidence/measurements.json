@@ -1,0 +1,172 @@
+{
+  "candidate": "422c282720fd630aa938674f122d84aea7f1e26f",
+  "date": "2026-10-19",
+  "scope": "Supplemental diagnostic experiments, not full green gate acceptance. No production source modifications.",
+  "raw_bundle": "local-verification-investigation-20261019",
+  "raw_bundle_availability": "Retained investigation artifacts outside Git; not required to understand this plan. These hashes identify retained evidence, not a public download. Reproduce missing evidence before relying on it for candidate acceptance.",
+  "attempts": [
+    {
+      "id": "feasibility-asan-compiler-and-generated-positive",
+      "seconds": 24.35888312201132,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-asan-compiler-and-generated-positive/receipt.json"
+    },
+    {
+      "id": "feasibility-asan-retained-preparation-1",
+      "seconds": 13.55816526300623,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-asan-retained-preparation-1/receipt.json"
+    },
+    {
+      "id": "feasibility-asan-retained-preparation-2",
+      "seconds": 4.138478117994964,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-asan-retained-preparation-2/receipt.json"
+    },
+    {
+      "id": "feasibility-components-parallel-prepare",
+      "seconds": 575.2802359610214,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-components-parallel-prepare/receipt.json"
+    },
+    {
+      "id": "feasibility-components-parallel-run-1",
+      "seconds": 72.33256472600624,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-components-parallel-run-1/receipt.json"
+    },
+    {
+      "id": "feasibility-components-parallel-run-2",
+      "seconds": 74.57213503998355,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-components-parallel-run-2/receipt.json"
+    },
+    {
+      "id": "feasibility-components-serial-prepare",
+      "seconds": 154.0261328810011,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-components-serial-prepare/receipt.json"
+    },
+    {
+      "id": "feasibility-components-serial-run-1",
+      "seconds": 227.48245220200624,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-components-serial-run-1/receipt.json"
+    },
+    {
+      "id": "feasibility-components-serial-run-2",
+      "seconds": 222.27904413299984,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-components-serial-run-2/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-0-baseline",
+      "seconds": 10.298079959989991,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-0-baseline/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-1-opt0",
+      "seconds": 69.82321607400081,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-1-opt0/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-2-opt0",
+      "seconds": 71.03086732700467,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-2-opt0/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-3-baseline",
+      "seconds": 10.293215824000072,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-3-baseline/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-matched-0-baseline",
+      "seconds": 11.108842071000254,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-matched-0-baseline/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-matched-1-opt0",
+      "seconds": 70.21152946999064,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-matched-1-opt0/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-matched-2-opt0",
+      "seconds": 69.79894905400579,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-matched-2-opt0/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-matched-3-baseline",
+      "seconds": 11.121497129002819,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-matched-3-baseline/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-matched-probe-prepare",
+      "seconds": 0.854191307007568,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-matched-probe-prepare/receipt.json"
+    },
+    {
+      "id": "feasibility-metadata-opt0-probe-prepare",
+      "seconds": 15.206561960018007,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-metadata-opt0-probe-prepare/receipt.json"
+    },
+    {
+      "id": "feasibility-sql-matched-profile-control",
+      "seconds": 426.17241080099484,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-sql-matched-profile-control/receipt.json"
+    },
+    {
+      "id": "feasibility-sql-opt0-full-protocol",
+      "seconds": 407.9256855059939,
+      "returncode": 0,
+      "stop_reason": null,
+      "receipt": "feasibility-evidence/feasibility-sql-opt0-full-protocol/receipt.json"
+    }
+  ],
+  "attempt_seconds_sum": 2541.8731379290402,
+  "attempt_sum_is_gate_runtime": false,
+  "files": {
+    "validated-plan.json": "a2682b7c513323313442caa2cbcddd547e24bb2a3deafc25e11d8b74dd814220",
+    "validation-scope.json": "90f6bf63b5e74eab54506b8b690759930407ba90dae04618b1c76ee570d5a200",
+    "validation-test-map.json": "43539df74db5bcf5c1ec41be7c29ac429c4659f88e41c2f149cb7b1f044e38c2",
+    "feasibility-summary.json": "e1fad922c9b6033c9f34315fb6bb313a0df1904e147325185ce0a7fa7775b5cf",
+    "feasibility-details.json": "818856d962e0dfc100f065c047389d597d7a975916996c163d437d931d5b19a0",
+    "feasibility-final-audit.json": "578c01c85e9871d06df2a91a2c715df4aea27ac66fc85db81661bd20f31a39bb",
+    "feasibility-metadata-matched-context.json": "d618c4f883abf084824a83e41bce796d3513050d41e1ff135854118ff8e3b71e",
+    "feasibility-metadata-matched-results.json": "a066228a1798ac970d1d03ecb361c8c15397de86eaa1ebedb1300234b0fec593",
+    "feasibility-component-results.json": "e9933510a5aa280f717f090cf0fc094c5fe386e13f4fd1b2f7c1c8e10bca5622",
+    "feasibility-sanitizer-proof.json": "1fd4ce838aefa5ff2456e183b3af5d4f46c4cbac7789c641cd89ecff2f00ab2b",
+    "feasibility-sql-artifact-audit.json": "72f05235e7e2a4200bbff08b2abb7a410755328ec742579e06bd01d61a09a55a",
+    "findings-audit.json": "3a6b1bfa4d4aa501a4a1bcb3afcc89de00728a0eee6c061a9cb4d745a7a252e0"
+  }
+}
