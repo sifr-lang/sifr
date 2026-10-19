@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Callable, TextIO
 
 from . import reports
+from .execution_scope import evidence_name
 from .paths import REPO_ROOT
 
 
@@ -75,7 +76,11 @@ def run_profile_with_report(
     handled_error: type[Exception],
     release_report_out: str | None,
     execution_outcomes: Callable[[], dict[str, int]] | None = None,
+    correctness_only: bool = False,
 ) -> int:
+    if correctness_only and release_report_out is not None:
+        raise ValueError("correctness-only execution cannot produce release evidence")
+    report_name = evidence_name(profile_name, correctness_only)
     release_output = None
     if release_report_out is not None:
         from .release_evidence import prepare_release_report_output
@@ -90,17 +95,17 @@ def run_profile_with_report(
             return 2
     report_dir = REPO_ROOT / "target" / "validation_lane_reports"
     report_dir.mkdir(parents=True, exist_ok=True)
-    temp_log = temporary_report_path(report_dir, f"lane.{profile_name}.log.")
-    temp_time = temporary_report_path(report_dir, f"lane.{profile_name}.time.")
-    latest_log = report_dir / f"{profile_name}.latest.log"
-    latest_time = report_dir / f"{profile_name}.latest.time"
-    json_file = report_dir / f"{profile_name}.latest.json"
+    temp_log = temporary_report_path(report_dir, f"lane.{report_name}.log.")
+    temp_time = temporary_report_path(report_dir, f"lane.{report_name}.time.")
+    latest_log = report_dir / f"{report_name}.latest.log"
+    latest_time = report_dir / f"{report_name}.latest.time"
+    json_file = report_dir / f"{report_name}.latest.json"
     start = time.monotonic()
     usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
     status = 0
-    live_status = report_dir / f"{profile_name}.status.json"
+    live_status = report_dir / f"{report_name}.status.json"
     def publish_status(state: str, code: int | None) -> None:
-        temporary = temporary_report_path(report_dir, f"{profile_name}.status.")
+        temporary = temporary_report_path(report_dir, f"{report_name}.status.")
         temporary.write_text(json.dumps({"state": state, "exit_status": code, "log": str(latest_log if state == "completed" else temp_log)}))
         temporary.replace(live_status)
     publish_status("running", None)
@@ -122,6 +127,7 @@ def run_profile_with_report(
         reports.summarize(
             argparse.Namespace(
                 profile=profile_name,
+                correctness_only=correctness_only,
                 log=str(latest_log),
                 time_file=str(latest_time),
                 json_out=str(json_file),

@@ -82,6 +82,36 @@ and Cargo fingerprints; make an evidence-backed correction before repeating an
 unchanged attempt. Follow the active phase's diagnostic cap and ownership rules;
 a timeout or cancellation is incomplete evidence and never a gate pass.
 
+### Local correctness scope
+
+Use the explicit scope when working on the LOCAL-GATE phase:
+
+```bash
+scripts/run_all_tests.sh --profile merge --correctness-only --emit-plan
+scripts/run_all_tests.sh --profile merge --correctness-only --no-fail-fast
+```
+
+`--correctness-only` derives selection from the canonical `create-pr` or `merge`
+profile. It removes only performance-area benchmark captures (`smoke`,
+`representative`, `full`). Syntax/cache checks, policy assertions, all other
+selected areas, crate configurations, guardrails and E2E corpus remain selected.
+It does not change the profile defaults or CI selection. Nightly, release and live
+profiles reject this flag; scoped execution cannot produce release evidence.
+
+Plans list the scope and every excluded suite. Reports use separate
+`<profile>-correctness` paths and carry the scope explicitly, so scoped evidence
+cannot overwrite or qualify a full profile. Base E2E/native profile semantics
+remain unchanged. Reference admission still applies whenever a reference-dependent
+performance suite is selected. The LOCAL-GATE final timing/coverage matrix remains
+required; this entry point alone establishes no ten-minute performance claim.
+
+Use `--no-fail-fast` for broad failure discovery when preparation can be shared.
+Independent failures remain failures, and invalid inventories, unsafe preparation
+or resource/deadline cancellation still stop dependent work. An incomplete broad
+run is diagnostic evidence, never acceptance. The phase's approved intermediate
+policy retains focused checks and independent review before each intermediate
+merge, followed by complete integrated final gates.
+
 ### Build allocations
 
 The profile runner keeps compiler Cargo jobs separate from native E2E jobs.

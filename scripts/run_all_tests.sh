@@ -22,6 +22,8 @@ Profiles:
 Options:
   --profile <name>                            Validation profile (default: merge)
   --release-report-out <path>                 Write immutable release evidence (release only)
+  --correctness-only                          Exclude benchmark captures (create-pr/merge only)
+  --no-fail-fast                               Collect independent failures
   --emit-plan                                 Print the selected profile execution plan and exit
   --help                                      Show this help
 
@@ -31,6 +33,7 @@ EOF
 
 PROFILE="${SIFR_TEST_PROFILE:-merge}"
 EMIT_PLAN=0
+SCOPE_ARGS=()
 FORWARD_ARGS=()
 RELEASE_REPORT_OUT=""
 
@@ -44,6 +47,10 @@ while [[ $# -gt 0 ]]; do
     --help)
       usage
       exit 0
+      ;;
+    --correctness-only)
+      SCOPE_ARGS=(--correctness-only)
+      shift
       ;;
     --emit-plan)
       EMIT_PLAN=1
@@ -102,23 +109,18 @@ require_uv
 
 if [[ "${EMIT_PLAN}" -eq 1 ]]; then
   exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
-    python -m sifr_verify profiles plan --profile "${PROFILE}"
+    python -m sifr_verify profiles plan --profile "${PROFILE}" ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
 fi
 
-if [[ "${#FORWARD_ARGS[@]}" -gt 0 ]]; then
-  profile_args=(profiles run --profile "${PROFILE}")
-  if [[ -n "${RELEASE_REPORT_OUT}" ]]; then
-    profile_args+=(--release-report-out "${RELEASE_REPORT_OUT}")
-  fi
-  exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
-    python -m sifr_verify "${profile_args[@]}" -- "${FORWARD_ARGS[@]}"
+profile_args=(profiles run --profile "${PROFILE}")
+if [[ "${#SCOPE_ARGS[@]}" -gt 0 ]]; then
+  profile_args+=("${SCOPE_ARGS[@]}")
 fi
-
 if [[ -n "${RELEASE_REPORT_OUT}" ]]; then
-  exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
-    python -m sifr_verify profiles run --profile "${PROFILE}" \
-    --release-report-out "${RELEASE_REPORT_OUT}"
+  profile_args+=(--release-report-out "${RELEASE_REPORT_OUT}")
 fi
-
+if [[ "${#FORWARD_ARGS[@]}" -gt 0 ]]; then
+  profile_args+=(-- "${FORWARD_ARGS[@]}")
+fi
 exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
-  python -m sifr_verify profiles run --profile "${PROFILE}"
+  python -m sifr_verify "${profile_args[@]}"

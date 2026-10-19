@@ -11,6 +11,7 @@ from typing import Any
 
 from .build_allocation import validate_build_policy
 from .errors import VerificationError
+from .execution_scope import scope_metadata, select_execution_scope
 from .paths import PROFILES_DIR, REPO_ROOT
 from .schemas import load_json, load_schema, validate_data
 
@@ -486,8 +487,9 @@ def print_summary(requested_profile: str) -> None:
     print(f"  manifest={profile_path(str(profile['name'])).relative_to(REPO_ROOT)}")
 
 
-def build_profile_plan(profile_name: str) -> dict[str, Any]:
-    profile = load_profile(profile_name)
+def build_profile_plan(profile_name: str, *, correctness_only: bool = False) -> dict[str, Any]:
+    canonical = load_profile(profile_name)
+    profile = select_execution_scope(canonical, correctness_only)
     selected_areas = [
         {
             "area": selection["area"],
@@ -502,6 +504,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
     selected_fixture_count = full_pass_fixture_count() if fixture_manifest is None else fixture_count(fixture_manifest)
     return {
         "schema_version": 2,
+        **scope_metadata(canonical, correctness_only),
         "profile": profile["name"],
         "description": profile.get("description", ""),
         "network_policy": profile.get("network_policy", {}),
@@ -528,8 +531,8 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
     }
 
 
-def print_plan(profile_name: str) -> None:
-    print(json.dumps(build_profile_plan(profile_name), indent=2, sort_keys=True))
+def print_plan(profile_name: str, *, correctness_only: bool = False) -> None:
+    print(json.dumps(build_profile_plan(profile_name, correctness_only=correctness_only), indent=2, sort_keys=True))
 
 
 def compare_plans(local_path: str, ci_path: str) -> int:
@@ -537,6 +540,9 @@ def compare_plans(local_path: str, ci_path: str) -> int:
     ci = load_json(Path(ci_path))
     keys = [
         "schema_version",
+        "execution_scope",
+        "evidence_name",
+        "excluded_area_suites",
         "profile",
         "selected_areas",
         "toolchain_steps",
@@ -565,6 +571,10 @@ def run_command(argv: list[str]) -> int:
         )
         return 2
     command = argv[0]
+    options = argv[1:argv.index("--")] if "--" in argv else argv[1:]
+    correctness_only = "--correctness-only" in options
+    if correctness_only and command not in {"plan", "run"}:
+        raise ProfileError("--correctness-only requires profiles plan or run")
     profile_name = _profile_arg(argv[1:]) if command in {"profile", "summary", "plan", "run"} else ""
     if command == "profile":
         profile = load_profile(profile_name)
@@ -574,7 +584,7 @@ def run_command(argv: list[str]) -> int:
         print_summary(profile_name)
         return 0
     if command == "plan":
-        print_plan(profile_name)
+        print_plan(profile_name, correctness_only=correctness_only)
         return 0
     if command == "compare-plans":
         return compare_plans(_path_arg(argv[1:], "--local"), _path_arg(argv[1:], "--ci"))
@@ -588,7 +598,8 @@ def run_command(argv: list[str]) -> int:
         return run_profile(
             profile_name,
             _forward_args(argv[1:]) + (["--no-fail-fast"] if "--no-fail-fast" in argv[1:] and "--" not in argv else []),
-            release_report_out=_optional_arg(argv[1:], "--release-report-out"),
+            release_report_out=_optional_arg(options, "--release-report-out"),
+            correctness_only=correctness_only,
         )
     print(f"unsupported profiles command: {command}", file=sys.stderr)
     return 2
