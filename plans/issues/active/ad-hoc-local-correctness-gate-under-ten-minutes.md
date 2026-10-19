@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4a reviewed; V0.15 source-direction admission next
+current_stage: V4a merged; V0.15 source-direction admission under validation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -260,8 +260,9 @@ create-pr 72 → 71 area suites; merge 106 → 105. The frozen correctness scope
 Reports and area results use a distinct correctness identity; full-profile
 reference admission remains tested. Independent review SATISFIED, no blockers, on candidate
 `429882fe25f0afd2f723be9b680808d26452e8d0`, base
-`ae729a7c7aa4b4e0d38aa4a6c4aebf2651b50d9c`; effective on
-[#4358](https://github.com/sifr-lang/sifr/pull/4358) merge. Raw review is retained
+`ae729a7c7aa4b4e0d38aa4a6c4aebf2651b50d9c`; merged in
+[#4358](https://github.com/sifr-lang/sifr/pull/4358) at
+`1e27d55d660f90222d6ee785db546d2d9ab30b80`. Raw review is retained
 externally under `reviews/429882fe25f0afd2f723be9b680808d26452e8d0/review.md`.
 No whole-gate
 pass or timing claim follows from these runner checks. Receipts: `v4a-*` in the
@@ -284,6 +285,23 @@ boundary without permitting provider construction in lower services generally.
 Run guard positive/negative self-tests, real repository guard, file-size and
 relevant workflow/foundation checks. This bounded prerequisite repair precedes the
 next broad diagnostic; unrelated compiler changes remain separate V0 items.
+
+V0.15 implementation: extend existing test-source ownership through literal
+include chains, with production include/module reachability taking precedence.
+Keep unknown include expressions scanned. Register the actual guided-replay
+composition boundary and moved SQL editor root; begin scanning compiler_services
+for illegal provider construction too. No Rust behavior, imports, assertions or
+crate dependency rules change. The guard passes on repository sources; negative
+controls retain rejection for shared production fragments (include, default module
+and path-attribute module) and lower-service provider construction. An initial
+classifier attempt still rejected the three test includes because it followed the
+test-root declaration from lib.rs; its failed receipt is retained, and the corrected
+classifier respects the guard's existing test-root classification. Final validation:
+repository guard passes (4.192s); all guard self-tests pass (0.740s), including
+mixed production ownership and both lower-service construction controls; file-size
+guardrails pass (5.722s), workflow contracts pass (0.740s), and whitespace/local
+links pass. No Rust source changes require a compiler rebuild. Scoped independent
+review is pending. Evidence: `v015-final-*` and `v015-workflow`.
 
 ## Execution stages
 
