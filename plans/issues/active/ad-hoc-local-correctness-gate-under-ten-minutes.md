@@ -39,10 +39,41 @@ before touching an externally owned failure. Explicitly assign in-scope repairs;
 do not absorb unrelated issues or claim their failed paths as passing coverage.
 
 The earlier E2E one-time merge exception and the archived DX policy do **not**
-apply to this phase. Existing implementation create-PR and merge gates remain
-required until their governing policy is explicitly changed. This plan grants
-no prospective validation waiver. Documentation-only planning/record updates
-require documentation checks only. Actual releases retain release qualification.
+apply to this phase. This phase has its own user-approved prospective execution
+policy below. Documentation-only planning/record updates require documentation
+checks only. Actual releases retain release qualification.
+
+## User-approved prospective execution policy — 2026-10-20
+
+The user explicitly selected **“Focused intermediate checks; full final gates”**
+in response to the proposal to use focused tests and independent review for
+intermediate repairs and complete create-PR/merge gates on the final integrated
+phase candidate. This supersedes the original planning-only requirement to run
+full candidate gates for every intermediate implementation PR; it does not waive
+any final coverage, failure semantics or timing acceptance.
+
+Each intermediate item requires named affected tests, regression controls,
+applicable area/workflow contracts, required formatting/file-size checks, and a
+SATISFIED scoped independent review on its candidate. Only then may it merge.
+Record failures owned by other phase items and preserve their evidence rather
+than repeating the same broad failing gate unchanged. Register the next bounded
+item and its checks before implementation.
+
+For the V0.1/V0.4 distribution admission candidate, named validation is: enrolled
+metadata producer tests (including producer/packager version parity and unsupported
+format rejection), real retained-compiler metadata admission/rejection diagnostics,
+all four synthetic governance archive admissions, the full distribution suite,
+the qualification suite, file-size guardrails and documentation checks. No Rust
+compiler source changes occur in this item. All original suite variant labels
+must be preserved, with the new regression enrolled as additional coverage.
+
+The final integrated implementation must pass the complete create-PR and merge
+gates under the explicitly governed final profile policy, plus V5's full timing,
+edit/invalidation and coverage matrix. V4 still owns the approved correctness-only
+selection boundary; benchmark/reference or foreign execution is not silently
+removed by this intermediate policy. An unavailable mandatory final prerequisite
+leaves final acceptance open. No full-gate pass or performance-reference pass is
+inferred from focused tests.
 
 ## Frozen scope and accounting
 
@@ -135,8 +166,9 @@ session/provider changes; it is not silently part of an unchanged merge total.
 
 The user authorized continuing the phase sequentially on the remote execution
 host until complete, using pragmatic diagnostics while preserving final correctness.
-This supersedes the per-item new-session pause for this execution; it does not
-waive candidate gates, review, coverage or final timing acceptance. Work remains
+This supersedes the per-item new-session pause for this execution. The approved
+prospective policy above governs candidate-gate timing; review, coverage and final
+timing acceptance remain required. Work remains
 bounded and sequential. No implementation item is accepted yet.
 
 | Item | Bounded ownership / prerequisite | Status |
@@ -187,6 +219,12 @@ All nine qualification groups passed (28.702s). Full distribution now passes
 all original 71 variant labels are retained. These are local synthetic platform
 contracts, not foreign-platform native execution or release publication.
 No ten-minute whole-gate or complete phase acceptance is claimed.
+
+The initial broad create-PR diagnostic stopped at performance-reference admission
+in 0.677s before compilation; the reference remains owned by #4347. All downstream
+steps are blocked, not passed. This failure is retained as
+`v01-v04-create-pr`, and the approved intermediate policy avoids repeating it
+unchanged while phase repairs proceed. No reference was fabricated or substituted.
 
 ## Execution stages
 
@@ -355,9 +393,9 @@ default-feature identities and product-version invalidation. Define the local co
 selection from one authoritative catalogue; do not fork a hand-maintained copy of the merge
 suite list. Compare emitted plans so the only intended exclusion is the agreed
 benchmark/foreign execution. Update verification docs and AGENTS.md command references for
-the approved entry point; keep focused edit checks and full candidate acceptance. Existing
-create-PR/merge requirements remain applicable until the governing policy is explicitly
-updated; the closed DX phase exception does not carry into this work. Avoid adding an extra
+the approved entry point; keep focused edit checks and full candidate acceptance. Final create-PR/merge requirements remain applicable under the governing policy;
+the phase-specific prospective policy above covers intermediate items. The closed
+DX phase exception does not carry into this work. Avoid adding an extra
 duplicate complete gate when integrating the approved selection. CI changes remain a later
 stage.
 
@@ -643,9 +681,10 @@ contracts, file-size guardrails, and profile selection using:
 uv run --project verification --locked python -m sifr_verify profiles check
 ```
 
-The planning PR does not modify these commands or policies. Until implementation
-explicitly changes the governing contract, run current create-pr/merge requirements
-for implementation candidates. No extra duplicate full gate should survive the
+The planning PR did not modify these commands or profiles. The approved prospective
+policy above now governs intermediate implementation candidates. Until V4 explicitly
+changes the governing contract, current full create-pr/merge requirements remain
+applicable to the final integrated candidate. No extra duplicate full gate should survive the
 approved integration merely because a new entry point was added. CI mirroring and
 foreign-platform/benchmark optimization remain later work.
 
