@@ -1,9 +1,9 @@
 # Ad Hoc Phase: Complete Local Correctness Gate Within Ten Minutes
 
-status: planned; implementation and integrated acceptance pending
+status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: phase registration takes effect with PR #4356; first implementation item is V0
+current_stage: V0.1/V0.4 reviewed; V4a correctness-only selection next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -39,10 +39,41 @@ before touching an externally owned failure. Explicitly assign in-scope repairs;
 do not absorb unrelated issues or claim their failed paths as passing coverage.
 
 The earlier E2E one-time merge exception and the archived DX policy do **not**
-apply to this phase. Existing implementation create-PR and merge gates remain
-required until their governing policy is explicitly changed. This plan grants
-no prospective validation waiver. Documentation-only planning/record updates
-require documentation checks only. Actual releases retain release qualification.
+apply to this phase. This phase has its own user-approved prospective execution
+policy below. Documentation-only planning/record updates require documentation
+checks only. Actual releases retain release qualification.
+
+## User-approved prospective execution policy — 2026-10-20
+
+The user explicitly selected **“Focused intermediate checks; full final gates”**
+in response to the proposal to use focused tests and independent review for
+intermediate repairs and complete create-PR/merge gates on the final integrated
+phase candidate. This supersedes the original planning-only requirement to run
+full candidate gates for every intermediate implementation PR; it does not waive
+any final coverage, failure semantics or timing acceptance.
+
+Each intermediate item requires named affected tests, regression controls,
+applicable area/workflow contracts, required formatting/file-size checks, and a
+SATISFIED scoped independent review on its candidate. Only then may it merge.
+Record failures owned by other phase items and preserve their evidence rather
+than repeating the same broad failing gate unchanged. Register the next bounded
+item and its checks before implementation.
+
+For the V0.1/V0.4 distribution admission candidate, named validation is: enrolled
+metadata producer tests (including producer/packager version parity and unsupported
+format rejection), real retained-compiler metadata admission/rejection diagnostics,
+all four synthetic governance archive admissions, the full distribution suite,
+the qualification suite, file-size guardrails and documentation checks. No Rust
+compiler source changes occur in this item. All original suite variant labels
+must be preserved, with the new regression enrolled as additional coverage.
+
+The final integrated implementation must pass the complete create-PR and merge
+gates under the explicitly governed final profile policy, plus V5's full timing,
+edit/invalidation and coverage matrix. V4 still owns the approved correctness-only
+selection boundary; benchmark/reference or foreign execution is not silently
+removed by this intermediate policy. An unavailable mandatory final prerequisite
+leaves final acceptance open. No full-gate pass or performance-reference pass is
+inferred from focused tests.
 
 ## Frozen scope and accounting
 
@@ -130,6 +161,94 @@ positive interval included inside it. These are different measurements and
 neither demonstrates full green verification. Four of 87 native roles also fail.
 The separate session-equivalence oracle took 224.78s and applies to affected
 session/provider changes; it is not silently part of an unchanged merge total.
+
+## Implementation work log — 2026-10-20
+
+The user authorized continuing the phase sequentially on the remote execution
+host until complete, using pragmatic diagnostics while preserving final correctness.
+This supersedes the per-item new-session pause for this execution. The approved
+prospective policy above governs candidate-gate timing; review, coverage and final
+timing acceptance remain required. Work remains
+bounded and sequential. V0.1/V0.4 acceptance becomes effective when PR #4357 merges.
+
+| Item | Bounded ownership / prerequisite | Status |
+| --- | --- | --- |
+| V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Validated and independently approved; effective on #4357 merge |
+| V0.2 | SQL provenance and moved-source qualification guards | Pending |
+| V0.3 | Canonical launch context and Python runtime registry/fixture admission | Pending |
+| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Validated and independently approved; effective on #4357 merge |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
+| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
+| V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
+| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
+| V0.10 | CLI eager/deferred schema parity | Pending |
+| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
+| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
+| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
+| V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
+
+V0.1 starts with packaging Python regressions before any compiler rebuild. Its
+scope includes matching the canonical format, keeping unsupported-format rejection,
+and making synthetic fixtures follow the real producer contract. Required evidence:
+focused producer/binding/corruption tests, applicable distribution contracts, and
+real retained compiler metadata admitted by the repaired packaging boundary.
+A retained compiler can qualify unchanged compiler bytes only; it does not qualify
+subsequent compiler edits. All final installed assertions and full gates remain open.
+
+V0.1 evidence: the new producer-version regression failed before the repair
+(format 4 versus producer format 5), then all six focused packaging checks passed
+in 0.74s. A real retained compiler produced 51,025 records / 6,556,655 bytes;
+packaging admitted format 5 and rejected rebound format 4/6 mutations (29.735s
+including production). File-size guardrails passed. A complete distribution-full
+run took 102.757s: 66/71 variants passed; five governance fixtures fail before
+their intended assertions because required SQL runtime files are absent (V0.4).
+The focused regression is now enrolled in the canonical distribution case scan.
+Two earlier diagnostic attempts were explicitly stopped, preserved and not passed:
+one launched a cold self-update target despite retained owned artifacts, and one
+retry began before cross-filesystem target restoration completed. Retained build
+selection and pinned Node were then restored without production scope changes.
+Evidence bundle: `local-gate-implementation-20261020`, receipts `v01-*`.
+
+V0.4 evidence: direct valid-fixture admission first failed on the missing SQL
+runtime manifest (0.681s). Adding both required SQL runtime manifests made all
+four synthetic target archives pass the unchanged production validator (0.689s).
+The existing negative missing-SQL-runtime controls remain in the full suite.
+All nine qualification groups passed (28.702s). Full distribution now passes
+72/72 variants (119.253s), including the newly enrolled metadata producer check;
+all original 71 variant labels are retained. These are local synthetic platform
+contracts, not foreign-platform native execution or release publication.
+No ten-minute whole-gate or complete phase acceptance is claimed.
+
+The initial broad create-PR diagnostic stopped at performance-reference admission
+in 0.677s before compilation; the reference remains owned by #4347. All downstream
+steps are blocked, not passed. This failure is retained as
+`v01-v04-create-pr`, and the approved intermediate policy avoids repeating it
+unchanged while phase repairs proceed. No reference was fabricated or substituted.
+
+V0.1/V0.4 closure: [#4357](https://github.com/sifr-lang/sifr/pull/4357),
+reviewed candidate `027f6f752edcde539596386bc296576aadb1cf1c`, base
+`59ff7f254aab2385e6196abec12265b1ced6ba26`. Independent review SATISFIED,
+no blocking findings; raw review is outside Git in the implementation bundle at
+`reviews/027f6f752edcde539596386bc296576aadb1cf1c/review.md`.
+All named focused/area checks above passed; final file-size guardrail passed in
+6.684s, changed local links and whitespace passed, and inventory comparison
+confirms no original distribution variant removed. Final record-only changes do
+not alter reviewed implementation inputs. No full gate or timing acceptance is
+claimed. Nonblocking suggestions about compiler-reported format discovery and
+standalone fixture constant sharing are deferred to future format-contract work;
+the enrolled regression already fails closed on producer/fixture drift.
+
+Next bounded item **V4a** is brought forward to support the user's approved broad
+failure-discovery approach: derive an explicit correctness-only selection from
+canonical delivery profiles, preserving all correctness suites, crate configurations,
+guardrails and E2E semantics. Separate its evidence identity from full profiles;
+keep benchmark admission mandatory whenever benchmarks remain selected. Do not
+change default full-profile behavior. Required checks: runner/profile self-tests,
+profile schema validation, emitted-plan comparisons with the frozen scope,
+facade argument forwarding, and affected workflow contracts. Then use broad
+no-fail-fast diagnostics to collect independent failures under the existing
+per-subcategory 30-minute/resource caps. Complete final acceptance remains open.
 
 ## Execution stages
 
@@ -298,9 +417,9 @@ default-feature identities and product-version invalidation. Define the local co
 selection from one authoritative catalogue; do not fork a hand-maintained copy of the merge
 suite list. Compare emitted plans so the only intended exclusion is the agreed
 benchmark/foreign execution. Update verification docs and AGENTS.md command references for
-the approved entry point; keep focused edit checks and full candidate acceptance. Existing
-create-PR/merge requirements remain applicable until the governing policy is explicitly
-updated; the closed DX phase exception does not carry into this work. Avoid adding an extra
+the approved entry point; keep focused edit checks and full candidate acceptance. Final create-PR/merge requirements remain applicable under the governing policy;
+the phase-specific prospective policy above covers intermediate items. The closed
+DX phase exception does not carry into this work. Avoid adding an extra
 duplicate complete gate when integrating the approved selection. CI changes remain a later
 stage.
 
@@ -586,9 +705,10 @@ contracts, file-size guardrails, and profile selection using:
 uv run --project verification --locked python -m sifr_verify profiles check
 ```
 
-The planning PR does not modify these commands or policies. Until implementation
-explicitly changes the governing contract, run current create-pr/merge requirements
-for implementation candidates. No extra duplicate full gate should survive the
+The planning PR did not modify these commands or profiles. The approved prospective
+policy above now governs intermediate implementation candidates. Until V4 explicitly
+changes the governing contract, current full create-pr/merge requirements remain
+applicable to the final integrated candidate. No extra duplicate full gate should survive the
 approved integration merely because a new entry point was added. CI mirroring and
 foreign-platform/benchmark optimization remain later work.
 
@@ -631,7 +751,6 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** start V0 in a new session, regenerate selection at the current
-candidate, assign the thirteen repair families to bounded owners/items, and begin
-the first owned prerequisite repair with its focused regression check. Preserve
+**Next action:** finish the V0.1/V0.4 merge, implement V4a as registered above,
+then collect broad independent failures and continue bounded V0 repairs. Preserve
 this investigation's baseline and failures while collecting current evidence.

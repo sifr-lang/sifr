@@ -69,7 +69,7 @@ successor and is summarized here.
 
 | Phase | Status | Plan |
 | --- | --- | --- |
-| LOCAL-GATE | Planned; implementation and integrated acceptance pending | [Complete local correctness within ten minutes](../issues/active/ad-hoc-local-correctness-gate-under-ten-minutes.md) |
+| LOCAL-GATE | In progress; integrated acceptance pending | [Complete local correctness within ten minutes](../issues/active/ad-hoc-local-correctness-gate-under-ten-minutes.md) |
 
 ## Ad hoc compiler DX phase
 
