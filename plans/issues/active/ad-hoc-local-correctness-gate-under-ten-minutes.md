@@ -3,7 +3,7 @@
 status: planned; implementation and integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: planning PR; first implementation item is V0
+current_stage: phase registration takes effect with PR #4356; first implementation item is V0
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -118,6 +118,12 @@ outside Git; hashes are provenance, not a substitute for execution evidence.
 | Self-update target sharing | Naive shared target 136.517s versus private 10.882s. | Reject blind target sharing across incompatible version contexts. |
 | Codegen unit tests | 1,756 assertions run in about 4.1s warm; libtest preparation has at least 851 sampled CPU-seconds and about 4.5 GiB process RSS. | Measure cohesive integration targets for public behavior; merely splitting source files cannot fix one large compilation unit. |
 
+Timing labels matter: the SQL clean-control 424.812s is its inner Cargo stage;
+the complete diagnostic attempt is 426.172s in the measurement manifest.
+Protocol totals and test-command durations are labeled separately from component
+stages. The manifest retains outer attempt times, including diagnostic overhead;
+these must not be substituted for full-gate elapsed time.
+
 The prior narrow E2E phase recorded a 98.585s median with 710/729 positive
 fixtures passing. The later whole-target diagnostic took 193.54s, with a 94.280s
 positive interval included inside it. These are different measurements and
@@ -167,7 +173,7 @@ or count an unexecuted installed check as a fast pass.
 - [ ] Implementation and acceptance complete.
 
 Current evidence: SQL full-protocol profile trial and sanitizer retention tests recorded
-below
+above
 
 Decision: Treat SQL as the first hard feasibility gate. Keep the measured whole critical
 path, not individual unit-duration subtraction. The larger architecture work is conditional
@@ -214,7 +220,7 @@ change the production profile.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Hotspots measured; component feature semantic trial below; caches not
+Current evidence: Hotspots measured; component feature semantic trial above; caches not
 implemented
 
 Decision: Prefer bounded lifetime-local reuse. Start with Wasmtime parallel compilation only
@@ -347,7 +353,7 @@ remains separate; the correctness-only scope does not waive a current gate.
 
 The real producer emits metadata schema 5 while packaging validates schema 4. Package
 creation fails, preventing installed equivalence, public emission, native execution,
-relocation and corruption/recovery assertions. A failed8.64-second warm package attempt does
+relocation and corruption/recovery assertions. A failed 8.64-second warm package attempt does
 not measure those assertions.
 
 Repair the canonical producer/packager contract; then execute every installed assertion.
@@ -366,8 +372,8 @@ preserve every mutation case and confirm that each still rejects its targeted de
 ### Original loader failures and remaining native compilation failures
 
 The selected-toolchain loader context was diagnosed and the original failures retained.
-All29 declared compiled Python examples across9 suites now execute and pass in the
-diagnostic context. Native isolated follow-ups establish83 passing cases and4 generated-Rust
+All 29 declared compiled Python examples across 9 suites now execute and pass in the
+diagnostic context. Native isolated follow-ups establish 83 passing cases and 4 generated-Rust
 failures, detailed below. This closes the missing-execution measurement gap for the Python
 examples but does not fix the canonical launch context, failed runtime registries or other
 Python contracts.
@@ -386,7 +392,7 @@ required-file rejection; do not count the short failed setup as the complete tes
 
 ### Maintained dependency version and checksum assertions
 
-The recorded Cargo inventory omits20tracked manifests and 9tracked lockfiles. Several
+The recorded Cargo inventory omits 20 tracked manifests and 9 tracked lockfiles. Several
 dependency tests fail admission before inspecting their intended resolved version/checksum
 properties.
 
@@ -395,7 +401,7 @@ the blocked assertions. Keep unknown/missing/duplicate-input rejection.
 
 ### Driver interop contracts blocked by incomplete fixture inputs
 
-The complete driver library run reports31missing real Cargo manifests and one missing
+The complete driver library run reports 31 missing real Cargo manifests and one missing
 bridge-source directory in tests that expected successful contract processing. These
 failures occur before the intended interop assertions. Other failures concern
 ownership/pruning and two output/key-shape assertions.
@@ -418,7 +424,7 @@ cache-performance result.
 ### Generated method-slot argument conventions
 
 The exact test_method_slot_runtime case fails in generated Rust before runtime: four calls
-pass String where the generated target signature requires &str. Its36.498s failed attempt
+pass String where the generated target signature requires &str. Its 36.498s failed attempt
 therefore does not measure the complete method-slot runtime assertions.
 
 Owner: codegen method-slot call emission and argument conventions. Correct the generated
@@ -428,8 +434,8 @@ Keep this semantic failure separate from performance and fixture-admission defec
 ### Project ancestry and consuming-upcast native compilation
 
 Two additional native cases fail before their runtime assertions: same-basename ancestry
-emits a constructor call with owned SifrInt where &SifrInt is required(6.199s); structural
-consuming upcasts expose private Mid through a public associated type(5.776s). Both are
+emits a constructor call with owned SifrInt where &SifrInt is required (6.199s); structural
+consuming upcasts expose private Mid through a public associated type (5.776s). Both are
 actual generated-Rust failures.
 
 Owner: codegen constructor argument conventions and generated visibility/upcast emission.
@@ -448,12 +454,12 @@ complete loops.
 
 ### Positive E2E fixtures blocked before native runtime
 
-The unchanged-candidate positive inventory accounts for729fixtures:710 pass,18 fail during
-source lowering, and callable_struct_field fails native compilation. Those19runtime
+The unchanged-candidate positive inventory accounts for 729 fixtures: 710 pass, 18 fail during
+source lowering, and callable_struct_field fails native compilation. Those 19 runtime
 assertions did not execute.
 
 Owner: affected lowering/codegen semantics. Preserve the individual errors, repair their
-causes and rerun the original native assertions. Do not treat the failed193.54s whole-target
+causes and rerun the original native assertions. Do not treat the failed 193.54s whole-target
 attempt as a passing-gate prediction.
 
 ### Generated-code demo compilation failures
@@ -479,8 +485,9 @@ qualify the original manifest.
 Repair the declared fixture and generated-target propagation while preserving compiler and
 generated-program instrumentation. Check fixture existence before long builds. Verify the
 actual executed outputs and measure representative compiler edits; retained preparation
-alone does not establish edit-cycle cost. See feasibility-sanitizer-proof.json and
-feasibility-scope-audit.json.
+alone does not establish edit-cycle cost. External-bundle references
+`feasibility-sanitizer-proof.json` and `feasibility-scope-audit.json` are both
+identified by hash in the committed measurement manifest.
 
 ## Focused validation and mutation controls
 
@@ -600,13 +607,24 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 
 | Item | Status | Merged PR / candidate / validation / review |
 | --- | --- | --- |
-| Phase registration | Planning PR pending | Record after review and merge; no implementation claim |
+| Phase registration | Recorded; effective when [#4356](https://github.com/sifr-lang/sifr/pull/4356) merges | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
 | V0 executable coverage | Pending | None |
 | V1 mandatory build path | Pending | Diagnostic evidence only |
 | V2 repeated metadata/component work | Pending | Diagnostic evidence only |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
 | V4 runner/compilation/policy integration | Pending | Diagnostic evidence only |
 | V5 integrated qualification | Pending | No complete green sub-ten-minute result |
+
+Planning handoff: branch `codex/local-correctness-gate-phase`; review verdict
+SATISFIED with no blockers. Candidate-keyed documentation validation and full
+review are retained outside the reviewed Git tree under the investigation bundle's
+`planning-pr-evidence/c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467/` directory. The
+linked PR records the final documentation head and merge identity, validation
+summary and review. Reviewer suggestions about external references, timing labels
+and formatting were incorporated as documentation-only corrections; no additional
+implementation requirement or unresolved follow-up was introduced. No second
+external review is required for these record/prose-only changes under the phase
+closure loop. Implementation remains pending and there is no full-gate pass.
 
 After all implementation items merge, close only when V5 passes. Record remaining
 out-of-scope work separately; no unresolved in-scope coverage or timing scenario

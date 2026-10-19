@@ -167,6 +167,7 @@
     "feasibility-component-results.json": "e9933510a5aa280f717f090cf0fc094c5fe386e13f4fd1b2f7c1c8e10bca5622",
     "feasibility-sanitizer-proof.json": "1fd4ce838aefa5ff2456e183b3af5d4f46c4cbac7789c641cd89ecff2f00ab2b",
     "feasibility-sql-artifact-audit.json": "72f05235e7e2a4200bbff08b2abb7a410755328ec742579e06bd01d61a09a55a",
-    "findings-audit.json": "3a6b1bfa4d4aa501a4a1bcb3afcc89de00728a0eee6c061a9cb4d745a7a252e0"
+    "findings-audit.json": "3a6b1bfa4d4aa501a4a1bcb3afcc89de00728a0eee6c061a9cb4d745a7a252e0",
+    "feasibility-scope-audit.json": "4701b021220cab70b14a4a33c5e99712dd5fe45d330492ff977a728af92cf01a"
   }
 }
