@@ -12,16 +12,18 @@ import re
 
 INCLUDE = re.compile(r'(?m)^\s*include!\s*\(\s*"([^"\n]+)"\s*\)\s*;')
 PRODUCTION_INCLUDE = re.compile(r'\binclude!\s*\(\s*"([^"\n]+)"\s*\)\s*;')
-MODULE = re.compile(r'\bmod\s+([A-Za-z_][A-Za-z_0-9]*)\s*;')
-PATH_ATTRIBUTE = re.compile(r'#\[path\s*=\s*"([^"\n]+)"\]')
+MODULE = re.compile(r'\bmod\s+(?:r#)?([A-Za-z_][A-Za-z_0-9]*)\s*;')
+PATH_ATTRIBUTE = re.compile(r'\bpath\s*=\s*(?:r#*)?"([^"\n]+)"')
 
 
 def exclusively_test_includes(files: set[Path], is_test: Callable[[Path], bool]) -> set[Path]:
     canonical = {path.resolve(): path for path in files}
     by_module_name = {}
+    by_filename = {}
     for path in files:
         name = path.parent.name if path.name == "mod.rs" else path.stem
         by_module_name.setdefault(name, set()).add(path.resolve())
+        by_filename.setdefault(path.name, set()).add(path.resolve())
     includes = {}
     modules = {}
     production_includes = {}
@@ -34,7 +36,12 @@ def exclusively_test_includes(files: set[Path], is_test: Callable[[Path], bool])
                           if (target := (path.parent / value).resolve()) in canonical}
         production_includes[path] = {canonical[target] for value in PRODUCTION_INCLUDE.findall(text)
                                      if (target := (path.parent / value).resolve()) in canonical}
-        targets = [(path.parent / value).resolve() for value in PATH_ATTRIBUTE.findall(text)]
+        targets = []
+        for value in PATH_ATTRIBUTE.findall(text):
+            targets.append((path.parent / value).resolve())
+            # cfg_attr, inline-module bases and parent-relative paths can name
+            # the same file. Keep every matching basename conservatively.
+            targets.extend(by_filename.get(Path(value.replace("\\", "/")).name, ()))
         for name in MODULE.findall(text):
             # Conservatively retain every matching module filename. This also
             # covers inline module nesting without implementing a Rust parser.

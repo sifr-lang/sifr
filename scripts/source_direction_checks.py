@@ -25,6 +25,10 @@ def check_split_sources_and_composition_roots(guard, failures: list[str]) -> Non
         for source in ('include!("fragments/outer.rs");\n',
                        '#[allow(dead_code)] include!("fragments/outer.rs");\n',
                        'mod fragments { mod inner; }\n',
+                       'mod fragments { mod r#inner; }\n',
+                       '#[cfg_attr(windows, path = "fragments/outer.rs")]\nmod production;\n',
+                       'mod fragments { #[path = "outer.rs"] mod production; }\n',
+                       'mod fragments { #[path = r#"outer.rs"#] mod production; }\n',
                        'include!(concat!("fragments/", "outer.rs"));\n',
                        '#[path = "fragments/outer.rs"]\nmod production;\n',
                        '#[path = "fragments/outer.rs"]\n#[allow(dead_code)]\npub(crate) mod production;\n'):

@@ -315,7 +315,15 @@ kept its original candidate unchanged: real guard passes (8.522s), full guard
 self-tests including new controls pass (1.710s), and file-size passes (5.320s).
 These are diagnostic wall times under concurrent host activity, not performance
 qualification. Workflow evidence is reused because its inputs are unchanged;
-record-only local links and whitespace pass. Evidence: `v015-final-*` and `v015-workflow`.
+record-only local links and whitespace pass. The remediation review of
+`aa5cec1ee996e2425323683e7286c4b226e7847b` was NOT SATISFIED: conditional
+path attributes and inline-relative paths could still hide shared production
+fragments. The correction matches path assignments including cfg_attr and raw
+strings, conservatively retains all matching basenames, and recognizes raw module
+identifiers. New negative controls cover each form. Final real guard passes
+(5.061s), all guard regressions pass (1.095s), and file-size passes (3.063s).
+Unresolved production include expressions deliberately retain all fragments for
+scanning, so future unrecognized syntax fails closed. Fresh review remains required. Evidence: `v015-final-*` and `v015-workflow`.
 
 ## Execution stages
 
