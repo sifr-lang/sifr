@@ -63,7 +63,6 @@ and keep scoped evidence distinct from full-profile acceptance. Use
 `--no-fail-fast` when shared preparation makes broad failure discovery worthwhile.
 Final phase gates and complete coverage/timing qualification remain required.
 
-
 Before long builds, check free disk, target size, effective CPU/memory, and the
 planned allocation/reserve. Reclaim only inactive, obsolete, session-owned
 artifacts when needed; preserve leases, consumers, reports, and failure evidence.

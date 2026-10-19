@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.1/V0.4 merged; V4a correctness-only selection under validation
+current_stage: V4a reviewed; V0.15 source-direction admission next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -258,9 +258,32 @@ all nonselection fields and remove exactly one benchmark suite per local profile
 create-pr 72 → 71 area suites; merge 106 → 105. The frozen correctness scope,
 17 Cargo configurations, 15 guardrails and complete merge E2E corpus are retained.
 Reports and area results use a distinct correctness identity; full-profile
-reference admission remains tested. Independent review is pending. No whole-gate
+reference admission remains tested. Independent review SATISFIED, no blockers, on candidate
+`429882fe25f0afd2f723be9b680808d26452e8d0`, base
+`ae729a7c7aa4b4e0d38aa4a6c4aebf2651b50d9c`; effective on
+[#4358](https://github.com/sifr-lang/sifr/pull/4358) merge. Raw review is retained
+externally under `reviews/429882fe25f0afd2f723be9b680808d26452e8d0/review.md`.
+No whole-gate
 pass or timing claim follows from these runner checks. Receipts: `v4a-*` in the
 implementation evidence bundle.
+
+The first correctness-only merge diagnostic (`v4a-merge-discovery`) reached all
+five early guards and stopped after 16.190s: four passed, source dependency
+direction failed on three codegen test includes and two guided replay provider
+constructions. All dependent steps remain blocked; no compiler build began.
+The runner retained the failing status and separate correctness evidence. The
+unchanged failure is not rerun as acceptance. V4a review suggestions about adjusted
+performance-area budgets and shared identical E2E/native cache semantics are owned
+by V5's timing/reuse matrix, not unresolved V4a correctness blockers.
+
+**V0.15 — source-direction admission:** classify the split test sources from their
+actual test-only include ownership; preserve production reference rejection and
+negative controls, including mixed test/production use. Verify and register actual
+provider composition roots for the guided replay boundary and moved SQL editor
+boundary without permitting provider construction in lower services generally.
+Run guard positive/negative self-tests, real repository guard, file-size and
+relevant workflow/foundation checks. This bounded prerequisite repair precedes the
+next broad diagnostic; unrelated compiler changes remain separate V0 items.
 
 ## Execution stages
 
@@ -772,6 +795,6 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** finish the V0.1/V0.4 merge, implement V4a as registered above,
-then collect broad independent failures and continue bounded V0 repairs. Preserve
+**Next action:** merge reviewed V4a, repair V0.15 source-direction admission,
+then resume broad independent failure discovery and bounded V0 repairs. Preserve
 this investigation's baseline and failures while collecting current evidence.
