@@ -300,8 +300,22 @@ classifier respects the guard's existing test-root classification. Final validat
 repository guard passes (4.192s); all guard self-tests pass (0.740s), including
 mixed production ownership and both lower-service construction controls; file-size
 guardrails pass (5.722s), workflow contracts pass (0.740s), and whitespace/local
-links pass. No Rust source changes require a compiler rebuild. Scoped independent
-review is pending. Evidence: `v015-final-*` and `v015-workflow`.
+links pass. No Rust source changes require a compiler rebuild. Initial independent review on `fce96a6c233af77b90b0f90a768ec8b9e23fa4d4`
+reported SATISFIED, but its note about same-line and inline-module shared
+production use identifies an in-scope classifier gap introduced here. A new
+regression demonstrates the false exclusion; the remediation conservatively
+retains every matching production module filename, same-line literal includes,
+and all candidate fragments when a production include expression is unresolved.
+These new controls must pass before a fresh scoped review; the initial verdict
+alone does not approve the remediation. Five fragments are newly classified:
+four codegen method-authority includes plus sysroot metadata test_dispatch.rs,
+all reached exclusively from existing test roots in this repository.
+Remediation validated in an owned isolated checkout while the broad diagnostic
+kept its original candidate unchanged: real guard passes (8.522s), full guard
+self-tests including new controls pass (1.710s), and file-size passes (5.320s).
+These are diagnostic wall times under concurrent host activity, not performance
+qualification. Workflow evidence is reused because its inputs are unchanged;
+record-only local links and whitespace pass. Evidence: `v015-final-*` and `v015-workflow`.
 
 ## Execution stages
 

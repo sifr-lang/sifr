@@ -23,6 +23,9 @@ def check_split_sources_and_composition_roots(guard, failures: list[str]) -> Non
             failures.append(f"test-owned split includes rejected: {actual}")
         # Shared fragments are production too, regardless of test reachability.
         for source in ('include!("fragments/outer.rs");\n',
+                       '#[allow(dead_code)] include!("fragments/outer.rs");\n',
+                       'mod fragments { mod inner; }\n',
+                       'include!(concat!("fragments/", "outer.rs"));\n',
                        '#[path = "fragments/outer.rs"]\nmod production;\n',
                        '#[path = "fragments/outer.rs"]\n#[allow(dead_code)]\npub(crate) mod production;\n'):
             (src / "lib.rs").write_text(source)
