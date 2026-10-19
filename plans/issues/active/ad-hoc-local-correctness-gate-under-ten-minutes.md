@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.1 packaging metadata producer/consumer contract repair
+current_stage: V0.1/V0.4 distribution admission repairs validated; review/candidate gates pending
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -144,7 +144,7 @@ bounded and sequential. No implementation item is accepted yet.
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Implemented; focused checks pass; independent review/candidate gates pending |
 | V0.2 | SQL provenance and moved-source qualification guards | Pending |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Pending |
-| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Pending |
+| V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Implemented; affected full/qualification suites pass; review/candidate gates pending |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
@@ -177,6 +177,16 @@ one launched a cold self-update target despite retained owned artifacts, and one
 retry began before cross-filesystem target restoration completed. Retained build
 selection and pinned Node were then restored without production scope changes.
 Evidence bundle: `local-gate-implementation-20261020`, receipts `v01-*`.
+
+V0.4 evidence: direct valid-fixture admission first failed on the missing SQL
+runtime manifest (0.681s). Adding both required SQL runtime manifests made all
+four synthetic target archives pass the unchanged production validator (0.689s).
+The existing negative missing-SQL-runtime controls remain in the full suite.
+All nine qualification groups passed (28.702s). Full distribution now passes
+72/72 variants (119.253s), including the newly enrolled metadata producer check;
+all original 71 variant labels are retained. These are local synthetic platform
+contracts, not foreign-platform native execution or release publication.
+No ten-minute whole-gate or complete phase acceptance is claimed.
 
 ## Execution stages
 
