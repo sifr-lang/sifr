@@ -36,6 +36,7 @@
     "crates/sifr_sql_sqlite_tools/Cargo.toml",
     "crates/sifr_sql_tool/Cargo.toml",
     "crates/sifr_stdlib/Cargo.toml",
+    "crates/sifr_stdlib_artifact/Cargo.toml",
     "crates/sifr_stdlib_imports/Cargo.toml",
     "crates/sifr_stdlib_manifest/Cargo.toml",
     "crates/sifr_structural_identity/Cargo.toml",
