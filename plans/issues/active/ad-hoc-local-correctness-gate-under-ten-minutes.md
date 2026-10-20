@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.2 merged; V0.3b Python admission in progress
+current_stage: V0.3b validated; independent review pending
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -177,6 +177,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.2 | SQL provenance and moved-source qualification guards | Merged #4362; 43 native tests and 33 checks pass; review SATISFIED |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
+| V0.3b | Python runtime registries and LSP selected-input admission | Validated in #4363; independent review pending |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
@@ -1154,3 +1155,58 @@ loosening the expectation. Run the affected runtime suites with pinned Python,
 LSP fingerprint/authoring and external-input generation controls, affected runner
 self-tests and standard guards. Other V0 items and full phase acceptance remain
 open; no final gate or V5 timing result is claimed.
+
+### V0.3b Python registries and selected LSP inputs
+
+Implementation `88faa732b` repairs two independent admission defects. The Arrow
+runner now requires all 15 current tests, including the H02 ABI/capsule and stream
+release controls. The DLPack runner requires all 21 current tests. Its renamed
+stopped-runtime test deliberately checks structural cleanup exactly once, per
+`e1bff98c99e1286dfe4276f25f4fed6e118066f4`; restoring the obsolete zero-release
+expectation would contradict that contract. The two H02 DLPack ABI/ownership tests
+are retained. Exact runtime admission still rejects missing/duplicate tests and
+now explicitly exercises extra/substituted-test rejection too. The unchanged
+five-test buffer registry exercises the shared runner.
+
+The LSP fingerprint had hashed every ancestor pyproject/uv.lock even with explicit
+manifest overrides. The original selected-metadata test also lacked a Cargo target.
+A fixture-only control still failed its original invariance assertion. The repair
+retains Cargo/config/toolchain ancestry and recomputes canonical Python selection
+on every observation, hashing its selected metadata/environment inputs. It adds
+cache-retention and project-discovery controls, including nearer project creation,
+incomplete projects, deletion, fallback to an ancestor and reappearance. The
+existing per-input environment invalidation fixture now explicitly selects its
+metadata, so missing-to-present transitions remain required for selected files.
+No assertion is relaxed to permit unselected-input cache eviction.
+
+Evidence outside Git under `local-gate-implementation-20261020/`:
+
+- `v03b-lsp-fingerprint-before`: original exact regression failed, 53.296s.
+- `v03b-lsp-valid-fixture-before`: valid Cargo fixture alone still failed, 17.785s.
+- `v03b-lsp-library`: all 114 library tests passed, no ignored/filtered tests,
+  234.534s including 17.30s initial compilation and a nested CLI build. The libtest
+  interval was 214.43s; this includes the CLI build and is not pure assertion time.
+- `v03b-policy-guards`: file-size and all area manifests passed; this attempt
+  failed because the external command misspelled the source-direction script.
+  Failure evidence is preserved. `v03b-source-guard-and-format` used the correct
+  source-direction script and passed it plus `cargo fmt --check`, 12.146s.
+
+Validation used pinned Python 3.14.7 and Rust 1.98.1, retained owned Cargo targets,
+two Cargo jobs and explicit disk/memory reserves. The focused area run overlaps
+the end of the full LSP run; neither duration is isolated performance evidence.
+These are bounded correctness/admission repairs, not proof of the final gate's
+600-second objective. Full integrated gates and V5 remain open.
+
+`v03b-python-focused-area` passed all four selected variants in 402.193s:
+LSP declaration authoring 397.250s (all four canonical commands), buffer release
+5/5 in 1.700s, Arrow 15/15 in 1.241s, and DLPack 21/21 in 0.865s. These are runner
+case times including their preparation. The large authoring time includes nested
+CLI/Cargo preparation, not only LSP assertions. The explicitly filtered run used
+`--allow-partial-certification`; its certification remains partial and cannot
+satisfy final Python-area/phase qualification. Exact runtime inventories, real
+PyArrow transfer, missing/duplicate/extra/substituted admission controls all ran.
+The runtime Cargo integration target reports zero selected tests separately;
+coverage credit is only the 41 exact named module tests, not those filtered targets.
+Raw reports, receipts, stdout/stderr and resource evidence are retained locally
+and remotely. PR [#4363](https://github.com/sifr-lang/sifr/pull/4363) is draft;
+independent review and merge are pending.
