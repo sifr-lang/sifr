@@ -155,12 +155,27 @@ fn production_policy_retains_only_its_cargo_child() {
     assert_eq!(locks.len(), 3);
     let mut unrelated = ChildGroup::spawn(Command::new("sleep").arg("30"));
     let mut command = ready.cargo_command().unwrap();
-    command.args([
-        "--config",
-        "alias.sifr-lease-control='!sleep'",
-        "sifr-lease-control",
-        "30",
-    ]);
+    let bin = cache.join("control-bin");
+    std::fs::create_dir(&bin).unwrap();
+    let extension = bin.join("cargo-sifr-lease-control");
+    std::fs::write(
+        &extension,
+        "#!/bin/sh\nprintf ready > \"$2\"\nexec sleep 30\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&extension, std::fs::Permissions::from_mode(0o700)).unwrap();
+    let path = command
+        .get_envs()
+        .find(|(key, _)| *key == "PATH")
+        .and_then(|(_, value)| value.map(std::ffi::OsStr::to_os_string))
+        .or_else(|| std::env::var_os("PATH"))
+        .unwrap();
+    command.env(
+        "PATH",
+        std::env::join_paths(std::iter::once(bin).chain(std::env::split_paths(&path))).unwrap(),
+    );
+    let marker = cache.join("cargo-child-ready");
+    command.arg("sifr-lease-control").arg(&marker);
     let mut intended = ChildGroup::spawn(&mut command);
     drop(command);
     drop(ready);
@@ -169,12 +184,20 @@ fn production_policy_retains_only_its_cargo_child() {
     drop(base);
     drop(publication);
     drop(family);
-    // Cargo itself and its actual shell-alias descendant retain the owned leases.
-    std::thread::sleep(Duration::from_millis(150));
-    assert!(
-        intended.0.try_wait().unwrap().is_none(),
-        "Cargo control exited prematurely"
-    );
+    // A real Cargo subcommand signals that it has executed before we observe
+    // ownership; this does not depend on scheduler timing or a shell-alias feature.
+    let start = Instant::now();
+    while !marker.exists() {
+        assert!(
+            intended.0.try_wait().unwrap().is_none(),
+            "Cargo control exited prematurely"
+        );
+        assert!(
+            start.elapsed() < Duration::from_secs(5),
+            "Cargo child did not become ready"
+        );
+        std::thread::sleep(Duration::from_millis(5));
+    }
     assert_busy(&locks);
     intended.stop();
     assert!(unrelated.0.try_wait().unwrap().is_none());

@@ -55898,7 +55898,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::1",
-      "fingerprint": "b94822f96a22c57330739e17db02b8b8120c318db2f1374c3df02b1c208534dc",
+      "fingerprint": "21a54f3e4cf082f5a0d2fdd9060f3d827c7ecbf5b08f5be48d2fb93b80aa9c75",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "# [ cfg ( unix ) ] if mode == \"family-test\"",
@@ -55910,7 +55910,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::2",
-      "fingerprint": "6b0deb43a330f63c43434f18769fe32827c77510ef7cc4a3f76014d65d39e8c1",
+      "fingerprint": "bdcdd4d9645b0cc2199bc6d22a12f889fe0a77c820c767d58920c96427ca3fde",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "# [ cfg ( unix ) ] if mode == \"stage-test\"",
@@ -55922,7 +55922,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::3",
-      "fingerprint": "e8bee6b670ab0ab79623c900e19def2c1620aec2d696351b60053dad7f6a01ef",
+      "fingerprint": "f400bef9b657fd360266c32299457efa81e74f0a1a0af8827d5fb7bb3728b079",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "# [ cfg ( unix ) ] if mode == \"aux-test\"",
@@ -55934,7 +55934,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::4",
-      "fingerprint": "d126d14c85a7edcef4cfa8f7989f56813e47026bee7421cbf0e327e77bd7186f",
+      "fingerprint": "6164ac3136f52180d6c4376784e7dcb50320507a6fe6aae1c61b2916dde05919",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "# [ cfg ( unix ) ] if mode == \"renewing-lease\"",
@@ -55946,7 +55946,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::5",
-      "fingerprint": "519ed11d0af7e17189aabee21f879dcf10f9ae7e86f54b543a5f151da93e4c22",
+      "fingerprint": "ede08e52c2e41e61586ba6a2984a295f302a04ca05520f0b9f7232f7d93d3db9",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "# [ cfg ( unix ) ] if mode == \"wedged-lease\"",
@@ -55958,7 +55958,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::6",
-      "fingerprint": "abe1703a6469ad39251661583c1121353e8b5564136e9b234edca3cc2d198e39",
+      "fingerprint": "4b358c40dfc095ce9f4d57b9ce5c079a7d4f55164d3d356aa44c00b7ca369fc8",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "# [ cfg ( unix ) ] if mode == \"family-descendant\"",
@@ -55970,7 +55970,19 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::7",
-      "fingerprint": "d0ef25fc9eb2d6d8a3d801573c1ec15342af65160f16e6ecec988e294ee1f0d3",
+      "fingerprint": "f052580797b9af964a91cdc32425b5fa134fbb431ce1465758f360f98ef6cfef",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "# [ cfg ( unix ) ] if mode == \"committed-descendant\"",
+      "inputs": "fn storage_child ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::8",
+      "fingerprint": "ddb3fbbb7816111bb3b2cb2e8a36a71714844d246d8eba12350f0029e0f10de7",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if mode == \"prune\"",
@@ -55981,8 +55993,8 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::8",
-      "fingerprint": "9e69d2c36f2464ca961b79d776f32ebee589e3a5b312d6ca8ae7fdfab05c5bab",
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::9",
+      "fingerprint": "3834376ffcdb47ebd195349e0ca08ed374006a841c54330f017086bbfdda4fb7",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if mode == \"pressure\"",
@@ -55993,8 +56005,8 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::9",
-      "fingerprint": "9035977b98c0d6449610b2e05ebfe37e380a2ad7dae094d13f839567cb539e6b",
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::10",
+      "fingerprint": "174d32c217eb71fa311e7ec28c588695e0565fd915a9206159b2c0b344fd0ded",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if mode == \"read\"",
@@ -56005,8 +56017,8 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::10",
-      "fingerprint": "7ecabfc9dca23b11a7701008a8d316251b148463ca040d116d595e2602ead4f0",
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::11",
+      "fingerprint": "558881cb61691c5a2c3f1a5822d924eb37dd323e389b1d455a27d8df1c9da54b",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if mode == \"before\"",
@@ -56017,8 +56029,8 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::11",
-      "fingerprint": "8be759e5c0f858dbc14f511b5087b258d5b30a8faafc0ef52a38f301c25b77f7",
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::12",
+      "fingerprint": "0f6c4bbc83be7cb3ae187ac5caf2b0fb2b33cb7038414ba81ee7a4daec00bd76",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if mode == \"descendant\"",
@@ -56029,23 +56041,11 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::12",
-      "fingerprint": "bce809a0baa38c279e8e0f34a7cb3502b238d0c4c18235305dc7e0ea28b0de50",
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::13",
+      "fingerprint": "81b653b2059e999564b7bfbf8315f2f75005c8d543f9a16df5b9fad76e77cd9a",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if mode == \"during\"",
-      "inputs": "fn storage_child ( )",
-      "outputs": "implicit unit / macro expansion",
-      "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::13",
-      "fingerprint": "63d170848641e5be527d076d9a528ca5c176a38d727804120f6c12efd3b7c14b",
-      "classification": "test-assertion",
-      "owner": "test-owner",
-      "operation": "if mode == \"after\"",
       "inputs": "fn storage_child ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
@@ -57278,7 +57278,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::1",
-      "fingerprint": "31278d42b5af5ccfa4f8bba3b421c28fcea30d9eb0fea961821920260504c095",
+      "fingerprint": "d0bb82747ed4efbc074ae4ea229a052115e7e8a6196b3befe8539aaa44b8ea2f",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if event [ \"reason\" ] == \"compiler-artifact\"",
@@ -57290,7 +57290,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::2",
-      "fingerprint": "50f4a81800b33619f3d3a2ed2e48646a7a01331011ed09f0f00f427d307bb756",
+      "fingerprint": "a695c6cb7e8ca0c23931b3706508327517a47b7941093048c4754c828a1d97fc",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"test\" ] == true",
@@ -57302,7 +57302,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::3",
-      "fingerprint": "a08967c1ea143205df2dd711414f516f9ae03018d18e0be769f3bc3143c4aa57",
+      "fingerprint": "3ee975fa2e3bf186bbc7409fce6e3cd6914e233cc87bd38f680e44983a416fb8",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"overflow_checks\" ] != true",
@@ -57314,7 +57314,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::4",
-      "fingerprint": "15d08a1970c2a1caf909d3319dc944cfb366209a8a83c94aa1a3c5fae2e37bc2",
+      "fingerprint": "16c88657c56cbc4d83304008283a21328a1a6f1454702f253cac70c0272f2562",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "let cargo_executables = String :: from_utf8_lossy ( & output . stdout ) . lines ( ) . filter_map ( | line | serde_json :: from_str :: < serde_json :: Value > ( line ) . ok ( ) ) . filter ( | event | event [ \"reason\" ] == \"compiler-artifact\"",
@@ -57326,7 +57326,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::5",
-      "fingerprint": "9c4e899d1270a37c8f0604bab8ecfc40532d148824ea9702c0b3b9fde6c02390",
+      "fingerprint": "fedd06e3de5ed5b7ae034972caa89ba4d8d0570f86db9c76f466d66f7309373d",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"test\" ] == true ) . filter_map ( | event | event [ \"executable\" ] . as_str ( ) . map ( PathBuf :: from ) ) . collect :: < Vec < _ > > ( )",
@@ -84566,7 +84566,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-match::1",
-      "fingerprint": "93cef0bfc1f24b2429479cef2f37b05a96ad4c4e5be4dbc0c071c1db29a119c3",
+      "fingerprint": "a8a5bf4bbf47a4c502311cf01d8ff11303431d9b9063c5a02c5b7b7d5279b32e",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( mode . as_str ( ) , \"family-test\" | \"stage-test\" | \"aux-test\" )",
@@ -84924,6 +84924,18 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child::literal-comparison::14",
+      "fingerprint": "f4d698c61eaad2a73ab0ef0efcb9b94cba8a3d68a837f1306b574f3c344e9685",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "if mode == \"after\"",
+      "inputs": "fn storage_child ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }

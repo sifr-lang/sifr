@@ -294,6 +294,12 @@ mod tests {
             |policy: &CargoResolutionPolicy| prepared_lock_path(root.path(), policy, &[]).unwrap();
         let original = key(&policy);
         assert_eq!(original, key(&policy));
+        let lease = std::fs::File::create(root.path().join("owned-lease")).unwrap();
+        assert_eq!(
+            original,
+            key(&policy.with_lease(&lease).unwrap()),
+            "process ownership must not alter resolution identity"
+        );
         policy.lock_mode = CargoLockMode::Frozen;
         assert_ne!(original, key(&policy));
         policy.lock_mode = CargoLockMode::Offline;

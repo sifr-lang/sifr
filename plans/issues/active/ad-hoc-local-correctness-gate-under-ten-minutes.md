@@ -2957,3 +2957,21 @@ not claimed repaired by production migration. Avoid introducing a public semanti
 CompilerContext ownership API solely for that fixture; migrate its test-worker
 ownership under V3 with the original native assertions. No source fixture, runtime
 expectation, platform qualification or profile selection may be weakened here.
+
+
+V0.14b2 audit clarification: the full unsafe inventory diagnostic found missing
+records for the previously merged cache command-lease primitive and isolated
+permissive-umask cache controls, as well as this item's new lifetime controls.
+Reconcile those cache/driver contracts with their actual local source proofs as
+part of the lease migration. Preserve unchanged owners and complete cross-record
+comparison. This is safety admission, not merely copying new fingerprints.
+
+The same audit found pre-existing stale code-proof references for the three SQL
+guest module allowances. Assign their record-only reconciliation to **V0.16d**,
+after V0.14b2 and before final phase gates. Do not claim a complete unsafe-guard
+pass while those references remain invalid. B2 requires every cache/driver site
+and all new obligations to validate; a full audit must expose only the separately
+recorded SQL proof failures. The twelve unsafe-guard mutation controls remain
+mandatory. The first full diagnostic took 185.383s including those controls;
+V4 owns investigation of repeated-contract comparison cost without weakening its
+cross-record rejection semantics.
