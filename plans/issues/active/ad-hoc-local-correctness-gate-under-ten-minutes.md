@@ -1540,3 +1540,13 @@ V0.11 without claiming the remaining async/network/process/callable-field cases
 fixed. V0.8/V0.9 own separate method-slot and ancestry/upcast failures. Complete
 phase gates and V5 remain mandatory. The user's sustained phase-execution request
 continues the registered sequence while preserving one bounded item at a time.
+
+
+V0.7 policy scope includes moving the eight existing registry-test node records
+with their unchanged tests and refreshing only this item's changed source sites
+and changed node/reference fingerprints. Admission logic and owner rules are
+unchanged. `v07-method-policy-base` reconstructs exact base Rust inputs in memory
+and proves **99 pre-existing method-policy inventory errors**. Assign that drift
+to **V0.16, method-policy inventory reconciliation**, before final gates; do not
+silently reclassify unrelated sites in V0.7. The affected-policy check must prove
+no new errors relative to that baseline and run policy mutation self-tests.
