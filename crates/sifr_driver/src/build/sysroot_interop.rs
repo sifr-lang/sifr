@@ -333,11 +333,26 @@ mod tests {
                 ..
             } if dependency_name == "sifr_stdlib" && sysroot_root == &root.path.display().to_string()
         ));
-        assert!(
-            resolved
-                .interop
-                .cache_key_fragment()
-                .contains("rust.cargo.package=sifr-sysroot-stdlib@")
+        let cargo = resolved
+            .interop
+            .rust
+            .cargo_inputs
+            .as_ref()
+            .expect("qualified Cargo inputs");
+        assert!(cargo.package_id.starts_with("sifr-sysroot-stdlib@"));
+        let original_key = resolved.interop.cache_key_fragment();
+        let mut changed = resolved.interop.clone();
+        changed
+            .rust
+            .cargo_inputs
+            .as_mut()
+            .expect("qualified Cargo inputs")
+            .package_id
+            .push_str("-different-toolchain");
+        assert_ne!(
+            original_key,
+            changed.cache_key_fragment(),
+            "the encoded cache identity must bind the qualified sysroot package"
         );
     }
 

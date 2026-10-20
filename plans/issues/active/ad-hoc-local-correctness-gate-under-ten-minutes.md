@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6b validated and reviewed; V0.6c semantic assertions next
+current_stage: V0.6b merged; V0.6c semantic assertions in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -1447,3 +1447,22 @@ execution, and retain bounded subprocess cancellation/cleanup when composing
 these tests into the final gate. The new housekeeping child already rejects zero
 selection; it currently relies on the enclosing runner for a timeout. Neither
 observation waives final coverage, failure cleanup or deadline requirements.
+
+
+V0.6b merged as #4366 at `e69e64d6bafb3bbe59963355c54b0491cf370c74`.
+
+### V0.6c bounded scope: semantic assertion authority
+
+The two remaining recorded driver failures are stale representation assumptions.
+The canonical Cargo fragment now encodes `RustInteropCargoInputs` with the v2
+identity encoder; its package ID is no longer plaintext in the fragment. Assert
+the qualified structured package ID and prove mutating only that ID changes the
+encoded key. The attached API call is emitted as `describe:: < Model >`, while
+its test expects `describe::< Model >`. Parse the real generated Rust and assert
+the concrete owner and exact generic bound lists structurally; do not normalize
+away required type/trait differences or weaken the semantic contracts.
+
+Keep production unchanged. Run affected sysroot and attached-API groups, guards,
+and a complete driver library diagnostic after these sequential driver repairs.
+Preserve native/ignored-case enrollment for the final gate. Require independent
+review and keep all later V0 owners and integrated phase gates/V5 open.
