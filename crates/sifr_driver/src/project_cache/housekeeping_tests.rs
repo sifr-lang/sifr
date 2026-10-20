@@ -23,12 +23,15 @@ fn stage(store: &storage::Store, suffix: &str) -> (PathBuf, fs::File) {
     let parent = store.root.join("generations");
     let lease = cache_storage::process_entry_lock(&parent, &name).unwrap();
     cache_storage::directory(&parent.join(&name)).unwrap();
-    fs::write(parent.join(&name).join("payload"), "abandoned").unwrap();
+    storage::write_new(&parent.join(&name).join("payload"), b"abandoned").unwrap();
     (parent.join(name), lease)
 }
 
 #[test]
 fn abandoned_stages_reclaimed_live_locks_preserved() {
+    if run_in_permissive_process("abandoned_stages_reclaimed_live_locks_preserved") {
+        return;
+    }
     let (root, file, cache) = tests::fixture();
     assert_eq!(tests::run(&cache, &file).1.status, "published");
     let store = tests::store(&cache, &file);
@@ -51,7 +54,7 @@ fn abandoned_stages_reclaimed_live_locks_preserved() {
         .join(live.file_name().unwrap());
     let live_inode = fs::metadata(&live_lock).unwrap().ino();
     let scratch = store.root.join("latest.stage-10-22");
-    fs::write(&scratch, "partial").unwrap();
+    storage::write_new(&scratch, b"partial").unwrap();
     let outside = root.path().join("outside");
     fs::write(&outside, "preserve").unwrap();
     let alias = store.root.join("latest.stage-10-23");
@@ -198,6 +201,9 @@ fn orphan_prune_requires_owner_and_inactivity() {
 
 #[test]
 fn pressure_prune_counts_are_truthful() {
+    if run_in_permissive_process("pressure_prune_counts_are_truthful") {
+        return;
+    }
     let (_root, file, cache) = tests::fixture();
     assert_eq!(
         prune(&cache, file.parent().unwrap(), false, false).examined_entries,
@@ -251,4 +257,33 @@ fn pressure_prune_counts_are_truthful() {
         ),
         (2, 0, 0)
     );
+}
+
+// Test-only process isolation: umask is process-global and must never change
+// concurrently with the parent libtest harness or another fixture.
+fn run_in_permissive_process(name: &str) -> bool {
+    const CHILD: &str = "SIFR_HOUSEKEEPING_UMASK_CHILD";
+    if std::env::var(CHILD).as_deref() == Ok(name) {
+        #[allow(unsafe_code)]
+        unsafe {
+            libc::umask(0o002);
+        }
+        return false;
+    }
+    let status = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            &format!("project_cache::housekeeping_tests::{name}"),
+            "--test-threads=1",
+            "--nocapture",
+        ])
+        .env(CHILD, name)
+        .stdout(std::process::Stdio::null())
+        .status()
+        .unwrap();
+    assert!(
+        status.success(),
+        "housekeeping case failed under permissive umask: {name}"
+    );
+    true
 }

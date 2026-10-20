@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6a2 validated and reviewed; V0.6b ownership/pruning next
+current_stage: V0.6a2 merged; V0.6b owned cache fixture permissions in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -1378,3 +1378,26 @@ clock-based TempSysroot directory naming with exclusive directory allocation
 before relying on parallel fixture execution; measure the real native patch copy
 before optimizing it. Keep actual source authority and equivalent assertions.
 Preparation is included in the recorded elapsed times and remains part of V5.
+
+
+V0.6a2 merged as #4365 at `f8ae3ec9a0ba9cbf71eb8b0f73ae29a7142a091e`.
+
+### V0.6b bounded scope: cache ownership fixture permissions
+
+Five current failures are reproduced on unchanged merged source under two umasks:
+`v06b-baseline-umask-002` has zero pass/five fail; `v06b-baseline-umask-022`
+has five pass/zero fail. The permissive attempt also left a worker in its owned
+process group; the diagnostic harness terminated it and preserved that fact.
+Retained failed native roots are mode 0775. Production correctly rejects owned
+cache records writable by others. Fixture `fs::write` creates 0664 payloads under
+0002; the production semantic writer creates private files independently of umask.
+
+Repair only the three N06 root/metadata fixtures and two semantic-housekeeping
+fixture inputs. Use exclusive private roots and production private-file creation,
+keep deliberate unsafe/symlink/foreign-owner cases, lock inode and live-descendant
+assertions, and all real crash/recovery boundaries. Force permissive umask in
+dedicated test subprocesses without changing the parallel parent harness. Run
+both umask controls, complete workspace/housekeeping groups, formatting/source/
+size/area guards and scoped review. Production ownership checks remain unchanged.
+The two cache-key/emitted-output failures remain separately owned V0.6c work;
+complete integrated gates and V5 remain mandatory.
