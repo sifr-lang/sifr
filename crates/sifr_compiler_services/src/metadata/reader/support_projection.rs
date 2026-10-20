@@ -2,8 +2,8 @@ use crate::{
     export_policy::should_export_callable,
     stdlib::{signature_params, stdlib_class_template},
 };
-use sifr_codegen::StdlibCode;
 use sifr_ir::HirModule;
+use sifr_stdlib_artifact::StdlibCode;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashMap;
 pub(super) fn project_signatures(

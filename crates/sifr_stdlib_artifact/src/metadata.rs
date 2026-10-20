@@ -1,0 +1,51 @@
+use crate::{ModuleFuncSignatures, StdlibRustSource};
+use sifr_type_system::Type;
+use std::collections::{HashMap, HashSet};
+
+/// Checked stdlib information shared by metadata and code generation.
+#[derive(Clone, Default)]
+pub struct StdlibCode {
+    /// Full checked inventory. Application interop demand follows these typed
+    /// declarations before any generated Rust is rendered or parsed.
+    pub hir_modules:
+        std::sync::Arc<std::collections::BTreeMap<String, std::sync::Arc<sifr_ir::HirModule>>>,
+    pub emission: StdlibEmissionCode,
+}
+
+impl std::ops::Deref for StdlibCode {
+    type Target = StdlibEmissionCode;
+    fn deref(&self) -> &Self::Target {
+        &self.emission
+    }
+}
+
+impl std::ops::DerefMut for StdlibCode {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.emission
+    }
+}
+
+/// Metadata consumed by module emission; application HIR inventory is not accessible here.
+#[derive(Clone, Default)]
+pub struct StdlibEmissionCode {
+    /// Checked Rust source for each stdlib module.
+    pub module_rust_code: HashMap<String, StdlibRustSource>,
+    /// Exported constants and their generated Rust names by module.
+    pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
+    /// Checked function and method signatures by module.
+    pub func_signatures: HashMap<String, ModuleFuncSignatures>,
+    /// Transitive intrinsic dependencies by module.
+    pub transitive_deps: HashMap<String, HashSet<String>>,
+    /// Generator functions by module.
+    pub generator_functions: HashMap<String, HashSet<String>>,
+    /// Generic stdlib class names.
+    pub generic_classes: HashSet<String>,
+    /// Declared type parameters for each generic stdlib class.
+    pub generic_class_params: HashMap<String, Vec<String>>,
+    /// Generic stdlib class templates used for concrete inference.
+    pub generic_class_templates: HashMap<String, std::sync::Arc<sifr_ir::HirClass>>,
+    /// Ordered fields for each stdlib class by module.
+    pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
+    /// Checked stdlib classes retained for late project-policy implementations.
+    pub module_class_templates: HashMap<String, HashMap<String, sifr_ir::HirClass>>,
+}

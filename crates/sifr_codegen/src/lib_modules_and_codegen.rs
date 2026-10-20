@@ -3,7 +3,7 @@ use crate::StdlibCode;
 use crate::stdlib_import_signatures::register_imported_stdlib_metadata;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
 mod deferred_codegen;
@@ -13,8 +13,6 @@ use deferred_codegen::{deferred_codegen_result, inline_codegen_result};
 mod structural_policy;
 pub(crate) use structural_policy::generate_rust_with_stdlib_for_module_with_structural_policy;
 
-pub(crate) type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
-pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
 pub(crate) type UnionVariantTypes = Vec<(String, Type)>;
 pub(crate) type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 
@@ -122,7 +120,7 @@ pub fn generate_rust_with_stdlib_for_module(
 ) -> CodegenResult {
     let body = generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
-        &stdlib_code.emission_view(),
+        &crate::StdlibEmissionView::new(stdlib_code),
         module_name,
         crate::rust_interop_plan::module_uses_structural_interop(module),
     );
@@ -150,7 +148,7 @@ impl crate::StdlibSyntaxSession {
         name: &str,
     ) -> ModuleCodegenResult {
         let sources = HashMap::new();
-        let mut view = metadata.bootstrap_view(&sources);
+        let mut view = crate::StdlibEmissionView::bootstrap(metadata, &sources);
         view.syntax_session = Some(self);
         generate_rust_with_stdlib_for_module_with_structural_policy(
             module,

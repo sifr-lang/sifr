@@ -362,6 +362,7 @@ sifr/
     sifr_stdlib_imports/    (legacy and bare stdlib import suggestion policy over manifest inventory)
     sifr_ipc/               (shared IPC protocol/frame/schema/request-tracking crate)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
+    sifr_stdlib_artifact/   (checked stdlib data shared by metadata and native emission; no emitter dependency)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_cache_storage/     (private cache entry, lease, bounded wait, and atomic publication primitives)
     sifr_compiler_services/ (stdlib and metadata services; Python and SQL editor services; generated preview and saved editor checks)
@@ -621,6 +622,7 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   consume its hints or declare a function; all ordinary assignment and nested
   signature/capture inference remains intact. Unreachable-statement checks use
   the canonical validated CFG without constructing unused rich flow facts.
+- `sifr_stdlib_artifact` owns shared checked stdlib HIR, emission metadata, Rust source records and signature types. Codegen retains emission views, syntax sessions and rendering algorithms; compiler services and the driver consume the same data owner. Its source identity participates in compiler input tokens. This boundary alone does not remove the remaining source-bootstrap dependency on codegen.
 - `sifr_compiler_services` owns source stdlib bootstrap, indexed metadata encoding
   and production, prepared metadata, and project-result transport. Its producer
   receives cancellation from the driver through an explicit callback and uses
