@@ -718,6 +718,14 @@ fn test_lock_flag_combinations_keep_independent_schema_parity() {
             }
             for update in [false, true] {
                 equivalent(&args, update);
+                if update {
+                    assert!(
+                        crate::cli_model_and_entrypoint::Cli::command_for_update()
+                            .try_get_matches_from(&args)
+                            .is_ok(),
+                        "valid update-mode lock flags: {args:?}"
+                    );
+                }
             }
             let matches = crate::cli_model_and_entrypoint::Cli::command()
                 .try_get_matches_from(&args)
