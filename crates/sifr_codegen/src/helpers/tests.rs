@@ -706,3 +706,19 @@ fn union_member_wrapper_uses_unit_for_none_payload() {
     assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
     assert!(rendered.ends_with("(())"), "{rendered}");
 }
+
+#[test]
+fn iterator_plan_consumes_named_task_handle_list() {
+    let source = HirExpr::Name {
+        name: "handles".to_string(),
+        binding_id: None,
+        ty: Type::List(Box::new(Type::Task(
+            Box::new(Type::Int),
+            Box::new(Type::Never),
+        ))),
+    };
+    let plan = plan_iterator_ownership(&source);
+    assert_eq!(plan.value_category, ValueCategory::Place);
+    assert_eq!(plan.source_access_mode, SourceAccessMode::Consume);
+    assert_eq!(plan.yield_mode, YieldMode::Move);
+}

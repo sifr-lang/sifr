@@ -34905,7 +34905,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::1",
-      "fingerprint": "a8d25d6c71d1f37b7fc72c5854f99210305548769352f198443d5b9103eb1b5a",
+      "fingerprint": "23705f8f52005ce25a1eb2a9474045ed759227100993221a57e346c529df36b6",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( iter_expr ) , method : \"copied\" . to_string ( ) , args : vec ! [ ] , }",
@@ -34917,7 +34917,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::2",
-      "fingerprint": "e473840c37c19d93906c47002a1f9a8a2f6af85c05f58278b247d3e4dee24451",
+      "fingerprint": "869582de360d78ef23280d9d2579046ede03362a1072a5e8b3cce1a9e00e8ab6",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( iter_expr ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , }",
@@ -34929,7 +34929,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::3",
-      "fingerprint": "ba8c9e9021ec461739302fc8353abd74f721abbca6f8340329f7024b66b3a1b6",
+      "fingerprint": "880ed0c8646ef5b620fdf5d3c09d0738d4df6b1da08208dd1ecd8b3a971e6d87",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"into_iter\" . to_string ( ) , args : vec ! [ ] , }",
@@ -34941,19 +34941,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::4",
-      "fingerprint": "ba8c9e9021ec461739302fc8353abd74f721abbca6f8340329f7024b66b3a1b6",
-      "classification": "rust-ir-consumption",
-      "owner": "sifr_codegen",
-      "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"into_iter\" . to_string ( ) , args : vec ! [ ] , }",
-      "inputs": "fn try_lower_simple_for_iter_expr ( iter : & HirExpr , target_ty : & Type )",
-      "outputs": "Option < RustExpr >",
-      "role": "inspect or rewrite generated Rust syntax/IR",
-      "caller_admission_relationship": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
-      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::5",
-      "fingerprint": "f320815864022d231ee01b80757a703911b154c76b9f44130d55f68a7f2a5ec1",
+      "fingerprint": "31b97c0b279cf3c54cfec157b416ccac4f2088a6b3ee5258d24cbdf09851be98",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"iter\" . to_string ( ) , args : vec ! [ ] , }",
@@ -34964,8 +34952,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::6",
-      "fingerprint": "60db3013c43f1d8804fe574cc5e3b6b57e68cb56239bf8afb8d84084a46ad28e",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::5",
+      "fingerprint": "ac8a81f5679ea4c5d32d9ac32d4bd0c6410f48a1d02824111a8367b18c28e23d",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"into_keys\" . to_string ( ) , args : vec ! [ ] , }",
@@ -34976,8 +34964,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::7",
-      "fingerprint": "1eb64486249946cb7f5ff301ff63eaba205d260acb19f3c901d8935962a35d7a",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::6",
+      "fingerprint": "66b9d09d6588036b673a69c2600e722303f0e4fa98aaa8ae7ca6224cf3e37e2d",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"keys\" . to_string ( ) , args : vec ! [ ] , }",
@@ -34988,8 +34976,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::8",
-      "fingerprint": "87e7d1e54ac9f01068c2b1db7e76f8b07a998d211a7b86d8ac276e7637cb6ce7",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::7",
+      "fingerprint": "d9c28101b7d8978d94bd2631b476959b685f724c4c86f716aa5026a795d71282",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"chars\" . to_string ( ) , args : vec ! [ ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ RustExpr :: Closure { params : vec ! [ RustParam :: Named { name : \"c\" . to_string ( ) , ty : RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: Ident ( \"c\" . to_string ( ) ) ) , method : \"to_string\" . to_string ( ) , args : vec ! [ ] , } ) , is_move : false , } ] , }",
@@ -35000,8 +34988,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::9",
-      "fingerprint": "e0d4f676995d3d2756d1fbf0d53ddf91b53d5922adb7f7b47ddb4e39fc8fcd94",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::8",
+      "fingerprint": "2377a3ce0bc1d58af1022ef7b0115d62501af886e3c0a264727974035fb5e1e2",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_iter ) , method : \"chars\" . to_string ( ) , args : vec ! [ ] , }",
@@ -35012,8 +35000,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::10",
-      "fingerprint": "cff193760f73d24d363df165304d04bccbc3774c9273ebd9e2a8a3d6edb0c18a",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::9",
+      "fingerprint": "cfafd9b109afa91de7e72bbd86eddd60964d5ca13ee8b1f67ff35264cf4bc9c0",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: Ident ( \"c\" . to_string ( ) ) ) , method : \"to_string\" . to_string ( ) , args : vec ! [ ] , }",
@@ -35024,8 +35012,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::11",
-      "fingerprint": "fef4e7aeee0aba36f5b780a3d6320afeec0520dfb4a1855b847f4f36fd310f24",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::10",
+      "fingerprint": "3cebc3c0a458a560e727e667364b63bbdf91a6dc591ef98dcff282b2d67996df",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: Paren ( Box :: new ( lowered_iter . clone ( ) ) ) ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , }",
@@ -35036,8 +35024,8 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::12",
-      "fingerprint": "7a4958f43886816cd3e494c3898e594bf57e1b4d8496a01b84ba65f3f3ba2a21",
+      "site": "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs::try_lower_simple_for_iter_expr::method-call-carrier::11",
+      "fingerprint": "efb3be9a178e0d56ef1808ff2cb1f2c46b01f129f5a7ddf4d5dcc14a649b5dcd",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( class_source . clone ( ) ) , method : \"__iter__\" . to_string ( ) , args : vec ! [ ] , }",

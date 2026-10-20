@@ -26,6 +26,7 @@ fn runtime_method_fixtures_emit_without_lowering_errors() {
         "task_group_basic",
         "task_group_spawn_cpu",
         "task_group_spawn_cpu_user_error",
+        "task_handle_collection_loop_consumed",
         "task_handle_join",
         "task_scope_basic",
         "task_scope_spawn_blocking",

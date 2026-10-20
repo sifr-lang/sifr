@@ -2198,3 +2198,26 @@ and its mutable receiver/affine ownership contract, rather than relying on the
 registry arity control alone. Both new fixtures join the aggregate regression
 (22 fixtures) and the full positive corpus (732 fixtures). Existing assertions
 are retained. Review and final phase gates remain open.
+
+
+V0.11b integration regression and repair boundary: candidate
+`1ce62b3f3beb56d1dbcb1311d42f66867314fd18` passes the corrected 22-fixture
+aggregate (7.694606 seconds outer / 4.04 seconds execution), all 22 focused native
+fixtures (390.262610 seconds outer / 22.018239 seconds suite), and all 569
+compile-fail fixtures (9.189224 seconds outer). Full positive integration completes
+732 outcomes in 157.810195 seconds outer: 731 pass, and the unchanged
+`task_handle_collection_loop_consumed` fails native Rust compilation with E0277
+because structured emission uses `handles.iter().cloned()` for non-Clone task
+handles. Prior conditional review is not accepted. Preserve all failed evidence.
+
+The old simple-loop path had a local task-list consuming override; the shared
+iterator ownership planner still selected Preserve/Clone for the same named list.
+Removing the restricted task-owner expression shortcut makes the surrounding
+async scope use structured emission, exposing this disagreement. Move the existing
+Task-list Consume/Move rule into the shared planner and remove the duplicate
+simple-loop override, so both paths agree. Do not make task handles clonable or
+change the original fixture. Add a planner regression and whole-source generated
+Rust regression; include the original fixture in the aggregate and focused native
+selection (now 23, with the full positive inventory unchanged at 732). Rerun all
+codegen tests, aggregate, focused native, full positive/negative suites and guards;
+request updated independent review. This is an in-scope regression correction.

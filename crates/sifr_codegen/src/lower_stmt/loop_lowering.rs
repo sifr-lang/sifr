@@ -235,10 +235,6 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
     };
     let iter_plan =
         crate::helpers::plan_iterator_ownership_with_element_hint(iter_source, Some(target_ty));
-    let consumes_task_handle_collection = matches!(
-        resolve_alias_type(iter_source.ty()),
-        Type::List(element_ty) if matches!(element_ty.resolve_alias(), Type::Task(_, _))
-    );
     let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
         crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
             receiver: Box::new(iter_expr),
@@ -253,11 +249,6 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
         crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
     };
     Some(match resolve_alias_type(iter_source.ty()) {
-        Type::List(_) if consumes_task_handle_collection => RustExpr::MethodCall {
-            receiver: Box::new(lowered_iter),
-            method: "into_iter".to_string(),
-            args: vec![],
-        },
         Type::List(_) | Type::Set(_) | Type::Iterable(_) => match iter_plan.source_access_mode {
             crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
                 receiver: Box::new(lowered_iter),
