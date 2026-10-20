@@ -108,11 +108,29 @@ impl Rewriter<'_> {
         if path.leading_colon.is_some() {
             return None;
         }
-        let parts = path
+        let mut parts = path
             .segments
             .iter()
             .map(|s| s.ident.to_string())
             .collect::<Vec<_>>();
+        // `Self` denotes the enclosing implementation's type, including in a
+        // trait adapter calling an inherent method. It is not a module name.
+        if parts.first().is_some_and(|part| part == "Self") {
+            let syn::Type::Path(owner) = self.self_type.as_ref()? else {
+                return None;
+            };
+            if owner.qself.is_some() || owner.path.leading_colon.is_some() {
+                return None;
+            }
+            parts.splice(
+                0..1,
+                owner
+                    .path
+                    .segments
+                    .iter()
+                    .map(|part| part.ident.to_string()),
+            );
+        }
         if parts.len() == 1 && self.bindings.contains_key(&parts[0]) {
             return None;
         }
@@ -879,3 +897,7 @@ impl VisitMut for Rewriter<'_> {
 }
 
 include!("typed_expression_tests.rs");
+
+#[cfg(test)]
+#[path = "method_slot_borrow_tests.rs"]
+mod method_slot_borrow_tests;

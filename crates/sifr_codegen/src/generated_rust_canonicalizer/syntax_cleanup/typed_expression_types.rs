@@ -18,10 +18,7 @@ impl Rewriter<'_> {
                 let output = &closure.output;
                 Some(syn::parse_quote!(fn(#(#inputs),*) #output))
             }
-            syn::Expr::Path(path) => self
-                .bindings
-                .get(&path.path.get_ident()?.to_string())?
-                .clone(),
+            syn::Expr::Path(path) => self.path_value_type(path),
             syn::Expr::Binary(binary) if matches!(binary.op, syn::BinOp::Add(_) | syn::BinOp::Sub(_) | syn::BinOp::Mul(_) | syn::BinOp::Div(_) | syn::BinOp::Rem(_)) => {
                 let left = self.ty(&binary.left)?;
                 let right = self.ty(&binary.right)?;

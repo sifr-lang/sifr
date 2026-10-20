@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16 validated and reviewed; V0.8 method-slot repair next
+current_stage: V0.16 merged; V0.8 method-slot ABI investigation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -182,7 +182,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
-| V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
+| V0.8 | Generated method-slot argument conventions (codegen owner) | In progress |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
@@ -190,7 +190,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
-| V0.16 | Method-policy inventory reconciliation | Validated/reviewed #4369; full method guard passes |
+| V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -1673,3 +1673,26 @@ Independent review is **SATISFIED**, no blockers. Raw evidence:
 are reflected above. No runtime tests were replaced or marked passing by this
 record reconciliation. The separately recorded V0.7 runtime validation remains
 unchanged. Continue with V0.8; complete integrated gates and V5 remain open.
+
+
+V0.16 merged as #4369 at `bbd4a94beab12b7ea4d7d4184d267c0c0a2c83bf`.
+
+### V0.8 bounded scope: preserve generated method-slot call/signature agreement
+
+`v08-current-native-baseline` reproduces the same four `String` versus `&str`
+errors on the current compiler (47.729 seconds). The original Sifr slot methods
+have owned string inputs; generated slot calls follow those declared conventions,
+while their target signatures are subsequently borrowed. Investigate the exact
+canonicalization boundary before changing slot argument emission. Use small
+before/after programs against the public canonicalization API and actual rustc
+compilation to discriminate incomplete call rewriting from emitter conventions.
+The first simple `Self`/receiver/generic-tuple probes pass; they do not reproduce
+or explain the native failure yet. No blanket borrow, name fallback, global
+optimization disablement or fixture weakening is authorized by this diagnosis.
+
+Acceptance: a root-cause regression that fails before and compiles/runs after
+canonicalization; relevant ownership/borrow identity controls and complete
+codegen unit suite; the unchanged native method-slot runtime case (mutable,
+shared and no-context variants) and lifetime/thread/shared-context rejection
+case; affected policy/area/format/size contracts and scoped independent review.
+Keep V0.9 ancestry/upcast, V0.11 unrelated E2E cases and final gates/V5 open.

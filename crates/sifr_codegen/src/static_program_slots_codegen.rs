@@ -135,7 +135,7 @@ fn slot_arm(index: usize, slot: &StaticMethodSlot, context: &StaticMethodSlotCon
         )
     };
     format!(
-        "            {index}usize => {{\n                let {binding} = {STRUCTURAL}::structural_construct::<{input}, _>(input).map_err({STRUCTURAL}::SlotError::Contract)?;\n                {dispatch}\n            }}"
+        "            {index}usize => {{\n                let {binding}: {input} = {STRUCTURAL}::structural_construct::<{input}, _>(input).map_err({STRUCTURAL}::SlotError::Contract)?;\n                {dispatch}\n            }}"
     )
 }
 
