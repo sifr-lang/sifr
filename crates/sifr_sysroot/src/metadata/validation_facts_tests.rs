@@ -1,5 +1,6 @@
 use super::validation_facts::ValidationFacts;
 use super::*;
+use std::io::{Seek, Write};
 
 fn identity() -> Compatibility {
     Compatibility {
@@ -121,8 +122,14 @@ fn corrupt_payload(bytes: &[u8], id: RecordId, mutation: impl FnOnce(&mut [u8]))
         .map(|i| super::container::HEADER_SIZE + i * super::container::ENTRY_SIZE)
         .find(|&offset| logical[offset..offset + 32] == id)
         .unwrap();
-    let offset = u64::from_le_bytes(logical[entry + 36..entry + 44].try_into().unwrap()) as usize;
-    let len = u64::from_le_bytes(logical[entry + 44..entry + 52].try_into().unwrap()) as usize;
+    let offset = usize::try_from(u64::from_le_bytes(
+        logical[entry + 36..entry + 44].try_into().unwrap(),
+    ))
+    .unwrap();
+    let len = usize::try_from(u64::from_le_bytes(
+        logical[entry + 44..entry + 52].try_into().unwrap(),
+    ))
+    .unwrap();
     mutation(&mut logical[offset..offset + len]);
     let digest: [u8; 32] = Sha256::digest(&logical[offset..offset + len]).into();
     logical[entry + 60..entry + 92].copy_from_slice(&digest);
@@ -141,7 +148,7 @@ fn exact_failure_diagnostics_survive_hits_misses_and_eviction() {
         .unwrap();
     let cycle = encoder.finish().unwrap();
     let malformed = corrupt_payload(&chain(4), reference::<Type>(4).id, |payload| {
-        payload[0] = b'!'
+        payload[0] = b'!';
     });
     let missing = corrupt_payload(&chain(4), reference::<Type>(4).id, |payload| {
         let old = serde_json::to_vec(&Type::List(reference::<Type>(3))).unwrap();
@@ -239,7 +246,6 @@ fn captured_input_survives_file_mutation_but_new_store_rejects_it() {
         .create_new(true)
         .open(&path)
         .unwrap();
-    use std::io::{Seek, Write};
     file.write_all(&bytes).unwrap();
     file.rewind().unwrap();
     let original_time = file.metadata().unwrap().modified().unwrap();
