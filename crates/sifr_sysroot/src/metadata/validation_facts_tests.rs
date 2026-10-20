@@ -186,9 +186,27 @@ fn exact_failure_diagnostics_survive_hits_misses_and_eviction() {
         )
         .unwrap();
     let bad_field = encoder.finish().unwrap();
+    let mut encoder = MetadataEncoder::new(identity(), Limits::default());
+    encoder.insert(reference::<Type>(1), &Type::Int).unwrap();
+    encoder
+        .insert(reference::<Type>(2), &Type::List(reference(1)))
+        .unwrap();
+    encoder
+        .insert(reference::<Text>(3), &Text { value: "//".into() })
+        .unwrap();
+    let noncanonical = corrupt_payload(
+        &encoder.finish().unwrap(),
+        reference::<Text>(3).id,
+        |payload| {
+            let slash = payload.windows(2).position(|bytes| bytes == b"//").unwrap();
+            payload[slash] = b'\\';
+        },
+    );
+
     for (bytes, expected) in [
         (cycle, "cycle in structural type or semantic body records"),
         (malformed, "record decode:"),
+        (noncanonical, "noncanonical record encoding"),
         (missing, "missing or wrong-kind complete record reference"),
         (
             wrong_kind,
