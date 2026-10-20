@@ -117,6 +117,15 @@ def main() -> None:
     .expect("compiler-owned nominal paths and unions should be source-disjoint");
 
     assert!(artifact.binary_path().exists());
+    let output = std::process::Command::new(artifact.binary_path())
+        .output()
+        .expect("collision fixture should execute");
+    assert!(
+        output.status.success(),
+        "collision runtime assertions failed: {}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
     let _ignored = std::fs::remove_dir_all(dir);
 }
 

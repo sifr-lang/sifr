@@ -544,7 +544,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -560,7 +560,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -576,7 +576,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -613,7 +613,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -629,7 +629,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -645,7 +645,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -661,7 +661,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -765,7 +765,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -797,7 +797,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -813,7 +813,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -829,7 +829,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -845,7 +845,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -861,7 +861,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -960,7 +960,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -976,7 +976,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -992,7 +992,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1008,7 +1008,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1024,7 +1024,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1040,7 +1040,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1061,7 +1061,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1077,7 +1077,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1093,7 +1093,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1109,7 +1109,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1125,7 +1125,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1141,7 +1141,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1157,7 +1157,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1173,7 +1173,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1189,7 +1189,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1205,7 +1205,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1221,7 +1221,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1330,7 +1330,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1346,7 +1346,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1362,7 +1362,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1378,7 +1378,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1394,7 +1394,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1410,7 +1410,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1426,7 +1426,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1442,7 +1442,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1458,7 +1458,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1479,7 +1479,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1515,7 +1515,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         }
       ]
     },
@@ -1571,40 +1571,40 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method",
           "context_fingerprint": "1c7bd38c37c2c2850767a7895e42782b06e1e8de01a7cbc0cac316d2532cacca"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method_accepts_ir_inputs",
           "context_fingerprint": "9a4647b8935f061cf31ae64dc2feec0364fd1b06e595feee6193a91288e84a41"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method_supports_list_sort_with_reverse_flag",
           "context_fingerprint": "3562db8e172c3eb15228ac15cc6b87b80eb147355a25f9accad362ea281594bd"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_bytes_methods_with_u8_backend_boundaries",
           "context_fingerprint": "11046205e38b1b84c0a5e2361988ec03057d654df287b31af09a8104988dcaf3"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_decimal_and_bigdecimal_methods_via_registry",
           "context_fingerprint": "b3c011ee8aa5a73082f6a4772348d440a10c4d98837b902a08250c723f1a55ea"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_string_methods_via_registry",
           "context_fingerprint": "f81c1e1ef8de1aedb3ee559f70c67a2df24b03f7a57d40e5dd72c511ecf4d601"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "safe_collection_methods_flatten_optional_payload_absence",
           "context_fingerprint": "4d976c65f324514eb7cd0aa2f8e01fae5082a9e752a470181ce9a1bcc9347ce9"
         }
@@ -1637,15 +1637,15 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method_with_context",
           "context_fingerprint": "6fcf039f65b65b2b6c4cc5c817c3e5ffe48e75a3fbfd97e83d7dfae4d3f1b30c"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_string_methods_via_registry",
           "context_fingerprint": "f81c1e1ef8de1aedb3ee559f70c67a2df24b03f7a57d40e5dd72c511ecf4d601"
         }
@@ -1673,7 +1673,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         }
       ]
     },
@@ -1699,12 +1699,12 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         },
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1720,7 +1720,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1736,7 +1736,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1752,7 +1752,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1794,7 +1794,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1810,7 +1810,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1826,7 +1826,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1842,7 +1842,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1858,7 +1858,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1874,7 +1874,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1890,7 +1890,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1906,7 +1906,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -1922,7 +1922,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2167,7 +2167,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2183,7 +2183,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2199,7 +2199,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2215,7 +2215,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2231,7 +2231,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2247,7 +2247,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2263,7 +2263,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2295,7 +2295,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2311,7 +2311,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2337,7 +2337,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_wrappers_and_compare.rs",
@@ -2358,7 +2358,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2374,7 +2374,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2390,12 +2390,12 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lower_method",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2446,47 +2446,47 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method",
           "context_fingerprint": "1c7bd38c37c2c2850767a7895e42782b06e1e8de01a7cbc0cac316d2532cacca"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method_accepts_ir_inputs",
           "context_fingerprint": "9a4647b8935f061cf31ae64dc2feec0364fd1b06e595feee6193a91288e84a41"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method_supports_list_sort_with_reverse_flag",
           "context_fingerprint": "3562db8e172c3eb15228ac15cc6b87b80eb147355a25f9accad362ea281594bd"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_bytes_methods_with_u8_backend_boundaries",
           "context_fingerprint": "11046205e38b1b84c0a5e2361988ec03057d654df287b31af09a8104988dcaf3"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_decimal_and_bigdecimal_methods_via_registry",
           "context_fingerprint": "b3c011ee8aa5a73082f6a4772348d440a10c4d98837b902a08250c723f1a55ea"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_string_methods_via_registry",
           "context_fingerprint": "f81c1e1ef8de1aedb3ee559f70c67a2df24b03f7a57d40e5dd72c511ecf4d601"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "safe_collection_methods_flatten_optional_payload_absence",
           "context_fingerprint": "4d976c65f324514eb7cd0aa2f8e01fae5082a9e752a470181ce9a1bcc9347ce9"
         }
       ]
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lower_method_with_context",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2512,22 +2512,22 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
-          "context_fingerprint": "5308b9e9d827864006e2ce24271e0864d2623a122409b4c98fd8ca251621c550"
+          "context_fingerprint": "2d237d0da967bf8a10a1951d8341bb32d1cf9dd1854c1294dccb69a4699fbf6f"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method_with_context",
           "context_fingerprint": "6fcf039f65b65b2b6c4cc5c817c3e5ffe48e75a3fbfd97e83d7dfae4d3f1b30c"
         },
         {
-          "path": "crates/sifr_codegen/src/methods/mod.rs",
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lowers_string_methods_via_registry",
           "context_fingerprint": "f81c1e1ef8de1aedb3ee559f70c67a2df24b03f7a57d40e5dd72c511ecf4d601"
         }
       ]
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lowers_string_methods_via_registry",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2537,7 +2537,7 @@
       "references": []
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lower_method_accepts_ir_inputs",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2547,7 +2547,7 @@
       "references": []
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lower_method_supports_list_sort_with_reverse_flag",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2557,7 +2557,7 @@
       "references": []
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "safe_collection_methods_flatten_optional_payload_absence",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2567,7 +2567,7 @@
       "references": []
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lowers_decimal_and_bigdecimal_methods_via_registry",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2577,7 +2577,7 @@
       "references": []
     },
     {
-      "path": "crates/sifr_codegen/src/methods/mod.rs",
+      "path": "crates/sifr_codegen/src/methods/tests.rs",
       "scope": "lowers_bytes_methods_with_u8_backend_boundaries",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
@@ -2781,7 +2781,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2797,7 +2797,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2813,7 +2813,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2829,7 +2829,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2845,7 +2845,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2861,7 +2861,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2877,7 +2877,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2893,7 +2893,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2909,7 +2909,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2925,7 +2925,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2941,7 +2941,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2957,7 +2957,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2973,7 +2973,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -2989,7 +2989,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3419,7 +3419,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3435,7 +3435,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3451,7 +3451,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3467,7 +3467,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3483,7 +3483,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3499,7 +3499,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
@@ -3536,7 +3536,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
@@ -3557,7 +3557,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3573,7 +3573,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3589,7 +3589,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3605,7 +3605,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3621,7 +3621,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3637,7 +3637,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3653,7 +3653,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3669,7 +3669,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3685,7 +3685,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3701,7 +3701,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3717,7 +3717,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3733,7 +3733,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3749,7 +3749,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3765,7 +3765,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3781,7 +3781,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3797,7 +3797,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3813,7 +3813,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3829,7 +3829,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -3845,7 +3845,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "lower_method_impl",
-          "context_fingerprint": "d6f0c5bbb49eb9f26cccfa440e8201a8ebb5824d58f0219aa239e0b5cef85436"
+          "context_fingerprint": "ae9674e97873798da18b2db22ea64bc5b98d6c3924cc7ea85057ad1e76efed55"
         }
       ]
     },
@@ -5984,6 +5984,21 @@
           "path": "crates/sifr_codegen/src/method_authority_tests/checked_dict_keys.rs",
           "scope": "checked_dict_keys_guards_preserve_nonbuiltin_authority_without_retry",
           "context_fingerprint": "28f8d41574ccb8766f86c6fa02408d026f85a2e41aa9f81ad7e0d30361279c50"
+        },
+        {
+          "path": "crates/sifr_codegen/src/method_authority_tests/nominal_accessors.rs",
+          "scope": "nominal_accessor_registry_rejects_wrong_receiver_method_and_arity",
+          "context_fingerprint": "d4d598547dd74f3c518531e85c001d3a2e3b84d273c7d6b5b60e18658ec933e2"
+        },
+        {
+          "path": "crates/sifr_codegen/src/method_authority_tests/nominal_accessors.rs",
+          "scope": "nominal_accessors_require_valid_declared_authority",
+          "context_fingerprint": "8ee53a3da0e2caabfe9bccfb863e3167c2911d111eaedb3fb15a128d3c7d6330"
+        },
+        {
+          "path": "crates/sifr_codegen/src/method_authority_tests/nominal_accessors.rs",
+          "scope": "nominal_accessors_use_typed_registry_for_direct_and_alias_receivers",
+          "context_fingerprint": "b11559e02f52760250fffe8637128cfa6d428ee5ac09a30d2b45d24b2e9cf61a"
         },
         {
           "path": "crates/sifr_codegen/src/method_authority_tests/nonempty_pop.rs",
@@ -39832,7 +39847,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl::literal-comparison::1",
-      "fingerprint": "7278a0a0b9dff0956b0f9d3d86b409b60c7250ff6684bace9dec95744d8dd059",
+      "fingerprint": "1ad811fb519fb40084605395e224e65fc5384b9b0080e8ef9faac82847d83fa9",
       "classification": "language-emission",
       "owner": "sifr_codegen::methods",
       "operation": "if method == \"len\"",
@@ -39844,10 +39859,10 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl::literal-match::1",
-      "fingerprint": "83e0760a2404a7a547750e92e40020ed6f2ae6f382ce5059bfa079aee0c890cb",
+      "fingerprint": "720b8e4039f09134c1c9859eac6f44bde2f715cc917fd9574bbf69c0d59d7979",
       "classification": "language-emission",
       "owner": "sifr_codegen::methods",
-      "operation": "match ( resolved_object_ty , method ) { ( Type :: Tuple ( elems ) , \"len\" ) => common :: lower_tuple_len ( elems . len ( ) , args ) , ( Type :: Tuple ( elems ) , \"count\" ) => common :: lower_tuple_count ( elems . len ( ) , object , args ) , ( Type :: Tuple ( elems ) , \"index\" ) => common :: lower_tuple_index ( elems . len ( ) , object , args ) , ( Type :: Str | Type :: LiteralStr ( _ ) , \"len\" ) => common :: lower_string_char_len ( object , args ) , ( ty , \"len\" ) if is_option_type ( ty ) => common :: lower_option_len ( ty , object , args ) , ( Type :: Class { .. } , \"len\" ) if args . is_empty ( ) => Some ( RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : \"len\" . to_string ( ) , args : Vec :: new ( ) , } ) , ( Type :: List ( _ ) | Type :: Dict ( _ , _ ) | Type :: Set ( _ ) | Type :: Bytes , \"len\" ) => { common :: lower_len ( object , args ) } ( ty , \"clone\" ) if ty . supports_derived_clone ( ) && args . is_empty ( ) => { Some ( RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : \"clone\" . to_string ( ) , args : Vec :: new ( ) , } ) } ( Type :: Str , \"upper\" ) => string :: lower_upper ( object , args ) , ( Type :: Str , \"lower\" ) => string :: lower_lower ( object , args ) , ( Type :: Str , \"strip\" ) => string :: lower_strip ( object , args ) , ( Type :: Str , \"startswith\" ) => string :: lower_startswith ( object , args ) , ( Type :: Str , \"endswith\" ) => string :: lower_endswith ( object , args ) , ( Type :: Str , \"split\" ) => string :: lower_split ( object , args ) , ( Type :: Str , \"replace\" ) => string :: lower_replace ( object , args ) , ( Type :: Str , \"find\" ) => string :: lower_find ( object , args ) , ( Type :: Str , \"rfind\" ) => string :: lower_rfind ( object , args ) , ( Type :: Str , \"lstrip\" ) => string :: lower_lstrip ( object , args ) , ( Type :: Str , \"rstrip\" ) => string :: lower_rstrip ( object , args ) , ( Type :: Str , \"count\" ) => string :: lower_count ( object , args ) , ( Type :: Str , \"join\" ) => string :: lower_join ( object , args ) , ( Type :: Str , \"title\" ) => string :: lower_title ( object , args ) , ( Type :: Str , \"capitalize\" ) => string :: lower_capitalize ( object , args ) , ( Type :: Str , \"swapcase\" ) => string :: lower_swapcase ( object , args ) , ( Type :: Str , \"isdigit\" ) => string :: lower_isdigit ( object , args ) , ( Type :: Str , \"isalpha\" ) => string :: lower_isalpha ( object , args ) , ( Type :: Str , \"isalnum\" ) => string :: lower_isalnum ( object , args ) , ( Type :: Str , \"isspace\" ) => string :: lower_isspace ( object , args ) , ( Type :: Str , \"isupper\" ) => string :: lower_isupper ( object , args ) , ( Type :: Str , \"islower\" ) => string :: lower_islower ( object , args ) , ( Type :: Str , \"center\" ) => string :: lower_center ( object , args ) , ( Type :: Str , \"ljust\" ) => string :: lower_ljust ( object , args ) , ( Type :: Str , \"rjust\" ) => string :: lower_rjust ( object , args ) , ( Type :: Str , \"zfill\" ) => string :: lower_zfill ( object , args ) , ( Type :: Decimal , \"quantize\" ) => decimal :: lower_decimal_quantize ( object , args ) , ( Type :: Decimal , \"sqrt\" ) => decimal :: lower_decimal_sqrt ( object , args ) , ( Type :: Decimal , \"round\" ) => decimal :: lower_decimal_round ( object , args ) , ( Type :: Decimal , \"abs\" ) => decimal :: lower_decimal_abs ( object , args ) , ( Type :: Decimal , \"is_zero\" ) => decimal :: lower_decimal_is_zero ( object , args ) , ( Type :: Decimal , \"is_finite\" ) => decimal :: lower_decimal_is_finite ( args ) , ( Type :: BigDecimal , \"quantize\" ) => decimal :: lower_bigdecimal_quantize ( object , args ) , ( Type :: BigDecimal , \"sqrt\" ) => decimal :: lower_bigdecimal_sqrt ( object , args ) , ( Type :: BigDecimal , \"round\" ) => decimal :: lower_bigdecimal_round ( object , args ) , ( Type :: BigDecimal , \"abs\" ) => decimal :: lower_bigdecimal_abs ( object , args ) , ( Type :: BigDecimal , \"is_zero\" ) => decimal :: lower_bigdecimal_is_zero ( object , args ) , ( Type :: BigDecimal , \"is_finite\" ) => decimal :: lower_bigdecimal_is_finite ( args ) , ( Type :: List ( _ ) , \"append\" ) if is_deque_data_field => deque :: lower_append ( object , args ) , ( Type :: List ( _ ) , \"appendleft\" ) if is_deque_data_field => { deque :: lower_appendleft ( object , args ) } ( Type :: List ( elem ) , \"pop\" ) if is_deque_data_field => deque :: lower_pop ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: List ( elem ) , \"popleft\" ) if is_deque_data_field => deque :: lower_popleft ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: List ( _ ) , \"reverse\" ) if is_deque_data_field => deque :: lower_reverse ( object , args ) , ( Type :: List ( _ ) , \"append\" ) => list :: lower_append ( object , args ) , ( Type :: List ( _ ) , \"extend\" ) => list :: lower_extend ( object , args ) , ( Type :: List ( _ ) , \"insert\" ) => list :: lower_insert ( object , args ) , ( Type :: List ( _ ) , \"clear\" ) => list :: lower_clear ( object , args ) , ( Type :: List ( _ ) , \"copy\" ) => list :: lower_copy ( object , args ) , ( Type :: List ( _ ) , \"cloned\" ) => list :: lower_copy ( object , args ) , ( Type :: List ( _ ) , \"reverse\" ) => list :: lower_reverse ( object , args ) , ( Type :: List ( elem ) , \"sort\" ) => list :: lower_sort ( object , elem , args ) , ( Type :: List ( _ ) , \"count\" ) => list :: lower_count ( object , args ) , ( Type :: List ( elem ) , \"contains\" ) => list :: lower_contains ( object , elem , args ) , ( Type :: List ( elem ) , \"pop\" ) => list :: lower_pop ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: List ( _ ) , \"remove\" ) => list :: lower_remove ( object , args ) , ( Type :: List ( _ ) , \"index\" ) => list :: lower_index ( object , args ) , ( Type :: Bytes , \"count\" ) => bytes :: lower_count ( object , args ) , ( Type :: Bytes , \"contains\" ) => bytes :: lower_contains ( object , args ) , ( Type :: Bytes , \"find\" ) => bytes :: lower_find ( object , args ) , ( Type :: Bytes , \"startswith\" ) => bytes :: lower_startswith ( object , args ) , ( Type :: Bytes , \"endswith\" ) => bytes :: lower_endswith ( object , args ) , ( Type :: Bytes , \"hex\" ) => bytes :: lower_hex ( object , args ) , ( Type :: Bytes , \"to_ints\" ) => bytes :: lower_to_ints ( object , args ) , ( Type :: FixedInt ( _ ) , \"checked_add\" ) => fixed_width :: lower_checked_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"checked_sub\" ) => fixed_width :: lower_checked_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"checked_mul\" ) => fixed_width :: lower_checked_mul ( object , args ) , ( Type :: FixedInt ( _ ) , \"wrapping_add\" ) => fixed_width :: lower_wrapping_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"wrapping_sub\" ) => fixed_width :: lower_wrapping_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"wrapping_mul\" ) => fixed_width :: lower_wrapping_mul ( object , args ) , ( Type :: FixedInt ( _ ) , \"saturating_add\" ) => fixed_width :: lower_saturating_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"saturating_sub\" ) => fixed_width :: lower_saturating_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"saturating_mul\" ) => fixed_width :: lower_saturating_mul ( object , args ) , ( Type :: FixedInt ( _ ) , \"overflowing_add\" ) => fixed_width :: lower_overflowing_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"overflowing_sub\" ) => fixed_width :: lower_overflowing_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"overflowing_mul\" ) => fixed_width :: lower_overflowing_mul ( object , args ) , ( Type :: Dict ( _ , _ ) , \"keys\" ) => dict :: lower_keys ( object , args ) , ( Type :: Dict ( _ , _ ) , \"values\" ) => dict :: lower_values ( object , args ) , ( Type :: Dict ( _ , _ ) , \"items\" ) => dict :: lower_items ( object , args ) , ( Type :: Dict ( _ , _ ) , \"update\" ) => dict :: lower_update ( object , args ) , ( Type :: Dict ( _ , _ ) , \"clear\" ) => dict :: lower_clear ( object , args ) , ( Type :: Dict ( _ , _ ) , \"copy\" ) => dict :: lower_copy ( object , args ) , ( Type :: Dict ( _ , _ ) , \"contains\" ) => dict :: lower_contains ( object , args ) , ( Type :: Dict ( _ , value ) , \"get\" ) => dict :: lower_get ( object , args ) . map ( | expr | { if args . len ( ) == 1 { crate :: helpers :: normalize_safe_option_result ( value , expr ) } else { expr } } ) , ( Type :: Dict ( _ , value ) , \"pop\" ) => dict :: lower_pop ( object , args ) . map ( | expr | { if args . len ( ) == 1 { crate :: helpers :: normalize_safe_option_result ( value , expr ) } else { expr } } ) , ( Type :: Dict ( key , value ) , \"setdefault\" ) => { dict :: lower_setdefault ( object , key , value , args , discard_result ) } ( Type :: Set ( _ ) , \"add\" ) => set :: lower_add ( object , args ) , ( Type :: Set ( _ ) , \"remove\" ) => set :: lower_remove ( object , args ) , ( Type :: Set ( _ ) , \"discard\" ) => set :: lower_discard ( object , args ) , ( Type :: Set ( _ ) , \"contains\" ) => set :: lower_contains ( object , args ) , ( Type :: Set ( _ ) , \"clear\" ) => set :: lower_clear ( object , args ) , ( Type :: Set ( _ ) , \"copy\" ) => set :: lower_copy ( object , args ) , ( Type :: Set ( _ ) , \"issubset\" ) => set :: lower_issubset ( object , args ) , ( Type :: Set ( _ ) , \"issuperset\" ) => set :: lower_issuperset ( object , args ) , ( Type :: Set ( _ ) , \"isdisjoint\" ) => set :: lower_isdisjoint ( object , args ) , ( Type :: Set ( elem ) , \"pop\" ) => set :: lower_pop ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: Set ( _ ) , \"union\" ) => set :: lower_union ( object , args ) , ( Type :: Set ( _ ) , \"intersection\" ) => set :: lower_intersection ( object , args ) , ( Type :: Set ( _ ) , \"difference\" ) => set :: lower_difference ( object , args ) , ( Type :: Set ( _ ) , \"symmetric_difference\" ) => set :: lower_symmetric_difference ( object , args ) , _ => return None , }",
+      "operation": "match ( resolved_object_ty , method ) { ( Type :: Newtype { .. } , \"value\" ) | ( Type :: Enum { .. } , \"name\" | \"value\" ) if args . is_empty ( ) => { Some ( RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : method . to_string ( ) , args : Vec :: new ( ) , } ) } ( Type :: Tuple ( elems ) , \"len\" ) => common :: lower_tuple_len ( elems . len ( ) , args ) , ( Type :: Tuple ( elems ) , \"count\" ) => common :: lower_tuple_count ( elems . len ( ) , object , args ) , ( Type :: Tuple ( elems ) , \"index\" ) => common :: lower_tuple_index ( elems . len ( ) , object , args ) , ( Type :: Str | Type :: LiteralStr ( _ ) , \"len\" ) => common :: lower_string_char_len ( object , args ) , ( ty , \"len\" ) if is_option_type ( ty ) => common :: lower_option_len ( ty , object , args ) , ( Type :: Class { .. } , \"len\" ) if args . is_empty ( ) => Some ( RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : \"len\" . to_string ( ) , args : Vec :: new ( ) , } ) , ( Type :: List ( _ ) | Type :: Dict ( _ , _ ) | Type :: Set ( _ ) | Type :: Bytes , \"len\" ) => { common :: lower_len ( object , args ) } ( ty , \"clone\" ) if ty . supports_derived_clone ( ) && args . is_empty ( ) => { Some ( RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : \"clone\" . to_string ( ) , args : Vec :: new ( ) , } ) } ( Type :: Str , \"upper\" ) => string :: lower_upper ( object , args ) , ( Type :: Str , \"lower\" ) => string :: lower_lower ( object , args ) , ( Type :: Str , \"strip\" ) => string :: lower_strip ( object , args ) , ( Type :: Str , \"startswith\" ) => string :: lower_startswith ( object , args ) , ( Type :: Str , \"endswith\" ) => string :: lower_endswith ( object , args ) , ( Type :: Str , \"split\" ) => string :: lower_split ( object , args ) , ( Type :: Str , \"replace\" ) => string :: lower_replace ( object , args ) , ( Type :: Str , \"find\" ) => string :: lower_find ( object , args ) , ( Type :: Str , \"rfind\" ) => string :: lower_rfind ( object , args ) , ( Type :: Str , \"lstrip\" ) => string :: lower_lstrip ( object , args ) , ( Type :: Str , \"rstrip\" ) => string :: lower_rstrip ( object , args ) , ( Type :: Str , \"count\" ) => string :: lower_count ( object , args ) , ( Type :: Str , \"join\" ) => string :: lower_join ( object , args ) , ( Type :: Str , \"title\" ) => string :: lower_title ( object , args ) , ( Type :: Str , \"capitalize\" ) => string :: lower_capitalize ( object , args ) , ( Type :: Str , \"swapcase\" ) => string :: lower_swapcase ( object , args ) , ( Type :: Str , \"isdigit\" ) => string :: lower_isdigit ( object , args ) , ( Type :: Str , \"isalpha\" ) => string :: lower_isalpha ( object , args ) , ( Type :: Str , \"isalnum\" ) => string :: lower_isalnum ( object , args ) , ( Type :: Str , \"isspace\" ) => string :: lower_isspace ( object , args ) , ( Type :: Str , \"isupper\" ) => string :: lower_isupper ( object , args ) , ( Type :: Str , \"islower\" ) => string :: lower_islower ( object , args ) , ( Type :: Str , \"center\" ) => string :: lower_center ( object , args ) , ( Type :: Str , \"ljust\" ) => string :: lower_ljust ( object , args ) , ( Type :: Str , \"rjust\" ) => string :: lower_rjust ( object , args ) , ( Type :: Str , \"zfill\" ) => string :: lower_zfill ( object , args ) , ( Type :: Decimal , \"quantize\" ) => decimal :: lower_decimal_quantize ( object , args ) , ( Type :: Decimal , \"sqrt\" ) => decimal :: lower_decimal_sqrt ( object , args ) , ( Type :: Decimal , \"round\" ) => decimal :: lower_decimal_round ( object , args ) , ( Type :: Decimal , \"abs\" ) => decimal :: lower_decimal_abs ( object , args ) , ( Type :: Decimal , \"is_zero\" ) => decimal :: lower_decimal_is_zero ( object , args ) , ( Type :: Decimal , \"is_finite\" ) => decimal :: lower_decimal_is_finite ( args ) , ( Type :: BigDecimal , \"quantize\" ) => decimal :: lower_bigdecimal_quantize ( object , args ) , ( Type :: BigDecimal , \"sqrt\" ) => decimal :: lower_bigdecimal_sqrt ( object , args ) , ( Type :: BigDecimal , \"round\" ) => decimal :: lower_bigdecimal_round ( object , args ) , ( Type :: BigDecimal , \"abs\" ) => decimal :: lower_bigdecimal_abs ( object , args ) , ( Type :: BigDecimal , \"is_zero\" ) => decimal :: lower_bigdecimal_is_zero ( object , args ) , ( Type :: BigDecimal , \"is_finite\" ) => decimal :: lower_bigdecimal_is_finite ( args ) , ( Type :: List ( _ ) , \"append\" ) if is_deque_data_field => deque :: lower_append ( object , args ) , ( Type :: List ( _ ) , \"appendleft\" ) if is_deque_data_field => { deque :: lower_appendleft ( object , args ) } ( Type :: List ( elem ) , \"pop\" ) if is_deque_data_field => deque :: lower_pop ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: List ( elem ) , \"popleft\" ) if is_deque_data_field => deque :: lower_popleft ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: List ( _ ) , \"reverse\" ) if is_deque_data_field => deque :: lower_reverse ( object , args ) , ( Type :: List ( _ ) , \"append\" ) => list :: lower_append ( object , args ) , ( Type :: List ( _ ) , \"extend\" ) => list :: lower_extend ( object , args ) , ( Type :: List ( _ ) , \"insert\" ) => list :: lower_insert ( object , args ) , ( Type :: List ( _ ) , \"clear\" ) => list :: lower_clear ( object , args ) , ( Type :: List ( _ ) , \"copy\" ) => list :: lower_copy ( object , args ) , ( Type :: List ( _ ) , \"cloned\" ) => list :: lower_copy ( object , args ) , ( Type :: List ( _ ) , \"reverse\" ) => list :: lower_reverse ( object , args ) , ( Type :: List ( elem ) , \"sort\" ) => list :: lower_sort ( object , elem , args ) , ( Type :: List ( _ ) , \"count\" ) => list :: lower_count ( object , args ) , ( Type :: List ( elem ) , \"contains\" ) => list :: lower_contains ( object , elem , args ) , ( Type :: List ( elem ) , \"pop\" ) => list :: lower_pop ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: List ( _ ) , \"remove\" ) => list :: lower_remove ( object , args ) , ( Type :: List ( _ ) , \"index\" ) => list :: lower_index ( object , args ) , ( Type :: Bytes , \"count\" ) => bytes :: lower_count ( object , args ) , ( Type :: Bytes , \"contains\" ) => bytes :: lower_contains ( object , args ) , ( Type :: Bytes , \"find\" ) => bytes :: lower_find ( object , args ) , ( Type :: Bytes , \"startswith\" ) => bytes :: lower_startswith ( object , args ) , ( Type :: Bytes , \"endswith\" ) => bytes :: lower_endswith ( object , args ) , ( Type :: Bytes , \"hex\" ) => bytes :: lower_hex ( object , args ) , ( Type :: Bytes , \"to_ints\" ) => bytes :: lower_to_ints ( object , args ) , ( Type :: FixedInt ( _ ) , \"checked_add\" ) => fixed_width :: lower_checked_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"checked_sub\" ) => fixed_width :: lower_checked_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"checked_mul\" ) => fixed_width :: lower_checked_mul ( object , args ) , ( Type :: FixedInt ( _ ) , \"wrapping_add\" ) => fixed_width :: lower_wrapping_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"wrapping_sub\" ) => fixed_width :: lower_wrapping_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"wrapping_mul\" ) => fixed_width :: lower_wrapping_mul ( object , args ) , ( Type :: FixedInt ( _ ) , \"saturating_add\" ) => fixed_width :: lower_saturating_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"saturating_sub\" ) => fixed_width :: lower_saturating_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"saturating_mul\" ) => fixed_width :: lower_saturating_mul ( object , args ) , ( Type :: FixedInt ( _ ) , \"overflowing_add\" ) => fixed_width :: lower_overflowing_add ( object , args ) , ( Type :: FixedInt ( _ ) , \"overflowing_sub\" ) => fixed_width :: lower_overflowing_sub ( object , args ) , ( Type :: FixedInt ( _ ) , \"overflowing_mul\" ) => fixed_width :: lower_overflowing_mul ( object , args ) , ( Type :: Dict ( _ , _ ) , \"keys\" ) => dict :: lower_keys ( object , args ) , ( Type :: Dict ( _ , _ ) , \"values\" ) => dict :: lower_values ( object , args ) , ( Type :: Dict ( _ , _ ) , \"items\" ) => dict :: lower_items ( object , args ) , ( Type :: Dict ( _ , _ ) , \"update\" ) => dict :: lower_update ( object , args ) , ( Type :: Dict ( _ , _ ) , \"clear\" ) => dict :: lower_clear ( object , args ) , ( Type :: Dict ( _ , _ ) , \"copy\" ) => dict :: lower_copy ( object , args ) , ( Type :: Dict ( _ , _ ) , \"contains\" ) => dict :: lower_contains ( object , args ) , ( Type :: Dict ( _ , value ) , \"get\" ) => dict :: lower_get ( object , args ) . map ( | expr | { if args . len ( ) == 1 { crate :: helpers :: normalize_safe_option_result ( value , expr ) } else { expr } } ) , ( Type :: Dict ( _ , value ) , \"pop\" ) => dict :: lower_pop ( object , args ) . map ( | expr | { if args . len ( ) == 1 { crate :: helpers :: normalize_safe_option_result ( value , expr ) } else { expr } } ) , ( Type :: Dict ( key , value ) , \"setdefault\" ) => { dict :: lower_setdefault ( object , key , value , args , discard_result ) } ( Type :: Set ( _ ) , \"add\" ) => set :: lower_add ( object , args ) , ( Type :: Set ( _ ) , \"remove\" ) => set :: lower_remove ( object , args ) , ( Type :: Set ( _ ) , \"discard\" ) => set :: lower_discard ( object , args ) , ( Type :: Set ( _ ) , \"contains\" ) => set :: lower_contains ( object , args ) , ( Type :: Set ( _ ) , \"clear\" ) => set :: lower_clear ( object , args ) , ( Type :: Set ( _ ) , \"copy\" ) => set :: lower_copy ( object , args ) , ( Type :: Set ( _ ) , \"issubset\" ) => set :: lower_issubset ( object , args ) , ( Type :: Set ( _ ) , \"issuperset\" ) => set :: lower_issuperset ( object , args ) , ( Type :: Set ( _ ) , \"isdisjoint\" ) => set :: lower_isdisjoint ( object , args ) , ( Type :: Set ( elem ) , \"pop\" ) => set :: lower_pop ( object , args ) . map ( | expr | crate :: helpers :: normalize_safe_option_result ( elem , expr ) ) , ( Type :: Set ( _ ) , \"union\" ) => set :: lower_union ( object , args ) , ( Type :: Set ( _ ) , \"intersection\" ) => set :: lower_intersection ( object , args ) , ( Type :: Set ( _ ) , \"difference\" ) => set :: lower_difference ( object , args ) , ( Type :: Set ( _ ) , \"symmetric_difference\" ) => set :: lower_symmetric_difference ( object , args ) , _ => return None , }",
       "inputs": "fn lower_method_impl ( object_ty : & Type , method : & str , object : & RustExpr , args : & [ RustExpr ] , is_deque_data_field : bool , discard_result : bool , )",
       "outputs": "Option < LoweredMethod >",
       "role": "canonical builtin method semantics",
@@ -39856,7 +39871,19 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl::method-call-carrier::1",
-      "fingerprint": "e5c47f81de42384b41a9bf0dca387b0bbd7aae2f20adc29a9362d8728246bad7",
+      "fingerprint": "b441d06f5f339d54ae69a1ba22fc30bbb428a7a46f0ba7538cdd5925d23e5d4b",
+      "classification": "language-emission",
+      "owner": "sifr_codegen::methods",
+      "operation": "RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : method . to_string ( ) , args : Vec :: new ( ) , }",
+      "inputs": "fn lower_method_impl ( object_ty : & Type , method : & str , object : & RustExpr , args : & [ RustExpr ] , is_deque_data_field : bool , discard_result : bool , )",
+      "outputs": "Option < LoweredMethod >",
+      "role": "canonical builtin method semantics",
+      "caller_admission_relationship": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
+      "contract": "canonical builtin method semantics: crates/sifr_codegen/src/methods/mod.rs::lower_method_impl enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl::method-call-carrier::2",
+      "fingerprint": "6d3d460e1c8482f26ded76cc6954dbfe211638053504fb3aa451accf11e87299",
       "classification": "language-emission",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : \"len\" . to_string ( ) , args : Vec :: new ( ) , }",
@@ -39867,8 +39894,8 @@
       "contract": "canonical builtin method semantics: crates/sifr_codegen/src/methods/mod.rs::lower_method_impl enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl::method-call-carrier::2",
-      "fingerprint": "66834acd0a1dfa64831a67bff9fb8587f049a09796cf0b6d93f542148bcdb3a9",
+      "site": "crates/sifr_codegen/src/methods/mod.rs::lower_method_impl::method-call-carrier::3",
+      "fingerprint": "d0fcb23af7ffa81089f37471b499d3bb94bab06966db2f24481793487659e927",
       "classification": "language-emission",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : \"clone\" . to_string ( ) , args : Vec :: new ( ) , }",
@@ -84257,6 +84284,18 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_type_system/src/types/type_rendering.rs::contains_element_type enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_type_system/src/types/type_rendering.rs::contains_element_type enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/src/method_authority_tests/nominal_accessors.rs::nominal_accessors_use_typed_registry_for_direct_and_alias_receivers::method-call-carrier::1",
+      "fingerprint": "b9ad751e145b742906c7e1a36b6885a548b33caee2d293881fbeb211b1104250",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "HirExpr :: MethodCall { ty , .. }",
+      "inputs": "fn nominal_accessors_use_typed_registry_for_direct_and_alias_receivers ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/src/method_authority_tests/nominal_accessors.rs::nominal_accessors_use_typed_registry_for_direct_and_alias_receivers enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/src/method_authority_tests/nominal_accessors.rs::nominal_accessors_use_typed_registry_for_direct_and_alias_receivers enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     }
   ]
 }

@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6c validated and reviewed; V0.7 next
+current_stage: V0.7 validated and reviewed; V0.16 policy inventory next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -180,8 +180,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3b | Python runtime registries and LSP selected-input admission | Merged #4363; 114 LSP tests and four focused area variants pass; review SATISFIED |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
-| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1/a2/b merged; V0.6c validated/reviewed |
-| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
+| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Validated/reviewed #4368; native and three E2E cases pass |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
@@ -189,6 +189,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
+| V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
+| V0.16 | Method-policy inventory reconciliation | Pending; 99 baseline diagnostics reproduced |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -1508,3 +1510,107 @@ comparison, explicit empty `where`-clause checking, and generated-source context
 in assertion failures. These suggestions do not weaken existing obligations.
 Record-only updates do not change validated inputs. Full integrated gates,
 native semantic repairs and V5 timing acceptance remain open.
+
+
+V0.6c merged as #4367 at `4790068c0899880f314ab34a0e9f82221ee1ee1e`.
+
+### V0.7 bounded scope: typed nominal accessors
+
+Current-source inspection refines the original diagnosis: lowering deliberately
+classifies newtype `value()` and enum `name()`/`value()` as builtin intrinsics.
+That authority is correct, but the typed codegen registry has no corresponding
+receiver arms. Reproduce the exact ignored native collision case before repair;
+retain nominal identity and strict authority checks. Add only supported zero-arg
+accessor lowering, using existing generated accessor methods and structured
+receiver types. Split registry tests by responsibility if necessary to preserve
+the 900-line source limit, retaining test IDs.
+
+The collision fixture currently builds but never executes its binary. Execute
+that binary and require success so its unchanged runtime assertions actually run.
+Validation: focused typed accessor/codegen authority controls; existing lowering
+method-authority tests; complete codegen unit tests; the exact native collision
+case; existing positive `newtype_basic`, `enum_value_property`, `enum_valued` E2E
+fixtures (compile and execute); formatting/file-size/source-direction/area
+contracts; independent scoped review. Verify actual selection counts. Include
+rejection controls for wrong receiver/arity, unclassified or forged authority,
+and preserve user/protocol dispatch. No name-based fallback or fixture skip.
+
+Emitted-Rust ownership was checked against issue #4344 (open, unassigned), which
+lists the three type fixtures among 19 failures. This bounded repair owns only
+the shared accessor mechanism under LOCAL-GATE V0.7; report observed overlap to
+V0.11 without claiming the remaining async/network/process/callable-field cases
+fixed. V0.8/V0.9 own separate method-slot and ancestry/upcast failures. Complete
+phase gates and V5 remain mandatory. The user's sustained phase-execution request
+continues the registered sequence while preserving one bounded item at a time.
+
+
+V0.7 policy scope includes moving the eight existing registry-test node records
+with their unchanged tests and refreshing only this item's changed source sites
+and changed node/reference fingerprints. Admission logic and owner rules are
+unchanged. `v07-method-policy-base` reconstructs exact base Rust inputs in memory
+and proves **99 pre-existing method-policy inventory errors**. Assign that drift
+to **V0.16, method-policy inventory reconciliation**, before final gates; do not
+silently reclassify unrelated sites in V0.7. The affected-policy check must prove
+no new errors relative to that baseline and run policy mutation self-tests.
+
+
+### V0.7 validation and runtime closure
+
+Candidate `e364e340978a1229211115416f1f0e0166b40ace`, base
+`4790068c0899880f314ab34a0e9f82221ee1ee1e`, PR
+[#4368](https://github.com/sifr-lang/sifr/pull/4368). The canonical registry now
+handles typed zero-argument accessors; authority admission is unchanged. The
+registry test extraction preserves all Rust tokens and qualified test IDs. The
+native collision fixture now executes its unchanged Sifr assertions.
+
+Evidence under `continuation-evidence/local-gate-implementation-20261020/`:
+
+| Check | Actual result | Total seconds |
+| --- | --- | ---: |
+| `v07-current-native-baseline` | Original unsupported `value()` failure reproduced on exact merged base | 49.712 |
+| `v07-codegen-accessor-controls-resumed` | 3 new controls pass; direct/alias receivers and rejection boundaries | 395.036 |
+| `v07-codegen-all` | 1,759 pass, zero failed/ignored/filtered; 13.97s test execution | 16.752 |
+| `v07-lowering-authority` | 5 pass, zero failed/ignored; 1,144 filtered | 10.243 |
+| `v07-native-collision` | Exact previously ignored case passes, including binary execution; 16.76s test execution | 202.052 |
+| `v07-e2e-accessors` | All three selected programs compile and execute; zero failed/blocked | 250.029 |
+| `v07-final-policy-guards` | Format, size, source direction and area contracts pass | 16.678 |
+| `v07-method-policy-delta` | Same 99 baseline errors; zero added/resolved diagnostics | 36.681 |
+| `v07-method-policy-selftest` | Mutation self-tests pass | 1.135 |
+
+`v07-final-validation.json` reconciles all successful checks against the exact
+candidate, with no timeouts, leftover groups or source drift. The three existing
+E2E programs are `newtype_basic`, `enum_value_property`, `enum_valued`; all original
+assertions remain. This closes their shared accessor mechanism from #4344, not
+the remaining historical async/network/process/callable-field failures in V0.11.
+
+The initial `v07-codegen-accessor-controls` attempt stopped at the 20-GiB disk
+reserve after 328.480 seconds before any tests ran. It remains incomplete. Six
+inactive, owned prior-build incremental directories were copied into a recoverable
+archive and verified against per-file SHA-256 hashes before their originals were
+reclaimed. No Cargo/rustc process was active during archival; binaries, reports,
+failed inputs and the active build configurations were preserved.
+`v07-archive-receipt.json` records about 6.8 GB moved and restoration instructions.
+The resumed preparation is not a warm performance comparison.
+
+E2E telemetry attributes its 34.179-second suite to 3.118 seconds Sifr compilation,
+29.722 seconds cache preparation/retirement, 0.643 seconds native build and
+0.033 seconds runtime, plus discovery/setup/reporting. Cargo rebuilt one generated
+unit and retained 29 dependency units. The enclosing 250.029-second command also
+includes CLI/integration-test preparation. Assign the observed retirement cost
+to V3; preserve failure markers, ownership and leases while optimizing it. These
+bounded timings are not a complete gate result or a ten-minute qualification.
+
+Independent review is **SATISFIED**, no blockers, with raw evidence at
+`reviews/e364e340978a1229211115416f1f0e0166b40ace/review.md`. Runtime checks were
+pending when review began and subsequently passed on the same frozen candidate.
+The suggested V0.15/V0.16 status rows are now explicit. Another pre-existing
+observation belongs to the V0.11 emitted-Rust owner: generated enum accessors are
+private, so cross-module calls need investigation if affected coverage exposes
+that boundary. V0.7 does not claim to qualify cross-module enum access.
+
+The full method-policy guard is still failing for the 99 reproduced older
+inventory diagnostics; the delta result is not a global pass. Bring V0.16 forward
+next to reconcile those records with source and independent review before further
+compiler repairs. `v016-inventory-analysis` is read-only preliminary analysis,
+not an inventory repair or acceptance result. Final integrated gates and V5 remain
+open.
