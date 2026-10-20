@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.17 accepted; V1 semantic/native separation and V2 repeated validation remain open
+current_stage: V0.18 filesystem ledger reconciliation; V1 semantic/native separation remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -654,7 +654,8 @@ runner, fallback compiler or elaborate scheduler is justified by current evidenc
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Blocked assertions are identified; repairs not implemented
+Current evidence: Bounded repairs and their acceptance are recorded below. V0.18
+filesystem ledger reconciliation and final integrated completeness remain open.
 
 Decision: No final timing promise until the failed setup paths execute their downstream
 assertions. Independent measured optimizations may proceed with matched outcomes; they
@@ -681,8 +682,9 @@ or count an unexecuted installed check as a fast pass.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: SQL full-protocol profile trial and sanitizer retention tests recorded
-above
+Current evidence: The SQL full-protocol profile trial and sanitizer retention tests
+are recorded; V1b1 shared artifact data is accepted. Semantic/native separation
+and complete build-path feasibility remain open.
 
 Decision: Treat SQL as the first hard feasibility gate. Keep the measured whole critical
 path, not individual unit-duration subtraction. The larger architecture work is conditional
@@ -729,8 +731,8 @@ change the production profile.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Hotspots measured; component feature semantic trial above; caches not
-implemented
+Current evidence: V2a bounded metadata validation facts are accepted below.
+Component Engine/component reuse and durable-history optimization remain open.
 
 Decision: Prefer bounded lifetime-local reuse. Start with Wasmtime parallel compilation only
 if the full semantic checks pass and it fits the shared CPU budget; add compiled-component
@@ -1126,12 +1128,12 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 
 | Item | Status | Merged PR / candidate / validation / review |
 | --- | --- | --- |
-| Phase registration | Recorded; effective when [#4356](https://github.com/sifr-lang/sifr/pull/4356) merges | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
-| V0 executable coverage | Pending | None |
-| V1 mandatory build path | Pending | Diagnostic evidence only |
-| V2 repeated metadata/component work | Pending | Diagnostic evidence only |
+| Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
+| V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.17 / #4385; V0.18 and final completeness pending |
+| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 accepted; semantic/native split and feasibility pending |
+| V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
-| V4 runner/compilation/policy integration | Pending | Diagnostic evidence only |
+| V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
 | V5 integrated qualification | Pending | No complete green sub-ten-minute result |
 
 Planning handoff: branch `codex/local-correctness-gate-phase`; review verdict
@@ -3379,3 +3381,142 @@ The original failed V1b1 coverage-area evidence remains failed and retained.
 This closure changes only this phase record. V1 semantic/native separation,
 V2–V5, complete integrated create-PR/merge gates and the ten-minute goal remain
 open. No runtime gain is attributed to the taxonomy repair.
+
+
+### V2a bounded implementation — invocation-local metadata validation facts
+
+Sequence this V2 subitem before the remaining V1 separation work to reduce the
+measured repeated validation cost of later producer and consumer checks. This
+is a sequencing change within the approved whole-phase scope, not completion of
+V1 or a replacement for its architecture/feasibility acceptance.
+
+The existing implementation reads, hashes, canonically decodes and field-checks
+shared records repeatedly while validating each complete-store graph root. Retain
+only successful per-record reference/field-validation facts in one bounded,
+invocation-local owner. Keep the immutable captured input as authority. Preserve
+per-root traversal order, colors, cycle/depth/work checks, direct-reference kind
+checks and first-error diagnostics. Do not retain graph verdicts or share facts
+between stores or invocations. Leave lazy consumer decoding/retention accounting
+separate. Eviction or an oversized fact must recompute, never skip validation.
+
+Acceptance: measure repeated reads and complete validation on the exact retained
+real metadata fixture before/after; compare its portable digest. Add hit/miss,
+eviction and oversized-record controls; compare exact diagnostics for malformed
+encoding/fields, absent/wrong-kind references, cycles, depth and work limits.
+Prove a later stricter root cannot inherit an earlier root's success. Preserve
+unchanged-path/mtime corruption rejection and existing producer cancellation
+checkpoints; there is no cancellation callback inside the current store API.
+Run the complete sysroot library tests, affected metadata producer/reader checks,
+existing full emitted-source/source-map corpus parity, formatting, file-size and
+affected verification guards. Required full final gates and V5 remain open.
+Use a scoped independent review under the approved intermediate policy.
+
+V1 semantic/native separation, component Engine/Store reuse, durable history,
+fixture/build lifecycle work and the shared gate scheduler are outside this
+bounded item and remain pending. Do not attribute additive whole-gate savings
+from this local measurement.
+
+
+### V2a acceptance — bounded complete-metadata validation facts
+
+PR [#4386](https://github.com/sifr-lang/sifr/pull/4386) accepts implementation
+`22ed35a76efbb03eeeafa389a03960475eaa7941`. Complete validation retains successful
+canonical record/field facts only within that invocation, with FIFO eviction,
+oversized-entry recomputation and an accounted budget capped at 32 MiB and half
+the configured decoded-record limit. Immutable captured bytes remain authority.
+Every root still performs its own traversal, cycle, depth, decode-work and kind
+checks. Lazy consumers keep their original read/decode/allocation path and
+separate retained-record accounting; no graph verdict or test result is cached.
+
+The serial ABBA comparison used the same retained real metadata fixture, five
+fresh stores per process and two processes per version. Median complete validation
+fell from **2.286071 s to 0.998618 s (56.3%)**, with an identical portable payload
+digest and approximately 10 MiB additional peak process RSS. Type reads fell
+from 79,566 to 1,420 for 1,420 records; HIR expression reads fell from 108,211 to
+13,534 for 13,534 records. These counters measure actual payload reads, not the
+per-root validation work that remains enforced. This is a local diagnostic,
+not a full-gate timing or product-identity qualification.
+
+Named execution on `78d3af7209fc41cb67bc39f94ca11dfafaa6302f`:
+
+| Category | Result | Wall time including command preparation |
+| --- | --- | --- |
+| Complete sysroot library | 55 passed, including all five new fact-reuse controls | 7.185 s |
+| Sysroot clippy | No warnings in changed code; five pre-existing test warnings retained | 3.185 s |
+| Driver preparation | Completed; retained outputs | 355.911 s |
+| Complete metadata producer group | 15 passed; subprocess entry invoked by parent tests | 132.252 s |
+| Complete metadata reader group | 9 passed; full corpus run separately | 27.696 s |
+| Full source/metadata emission corpus | 732 fixtures, exact Rust and source-map parity | 105.739 s |
+| Formatting, size, area, taxonomy and unchanged-input guards | Passed | 55.207 s |
+
+The producer checks include real cancellation, concurrency, failure recovery and
+publication. The corpus comparison also proves all 1,464 generated/fixture files
+and the portable metadata digest match the retained V1b1 baseline. Its original
+raw JSON equality check failed on 192 `stdlib_modules` arrays: the unchanged
+producer serializes an unordered `HashSet<String>`. The corrected comparison
+requires duplicate-free set equality only for that field and exact equality for
+all other fields, maps, target/selection descriptors and files. Preserve that
+initial failure; deterministic report ordering remains V4 work. The observed
+V1b1 baseline `cc52c0ed0` and PR base `a85b56bb2` have identical compiler, fixture,
+Cargo, toolchain/config, tool-pin and profile inputs despite squash-merge lineage.
+
+An additional affected audit found six missing filesystem-effect rows and one
+missing literal test-control row introduced by V2a. The final candidate adds
+only those rows, preserving every existing row/classification. Filesystem
+self-tests, the complete method-authority scan and its 17 self-tests, profile
+validity, file-size and whitespace checks passed on the final candidate. The
+full filesystem scan **still fails on exactly 344 base discrepancies**; V0.18
+below owns them. Neither the initial 350-discrepancy scan nor the remaining
+344-discrepancy scan is reclassified as passing.
+
+Evidence reuse is input-bound: only the two inventory JSON files changed after
+runtime validation. All 45 first-party Cargo artifacts were fresh, and driver
+and sysroot test executable SHA-256 values were identical before/after. Freshness
+checks took 2.758 s and 0.750 s; these are not new test executions. Original
+runtime receipts retain `78d3af720`, and paired timing retains `fa20b3359` (the
+later source difference was test-helper checked offsets/style only). Raw evidence:
+`v2a-acceptance.json`, `v2a-artifact-reuse-proof.json`, `v2a-paired-probe/`,
+`v2a-corpus-comparison.json`, `v2a-corpus-initial-comparison.json`,
+`v2a-filesystem-audit-reconciliation.json`, `v2a-policy-validation.json` and the
+named receipt directories in the external LOCAL-GATE evidence root.
+
+Final independent review is **SATISFIED**, with no blocking findings, under
+`reviews/22ed35a76efbb03eeeafa389a03960475eaa7941/`. The initial source review at
+`78d3af720` is also retained, including the later audit qualification note.
+Optional immutability-comment maintenance and existing sysroot test warnings
+remain with their owners. V1, the remaining V2–V5 work, full final create-PR/merge
+gates and the ten-minute target remain open. This record-only closure does not
+change the qualified implementation inputs.
+
+### V0.18 bounded repair — reconcile the filesystem ownership ledger
+
+The exact V2a-base scan found 344 stale/unclassified filesystem-effect
+relationships outside the V2a test file. Reconcile these against current source
+before returning to the compiler dependency boundary work. Preserve the failed
+runs and their source-bound baseline comparison. No scanner weakening, directory
+exclusion, blanket permission or Rust behavior change is in scope.
+
+Review each added/removed relationship. Preserve all still-live classifications;
+carry reviewed ownership through demonstrably equivalent moved/renamed sites.
+Classify actual new reads by semantic input, build identity or tooling input,
+and actual mutations as output effects. Remove only relationships absent from
+the canonical source discovery. Keep the inventory schema and discovery rules
+unchanged. Record the proposed additions/removals and their ownership rationale
+outside Git before applying the reconciled ledger.
+
+Required checks: the complete filesystem scan and its negative controls; proof
+that all live existing classifications remain unchanged; file-size, whitespace,
+profile validity and changed-link checks. Run the developer-tooling static suite
+to discover other cheap policy failures together; preserve and separately assign
+any unrelated failure instead of hiding it in this repair. No compiler rebuild
+is needed if only this ledger and phase records change. Use scoped independent
+review under the approved intermediate policy. The full final gates remain
+mandatory; V0.18 makes no runtime-speed claim.
+
+The next compiler-boundary investigation should also account for the observed
+355.911-second rebuild after a metadata-store edit: stdlib manifest depends on
+sysroot layout/resolution, while the same sysroot crate owns metadata storage.
+That edge propagates metadata changes into imports, lowering and codegen. Record
+this as real dependency coupling, not a broken Cargo cache. The semantic/native
+separation and the actual SQL clean/reused/independent-clean feasibility protocol
+remain required; no gain from a future crate split is assumed here.

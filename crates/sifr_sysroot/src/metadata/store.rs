@@ -324,10 +324,17 @@ fn io_error(e: &std::io::Error) -> MetadataError {
 impl MetadataStore {
     /// Producer qualification checks every payload without retaining decoded records.
     pub fn validate_complete(&self) -> Result<()> {
+        let mut facts =
+            super::validation_facts::ValidationFacts::new(self.limits.retained_bytes / 2);
+        self.validate_complete_with_facts(&mut facts)
+    }
+    pub(super) fn validate_complete_with_facts(
+        &self,
+        facts: &mut super::validation_facts::ValidationFacts,
+    ) -> Result<()> {
         for (id, entry) in &self.directory {
-            let payload = self.read_payload(entry)?;
-            let references = super::decode::references(self, entry.kind, &payload)?;
-            for (reference, kind) in references {
+            let references = facts.references(self, *id, entry)?;
+            for &(reference, kind) in references.iter() {
                 if self
                     .directory
                     .get(&reference)
@@ -336,7 +343,7 @@ impl MetadataStore {
                     return Err(err("missing or wrong-kind complete record reference"));
                 }
             }
-            self.validate_graph(*id, &payload)?;
+            self.validate_graph_with_facts(*id, facts)?;
         }
         Ok(())
     }
