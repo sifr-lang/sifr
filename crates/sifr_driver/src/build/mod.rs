@@ -71,6 +71,8 @@ mod rust_interop_trust;
 #[cfg(test)]
 mod rust_interop_zero_copy_contract_tests;
 mod single_file_interop_cache;
+#[cfg(test)]
+mod single_file_lowering_error_tests;
 mod sql_application_queries;
 mod sql_profiles;
 #[cfg(test)]
