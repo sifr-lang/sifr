@@ -1742,3 +1742,13 @@ focused candidate had four passing checks and this unrelated liveness failure
 The first guard run passed format/area/method-policy/self-tests but failed the
 900-line guard at 903. Move call resolution beside declared-method facts to keep
 the main typed-rewriter source below its limit. Both attempts remain retained.
+
+
+`v08-codegen-all` on `97f1374e6ba97ef9e0e322a47f4c90c264886bc4`
+ran all 1,763 tests: 1,762 passed and one existing emitter text assertion failed
+because it required an untyped tuple binding. All four new regressions passed.
+Update that assertion to require the preserved `(Record, String)` type; retain
+its receiver-call assertion. The failed run took 331.980 seconds including
+316 seconds preparation and 13.81 seconds tests. The review started on that
+candidate was stopped before mutation once this failure was known; its partial
+output is not an accepted review. Revalidate and review the final candidate.
