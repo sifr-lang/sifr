@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1a measured SQL build profile feasibility
+current_stage: V1b1 shared stdlib artifact ownership
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -3146,3 +3146,75 @@ and keep actual product/installed qualification separate and mandatory. No profi
 is accepted from build time alone. If this simple candidate cannot fit the complete
 budget without a runtime regression, proceed to the canonical semantic/native
 ownership investigation rather than accumulating arbitrary package overrides.
+
+
+### V1a diagnostic result — profile tuning does not meet the budget
+
+Current-source candidate `5011e4ae8fdd792be2ad7c379f260f6d95ee0ccb` was measured
+with three Cargo workers, the same filesystem, locked/offline resolution, explicit
+LTO off and debug off. The four-worker attempt failed admission before compilation:
+its effective memory did not cover the requested allocation plus the unchanged
+2 GiB reserve. Both actual variants therefore used three workers.
+
+| Diagnostic stage | Outer wall time | Cargo units / fresh units |
+| --- | ---: | ---: |
+| Normal profile, one independent clean control | 512.007s | 498 / 0 |
+| Three first-party overrides at opt1, clean A | 505.989s | 498 / 0 |
+| Same candidate, unchanged A | 8.189s | 498 / 498 |
+| Same candidate, independent clean B | 514.568s | 498 / 0 |
+
+All three exact linked SQL executable hashes agree within the candidate protocol.
+All seven canonical artifact-selector mutation controls pass. Resolved package,
+target-kind and feature inventories agree; only the three intended package
+optimization settings differ. Candidate build-stage wall times sum to **1028.745s
+(17m 09s)**. This sum excludes cleanup and is not a whole-gate time. The normal
+control is a single clean build, not a complete baseline reproducibility protocol.
+Sequential build order and a single control do not establish a small speedup: the
+two candidate clean builds straddle the control. This profile is **not adopted**.
+
+Matched runtime probes link the actual SQL build libraries, use the same supplied
+diagnostic identity and the same **6,559,402-byte** metadata artifact, and run in
+fresh-process ABBA order after separately recorded preparation. All metadata hashes
+and recorded inventories/read counts agree. Six complete validations per variant
+have medians **2.513624s normal / 2.524326s candidate** (ratio **1.0043**). These
+probes do not qualify actual product/profile identity, installed artifacts or all
+runtime semantics. No material runtime benefit is demonstrated.
+
+Twelve diagnostic stages pass without resource stops, leftover process groups or
+source changes. Preserve both earlier failures: four-worker admission and a probe
+helper that incorrectly demanded globally unique library names across different
+transitive package versions. The corrected helper selects only its three required
+libraries by exact Cargo package identity; neither failure required repeating a
+successful build. Raw commands, partial failures, Cargo JSON/timings, probe
+preparation/runtime logs and receipts remain in the external implementation bundle:
+`v1a-final-diagnostic.json` and `v1a-sql-profile-trial-j3/analysis.json`. Targets and
+probe artifacts are retained for audit, explicitly outside final cleanup acceptance.
+
+The unchanged-build cache works in this path. The measured cost is compiling the
+full dependency graph twice, including the emitter. Continue V1's semantic/native
+ownership work. V1–V5, the complete final create-PR/merge gates and sub-600s acceptance
+remain open; no tests or valuable qualification obligations are removed.
+
+### V1b1 bounded implementation — shared stdlib artifact data
+
+Move the immutable `StdlibCode`, `StdlibEmissionCode`, `StdlibRustSource` and their
+signature representation to a small lower artifact-data owner that depends on HIR
+and types, not the emitter. Keep `StdlibEmissionView`, its syntax-session ownership
+and all rendering algorithms in codegen. Update actual consumers and compiled input
+identities. Preserve data layouts, declaration/order behavior, defaults, ownership,
+serialization, emitted bytes and existing test assertions. Treat the new workspace
+lock entry as an intentional first-party dependency change; do not alter registry
+versions or separately pinned verification graphs.
+
+This is one dependency-boundary prerequisite, with no claimed runtime gain. Native
+capability selection, metadata role/schema changes, semantic bootstrap separation
+and the SQL consumer switch are subsequent explicit V1 items. Do not introduce a
+second frontend, compatibility fallback, cache-result substitution or test removal.
+
+Named intermediate validation: full codegen library tests; compiler-services library
+tests; affected driver metadata producer/reader and stdlib regressions; the complete
+positive E2E inventory through its canonical Cargo entrypoint; formatting, file-size,
+method/safety policy checks affected by the move, whitespace and changed-link checks.
+Run focused checks first and diagnose preparation failures before repeating. Retain
+build targets, inspect capacity before preparation, freeze the candidate for named
+validation and independent review. The phase-end full gate policy remains unchanged.
