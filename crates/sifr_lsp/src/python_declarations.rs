@@ -597,6 +597,8 @@ mod tests {
     #[test]
     fn package_fingerprint_tracks_manifest_selected_metadata_paths() {
         let root = tempfile::tempdir().expect("temporary package");
+        std::fs::create_dir(root.path().join("src")).expect("source directory");
+        std::fs::write(root.path().join("src/lib.rs"), "").expect("Cargo target");
         let metadata = root.path().join("python");
         std::fs::create_dir(&metadata).expect("metadata directory");
         std::fs::write(
@@ -633,7 +635,6 @@ mod tests {
         );
 
         let before_app = package_input_fingerprint(root.path(), &mut provider);
-        std::fs::create_dir(root.path().join("src")).expect("source directory");
         std::fs::write(root.path().join("src/main.sifr"), "def main():\n    pass\n")
             .expect("application entrypoint");
         assert_ne!(

@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.2 reviewed; merge pending; V0.3b next
+current_stage: V0.2 merged; V0.3b Python admission in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -174,7 +174,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | Item | Bounded ownership / prerequisite | Status |
 | --- | --- | --- |
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
-| V0.2 | SQL provenance and moved-source qualification guards | Validated; 43 native tests and 33 checks pass; reviewed #4362 |
+| V0.2 | SQL provenance and moved-source qualification guards | Merged #4362; 43 native tests and 33 checks pass; review SATISFIED |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
@@ -1140,7 +1140,9 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V0.2, then open bounded V0.3b for Python runtime
+V0.2 merged as #4362 at `260110d9bc66f0812738650d63a80aab55dd3d12`.
+
+**Current bounded item:** V0.3b for Python runtime
 registry and LSP input-authority admission. Confirm current failures before edits.
 Arrow and DLPack runners retain old exact test inventories; review each added or
 renamed ownership assertion against its originating change before reconciling
