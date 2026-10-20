@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.5 merged; V0.2 SQL qualification in progress
+current_stage: V0.2 validated; independent review pending
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -548,7 +548,7 @@ mutations are optional additional controls; current exact product-path exclusion
 product helper controls and every-input mutation tests cover the required policy.
 
 
-### V0.2 SQL qualification — implementation under validation
+### V0.2 SQL qualification — validated, review pending
 
 Base: `ad1e26aac38787b669414e8572dcf9146433ced6`. Exact pinned PostgreSQL parser
 repositories and WASI-Virt were materialized in the owned checkout. Initial
@@ -584,10 +584,37 @@ The source was frozen during each producer run; only that producer's declared
 artifact/receipt outputs could change. The source hashes were not patched to
 bless existing binaries. Runtime assertions, final lightweight qualification,
 guards, independent review and merge remain required before V0.2 closes.
-Evidence: `v02-lightweight-baseline[-cases]`, `v02-source-repairs[-cases]`,
+Evidence: `v02-lightweight-baseline[-cases]`, `v02-source-repairs-batch`, `v02-source-repairs-cases`,
 `v02-submodule-preparation.json`, `v02-sdk-prepare`, `v02-sdk-preparation.json`,
 `v02-virtualizer-build`, `v02-virtualizer-fetch`, `v02-virtualizer-build-prepared`,
 and `v02-{mysql,sqlite,postgresql}-producer`.
+
+
+V0.2 final validation on implementation
+`3d01c1638ed672ef56b38c8405457d37a6ba1dd1`:
+
+| Check | Executed coverage | Elapsed including preparation |
+|---|---|---:|
+| Lightweight SQL qualification / mutations | 33/33 commands pass | 9.647s |
+| Component host and sandbox | 18/18 tests pass | 4.382s |
+| MySQL compiler and component execution | 9/9 tests, all three component variants | 19.383s |
+| SQLite compiler and component execution | 14/14 tests, the supported component | 9.376s |
+| PostgreSQL component execution and registrations | 2/2 tests, all six majors | 190.983s |
+| File-size, source direction and area contracts | All pass, Python 3.14.7 | 8.157s |
+
+All **43 native tests** executed with no ignored/filtered tests. Cargo checked the
+candidate at the retained native build location; the suites read and execute the
+new artifact bytes there. All ten SQL variants passed actual host execution,
+including the existing diagnostic/schema assertions. The native checks ran
+sequentially with their own cap; lightweight/guard checks overlapped preparation,
+so their durations must not be summed into a gate-wall-time claim. No full phase
+gate or V5 timing scenario is qualified by this bounded validation.
+
+Evidence: `v02-lightweight-final[-cases]`, `v02-component-host-tests`,
+`v02-{mysql,sqlite,postgresql}-runtime-tests`, `v02-runtime-batch.json`, and
+`v02-policy-guards`. [PR #4362](https://github.com/sifr-lang/sifr/pull/4362)
+is open for independent review. Subsequent phase-record edits do not change the
+validated implementation inputs.
 
 ## Execution stages
 
