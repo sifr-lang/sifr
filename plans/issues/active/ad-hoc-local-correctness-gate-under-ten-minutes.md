@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.14a accepted; V0.14b process lease inheritance
+current_stage: V0.14a merged; V0.14b1 E2E command-owned leases
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -2708,3 +2708,34 @@ Evidence: external `v014a-final-acceptance.json`, `v014a-baseline-graph.json`,
 `v014a-final-graph.json`, `v014a-actual-environment/`, all named receipts, and
 `reviews/4ee052487a2fda39ddbd801127a3f51b0c4af4a0/review.md` with timing/follow-up context.
 V0.14b is next. Full final phase gates and V1–V5 remain open.
+
+
+### V0.14b bounded sequence and V0.14b1 acceptance contract
+
+V0.14a merged as `d594df65e44b958b1da195eb42d1f7f794c7707d`
+([PR #4378](https://github.com/sifr-lang/sifr/pull/4378)).
+V0.14b1 starts from that base and fixes E2E suite lease inheritance. The observed
+parallel native-cache failure is caused by globally clearing CLOEXEC on the
+suite descriptor: unrelated Cargo/fixture children inherit it and prolong ownership.
+V0.14b2 owns the separate migration of production native family, publication,
+resolution, artifact and semantic-storage consumers. V0.14b is incomplete until
+both steps preserve their original ownership contracts.
+
+V0.14b1 scope: add a Unix command-bound lease primitive that leaves parent
+file descriptors close-on-exec, explicitly bind the E2E suite lease to its Cargo
+build/retirement and fixture commands, and pass ownership through normal and
+failure-isolation harness paths. Preserve Windows' existing behavior; foreign
+execution remains outside this local goal. No test serialization, weakened
+lease protection, implicit global registry, changed corpus, skipped assertions,
+or cache-authorized Cargo bypass is permitted. The existing production entry
+lock policy remains visible and owned by V0.14b2 during this bounded migration.
+
+Acceptance: prove unrelated live children do not retain the suite lease while
+intended live children do; prove protection after owner death, release after
+child exit, independent simultaneous owners, command disposal/spawn failure,
+and unchanged parent CLOEXEC state. Run the original native-cache tests with
+parallel workers, affected harness/isolation/lifecycle controls, full positive
+E2E assertions, formatting/file-size and affected method/area guards, then scoped
+independent review. Keep preparation separate from execution and preserve every
+failed/interrupted attempt under the existing 30-minute diagnostic cap. Full
+final phase gates and V5 remain required.
