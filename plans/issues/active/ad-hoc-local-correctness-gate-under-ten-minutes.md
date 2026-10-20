@@ -524,7 +524,11 @@ preparation (`v05-approved-all-contracts-final`). This retains all 102 original
 tests and adds six pinned-graph mutation/coverage controls. Format passed (19.186s),
 file-size guard passed (7.671s), and source dependency-direction guard passed
 (5.096s). Concurrent guard timings are diagnostic durations, not isolated speedup
-measurements. Six added controls reject missing/changed inputs, scope expansion,
+measurements. The initial Python guards used the system 3.14.4 interpreter;
+a final toolchain audit caught that mismatch. Both guards were rerun successfully
+through the locked verification environment with asserted **Python 3.14.7**, in
+6.591s combined (`v05-pinned-python-guards`). The pinned rerun is the acceptance
+evidence; earlier runs remain diagnostic evidence. Six added controls reject missing/changed inputs, scope expansion,
 unapproved registry rows/checksums/sources, and product-version relaxation.
 Independent review: **SATISFIED**, no blockers, for implementation
 `f4981e547d33514744567ea31f80bcc5846e5df2` against
