@@ -35,6 +35,9 @@ pub(super) fn execute_fixture(
     group_root: &Path,
     deadline: Duration,
 ) -> Result<(), String> {
+    if deadline.is_zero() {
+        return Err("diagnostic isolation deadline exhausted; fixture blocked".to_owned());
+    }
     let start = std::time::Instant::now();
     let result = execute_fixture_inner(command, fixture, group_root, deadline);
     eprintln!(

@@ -118,7 +118,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     let env_signature = cache_env_signature();
     setup_stage.finish("pass", serde_json::json!({}));
     let cache_stage = stage("cache_prepare", serde_json::json!({}));
-    let initial_manifest = initial_cache_manifest(config);
+    let initial_manifest = initial_cache_manifest(&lease, config);
 
     cache_stage.finish(
         "pass",
@@ -130,6 +130,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         serde_json::json!({"selected_groups":groups.len(),"native_workers":1,"cargo_jobs":config.cargo_build_jobs}),
     );
     let (original_builds, updated_manifest) = build_batch_suite(
+        &lease,
         &groups,
         config,
         &toolchain,
@@ -151,6 +152,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         serde_json::json!({"safety_budget_seconds":1800}),
     );
     let (build_outcomes, batch_failures) = batch_isolation::isolate_failed_batches(
+        &lease,
         original_builds,
         config,
         &toolchain,
@@ -189,7 +191,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         serde_json::json!({"groups":build_outcomes.len(),"workers":config.run_jobs}),
     );
     let run_started = Instant::now();
-    let (run_cases, run_outcomes) = run_batch_suite(&build_outcomes, config);
+    let (run_cases, run_outcomes) = run_batch_suite(&lease, &build_outcomes, config);
     let runtime_selected = run_cases.len();
     let runtime_failed = run_cases.iter().filter(|o| o.status.is_err()).count();
     let runtime_blocked: usize = build_outcomes

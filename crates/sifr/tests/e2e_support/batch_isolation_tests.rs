@@ -68,11 +68,18 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
         case("healthy", "fn main() {}"),
     ])
     .unwrap();
-    let (original, next) =
-        build_batch_suite(&[group.clone()], &config, &toolchain, "control", &manifest);
+    let (original, next) = build_batch_suite(
+        &lease,
+        &[group.clone()],
+        &config,
+        &toolchain,
+        "control",
+        &manifest,
+    );
     assert!(original[0].source_failure, "{:?}", original[0].build_error);
     let preserved = original[0].group_root.clone();
     let (isolated, failures) = batch_isolation::isolate_failed_batches(
+        &lease,
         original.clone(),
         &config,
         &toolchain,
@@ -82,7 +89,7 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
     );
     assert_eq!(isolated.len(), 2);
     assert_eq!(failures.len(), 1);
-    let (cases, _) = run_batch_suite(&isolated, &config);
+    let (cases, _) = run_batch_suite(&lease, &isolated, &config);
     assert_eq!(
         cases.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(),
         vec!["broken", "healthy"]
@@ -97,6 +104,7 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
     assert_eq!(report.failed_count(), 1);
     assert!(std::panic::catch_unwind(|| assert_report("control", &report)).is_err());
     let (capped, retained) = batch_isolation::isolate_failed_batches(
+        &lease,
         original,
         &config,
         &toolchain,
@@ -120,9 +128,16 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
     interaction
         .generated_main
         .push_str("\nfn interaction_error() { missing_function(); }\n");
-    let (failed, next) =
-        build_batch_suite(&[interaction], &config, &toolchain, "control", &manifest);
+    let (failed, next) = build_batch_suite(
+        &lease,
+        &[interaction],
+        &config,
+        &toolchain,
+        "control",
+        &manifest,
+    );
     let (isolated, failures) = batch_isolation::isolate_failed_batches(
+        &lease,
         failed,
         &config,
         &toolchain,
@@ -130,7 +145,7 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
         &next,
         Duration::from_secs(60),
     );
-    let (cases, _) = run_batch_suite(&isolated, &config);
+    let (cases, _) = run_batch_suite(&lease, &isolated, &config);
     assert!(cases.iter().all(|c| c.status.is_ok()));
     assert!(
         std::panic::catch_unwind(|| assert_report(
@@ -146,8 +161,14 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
     let mut parse = build_group_sources(vec![case("parse", "fn main() {}")]).unwrap();
     parse.generated_main.push_str("\nfn malformed(\n");
     let healthy = build_group_sources(vec![case("after_parse", "fn main() {}")]).unwrap();
-    let (mixed, _) =
-        build_batch_suite(&[parse, healthy], &config, &toolchain, "control", &manifest);
+    let (mixed, _) = build_batch_suite(
+        &lease,
+        &[parse, healthy],
+        &config,
+        &toolchain,
+        "control",
+        &manifest,
+    );
     assert!(mixed[0].build_error.is_some());
     assert!(!mixed[0].source_failure && !mixed[0].infrastructure_failure);
     assert!(
@@ -155,7 +176,7 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
         "{:?}",
         mixed[1].build_error
     );
-    assert!(run_batch_outcomes(&mixed[1])[0].status.is_ok());
+    assert!(run_batch_outcomes(&lease, &mixed[1])[0].status.is_ok());
     // Multiple source groups exhaust one shared budget; no member disappears.
     let mut first = batch_isolation::blocked(group.clone(), &config, "injected source failure");
     first.source_failure = true;
@@ -166,6 +187,7 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
         member.fixture.name.push_str("_second");
     }
     let (capped, retained) = batch_isolation::isolate_failed_batches(
+        &lease,
         vec![first, second],
         &config,
         &toolchain,
@@ -182,6 +204,7 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
     );
     let unavailable = batch_isolation::blocked(group, &config, "disk unavailable");
     let (attempts, _) = batch_isolation::isolate_failed_batches(
+        &lease,
         vec![unavailable],
         &config,
         &toolchain,

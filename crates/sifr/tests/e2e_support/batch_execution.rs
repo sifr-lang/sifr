@@ -5,6 +5,7 @@
 
 use super::*;
 pub(crate) fn build_batch_group(
+    lease: &native_cache::NativeCache,
     group: BatchGroup,
     config: &RunnerConfig,
     toolchain: &ToolchainInfo,
@@ -12,6 +13,7 @@ pub(crate) fn build_batch_group(
     manifest: &Arc<Mutex<CacheManifest>>,
 ) -> GroupBuildOutcome {
     build_batch_group_bounded(
+        lease,
         group,
         config,
         toolchain,
@@ -22,6 +24,7 @@ pub(crate) fn build_batch_group(
 }
 
 pub(crate) fn build_batch_group_bounded(
+    lease: &native_cache::NativeCache,
     group: BatchGroup,
     config: &RunnerConfig,
     toolchain: &ToolchainInfo,
@@ -83,7 +86,7 @@ pub(crate) fn build_batch_group_bounded(
                 .current_dir(&group_root);
             application_profile().configure(&mut build_command);
             build_command.env("CARGO_TARGET_DIR", config.cache.root.join("native-target"));
-            let build_capture = run_capture_bounded(build_command, deadline);
+            let build_capture = run_leased_capture(build_command, lease, deadline);
             units = telemetry::cargo_units(&build_capture.stdout);
             source_failure =
                 batch_isolation::is_source_failure(&build_capture, &group.package_name);
@@ -209,6 +212,7 @@ pub(crate) fn build_batch_group_bounded(
 }
 
 pub(crate) fn build_batch_suite(
+    lease: &native_cache::NativeCache,
     groups: &[BatchGroup],
     config: &RunnerConfig,
     toolchain: &ToolchainInfo,
@@ -227,6 +231,7 @@ pub(crate) fn build_batch_suite(
             batch_isolation::blocked(group.clone(), config, "prior native infrastructure failure")
         } else {
             build_batch_group(
+                lease,
                 group.clone(),
                 config,
                 toolchain,
@@ -248,7 +253,10 @@ pub(crate) fn build_batch_suite(
     (outcomes, next_manifest)
 }
 
-pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<FixtureExecution> {
+pub(crate) fn run_batch_outcomes(
+    lease: &native_cache::NativeCache,
+    group_outcome: &GroupBuildOutcome,
+) -> Vec<FixtureExecution> {
     let group = &group_outcome.group;
     let fixture_names = group
         .cases
@@ -308,8 +316,14 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
         .iter()
         .map(|case| {
             let status =
-                match fixture_execution::run_single_case_bounded(artifact, &case.fixture.name, &group_outcome.group_root,
-                    group_outcome.execution_deadline.map_or(std::time::Duration::from_secs(30 * 60), |end| end.saturating_duration_since(Instant::now()))) {
+                match (|| {
+                    if !artifact.is_absolute() { return Err("fixture executable must have an absolute Cargo-selected path".to_owned()); }
+                    let mut command = Command::new(artifact);
+                    command.args(["--case", &case.fixture.name]);
+                    lease.bind_command(&mut command).map_err(|error| format!("cannot bind fixture lease: {error}"))?;
+                    fixture_execution::execute_fixture(command, &case.fixture.name, &group_outcome.group_root,
+                        group_outcome.execution_deadline.map_or(std::time::Duration::from_secs(30 * 60), |end| end.saturating_duration_since(Instant::now())))
+                })() {
                     Ok(()) => Ok(()),
                     Err(err) => Err(format!(
                         "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",
@@ -330,6 +344,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
 }
 
 pub(crate) fn run_batch_suite(
+    lease: &native_cache::NativeCache,
     build_outcomes: &[GroupBuildOutcome],
     config: &RunnerConfig,
 ) -> (Vec<FixtureExecution>, Vec<GroupRunOutcome>) {
@@ -338,7 +353,7 @@ pub(crate) fn run_batch_suite(
 
     let per_group = run_in_parallel(build_outcomes, config.run_jobs, |group| {
         let started = Instant::now();
-        let results = run_batch_outcomes(group);
+        let results = run_batch_outcomes(lease, group);
         (
             GroupRunOutcome {
                 group_id: group.group.id.clone(),
@@ -528,7 +543,10 @@ where
     ordered
 }
 
-pub(crate) fn initial_cache_manifest(config: &RunnerConfig) -> CacheManifest {
+pub(crate) fn initial_cache_manifest(
+    lease: &native_cache::NativeCache,
+    config: &RunnerConfig,
+) -> CacheManifest {
     if !config.cache.enabled {
         return CacheManifest {
             schema_version: E2E_CACHE_SCHEMA_VERSION,
@@ -558,7 +576,8 @@ pub(crate) fn initial_cache_manifest(config: &RunnerConfig) -> CacheManifest {
             {
                 let mut command = Command::new("cargo");
                 command.args(args).current_dir(group_root);
-                let capture = run_capture(command);
+                let capture =
+                    run_leased_capture(command, lease, std::time::Duration::from_secs(30 * 60));
                 if !capture.status_ok {
                     let log = group_root.join(format!(
                         "retirement-failure-{}.log",
@@ -579,4 +598,20 @@ pub(crate) fn initial_cache_manifest(config: &RunnerConfig) -> CacheManifest {
     );
     write_cache_manifest(&config.cache.root, &pruned);
     pruned
+}
+
+fn run_leased_capture(
+    mut command: Command,
+    lease: &native_cache::NativeCache,
+    deadline: std::time::Duration,
+) -> CommandCapture {
+    if let Err(error) = lease.bind_command(&mut command) {
+        return CommandCapture {
+            stdout: String::new(),
+            stderr: format!("cannot bind native cache lease: {error}"),
+            status_ok: false,
+            exit_code: None,
+        };
+    }
+    run_capture_bounded(command, deadline)
 }

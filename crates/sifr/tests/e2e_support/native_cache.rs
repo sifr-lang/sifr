@@ -5,12 +5,21 @@ use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct NativeCache {
-    // Inherited by native children on Unix, including after an interrupted owner.
+    // Only explicitly bound native children inherit this lease on Unix.
     _lease: File,
     pub(crate) root: PathBuf,
 }
 
 impl NativeCache {
+    pub(crate) fn bind_command(&self, command: &mut std::process::Command) -> io::Result<()> {
+        #[cfg(unix)]
+        sifr_cache_storage::inherit_lease_for_command(command, &self._lease)?;
+        // Windows retains its existing inherited-handle and Job ownership policy.
+        #[cfg(windows)]
+        let _ = command;
+        Ok(())
+    }
+
     pub(crate) fn acquire(requested: &Path) -> io::Result<Self> {
         let absolute = if requested.is_absolute() {
             requested.to_path_buf()
@@ -20,6 +29,9 @@ impl NativeCache {
         // A new namespace leaves legacy per-group targets and evidence untouched.
         let root = absolute.join("cargo-v3");
         sifr_cache_storage::directory(&root)?;
+        #[cfg(unix)]
+        let lease = sifr_cache_storage::open_entry_lock(&root, "suite", false)?;
+        #[cfg(windows)]
         let lease = sifr_cache_storage::entry_lock(&root, "suite")?;
         lease.try_lock().map_err(|error| io::Error::other(format!(
             "cache is busy or cannot be locked ({}): {error}; choose a separate --cache-dir or wait for its owner", root.display()

@@ -715,7 +715,7 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     let manifest_path = cache_manifest_path(&config.cache.root);
     let sentinel = b"existing invalid success manifest must remain untouched";
     native_cache::write_changed(&manifest_path, sentinel).unwrap();
-    let manifest = initial_cache_manifest(&config);
+    let manifest = initial_cache_manifest(&lease, &config);
     assert!(manifest.entries.is_empty());
     let case = FixtureCase {
         name: "no_cache_control".into(),
@@ -733,6 +733,7 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     let toolchain = toolchain_info();
     let env_signature = cache_env_signature();
     let (first, _) = build_batch_suite(
+        &lease,
         &[group.clone()],
         &config,
         &toolchain,
@@ -751,6 +752,7 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
         .is_empty()
     );
     let (fresh, _) = build_batch_suite(
+        &lease,
         &[group.clone()],
         &config,
         &toolchain,
@@ -764,6 +766,7 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     )
     .unwrap();
     let (corrupt, _) = build_batch_suite(
+        &lease,
         &[group.clone()],
         &config,
         &toolchain,
@@ -772,7 +775,7 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     );
     assert!(corrupt[0].artifact_path.is_none());
     assert!(corrupt[0].build_error.is_some());
-    let failure = run_batch_outcomes(&corrupt[0]);
+    let failure = run_batch_outcomes(&lease, &corrupt[0]);
     assert!(
         failure[0]
             .status
@@ -783,7 +786,14 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     group
         .generated_main
         .push_str("\ncompile_error!(\"no-cache must validate Cargo\");\n");
-    let (invalid, _) = build_batch_suite(&[group], &config, &toolchain, &env_signature, &manifest);
+    let (invalid, _) = build_batch_suite(
+        &lease,
+        &[group],
+        &config,
+        &toolchain,
+        &env_signature,
+        &manifest,
+    );
     assert!(invalid[0].artifact_path.is_none());
     assert!(invalid[0].build_error.is_some());
     assert_eq!(std::fs::read(manifest_path).unwrap(), sentinel);

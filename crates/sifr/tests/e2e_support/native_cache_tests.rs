@@ -300,7 +300,11 @@ fn interrupted_owner_cannot_release_a_live_native_child_lease() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path().canonicalize().unwrap();
     let lease = NativeCache::acquire(&root).unwrap();
-    let mut child = Command::new("sleep").arg("30").spawn().unwrap();
+    let mut command = Command::new("sleep");
+    command.arg("30");
+    lease.bind_command(&mut command).unwrap();
+    let mut child = command.spawn().unwrap();
+    drop(command);
     drop(lease); // Equivalent to the owner process losing its descriptor.
     assert!(NativeCache::acquire(&root).is_err());
     child.kill().unwrap();
@@ -367,4 +371,25 @@ fn invalid_retirement_records_cannot_select_other_packages_or_targets() {
         write_changed(&p.project.join("retirement.json"), record.as_bytes()).unwrap();
         assert!(retirement_commands(&p.project, &p.target, "probe").is_err());
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn unrelated_live_children_do_not_keep_the_suite_busy() {
+    struct ChildGuard(std::process::Child);
+    impl Drop for ChildGuard {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().canonicalize().unwrap();
+    let owner = NativeCache::acquire(&root).unwrap();
+    let unrelated = ChildGuard(Command::new("sleep").arg("30").spawn().unwrap());
+    drop(owner);
+    let next_owner =
+        NativeCache::acquire(&root).expect("unrelated child must not retain suite lease");
+    drop(next_owner);
+    drop(unrelated);
 }
