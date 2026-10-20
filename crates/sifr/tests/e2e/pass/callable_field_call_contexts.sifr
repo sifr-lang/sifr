@@ -1,0 +1,28 @@
+# Callable fields preserve invocation and borrowing in every expression context.
+class Holder:
+    callback: Callable[[str], str]
+
+    def __init__(self, callback: Callable[[str], str]):
+        self.callback = callback
+
+class MethodHolder:
+    def callback(self, value: str) -> str:
+        return value.clone()
+
+def decorate(value: str) -> str:
+    return value + "!"
+
+def identity(value: str) -> str:
+    return value.clone()
+
+def main():
+    holder = Holder(decorate)
+    method = MethodHolder()
+    text: str = "retained"
+    direct = holder.callback(text)
+    assert direct == "retained!"
+    assert len(holder.callback(text)) == 9
+    assert str(holder.callback(text)) == "retained!"
+    assert identity(holder.callback(text)) == "retained!"
+    assert len(method.callback(text)) == 8
+    assert text == "retained"
