@@ -161,7 +161,7 @@ fn collect_demands(
 // The emitter expresses class ancestry through this standard contract. A
 // same-spelled local/private trait does not impose a public parent boundary.
 fn generated_parent_contract(item: &syn::ItemImpl) -> bool {
-    item.trait_.as_ref().is_some_and(|(_, path, _)| {
+    item.trait_.as_ref().is_some_and(|(path, _)| {
         path.leading_colon.is_some()
             && path
                 .segments
