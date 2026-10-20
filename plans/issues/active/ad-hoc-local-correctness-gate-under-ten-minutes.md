@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.9 validated and reviewed; V0.10 CLI parity next
+current_stage: V0.10 validated and reviewed; V0.11 E2E inventory next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -183,8 +183,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
-| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Validated/reviewed; PR #4371 |
-| V0.10 | CLI eager/deferred schema parity | Pending |
+| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
+| V0.10 | CLI eager/deferred schema parity | Validated/reviewed; PR #4372 |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
@@ -1942,3 +1942,63 @@ identity input. Evaluate cohesive public-behavior test ownership together with
 production-input identity; do not omit genuine production dependencies or expose
 private APIs just to move tests. The observed 318/336-second preparations are
 separate library/test contexts, not an additive full-gate forecast.
+
+
+V0.9 merged as #4371 at `eec85331bb2e5cb2f6c851ed2fe3db346ae65471`.
+
+### V0.10 bounded scope: independent CLI schema parity
+
+Reproduce the current eager/deferred schema mismatch, then align the eager test
+reference with the production test command's locked/offline/frozen flags. Keep
+independent schemas, exact match/error/help/order equality, all existing loop
+cases and production normalization semantics. Add explicit coverage for all
+three-flag combinations in both normal and update construction modes and
+representative option orderings. No production command behavior changes.
+
+Acceptance: the complete eager-contract and deferred-parser test groups, existing
+build/test lock-mode parse/normalization controls, added flag combinations,
+formatting/size/area and affected policy checks, plus independent review. Use
+retained targets and the existing 30-minute/resource limits. Final integrated
+create-PR/merge gates and V5 remain required.
+
+
+### V0.10 final validation and review
+
+Implementation `0144543fe075eb7065632b333851fa88d3387d3f`, base
+`eec85331bb2e5cb2f6c851ed2fe3db346ae65471`, PR
+[#4372](https://github.com/sifr-lang/sifr/pull/4372). Only the independent eager
+test schema and added regression change; production parsing, normalization,
+profiles, locks, test selection and existing assertions are unchanged.
+
+`v010-cli-baseline` reproduces the exact two composite failures: 9 pass, 2 fail,
+143 filtered; 397.551 seconds outer, 387 Cargo preparation and 0.21 execution.
+The missing fields cause equality failure at `sifr test`, so later loop entries
+are not claimed covered by this baseline. `v010-cli-final` passes **all 12 named
+tests**, zero failed/ignored and the same 143 filtered, in 40.799 seconds outer
+(37.39 preparation, 0.31 execution). It retains all eleven original IDs and adds
+one regression with 32 parity cases, explicit success for sixteen update-mode
+inputs and expected values for each normal-mode flag. Both formerly failing
+composite tests now execute their complete loops. The retained dependency context
+explains most of the shorter final preparation; this is not a measured compiler
+optimization or full-gate timing result.
+
+`v010-guards-final` passes formatting, size, all area contracts, unchanged method
+policy and mutation controls, and diff check in 49.192 seconds. The source is
+743 lines. Independent review is **SATISFIED**, no blockers, in
+`reviews/0144543fe075eb7065632b333851fa88d3387d3f/review.md`; its required final
+checks now pass. The earlier review at `c02622144` prompted the added update-mode
+acceptance assertion before final validation. Receipts, file hashes and retained/
+added/repaired test identities are in `v010-final-validation.json`, under
+`continuation-evidence/local-gate-implementation-20261020/`. No final timeout,
+reserve stop, leftover process group or source drift occurred.
+
+V4 owns the review's separate suggestion to collect every independent CLI schema
+mismatch before reporting a failed aggregate. The optional duplicate value checks
+and additional release/lock combinations are not acceptance gaps; exact reference
+equality and the existing normalization/release controls remain retained. The
+CLI baseline prepared a distinct existing Cargo dependency context; captured
+process arguments and eight retained codegen fingerprint records are in
+`v010-cli-preparation-processes.json` and `v010-codegen-contexts.json`. Differences
+in dependency fingerprints are evidence for investigation, not proof of cache
+corruption or of an unnecessary feature variant. V0.11 current E2E failure
+reconciliation is next; final complete gates and V5 remain mandatory.

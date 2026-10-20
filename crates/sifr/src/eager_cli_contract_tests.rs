@@ -336,6 +336,15 @@ enum Commands {
         /// Optimize the generated application using the release profile
         #[arg(long)]
         release: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
         /// Directory containing test files (default: current directory)
         #[arg(default_value = ".")]
         dir: PathBuf,
@@ -683,5 +692,52 @@ fn cache_cli_contract() {
             .try_get_matches_from(args)
             .unwrap_err();
         assert_eq!(error.exit_code(), 2);
+    }
+}
+
+#[test]
+fn test_lock_flag_combinations_keep_independent_schema_parity() {
+    let flags = [
+        ("locked", "--locked"),
+        ("offline", "--offline"),
+        ("frozen", "--frozen"),
+    ];
+    for mask in 0_u8..8 {
+        for options_first in [false, true] {
+            let mut args = vec!["sifr", "test"];
+            if !options_first {
+                args.push("tests");
+            }
+            for (index, (_, option)) in flags.iter().enumerate() {
+                if mask & (1 << index) != 0 {
+                    args.push(option);
+                }
+            }
+            if options_first {
+                args.push("tests");
+            }
+            for update in [false, true] {
+                equivalent(&args, update);
+                if update {
+                    assert!(
+                        crate::cli_model_and_entrypoint::Cli::command_for_update()
+                            .try_get_matches_from(&args)
+                            .is_ok(),
+                        "valid update-mode lock flags: {args:?}"
+                    );
+                }
+            }
+            let matches = crate::cli_model_and_entrypoint::Cli::command()
+                .try_get_matches_from(&args)
+                .expect("valid lock flags");
+            let test = matches.subcommand_matches("test").expect("test selection");
+            for (index, (name, _)) in flags.iter().enumerate() {
+                assert_eq!(
+                    test.get_flag(name),
+                    mask & (1 << index) != 0,
+                    "{args:?}: {name}"
+                );
+            }
+        }
     }
 }
