@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6c validated and reviewed; V0.7 next
+current_stage: V0.6 complete; V0.7 typed nominal accessors in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -180,8 +180,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3b | Python runtime registries and LSP selected-input admission | Merged #4363; 114 LSP tests and four focused area variants pass; review SATISFIED |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
-| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1/a2/b merged; V0.6c validated/reviewed |
-| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
+| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | In progress |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
@@ -1508,3 +1508,35 @@ comparison, explicit empty `where`-clause checking, and generated-source context
 in assertion failures. These suggestions do not weaken existing obligations.
 Record-only updates do not change validated inputs. Full integrated gates,
 native semantic repairs and V5 timing acceptance remain open.
+
+
+V0.6c merged as #4367 at `4790068c0899880f314ab34a0e9f82221ee1ee1e`.
+
+### V0.7 bounded scope: typed nominal accessors
+
+Current-source inspection refines the original diagnosis: lowering deliberately
+classifies newtype `value()` and enum `name()`/`value()` as builtin intrinsics.
+That authority is correct, but the typed codegen registry has no corresponding
+receiver arms. Reproduce the exact ignored native collision case before repair;
+retain nominal identity and strict authority checks. Add only supported zero-arg
+accessor lowering, using existing generated accessor methods and structured
+receiver types. Split registry tests by responsibility if necessary to preserve
+the 900-line source limit, retaining test IDs.
+
+The collision fixture currently builds but never executes its binary. Execute
+that binary and require success so its unchanged runtime assertions actually run.
+Validation: focused typed accessor/codegen authority controls; existing lowering
+method-authority tests; complete codegen unit tests; the exact native collision
+case; existing positive `newtype_basic`, `enum_value_property`, `enum_valued` E2E
+fixtures (compile and execute); formatting/file-size/source-direction/area
+contracts; independent scoped review. Verify actual selection counts. Include
+rejection controls for wrong receiver/arity, unclassified or forged authority,
+and preserve user/protocol dispatch. No name-based fallback or fixture skip.
+
+Emitted-Rust ownership was checked against issue #4344 (open, unassigned), which
+lists the three type fixtures among 19 failures. This bounded repair owns only
+the shared accessor mechanism under LOCAL-GATE V0.7; report observed overlap to
+V0.11 without claiming the remaining async/network/process/callable-field cases
+fixed. V0.8/V0.9 own separate method-slot and ancestry/upcast failures. Complete
+phase gates and V5 remain mandatory. The user's sustained phase-execution request
+continues the registered sequence while preserving one bounded item at a time.
