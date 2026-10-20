@@ -947,14 +947,13 @@ summary and review. Reviewer suggestions about external references, timing label
 and formatting were incorporated as documentation-only corrections; no additional
 implementation requirement or unresolved follow-up was introduced. No second
 external review is required for these record/prose-only changes under the phase
-closure loop. Implementation remains pending and there is no full-gate pass.
+closure loop. At that planning checkpoint, implementation remained pending and no full-gate pass was claimed.
 
 After all implementation items merge, close only when V5 passes. Record remaining
 out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge qualified V0.3a, then implement V0.5; the original
-broad diagnostic finish or hit its cap without mutating its candidate. Continue
-bounded V0 repairs and preserve all incomplete evidence. Preserve
-this investigation's baseline and failures while collecting current evidence.
+**Next action:** merge qualified V0.3a, then implement V0.5. Continue bounded
+V0 repairs, retaining the stopped broad diagnostic and all incomplete evidence.
+Preserve the investigation baseline and failures while collecting current evidence.
