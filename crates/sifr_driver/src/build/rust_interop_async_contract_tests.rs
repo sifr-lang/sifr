@@ -7,7 +7,7 @@ use super::rust_interop_contract_tests::{
     set_bridge_roots, signature_contract, string_contract, temp_package_root,
 };
 use sifr_codegen::{
-    RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropOwner, StdlibCode,
+    RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropOwner,
     generate_rust_multi_with_metadata,
 };
 use sifr_package::TrustPolicy;
