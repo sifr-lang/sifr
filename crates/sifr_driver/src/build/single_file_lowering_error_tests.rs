@@ -8,6 +8,27 @@ const SOURCE: &str = "def main():\n    assert 1 + 1 == 2\n";
 
 #[test]
 fn lowering_error_counters_reject_before_and_after_successful_resolution() {
+    // Other driver tests also record Cargo calls. An isolated test process
+    // makes an empty trace meaningful even under parallel test execution.
+    const CHILD: &str = "SIFR_LOWERING_COUNTER_CONTROL_CHILD";
+    if std::env::var_os(CHILD).is_none() {
+        let output = std::process::Command::new(std::env::current_exe().expect("test executable"))
+            .args([
+                "build::single_file_lowering_error_tests::lowering_error_counters_reject_before_and_after_successful_resolution",
+                "--exact", "--nocapture", "--test-threads=1",
+            ])
+            .env(CHILD, "1")
+            .output()
+            .expect("isolated lowering counter control");
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed; 0 failed"));
+        return;
+    }
     let unavailable_native = Err("native preparation must not run for lowering errors".to_owned());
     for after_success in [false, true] {
         if after_success {
