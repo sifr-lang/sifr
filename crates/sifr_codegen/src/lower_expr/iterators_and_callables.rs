@@ -344,47 +344,6 @@ pub(crate) fn try_lower_simple_method_call_expr(expr: &HirExpr) -> Option<RustEx
     {
         return None;
     }
-    if (matches!(
-        method.as_str(),
-        "__sifr_spawn_infallible"
-            | "__sifr_spawn_infallible_with_context"
-            | "__sifr_spawn_result"
-            | "__sifr_spawn_result_with_context"
-            | "__sifr_scope_spawn_blocking_infallible"
-            | "__sifr_scope_spawn_blocking_result"
-            | "__sifr_scope_spawn_cpu_infallible"
-            | "__sifr_scope_spawn_cpu_result"
-            | "__sifr_scope_spawn_process"
-    )) && matches!(resolve_alias_type(object.ty()), Type::Class { name, .. } if name == "TaskScope" || name == "TaskGroup")
-    {
-        let lowered_object = try_lower_leaf_or_name_expr(object)?;
-        let lowered_args = args
-            .iter()
-            .map(|arg| {
-                if let HirExpr::Call {
-                    func,
-                    args: call_args,
-                    ..
-                } = arg
-                {
-                    let lowered_call_args = call_args
-                        .iter()
-                        .map(try_lower_leaf_or_name_expr)
-                        .collect::<Option<Vec<_>>>()?;
-                    return Some(RustExpr::FnCall {
-                        func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
-                        args: lowered_call_args,
-                    });
-                }
-                try_lower_leaf_expr(arg)
-            })
-            .collect::<Option<Vec<_>>>()?;
-        return Some(RustExpr::MethodCall {
-            receiver: Box::new(lowered_object),
-            method: method.clone(),
-            args: lowered_args,
-        });
-    }
     if (method == "join" || method == "cancel_and_join")
         && matches!(
             resolve_alias_type(object.ty()),

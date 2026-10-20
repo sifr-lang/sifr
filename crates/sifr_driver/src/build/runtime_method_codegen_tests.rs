@@ -21,6 +21,7 @@ fn runtime_method_fixtures_emit_without_lowering_errors() {
         "process_scoped_spawn_handle",
         "task_cancel_basic",
         "task_context_propagation_basic",
+        "task_context_reuse_across_spawns",
         "task_group_basic",
         "task_group_spawn_cpu",
         "task_group_spawn_cpu_user_error",

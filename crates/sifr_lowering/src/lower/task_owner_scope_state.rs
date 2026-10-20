@@ -12,27 +12,7 @@ pub(in crate::lower) struct ActiveTaskOwnerSnapshot {
     previous_handle_group_owners: HashMap<String, String>,
 }
 
-pub(in crate::lower) fn task_scope_type() -> Type {
-    Type::Class {
-        identity: Some("sifr.task.TaskScope".to_string()),
-        type_args: Vec::new(),
-        name: "TaskScope".to_string(),
-        fields: vec![].into(),
-        methods: vec![].into(),
-        parent_class: None,
-    }
-}
-
-pub(in crate::lower) fn task_group_type() -> Type {
-    Type::Class {
-        identity: Some("sifr.task.TaskGroup".to_string()),
-        type_args: Vec::new(),
-        name: "TaskGroup".to_string(),
-        fields: vec![].into(),
-        methods: vec![].into(),
-        parent_class: None,
-    }
-}
+pub(in crate::lower) use sifr_type_system::{task_group_type, task_scope_type};
 
 pub(in crate::lower) fn enter_task_owner_scope(
     ctx: &mut LowerCtx,

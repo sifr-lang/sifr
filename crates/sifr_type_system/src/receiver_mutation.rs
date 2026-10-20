@@ -67,7 +67,14 @@ pub fn receiver_mutation_summary(
         },
         Type::PythonBuffer(_) => ReceiverMutationEffect::ValueMutation,
         Type::JoinSet(_, _)
-            if matches!(method, "add" | "__sifr_spawn_blocking" | "__sifr_spawn_cpu") =>
+            if matches!(
+                method,
+                "add"
+                    | "__sifr_add_task"
+                    | "__sifr_add_blocking_task"
+                    | "__sifr_spawn_blocking"
+                    | "__sifr_spawn_cpu"
+            ) =>
         {
             ReceiverMutationEffect::Growth
         }
@@ -121,7 +128,11 @@ fn receiver_fact_domain(
         (Type::PythonBuffer(_), "write", ReceiverMutationEffect::ValueMutation)
         | (
             Type::JoinSet(_, _),
-            "add" | "__sifr_spawn_blocking" | "__sifr_spawn_cpu",
+            "add"
+            | "__sifr_add_task"
+            | "__sifr_add_blocking_task"
+            | "__sifr_spawn_blocking"
+            | "__sifr_spawn_cpu",
             ReceiverMutationEffect::Growth,
         ) => ReceiverFactDomain::NoRelevantSequenceFacts,
         _ => ReceiverFactDomain::RelevantSequenceFacts,
