@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.11b validated for merge; V0.12 demo compilation and generated freshness next
+current_stage: V0.11b merged; V0.12 demo compilation and generated freshness investigation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -185,8 +185,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
-| V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b validated #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
-| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
+| V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b merged #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
+| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Current: measure complete canonical demos and freshness after V0.11b |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
@@ -2281,3 +2281,33 @@ and failure evidence remain. Restore instructions and hashes are retained in
 This is intermediate acceptance under the approved phase policy. Full final
 create-PR/merge correctness gates and V5 remain open. Next: V0.12 canonical demo
 compilation and generated companion freshness, using this repaired compiler.
+
+
+V0.11b merged as PR #4374 at `9025dad7470efeb3647cf0ebacaf948a02a8aca8`.
+Final reviewed/tested implementation remains `ffa7a4ebfd3c55b5b72fadc08bde9185540f5cee`;
+final head `f95d522608f81db1f6a69abfd70191b6f8e138ab` changed only this record.
+
+### V0.12 bounded scope and acceptance
+
+First rerun the complete canonical `generated_code_quality:demos` and
+`generated_code_quality:freshness` contracts with the repaired compiler. Preserve
+all per-demo failures and freshness comparisons; prior 43-stale evidence remains
+historical, not a claim about this candidate. Diagnose before changing production
+code, snapshots or quality debt. No subset or stale-list allowance substitutes
+for the original contracts. Use the selected compiler and retained owned targets;
+include preparation in outer timing and retain the 30-minute diagnostic cap.
+
+When emitted companions differ, reconcile each change to current source/compiler
+behavior and preserve the demo's source assertions. Regenerate only justified
+current outputs, then require a second complete freshness check and deterministic
+comparison. Reconcile exact quality inventories if generated safety findings
+change; do not increase allowed debt merely to pass. Any remaining compiler
+semantic failure must be reproduced and bounded before a repair; do not discard
+independent demos after the first failure.
+
+Named acceptance: all canonical demo entries, all authoritative companion
+comparisons, affected generated-code inventory/safety/format/determinism contracts,
+focused regression checks for any actual code change, required guards, and scoped
+independent review. Existing phase-end full correctness gates and V5 remain
+mandatory. Separate sanitizer/process/caching/compilation work stays in its
+recorded item. No demo source renames or unrelated refactors are implied.
