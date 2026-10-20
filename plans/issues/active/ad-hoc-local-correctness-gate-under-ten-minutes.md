@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16c merged; V0.14b2 production child lease ownership
+current_stage: V0.14b2 accepted; V0.16d SQL proof reconciliation next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -190,9 +190,9 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Merged #4376; focused acceptance and scoped review pass |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Split into V0.14a preparation prerequisites and V0.14b process lease inheritance |
 | V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Merged #4378; declared prerequisites, 114 LSP and two native bridge tests, runner controls and review pass |
-| V0.14b | Process lease inheritance limited to the intended consuming children | E2E migration accepted in V0.14b1; production migration remains V0.14b2 |
+| V0.14b | Process lease inheritance limited to the intended consuming children | E2E #4379 and production #4381 accepted; reusable source fixture ownership remains V3 |
 | V0.14b1 | Explicit E2E suite child lease ownership | Merged #4379; focused checks, all 732 positives and scoped review pass |
-| V0.14b2 | Explicit production child lease ownership | Pending: native families/publication/resolution/artifact and semantic owners |
+| V0.14b2 | Explicit production child lease ownership | Accepted #4381; named ownership/native/CLI checks and scoped review pass |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 | V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
@@ -2987,3 +2987,84 @@ this item, not a relaxation of cache admission. Run the original regression unde
 both 0002 and 0077 and all semantic-services tests. Preserve the initial 25/26
 receipt and label the restrictive-umask probe diagnostic-only. No runtime metadata
 logic, cache identities, platform policy or test selection changes.
+
+
+### V0.14b2 focused acceptance
+
+[PR #4381](https://github.com/sifr-lang/sifr/pull/4381) accepts implementation
+`a50013da171beb59ebe152e07ae6fed398934373` under the approved intermediate policy.
+Unix production leases now follow their consuming Cargo/native commands explicitly.
+Family, publication and prepared-resolution ownership covers metadata, probes,
+builds and portable materialization. Finalized executables receive their artifact
+lease through `CachedBinaryArtifact::command`. Generated tests release mutable
+family ownership before executing protected immutable artifacts. Semantic metadata
+keeps its owner in process. Parent descriptors stay close-on-exec; descriptor
+values never enter cache identity. Windows policy is unchanged.
+
+Real-Cargo, killed-owner, unrelated-live-child, multiple-owner, failed-spawn and
+command-disposal controls pass. Original native reuse, cache, pruning, generated
+test, CLI and portable assertions remain. The metadata fixture now creates its
+own private cache child, preserving production permission checks. The obsolete
+Unix `entry_lock` re-export is test-only; final preparation has no warnings/errors.
+
+| Final implementation category | Result | Outer elapsed |
+| --- | --- | ---: |
+| driver preparation | Pass | 34.736s |
+| cli preparation | Pass | 60.322s |
+| e2e preparation | Pass | 17.377s |
+| cli lock mode | 6 passed, zero failed/ignored | 76.786s |
+| production controls | 3 passed, zero failed/ignored | 5.186s |
+| workspace ownership | 10 passed, zero failed/ignored | 6.688s |
+| native reuse | 7 passed, zero failed/ignored | 17.202s |
+| generated runner | 4 passed, zero failed/ignored | 8.688s |
+| bridge archives | 2 passed, zero failed/ignored | 79.229s |
+| storage | 10 passed, zero failed/ignored | 1.184s |
+| semantic 002 | 26 passed, zero failed/ignored | 43.713s |
+| semantic 077 | 26 passed, zero failed/ignored | 42.207s |
+| portable | 1 passed, zero failed/ignored | 21.198s |
+| guards | Pass | 59.206s |
+
+These categories overlap; their counts/times are not a complete gate total or a
+matched speedup measurement. The storage count includes a helper whose child
+assertions are exercised by parent controls. An earlier complete ordinary driver
+run at `f9df2d0d762cfa2e5c9898cc900e2dbc84585222` passed 741 tests with 81 existing
+integration/helper ignores in 790.704s. It remains that observed diagnostic,
+not a final-candidate run. Every table receipt has no resource stop, leftover
+process group or source mutation.
+
+The complete unsafe audit at `971ee00e7a1717106cda84c5f0983258ded7ff00` remains
+**failed** on exactly twelve pre-existing SQL guest proof references. It took
+201.034s; all twelve mutation tests passed and complete cross-record comparison
+reported no cache/driver/new-site error. Fresh final-candidate local validation
+finds the same twelve errors. Safety sites, fingerprints, operations/evidence,
+inventory contracts, auditor code and schemas are unchanged.
+`v014b2-a500-unsafe-reconciliation.json` binds reuse of the pure cross-record checks
+to identical inputs. V0.16d must repair the SQL proofs before final gates.
+
+Independent review is **SATISFIED**; its named merge conditions are now met.
+The initial code review and bounded remediation reviews remain externally keyed
+by SHA. Final review: `reviews/a50013da171beb59ebe152e07ae6fed398934373/review.md`.
+Acceptance, raw commands, receipts and output hashes are retained externally in
+`v014b2-final-acceptance.json` and its named directories.
+
+Preserved failures include the unsupported Cargo shell-alias control, incomplete
+policy records, the metadata fixture's permissive-umask failure (25/26), missing
+CLI sysroot selection, and portable relocation stopped at the disk reserve.
+Two CLI failures cascaded from the first poisoned test lock before their native
+assertions; the corrected final batch executes all six cases. The restrictive
+umask probe remains diagnostic-only. Portable interruption was 19.220s at the
+disk reserve, not a greater-than-30-minute classification.
+
+CLI qualification explicitly selects the candidate source sysroot: these cases
+change working directory and the owned Cargo target is outside source ancestry.
+V3 owns that canonical launch input. Portable qualification retains its original
+explicit fetch/locked-check contract; no additional offline guarantee is inferred.
+Capacity recovery archived checksum-verified obsolete executables and older
+incremental generations, retaining the newest generation and lock files in each
+context. The reserve was not reduced; failed outputs were preserved.
+
+Next: V0.16d SQL proof records, then V1–V5. V3 retains reusable source-fixture
+child ownership and Python/launch preparation identities. V4 retains pure
+safety-audit work, durable-history cost, compilation/capacity accounting and
+fail-closed corpus admission. Complete final phase gates and measured
+sub-ten-minute acceptance remain open.
