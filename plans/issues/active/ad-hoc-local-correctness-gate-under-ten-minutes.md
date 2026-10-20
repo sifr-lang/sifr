@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.14b1 accepted; V0.16c deterministic lowering-error control
+current_stage: V0.14b1 merged; V0.16c deterministic lowering-error control
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -191,7 +191,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Split into V0.14a preparation prerequisites and V0.14b process lease inheritance |
 | V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Merged #4378; declared prerequisites, 114 LSP and two native bridge tests, runner controls and review pass |
 | V0.14b | Process lease inheritance limited to the intended consuming children | E2E migration accepted in V0.14b1; production migration remains V0.14b2 |
-| V0.14b1 | Explicit E2E suite child lease ownership | Accepted: PR #4379; focused checks, all 732 positives and scoped review pass |
+| V0.14b1 | Explicit E2E suite child lease ownership | Merged #4379; focused checks, all 732 positives and scoped review pass |
 | V0.14b2 | Explicit production child lease ownership | Pending: native families/publication/resolution/artifact and semantic owners |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
@@ -2834,3 +2834,34 @@ qualification has been claimed.
 Evidence: `v014b1-final-acceptance.json`, all named raw receipts and command specs,
 `v014b1-fork-transition-proof.json`, `v014b1-guard-reconciliation.json`, both raw
 reviews, and `reviews/ed625d0816507a86274e2847572863905ca04e45/review.md`.
+
+
+### V0.16c bounded scope and acceptance
+
+V0.14b1 merged as `e58a6355e4c44eff9dcb1550827a03d3de1570c9`
+([PR #4379](https://github.com/sifr-lang/sifr/pull/4379)). V0.16c starts there.
+Its root cause is a negative test depending on a temporary compiler deficiency:
+V0.7 repaired the positive enum fixture, but the old harness test still demanded
+its failure. The production lowering-error rejection is unchanged and remains
+required. No compiler behavior, fixture expectation, supported feature or runtime
+assertion may be weakened to make this test pass.
+
+Replace that dependency with private driver tests of the actual
+`resolve_single_file_metadata` boundary. Generate real valid codegen output, then
+exercise statement, expression and item lowering errors separately and together,
+checking canonical diagnostics and refusal to continue native preparation. Include
+zero-error success and a warmed-resolution control so a successful prior resolution
+cannot bypass error admission. Keep an E2E assertion that actual compiler diagnostics
+propagate as fixture failure before native planning. The repaired enum stays in the
+full positive corpus with all original assertions. No production test hooks or new
+public APIs are needed.
+
+Acceptance: focused driver boundary controls, affected E2E diagnostic/isolation
+checks, formatting/file-size/area/method guards, then the complete ordinary E2E test
+binary with its original corpus/runtime/harness assertions. Record explicit helper
+and separately qualified session ignores as such; never call them executed unless
+their parent control invoked them. Preserve the original stale failure and any new
+failure, run each diagnostic category under the 30-minute cap, and retain compiler
+preparation separately. Network preparation may fetch the published candidate's
+locked portable source graph. Obtain scoped independent review. Full final phase
+gates and V0.14b2/V1–V5 remain required.
