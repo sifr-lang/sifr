@@ -1,7 +1,7 @@
 # Validation execution inventory — 2026-10-03
 
 This is the implementation-entry snapshot for the
-[active validation plan](../plans/issues/active/ad-hoc-validation-contracts-and-resource-aware-execution.md).
+[active validation plan](../../issues/active/ad-hoc-validation-contracts-and-resource-aware-execution.md).
 Canonical profiles, area manifests, and guards remain authoritative; this report
 is an observation, not a second inventory or a validation receipt.
 

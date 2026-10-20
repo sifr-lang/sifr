@@ -49,7 +49,7 @@ The PostgreSQL runtime matrix similarly selects its exact ignored live test
 against PostgreSQL 13 through 18. SQLite runtime tests use local SQLite
 databases; their execution does not establish MySQL or PostgreSQL live coverage.
 
-## Item 5 qualification
+## Qualification evidence
 
 The phase qualification runs the named seven-package Cargo test command and
 the changed MySQL adapter command, records actual executed and ignored cases,

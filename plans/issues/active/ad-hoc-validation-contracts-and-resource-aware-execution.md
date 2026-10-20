@@ -224,7 +224,7 @@ policy. Required release checks remain conditional on a real release request.
 Current state: M0 inventory and agent simplification implemented and validated;
 initial authenticated review found documentation regressions, now corrected.
 M1–M6 remain pending.
-The [entry inventory](../../../internal_docs/validation_execution_inventory_20261003.md)
+The [entry inventory](../../reviews/archive/validation-execution-entry-inventory-20261003.md)
 records current selections, resources, verified protection, owners and gaps.
 Next action: verify final M0 reviewer satisfaction, deliver M0, then implement
 M1 contracts/evidence. Subsequent items record candidate
