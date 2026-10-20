@@ -300,4 +300,23 @@ fn method_slot_self_and_constructor_keep_opaque_owner_paths() {
     "#,
     );
     assert!(!rust.contains(".as_str()"), "{rust}");
+    // Isolate constructor lookup from the opaque import in the first program.
+    let rust = typed_compile_and_run(
+        r#"
+        mod owner {
+            pub struct Model;
+            impl Model { pub fn serialize(&self, value: &str) -> usize { value.len() } }
+        }
+        fn main() {
+            mod owner {
+                pub struct Model;
+                impl Model { pub fn serialize(&self, value: String) -> usize { value.len() } }
+            }
+            let receiver = owner::Model;
+            let value = String::from("hello");
+            assert_eq!(receiver.serialize(value), 5);
+        }
+    "#,
+    );
+    assert!(!rust.contains(".as_str()"), "{rust}");
 }

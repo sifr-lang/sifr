@@ -1794,3 +1794,12 @@ emitted-Rust investigation alongside the existing opaque-call ABI/liveness
 follow-ups. It is not claimed covered by this slot-adapter repair. The measured
 codegen-test and driver preparation costs also remain inputs to V4's build-time
 work; the diagnostic two-job allocation is not a ten-minute acceptance result.
+
+
+`v08-opaque-owner-before` proves the new alias/module control fails on the
+unrepaired resolver: original Rust compiles and executes, but typed cleanup adds
+incorrect `.as_str()` calls and rustc rejects both `Self::normalize` calls with
+E0308. The attempt took 330.985 seconds, including 328 seconds preparation and
+0.49 seconds test execution; its failure inputs remain retained. The final
+control separately exercises the local-module constructor path without the
+opaque import from the first program masking its inference.
