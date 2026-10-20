@@ -2739,3 +2739,40 @@ E2E assertions, formatting/file-size and affected method/area guards, then scope
 independent review. Keep preparation separate from execution and preserve every
 failed/interrupted attempt under the existing 30-minute diagnostic cap. Full
 final phase gates and V5 remain required.
+
+
+### V0.14b1 broader diagnostic and V0.16c owner
+
+The first E2E diagnostic candidate `7cf3bb0930c78bc1793e5d0071c7b901166c9790`
+prepared its binary in 91.462s, passed ten native-cache controls with eight workers
+in 7.691s, and passed all 732 original positive fixtures in 126.256s (suite119.70s).
+The other E2E batch took 250.901s: 51 passed, two failed, three explicit helper/session
+qualification tests ignored, and eleven tests separately selected in the native-cache
+and positive categories. These observations do not qualify the complete phase.
+
+One failure is preparation: the offline diagnostic could not fetch its newly
+published exact candidate revision for the relocated portable project. Repeat that
+original assertion with network preparation enabled and unchanged locked resolution;
+retain the offline failure. V3 owns explicit input-bound preparation for this graph.
+
+**V0.16c (pending, next after V0.14b1):**
+`test_structured_lowering_error_is_canonical_before_native_build` uses the positive
+`enum_value_property.sifr` fixture as an expected lowering failure. The test body is
+unchanged from the V0.14b1 base, and V0.7 already proved that fixture should compile
+and run. This is a stale negative control, not a lease regression. Replace its
+reliance on an unfixed language feature with a deterministic control of the actual
+canonical lowering-error boundary, retaining proof that nonzero lowering errors
+cannot become successful native preparation. Keep the positive fixture's successful
+compilation/runtime assertions. Do not delete or skip the negative coverage. This
+unrelated control remains failed in the broad diagnostic and required before final
+gates; V0.14b1 acceptance must name its lease/fixture/isolation checks individually.
+
+Initial V0.14b1 review was NOT SATISFIED: two E2E release assertions retained the
+same concurrent pre-exec descriptor race already demonstrated in the primitive
+tests. Remediation bounds only test-side release waits, retains structured
+WouldBlock errors and immediate busy-owner rejection, protects test child cleanup,
+and consolidates cached/standalone fixture command preparation. The real owner-death
+and 30-second live-child negative controls remain. Fresh scoped review and affected
+validation are required after that remediation. Earlier failures and the guard run
+invalidated by an overlapping owned commit remain preserved; frozen guard evidence
+supersedes that invalid attempt only, without reclassifying it as a pass.
