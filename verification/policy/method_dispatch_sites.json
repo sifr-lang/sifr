@@ -83521,6 +83521,18 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
+      "site": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction::literal-comparison::1",
+      "fingerprint": "331c5dab74fd7b3061dac2d2ebb5777510adc854aad056025bec756fb9bbfe3c",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "let slash = payload . windows ( 2 ) . position ( | bytes | bytes == b\"//\" ) . unwrap ( )",
+      "inputs": "fn exact_failure_diagnostics_survive_hits_misses_and_eviction ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_sysroot/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
       "site": "crates/sifr_sysroot/src/native_context.rs::flags::literal-comparison::1",
       "fingerprint": "dae1ed5642e08826688f07264d54003bc2c05ac99a718220c864cfe991caaf27",
       "classification": "compiler-policy",

@@ -20666,6 +20666,48 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
+      "operation": "open-write",
+      "site": ".open(&path)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
+      "operation": "metadata",
+      "site": "let original_time = file.metadata().unwrap().modified().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
+      "operation": "set_times",
+      "site": "file.set_times(std::fs::FileTimes::new().set_modified(original_time))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
+      "operation": "set_modified",
+      "site": "file.set_times(std::fs::FileTimes::new().set_modified(original_time))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
+      "operation": "metadata",
+      "site": "assert_eq!(file.metadata().unwrap().modified().unwrap(), original_time);",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_sysroot/src/native_context.rs",
       "symbol": "path_executable",
       "operation": "is_file",
