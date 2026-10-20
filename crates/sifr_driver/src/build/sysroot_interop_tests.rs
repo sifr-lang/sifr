@@ -160,6 +160,7 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
 fn merged_user_and_private_stdlib_interop_both_resolve() {
     let package = CargoFixture::bridge();
     let root = TempSysroot::new("merged-resolution");
+    root.copy_runtime_patch();
     let stdlib_interop = private_stdlib_interop(
         &root,
         "@rust(sifr_stdlib.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",

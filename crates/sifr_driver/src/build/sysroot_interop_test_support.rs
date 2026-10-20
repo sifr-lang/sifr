@@ -59,6 +59,22 @@ impl TempSysroot {
         }
     }
 
+    // User-package probe manifests carry this real path patch even when the
+    // tested function does not use SQLite. Keep its Cargo input valid; this
+    // fixture makes no claim to exercise SQLite runtime behavior.
+    pub(super) fn copy_runtime_patch(&self) {
+        let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("crates directory")
+            .join("sifr_runtime/third_party/libsqlite3-sys");
+        copy_fixture_tree(
+            &source,
+            &self
+                .path
+                .join("crates/sifr_runtime/third_party/libsqlite3-sys"),
+        );
+    }
+
     pub(super) fn write_private(&self, module: &str, source: &str) {
         fs::write(self.private_path(module), source).expect("private source");
         self.private_sources
@@ -107,5 +123,23 @@ impl TempSysroot {
 impl Drop for TempSysroot {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.path);
+    }
+}
+
+fn copy_fixture_tree(source: &std::path::Path, destination: &std::path::Path) {
+    fs::create_dir_all(destination).expect("create fixture patch directory");
+    for entry in fs::read_dir(source).expect("read actual runtime patch") {
+        let entry = entry.expect("runtime patch entry");
+        let kind = entry.file_type().expect("runtime patch file type");
+        let target = destination.join(entry.file_name());
+        if kind.is_dir() {
+            copy_fixture_tree(&entry.path(), &target);
+        } else {
+            assert!(
+                kind.is_file(),
+                "runtime patch fixture expects ordinary source files"
+            );
+            fs::copy(entry.path(), target).expect("copy actual runtime patch input");
+        }
     }
 }
