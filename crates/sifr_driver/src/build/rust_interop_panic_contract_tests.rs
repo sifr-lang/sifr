@@ -49,7 +49,7 @@ fn package_rust_interop_result_accepts_rust_panic_error_surface() {
     );
     let context = bridge_context(TrustPolicy::default());
 
-    super::rust_interop::apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("RustPanicError in Result error channel should satisfy panic surface");
 }
 
@@ -68,7 +68,7 @@ fn package_rust_interop_result_accepts_map_error_surface() {
     );
     let context = bridge_context(TrustPolicy::default());
 
-    super::rust_interop::apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("map_error adapter with a redacted fallback should satisfy Result panic surface");
 }
 

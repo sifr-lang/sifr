@@ -113,7 +113,7 @@ fn package_rust_interop_accepts_arrow_record_batch_metadata_contract() {
     let generated = generated_from_source(ARROW_SOURCE, record_batch_signature_contract());
     let context = context_with_source(ARROW_SOURCE, "sifr_arrow_bridge");
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("arrow record batch metadata contract should pass");
 }
 
@@ -123,7 +123,7 @@ fn package_rust_interop_accepts_arrow_array_metadata_contract() {
     let generated = generated_from_source(&source, record_batch_signature_contract());
     let context = context_with_source(&source, "sifr_arrow_bridge");
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("arrow array metadata contract should pass");
 }
 
@@ -133,7 +133,7 @@ fn package_rust_interop_accepts_dataframe_metadata_contract() {
     let generated = generated_from_source(&source, record_batch_signature_contract());
     let context = context_with_source(&source, "sifr_arrow_bridge");
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("dataframe metadata contract should pass");
 }
 
@@ -142,7 +142,7 @@ fn package_rust_interop_accepts_tensor_metadata_contract() {
     let generated = generated_from_source(TENSOR_SOURCE, tensor_signature_contract("tensor"));
     let context = context_with_source(TENSOR_SOURCE, "sifr_tensor_bridge");
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("tensor metadata contract should pass");
 }
 
@@ -154,7 +154,7 @@ fn package_rust_interop_accepts_explicit_dlpack_transfer_contract() {
     );
     let context = context_with_source(DLPACK_SOURCE, "sifr_tensor_bridge");
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("explicit DLPack transfer contract should pass");
 }
 

@@ -89,6 +89,10 @@ fn package_rust_interop_direct_probe_checks_signature_shape() {
         backend_root.join("Cargo.toml"),
     )]);
 
+    let planned = super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
+        .expect("signature contract planning");
+    assert_eq!(planned.probes.len(), 1);
+
     let diagnostics = interop_errors(generated, Some(context), "signature probe must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
@@ -129,6 +133,10 @@ fn package_rust_interop_direct_probe_accepts_bridge_signature() {
         "native",
         backend_root.join("Cargo.toml"),
     )]);
+
+    let planned = super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
+        .expect("signature contract planning");
+    assert_eq!(planned.probes.len(), 1);
 
     apply_package_rust_interop_metadata(generated, Some(context))
         .expect("compatible signature should pass probe");
