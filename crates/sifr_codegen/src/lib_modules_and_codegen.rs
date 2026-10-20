@@ -3,7 +3,7 @@ use crate::StdlibCode;
 use crate::stdlib_import_signatures::register_imported_stdlib_metadata;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
 mod deferred_codegen;

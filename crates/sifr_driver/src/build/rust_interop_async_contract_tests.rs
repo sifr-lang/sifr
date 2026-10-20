@@ -11,6 +11,7 @@ use sifr_codegen::{
     generate_rust_multi_with_metadata,
 };
 use sifr_package::TrustPolicy;
+use sifr_stdlib_artifact::StdlibCode;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 

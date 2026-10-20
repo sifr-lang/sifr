@@ -7,10 +7,9 @@ use crate::frontend::FrontendCompiled;
 use crate::project::{
     ProjectLowering, assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path,
 };
-use sifr_codegen::{
-    StdlibCode, generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module,
-};
+use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module};
 use sifr_ir::HirModule;
+use sifr_stdlib_artifact::StdlibCode;
 use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};
 
