@@ -308,17 +308,14 @@ class Client:
     async def hash(self, input: str) -> Result[str, RustError | RustPanicError]:
         return "ok"
 "#;
-    let mut generated = generated_from_source(source, vec![client_hash_signature_contract()]);
+    let generated = generated_from_source(source, vec![client_hash_signature_contract()]);
     let mut context = context_with_source(source, Vec::new());
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
-    generated = apply_package_rust_interop_metadata(generated, Some(context))
+    let plan = super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("opaque current-thread async method should resolve");
 
-    let method_probe = generated
-        .interop
-        .rust
-        .probe_plan
+    let method_probe = plan
         .probes
         .iter()
         .find(|probe| probe.canonical_target_path == "app.Client.hash")

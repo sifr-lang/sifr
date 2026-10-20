@@ -116,6 +116,26 @@ pub(super) fn apply_package_rust_interop_metadata_with_resolution(
     Ok(generated)
 }
 
+// Contract unit tests inspect the production planning stage. This adapter cannot
+// produce a generated project or cache identity: full resolution still executes
+// native probes and validates all input authority before returning either.
+#[cfg(test)]
+pub(super) fn plan_rust_interop_contracts_for_test(
+    generated: &GeneratedBinaryProject,
+    context: &PackageRustInteropContext,
+) -> Result<RustBridgeProbePlan, Vec<RenderedDiagnostic>> {
+    let policy = CargoResolutionPolicy::normal();
+    let mut resolver = RustInteropResolver::new(context, &policy, DirectProbePolicy::ExecuteAll);
+    resolver.plan_contracts(generated)?;
+    Ok(RustBridgeProbePlan {
+        probes: resolver.probes,
+    })
+}
+
+#[cfg(test)]
+#[path = "rust_interop/contract_planning_tests.rs"]
+mod contract_planning_tests;
+
 struct RustInteropResolver<'a> {
     context: &'a PackageRustInteropContext,
     cargo_resolution: &'a CargoResolutionPolicy,
@@ -162,9 +182,9 @@ impl<'a> RustInteropResolver<'a> {
         }
     }
 
-    fn resolve_plan(
+    fn plan_contracts(
         &mut self,
-        generated: &mut GeneratedBinaryProject,
+        generated: &GeneratedBinaryProject,
     ) -> Result<(), Vec<RenderedDiagnostic>> {
         self.signature_contracts = generated
             .interop
@@ -202,6 +222,14 @@ impl<'a> RustInteropResolver<'a> {
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
         }
+        Ok(())
+    }
+
+    fn resolve_plan(
+        &mut self,
+        generated: &mut GeneratedBinaryProject,
+    ) -> Result<(), Vec<RenderedDiagnostic>> {
+        self.plan_contracts(generated)?;
         self.execute_pending_direct_probes();
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));

@@ -1,7 +1,5 @@
 use super::project_codegen::GeneratedBinaryProject;
-use super::rust_interop::{
-    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
-};
+use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::rust_interop_contract_tests::{
     interop_errors, package_context, set_bridge_roots, temp_package_root,
 };
@@ -29,7 +27,7 @@ fn package_rust_interop_accepts_callback_policy_contract() {
     let generated = generated_from_source(CALLBACK_SOURCE);
     let context = context_with_source(CALLBACK_SOURCE);
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("valid callback contract should pass");
 }
 
@@ -42,7 +40,7 @@ fn package_rust_interop_accepts_direct_callback_backpressure() {
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("direct callback policy should pass");
 }
 
@@ -115,7 +113,7 @@ fn package_rust_interop_accepts_callable_parameter_as_call_scoped() {
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("plain Callable parameters should use the call-scoped bridge contract");
 }
 

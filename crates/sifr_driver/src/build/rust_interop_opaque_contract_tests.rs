@@ -1,4 +1,3 @@
-use super::rust_interop::apply_package_rust_interop_metadata;
 use super::rust_interop_contract_tests::{
     backend_with_manifest, base_project_with_contracts, interop_errors,
     opaque_class_declaration_entry, package_context, set_bridge_roots, symbol_argument,
@@ -124,7 +123,7 @@ fn package_rust_interop_opaque_async_close_policy_accepts_async_aclose_contract(
     let mut context = package_context(TrustPolicy::default(), Vec::new());
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("async aclose should satisfy async_close policy");
 }
 

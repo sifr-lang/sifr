@@ -1,7 +1,5 @@
 use super::project_codegen::GeneratedBinaryProject;
-use super::rust_interop::{
-    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
-};
+use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::rust_interop_contract_tests::{
     interop_errors, package_context, param_contract, result_contract, set_bridge_roots,
     signature_contract,
@@ -42,27 +40,21 @@ def hash(input: bytes) -> Result[BytesView, RustError | RustPanicError]: ...
 
 #[test]
 fn package_rust_interop_zero_copy_accepts_borrowed_bytes_view_contract() {
-    let mut generated = generated_from_fixture_source(ZERO_COPY_BYTES_FIXTURE);
+    let generated = generated_from_fixture_source(ZERO_COPY_BYTES_FIXTURE);
     let mut context = context_with_source(ZERO_COPY_BYTES_FIXTURE);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
-    generated = apply_package_rust_interop_metadata(generated, Some(context))
+    let plan = super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("valid zero-copy view contract should pass");
 
-    let view_probe = generated
-        .interop
-        .rust
-        .probe_plan
+    let view_probe = plan
         .probes
         .iter()
         .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::View)
         .expect("view probe");
     assert!(view_probe.requires_send);
     assert!(view_probe.requires_sync);
-    let zero_copy_probe = generated
-        .interop
-        .rust
-        .probe_plan
+    let zero_copy_probe = plan
         .probes
         .iter()
         .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::ZeroCopy)
@@ -73,27 +65,21 @@ fn package_rust_interop_zero_copy_accepts_borrowed_bytes_view_contract() {
 
 #[test]
 fn package_rust_interop_view_send_sync_metadata_reaches_probe_plan() {
-    let mut generated = generated_from_fixture_source(ZERO_COPY_VIEW_MATRIX_FIXTURE);
+    let generated = generated_from_fixture_source(ZERO_COPY_VIEW_MATRIX_FIXTURE);
     let mut context = context_with_source(ZERO_COPY_VIEW_MATRIX_FIXTURE);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
-    generated = apply_package_rust_interop_metadata(generated, Some(context))
+    let plan = super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("valid send/sync view contract should pass");
 
-    let view_probe = generated
-        .interop
-        .rust
-        .probe_plan
+    let view_probe = plan
         .probes
         .iter()
         .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::View)
         .expect("view probe");
     assert!(view_probe.requires_send);
     assert!(view_probe.requires_sync);
-    let zero_copy_probe = generated
-        .interop
-        .rust
-        .probe_plan
+    let zero_copy_probe = plan
         .probes
         .iter()
         .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::ZeroCopy)
@@ -108,19 +94,15 @@ fn package_rust_interop_accepts_async_static_lifetime_view() {
         .replace("lifetime=owner", "lifetime=static")
         .replace(", panic=map_error(bridge.bytes.map_panic)", "")
         .replace("def hash", "async def hash");
-    let mut generated = generated_from_source(&source);
+    let generated = generated_from_source(&source);
     let mut context = context_with_source(&source);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
-    generated = apply_package_rust_interop_metadata(generated, Some(context))
+    let plan = super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("async static-lifetime view contract should pass");
 
     assert!(
-        generated
-            .interop
-            .rust
-            .probe_plan
-            .probes
+        plan.probes
             .iter()
             .any(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::View)
     );
@@ -225,7 +207,7 @@ fn package_rust_interop_preserves_generated_record_view_contract() {
     let mut context = context_with_source(&source);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
-    apply_package_rust_interop_metadata(generated, Some(context))
+    super::rust_interop::plan_rust_interop_contracts_for_test(&generated, &context)
         .expect("contract-only generated record view should remain supported");
 }
 
