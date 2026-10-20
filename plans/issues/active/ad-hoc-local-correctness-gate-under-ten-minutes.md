@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16d SQL safety proof reconciliation
+current_stage: V0.16d accepted; V1 mandatory build-path feasibility next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -197,7 +197,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 | V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
 | V0.16c | Deterministic canonical lowering-error negative control | Merged #4380; driver boundary, all 64 ordinary E2E tests and scoped review pass |
-| V0.16d | SQL guest safety proof references after diagnostic projection | In progress: three reviewed allowances, twelve stale code proofs |
+| V0.16d | SQL guest safety proof references after diagnostic projection | Accepted #4382; complete unsafe audit and independent review pass |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -3093,3 +3093,26 @@ must pass with zero omitted segments or exceptions. All twelve mutation controls
 file-size/whitespace checks and scoped independent review must pass. No compiler
 build is needed for these record changes. Preserve the earlier twelve-error audit
 as failed evidence; final integrated phase gates and V1–V5 remain open.
+
+
+### V0.16d focused acceptance
+
+[PR #4382](https://github.com/sifr-lang/sifr/pull/4382) accepts record-only candidate
+`8a5491b84f01657ceff76392cfe114af4fd28670`. All twelve SQL guest code references now
+quote the current complete `analyze` body with its context fingerprint. SQL ownership,
+contracts, obligation rules and operation proofs are unchanged; no Rust changes.
+
+The local proof precheck passes in 28.163s. Complete safety auditing of **382 sites
+across all three partitions**, all **twelve mutation controls**, file-size checks
+and whitespace checks pass in **191.231s**. The complete run retains every
+cross-record comparison with no exceptions. These overlapping diagnostic checks
+are not a whole-gate total. Receipts show no resource stop, leftover group or source
+mutation. Independent review is **SATISFIED**, with no blockers; it inspected the
+actual request/response ownership and diagnostic projection, not just hashes.
+
+Raw review: `reviews/8a5491b84f01657ceff76392cfe114af4fd28670/review.md` in the external
+implementation bundle. `v016d-final-acceptance.json` binds command specs, output
+hashes and receipts. Earlier twelve-error audits remain failed historical evidence.
+No compiler build was required. A non-blocking wording clarification about typed
+request/response ownership remains with the SQL record owner. Next is V1's measured
+mandatory build path; V1–V5 and complete final phase gates remain open.
