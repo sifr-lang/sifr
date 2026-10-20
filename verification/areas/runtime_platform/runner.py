@@ -432,10 +432,18 @@ def validate_sanitizer_inputs(case: dict[str, Any]) -> None:
             raise SystemExit(f"sanitizer case {case['id']} required input is missing or outside the repository: {raw}")
 
 
+# Rust str::trim uses Unicode White_Space. Python also strips U+001C–U+001F,
+# which Cargo keeps, so use the Rust set when validating sanitizer conflicts.
+RUST_FLAG_WHITESPACE = (
+    "\t\n\v\f\r \x85\xa0\u1680"
+    "\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a"
+    "\u2028\u2029\u202f\u205f\u3000"
+)
+
+
 def cargo_plain_rustflags(raw: str) -> list[str]:
-    # Cargo splits on literal spaces, not shell quoting or all whitespace.
-    # Keep quotes/apostrophes and embedded tabs/newlines for rustc to interpret.
-    return [flag for flag in raw.split(" ") if flag.strip()]
+    # Validation only. Keep the original representation for Cargo execution.
+    return [flag for part in raw.split(" ") if (flag := part.strip(RUST_FLAG_WHITESPACE))]
 
 
 def sanitizer_flag_modes(flags: list[str]) -> set[str]:
@@ -460,16 +468,23 @@ def sanitizer_environment(case: dict[str, Any], host_triple: str) -> dict[str, s
         raise SystemExit(f"sanitizer case {case['id']} must declare {expected} instrumentation")
     # Cargo prefers encoded flags even when RUSTFLAGS is also present. Preserve
     # caller options in that same order, then append the required instrumentation.
-    if "CARGO_ENCODED_RUSTFLAGS" in env:
-        encoded = env["CARGO_ENCODED_RUSTFLAGS"]
-        flags = encoded.split("\x1f") if encoded else []
+    raw = inherited.get("RUSTFLAGS", "")
+    encoded = env.get("CARGO_ENCODED_RUSTFLAGS")
+    if encoded is None:
+        flags = cargo_plain_rustflags(raw)
     else:
-        flags = cargo_plain_rustflags(inherited.get("RUSTFLAGS", ""))
+        flags = encoded.split("\x1f") if encoded else []
     if sanitizer_flag_modes(flags).difference({expected}):
         raise SystemExit(f"sanitizer case {case['id']} conflicts with inherited sanitizer instrumentation")
-    flags.extend(required)
-    env["RUSTFLAGS"] = " ".join(flags)
-    env["CARGO_ENCODED_RUSTFLAGS"] = "\x1f".join(flags)
+    # Preserve the caller's input format and bytes. Cargo owns parsing of plain
+    # flags; converting them to encoded flags could split a literal U+001F.
+    declared = case["env"]["RUSTFLAGS"]
+    env["RUSTFLAGS"] = f"{raw} {declared}" if raw else declared
+    if encoded is not None:
+        if any("\x1f" in flag for flag in required):
+            raise SystemExit(f"sanitizer case {case['id']} has an unrepresentable declared encoded flag")
+        addition = "\x1f".join(required)
+        env["CARGO_ENCODED_RUSTFLAGS"] = f"{encoded}\x1f{addition}" if encoded else addition
     if case["scope"] == "generated_binary":
         # The selected compiler launches Cargo again. Target separation must
         # reach that child too, so host proc macros remain uninstrumented.

@@ -2470,9 +2470,9 @@ final phase gates; `v013-runner-selftest` remains failed, not an implied pass.
 
 Initial scoped review of `35e113a0e5380ebf0902df274d7626e4dd038c5b` is
 **NOT SATISFIED**: using shell parsing for inherited plain Rust flags changes
-Cargo semantics. The correction splits on literal spaces, keeps quotes and
-apostrophes, preserves embedded tabs/newlines, and emits authoritative encoded
-flags with the declared instrumentation. Eighteen focused controls now pass.
+Cargo semantics. The first correction split on literal spaces, kept quotes and apostrophes,
+preserved embedded tabs/newlines, and emitted encoded flags with the declared
+instrumentation. Eighteen focused controls passed on that candidate.
 A direct Cargo comparison confirms all five exercised inputs keep their original
 outcomes and caller arguments: three valid cases compile, and two malformed
 embedded-whitespace cases remain rejected. The required ASAN flag reaches rustc.
@@ -2480,3 +2480,26 @@ These are correctness controls, not performance qualification. Raw initial revie
 and both probe results remain in the external implementation evidence bundle.
 Fresh affected checks and scoped remediation review remain required, together
 with real instrumented execution/artifact evidence and retained/edit timings.
+
+The remediation review of `bfaa2aa06f209172a1aae5cf8a4cd8af7639521a` also
+found an in-scope blocker: Cargo trims surrounding Rust whitespace from each
+space-separated piece. The first parser filtered empty pieces without trimming
+retained pieces. This review remains **NOT SATISFIED** in the evidence bundle.
+
+The final approach preserves plain flags as plain text and encoded flags in their
+original encoding, appending required instrumentation in that same format. Cargo
+owns execution parsing. Conflict validation follows Cargo's literal-space split
+and Rust whitespace trim, preserving control separators that Python would strip.
+It no longer translates caller plain flags into encoded flags, so a literal unit
+separator inside a valid quoted cfg value keeps its original argument boundary.
+Twenty-two focused tests and fourteen direct Cargo comparisons pass: ten valid
+inputs compile and four malformed inputs retain their original rejection status.
+The comparisons record actual rustc arguments before and after policy application.
+No declared instrumentation or caller argument is silently dropped.
+
+Initial runtime ASAN preparation passed in 71.730s and compiler ASAN preparation
+in 536.659s at `35e113a0e5380ebf0902df274d7626e4dd038c5b`; both actual
+executables define the expected ASAN symbols. These are preparation results,
+not smoke execution or V5 timing passes. Rust sources are unchanged by subsequent
+policy corrections. Final retained preparation, real smoke/artifact execution,
+representative edit timing, guards and fresh scoped review remain required.

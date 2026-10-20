@@ -59,7 +59,7 @@ class SanitizerTargetTests(unittest.TestCase):
                     self.assertEqual(kwargs["env"]["RUSTFLAGS"], original["env"]["RUSTFLAGS"])
                     self.assertEqual(kwargs["env"]["CARGO_HOME"], "/owned/cache")
                     self.assertEqual(kwargs["env"]["CARGO_NET_OFFLINE"], "true")
-                    self.assertEqual(kwargs["env"]["CARGO_ENCODED_RUSTFLAGS"], original["env"]["RUSTFLAGS"])
+                    self.assertNotIn("CARGO_ENCODED_RUSTFLAGS", kwargs["env"])
                     if original["scope"] == "generated_binary":
                         self.assertEqual(kwargs["env"]["CARGO_BUILD_TARGET"], host)
                     else:
@@ -133,8 +133,8 @@ class SanitizerTargetTests(unittest.TestCase):
         }
         _, execute = self.run_case(case, "x86_64-unknown-linux-gnu", environment=inherited)
         env = execute.call_args.kwargs["env"]
-        self.assertEqual(env["CARGO_ENCODED_RUSTFLAGS"].split("\x1f"),
-                         ["--cfg", 'v013_probe="value"', "-C", "debuginfo=1", "-Zsanitizer=address"])
+        self.assertNotIn("CARGO_ENCODED_RUSTFLAGS", env)
+        self.assertEqual(env["RUSTFLAGS"], inherited["RUSTFLAGS"] + " -Zsanitizer=address")
         self.assertEqual(env["CARGO_TARGET_DIR"], "/owned/build")
         self.assertEqual(env["CARGO_BUILD_JOBS"], "2")
         self.assertEqual(env["CARGO_BUILD_TARGET"], "x86_64-unknown-linux-gnu")
@@ -148,8 +148,47 @@ class SanitizerTargetTests(unittest.TestCase):
             with self.subTest(flags=flags):
                 _, execute = self.run_case(case, "x86_64-unknown-linux-gnu",
                                            environment={"RUSTFLAGS": flags})
-                self.assertEqual(execute.call_args.kwargs["env"]["CARGO_ENCODED_RUSTFLAGS"].split(chr(31)),
-                                 [flags, "-Zsanitizer=address"])
+                env = execute.call_args.kwargs["env"]
+                self.assertNotIn("CARGO_ENCODED_RUSTFLAGS", env)
+                self.assertEqual(env["RUSTFLAGS"], flags + " -Zsanitizer=address")
+
+
+    def test_plain_sanitizer_boundary_whitespace_matches_rust_trim(self):
+        case = self.cases["runtime-asan-smoke"]
+        for whitespace in self.adapter.RUST_FLAG_WHITESPACE:
+            raw = whitespace + "-Zsanitizer=address" + whitespace
+            with self.subTest(whitespace=repr(whitespace)):
+                _, execute = self.run_case(case, "x86_64-unknown-linux-gnu",
+                                           environment={"RUSTFLAGS": raw})
+                env = execute.call_args.kwargs["env"]
+                self.assertEqual(env["RUSTFLAGS"], raw + " -Zsanitizer=address")
+                self.assertNotIn("CARGO_ENCODED_RUSTFLAGS", env)
+
+    def test_plain_control_separators_remain_inside_the_argument(self):
+        case = self.cases["runtime-asan-smoke"]
+        for separator in ("\x1c", "\x1d", "\x1e", "\x1f"):
+            with self.subTest(separator=repr(separator)):
+                raw = '--cfg v013_probe="a' + separator + 'b"'
+                _, execute = self.run_case(case, "x86_64-unknown-linux-gnu",
+                                           environment={"RUSTFLAGS": raw})
+                env = execute.call_args.kwargs["env"]
+                self.assertEqual(env["RUSTFLAGS"], raw + " -Zsanitizer=address")
+                self.assertNotIn("CARGO_ENCODED_RUSTFLAGS", env)
+                edge = separator + "-Cdebuginfo=1" + separator
+                self.assertEqual(self.adapter.cargo_plain_rustflags(edge), [edge])
+
+    def test_encoded_sanitizer_boundary_whitespace_is_not_trimmed(self):
+        case = self.cases["runtime-asan-smoke"]
+        with self.assertRaisesRegex(SystemExit, "conflicts with inherited"):
+            self.run_case(case, "x86_64-unknown-linux-gnu",
+                          environment={"CARGO_ENCODED_RUSTFLAGS": "-Zsanitizer=address\n"})
+
+    def test_declared_encoded_separator_cannot_change_argument_boundaries(self):
+        case = copy.deepcopy(self.cases["runtime-asan-smoke"])
+        case["env"]["RUSTFLAGS"] += ' --cfg value="a\x1fb"'
+        with self.assertRaisesRegex(SystemExit, "unrepresentable declared encoded flag"):
+            self.run_case(case, "x86_64-unknown-linux-gnu",
+                          environment={"CARGO_ENCODED_RUSTFLAGS": "-Cdebuginfo=1"})
 
     def test_encoded_arguments_preserve_spaces_without_shell_quoting(self):
         case = self.cases["runtime-asan-smoke"]
