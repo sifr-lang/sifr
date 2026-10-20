@@ -2975,3 +2975,15 @@ recorded SQL proof failures. The twelve unsafe-guard mutation controls remain
 mandatory. The first full diagnostic took 185.383s including those controls;
 V4 owns investigation of repeated-contract comparison cost without weakening its
 cross-record rejection semantics.
+
+
+V0.14b2 semantic fixture ownership correction: the complete services batch found
+one pre-existing fixture failure under umask 0002. The override-retry test passed
+its generic temporary parent as an already-created cache root, which the unchanged
+private-cache check correctly rejected. Use an explicitly owned cache child, as
+other provider fixtures do; retain every corrupt/stale override assertion and the
+production permission check. This is the metadata ownership fixture exercised by
+this item, not a relaxation of cache admission. Run the original regression under
+both 0002 and 0077 and all semantic-services tests. Preserve the initial 25/26
+receipt and label the restrictive-umask probe diagnostic-only. No runtime metadata
+logic, cache identities, platform policy or test selection changes.
