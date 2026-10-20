@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.15 independently approved; V0.3a native launch context next
+current_stage: V0.3a qualified and reviewed; V0.5 inventory repair next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -175,7 +175,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | --- | --- | --- |
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
 | V0.2 | SQL provenance and moved-source qualification guards | Pending |
-| V0.3 | Canonical launch context and Python runtime registry/fixture admission | Pending |
+| V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
+| V0.3a | Rustup-selected native Cargo/rustc launch context | Qualified and independently approved; PR #4360 |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
@@ -324,8 +325,9 @@ identifiers. New negative controls cover each form. Final real guard passes
 (5.061s), all guard regressions pass (1.095s), and file-size passes (3.063s).
 Unresolved production include expressions deliberately retain all fragments for
 scanning, so future unrecognized syntax fails closed. Final independent review SATISFIED, no blockers, on
-`0fe59a9320967e958c6b4edabd328cf32de509c4`; effective when
-[#4359](https://github.com/sifr-lang/sifr/pull/4359) merges. Final raw review is
+`0fe59a9320967e958c6b4edabd328cf32de509c4`; merged in
+[#4359](https://github.com/sifr-lang/sifr/pull/4359) at
+`a36a01f926c3d59f147e138b982f691d3c50233c`. Final raw review is
 external at `reviews/0fe59a9320967e958c6b4edabd328cf32de509c4/review.md`.
 Evidence: `v015-path-*`, earlier `v015-final-*` and unchanged `v015-workflow`.
 The existing file-wide composition-root exemption is retained; tightening it to
@@ -350,6 +352,97 @@ missing-tool and explicit-pair behavior, configuration/identity regression tests
 a real nested build-script integration, focused sysroot tests, fmt/size checks,
 and rerun the affected generated-code preparation. Python fixture/registry and
 permission repairs remain separate V0.3/V0.6 work. Final complete gates stay open.
+
+### V0.3a implementation and focused evidence
+
+Rustup-resolved toolchains now retain the selected launcher for version discovery
+and Cargo execution. Cargo/rustc paths remain exact; explicit paired tools and
+non-rustup installations remain direct. The native identity domain is version 2
+and includes launcher mode, path, content digest and selection. Existing native
+artifacts therefore require requalification under the new identity; this is not
+claimed as a cache speedup. Captured caller environment and Cargo configuration
+validation remain unchanged.
+
+Subprocess-isolated regression controls cover the nested rustc launch, launcher
+byte invalidation, missing selection rejection, explicit pairs and direct tools.
+The nested-launch regression fails before the repair (`v03a-nested-regression-before`,
+9.150s, one selected test). All 50 sysroot tests pass afterward
+(`v03a-sysroot-final`, 14.157s including incremental preparation; 1.35s test runtime).
+The real `NativeToolchain` API also builds a fresh tiny Cargo project whose build
+script invokes rustc with an initially narrow loader path; the generated program
+prints `native-api-ok` (`v03a-api-integration`, 2.632s overall). This uses the
+actual modified library, not a separately implemented launcher. Formatting passes
+(`v03a-fmt`, 17.195s) and size guardrails pass (`v03a-file-size`, 4.174s).
+
+Preserved diagnostics: the first 310.246s build selected zero tests because its
+exact filter lacked the module prefix, so it is preparation only. The corrected
+initial launcher regression fails in 2.113s. The first complete post-repair run
+passes 49/50 in 202.796s including compilation; its new identity test incorrectly
+expected libtest output to start at column zero. Correcting that output parser
+produces the full 50/50 result above without further production changes. The
+queued API probe correctly did not execute while that suite was failing.
+
+V0.3a full affected preparation passes at the reviewed implementation candidate
+`6cf4b5c178912cb0a4184a9469ba620ad49e8ea6`: **93/93** positive generated-code entries,
+1,087.996s overall, including 95.896s compiler preparation. Reconciliation verifies
+exact selected IDs, uniqueness, revision and all 186 manifest/lock hashes against
+the final report. Evidence: `v03a-generated-preparation/{receipt.json,generated-report.json,reconciliation.json}`.
+This is a cold native/materialization preparation result, not a full gate or a
+warm speedup; it remains above the ten-minute objective by itself. It does not
+qualify generated Rust execution, which retains its separate assertions.
+
+Independent review is SATISFIED with no blockers on that same implementation
+candidate. Raw review: `reviews/6cf4b5c178912cb0a4184a9469ba620ad49e8ea6/review.md`,
+external to the reviewed tree. Effective on merging
+[#4360](https://github.com/sifr-lang/sifr/pull/4360). The 50 libtest rows include
+49 assertion-bearing tests and one subprocess-dispatch helper that returns early
+in the parent run; its real child assertions are exercised by the parent tests.
+Review suggestions retained for later identity/timing work: measure launcher-file
+hashing cost; consider additional isolated selection/path identity controls.
+Redundant consistent RUSTUP_TOOLCHAIN propagation needs no change.
+
+The original broad merge-correctness diagnostic against frozen
+`fce96a6c233af77b90b0f90a768ec8b9e23fa4d4` stopped at **1,586.715s** on the disk
+reserve, before the 30-minute cap or main test suites. Its generated preparation
+failed in 34.950s at the nested toolchain boundary. Its advanced native preparation
+was still incomplete; it is not a measured greater-than-30-minute category or a
+full-gate result. Cleanup signalled remaining process-group members; a subsequent
+process inspection found no compiler/test children. Source identity stayed fixed.
+Evidence: `v015-merge-discovery`.
+
+Capacity recovery preserved a checksum-verified copy of this session's inactive
+native Cargo target on the larger volume, under its original family lease, before
+releasing the old storage. Lease inode, owner metadata and archive receipt remain
+preserved (`native-target-archive.json`); approximately 4.1 GiB was recovered.
+Subsequent native work uses an explicit private cache on that volume. The new cache
+state is recorded, and no warm-comparison claim is made across this relocation.
+The compiler dependency target remains retained.
+
+PR #4360's remote create-PR workflow failed before compiler tests because the
+benchmark-inclusive default lacked SIFR_PERFORMANCE_REFERENCE. This known
+benchmark admission prerequisite is outside this local-correctness item; raw job
+log is retained as `ci-4360-create-pr.log`. No CI pass is claimed. The approved
+focused intermediate policy governs this merge; complete integrated correctness
+gates and V5 still remain mandatory.
+
+### Next bounded item V0.5 — maintained Cargo inventory admission
+
+Reconcile tracked first-party manifest/lock inventory and exact audited dependency
+owner declarations with current maintained inputs. Preserve exclusions for vendor,
+gitlinks and third-party repositories, exact declaration identity, checksum
+validation and negative mutation controls. Existing registry release evidence is
+historical authority, not permission to upgrade dependencies or claim a fresh
+latest-version audit. Inspect new declarations and lock identities before updating
+the inventory; genuinely new package/release evidence must be independently
+verified or assigned to its owner. No dependency-version or Cargo.lock changes
+are authorized by this bounded item.
+
+Start with the failing inventory/direct-declaration tests, then run all affected
+stdlib-manifest dependency contract tests together to expose related drift in one
+pass. Required acceptance: exact tracked inventory and declaration comparisons,
+all affected dependency/version/lock contracts and their negative controls, full
+`sifr_stdlib_manifest` tests, fmt/file-size checks and scoped independent review.
+The full phase gates remain deferred under the approved policy.
 
 ## Execution stages
 
@@ -854,14 +947,13 @@ summary and review. Reviewer suggestions about external references, timing label
 and formatting were incorporated as documentation-only corrections; no additional
 implementation requirement or unresolved follow-up was introduced. No second
 external review is required for these record/prose-only changes under the phase
-closure loop. Implementation remains pending and there is no full-gate pass.
+closure loop. At that planning checkpoint, implementation remained pending and no full-gate pass was claimed.
 
 After all implementation items merge, close only when V5 passes. Record remaining
 out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V0.15 and implement V0.3a; let the original
-broad diagnostic finish or hit its cap without mutating its candidate. Continue
-bounded V0 repairs and preserve all incomplete evidence. Preserve
-this investigation's baseline and failures while collecting current evidence.
+**Next action:** merge qualified V0.3a, then implement V0.5. Continue bounded
+V0 repairs, retaining the stopped broad diagnostic and all incomplete evidence.
+Preserve the investigation baseline and failures while collecting current evidence.

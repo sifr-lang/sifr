@@ -286,3 +286,183 @@ fn dx10_b05_generated_manifest_owns_profile_authority() {
             .is_err()
     );
 }
+
+fn launch_fixture() -> Fixture {
+    let fixture = Fixture::new();
+    fixture.tool(
+        "cargo",
+        r#"if [ "$1" = -vV ]; then echo 'cargo selected'; else "$RUSTC" --version; fi"#,
+    );
+    fixture.tool(
+        "rustc",
+        r#"if [ "$1" != -vV ]; then
+    [ "$SIFR_NATIVE_TEST_BOOTSTRAP" = selected ] || exit 92
+fi
+printf 'rustc selected\nhost: x86_64-fixture-linux\n'"#,
+    );
+    fixture.tool(
+        "rustup",
+        r#"case "$1" in
+show) echo 'fixture-selected (overridden)' ;;
+which)
+    [ "$2" = --toolchain ] && [ "$3" = fixture-selected ] || exit 93
+    printf '%s/%s\n' "$SIFR_NATIVE_TEST_ROOT" "$4" ;;
+run)
+    [ "$2" = fixture-selected ] || exit 94
+    shift 2
+    export SIFR_NATIVE_TEST_BOOTSTRAP=selected
+    exec "$@" ;;
+*) exit 95 ;;
+esac"#,
+    );
+    fixture
+}
+
+fn launch_child(fixture: &Fixture, mode: &str) -> std::process::Output {
+    let mut paths = vec![fixture.root.clone()];
+    paths.extend(std::env::split_paths(
+        &std::env::var_os("PATH").unwrap_or_default(),
+    ));
+    let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+    command
+        .args([
+            "--exact",
+            "native_context_tests::native_launch_subprocess_entry",
+            "--nocapture",
+        ])
+        .env("SIFR_NATIVE_TEST_ROOT", &fixture.root)
+        .env("SIFR_NATIVE_TEST_MODE", mode)
+        .env("PATH", std::env::join_paths(paths).unwrap())
+        .env(
+            "SIFR_RUST_TOOLCHAIN",
+            if mode == "missing" {
+                "unavailable"
+            } else {
+                "fixture-selected"
+            },
+        )
+        .env_remove("SIFR_CARGO")
+        .env_remove("SIFR_RUSTC")
+        .env_remove("RUSTC")
+        .env_remove("CARGO_BUILD_RUSTC")
+        .env_remove("SIFR_NATIVE_TEST_BOOTSTRAP")
+        .current_dir(&fixture.root);
+    if mode == "paired" {
+        command
+            .env("SIFR_CARGO", fixture.root.join("cargo"))
+            .env("SIFR_RUSTC", fixture.root.join("rustc"));
+    } else if mode == "direct" {
+        command
+            .env("PATH", &fixture.root)
+            .env_remove("SIFR_RUST_TOOLCHAIN")
+            .env_remove("RUSTUP_TOOLCHAIN");
+    }
+    command.output().unwrap()
+}
+
+#[test]
+fn native_launcher_bootstraps_selected_tools_and_nested_rustc() {
+    let fixture = launch_fixture();
+    let output = launch_child(&fixture, "selected");
+    assert!(
+        output.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+fn native_launcher_identity_covers_launcher_bytes() {
+    let fixture = launch_fixture();
+    let first = launch_child(&fixture, "selected");
+    assert!(
+        first.status.success(),
+        "{}",
+        String::from_utf8_lossy(&first.stdout)
+    );
+    let launcher = fixture.root.join("rustup");
+    let mut bytes = fs::read(&launcher).unwrap();
+    bytes.extend_from_slice(b"\n# distinct launcher implementation\n");
+    fs::write(launcher, bytes).unwrap();
+    let second = launch_child(&fixture, "selected");
+    assert!(
+        second.status.success(),
+        "{}",
+        String::from_utf8_lossy(&second.stdout)
+    );
+    let identity = |bytes: &[u8]| {
+        String::from_utf8_lossy(bytes)
+            .lines()
+            .find_map(|line| line.split_once("NATIVE_LAUNCH_ID=").map(|(_, value)| value))
+            .unwrap()
+            .to_owned()
+    };
+    assert_ne!(identity(&first.stdout), identity(&second.stdout));
+}
+
+#[test]
+fn native_launcher_rejects_missing_selection_without_direct_fallback() {
+    let fixture = launch_fixture();
+    let output = launch_child(&fixture, "missing");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+}
+
+#[test]
+fn native_launcher_keeps_explicit_pairs_and_non_rustup_tools_direct() {
+    for mode in ["paired", "direct"] {
+        let fixture = Fixture::new();
+        fixture.tool(
+            "cargo",
+            r#"if [ "$1" = -vV ]; then echo 'cargo direct'; else "$RUSTC" --version; fi"#,
+        );
+        fixture.tool(
+            "rustc",
+            r#"[ -z "$SIFR_NATIVE_TEST_BOOTSTRAP" ] || exit 96
+printf 'rustc selected\nhost: x86_64-fixture-linux\n'"#,
+        );
+        if mode == "paired" {
+            fixture.tool("rustup", "exit 97");
+        }
+        let output = launch_child(&fixture, mode);
+        assert!(
+            output.status.success(),
+            "{mode}: {}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[test]
+fn native_launch_subprocess_entry() {
+    let Some(root) = std::env::var_os("SIFR_NATIVE_TEST_ROOT") else {
+        return;
+    };
+    let root = PathBuf::from(root);
+    let tools = NativeToolchain::resolve_at(&root);
+    if std::env::var("SIFR_NATIVE_TEST_MODE").unwrap() == "missing" {
+        assert!(tools.is_err());
+        return;
+    }
+    let tools = tools.unwrap();
+    assert_eq!(tools.cargo_path(), root.join("cargo"));
+    assert_eq!(tools.rustc_path(), root.join("rustc"));
+    let result = tools
+        .cargo_command()
+        .unwrap()
+        .arg("build")
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    assert!(String::from_utf8_lossy(&result.stdout).starts_with("rustc selected"));
+    println!("NATIVE_LAUNCH_ID={}", tools.identity());
+}

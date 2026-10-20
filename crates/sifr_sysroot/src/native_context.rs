@@ -37,9 +37,55 @@ const NATIVE_ENV: &[&str] = &[
     "SDKROOT",
 ];
 
+/// Keep the selected toolchain's runtime environment, not only executable paths.
+/// Cargo build scripts can invoke rustc after Cargo changes the loader search path.
+#[derive(Clone)]
+enum NativeLauncher {
+    Direct,
+    Rustup {
+        executable: PathBuf,
+        toolchain: String,
+    },
+}
+
+impl NativeLauncher {
+    fn command(&self, program: &Path) -> Command {
+        match self {
+            Self::Direct => Command::new(program),
+            Self::Rustup {
+                executable,
+                toolchain,
+            } => {
+                let mut command = Command::new(executable);
+                command.arg("run").arg(toolchain).arg(program);
+                command
+            }
+        }
+    }
+
+    fn encode_identity(&self, identity: &mut IdentityEncoder) -> Result<(), String> {
+        match self {
+            Self::Direct => identity.field("launcher", b"direct"),
+            Self::Rustup {
+                executable,
+                toolchain,
+            } => {
+                identity.field("launcher", b"rustup");
+                identity.field("launcher-path", executable.as_os_str().as_encoded_bytes());
+                let digest = crate::sha256_file(executable)
+                    .map_err(|_| "cannot identify selected toolchain launcher")?;
+                identity.field("launcher-digest", digest.as_bytes());
+                identity.field("launcher-toolchain", toolchain.as_bytes());
+            }
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone)]
 pub struct NativeToolchain {
     invocation_root: PathBuf,
+    launcher: NativeLauncher,
     cargo: PathBuf,
     rustc: PathBuf,
     selection: Option<String>,
@@ -166,6 +212,7 @@ impl NativeToolchain {
         let cargo_override = env::var("SIFR_CARGO").ok();
         let rustc_override = env::var("SIFR_RUSTC").ok();
         let paired_override = cargo_override.is_some() && rustc_override.is_some();
+        let mut launcher = NativeLauncher::Direct;
         let (cargo, mut rustc, selection) = match (cargo_override, rustc_override) {
             (Some(cargo), Some(rustc)) => (
                 executable(&cargo, cwd)?,
@@ -200,6 +247,10 @@ impl NativeToolchain {
                             .args(["which", "--toolchain", &selection, "rustc"])
                             .current_dir(cwd),
                     )?;
+                    launcher = NativeLauncher::Rustup {
+                        executable: rustup,
+                        toolchain: selection.clone(),
+                    };
                     (
                         PathBuf::from(selected_cargo),
                         PathBuf::from(selected_rustc),
@@ -241,7 +292,7 @@ impl NativeToolchain {
                 rustc = program;
             }
         }
-        Self::from_executables(cwd, cargo, rustc, selection)
+        Self::from_resolved_executables(cwd, cargo, rustc, selection, launcher)
     }
     pub fn from_executables(
         cwd: &Path,
@@ -249,11 +300,21 @@ impl NativeToolchain {
         rustc: PathBuf,
         selection: Option<String>,
     ) -> Result<Self, String> {
+        Self::from_resolved_executables(cwd, cargo, rustc, selection, NativeLauncher::Direct)
+    }
+
+    fn from_resolved_executables(
+        cwd: &Path,
+        cargo: PathBuf,
+        rustc: PathBuf,
+        selection: Option<String>,
+        launcher: NativeLauncher,
+    ) -> Result<Self, String> {
         if !cargo.is_absolute() || !rustc.is_absolute() {
             return Err("native executable paths must be absolute".into());
         }
         let version = |program: &Path| {
-            let mut command = Command::new(program);
+            let mut command = launcher.command(program);
             command.arg("-vV").current_dir(cwd);
             if let Some(selection) = &selection {
                 command.env("RUSTUP_TOOLCHAIN", selection);
@@ -299,7 +360,8 @@ impl NativeToolchain {
                 .into_string()
                 .map_err(|_| "Cargo target is not UTF-8")?;
         }
-        let mut hash = IdentityEncoder::new("resolved-native-toolchain-v1");
+        let mut hash = IdentityEncoder::new("resolved-native-toolchain-v2");
+        launcher.encode_identity(&mut hash)?;
         for (name, value) in [
             ("cargo", cargo_version.as_str()),
             ("rustc", rustc_version.as_str()),
@@ -332,6 +394,7 @@ impl NativeToolchain {
         let identity = hash.finish();
         Ok(Self {
             invocation_root: cwd.to_path_buf(),
+            launcher,
             cargo,
             rustc,
             selection,
@@ -489,7 +552,7 @@ impl NativeToolchain {
     }
     pub fn cargo_command(&self) -> Result<Command, String> {
         self.validate_configuration()?;
-        let mut command = Command::new(&self.cargo);
+        let mut command = self.launcher.command(&self.cargo);
         command.current_dir(&self.invocation_root);
         command
             .env_clear()
