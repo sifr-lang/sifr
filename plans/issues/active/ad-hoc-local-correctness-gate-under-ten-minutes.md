@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.9 validated and reviewed; V0.10 CLI parity next
+current_stage: V0.9 merged; V0.10 CLI schema parity
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -183,8 +183,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
-| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Validated/reviewed; PR #4371 |
-| V0.10 | CLI eager/deferred schema parity | Pending |
+| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
+| V0.10 | CLI eager/deferred schema parity | In progress |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
@@ -1942,3 +1942,21 @@ identity input. Evaluate cohesive public-behavior test ownership together with
 production-input identity; do not omit genuine production dependencies or expose
 private APIs just to move tests. The observed 318/336-second preparations are
 separate library/test contexts, not an additive full-gate forecast.
+
+
+V0.9 merged as #4371 at `eec85331bb2e5cb2f6c851ed2fe3db346ae65471`.
+
+### V0.10 bounded scope: independent CLI schema parity
+
+Reproduce the current eager/deferred schema mismatch, then align the eager test
+reference with the production test command's locked/offline/frozen flags. Keep
+independent schemas, exact match/error/help/order equality, all existing loop
+cases and production normalization semantics. Add explicit coverage for all
+three-flag combinations in both normal and update construction modes and
+representative option orderings. No production command behavior changes.
+
+Acceptance: the complete eager-contract and deferred-parser test groups, existing
+build/test lock-mode parse/normalization controls, added flag combinations,
+formatting/size/area and affected policy checks, plus independent review. Use
+retained targets and the existing 30-minute/resource limits. Final integrated
+create-PR/merge gates and V5 remain required.
