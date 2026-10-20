@@ -1686,8 +1686,11 @@ while their target signatures are subsequently borrowed. Investigate the exact
 canonicalization boundary before changing slot argument emission. Use small
 before/after programs against the public canonicalization API and actual rustc
 compilation to discriminate incomplete call rewriting from emitter conventions.
-The first simple `Self`/receiver/generic-tuple probes pass; they do not reproduce
-or explain the native failure yet. No blanket borrow, name fallback, global
+The first simple `Self`/receiver/generic-tuple probes passed because their bodies
+did not qualify for the string-borrow rewrite. With a qualifying `to_uppercase`
+body, four reduced programs fail after canonicalization while their original
+Rust compiles/runs. Three checked-in native regressions likewise compile/run
+before and fail after the retained baseline canonicalizer (`v08-new-tests-against-base`). No blanket borrow, name fallback, global
 optimization disablement or fixture weakening is authorized by this diagnosis.
 
 Acceptance: a root-cause regression that fails before and compiles/runs after
@@ -1696,3 +1699,32 @@ codegen unit suite; the unchanged native method-slot runtime case (mutable,
 shared and no-context variants) and lifetime/thread/shared-context rejection
 case; affected policy/area/format/size contracts and scoped independent review.
 Keep V0.9 ancestry/upcast, V0.11 unrelated E2E cases and final gates/V5 open.
+
+
+### V0.8 implementation and remaining diagnostic boundary
+
+The typed cleanup treated `Self` as a literal module/type owner and could not
+resolve those inherent calls. Unit-struct receiver values also lacked a type
+fact. Resolve `Self` through the actual enclosing implementation, and derive unit
+constructor types only from known declarations, retaining lexical shadowing and
+opaque-type boundaries. Slot decoding now emits the already-known HIR input type
+on its local binding, including receiver/value tuples. This preserves semantic
+information across the external runtime call without guessing that helper's
+return type. The existing borrow-only string optimization remains enabled; slot
+argument conventions and original runtime/negative fixtures are unchanged.
+
+The new native regressions execute original and canonical Rust for nested owner
+identity, unit receiver dispatch and typed opaque-decoder boundaries; a fourth
+control checks that unknown/shadowing bindings and local types do not acquire
+outer constructor facts. The method-policy update refreshes ten existing Rust-IR
+fingerprints and adds the `Self` identity comparison, with existing ownership,
+classification and all 234 constituent records unchanged.
+
+Separate follow-up, owned by V0.11's emitted-Rust correctness investigation:
+unannotated values returned by unknown external generic calls can still expose
+string-signature rewrites whose callers lack sufficient type facts. The retained
+`v08-syntax-probe/borrow-results.json` records those pre-existing cases. V0.8
+repairs compiler-generated method-slot adapters by retaining their known input
+contracts; it does not claim general transactional ABI optimization across opaque
+foreign code. This concern must remain visible in the phase's final correctness
+assessment rather than being treated as a passing probe.
