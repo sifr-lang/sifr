@@ -2336,3 +2336,21 @@ retained in `v012-companion-proposal/report.json`, its per-file diffs and
 `change-cohorts.json`, and `v012-safety-proposal.json` outside the reviewed tree.
 Complete freshness, deterministic comparisons, affected quality contracts,
 guards and independent review remain pending on the implementation candidate.
+
+V0.12 strict follow-up found three generated quality failures after all 41
+projects were prepared: `nested_function_backtracking` and
+`nested_function_composition` each have three `implicit_clone` diagnostics;
+`nested_helpers` has four `arithmetic_side_effects` diagnostics. All generated
+safety scans were empty. The other 38 changed companions passed strict Clippy.
+The ten canonical demos, their safety/format/determinism checks and four native
+controls passed. The extra 41-companion determinism probe did not execute: its
+threaded diagnostic helper used a main-thread-only process supervisor. Preserve
+that harness failure and rerun with a corrected helper; it is not evidence of
+compiler nondeterminism.
+
+The repair distinguishes borrowed vectors from slices, preserving the owned-copy
+result across reference depth, and uses resolved runtime-integer/range facts for
+borrowed arithmetic cleanup. Unknown, shadowed and primitive types retain their
+operations. No source assertion, lint suppression or quality-debt allowance is
+changed. These implementation changes require fresh affected tests, emissions
+and scoped review; the initial snapshot-only review does not approve them.

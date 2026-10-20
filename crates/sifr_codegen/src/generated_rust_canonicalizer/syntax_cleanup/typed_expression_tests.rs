@@ -560,4 +560,87 @@ mod tests {
         assert!(opaque.contains("add(&left, &right)"), "{opaque}");
     }
 
+
+    #[test]
+    fn vector_copy_cleanup_preserves_borrow_depth_and_slice_ownership() {
+        let rust = clean(r#"
+            fn copy(values: &Vec<String>, mutable: &mut Vec<String>, deep: &&Vec<String>, slice: &[String]) {
+                let a: Vec<String> = values.to_vec();
+                let b: Vec<String> = mutable.to_vec();
+                let c: Vec<String> = deep.to_vec();
+                let d: Vec<String> = slice.to_vec();
+            }
+        "#);
+        for expected in ["values.clone()", "mutable.clone()", "(*deep).clone()", "slice.to_vec()"] {
+            assert!(rust.contains(expected), "{rust}");
+        }
+    }
+
+    #[test]
+    fn vector_collect_cleanup_distinguishes_borrowed_vectors_from_slices() {
+        let rust = clean(r#"
+            fn copy(values: &mut Vec<String>, slice: &[String]) {
+                let a: Vec<String> = values.iter().cloned().collect();
+                let b: Vec<String> = slice.iter().cloned().collect();
+            }
+        "#);
+        assert!(rust.contains("values.clone()"), "{rust}");
+        assert!(rust.contains("slice.to_vec()"), "{rust}");
+        for source in [
+            "struct Vec<T>(T); fn copy(value: &mut Vec<String>) { value.to_vec(); }",
+            "use external::Vec; fn copy(value: &mut Vec<String>) { value.to_vec(); }",
+            "trait Other { fn clone(&self); } fn copy(value: &mut Vec<String>) { value.to_vec(); }",
+        ] {
+            let unchanged = clean(source);
+            assert!(unchanged.contains("value.to_vec()"), "{unchanged}");
+        }
+    }
+
+    #[test]
+    fn exact_integer_cleanup_tracks_borrowed_parameters_and_range_items() {
+        let rust = clean(r#"
+            use ::sifr_runtime::{SifrInt, SifrRange};
+            fn outer() {
+                fn inner(i: &SifrInt, n: &SifrInt) {
+                    for j in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
+                        consume(i + &j);
+                        consume(i - &j);
+                        consume(i * &j);
+                    }
+                }
+            }
+        "#);
+        for expected in ["::std::ops::Add::add(i, &j)", "::std::ops::Sub::sub(i, &j)", "::std::ops::Mul::mul(i, &j)"] {
+            assert!(rust.contains(expected), "{rust}");
+        }
+    }
+
+    #[test]
+    fn exact_integer_cleanup_preserves_unknown_and_shadowed_operations() {
+        for source in [
+            "fn copy(a: &i64, b: &i64) { consume(a + b); }",
+            "fn copy(a: &SifrInt, b: &Unknown) { consume(a + b); }",
+            "struct SifrInt; fn copy(a: &SifrInt, b: &SifrInt) { consume(a + b); }",
+            "use external::SifrInt; fn copy(a: &SifrInt, b: &SifrInt) { consume(a + b); }",
+        ] {
+            let rust = clean(source);
+            assert!(rust.contains("a + b"), "{rust}");
+        }
+        for declaration in [
+            "struct SifrRange;",
+            "use external::SifrRange;",
+            "mod SifrRange { pub fn new_known_nonzero() {} }",
+            "extern crate external as SifrRange;",
+            "trait SifrRange {}",
+        ] {
+            let rust = clean(&format!(r#"
+                {declaration}
+                fn run(i: &SifrInt) {{
+                    for j in SifrRange::new_known_nonzero(start(), stop(), step()) {{ consume(i + &j); }}
+                }}
+            "#));
+            assert!(rust.contains("i + &j"), "{rust}");
+        }
+    }
+
 }

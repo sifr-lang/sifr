@@ -2,6 +2,9 @@
 
 impl Rewriter<'_> {
     fn iterator_element(&self, expression: &syn::Expr) -> Option<syn::Type> {
+        if self.is_standard_integer_range(expression) {
+            return Some(syn::parse_quote!(SifrInt));
+        }
         if let syn::Expr::Paren(paren) = expression {
             return self.iterator_element(&paren.expr);
         }

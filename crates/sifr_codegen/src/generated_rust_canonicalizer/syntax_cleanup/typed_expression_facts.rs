@@ -362,6 +362,28 @@ impl Rewriter<'_> {
         }
     }
 
+    // Vec::clone owns the copied vector. For deeper references, remove only the
+    // extra layers that would otherwise select Clone for a reference instead.
+    fn clone_standard_vector(
+        &self,
+        receiver: &syn::Expr,
+        source: &syn::Type,
+    ) -> Option<syn::Expr> {
+        if !self.clone_is_unambiguous() {
+            return None;
+        }
+        self.standard_generic(unreference(source), "Vec")?;
+        let mut receiver = receiver.clone();
+        let mut remaining = source;
+        while let syn::Type::Reference(reference) = remaining {
+            remaining = &reference.elem;
+            if matches!(remaining, syn::Type::Reference(_)) {
+                receiver = syn::parse_quote!((*#receiver));
+            }
+        }
+        Some(syn::parse_quote!(#receiver.clone()))
+    }
+
     fn rewrite_vector_collect(&self, expression: &mut syn::Expr, expected: &syn::Type) {
         if !self.clone_is_unambiguous() {
             return;
@@ -408,11 +430,9 @@ impl Rewriter<'_> {
             return;
         }
         let receiver = &iterated.receiver;
-        *expression = if self.standard_generic(&source, "Vec").is_some() {
-            syn::parse_quote!(#receiver.clone())
-        } else {
-            syn::parse_quote!(#receiver.to_vec())
-        };
+        *expression = self
+            .clone_standard_vector(receiver, &source)
+            .unwrap_or_else(|| syn::parse_quote!(#receiver.to_vec()));
     }
 }
 
