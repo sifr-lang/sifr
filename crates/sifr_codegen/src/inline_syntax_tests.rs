@@ -171,7 +171,7 @@ fn support_reuse_preserves_canonical_rendering_bytes_and_order() {
     let sources = std::collections::HashMap::new();
     let reference = generate_rust_with_stdlib_for_module_with_structural_policy(
         &lowered.module,
-        &metadata.bootstrap_view(&sources),
+        &crate::StdlibEmissionView::bootstrap(&metadata, &sources),
         Some("sifr.fixture"),
         false,
     );

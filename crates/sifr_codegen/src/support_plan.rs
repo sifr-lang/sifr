@@ -634,7 +634,7 @@ mod tests {
 
         let rendered = render_support(
             &demand,
-            &crate::StdlibEmissionCode::default().emission_view(),
+            &crate::StdlibEmissionView::new(&crate::StdlibEmissionCode::default()),
         );
 
         assert!(!rendered.source.contains("struct SecondaryError"));
@@ -665,7 +665,7 @@ mod tests {
             },
         );
 
-        let rendered = render_support(&project, &stdlib.emission_view());
+        let rendered = render_support(&project, &crate::StdlibEmissionView::new(&stdlib));
 
         assert!(rendered.source.contains("struct ValueError"));
     }

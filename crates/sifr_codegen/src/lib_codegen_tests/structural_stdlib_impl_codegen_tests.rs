@@ -41,7 +41,7 @@ fn project_identity_with_stdlib_prefix_gets_no_origin_bypass() {
 
     let generated = crate::generate_rust_with_stdlib_for_module_with_project_policy(
         &module,
-        &crate::StdlibCode::default().emission_view(),
+        &crate::StdlibEmissionView::new(&crate::StdlibCode::default()),
         Some("main"),
         Some("main"),
         true,
@@ -186,7 +186,7 @@ fn imported_stdlib_structural_contracts_include_transitive_field_types_only() {
         "struct JsonValue { value: Vec<Child> } struct Child { value: SifrInt }".to_string();
     let mut consumer = module(vec![structural_function()], Vec::new());
     consumer.imports.push(json_import());
-    let view = stdlib.emission_view();
+    let view = crate::StdlibEmissionView::new(&stdlib);
     let selected = crate::structural_impl_codegen::imported_stdlib_classes(&consumer, &view);
     assert_eq!(
         selected
@@ -238,7 +238,7 @@ fn import_only_structural_registration_preserves_opaque_runtime_ownership() {
     let mut plan = crate::project_stdlib_nominals::ProjectStdlibNominalPlan::empty();
     crate::project_stdlib_nominals::register_imported_structural_nominals(
         &[("consumer", &consumer)],
-        &stdlib.emission_view(),
+        &crate::StdlibEmissionView::new(&stdlib),
         &mut plan,
     );
     assert!(plan.registry.rust_paths.contains_key("sifr.json.JsonValue"));

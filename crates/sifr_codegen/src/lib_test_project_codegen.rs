@@ -60,7 +60,7 @@ pub fn generate_rust_test_project_with_metadata(
     if structural_interop_enabled {
         crate::project_stdlib_nominals::register_imported_structural_nominals(
             &all_modules,
-            &stdlib_code.emission_view(),
+            &crate::StdlibEmissionView::new(stdlib_code),
             &mut stdlib_nominal_plan,
         );
     }
@@ -107,7 +107,7 @@ pub fn generate_rust_test_project_with_metadata(
         let structural_identity_module_name = Some(*module_name);
         let generated = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
-            &module_code.emission_view(),
+            &crate::StdlibEmissionView::new(&module_code),
             Some(module_name),
             structural_identity_module_name,
             structural_interop_enabled,
@@ -182,7 +182,10 @@ pub fn generate_rust_test_project_with_metadata(
     }
 
     project_support_demand.set_error_conversion_paths(&nominal_type_paths);
-    let rendered_support = render_support(&project_support_demand, &stdlib_code.emission_view());
+    let rendered_support = render_support(
+        &project_support_demand,
+        &crate::StdlibEmissionView::new(stdlib_code),
+    );
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
     let (nominal_prelude, remaining_support) = extract_project_stdlib_nominal_prelude(

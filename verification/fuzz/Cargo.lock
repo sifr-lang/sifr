@@ -1584,9 +1584,11 @@ dependencies = [
  "quote",
  "ruff_text_size",
  "rust_decimal",
+ "serde_json",
  "sifr_diagnostics",
  "sifr_identity",
  "sifr_ir",
+ "sifr_stdlib_artifact",
  "sifr_stdlib_manifest",
  "sifr_structural_identity",
  "sifr_type_system",
@@ -1627,6 +1629,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_package",
  "sifr_sql_contract",
+ "sifr_stdlib_artifact",
  "sifr_stdlib_imports",
  "sifr_stdlib_manifest",
  "sifr_syntax",
@@ -1669,6 +1672,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_package",
  "sifr_sql_contract",
+ "sifr_stdlib_artifact",
  "sifr_stdlib_imports",
  "sifr_stdlib_manifest",
  "sifr_syntax",
@@ -1786,6 +1790,15 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_identity",
  "sifr_structural_identity",
+]
+
+[[package]]
+name = "sifr_stdlib_artifact"
+version = "0.0.0"
+dependencies = [
+ "sifr_identity",
+ "sifr_ir",
+ "sifr_type_system",
 ]
 
 [[package]]

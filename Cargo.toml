@@ -25,6 +25,7 @@ members = [
     "crates/sifr_stdlib_imports",
     "crates/sifr_stdlib_manifest",
     "crates/sifr_ir",
+    "crates/sifr_stdlib_artifact",
     "crates/sifr_lowering",
     "crates/sifr_syntax",
     "crates/sifr_frontend",
@@ -58,6 +59,7 @@ authors = ["Yaser Al-Najjar"]
 license = "MIT"
 
 [workspace.dependencies]
+sifr_stdlib_artifact = { path = "crates/sifr_stdlib_artifact" }
 sifr_identity = { path = "crates/sifr_identity" }
 csv = { package = "csv", version = "=1.4.0", default-features = false, features = [] }
 data-encoding = { package = "data-encoding", version = "=2.11.1", default-features = false, features = ["alloc"] }

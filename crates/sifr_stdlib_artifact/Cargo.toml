@@ -1,0 +1,18 @@
+[package]
+name = "sifr_stdlib_artifact"
+links = "sifr_stdlib_artifact_compiled_identity"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_ir = { workspace = true }
+sifr_type_system = { workspace = true }
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }
+
+[lints]
+workspace = true

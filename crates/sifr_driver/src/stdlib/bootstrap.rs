@@ -1,6 +1,5 @@
 use crate::diagnostics::RenderedDiagnostic;
 use crate::stdlib::types::StdlibCompiled;
-use sifr_codegen::StdlibCode;
 #[cfg(test)]
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::ExternalDefs;
@@ -8,6 +7,7 @@ use sifr_lowering::ExternalDefs;
 use sifr_lowering::lower_module_sysroot_public_stdlib_with_externals;
 #[cfg(test)]
 use sifr_lowering::{HirFunction, HirParam};
+use sifr_stdlib_artifact::StdlibCode;
 #[cfg(test)]
 use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 #[cfg(test)]

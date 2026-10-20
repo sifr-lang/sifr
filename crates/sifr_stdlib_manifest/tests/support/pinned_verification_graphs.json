@@ -7,7 +7,7 @@
     "verification/tools/maintainability_builtin_input"
   ],
   "files": {
-    "verification/fuzz/Cargo.lock": "4750f037c4957e7a70e8a3f24dc443beb50586ce274e05f8fbeba62f806db167",
+    "verification/fuzz/Cargo.lock": "3b4f351547ab96bc51cdc98f81989d0d6e12cd021aa571edbc0f86cc5f10f9a5",
     "verification/fuzz/Cargo.toml": "da843afad4025defded8d6d013605bcc53068eabf4fc255d971f3de3ab8f85f0",
     "verification/fuzz/project_fixtures/base/alpha/Cargo.toml": "660b9bf47aea54185aab14b785f375b337dd55202c7daeee4c86e4970a6872a9",
     "verification/fuzz/project_fixtures/base/app/Cargo.toml": "74e1b1e28d6646d6ec2b47e4f740a9e3bb2394b0519f6daa1d42eb1d64873af2",

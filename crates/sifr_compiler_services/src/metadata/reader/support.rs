@@ -1,7 +1,7 @@
 use super::{Decode, Decoder, Provider, Result, wire};
 use crate::stdlib::{SourceStdlibCompiled, StdlibRustInterop};
 use sha2::{Digest, Sha256};
-use sifr_codegen::{StdlibCode, StdlibRustSource};
+use sifr_stdlib_artifact::{StdlibCode, StdlibRustSource};
 use sifr_sysroot::ResolvedSysroot;
 use std::{
     collections::{BTreeMap, HashMap, HashSet},

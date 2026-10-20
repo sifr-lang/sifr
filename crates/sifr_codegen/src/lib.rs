@@ -90,9 +90,7 @@ mod ir_imports;
 mod ir_optimize;
 mod ir_validate;
 mod lib_support;
-pub(crate) use lib_modules_and_codegen::{
-    IsinstanceUnionMatch, ModuleFuncSignatures, NestedFnCapture,
-};
+pub(crate) use lib_modules_and_codegen::{IsinstanceUnionMatch, NestedFnCapture};
 pub(crate) use lib_support::{
     homogeneous_large_tuple_backing_array, resolve_alias_type_for_plain_call,
     try_lower_leaf_or_name_expr_result,
@@ -200,15 +198,16 @@ mod stdlib_codegen_metadata;
 pub use inline_syntax::StdlibSyntaxSession;
 mod stdlib_filter;
 mod stdlib_interop_demand;
-pub use stdlib_codegen_metadata::{StdlibCode, StdlibEmissionCode, StdlibEmissionView};
+pub(crate) use sifr_stdlib_artifact::{
+    FuncSignature, ModuleFuncSignatures, StdlibCode, StdlibEmissionCode, StdlibRustSource,
+};
+pub use stdlib_codegen_metadata::StdlibEmissionView;
 #[doc(hidden)]
 pub use stdlib_interop_demand::{observe_stdlib_interop_selection, stdlib_module_roots};
-mod stdlib_import_signatures;
-mod stdlib_rust_source;
-pub use stdlib_rust_source::StdlibRustSource;
 mod static_program_codegen;
 mod static_program_slots_codegen;
 mod stdlib_demand_plan;
+mod stdlib_import_signatures;
 mod stmt_support_emitter;
 mod string_char_cache;
 mod string_char_cache_scan;

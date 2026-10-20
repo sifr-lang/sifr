@@ -1,5 +1,5 @@
-use sifr_codegen::StdlibCode;
 use sifr_lowering::ExternalDefs;
+use sifr_stdlib_artifact::StdlibCode;
 
 /// Completed bootstrap owner, shared immutably by compilation consumers.
 /// Mutable lowering receives its own definitions projection.

@@ -285,6 +285,7 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
     tokens.extend(sifr_frontend::compiled_input_tokens());
     tokens.extend(sifr_syntax::compiled_input_tokens());
     tokens.extend(sifr_codegen::compiled_input_tokens());
+    tokens.extend(sifr_stdlib_artifact::compiled_input_tokens());
     tokens.extend(sifr_package::compiled_input_tokens());
     tokens.extend(sifr_compiler_component::compiled_input_tokens());
     tokens.extend(sifr_sql_contract::compiled_input_tokens());

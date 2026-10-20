@@ -6,9 +6,10 @@ use super::rust_interop_contract_tests::{
 };
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
-    RustBridgeTypeKind, StdlibCode, generate_rust_multi_with_metadata,
+    RustBridgeTypeKind, generate_rust_multi_with_metadata,
 };
 use sifr_package::TrustPolicy;
+use sifr_stdlib_artifact::StdlibCode;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 

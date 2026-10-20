@@ -3,7 +3,6 @@ use crate::export_policy::should_export_callable;
 use crate::stdlib::SourceStdlibCompiled;
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
-use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
     ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
@@ -11,6 +10,7 @@ use sifr_lowering::{
     lower_module_sysroot_private_declaration_with_externals,
     lower_module_sysroot_public_stdlib_with_externals,
 };
+use sifr_stdlib_artifact::{StdlibCode, StdlibRustSource};
 use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 use sifr_syntax::parse_module_raw;
 use sifr_sysroot::ResolvedSysroot;

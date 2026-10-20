@@ -24,6 +24,20 @@ class ProfilePlanTests(unittest.TestCase):
                     self.assertEqual(group.preparation()[5:], list(group.command[1:group.command.index("--") if "--" in group.command else len(group.command)]))
                     self.assertEqual(group.execution()[4:], list(group.command[1:]))
 
+    def test_shared_stdlib_owner_is_enrolled_without_an_extra_configuration(self):
+        for name in ("create-pr", "merge", "nightly", "release"):
+            for mode in ("smoke", "full"):
+                profile = load_profile(name)
+                plan = configuration_plan(profile, mode)
+                matches = [g for g in plan if "sifr_stdlib_artifact" in g.ids]
+                self.assertEqual(len(matches), 1, (name, mode))
+                self.assertEqual(matches[0].classification, "integration")
+                self.assertIn("sifr_stdlib_imports", matches[0].ids)
+                without_owner = copy.deepcopy(profile)
+                suites = without_owner["crate_test_membership"]["suites"]
+                suites[:] = [s for s in suites if s["id"] != "sifr_stdlib_artifact"]
+                self.assertEqual(len(plan), len(configuration_plan(without_owner, mode)))
+
     def test_r06_duplicate_compiler_preparation_is_memoized(self):
         from .cargo_crate_setup import prepare_crate_test_binaries
         profile = load_profile("merge")

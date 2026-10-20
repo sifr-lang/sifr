@@ -195,7 +195,7 @@ mod tests {
         );
 
         let selected = plan_demanded_stdlib_sources(
-            &stdlib.emission_view(),
+            &crate::StdlibEmissionView::new(&stdlib),
             &["_sifr.fs".to_string(), "sifr.io".to_string()],
             &HashSet::from(["sifr.io".to_string()]),
             &HashMap::from([(
