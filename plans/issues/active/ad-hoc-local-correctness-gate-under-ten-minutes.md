@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16c accepted; V0.14b2 production child lease ownership next
+current_stage: V0.16c merged; V0.14b2 production child lease ownership
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -196,7 +196,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 | V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
-| V0.16c | Deterministic canonical lowering-error negative control | Accepted #4380; driver boundary, all 64 ordinary E2E tests and scoped review pass |
+| V0.16c | Deterministic canonical lowering-error negative control | Merged #4380; driver boundary, all 64 ordinary E2E tests and scoped review pass |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -2919,3 +2919,41 @@ execution and measured compiler-identity/test compilation costs. V3 retains the
 remaining reusable native fixture ownership migration. V0.14b2 production child
 leases are next. V1–V5 and the complete final create-PR/merge gates remain open;
 this acceptance does not establish the whole phase's sub-ten-minute objective.
+
+
+### V0.14b2 bounded scope and acceptance
+
+V0.16c merged as `e2efe1ef30b6b855f722f79175a36f2111e1aa2f`
+([PR #4380](https://github.com/sifr-lang/sifr/pull/4380)). V0.14b2 starts there.
+Production Unix family, publication, resolution, artifact and semantic metadata
+leases still inherit into unrelated commands. Apply the already qualified
+command-owned descriptor primitive to their intended native consumers; keep
+semantic in-process ownership close-on-exec. Preserve the existing Windows
+handle/Job policy and make no foreign execution claim.
+
+Use a small explicit lease collection in scoped native Cargo policies. Carry
+family/publication ownership through metadata preparation, native probes/builds
+and portable resolution; retain the prepared resolution during its consumers.
+Give cached executable artifacts a command constructor that retains the actual
+entry, and migrate CLI and test callers. Bind generated-test execution to its
+captured artifact. Dispose completed command/policy/resolution ownership before
+the existing native-family release boundary. Do not put process-local descriptor
+values into semantic/cache identity, omit identity inputs, serialize unrelated
+commands, or add a global ownership registry.
+
+Acceptance: focused storage/command ownership and original driver workspace/prune
+controls, real killed-parent and unrelated-live-child cases, multiple owners,
+spawn/disposal failure, retained family/publication/resolution/artifact ownership,
+and release before independent finalized-artifact execution. Run original native
+reuse, lock-mode, portable relocation, cached executable and generated-test
+assertions. Use a broad ordinary driver batch where it diagnoses cross-test
+interaction efficiently, keeping preparation separate and each diagnostic under
+the 30-minute cap. Run the applicable guards and independent scoped review.
+The final complete phase gates remain mandatory.
+
+The test-only reusable native source fixture is a distinct input owner. Its
+ambient inheritance is explicitly retained as required V3 fixture-lifecycle work,
+not claimed repaired by production migration. Avoid introducing a public semantic
+CompilerContext ownership API solely for that fixture; migrate its test-worker
+ownership under V3 with the original native assertions. No source fixture, runtime
+expectation, platform qualification or profile selection may be weakened here.
