@@ -57,6 +57,15 @@ class PythonPreparationTests(unittest.TestCase):
                 suite.update(status="red-blocker", executed_in_merge=False)
         self.assertEqual(python_consumers(profile), set())
 
+    def test_driver_library_does_not_bootstrap_area_but_native_archive_selection_does(self):
+        for suite_id, required in (("sifr_driver_lib", False),
+                                   ("sifr_driver_generated_builds", True)):
+            with self.subTest(suite=suite_id):
+                profile = self.selection(crate=True)
+                profile["crate_test_membership"]["suites"] = [
+                    s for s in profile["crate_test_membership"]["suites"] if s["id"] == suite_id]
+                self.assertEqual(bool(python_consumers(profile)), required)
+
     def test_environment_failure_blocks_all_consumers_but_not_independent_work(self):
         profile = load_profile("merge")
         nodes, consumers = cargo_preparation_plan(profile, {}, lambda *a, **kw: None)

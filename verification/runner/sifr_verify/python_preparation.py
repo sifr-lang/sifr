@@ -4,6 +4,16 @@ from .paths import REPO_ROOT
 from .profiles import crate_test_mode, crate_test_suites_for_mode
 
 
+def _crate_needs_environment(suite):
+    if suite["status"] == "red-blocker" and not suite["executed_in_merge"]:
+        return False
+    if suite["package"] == "sifr_lsp":
+        return True
+    # The archive/bridge fixture is ignored by ordinary driver library tests.
+    return suite["package"] == "sifr_driver" and any(
+        flag in suite["command"] for flag in ("--ignored", "--include-ignored"))
+
+
 def python_consumers(profile):
     consumers = set()
     for area in profile.get("selected_areas", []):
@@ -18,9 +28,7 @@ def python_consumers(profile):
     mode = crate_test_mode(profile)
     if mode is not None:
         suites = crate_test_suites_for_mode(profile, mode)
-        if any(suite["package"] in {"sifr_driver", "sifr_lsp"}
-               and not (suite["status"] == "red-blocker" and not suite["executed_in_merge"])
-               for suite in suites):
+        if any(_crate_needs_environment(suite) for suite in suites):
             consumers.add(f"toolchain_cargo_test_sifr_{mode}")
     return consumers
 
