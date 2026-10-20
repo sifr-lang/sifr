@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.17 accepted; V1 semantic/native separation and V2 repeated validation remain open
+current_stage: V2a bounded metadata validation facts; V1 semantic/native separation remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -3379,3 +3379,37 @@ The original failed V1b1 coverage-area evidence remains failed and retained.
 This closure changes only this phase record. V1 semantic/native separation,
 V2–V5, complete integrated create-PR/merge gates and the ten-minute goal remain
 open. No runtime gain is attributed to the taxonomy repair.
+
+
+### V2a bounded implementation — invocation-local metadata validation facts
+
+Sequence this V2 subitem before the remaining V1 separation work to reduce the
+measured repeated validation cost of later producer and consumer checks. This
+is a sequencing change within the approved whole-phase scope, not completion of
+V1 or a replacement for its architecture/feasibility acceptance.
+
+The existing implementation reads, hashes, canonically decodes and field-checks
+shared records repeatedly while validating each complete-store graph root. Retain
+only successful per-record reference/field-validation facts in one bounded,
+invocation-local owner. Keep the immutable captured input as authority. Preserve
+per-root traversal order, colors, cycle/depth/work checks, direct-reference kind
+checks and first-error diagnostics. Do not retain graph verdicts or share facts
+between stores or invocations. Leave lazy consumer decoding/retention accounting
+separate. Eviction or an oversized fact must recompute, never skip validation.
+
+Acceptance: measure repeated reads and complete validation on the exact retained
+real metadata fixture before/after; compare its portable digest. Add hit/miss,
+eviction and oversized-record controls; compare exact diagnostics for malformed
+encoding/fields, absent/wrong-kind references, cycles, depth and work limits.
+Prove a later stricter root cannot inherit an earlier root's success. Preserve
+unchanged-path/mtime corruption rejection and existing producer cancellation
+checkpoints; there is no cancellation callback inside the current store API.
+Run the complete sysroot library tests, affected metadata producer/reader checks,
+existing full emitted-source/source-map corpus parity, formatting, file-size and
+affected verification guards. Required full final gates and V5 remain open.
+Use a scoped independent review under the approved intermediate policy.
+
+V1 semantic/native separation, component Engine/Store reuse, durable history,
+fixture/build lifecycle work and the shared gate scheduler are outside this
+bounded item and remain pending. Do not attribute additive whole-gate savings
+from this local measurement.
