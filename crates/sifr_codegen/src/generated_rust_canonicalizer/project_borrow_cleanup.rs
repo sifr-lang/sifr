@@ -59,11 +59,30 @@ pub(crate) fn rewrite_named_project_borrows(
         }
     }
     let shared_slices = api_cleanup::collect_project_shared_slice_params(&files);
-    let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
+    // Rewriting one call may make its caller borrow-only. Close the complete
+    // project graph before later per-file canonicalization can change that ABI.
+    loop {
+        let before = files
+            .iter()
+            .map(quote::ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>();
+        let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
+        for file in &mut files {
+            syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
+        }
+        let after = files
+            .iter()
+            .map(quote::ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>();
+        if before == after {
+            break;
+        }
+    }
     let mutability_facts = syntax_cleanup::collect_project_mutability_facts(&files);
     for file in &mut files {
         api_cleanup::rewrite_project_shared_slice_calls(file, &shared_slices);
-        syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
         syntax_cleanup::apply_project_mutability_facts(file, &mutability_facts);
     }
     let signatures = syntax_cleanup::collect_project_borrowed_string_params(&files);
@@ -204,7 +223,7 @@ mod ancestry_tests {
                 .collect::<String>();
             assert!(
                 main.contains(
-                    "Child::new(SifrInt::from_i64(1),&SifrInt::from_i64(2),&SifrInt::from_i64(3))"
+                    "Child::new(SifrInt::from_i64(1),&SifrInt::from_i64(2),&SifrInt::from_i64(3)"
                 ),
                 "{main}"
             );

@@ -1864,3 +1864,20 @@ transitive/structural conversions, same-basename owners and non-main modules),
 affected formatting/size/area/method-policy contracts and independent review.
 Use retained compilation contexts and the 30-minute diagnostic cap; reserve
 20 GiB disk and 2 GiB memory. Final integrated gates and V5 remain mandatory.
+
+
+V0.9 current baseline `v09-current-native-group` binds candidate
+`a3ff03d2d` and executes all nineteen project-generic tests with ignored native
+cases included: **17 pass, 2 fail**, 35.766 seconds outer (2.10 preparation,
+31.74 test execution). The failures are exactly the same-basename ancestor
+constructor's `SifrInt`/`&SifrInt` disagreement and the structural consuming
+upcast's private `Mid` in public `Deref::Target` (E0446). Other related tests now
+pass and are not repaired speculatively. All generated failed inputs are retained.
+
+The proposed repair closes scalar-borrow propagation across callers before
+per-file canonicalization, and closes visibility demands along the emitter's
+fully qualified standard `Deref` ancestry edges. It retains owned inputs when
+consumed, resolves declared module aliases, normalizes restricted audiences to
+absolute scopes, and leaves unrelated structs, generic type parameters,
+external paths and private/custom trait contracts alone. New tests check
+fixed-point stability, source ordering, transitive parents and those boundaries.

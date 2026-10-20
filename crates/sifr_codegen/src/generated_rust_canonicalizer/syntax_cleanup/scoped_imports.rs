@@ -25,8 +25,12 @@ pub(crate) fn qualified_path(scope: &[String], path: &[String]) -> Option<Vec<St
 }
 
 pub(crate) fn expand<T: Clone>(file: &syn::File, definitions: &mut HashMap<String, T>) {
+    expand_items(&file.items, definitions);
+}
+
+pub(crate) fn expand_items<T: Clone>(items: &[syn::Item], definitions: &mut HashMap<String, T>) {
     let mut aliases = Vec::new();
-    collect(&file.items, &[], &mut aliases);
+    collect(items, &[], &mut aliases);
     for _ in 0..aliases.len() {
         let mut additions = Vec::new();
         for (alias, target) in &aliases {
