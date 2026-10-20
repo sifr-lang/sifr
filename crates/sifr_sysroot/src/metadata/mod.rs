@@ -17,6 +17,9 @@ mod physical;
 mod physical_input;
 mod store;
 mod validation;
+mod validation_facts;
+#[cfg(test)]
+mod validation_facts_tests;
 pub use container::{Compatibility, Limits, MetadataEncoder};
 pub use store::MetadataStore;
 mod hir_nodes;
