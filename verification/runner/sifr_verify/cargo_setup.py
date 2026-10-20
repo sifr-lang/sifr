@@ -62,9 +62,6 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
                 consumers[owner].append(name)
 
     python_owners = python_consumers(profile)
-    if python_owners:
-        add("python_environment", (),
-            lambda: prepare_python_environment(setup_env, command_runner), python_owners)
 
     def area_requires(area):
         return (("workspace", "python_environment") if f"area_{area}" in python_owners
@@ -75,6 +72,9 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
         "toolchain_cargo_test_sifr_smoke", "toolchain_cargo_test_sifr_full"}]
     add("fixtures", ("workspace",),
         lambda: prepare_locked_fixture_caches(profile, setup_env, command_runner))
+    if python_owners:
+        add("python_environment", (),
+            lambda: prepare_python_environment(setup_env, command_runner), python_owners)
 
     def generated():
         if not any(area["area"] == "generated_code_quality"
