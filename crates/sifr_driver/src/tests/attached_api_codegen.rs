@@ -192,7 +192,12 @@ fn rust_path(path: &syn::Path) -> String {
 }
 
 fn type_parameter_bounds(file: &syn::File, function: &str, parameter: &str) -> Vec<String> {
-    let parameter = rust_function(file, function)
+    let function = rust_function(file, function);
+    assert!(
+        matches!(function.vis, syn::Visibility::Public(_)),
+        "attached API providers must remain public"
+    );
+    let parameter = function
         .sig
         .generics
         .type_params()
