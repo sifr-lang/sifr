@@ -103,8 +103,6 @@ fn package_input_snapshot(root: &Path, provider: &mut impl SourceProvider) -> (u
             ".cargo/config",
             "rust-toolchain.toml",
             "rust-toolchain",
-            "pyproject.toml",
-            "uv.lock",
         ] {
             paths.push(ancestor.join(name));
         }
@@ -115,6 +113,9 @@ fn package_input_snapshot(root: &Path, provider: &mut impl SourceProvider) -> (u
     for relative in sifr_package::required_python_certification_archive_entries(root) {
         paths.push(root.join(relative));
     }
+    // Resolve selection on every observation: creation/deletion of a nearer uv
+    // project can change it. Only the selected Python files affect this root;
+    // unrelated ancestor projects must not evict a warm explicit environment.
     let interpreter = python_environment_selection(root, provider).map(|selection| {
         paths.extend(selection.pyproject);
         paths.extend(selection.lock);
