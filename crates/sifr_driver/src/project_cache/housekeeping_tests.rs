@@ -274,7 +274,7 @@ fn run_in_permissive_process(name: &str) -> bool {
         }
         return false;
     }
-    let status = std::process::Command::new(std::env::current_exe().unwrap())
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
             &format!("project_cache::housekeeping_tests::{name}"),
@@ -282,12 +282,18 @@ fn run_in_permissive_process(name: &str) -> bool {
             "--nocapture",
         ])
         .env(CHILD, name)
-        .stdout(std::process::Stdio::null())
-        .status()
+        .output()
         .unwrap();
     assert!(
-        status.success(),
-        "housekeeping case failed under permissive umask: {name}"
+        output.status.success(),
+        "housekeeping case failed under permissive umask: {name}\n{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .contains("test result: ok. 1 passed; 0 failed; 0 ignored;"),
+        "exact housekeeping subprocess must execute one test: {name}"
     );
     true
 }
