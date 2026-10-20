@@ -15,6 +15,8 @@ EXPECTED_TESTS = {
     "python::arrow_ops::abi::tests::rejects_invalid_device_metadata",
     "python::arrow_ops::abi::tests::rejects_missing_release_and_inconsistent_pairs",
     "python::arrow_ops::abi::tests::rejects_misaligned_payloads_and_reserved_device_types",
+    "python::arrow_ops::h02_contract_tests::abi_layout_and_capsule_transfer",
+    "python::arrow_ops::h02_contract_tests::stream_callbacks_release_exactly_once",
     "python::arrow_ops::tests::arrow_array_stream_schema_track_metadata_and_release",
     "python::arrow_ops::tests::arrow_declaration_certification_requires_exact_producer_identity",
     "python::arrow_ops::tests::arrow_marks_pandas_like_producers_copy_possible",

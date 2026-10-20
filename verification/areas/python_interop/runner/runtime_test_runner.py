@@ -33,6 +33,16 @@ def validate_expected_tests(label: str, expected: set[str]) -> None:
     if exact_tests_observed(observed_tests(duplicate_output), expected):
         raise SystemExit(f"{label} runtime runner accepted a duplicate test")
 
+    unexpected = "unexpected::runtime_test"
+    while unexpected in expected:
+        unexpected += "_"
+    extra_output = f"{exact_output}\ntest {unexpected} ... ok"
+    if exact_tests_observed(observed_tests(extra_output), expected):
+        raise SystemExit(f"{label} runtime runner accepted an extra test")
+    replaced_output = f"{missing_output}\ntest {unexpected} ... ok"
+    if exact_tests_observed(observed_tests(replaced_output), expected):
+        raise SystemExit(f"{label} runtime runner accepted a substituted test")
+
 
 def run_exact_runtime_tests(
     repo_root: Path,

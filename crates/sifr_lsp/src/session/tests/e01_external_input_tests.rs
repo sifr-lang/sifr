@@ -235,6 +235,7 @@ fn absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_c
 fn environment_bridge_and_certification_drift_revalidate_without_source_edits() {
     let temp = tempfile::tempdir().expect("temporary root");
     let (path, uri) = fixture(temp.path(), "environment-root");
+    select_explicit_environment(temp.path(), ".");
     let mut session = Session::new();
     open(&mut session, uri.clone());
     session
@@ -281,4 +282,129 @@ fn environment_bridge_and_certification_drift_revalidate_without_source_edits() 
         assert!(session.python_declarations.snapshot_builds() > builds);
     }
     assert_eq!(std::fs::read(path).expect("source unchanged"), source);
+}
+
+fn select_explicit_environment(root: &Path, directory: &str) {
+    let path = root.join("sifr.toml");
+    let mut manifest = std::fs::read_to_string(&path).expect("read manifest");
+    manifest.push_str(&format!(
+        "\n[python]\npyproject = \"{directory}/pyproject.toml\"\nlock = \"{directory}/uv.lock\"\n"
+    ));
+    std::fs::write(path, manifest).expect("select Python metadata");
+}
+
+fn selected_project(root: &Path) -> Option<PathBuf> {
+    sifr_compiler_services::python::python_environment_selection(
+        root,
+        &mut sifr_analysis::DiskSourceProvider::new(),
+    )
+    .and_then(|selection| selection.pyproject)
+}
+
+#[test]
+fn unselected_python_projects_preserve_explicit_environment_cache() {
+    let temp = tempfile::tempdir().expect("temporary ancestry");
+    let root = temp.path().join("package");
+    let (path, uri) = fixture(&root, "explicit-root");
+    select_explicit_environment(&root, "selected");
+    assert_eq!(
+        selected_project(&root),
+        Some(root.join("selected/pyproject.toml"))
+    );
+    let mut session = Session::new();
+    open(&mut session, uri.clone());
+    session
+        .python_declaration_snapshot(&uri)
+        .expect("initial status");
+    let generation = session.external_inputs.generation(&root);
+    let builds = session.python_declarations.snapshot_builds();
+    for directory in [temp.path(), root.as_path()] {
+        for name in ["pyproject.toml", "uv.lock"] {
+            std::fs::write(directory.join(name), "unselected").expect("unselected input");
+            session.observe_external_inputs_for_path(&path);
+            session
+                .python_declaration_snapshot(&uri)
+                .expect("warm status");
+            assert_eq!(session.external_inputs.generation(&root), generation);
+            assert_eq!(session.python_declarations.snapshot_builds(), builds);
+        }
+    }
+    std::fs::create_dir(root.join("selected")).expect("selected directory");
+    for name in ["pyproject.toml", "uv.lock"] {
+        let selected = root.join("selected").join(name);
+        for content in ["", "changed"] {
+            let before = session.external_inputs.generation(&root);
+            std::fs::write(&selected, content).expect("selected input");
+            session.observe_external_inputs_for_path(&path);
+            assert_ne!(session.external_inputs.generation(&root), before);
+            assert!(!session.python_declarations.has_entry(&root));
+            session
+                .python_declaration_snapshot(&uri)
+                .expect("revalidated status");
+        }
+        let before = session.external_inputs.generation(&root);
+        std::fs::remove_file(&selected).expect("delete selected input");
+        session.observe_external_inputs_for_path(&path);
+        assert_ne!(session.external_inputs.generation(&root), before);
+        assert!(!session.python_declarations.has_entry(&root));
+        session
+            .python_declaration_snapshot(&uri)
+            .expect("missing input status");
+    }
+}
+
+#[test]
+fn discovered_python_environment_reselects_after_project_creation_and_deletion() {
+    let temp = tempfile::tempdir().expect("temporary ancestry");
+    let root = temp.path().join("package");
+    let (path, uri) = fixture(&root, "discovered-root");
+    for name in ["pyproject.toml", "uv.lock"] {
+        std::fs::write(temp.path().join(name), "parent").expect("ancestor project");
+    }
+    let mut session = Session::new();
+    open(&mut session, uri.clone());
+    session
+        .python_declaration_snapshot(&uri)
+        .expect("initial status");
+    assert_eq!(
+        selected_project(&root),
+        Some(temp.path().join("pyproject.toml"))
+    );
+    let initial = session.external_inputs.generation(&root);
+    std::fs::write(root.join("pyproject.toml"), "nearer").expect("incomplete nearer project");
+    session.observe_external_inputs_for_path(&path);
+    assert_eq!(session.external_inputs.generation(&root), initial);
+    assert!(session.python_declarations.has_entry(&root));
+    for (lock, create, project) in [
+        (
+            root.join("uv.lock"),
+            true,
+            Some(root.join("pyproject.toml")),
+        ),
+        (
+            root.join("uv.lock"),
+            false,
+            Some(temp.path().join("pyproject.toml")),
+        ),
+        (temp.path().join("uv.lock"), false, None),
+        (
+            temp.path().join("uv.lock"),
+            true,
+            Some(temp.path().join("pyproject.toml")),
+        ),
+    ] {
+        let before = session.external_inputs.generation(&root);
+        if create {
+            std::fs::write(lock, "selected").expect("create lock");
+        } else {
+            std::fs::remove_file(lock).expect("delete lock");
+        }
+        assert_eq!(selected_project(&root), project);
+        session.observe_external_inputs_for_path(&path);
+        assert_ne!(session.external_inputs.generation(&root), before);
+        assert!(!session.python_declarations.has_entry(&root));
+        session
+            .python_declaration_snapshot(&uri)
+            .expect("reselected status");
+    }
 }
