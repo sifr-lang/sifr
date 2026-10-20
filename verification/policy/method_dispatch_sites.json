@@ -84936,6 +84936,18 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/workspace_tests.rs::storage_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/native_child_lease_tests.rs::production_policy_retains_only_its_cargo_child::literal-comparison::1",
+      "fingerprint": "0e30bfa79de176b710d8c5c64ce0bb56a6bb48baf27bef269b6f4196c490a61c",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "_ ) | * key == \"PATH\" ) . and_then ( | ( _",
+      "inputs": "fn production_policy_retains_only_its_cargo_child ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/native_child_lease_tests.rs::production_policy_retains_only_its_cargo_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/native_child_lease_tests.rs::production_policy_retains_only_its_cargo_child enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }
