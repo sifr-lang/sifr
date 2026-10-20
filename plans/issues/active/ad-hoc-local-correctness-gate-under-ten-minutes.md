@@ -2023,3 +2023,46 @@ by actual compiler boundary, then register the next bounded V0.11 subitem and it
 regressions/acceptance before editing compiler code. Do not silently absorb
 separate V0.12 demo/async work or the recorded lexical identity follow-ups; reconcile
 shared causes explicitly when evidence shows they coincide.
+
+
+### V0.11 current complete inventory and V0.11a bounded scope
+
+At `1ecff7f7b`, `v011-full-positive-resumed` completed all 729 positive
+fixtures: 713 runtime passes, 15 source compilation failures and one native
+compilation failure (`callable_struct_field`, E0599). Outer wall time was
+128.786596 seconds; source compilation 53.230751, native build 55.511499,
+individual failure isolation 4.603599, runtime 7.333808, reporting/retention
+1.024194 seconds. This retained-target diagnostic is a failed positive suite,
+not final complete-gate acceptance or a performance forecast. The earlier
+`v011-full-positive-baseline` stopped at 198.311322 seconds on the 20 GiB disk
+reserve; retain it as incomplete. Two obsolete prior-day owned codegen
+incremental directories were archived and independently hash-verified before
+removal; current prepared contexts, native cache and failed evidence remain.
+Recovery inventory: `v011-inactive-incremental-archive/receipt.json`.
+
+The remaining source failures are the two async-generator close fixtures, six
+JoinSet fixtures, task-context propagation, two TaskGroup CPU fixtures,
+TaskScope blocking spawn, two scoped-process fixtures and the network HTTP/TLS
+loopback fixture. These reconcile with #4344 after V0.7's three nominal accessor
+repairs. They remain separate from V0.11a and V0.12 until their actual dispatch
+boundaries are established. Raw evidence and per-case/stage reconciliation are
+`v011-full-positive-resumed/` and `v011-full-positive-resumed-summary.json`.
+
+V0.11a owns callable-field invocation in recursive expression emission. The
+validated nominal dispatch branch currently emits every admitted call as a Rust
+method, bypassing the receiver's existing callable-field query; the statement
+branch already emits a field invocation. Preserve frontend method authority,
+resolved receiver types, argument-place and convention handling, and ordinary
+method precedence. Do not add a method-name fallback or weaken admission.
+Preserve the original failing fixture and all existing assertions. Add focused
+codegen and native controls for nested/direct invocation, reusable borrowed
+string arguments, and an ordinary method with the same spelling.
+
+Named acceptance: all codegen library tests (including existing authority
+rejection, structural/async callable and exact-integer controls); original
+callable-field and disjoint sibling fixtures, structural records, callable
+borrow conventions and new native context regression; the complete compile-fail
+E2E corpus; formatting, file-size, area and method-authority checks/self-tests;
+one scoped independent review. Intermediate checks follow the approved
+phase-end full-gate policy. No frontend/ABI/profile/test-selection changes are
+part of this item.
