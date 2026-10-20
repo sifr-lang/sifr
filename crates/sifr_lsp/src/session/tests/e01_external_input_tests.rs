@@ -282,3 +282,76 @@ fn environment_bridge_and_certification_drift_revalidate_without_source_edits() 
     }
     assert_eq!(std::fs::read(path).expect("source unchanged"), source);
 }
+
+#[cfg(unix)]
+#[test]
+fn populated_ancestor_venv_preserves_diagnostics_and_environment_invalidation() {
+    let temp = tempfile::tempdir().expect("ancestor uv project");
+    std::fs::write(
+        temp.path().join("pyproject.toml"),
+        "[project]\nname = \"ancestor\"\nversion = \"0.0.0\"\n",
+    )
+    .expect("pyproject");
+    std::fs::write(temp.path().join("uv.lock"), "version = 1\n").expect("uv lock");
+    let bin = temp.path().join(".venv/bin");
+    std::fs::create_dir_all(&bin).expect("venv");
+    let interpreter = bin.join("python");
+    std::fs::write(&interpreter, vec![42; 32_207_448]).expect("interpreter-sized fixture");
+    let root = temp.path().join("editor");
+    let (path, uri) = fixture(&root, "populated-ancestor");
+    let mut session = Session::new();
+    open(&mut session, uri.clone());
+    let initial = session.external_input_identity_for_path(&path);
+    let start = std::time::Instant::now();
+    for version in 2..462 {
+        session.change_compacted(&uri, Some(version), &[serde_json::json!({"text": format!("def main() -> int:\n    return {version}\n")})]).expect("editor update");
+        assert!(
+            crate::diagnostics::document_diagnostics(&mut session, &uri)
+                .expect("diagnostics")
+                .is_empty()
+        );
+    }
+    eprintln!("460 populated-venv diagnostics: {:?}", start.elapsed());
+    assert_eq!(session.external_input_identity_for_path(&path), initial);
+    let replacement = bin.join("replacement");
+    std::fs::write(&replacement, vec![42; 32_207_448]).expect("same-version replacement");
+    std::fs::rename(replacement, &interpreter).expect("replace");
+    let replaced = session.observe_external_input_identity_for_path(&path);
+    assert!(replaced.generation > initial.generation);
+    std::fs::write(temp.path().join(".venv/pyvenv.cfg"), "home = changed\n")
+        .expect("config change");
+    assert!(
+        session
+            .observe_external_input_identity_for_path(&path)
+            .generation
+            > replaced.generation
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn interpreter_drift_during_request_rejects_stale_declarations() {
+    let temp = tempfile::tempdir().expect("uv project");
+    let (path, uri) = fixture(temp.path(), "interpreter-stale");
+    std::fs::write(temp.path().join("pyproject.toml"), "[project]\n").expect("project");
+    std::fs::write(temp.path().join("uv.lock"), "version = 1\n").expect("lock");
+    let bin = temp.path().join(".venv/bin");
+    std::fs::create_dir_all(&bin).expect("venv");
+    let interpreter = bin.join("python");
+    std::fs::write(&interpreter, b"same-version-A").expect("interpreter");
+    let mut session = Session::new();
+    open(&mut session, uri.clone());
+    let before = session.external_input_identity_for_path(&path);
+    session
+        .python_declarations
+        .inject_external_change_before_verification(interpreter, Some(b"same-version-B".to_vec()));
+    let stale = session
+        .python_declaration_snapshot(&uri)
+        .expect_err("interpreter drift must reject captured inputs");
+    assert_eq!(stale.code(), lsp_server::ErrorCode::ContentModified as i32);
+    assert!(session.external_input_identity_for_path(&path).generation > before.generation);
+    assert!(!session.python_declarations.has_entry(temp.path()));
+    session
+        .python_declaration_snapshot(&uri)
+        .expect("retry with current inputs");
+}

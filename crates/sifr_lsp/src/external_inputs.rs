@@ -1,3 +1,6 @@
+mod interpreter;
+use interpreter::InterpreterSnapshot;
+
 use sifr_analysis::{DiskSourceProvider, SourceProvider};
 use sifr_compiler_services::python::python_environment_selection;
 use std::collections::BTreeMap;
@@ -15,11 +18,14 @@ struct RootSnapshot {
 pub(crate) struct ExternalInputSnapshots {
     roots: BTreeMap<PathBuf, RootSnapshot>,
     revision: u64,
+    interpreters: BTreeMap<PathBuf, InterpreterSnapshot>,
 }
 
 impl ExternalInputSnapshots {
     pub(crate) fn observe(&mut self, root: &Path) -> (u64, bool) {
-        let (fingerprint, stable) = package_input_snapshot(root, &mut DiskSourceProvider::new());
+        let interpreter = self.interpreters.entry(root.to_path_buf()).or_default();
+        let (fingerprint, stable) =
+            package_input_snapshot(root, &mut DiskSourceProvider::new(), interpreter);
         match self.roots.get_mut(root) {
             Some(snapshot) if stable && snapshot.stable && snapshot.fingerprint == fingerprint => {
                 (snapshot.generation, false)
@@ -55,6 +61,7 @@ impl ExternalInputSnapshots {
     }
 
     pub(crate) fn retire_root(&mut self, root: &Path) {
+        self.interpreters.remove(root);
         if self.roots.remove(root).is_some() {
             self.revision = self.revision.saturating_add(1);
         }
@@ -82,10 +89,14 @@ impl ExternalInputSnapshots {
 
 #[cfg(test)]
 pub(crate) fn package_input_fingerprint(root: &Path, provider: &mut impl SourceProvider) -> u64 {
-    package_input_snapshot(root, provider).0
+    package_input_snapshot(root, provider, &mut InterpreterSnapshot::default()).0
 }
 
-fn package_input_snapshot(root: &Path, provider: &mut impl SourceProvider) -> (u64, bool) {
+fn package_input_snapshot(
+    root: &Path,
+    provider: &mut impl SourceProvider,
+    interpreter_snapshot: &mut InterpreterSnapshot,
+) -> (u64, bool) {
     let mut hasher = DefaultHasher::new();
     let mut stable = true;
     let mut paths = vec![
@@ -129,19 +140,7 @@ fn package_input_snapshot(root: &Path, provider: &mut impl SourceProvider) -> (u
     hash_python_bridge_inputs(root, &mut hasher, &mut stable);
     hash_runnable_app_entries(root, &mut hasher, provider);
     if let Some(interpreter) = interpreter {
-        hash_path(&interpreter, &mut hasher, &mut stable, true);
-        match std::fs::metadata(&interpreter) {
-            Ok(metadata) => {
-                metadata.len().hash(&mut hasher);
-                metadata.modified().ok().hash(&mut hasher);
-            }
-            Err(error) => {
-                if error.kind() != std::io::ErrorKind::NotFound {
-                    stable = false;
-                }
-                error.kind().hash(&mut hasher);
-            }
-        }
+        interpreter_snapshot.hash(&interpreter, &mut hasher, &mut stable);
     }
     (hasher.finish(), stable)
 }
