@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6a2 validated and reviewed; V0.6b ownership/pruning next
+current_stage: V0.6b validated and reviewed; V0.6c semantic assertions next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -180,7 +180,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3b | Python runtime registries and LSP selected-input admission | Merged #4363; 114 LSP tests and four focused area variants pass; review SATISFIED |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
-| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1 merged; V0.6a2 validated/reviewed; V0.6b/c remain |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1/a2 merged; V0.6b validated/reviewed; V0.6c remains |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
@@ -1378,3 +1378,72 @@ clock-based TempSysroot directory naming with exclusive directory allocation
 before relying on parallel fixture execution; measure the real native patch copy
 before optimizing it. Keep actual source authority and equivalent assertions.
 Preparation is included in the recorded elapsed times and remains part of V5.
+
+V0.6a2 merged as #4365 at `f8ae3ec9a0ba9cbf71eb8b0f73ae29a7142a091e`.
+
+### V0.6b bounded scope: cache ownership fixture permissions
+
+Five current failures are reproduced on unchanged merged source under two umasks:
+`v06b-baseline-umask-002` has zero pass/five fail; `v06b-baseline-umask-022`
+has five pass/zero fail. The permissive attempt also left a worker in its owned
+process group; the diagnostic harness terminated it and preserved that fact.
+Retained failed native roots are mode 0775. Production correctly rejects owned
+cache records writable by others. Fixture `fs::write` creates 0664 payloads under
+0002; the production semantic writer creates private files independently of umask.
+
+Repair only the three N06 root/metadata fixtures and two semantic-housekeeping
+fixture inputs. Use exclusive private roots and production private-file creation,
+keep deliberate unsafe/symlink/foreign-owner cases, lock inode and live-descendant
+assertions, and all real crash/recovery boundaries. Force permissive umask in
+dedicated test subprocesses without changing the parallel parent harness. Run
+both umask controls, complete workspace/housekeeping groups, formatting/source/
+size/area guards and scoped review. Production ownership checks remain unchanged.
+The two cache-key/emitted-output failures remain separately owned V0.6c work;
+complete integrated gates and V5 remain mandatory.
+
+
+### V0.6b ownership fixture validation
+
+Implementation candidate `fac0dc32ad1bf0d6bf9361f42b019963970700b4`, base
+`f8ae3ec9a0ba9cbf71eb8b0f73ae29a7142a091e`, PR
+[#4366](https://github.com/sifr-lang/sifr/pull/4366). Production cache policy is
+unchanged. Three native fixture roots now use exclusive allocation with explicit
+0700 permissions; eligible fixture records use the production private-file
+writer. The two semantic-housekeeping cases supply private stage/scratch files
+and an explicitly owned workspace. Dedicated subprocesses enforce umask 0002
+without changing the parent harness. Housekeeping subprocesses must both succeed
+and report one test actually executed, so empty selection is rejected.
+
+Evidence under `continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v06b-baseline-umask-002`: all five failures reproduced, 4.189 seconds including
+  preparation and cleanup; leftover worker signalled. `v06b-baseline-umask-022`:
+  same source and five tests pass, 3.186 seconds. These diagnose permissions;
+  failed execution is not performance evidence for a passing suite.
+- `v06b-repaired-umask-*` remain failed intermediate attempts: pinned tempfile
+  3.27.0 follows ambient directory permissions unless explicitly configured, and
+  workspace-hint reclamation also rejects a group-writable workspace. Both
+  assumptions were corrected explicitly. `v06b-private-umask-*` then pass all
+  five tests under both masks; the final candidate additionally checks actual
+  subprocess test admission.
+- `v06b-final-groups-umask-002` and `-022`: complete workspace and housekeeping
+  groups on the exact candidate, **12 pass, zero fail/ignored, 804 filtered** in
+  each; 16.688 seconds including 11.24 seconds preparation, then 6.687 seconds
+  retained. Counts include the internal `storage_child` entry; its real cases
+  are exercised by the parent tests. No timeouts, leftover groups or tracked
+  changes. Real crash/recovery, descendant leases, lock-inode stability, foreign
+  scope, unsafe 0666 files, symlinks and pruning-count assertions remain intact.
+- `v06b-final-guards`: formatting, file-size, source-direction and all area
+  manifests pass, 13.141 seconds, pinned verification Python 3.14.7.
+
+These are correctness repairs, not a measured whole-gate speedup. The two
+recorded V0.6c assertion failures and complete integrated gates/V5 remain open.
+
+Independent review is **SATISFIED**, no blockers; raw review:
+`reviews/fac0dc32ad1bf0d6bf9361f42b019963970700b4/review.md`.
+Follow-ups are assigned to V0.14/V3 child lifecycle and admission: extend the
+pre-existing workspace child helper's exit-only check to prove actual test
+execution, and retain bounded subprocess cancellation/cleanup when composing
+these tests into the final gate. The new housekeeping child already rejects zero
+selection; it currently relies on the enclosing runner for a timeout. Neither
+observation waives final coverage, failure cleanup or deadline requirements.

@@ -7,6 +7,15 @@ fn storage_child() {
     let Ok(mode) = std::env::var("SIFR_DX3_CHILD") else {
         return;
     };
+    #[cfg(unix)]
+    if matches!(mode.as_str(), "family-test" | "stage-test" | "aux-test") {
+        // Only this dedicated test subprocess changes its umask. Other tests
+        // and the parent harness retain their own process-global settings.
+        #[allow(unsafe_code)]
+        unsafe {
+            libc::umask(0o002);
+        }
+    }
     let scope = std::env::current_dir().unwrap();
     let required = [Path::new("payload")];
     #[cfg(unix)]
@@ -474,15 +483,18 @@ fn n06_live_holder_outlasts_idle_window_then_waiter_acquires() {
 #[test]
 #[cfg(unix)]
 fn n06_family_prune_preserves_inherited_live_child_then_reclaims_owner() {
-    let root = std::env::temp_dir().join(format!("sifr-n06-family-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
+    let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
+        .prefix("sifr-n06-family-")
+        .tempdir()
+        .unwrap();
+    let root = fixture.path();
     assert!(
-        child(&root, "family-test", &root.join("ready"))
+        child(root, "family-test", &root.join("ready"))
             .status()
             .unwrap()
             .success()
     );
-    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[cfg(unix)]
@@ -540,15 +552,18 @@ fn family_case() {
 #[test]
 #[cfg(unix)]
 fn n06_abandoned_stage_prunes_only_matching_owner_scope() {
-    let root = std::env::temp_dir().join(format!("sifr-n06-stage-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
+    let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
+        .prefix("sifr-n06-stage-")
+        .tempdir()
+        .unwrap();
+    let root = fixture.path();
     assert!(
-        child(&root, "stage-test", &root.join("ready"))
+        child(root, "stage-test", &root.join("ready"))
             .status()
             .unwrap()
             .success()
     );
-    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[cfg(unix)]
@@ -561,7 +576,7 @@ fn stage_case() {
     let abandoned = artifacts.join(format!("{key}.stage-abandoned"));
     crate::cache_storage::directory(&abandoned).unwrap();
     let scope = crate::cache_storage::owner_scope().unwrap();
-    std::fs::write(
+    write_owned_fixture(
         abandoned.join("artifact_cache.json"),
         serde_json::to_vec(&serde_json::json!({"scope":scope})).unwrap(),
     )
@@ -570,7 +585,7 @@ fn stage_case() {
     let _foreign_lock = crate::cache_storage::entry_lock(&artifacts, &foreign_key).unwrap();
     let foreign = artifacts.join(format!("{foreign_key}.stage-foreign"));
     crate::cache_storage::directory(&foreign).unwrap();
-    std::fs::write(
+    write_owned_fixture(
         foreign.join("artifact_cache.json"),
         serde_json::to_vec(&serde_json::json!({"scope":"/another/session"})).unwrap(),
     )
@@ -590,15 +605,18 @@ fn stage_case() {
 #[test]
 #[cfg(unix)]
 fn n06_orphan_auxiliary_roots_require_owner_and_lease() {
-    let root = std::env::temp_dir().join(format!("sifr-n06-aux-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
+    let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
+        .prefix("sifr-n06-aux-")
+        .tempdir()
+        .unwrap();
+    let root = fixture.path();
     assert!(
-        child(&root, "aux-test", &root.join("ready"))
+        child(root, "aux-test", &root.join("ready"))
             .status()
             .unwrap()
             .success()
     );
-    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[cfg(unix)]
@@ -617,18 +635,18 @@ fn auxiliary_case() {
     let key = "c".repeat(64);
     let owned = root.join(&key);
     crate::cache_storage::directory(&owned).unwrap();
-    std::fs::write(
+    write_owned_fixture(
         owned.join("resolution_owner.json"),
         serde_json::to_vec(&serde_json::json!({"schema":1,"key":key,"owner_scope":scope})).unwrap(),
     )
     .unwrap();
-    std::fs::write(owned.join("Cargo.lock"), b"orphan").unwrap();
+    write_owned_fixture(owned.join("Cargo.lock"), b"orphan").unwrap();
     let lease = crate::cache_storage::entry_lock(&root, &key).unwrap();
     lease.lock().unwrap();
     let foreign_key = "d".repeat(64);
     let foreign = root.join(&foreign_key);
     crate::cache_storage::directory(&foreign).unwrap();
-    std::fs::write(
+    write_owned_fixture(
         foreign.join("resolution_owner.json"),
         serde_json::to_vec(
             &serde_json::json!({"schema":1,"key":foreign_key,"owner_scope":"/another/session"}),
@@ -648,4 +666,10 @@ fn auxiliary_case() {
         root.join(".locks").join(key).exists(),
         "auxiliary lock inode was unlinked"
     );
+}
+
+#[cfg(unix)]
+fn write_owned_fixture(path: impl AsRef<Path>, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
+    use std::io::Write;
+    crate::cache_storage::new_private_file(path.as_ref())?.write_all(contents.as_ref())
 }
