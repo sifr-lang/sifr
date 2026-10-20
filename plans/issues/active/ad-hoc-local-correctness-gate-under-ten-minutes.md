@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16d accepted; V1 mandatory build-path feasibility next
+current_stage: V1a measured SQL build profile feasibility
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -197,7 +197,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 | V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
 | V0.16c | Deterministic canonical lowering-error negative control | Merged #4380; driver boundary, all 64 ordinary E2E tests and scoped review pass |
-| V0.16d | SQL guest safety proof references after diagnostic projection | Accepted #4382; complete unsafe audit and independent review pass |
+| V0.16d | SQL guest safety proof references after diagnostic projection | Merged #4382; complete unsafe audit and independent review pass |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -3116,3 +3116,33 @@ hashes and receipts. Earlier twelve-error audits remain failed historical eviden
 No compiler build was required. A non-blocking wording clarification about typed
 request/response ownership remains with the SQL record owner. Next is V1's measured
 mandatory build path; V1–V5 and complete final phase gates remain open.
+
+
+### V1a bounded feasibility investigation
+
+V0.16d merged as `fbb7015dd9c42025bc9279c0dd52e11b778e266d`
+([PR #4382](https://github.com/sifr-lang/sifr/pull/4382)). Begin with a diagnostic,
+not a production profile change: keep the normal development profile and compare
+one candidate that sets `sifr_codegen`, `sifr_lowering` and `sifr_type_system` to
+optimization level 1 instead of their current level 2. Other optimization levels,
+features, packages and semantic/runtime checks remain unchanged. Use the same
+explicit LTO-off and debug-off settings for both measured variants; these are
+recorded experimental controls, not unqualified defaults.
+
+Run a fresh current-source normal SQL build and candidate clean A, unchanged A
+and independent clean B. Keep the canonical locked/offline package selection,
+constant within-protocol path maps, exact linked executable selection and byte
+comparisons. Record Cargo units, freshness, profiles, full command settings,
+resources, preparation and cleanup boundaries. Retain artifacts needed for
+matched runtime probes in owned external directories, labeling that retention;
+this diagnostic is not a complete gate or final cleanup qualification.
+
+Use isolated owned targets on the same filesystem with four Cargo jobs only when
+effective CPU/memory admission permits the allocation and reserve. Each diagnostic
+stage retains the 30-minute cap, memory/disk protection and source freeze. Do not
+repeat a failed unchanged build. Compare metadata validation with the real linked
+SQL graph in both variants, using identical supplied diagnostic metadata inputs,
+and keep actual product/installed qualification separate and mandatory. No profile
+is accepted from build time alone. If this simple candidate cannot fit the complete
+budget without a runtime regression, proceed to the canonical semantic/native
+ownership investigation rather than accumulating arbitrary package overrides.
