@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.12 accepted; V0.13 sanitizer fixture and target propagation pending
+current_stage: V0.12 merged; V0.13 sanitizer fixture and target propagation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -187,7 +187,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b merged #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Accepted: complete demos/freshness, typed cleanup repair and scoped review; PR #4375 |
-| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
+| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Current: repair declared input and exact instrumented target/environment; validate actual smoke outputs |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
@@ -2431,3 +2431,28 @@ codegen-test suggestion. These are not additional V0.12 merge requirements.
 Full integrated create-PR/merge correctness gates and the V5 timing matrix remain
 open. Next bounded implementation item: V0.13 sanitizer fixture and target
 propagation, retaining compiler and generated-program instrumentation.
+
+### V0.13 bounded scope and acceptance
+
+V0.12 merged as `538577f1eb34416d2c018f561fb4690002476b42` through
+[PR #4375](https://github.com/sifr-lang/sifr/pull/4375). V0.13 starts from that
+candidate. The unchanged sanitizer manifest still references absent
+`demos/hello.sifr`; the prior diagnostic used the existing assertion-bearing
+`crates/sifr/tests/e2e/pass/break_continue.sifr` without qualifying that manifest.
+
+Repair the declared generated fixture and validate its required input before
+starting expensive builds. Propagate the explicit current-host target to nested
+generated Cargo as well as the instrumented compiler build, retaining Cargo
+artifact authority for executable paths. Preserve caller build storage and flags
+while ensuring encoded Rust flags cannot silently disable declared sanitizer
+instrumentation. Keep existing tools, hosts, timeouts, native assertions and
+structured skip policy; a required local smoke skip is not an acceptance pass.
+
+Named acceptance: affected sanitizer policy/self-tests with missing-input,
+target/argument, flag-precedence and failure controls; required runner/area guards;
+real runtime and generated-binary ASAN smoke execution with compiler and generated
+instrumentation verified against actual artifacts; retained preparation and
+representative compiler-edit timing recorded separately under the diagnostic cap;
+and scoped independent review. Preserve historical failures. Full final phase
+gates and V5 remain required. General process supervision and preparation-consumer
+ordering remain owned by V0.14; do not broaden this item into that lifecycle work.
