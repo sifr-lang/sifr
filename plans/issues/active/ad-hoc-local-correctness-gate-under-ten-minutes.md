@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6b validated and reviewed; V0.6c semantic assertions next
+current_stage: V0.6c validated and reviewed; V0.7 next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -180,7 +180,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3b | Python runtime registries and LSP selected-input admission | Merged #4363; 114 LSP tests and four focused area variants pass; review SATISFIED |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
-| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1/a2 merged; V0.6b validated/reviewed; V0.6c remains |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1/a2/b merged; V0.6c validated/reviewed |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
@@ -1447,3 +1447,64 @@ execution, and retain bounded subprocess cancellation/cleanup when composing
 these tests into the final gate. The new housekeeping child already rejects zero
 selection; it currently relies on the enclosing runner for a timeout. Neither
 observation waives final coverage, failure cleanup or deadline requirements.
+
+
+V0.6b merged as #4366 at `e69e64d6bafb3bbe59963355c54b0491cf370c74`.
+
+### V0.6c bounded scope: semantic assertion authority
+
+The two remaining recorded driver failures are stale representation assumptions.
+The canonical Cargo fragment now encodes `RustInteropCargoInputs` with the v2
+identity encoder; its package ID is no longer plaintext in the fragment. Assert
+the qualified structured package ID and prove mutating only that ID changes the
+encoded key. The attached API call is emitted as `describe:: < Model >`, while
+its test expects `describe::< Model >`. Parse the real generated Rust and assert
+the concrete owner and exact generic bound lists structurally; do not normalize
+away required type/trait differences or weaken the semantic contracts.
+
+Keep production unchanged. Run affected sysroot and attached-API groups, guards,
+and a complete driver library diagnostic after these sequential driver repairs.
+Preserve native/ignored-case enrollment for the final gate. Require independent
+review and keep all later V0 owners and integrated phase gates/V5 open.
+
+
+### V0.6c validation and complete driver reconciliation
+
+Candidate `f9ecdb1f66f410ecdc49883011710321cdeeb760`, base
+`e69e64d6bafb3bbe59963355c54b0491cf370c74`, PR
+[#4367](https://github.com/sifr-lang/sifr/pull/4367). Production is unchanged.
+The sysroot test reads the qualified package ID and proves its contribution to
+encoded cache identity. Attached-API checks parse real generated Rust and retain
+public visibility, ordered exact bounds and the concrete call owner.
+
+Evidence under `continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v06c-two-regressions` preserves the initial compile failure from using a
+  pre-Syn3 trait-bound API. The helper was corrected against pinned Syn 3.0.5;
+  that failed attempt is not a runtime pass.
+- `v06c-regressions-pinned-syn`: both exact regressions pass, 59.719 seconds
+  including 54.63 seconds preparation. `v06c-affected-groups`: all 16 sysroot and
+  attached-API tests pass, zero ignored, 12.691 seconds including preparation.
+- `v06c-final-guards`: formatting, file-size, source direction and area contracts
+  pass, 13.838 seconds, using pinned verification Python 3.14.7.
+- `v06c-full-driver`: **735 passed, zero failed, 81 ignored, zero filtered**;
+  793.35 seconds libtest and **796.154 seconds** including preparation/cleanup.
+  No timeout, leftover process group or tracked source change. The 81 ignored
+  integration/corpus cases remain mandatory in their explicit final selections.
+- `v06c-final-inventory.json`: all 23 failures remaining after V0.6a1 now pass;
+  no original driver ID is removed or newly ignored. One missing-bridge-source
+  negative control was added by V0.6a2. Interleaved subprocess stdout is accounted
+  for explicitly: five parent outcomes are inferred from the complete successful
+  libtest result; the child-only `storage_case` is not counted as a driver test.
+- `v06c-history-observation.json`: the unchanged 4,097-publication durability
+  test took about 253.085 seconds by external stdout observation (0.25-second
+  polling), versus the earlier 247.829 seconds on the same SSD scratch. This is
+  diagnostic attribution, not an isolated benchmark or a whole-gate speedup.
+
+Independent review is **SATISFIED**, no blockers, keyed to the exact candidate:
+`reviews/f9ecdb1f66f410ecdc49883011710321cdeeb760/review.md`. Follow-ups assigned to
+emitted-Rust attached-API test ownership: consider exact fixture package-ID
+comparison, explicit empty `where`-clause checking, and generated-source context
+in assertion failures. These suggestions do not weaken existing obligations.
+Record-only updates do not change validated inputs. Full integrated gates,
+native semantic repairs and V5 timing acceptance remain open.

@@ -3,6 +3,7 @@ use crate::{
     PackageEntrypoint, check_package_project, collect_project_hir_modules, compile_stdlib,
 };
 use std::path::{Path, PathBuf};
+use syn::parse::Parser;
 
 fn static_adapter_negative_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join(
@@ -80,24 +81,28 @@ def main():
     let provider = &generated.rust_files["fixture.contract"];
     let main = &generated.rust_files["main"];
 
-    assert!(
-        provider.contains("pub fn describe<")
-            && provider.contains(
-                "T: ::sifr_runtime::interop::structural::StaticProgramType + Clone + 'static,"
-            ),
-        "{provider}"
+    let provider = syn::parse_file(provider).expect("generated provider must parse");
+    assert_eq!(
+        type_parameter_bounds(&provider, "describe", "T"),
+        [
+            "::sifr_runtime::interop::structural::StaticProgramType",
+            "Clone",
+            "'static",
+        ]
     );
-    assert!(
-        provider.contains("pub fn echo<")
-            && provider.contains("Input: ::sifr_runtime::interop::structural::StructuralConstruct")
-            && provider.contains(
-                "+ ::sifr_runtime::interop::structural::StructuralProject + Clone + 'static,"
-            ),
-        "{provider}"
+    assert_eq!(
+        type_parameter_bounds(&provider, "echo", "Input"),
+        [
+            "::sifr_runtime::interop::structural::StructuralConstruct",
+            "::sifr_runtime::interop::structural::StructuralProject",
+            "Clone",
+            "'static",
+        ]
     );
-    assert!(
-        main.contains("__sifr_attached_api_fixture_contract_describe::< Model >"),
-        "{main}"
+    let main = syn::parse_file(main).expect("generated main must parse");
+    assert_eq!(
+        assertion_call_type_arguments(&main, "__sifr_attached_api_fixture_contract_describe"),
+        ["Model"]
     );
 }
 
@@ -151,4 +156,108 @@ fn non_string_leaf_negative_is_package_compilable() {
             .all(|error| !error.message.contains("cannot resolve import")),
         "{errors:#?}"
     );
+}
+
+fn rust_function<'a>(file: &'a syn::File, name: &str) -> &'a syn::ItemFn {
+    file.items
+        .iter()
+        .find_map(|item| match item {
+            syn::Item::Fn(function) if function.sig.ident == name => Some(function),
+            _ => None,
+        })
+        .expect("expected generated function")
+}
+
+fn rust_path(path: &syn::Path) -> String {
+    assert!(
+        path.segments
+            .iter()
+            .all(|segment| matches!(segment.arguments, syn::PathArguments::None)),
+        "expected exact non-generic type path"
+    );
+    let mut name = if path.leading_colon.is_some() {
+        "::".to_owned()
+    } else {
+        String::new()
+    };
+    name.push_str(
+        &path
+            .segments
+            .iter()
+            .map(|segment| segment.ident.to_string())
+            .collect::<Vec<_>>()
+            .join("::"),
+    );
+    name
+}
+
+fn type_parameter_bounds(file: &syn::File, function: &str, parameter: &str) -> Vec<String> {
+    let function = rust_function(file, function);
+    assert!(
+        matches!(function.vis, syn::Visibility::Public(_)),
+        "attached API providers must remain public"
+    );
+    let parameter = function
+        .sig
+        .generics
+        .type_params()
+        .find(|item| item.ident == parameter)
+        .expect("expected generated type parameter");
+    parameter
+        .bounds
+        .iter()
+        .map(|bound| match bound {
+            syn::TypeParamBound::Trait(bound) => {
+                bound
+                    .modifiers
+                    .require_empty()
+                    .expect("ordinary trait bound");
+                assert!(bound.maybe.is_none());
+                assert!(bound.lifetimes.is_none());
+                rust_path(&bound.path)
+            }
+            syn::TypeParamBound::Lifetime(lifetime) => format!("'{}", lifetime.ident),
+            _ => panic!("unexpected generated type bound"),
+        })
+        .collect()
+}
+
+fn assertion_call_type_arguments(file: &syn::File, target: &str) -> Vec<String> {
+    for statement in &rust_function(file, "main").block.stmts {
+        let mac = match statement {
+            syn::Stmt::Macro(statement) => &statement.mac,
+            syn::Stmt::Expr(syn::Expr::Macro(expression), _) => &expression.mac,
+            _ => continue,
+        };
+        if !mac.path.is_ident("assert_eq") {
+            continue;
+        }
+        let arguments = syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated
+            .parse2(mac.tokens.clone())
+            .expect("generated assertion arguments");
+        let Some(syn::Expr::Call(call)) = arguments.first() else {
+            continue;
+        };
+        let syn::Expr::Path(function) = call.func.as_ref() else {
+            continue;
+        };
+        let segment = function.path.segments.last().expect("call path");
+        if segment.ident != target {
+            continue;
+        }
+        let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments else {
+            panic!("attached API call must select explicit concrete type arguments");
+        };
+        return arguments
+            .args
+            .iter()
+            .map(|argument| match argument {
+                syn::GenericArgument::Type(syn::Type::Path(path)) if path.qself.is_none() => {
+                    rust_path(&path.path)
+                }
+                _ => panic!("expected concrete attached API owner type"),
+            })
+            .collect();
+    }
+    panic!("generated assertion must call {target}");
 }
