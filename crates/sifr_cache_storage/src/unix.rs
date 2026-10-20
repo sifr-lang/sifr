@@ -315,7 +315,12 @@ mod tests {
 
     #[test]
     fn private_file_and_atomic_publication() {
-        let root = tempfile::tempdir().unwrap();
+        let root = tempfile::Builder::new()
+            .permissions(
+                <std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700),
+            )
+            .tempdir()
+            .unwrap();
         let root = root.path().canonicalize().unwrap();
         directory(&root).unwrap();
         let stage = root.join("metadata.stage");
@@ -332,7 +337,12 @@ mod tests {
 
     #[test]
     fn idle_and_live_lease_waits_remain_bounded() {
-        let root = tempfile::tempdir().unwrap();
+        let root = tempfile::Builder::new()
+            .permissions(
+                <std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700),
+            )
+            .tempdir()
+            .unwrap();
         let root = root.path().canonicalize().unwrap();
         directory(&root).unwrap();
         let owner = entry_lock(&root, "metadata-key").unwrap();
@@ -386,7 +396,12 @@ mod tests {
 
     #[test]
     fn cancelled_wait_preserves_owner() {
-        let root = tempfile::tempdir().unwrap();
+        let root = tempfile::Builder::new()
+            .permissions(
+                <std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700),
+            )
+            .tempdir()
+            .unwrap();
         let root = root.path().canonicalize().unwrap();
         directory(&root).unwrap();
         let owner = entry_lock(&root, "metadata-key").unwrap();

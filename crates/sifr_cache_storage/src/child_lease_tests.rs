@@ -34,7 +34,10 @@ fn flags(file: &File) -> i32 {
 }
 
 fn root() -> (tempfile::TempDir, PathBuf) {
-    let temp = tempfile::tempdir().unwrap();
+    let temp = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
+        .tempdir()
+        .unwrap();
     let path = temp.path().canonicalize().unwrap();
     (temp, path)
 }
@@ -134,7 +137,7 @@ fn failed_spawn_and_unused_command_release_owned_descriptors_on_drop() {
             Err(std::fs::TryLockError::WouldBlock)
         ));
         drop(command);
-        waiter.try_lock().unwrap();
+        assert_released(&waiter);
     }
 }
 
@@ -239,6 +242,23 @@ fn killing_the_owner_does_not_release_a_live_childs_lease() {
             Err(std::fs::TryLockError::WouldBlock) => {
                 assert!(Instant::now() < deadline, "child lease did not release");
                 std::thread::sleep(Duration::from_millis(10));
+            }
+            Err(error) => panic!("unexpected lock error: {error}"),
+        }
+    }
+}
+
+// A concurrent fork briefly copies CLOEXEC descriptors before its exec closes
+// them. Bound that transition; a persistent inherited sleep lease lasts 30s and
+// must still fail this check. No test worker or child creation is serialized.
+fn assert_released(file: &File) {
+    let deadline = Instant::now() + Duration::from_secs(1);
+    loop {
+        match file.try_lock() {
+            Ok(()) => return,
+            Err(std::fs::TryLockError::WouldBlock) => {
+                assert!(Instant::now() < deadline, "descriptor remained leased");
+                std::thread::sleep(Duration::from_millis(1));
             }
             Err(error) => panic!("unexpected lock error: {error}"),
         }
