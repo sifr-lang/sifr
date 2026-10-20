@@ -654,7 +654,8 @@ runner, fallback compiler or elaborate scheduler is justified by current evidenc
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Blocked assertions are identified; repairs not implemented
+Current evidence: Bounded repairs and their acceptance are recorded below. V0.18
+filesystem ledger reconciliation and final integrated completeness remain open.
 
 Decision: No final timing promise until the failed setup paths execute their downstream
 assertions. Independent measured optimizations may proceed with matched outcomes; they
@@ -681,8 +682,9 @@ or count an unexecuted installed check as a fast pass.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: SQL full-protocol profile trial and sanitizer retention tests recorded
-above
+Current evidence: The SQL full-protocol profile trial and sanitizer retention tests
+are recorded; V1b1 shared artifact data is accepted. Semantic/native separation
+and complete build-path feasibility remain open.
 
 Decision: Treat SQL as the first hard feasibility gate. Keep the measured whole critical
 path, not individual unit-duration subtraction. The larger architecture work is conditional
@@ -729,8 +731,8 @@ change the production profile.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Hotspots measured; component feature semantic trial above; caches not
-implemented
+Current evidence: V2a bounded metadata validation facts are accepted below.
+Component Engine/component reuse and durable-history optimization remain open.
 
 Decision: Prefer bounded lifetime-local reuse. Start with Wasmtime parallel compilation only
 if the full semantic checks pass and it fits the shared CPU budget; add compiled-component
@@ -1126,12 +1128,12 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 
 | Item | Status | Merged PR / candidate / validation / review |
 | --- | --- | --- |
-| Phase registration | Recorded; effective when [#4356](https://github.com/sifr-lang/sifr/pull/4356) merges | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
-| V0 executable coverage | Pending | None |
-| V1 mandatory build path | Pending | Diagnostic evidence only |
-| V2 repeated metadata/component work | Pending | Diagnostic evidence only |
+| Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
+| V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.17 / #4385; V0.18 and final completeness pending |
+| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 accepted; semantic/native split and feasibility pending |
+| V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
-| V4 runner/compilation/policy integration | Pending | Diagnostic evidence only |
+| V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
 | V5 integrated qualification | Pending | No complete green sub-ten-minute result |
 
 Planning handoff: branch `codex/local-correctness-gate-phase`; review verdict
