@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.8 validated and reviewed; V0.9 ancestry repair next
+current_stage: V0.8 merged; V0.9 ancestry/upcast investigation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -182,7 +182,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
-| V0.8 | Generated method-slot argument conventions (codegen owner) | Validated/reviewed; PR #4370 |
+| V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
@@ -1844,3 +1844,23 @@ intermediate policy. It does not complete the phase or establish the ten-minute
 acceptance result. V4 retains the measured production-library/libtest preparation
 costs as work; V0.9 ancestry/upcast is next. Complete integrated gates and V5 remain
 mandatory, and all failed/superseded attempts above remain preserved.
+
+
+V0.8 merged as #4370 at `01ed090d1fdcad7677f2e8107bd323732bb4da8e`.
+
+### V0.9 bounded scope: ancestry constructors and consuming upcast visibility
+
+Reproduce the historical borrowed exact-integer constructor mismatch and private
+intermediate ancestor escaping a public associated type against the current
+compiler. Diagnose their producer/canonicalizer ownership before editing. Run
+the existing project-generic native group together to expose related ancestry,
+identity and structural conversion failures; preserve unrelated failures for
+V0.11. Retain all existing native assertions. Add minimal root-cause controls
+where existing tests do not cover the repaired boundary.
+
+Acceptance: affected constructor/upcast unit regressions, complete codegen unit
+suite, unchanged native ancestry/upcast scenarios (including imported aliases,
+transitive/structural conversions, same-basename owners and non-main modules),
+affected formatting/size/area/method-policy contracts and independent review.
+Use retained compilation contexts and the 30-minute diagnostic cap; reserve
+20 GiB disk and 2 GiB memory. Final integrated gates and V5 remain mandatory.
