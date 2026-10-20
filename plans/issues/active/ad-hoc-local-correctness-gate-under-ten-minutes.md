@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16 merged; V0.8 method-slot ABI investigation
+current_stage: V0.8 validated and reviewed; V0.9 ancestry repair next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -182,7 +182,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
-| V0.8 | Generated method-slot argument conventions (codegen owner) | In progress |
+| V0.8 | Generated method-slot argument conventions (codegen owner) | Validated/reviewed; PR #4370 |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
@@ -1803,3 +1803,44 @@ E0308. The attempt took 330.985 seconds, including 328 seconds preparation and
 0.49 seconds test execution; its failure inputs remain retained. The final
 control separately exercises the local-module constructor path without the
 opaque import from the first program masking its inference.
+
+
+### V0.8 final validation and review
+
+Implementation candidate `849bf963c4ca11523db33e6fb252b4fbf0802d5d`, base
+`bbd4a94beab12b7ea4d7d4184d267c0c0a2c83bf`, PR
+[#4370](https://github.com/sifr-lang/sifr/pull/4370). Final receipts and file hashes
+are reconciled in `v08-final-validation.json` under
+`continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v08-opaque-codegen-all`: **1,766 passed, zero failed/ignored/filtered**;
+  356.967 seconds outer, 340 preparation, 15.21 test execution. The inventory
+  comparison retains every one of the previous 1,759 test IDs and adds seven
+  native regression/control tests. Expected-panic test labels are included in
+  the reconciliation; no test IDs are lost to its parser.
+- `v08-opaque-native-slots`: both unchanged native tests pass, including all five
+  runtime outputs and exact lifetime/thread/shared-context rejection diagnostics;
+  394.014 seconds outer, 303 preparation, 88.68 test execution. The 814 filtered
+  driver tests are outside this named intermediate check, not implied passes.
+- `v08-complete-guards`: formatting, size, all area contracts, method-policy
+  reconciliation, mutation self-tests and diff check pass in 45.171 seconds.
+  The final inventory has 6,394 sites and 234 nodes: twenty existing Rust-IR
+  records refreshed and one Self identity comparison added; no existing owner,
+  class or constituent record changed.
+- `v08-native-scratch-cleanup.json`: no new native-input directories remain after
+  the successful codegen run, while the earlier failure's original/rewritten
+  sources and diagnostics are still retained.
+
+All successful receipts bind the same candidate, with no timeout, reserve stop,
+leftover process group or source drift. Independent review is **SATISFIED**, with
+no blockers; raw evidence is
+`reviews/849bf963c4ca11523db33e6fb252b4fbf0802d5d/review.md`. Its final pre-existing
+receiver-method lookup follow-up (local imports or multi-segment local owners)
+is assigned to V0.11 alongside the recorded generic/opaque-call/liveness items.
+The cosmetic include-file spacing suggestion does not change validation.
+
+This closes the bounded method-slot repair after merge under the approved
+intermediate policy. It does not complete the phase or establish the ten-minute
+acceptance result. V4 retains the measured production-library/libtest preparation
+costs as work; V0.9 ancestry/upcast is next. Complete integrated gates and V5 remain
+mandatory, and all failed/superseded attempts above remain preserved.
