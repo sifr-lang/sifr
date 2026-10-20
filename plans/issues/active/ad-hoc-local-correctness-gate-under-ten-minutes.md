@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6a1 validated and reviewed; V0.6a2 real fixtures next
+current_stage: V0.6a2 validated and reviewed; V0.6b ownership/pruning next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -180,7 +180,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3b | Python runtime registries and LSP selected-input admission | Merged #4363; 114 LSP tests and four focused area variants pass; review SATISFIED |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
-| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
+| V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | V0.6a1 merged; V0.6a2 validated/reviewed; V0.6b/c remain |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
@@ -1143,7 +1143,7 @@ not a scope reduction or a promised speedup based on overlapping timings.
 
 V0.2 merged as #4362 at `260110d9bc66f0812738650d63a80aab55dd3d12`.
 
-**Current bounded item:** V0.3b for Python runtime
+**V0.3b entry scope (now merged):** Python runtime
 registry and LSP input-authority admission. Confirm current failures before edits.
 Arrow and DLPack runners retain old exact test inventories; review each added or
 renamed ownership assertion against its originating change before reconciling
@@ -1320,3 +1320,61 @@ belong to V0.6c. Review also notes that the test adapter assumes declarations
 and a context; check that assumption if future tests reuse it. Final integrated
 create-PR/merge gates and V5 remain open; this intermediate repair makes no
 whole-gate runtime claim.
+
+V0.6a1 merged as #4364 at `a425c6b99658925c32fa2869da882e1f9f687173`.
+V0.6a2 now supplies owned real Cargo/bridge/sysroot inputs for qualification tests.
+It retains same-fixture cache comparisons and explicit absent-manifest/source
+rejection controls. The existing sysroot Cargo-key shape assertion remains a
+separate V0.6c failure; no production fallback or qualification bypass is added.
+
+
+### V0.6a2 real qualification fixture evidence
+
+Implementation candidate `8aa639c8ec6fe16b76f4bd52bd75f88330c238e3`, base
+`a425c6b99658925c32fa2869da882e1f9f687173`, PR
+[#4365](https://github.com/sifr-lang/sifr/pull/4365). The change supplies owned
+Cargo projects and actual declared bridge files for sixteen qualification tests,
+shares the existing miniature sysroot fixture, and keeps trust/cache comparisons
+on the same fixture paths. The abort-profile test now has its real bridge source.
+The mixed user/sysroot fixture selects one runtime/vendor authority and copies
+its real declared native path-patch input from the repository. It does not replace
+that patch with a stub. Production qualification is unchanged.
+
+These tests exercise an already-resolved sysroot context, constructed explicitly
+as before. They are not installed-distribution authentication or SQL runtime
+qualification. Those independent integrated gates remain mandatory and unchanged.
+
+Evidence under `continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v06a2-qualified-interop`: complete affected Rust interop/sysroot groups on the
+  candidate, **226 pass, one pre-existing failure, zero ignored, 589 filtered**;
+  63.99 libtest / 67.219 outer seconds. This is a FAILED diagnostic, not a green
+  suite. `v06a2-final-comparison.json` reconciles all sixteen targeted failures
+  to passing rows, one added passing source-rejection control, no missing IDs and
+  no status regressions. The remaining plaintext sysroot Cargo-key assertion
+  belongs to V0.6c. Actual native signature and absent-manifest controls pass.
+- `v06a2-mixed-sysroot`: exact mixed-context native qualification and new runtime
+  selection assertion pass, 60.772 seconds including 57.32 seconds preparation.
+- `v06a2-reviewed-guards`: exact candidate formatting, source direction, file
+  size and all area-manifest checks pass, 15.331 seconds, pinned Python 3.14.7.
+- `v06a2-fixture-matrix`: canonical matrix and self-tests pass, 7.676 seconds.
+  Later changes only remove unused imports and complete the mixed fixture; matrix
+  inputs and enrollment are unchanged. `v06a2-test-name-audit.json` records no
+  removed tests and one added missing-source rejection test.
+- `v06a2-interop-groups` and `v06a2-interop-final` remain failed intermediate
+  attempts. They exposed the mixed fixture's inconsistent runtime/vendor inputs
+  and absent native path patch; neither is relabeled as passing. The final
+  candidate executes both user and private sysroot probes successfully.
+
+The broad prior driver baseline remains `v06a1-driver-library`: 711 pass,
+23 fail, 81 ignored. Do not infer a new whole-driver pass or timing from this
+focused repair. Workspace ownership/pruning and emitted-output/key assertions
+remain separately owned V0.6b/c work. Complete phase gates and V5 remain open.
+
+Independent review on the implementation candidate is **SATISFIED**, no blockers;
+raw evidence: `reviews/8aa639c8ec6fe16b76f4bd52bd75f88330c238e3/review.md`.
+Review follow-ups are assigned to V3 fixture ownership/reuse: replace the existing
+clock-based TempSysroot directory naming with exclusive directory allocation
+before relying on parallel fixture execution; measure the real native patch copy
+before optimizing it. Keep actual source authority and equivalent assertions.
+Preparation is included in the recorded elapsed times and remains part of V5.

@@ -2,7 +2,7 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
     PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
-use super::rust_interop_test_support::span;
+use super::rust_interop_test_support::{CargoFixture, span};
 use crate::diagnostics::RenderedDiagnostic;
 use sifr_codegen::{
     InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
@@ -72,28 +72,24 @@ fn package_rust_interop_rejects_unknown_target_root() {
 
 #[test]
 fn package_rust_interop_records_probe_plan() {
+    let fixture = CargoFixture::bridge();
+    let native = CargoFixture::new("native", "pub fn hash() {}\n");
+    native.write("build.rs", "fn main() {}\n");
     let generated = base_project(vec![declaration_entry(
         "native.hash",
         RustInteropDecoratorKind::Function,
     )]);
-    let context = package_context(
+    let context = fixture.bind(package_context(
         TrustPolicy {
             rust_build_scripts: vec!["native".to_string()],
             ..TrustPolicy::default()
         },
-        vec![BackendCrateMetadata {
-            cargo_package_id: CargoPackageId("path+file:///ws/native#native@0.1.0".to_string()),
-            dependency_name: "native".to_string(),
-            dependency_kind: None,
-            cargo_package_name: "native".to_string(),
-            cargo_version: "0.1.0".to_string(),
-            cargo_source: None,
-            cargo_manifest_path: PathBuf::from("/ws/native/Cargo.toml"),
-            links: None,
-            has_build_script: true,
-            has_proc_macro: false,
-        }],
-    );
+        vec![backend_with_manifest(
+            "native",
+            true,
+            native.path().join("Cargo.toml"),
+        )],
+    ));
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("trusted interop metadata should apply");
@@ -113,11 +109,12 @@ fn package_rust_interop_records_probe_plan() {
 
 #[test]
 fn package_rust_interop_resolves_bridge_root() {
+    let fixture = CargoFixture::bridge();
     let generated = base_project(vec![declaration_entry(
         "bridge.hash",
         RustInteropDecoratorKind::Function,
     )]);
-    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    let mut context = fixture.bind(package_context(TrustPolicy::default(), Vec::new()));
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -142,6 +139,7 @@ fn package_rust_interop_resolves_bridge_root() {
 
 #[test]
 fn package_rust_interop_injects_bridge_alias_into_declaring_module() {
+    let fixture = CargoFixture::bridge();
     let mut generated = base_project(vec![declaration_entry(
         "bridge.hash",
         RustInteropDecoratorKind::Function,
@@ -149,7 +147,7 @@ fn package_rust_interop_injects_bridge_alias_into_declaring_module() {
     generated
         .support_modules
         .insert("app".to_string(), "pub fn hash() {}\n".to_string());
-    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    let mut context = fixture.bind(package_context(TrustPolicy::default(), Vec::new()));
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -163,6 +161,7 @@ fn package_rust_interop_injects_bridge_alias_into_declaring_module() {
 
 #[test]
 fn package_rust_interop_injects_one_bridge_alias_per_module() {
+    let fixture = CargoFixture::bridge();
     let mut generated = base_project(vec![
         declaration_entry("bridge.hash", RustInteropDecoratorKind::Function),
         declaration_entry("bridge.codec", RustInteropDecoratorKind::Function),
@@ -170,7 +169,7 @@ fn package_rust_interop_injects_one_bridge_alias_per_module() {
     generated
         .support_modules
         .insert("app".to_string(), "pub fn hash() {}\n".to_string());
-    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    let mut context = fixture.bind(package_context(TrustPolicy::default(), Vec::new()));
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -190,6 +189,7 @@ fn package_rust_interop_injects_one_bridge_alias_per_module() {
 
 #[test]
 fn package_bridge_cargo_alias_survives_complete_project_canonicalization() {
+    let fixture = CargoFixture::bridge();
     let mut generated = base_project(vec![declaration_entry(
         "bridge.hash",
         RustInteropDecoratorKind::Function,
@@ -199,7 +199,7 @@ fn package_bridge_cargo_alias_survives_complete_project_canonicalization() {
         "app".to_string(),
         "pub fn hash() { bridge::hash(); }\n".to_string(),
     );
-    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    let mut context = fixture.bind(package_context(TrustPolicy::default(), Vec::new()));
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
     let mut generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("bridge root should resolve");
@@ -341,11 +341,12 @@ fn package_rust_interop_resolves_same_workspace_path_dependency() {
 
 #[test]
 fn package_rust_interop_resolves_self_method_root() {
+    let fixture = CargoFixture::bridge();
     let generated = base_project(vec![
         opaque_class_declaration_entry(),
         method_declaration_entry("Self.poll", RustInteropDecoratorKind::Function),
     ]);
-    let context = package_context(TrustPolicy::default(), Vec::new());
+    let context = fixture.bind(package_context(TrustPolicy::default(), Vec::new()));
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("Self method root should resolve");
@@ -388,7 +389,16 @@ fn package_rust_interop_rejects_self_method_root_without_opaque_class() {
 
 #[test]
 fn package_rust_interop_cache_fragment_is_deterministic() {
-    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+    let fixture = CargoFixture::bridge();
+    let native = CargoFixture::new("native", "pub fn hash() {}\n");
+    let context = fixture.bind(package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            false,
+            native.path().join("Cargo.toml"),
+        )],
+    ));
 
     let first = apply_package_rust_interop_metadata(
         base_project(vec![declaration_entry(
@@ -416,15 +426,21 @@ fn package_rust_interop_cache_fragment_is_deterministic() {
 
 #[test]
 fn package_rust_interop_cache_changes_with_trust_policy() {
+    let fixture = CargoFixture::bridge();
+    let native = CargoFixture::new("native", "pub fn hash() {}\n");
     let first = apply_package_rust_interop_metadata(
         base_project(vec![declaration_entry(
             "native.hash",
             RustInteropDecoratorKind::Function,
         )]),
-        Some(package_context(
+        Some(fixture.bind(package_context(
             TrustPolicy::default(),
-            vec![backend("native", false)],
-        )),
+            vec![backend_with_manifest(
+                "native",
+                false,
+                native.path().join("Cargo.toml"),
+            )],
+        ))),
     )
     .expect("first metadata pass should apply")
     .interop
@@ -434,13 +450,17 @@ fn package_rust_interop_cache_changes_with_trust_policy() {
             "native.hash",
             RustInteropDecoratorKind::Function,
         )]),
-        Some(package_context(
+        Some(fixture.bind(package_context(
             TrustPolicy {
                 build_env: vec!["OPENSSL_DIR".to_string()],
                 ..TrustPolicy::default()
             },
-            vec![backend("native", false)],
-        )),
+            vec![backend_with_manifest(
+                "native",
+                false,
+                native.path().join("Cargo.toml"),
+            )],
+        ))),
     )
     .expect("second metadata pass should apply")
     .interop
@@ -548,14 +568,14 @@ fn package_rust_interop_rejects_untrusted_build_env() {
 
 #[test]
 fn package_rust_interop_records_lock_and_profile_cache_inputs() {
-    let root = temp_package_root("rust_interop_cache_inputs");
-    std::fs::create_dir_all(&root).expect("create package root");
-    std::fs::write(root.join("Cargo.lock"), "version = 4\n").expect("write lock");
-    std::fs::write(
-        root.join("Cargo.toml"),
-        "[profile.release]\nlto = true\ncodegen-units = 1\n",
-    )
-    .expect("write cargo toml");
+    let fixture = CargoFixture::bridge();
+    let native = CargoFixture::new("native", "pub fn hash() {}\n");
+    fixture.write("Cargo.lock", "version = 4\n");
+    let manifest = std::fs::read_to_string(fixture.path().join("Cargo.toml")).expect("manifest");
+    fixture.write(
+        "Cargo.toml",
+        &format!("{manifest}\n[profile.release]\nlto = true\ncodegen-units = 1\n"),
+    );
 
     let generated = base_project(vec![declaration_entry(
         "native.hash",
@@ -563,8 +583,12 @@ fn package_rust_interop_records_lock_and_profile_cache_inputs() {
     )]);
     let context = package_context_with_root(
         TrustPolicy::default(),
-        vec![backend("native", false)],
-        root.clone(),
+        vec![backend_with_manifest(
+            "native",
+            false,
+            native.path().join("Cargo.toml"),
+        )],
+        fixture.path().to_path_buf(),
     );
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))

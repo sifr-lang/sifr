@@ -80,6 +80,8 @@ mod stdlib_interop_demand_tests;
 mod stdlib_interop_startup_tests;
 mod sysroot_interop;
 #[cfg(test)]
+mod sysroot_interop_test_support;
+#[cfg(test)]
 mod sysroot_interop_tests;
 mod test_runner_interop;
 mod workspace;
