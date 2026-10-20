@@ -159,7 +159,13 @@ mod sifr_generated_generated_support {
             } else if sifr_generated_chars_part.len() == SifrInt::from_i64(0) {
                 units.push("-".to_string());
             } else {
-                units.push(format!("{part}-"));
+                units.push({
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(part.len().saturating_add(1usize));
+                    sifr_generated_concat.push_str(part.as_str());
+                    sifr_generated_concat.push('-');
+                    sifr_generated_concat
+                });
             }
             index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
         }
@@ -601,9 +607,7 @@ fn collect_wrap_fill_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let lines: Vec<String> = wrap("alpha\tbeta\ngamma", &SifrInt::from_i64(10))?;
-        actual.push(
-            format!("{lines:?}").as_str() == "[\"alpha beta\", \"gamma\"]".to_string().as_str(),
-        );
+        actual.push(format!("{lines:?}") == "[\"alpha beta\", \"gamma\"]");
         Ok(())
     })();
     if let Err(_try_err) = sifr_generated_try_res {
@@ -621,14 +625,13 @@ fn collect_wrap_fill_actual() -> Vec<bool> {
 }
 fn collect_other_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![
-        dedent("  x\n  y").as_str() == "x\ny".to_string().as_str(),
-        indent("x\n \ny", ">> ").as_str() == ">> x\n \n>> y".to_string().as_str(),
-        shorten("alpha beta gamma", &SifrInt::from_i64(16)).as_str()
-            == "alpha beta [...]".to_string().as_str(),
+        dedent("  x\n  y") == "x\ny",
+        indent("x\n \ny", ">> ") == ">> x\n \n>> y",
+        shorten("alpha beta gamma", &SifrInt::from_i64(16)) == "alpha beta [...]",
     ];
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let wrap_empty: Vec<String> = wrap("", &SifrInt::from_i64(5))?;
-        actual.push(format!("{wrap_empty:?}").as_str() == "[]".to_string().as_str());
+        actual.push(format!("{wrap_empty:?}") == "[]");
         Ok(())
     })();
     if let Err(_try_err) = sifr_generated_try_res {

@@ -213,6 +213,7 @@ fn collect_scalar_shadows(file: &syn::File) -> std::collections::HashSet<String>
             let expected = match bound.to_string().as_str() {
                 "String" => "std::string::String",
                 "SifrInt" => "sifr_runtime::SifrInt",
+                "SifrRange" => "sifr_runtime::SifrRange",
                 "Option" => "std::option::Option",
                 "Some" => "std::option::Option::Some",
                 "None" => "std::option::Option::None",
@@ -266,7 +267,16 @@ fn collect_scalar_shadows(file: &syn::File) -> std::collections::HashSet<String>
         fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
             self.import(&item.tree, &mut Vec::new());
         }
+        fn visit_item_trait(&mut self, item: &'ast syn::ItemTrait) {
+            self.declaration(&item.ident);
+            visit::visit_item_trait(self, item);
+        }
+        fn visit_item_extern_crate(&mut self, item: &'ast syn::ItemExternCrate) {
+            self.declaration(item.rename.as_ref().map_or(&item.ident, |(_, name)| name));
+            visit::visit_item_extern_crate(self, item);
+        }
         fn visit_item_mod(&mut self, item: &'ast syn::ItemMod) {
+            self.declaration(&item.ident);
             self.1.push(item.ident.to_string());
             visit::visit_item_mod(self, item);
             self.1.pop();
@@ -290,7 +300,7 @@ fn collect_scalar_shadows(file: &syn::File) -> std::collections::HashSet<String>
 }
 
 const STANDARD_VALUE_NAMES: &[&str] = &[
-    "vec", "String", "SifrInt", "Option", "Some", "None", "Result", "Vec", "Box", "HashMap",
+    "vec", "String", "SifrInt", "SifrRange", "Option", "Some", "None", "Result", "Vec", "Box", "HashMap",
     "HashSet", "Clone", "bool", "char", "str", "u8", "u16", "u32", "u64", "u128", "usize", "i8",
     "i16", "i32", "i64", "i128", "isize", "f32", "f64",
 ];

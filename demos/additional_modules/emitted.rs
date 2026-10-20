@@ -601,15 +601,16 @@ mod sifr_generated_project_nominals {
                             &SifrInt::from_i64(1),
                         )
                         .clamp_slice_bound(sifr_generated_slice_len);
-                        sifr_generated_slice_src
-                            .iter()
-                            .skip(sifr_generated_slice_start)
-                            .take(
-                                sifr_generated_slice_stop
-                                    .saturating_sub(sifr_generated_slice_start),
-                            )
-                            .copied()
-                            .collect::<String>()
+                        String::from_iter(
+                            sifr_generated_slice_src
+                                .iter()
+                                .skip(sifr_generated_slice_start)
+                                .take(
+                                    sifr_generated_slice_stop
+                                        .saturating_sub(sifr_generated_slice_start),
+                                )
+                                .copied(),
+                        )
                     }
                     .trim()
                     .to_string();

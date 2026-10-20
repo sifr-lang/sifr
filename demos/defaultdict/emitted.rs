@@ -142,5 +142,5 @@ fn main() {
             ]),
             None,
         );
-    assert_eq!(&q.len(), &SifrInt::from_i64(3));
+    assert_eq!(q.len(), SifrInt::from_i64(3));
 }

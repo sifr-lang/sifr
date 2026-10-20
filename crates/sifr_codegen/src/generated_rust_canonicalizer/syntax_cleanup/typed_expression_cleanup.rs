@@ -83,6 +83,7 @@ include!("typed_expression_types.rs");
 include!("typed_iterator_facts.rs");
 include!("typed_field_cleanup.rs");
 include!("typed_string_cleanup.rs");
+include!("typed_integer_cleanup.rs");
 
 struct Rewriter<'facts> {
     iteration_dispatch_closed: bool,
@@ -720,6 +721,7 @@ impl VisitMut for Rewriter<'_> {
         self.rewrite_standard_copy_iterator(expression);
         self.rewrite_typed_string_clones(expression);
         self.record_source_float_arithmetic(expression);
+        self.rewrite_exact_integer_arithmetic(expression);
         self.rewrite_inert_parent_field_clone(expression);
         if let Some(ty) = self.ty(expression) {
             self.rewrite_vector_collect(expression, &ty);
@@ -791,13 +793,12 @@ impl VisitMut for Rewriter<'_> {
             call.receiver = view.receiver.clone();
         }
         if call.method == "to_vec"
-            && self.clone_is_unambiguous()
             && call.args.is_empty()
-            && self
-                .ty(&call.receiver)
-                .is_some_and(|ty| self.standard_generic(&ty, "Vec").is_some())
+            && let Some(source) = self.ty(&call.receiver)
+            && let Some(copy) = self.clone_standard_vector(&call.receiver, &source)
         {
-            call.method = syn::Ident::new("clone", call.method.span());
+            *expression = copy;
+            return;
         }
         if call.method == "unwrap_or_else"
             && call.args.len() == 1

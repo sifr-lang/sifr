@@ -521,7 +521,13 @@ mod sifr_generated_generated_support {
         mut tokens: Vec<String>,
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
-        tokens.push(value.kind.clone());
+        tokens.push({
+            let mut sifr_generated_concat: String =
+                String::with_capacity(0usize.saturating_add(0usize));
+            sifr_generated_concat.push_str(value.kind.as_str());
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
+        });
         if value.kind == "bool" {
             let bool_value: Option<bool> = value.bool_value;
             if bool_value.is_none() {

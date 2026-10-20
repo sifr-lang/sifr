@@ -1211,7 +1211,7 @@ fn collect_positive_actual() -> Vec<bool> {
             &SifrInt::from_i64(0),
             None,
         );
-    actual.push(dt.isoformat().as_str() == "2024-01-15T10:30:00".to_string().as_str());
+    actual.push(dt.isoformat() == "2024-01-15T10:30:00");
     let base_td: SifrGeneratedStdlibSifrX2edatetimeX2etimedelta =
         SifrGeneratedStdlibSifrX2edatetimeX2etimedelta::new(
             &SifrInt::from_i64(0),
@@ -1246,8 +1246,7 @@ fn collect_positive_actual() -> Vec<bool> {
             &SifrInt::from_i64(19800),
         ))
         .to_string()
-        .as_str()
-            == "UTC-05:30".to_string().as_str(),
+            == "UTC-05:30",
     );
     actual
 }

@@ -44,7 +44,13 @@ mod sifr_generated_generated_support {
         mut tokens: Vec<String>,
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
-        tokens.push(value.kind.clone());
+        tokens.push({
+            let mut sifr_generated_concat: String =
+                String::with_capacity(0usize.saturating_add(0usize));
+            sifr_generated_concat.push_str(value.kind.as_str());
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
+        });
         if value.kind == "bool" {
             let bool_value: Option<bool> = value.bool_value;
             if bool_value.is_none() {
@@ -479,20 +485,28 @@ fn main() {
                 ::bigdecimal::RoundingMode::HalfEven,
             )
             .round_decimal_ref(
-                &::std::ops::Add::add(
-                    BigDecimal::new(
-                        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(
-                            &[39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21],
+                &::bigdecimal::Context::new(
+                        ::std::num::NonZeroU64::MIN.saturating_add(27),
+                        ::bigdecimal::RoundingMode::HalfEven,
+                    )
+                    .round_decimal_ref(
+                        &::std::ops::Add::add(
+                            BigDecimal::new(
+                                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(
+                                    &[39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21],
+                                ),
+                                28,
+                            ),
+                            BigDecimal::new(
+                                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(
+                                    &[0],
+                                ),
+                                0,
+                            ),
                         ),
-                        28,
-                    ),
-                    BigDecimal::new(
-                        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[0]),
-                        0,
-                    ),
-                ),
+                    )
+                    .with_scale_round(6, ::bigdecimal::RoundingMode::HalfEven),
             )
-            .round(6)
             .to_string();
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < SifrInt::from_i64(20) {
@@ -537,10 +551,14 @@ fn main() {
                 ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
                 .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven)
                 .round_decimal_ref(&
+                ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
+                .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven)
+                .round_decimal_ref(&
                 ::std::ops::Add::add(BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
                 [39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21]), 28),
                 BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-                [0]), 0))).round(6).to_string(), baseline_bd_value_ad11946794caa821
+                [0]), 0))).with_scale_round(6, ::bigdecimal::RoundingMode::HalfEven))
+                .to_string(), baseline_bd_value_ad11946794caa821
             );
             i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }

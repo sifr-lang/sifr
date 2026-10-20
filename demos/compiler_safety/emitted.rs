@@ -93,7 +93,13 @@ fn demo_early_return() -> Vec<String> {
             ctx: sifr_generated_ctx_0,
         };
         let f = sifr_generated_guard_0.ctx.sifr_generated_enter__();
-        output.push(format!("Reading: {}", f.path));
+        output.push({
+            let mut sifr_generated_concat: String =
+                String::with_capacity(9usize.saturating_add(0usize));
+            sifr_generated_concat.push_str("Reading: ");
+            sifr_generated_concat.push_str(f.path.as_str());
+            sifr_generated_concat
+        });
     }
     output.push("Closing: data.csv".to_string());
     output.push("42".to_string());
@@ -122,7 +128,13 @@ fn main() {
             ctx: sifr_generated_ctx_0,
         };
         let f = sifr_generated_guard_0.ctx.sifr_generated_enter__();
-        events.push(format!("Using: {}", f.path));
+        events.push({
+            let mut sifr_generated_concat: String =
+                String::with_capacity(7usize.saturating_add(0usize));
+            sifr_generated_concat.push_str("Using: ");
+            sifr_generated_concat.push_str(f.path.as_str());
+            sifr_generated_concat
+        });
     }
     events.push("Closing: config.json".to_string());
     events.push("=== Context Manager: Early Return ===".to_string());
@@ -152,7 +164,13 @@ fn main() {
             if i == SifrInt::from_i64(1) {
                 should_break = true;
             } else {
-                events.push(format!("Query on: {}", conn.name));
+                events.push({
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(10usize.saturating_add(0usize));
+                    sifr_generated_concat.push_str("Query on: ");
+                    sifr_generated_concat.push_str(conn.name.as_str());
+                    sifr_generated_concat
+                });
             }
         }
         events.push("Disconnecting: db".to_string());
@@ -191,7 +209,19 @@ fn main() {
             ctx: sifr_generated_ctx_1,
         };
         let db = sifr_generated_guard_1.ctx.sifr_generated_enter__();
-        events.push(format!("Processing with: {} and {}", fin.path, db.name));
+        events.push({
+            let mut sifr_generated_concat: String = String::with_capacity(
+                17usize
+                    .saturating_add(0usize)
+                    .saturating_add(5usize)
+                    .saturating_add(0usize),
+            );
+            sifr_generated_concat.push_str("Processing with: ");
+            sifr_generated_concat.push_str(fin.path.as_str());
+            sifr_generated_concat.push_str(" and ");
+            sifr_generated_concat.push_str(db.name.as_str());
+            sifr_generated_concat
+        });
     }
     events.push("Disconnecting: postgres".to_string());
     events.push("Closing: input.txt".to_string());

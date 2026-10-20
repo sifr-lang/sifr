@@ -384,9 +384,7 @@ fn collect_core_actual() -> Vec<bool> {
                 vec![SifrInt::from_i64(3)]
             ])
             .collect::<Vec<_>>()
-        )
-        .as_str()
-            == "[1, 2, 3]".to_string().as_str(),
+        ) == "[1, 2, 3]",
         format!(
             "{:?}",
             pairwise(&[
@@ -395,9 +393,7 @@ fn collect_core_actual() -> Vec<bool> {
                 SifrInt::from_i64(3),
                 SifrInt::from_i64(4)
             ])
-        )
-        .as_str()
-            == "[[1, 2], [2, 3], [3, 4]]".to_string().as_str(),
+        ) == "[[1, 2], [2, 3], [3, 4]]",
     ];
     let mut batched_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -431,9 +427,7 @@ fn collect_core_actual() -> Vec<bool> {
                 None
             )
             .collect::<Vec<_>>()
-        )
-        .as_str()
-            == "[1, 3, 6]".to_string().as_str(),
+        ) == "[1, 3, 6]",
     );
     actual.push(
         format!(
@@ -443,9 +437,7 @@ fn collect_core_actual() -> Vec<bool> {
                 SifrInt::from_i64(5)
             )
             .collect::<Vec<_>>()
-        )
-        .as_str()
-            == "[5, 6, 5, 6, 5]".to_string().as_str(),
+        ) == "[5, 6, 5, 6, 5]",
     );
     actual
 }
