@@ -11,7 +11,9 @@ async def main() -> Result[None, ScopeFailure]:
         first = task.spawn_scoped(worker(), ctx=context)
         second = task.spawn_scoped(worker(), ctx=context)
         assert str(context) == "shared"
-        assert await first == task.Ok(1)
-        assert await second == task.Ok(1)
+        first_result = await first
+        second_result = await second
+        assert str(first_result) == "Ok(1)"
+        assert str(second_result) == "Ok(1)"
     assert str(context) == "shared"
     return None
