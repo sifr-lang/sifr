@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.3a merged; V0.5 approved pinned-graph audit in progress
+current_stage: V0.5 reviewed; merge pending; V0.2 next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -178,7 +178,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
-| V0.5 | Maintained Cargo manifest/lock inventory admission | Approved pinned-verification-graph audit; implementation in progress |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Implemented; 108/108 tests pass; independent review satisfied; PR #4361 |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
@@ -496,7 +496,7 @@ its exact patch remains externally reproducible against the recorded base.
 V0.5 is not complete, and the phase has no final-gate or timing acceptance.
 
 
-### V0.5 implementation and validation — review pending
+### V0.5 implementation and validation — reviewed
 
 The approved audit covers **153 manifests, 35 locks, 211 direct declarations and
 44 exact maintained owner/lock dependency edges**. The two named verification
@@ -526,7 +526,21 @@ file-size guard passed (7.671s), and source dependency-direction guard passed
 (5.096s). Concurrent guard timings are diagnostic durations, not isolated speedup
 measurements. Six added controls reject missing/changed inputs, scope expansion,
 unapproved registry rows/checksums/sources, and product-version relaxation.
-Independent review and merge remain pending; final phase gates/timing remain open.
+Independent review: **SATISFIED**, no blockers, for implementation
+`f4981e547d33514744567ea31f80bcc5846e5df2` against
+`8858bde63f80b3b40860da3b1b7a48b31a91caaa`. Raw review is preserved outside Git
+at `reviews/f4981e547d33514744567ea31f80bcc5846e5df2/review.md`.
+[PR #4361](https://github.com/sifr-lang/sifr/pull/4361) awaits merge; final phase
+gates/timing remain open. CI's benchmark-inclusive create-PR job stops before tests
+because `SIFR_PERFORMANCE_REFERENCE` is unset (`ci-4361-create-pr.log`); this is
+not a CI pass. The approved intermediate local policy remains applicable.
+
+Review follow-ups: the dependency-release owner should separately refresh historical
+September release pins; this item only reconciles official checksum evidence.
+Cross-platform qualification should consider raw-byte pinned-input hashes under
+Windows line-ending conversion. Direct exemption-routing and Git-revision-specific
+mutations are optional additional controls; current exact product-path exclusion,
+product helper controls and every-input mutation tests cover the required policy.
 
 ## Execution stages
 
@@ -1038,6 +1052,13 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** implement the approved V0.5 pinned-graph audit policy before
-dependent implementation. Preserve the external diagnostic patch, failed evidence
-and unchanged dependency graphs. Other V0 repairs and full phase acceptance remain open.
+**Next action:** merge reviewed V0.5, then repair V0.2 SQL qualification on a
+new owned branch. Read-only provenance inspection on the reviewed candidate shows
+all three SQL family receipts differ only in `Cargo.lock`; the words receipt has
+no changed inputs. The changed lock adds the CLI's cache-storage dependency.
+Rebuild SQL artifacts with the actual pinned producer and preserve its receipts;
+do not merely refresh hashes. Follow moved SQL service ownership in qualification
+guards and retain every mutation control. Run each lightweight qualification and
+self-test, plus affected component producer/input tests and runtime qualification.
+Preserve original failures and the 30-minute per-category cap; split preparation
+by family when needed. Full phase acceptance and other V0 items remain open.
