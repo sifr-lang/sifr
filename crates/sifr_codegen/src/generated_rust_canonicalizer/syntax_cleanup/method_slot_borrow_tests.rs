@@ -16,13 +16,32 @@ fn typed_compile_and_run(source: &str) -> String {
     canonical
 }
 
+// Preserve failed inputs (including unexpected I/O failures) while successful
+// native checks release their owned scratch directory automatically.
+struct NativeInputs(Option<tempfile::TempDir>);
+
+impl Drop for NativeInputs {
+    fn drop(&mut self) {
+        if std::thread::panicking()
+            && let Some(directory) = self.0.take()
+        {
+            eprintln!(
+                "Retained native regression inputs: {}",
+                directory.keep().display()
+            );
+        }
+    }
+}
+
 fn compile_pair(source: &str, canonical: &str) {
-    let directory = tempfile::Builder::new()
-        .prefix("sifr-method-slot-borrows-")
-        .tempdir()
-        .expect("owned native regression directory")
-        .keep();
-    // Keep both inputs and compiler diagnostics, including on failure.
+    let inputs = NativeInputs(Some(
+        tempfile::Builder::new()
+            .prefix("sifr-method-slot-borrows-")
+            .tempdir()
+            .expect("owned native regression directory"),
+    ));
+    let directory = inputs.0.as_ref().expect("native inputs are owned").path();
+    // Keep both inputs and compiler diagnostics on failure.
     for (name, text) in [("before", source), ("after", canonical)] {
         let input = directory.join(format!("{name}.rs"));
         let binary = directory.join(format!("{name}{}", std::env::consts::EXE_SUFFIX));

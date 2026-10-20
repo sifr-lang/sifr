@@ -91,8 +91,7 @@ impl Rewriter<'_> {
         } else {
             &expression.path
         };
-        if path.leading_colon.is_some() || self.local_items.types.contains_key("*")
-            || local_type_name(path).is_some_and(|name| self.local_items.types.contains_key(&name)) {
+        if path.leading_colon.is_some() || self.local_type_path_is_opaque(path) {
             return None;
         }
         let parts = path.segments.iter().map(|part| part.ident.to_string()).collect::<Vec<_>>();
@@ -102,5 +101,14 @@ impl Rewriter<'_> {
             return None;
         }
         Some(syn::parse_quote!(#path))
+    }
+}
+
+
+impl Rewriter<'_> {
+    fn local_type_path_is_opaque(&self, path: &syn::Path) -> bool {
+        self.local_items.types.contains_key("*")
+            || path.segments.first().is_some_and(|part|
+                self.local_items.types.contains_key(&part.ident.to_string()))
     }
 }

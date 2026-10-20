@@ -84863,7 +84863,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::resolve::literal-comparison::1",
-      "fingerprint": "8eba7b37c3c3551face442f5c17033d9db03ba256624c875e004f89cec018ad7",
+      "fingerprint": "dd8f5cf8789d284b6eda6d151f09cb6568b8fe6f14aad7d6656a6f94358fc90f",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "if parts . first ( ) . is_some_and ( | part | part == \"Self\" )",

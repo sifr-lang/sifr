@@ -148,8 +148,7 @@ impl Rewriter<'_> {
                 return None;
             };
             if owner.qself.is_some() || owner.path.leading_colon.is_some()
-                || local_type_name(&owner.path).is_some_and(|name|
-                    self.local_items.types.contains_key(&name)) {
+                || self.local_type_path_is_opaque(&owner.path) {
                 return None;
             }
             parts.splice(

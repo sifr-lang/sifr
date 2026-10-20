@@ -1713,10 +1713,11 @@ information across the external runtime call without guessing that helper's
 return type. The existing borrow-only string optimization remains enabled; slot
 argument conventions and original runtime/negative fixtures are unchanged.
 
-The new native regressions execute original and canonical Rust for nested owner
-identity, unit receiver dispatch and typed opaque-decoder boundaries; a fourth
-control checks that unknown/shadowing bindings and local types do not acquire
-outer constructor facts. The method-policy update refreshes ten existing Rust-IR
+The three primary native regressions execute original and canonical Rust for
+nested owner identity, unit receiver dispatch and typed opaque-decoder boundaries.
+Additional native lexical controls check that local values, types, traits,
+imports and modules do not acquire an outer declaration's identity; the successive
+validation records below bind each candidate's exact test inventory. The method-policy update refreshes ten existing Rust-IR
 fingerprints and adds the `Self` identity comparison, with existing ownership,
 classification and all 234 constituent records unchanged.
 
@@ -1771,3 +1772,25 @@ and add native local-impl/nested-trait controls. The typed cleanup alone is used
 for these controls to isolate identity resolution from unrelated whole-pipeline
 optimizations; the three primary native regressions still exercise the complete
 canonicalizer. Revalidate and obtain a fresh scoped review after this refinement.
+
+
+Candidate `a5e1d362b4fb69f7ac2a759a9ec015392be20c1d` passes all 1,765 codegen
+tests (372.562 seconds outer, 356 preparation, 14.32 execution), required guards
+(49.833 seconds), and both native slot tests (392.056 seconds outer, 303 preparation,
+87.02 execution). Its renewed scoped review is SATISFIED with no blockers, raw
+record `reviews/a5e1d362b4fb69f7ac2a759a9ec015392be20c1d/review.md`.
+
+Close its remaining opaque-owner suggestion in the same bounded identity repair:
+local imports make the owner opaque, and a local module can shadow the leading
+segment of a qualified owner path. Apply that proof boundary to both new `Self`
+lookup and unit-constructor inference. A seventh native control covers local
+aliases, local-module `Self`, and a receiver constructed through that module.
+Successful native unit checks now remove their owned scratch directories; panic
+or interruption preserves failed/incomplete inputs and diagnostics. The helper
+owns only its freshly allocated temporary directory.
+
+The review's generic-parameter shadowing suggestion is assigned to V0.11's
+emitted-Rust investigation alongside the existing opaque-call ABI/liveness
+follow-ups. It is not claimed covered by this slot-adapter repair. The measured
+codegen-test and driver preparation costs also remain inputs to V4's build-time
+work; the diagnostic two-job allocation is not a ten-minute acceptance result.
