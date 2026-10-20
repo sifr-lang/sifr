@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16b merged; V0.14a explicit Python preparation prerequisites
+current_stage: V0.14a accepted; V0.14b process lease inheritance
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -189,7 +189,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Merged #4375; complete named acceptance and scoped review pass |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Merged #4376; focused acceptance and scoped review pass |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Split into V0.14a preparation prerequisites and V0.14b process lease inheritance |
-| V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Current: bind preparation and failure propagation; retain independent continuation |
+| V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Accepted: declared prerequisites, 114 LSP and two native bridge tests, runner controls and review pass; PR #4378 |
 | V0.14b | Process lease inheritance limited to the intended consuming children | Pending: preserve killed-owner protection without unrelated child inheritance |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
@@ -2646,3 +2646,65 @@ consumers under their original assertions and the per-category diagnostic cap.
 Scoped independent review remains required. Environment bootstrap and compiler
 preparation are recorded separately; moving preparation earlier is not a speedup.
 Full final phase gates and V5 remain open.
+
+
+### V0.14a acceptance
+
+Implementation `4ee052487a2fda39ddbd801127a3f51b0c4af4a0` is accepted in
+[PR #4378](https://github.com/sifr-lang/sifr/pull/4378). The canonical graph now
+has one explicit environment prerequisite for selected Python-area, SQL LSP,
+LSP-crate and ignored driver native-archive consumers. Ordinary driver library
+tests do not request that environment. A normal environment failure blocks its
+dependent preparation and consumers, while independent work remains eligible in
+no-fail-fast mode. A later compiled-example failure does not invalidate a
+successfully prepared environment or block unrelated SQL/crate consumers.
+
+The callback retains exact project/tool/interpreter pins and caller Cargo
+storage/flags, removes the unrelated active environment and explicitly targets
+the canonical area's `.venv`. The actual probe checks the existing CPython/GIL
+contract and virtual environment prefix. No source fixture, Rust implementation,
+runtime assertion, selected command or profile membership changed.
+
+| Named validation category | Result | Outer elapsed |
+| --- | --- | ---: |
+| Affected preparation/area setup controls | 64 pass | 2.637s |
+| Full canonical runner self-test | 27 groups pass | 113.945s |
+| Emitted selection-plan comparison | Six plans identical | 0.649s |
+| Profile declarations | Pass | 0.649s |
+| Required formatting/file-size/area/method guards | Pass | 45.174s |
+| Existing locked Python environment validation | Pass; manifest/lock unchanged | 0.690s |
+| LSP compiler preparation | Pass | 45.279s |
+| Original LSP assertions | 114 pass; zero failed/ignored/filtered | 207.196s |
+| Native bridge compiler preparation | Pass | 323.046s |
+| Original native archive/bridge assertions | Two pass; zero failed/ignored | 81.236s |
+
+The inner `uv` command took 0.097795s; the outer preparation
+receipt includes its harness/verification launcher. Both describe locked
+re-validation of an existing environment, **not cold bootstrap**. Prior initial
+environment bootstrap remains separately reported. Cargo preparation and test
+execution have separate receipts; every category stays under its diagnostic cap.
+These overlapping diagnostic observations are not a matched performance comparison
+or an integrated full-gate sum. The source-level dependency fix establishes correct
+ordering/failure accounting, not a claimed reduction of actual LSP/runtime work.
+
+Independent review is **SATISFIED**, externally keyed by the exact implementation.
+Its pending validation conditions have now passed on that candidate. Review's
+timing note is clarified by retaining both inner and outer receipts; the raw
+review is unchanged. The first implementation's two order-test failures remain
+preserved: workspace/fixture fetch retains its original early position, followed
+by the explicitly asserted environment step. The later narrowing adds a regression
+control against unnecessary ordinary-driver environment preparation.
+
+V3 follow-up, required before final qualification: compiled Python-example setup
+and actual area execution still have pre-existing ambient
+`UV_PROJECT_ENVIRONMENT` handling that can select a different environment. Align
+their environment authority with the actual selected fixture interpreter, preserving
+venv identity and pinned dependencies; do not normalize to the base interpreter.
+The current environment-preparation protection does not imply that downstream
+follow-up is already fixed. Conservative compile-node blocking remains visible;
+finer independent preparation can be evaluated within V4 without dropping consumers.
+
+Evidence: external `v014a-final-acceptance.json`, `v014a-baseline-graph.json`,
+`v014a-final-graph.json`, `v014a-actual-environment/`, all named receipts, and
+`reviews/4ee052487a2fda39ddbd801127a3f51b0c4af4a0/review.md` with timing/follow-up context.
+V0.14b is next. Full final phase gates and V1–V5 remain open.
