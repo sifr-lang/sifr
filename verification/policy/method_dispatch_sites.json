@@ -25,7 +25,7 @@
       "relationship": "source_method_path -> nonbuiltin early return; builtin specializations end in methods registry or decline",
       "inputs": "fn try_lower_registry_expr_recursive ( & mut self , expr : & HirExpr , )",
       "outputs": "Option < crate :: RustExpr >",
-      "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279",
+      "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165",
       "references": [
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs",
@@ -46,7 +46,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr.rs",
@@ -209,7 +209,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -225,7 +225,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -246,7 +246,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -267,7 +267,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -309,7 +309,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -330,7 +330,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -351,7 +351,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -1622,7 +1622,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/lib_codegen_tests/emitted_rust_quality_codegen_tests.rs",
@@ -2497,7 +2497,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/lib_codegen_tests/emitted_rust_quality_codegen_tests.rs",
@@ -4023,7 +4023,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/method_authority_tests/nonempty_pop.rs",
@@ -4257,7 +4257,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -4901,7 +4901,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
