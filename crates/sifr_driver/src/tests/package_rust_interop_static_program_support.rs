@@ -72,7 +72,9 @@ fn test_static_program_constructs_and_projects_arena() {
         evidence_source,
         "repeated generated output must be byte-identical"
     );
-    let output = std::process::Command::new(evidence_artifact.binary_path())
+    let output = evidence_artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("static-program evidence binary should run");
     assert!(

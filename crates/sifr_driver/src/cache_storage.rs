@@ -1,10 +1,10 @@
 //! CLI cache policy, inventory and pruning.
-#[cfg(test)]
-pub(crate) use sifr_cache_storage::lock_bounded_with_hooks;
 pub(crate) use sifr_cache_storage::{
-    LEASE_WAIT, LeaseActivity, check_owned, directory, entry_lock, invalid,
-    lock_bounded_with_cancel, new_private_file, owner_scope, payload, publish, relative, uid,
+    LEASE_WAIT, LeaseActivity, check_owned, directory, invalid, lock_bounded_with_cancel,
+    new_private_file, owner_scope, payload, publish, relative, uid,
 };
+#[cfg(test)]
+pub(crate) use sifr_cache_storage::{entry_lock, lock_bounded_with_hooks};
 use std::fs::{self, File, OpenOptions};
 use std::io;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};

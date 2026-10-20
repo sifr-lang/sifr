@@ -38,6 +38,7 @@ pub(crate) fn package_cargo_resolution_policy(
         trusted_vendor_dirs.push(vendor_dir);
     }
     CargoResolutionPolicy {
+        child_leases: Default::default(),
         application_profile: crate::ApplicationProfile::Development,
         native_toolchain: if prepare_native {
             entrypoint

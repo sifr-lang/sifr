@@ -117,7 +117,9 @@ def main() -> None:
     .expect("compiler-owned nominal paths and unions should be source-disjoint");
 
     assert!(artifact.binary_path().exists());
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("collision fixture should execute");
     assert!(
@@ -378,7 +380,9 @@ def main() -> Result[None, PythonError]:
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("raw coroutine package should build with the owned loop");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("raw coroutine package should run");
 

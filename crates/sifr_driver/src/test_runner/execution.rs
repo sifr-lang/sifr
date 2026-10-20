@@ -210,14 +210,17 @@ pub(crate) fn execute_test_runner_project(
         )
         .map_err(test_io_error)?;
     let cargo_prefix_args = sysroot_cargo_config_args(&cargo_plan.dependency_plan);
+    let owned_policy = cargo_resolution.with_lease(family.lease())?;
     let prepared_resolution =
-        prepare_cargo_resolution(&project_dir, cargo_resolution, &cargo_prefix_args)?;
+        prepare_cargo_resolution(&project_dir, &owned_policy, &cargo_prefix_args)?;
     write_stderr_line(&format!(
         "application profile: {} ({})",
         generated_project.application_profile.name(),
         generated_project.application_profile.policy_identity()
     ));
-    let mut command = cargo_resolution.cargo_command()?;
+    let mut command = prepared_resolution
+        .command_policy(&owned_policy)?
+        .cargo_command()?;
     command
         .args(&cargo_prefix_args)
         .args([
@@ -238,6 +241,7 @@ pub(crate) fn execute_test_runner_project(
     configure_hermetic_build_environment(&mut command);
     record_cargo_invocation("final-test", cargo_resolution.lock_mode, &command);
     let output = crate::process_execution::output(&mut command).map_err(test_io_error)?;
+    drop(command);
     write_stderr(&String::from_utf8_lossy(&output.stderr));
     validate_test_native_link_evidence(
         &output.stdout,
@@ -333,17 +337,18 @@ pub(crate) fn execute_test_runner_project(
             pending.commit(&required_paths)?
         }
     };
+    drop(prepared_resolution);
+    drop(owned_policy);
     drop(family);
     if executables.is_empty() {
         return Err(test_io_error("cached test entry contains no executable"));
     }
     let mut success = true;
     for executable in executables {
-        let output = crate::process_execution::output(
-            std::process::Command::new(entry.workspace_root().join(executable))
-                .current_dir(&generated_project.cache_scope),
-        )
-        .map_err(test_io_error)?;
+        let mut command = std::process::Command::new(entry.workspace_root().join(executable));
+        command.current_dir(&generated_project.cache_scope);
+        entry.bind_command(&mut command).map_err(test_io_error)?;
+        let output = crate::process_execution::output(&mut command).map_err(test_io_error)?;
         write_stderr(&String::from_utf8_lossy(&output.stdout));
         write_stderr(&String::from_utf8_lossy(&output.stderr));
         success &= output.status.success();

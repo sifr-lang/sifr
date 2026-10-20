@@ -53,6 +53,10 @@ pub(crate) struct CachedArtifactEntry {
 }
 
 impl CachedArtifactEntry {
+    pub(crate) fn bind_command(&self, command: &mut std::process::Command) -> std::io::Result<()> {
+        super::native_child_leases::bind(command, &self._lease)
+    }
+
     pub(crate) fn workspace_root(&self) -> &Path {
         &self.workspace_root
     }
@@ -99,6 +103,11 @@ fn lock_artifact(lease: &std::fs::File, root: &Path, shared: bool) -> std::io::R
 }
 
 impl PendingCachedArtifact {
+    #[cfg(test)]
+    pub(crate) fn bind_command(&self, command: &mut std::process::Command) -> std::io::Result<()> {
+        super::native_child_leases::bind(command, &self.lease)
+    }
+
     pub(crate) fn workspace_root(&self) -> &Path {
         &self.staging_root
     }
@@ -240,7 +249,7 @@ pub(crate) fn prepare_cached_artifact(
     let cache_root = artifact_cache_root().join(namespace);
     crate::cache_storage::directory(&cache_root).map_err(storage_error)?;
     let lease = std::sync::Arc::new(
-        crate::cache_storage::entry_lock(&cache_root, &cache_key).map_err(storage_error)?,
+        super::native_child_leases::open(&cache_root, &cache_key).map_err(storage_error)?,
     );
     // Readers lease immutable entries. A miss upgrades to exclusive ownership
     // and revalidates after acquisition before producing a new entry.

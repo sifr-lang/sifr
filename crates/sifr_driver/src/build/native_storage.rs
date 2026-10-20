@@ -12,6 +12,10 @@ pub(crate) struct NativeFamily {
 }
 
 impl NativeFamily {
+    pub(crate) fn lease(&self) -> &File {
+        &self._lease
+    }
+
     pub(crate) fn acquire(
         toolchain: &str,
         source_configuration: &str,
@@ -32,7 +36,7 @@ impl NativeFamily {
         let directory = crate::cache_storage::root().join("native/families");
         crate::cache_storage::directory(&directory)?;
         let key = id.finish();
-        let lease = crate::cache_storage::entry_lock(&directory, &key)?;
+        let lease = super::native_child_leases::open(&directory, &key)?;
         #[cfg(unix)]
         crate::cache_storage::lock_bounded(
             &lease,
@@ -82,6 +86,12 @@ pub(crate) struct PublicationLease {
     _activity: crate::cache_storage::LeaseActivity,
 }
 
+impl PublicationLease {
+    pub(crate) fn lease(&self) -> &File {
+        &self._lease
+    }
+}
+
 pub(crate) fn publication_lock(path: &Path) -> std::io::Result<PublicationLease> {
     #[cfg(windows)]
     let path = if path.is_absolute() {
@@ -102,7 +112,7 @@ pub(crate) fn publication_lock(path: &Path) -> std::io::Result<PublicationLease>
     let directory = crate::cache_storage::root().join("native/publications");
     crate::cache_storage::directory(&directory)?;
     let key = id.finish();
-    let lease = crate::cache_storage::entry_lock(&directory, &key)?;
+    let lease = super::native_child_leases::open(&directory, &key)?;
     #[cfg(unix)]
     crate::cache_storage::lock_bounded(
         &lease,

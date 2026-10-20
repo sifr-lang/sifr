@@ -101,8 +101,10 @@ pub(crate) fn prepare_cargo_resolution(
         .ok_or_else(|| vec![cargo_resolution_error("invalid prepared cache key")])?;
     crate::cache_storage::directory(prepared_root)
         .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
-    let cache_lease = crate::cache_storage::entry_lock(cache_root, key)
+    let cache_lease = super::native_child_leases::open(cache_root, key)
         .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+    let owned_policy = policy.with_lease(&cache_lease)?;
+    let policy = &owned_policy;
     let scope = crate::cache_storage::owner_scope()
         .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
     let owner_path = prepared_root.join("resolution_owner.json");
@@ -307,6 +309,16 @@ fn cache_prepared_lock(
 }
 
 impl PreparedCargoResolution {
+    pub(crate) fn command_policy(
+        &self,
+        policy: &CargoResolutionPolicy,
+    ) -> Result<CargoResolutionPolicy, Vec<RenderedDiagnostic>> {
+        match &self._cache_lease {
+            Some(lease) => policy.with_lease(lease),
+            None => Ok(policy.clone()),
+        }
+    }
+
     pub(crate) fn assert_unchanged(&self) -> Result<(), Vec<RenderedDiagnostic>> {
         if self.lock_mode == CargoLockMode::Normal {
             return Ok(());
@@ -649,6 +661,7 @@ mod tests {
     fn probe_vendor_replacement_follows_resolution_ownership() {
         assert!(CargoResolutionPolicy::normal().uses_sysroot_vendor());
         let package_owned = CargoResolutionPolicy {
+            child_leases: Default::default(),
             application_profile: crate::ApplicationProfile::Release,
             native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
             lock_mode: CargoLockMode::Frozen,

@@ -459,13 +459,15 @@ pub(super) fn cmd_run_file(
             if !quiet && !artifact.build_report().cache_hit() {
                 emit_build_report(artifact.build_report(), false, false, diagnostic_format);
             }
-            let output = crate::trace_artifacts::run_program(
-                std::process::Command::new(artifact.binary_path()).args(app_args),
-            )
-            .unwrap_or_else(|e| {
-                let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-                crate::trace_artifacts::exit(sifr_driver::process_execution::failure_exit_code(&e));
-            });
+            let output = artifact
+                .command()
+                .and_then(|mut command| crate::trace_artifacts::run_program(command.args(app_args)))
+                .unwrap_or_else(|e| {
+                    let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
+                    crate::trace_artifacts::exit(
+                        sifr_driver::process_execution::failure_exit_code(&e),
+                    );
+                });
 
             // Forward stdout and stderr
             std::io::stdout().write_all(&output.stdout).ok();
@@ -537,13 +539,13 @@ pub(super) fn run_binary_artifact(
     if !quiet && !artifact.build_report().cache_hit() {
         emit_build_report(artifact.build_report(), false, false, diagnostic_format);
     }
-    let output = crate::trace_artifacts::run_program(
-        std::process::Command::new(artifact.binary_path()).args(app_args),
-    )
-    .unwrap_or_else(|e| {
-        let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-        crate::trace_artifacts::exit(sifr_driver::process_execution::failure_exit_code(&e));
-    });
+    let output = artifact
+        .command()
+        .and_then(|mut command| crate::trace_artifacts::run_program(command.args(app_args)))
+        .unwrap_or_else(|e| {
+            let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
+            crate::trace_artifacts::exit(sifr_driver::process_execution::failure_exit_code(&e));
+        });
 
     std::io::stdout().write_all(&output.stdout).ok();
     std::io::stderr().write_all(&output.stderr).ok();

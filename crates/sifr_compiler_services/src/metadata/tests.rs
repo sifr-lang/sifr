@@ -9,6 +9,8 @@ fn stale_or_corrupt_override_retries() {
         .canonicalize()
         .unwrap();
     let scratch = tempfile::tempdir().unwrap();
+    // The cache owns its private child; the temporary parent may use a permissive umask.
+    let cache = scratch.path().join("cache");
     let identity = CompilerIdentity::for_test(vec![("metadata-test", "c02a0")], "override-retry");
     let target = if cfg!(target_os = "macos") {
         if cfg!(target_arch = "aarch64") {
@@ -28,14 +30,9 @@ fn stale_or_corrupt_override_retries() {
         "x86_64-unknown-linux-gnu"
     };
     let never_cancel = || false;
-    let prepared = ensure_development_metadata(
-        &identity,
-        &source_root,
-        target,
-        scratch.path(),
-        &never_cancel,
-    )
-    .unwrap();
+    let prepared =
+        ensure_development_metadata(&identity, &source_root, target, &cache, &never_cancel)
+            .unwrap();
     let override_path = scratch.path().join("override.sifrmeta");
     std::fs::write(&override_path, b"corrupt metadata").unwrap();
     assert!(

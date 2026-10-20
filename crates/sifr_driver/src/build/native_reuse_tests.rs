@@ -83,6 +83,7 @@ fn dx9_f7_locked_root_reconciles_alternating_runtime_dependency() {
     let authority = root.join("authority.lock");
     std::fs::write(&authority, "version = 4\n").expect("lock authority");
     let policy = CargoResolutionPolicy {
+        child_leases: Default::default(),
         application_profile: crate::ApplicationProfile::Release,
         native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
         lock_mode: CargoLockMode::Locked,
@@ -118,7 +119,9 @@ fn dx9_f7_locked_root_reconciles_alternating_runtime_dependency() {
             "same_name",
             project,
             &plan,
-            &policy,
+            &policy
+                .with_lease(family.lease())
+                .expect("family child ownership"),
             &target,
         )
         .expect("locked build must reconcile the generated manifest and lock");

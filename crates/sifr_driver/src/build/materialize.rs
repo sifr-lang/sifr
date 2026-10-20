@@ -79,8 +79,10 @@ pub(super) fn materialize_binary_project_sources(
         requested_vendor_mode,
     )
     .map_err(|error| vec![build_error(error.boundary_message())])?;
-    let _publication = super::native_storage::publication_lock(&project_path)
+    let publication = super::native_storage::publication_lock(&project_path)
         .map_err(|error| vec![build_error(error.to_string())])?;
+    let owned_policy = cargo_resolution.with_lease(publication.lease())?;
+    let cargo_resolution = &owned_policy;
     let runtime_contract = if let Some(runtime) = &generated_project.python_runtime {
         let library_sha256 = runtime
             .selected_library()
@@ -116,6 +118,8 @@ pub(super) fn materialize_binary_project_sources(
         let cargo_prefix_args = sysroot_cargo_config_args(&dependency_plan);
         let prepared_resolution =
             prepare_cargo_resolution(&local_project_path, cargo_resolution, &cargo_prefix_args)?;
+        let owned_policy = prepared_resolution.command_policy(cargo_resolution)?;
+        let cargo_resolution = &owned_policy;
         super::portable_project::resolve_portable_local_root(
             &local_project_path,
             cargo_resolution,
@@ -230,7 +234,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
         project_name,
         generated_project,
         &dependency_plan,
-        cargo_resolution,
+        &cargo_resolution.with_lease(family.lease())?,
         &family.target(),
     )?;
     let snapshot = super::native_storage::NativeSnapshot::inspect(
@@ -294,7 +298,7 @@ pub(super) fn materialize_binary_project_at_path(
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
-    let _publication = super::native_storage::publication_lock(project_path)
+    let publication = super::native_storage::publication_lock(project_path)
         .map_err(|error| vec![build_error(error.to_string())])?;
     let tools = cargo_resolution
         .native_toolchain
@@ -317,7 +321,9 @@ pub(super) fn materialize_binary_project_at_path(
         project_name,
         generated_project,
         dependency_plan,
-        cargo_resolution,
+        &cargo_resolution
+            .with_lease(publication.lease())?
+            .with_lease(family.lease())?,
         &family.target(),
     )
 }
@@ -359,7 +365,7 @@ pub(super) fn materialize_binary_project_at_path_with_target(
         validate_native_links,
         &trusted_native_links,
         dependency_plan,
-        cargo_resolution,
+        &prepared_resolution.command_policy(cargo_resolution)?,
         target,
     )?;
     let destination = cached_binary_path(
