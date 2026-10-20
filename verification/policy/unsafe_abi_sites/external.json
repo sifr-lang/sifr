@@ -8919,8 +8919,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_mysql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         },
@@ -8937,8 +8937,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_mysql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         },
@@ -8955,8 +8955,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_mysql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         },
@@ -8973,8 +8973,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_mysql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         }
@@ -10203,8 +10203,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_postgresql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = sifr_sql_contract::ProviderSemanticDiagnostic {\n                    code: diagnostic.code.as_str().into(),\n                    message: diagnostic.message,\n                    primary: sifr_sql_contract::ProviderDiagnosticSpan {\n                        kind: \"sql-template\".into(),\n                        document: diagnostic.primary.document,\n                        start: diagnostic.primary.start,\n                        end: diagnostic.primary.end,\n                        label: String::new(),\n                    },\n                    related: diagnostic\n                        .related\n                        .into_iter()\n                        .map(|span| sifr_sql_contract::ProviderDiagnosticSpan {\n                            kind: \"sifr\".into(),\n                            document: span.document,\n                            start: span.start,\n                            end: span.end,\n                            label: String::new(),\n                        })\n                        .collect(),\n                };\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0de8578b952f1b14abf88cebbcf91c5c396124b24a1005a8eeaa127743bc846f"
             }
           ]
         },
@@ -10221,8 +10221,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_postgresql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = sifr_sql_contract::ProviderSemanticDiagnostic {\n                    code: diagnostic.code.as_str().into(),\n                    message: diagnostic.message,\n                    primary: sifr_sql_contract::ProviderDiagnosticSpan {\n                        kind: \"sql-template\".into(),\n                        document: diagnostic.primary.document,\n                        start: diagnostic.primary.start,\n                        end: diagnostic.primary.end,\n                        label: String::new(),\n                    },\n                    related: diagnostic\n                        .related\n                        .into_iter()\n                        .map(|span| sifr_sql_contract::ProviderDiagnosticSpan {\n                            kind: \"sifr\".into(),\n                            document: span.document,\n                            start: span.start,\n                            end: span.end,\n                            label: String::new(),\n                        })\n                        .collect(),\n                };\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0de8578b952f1b14abf88cebbcf91c5c396124b24a1005a8eeaa127743bc846f"
             }
           ]
         },
@@ -10239,8 +10239,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_postgresql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = sifr_sql_contract::ProviderSemanticDiagnostic {\n                    code: diagnostic.code.as_str().into(),\n                    message: diagnostic.message,\n                    primary: sifr_sql_contract::ProviderDiagnosticSpan {\n                        kind: \"sql-template\".into(),\n                        document: diagnostic.primary.document,\n                        start: diagnostic.primary.start,\n                        end: diagnostic.primary.end,\n                        label: String::new(),\n                    },\n                    related: diagnostic\n                        .related\n                        .into_iter()\n                        .map(|span| sifr_sql_contract::ProviderDiagnosticSpan {\n                            kind: \"sifr\".into(),\n                            document: span.document,\n                            start: span.start,\n                            end: span.end,\n                            label: String::new(),\n                        })\n                        .collect(),\n                };\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0de8578b952f1b14abf88cebbcf91c5c396124b24a1005a8eeaa127743bc846f"
             }
           ]
         },
@@ -10257,8 +10257,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_postgresql/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = sifr_sql_contract::ProviderSemanticDiagnostic {\n                    code: diagnostic.code.as_str().into(),\n                    message: diagnostic.message,\n                    primary: sifr_sql_contract::ProviderDiagnosticSpan {\n                        kind: \"sql-template\".into(),\n                        document: diagnostic.primary.document,\n                        start: diagnostic.primary.start,\n                        end: diagnostic.primary.end,\n                        label: String::new(),\n                    },\n                    related: diagnostic\n                        .related\n                        .into_iter()\n                        .map(|span| sifr_sql_contract::ProviderDiagnosticSpan {\n                            kind: \"sifr\".into(),\n                            document: span.document,\n                            start: span.start,\n                            end: span.end,\n                            label: String::new(),\n                        })\n                        .collect(),\n                };\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0de8578b952f1b14abf88cebbcf91c5c396124b24a1005a8eeaa127743bc846f"
             }
           ]
         }
@@ -10292,8 +10292,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_sqlite/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         },
@@ -10310,8 +10310,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_sqlite/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         },
@@ -10328,8 +10328,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_sqlite/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         },
@@ -10346,8 +10346,8 @@
               "kind": "code",
               "path": "crates/sifr_sql_sqlite/src/guest.rs",
               "scope": "analyze",
-              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let Ok(response) = crate::execute_embedded_request(request) else {\n            return Vec::new();\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
-              "context_fingerprint": "0cead04ada41d34caae2c2eeb4999c97cde27e78acb7856247a3dcd48b77f98a"
+              "quote": "fn analyze(request: Vec<u8>) -> Vec<u8> {\n        let Ok(request) = serde_json::from_slice::<EmbeddedAnalysisRequest>(&request) else {\n            return Vec::new();\n        };\n        let response = match crate::execute_embedded_request(request.clone()) {\n            Ok(mut response) => {\n                if sifr_sql_contract::project_provider_diagnostics(&request, &mut response).is_err()\n                {\n                    return Vec::new();\n                }\n                response\n            }\n            Err(diagnostic) => {\n                let semantic = diagnostic.semantic();\n                let Ok(response) =\n                    sifr_sql_contract::provider_diagnostic_response(&request, &semantic)\n                else {\n                    return Vec::new();\n                };\n                response\n            }\n        };\n        serde_json::to_vec(&response).unwrap_or_default()\n    }",
+              "context_fingerprint": "0da9584b4c9d0029e9e007d7aa23d48a9b9b3bb7842f343a97356966977661ba"
             }
           ]
         }
