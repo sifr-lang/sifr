@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.10 merged; V0.11 current E2E failure reconciliation
+current_stage: V0.11a callable-field repair validated; remaining runtime dispatch failures open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -185,7 +185,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
-| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Current inventory in progress; three nominal-accessor cases already fixed by V0.7 |
+| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Current complete inventory: 16 failures after V0.7; V0.11a callable-field repair validated, 15 runtime-dispatch investigations open |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
@@ -2066,3 +2066,48 @@ E2E corpus; formatting, file-size, area and method-authority checks/self-tests;
 one scoped independent review. Intermediate checks follow the approved
 phase-end full-gate policy. No frontend/ABI/profile/test-selection changes are
 part of this item.
+
+
+### V0.11a final validation and review
+
+Implementation `1bb2e0080c91d1d85d96f20e0687affa74ea765e`, PR #4373,
+base `2c6adad497949b4a7855c5e26f150e62609916b7`:
+
+- `v011a-callable-codegen`: both new regressions pass; 343.536747 seconds outer,
+  341 seconds preparation and 0.01 seconds execution. This first focused run
+  used `21018c3bee8e3176e0df04d6436dad3e55147c7e`; the only subsequent change
+  was the method-policy graph fingerprint record.
+- `v011a-codegen-all`: **1,772 passed, zero failed/ignored/filtered** on the final
+  candidate; all 1,770 prior tests retained plus the two new regressions.
+  17.249008 seconds outer / 14.45 seconds execution with preparation retained.
+  Reconciliation includes expected-panic tests; `v011a-codegen-inventory.json`.
+- `v011a-native-callables`: all five named fixtures pass source compilation,
+  native compilation and runtime assertions, including unchanged original
+  `callable_struct_field`, the new `callable_field_call_contexts`, disjoint
+  sibling invocation, structural records and callable borrow conventions.
+  273.101182 seconds outer / 255 seconds Cargo preparation / 9.762989 seconds
+  E2E suite. These are stages of one invocation, not an additional full gate.
+- `v011a-negative-all`: **all 569 compile-fail fixtures pass**, 9.246338 seconds
+  outer. Expected diagnostic assertions remain intact.
+- `v011a-guards-final`: formatting, 900-line guard, all area manifests, method
+  authority inventory and its 17 mutation/self-tests pass; 51.414921 seconds.
+  The first `v011a-guards` failed on stale graph context fingerprints and is
+  preserved. No policy classification, role, signature, relationship or reference
+  identity changed: 6,391 sites and 234 graph nodes remain; hashes change only
+  in the edited function or references from its context. Reconciliation:
+  `v011a-policy-graph-reconciliation.json`.
+
+Independent review: **SATISFIED**, no blocking findings; raw report at
+`reviews/1bb2e0080c91d1d85d96f20e0687affa74ea765e/review.md`. Its pending-test
+conditions are now fulfilled by the receipts above. The optional structural
+recursive-call test suggestion is a separate coverage enhancement; existing
+structural-record native and codegen assertions remain passing. Review is not
+final phase acceptance. `v011a-final-validation.json` binds receipt/log hashes,
+retained/added test identities, native fixture identities, negative count and
+review hash. No required skips, resource stops, leaked workers or unexpected
+tracked changes occurred in the final checks.
+
+The original E0599 is repaired without changing its fixture or relaxing method
+authority. Fifteen current source-emission failures remain for the next bounded
+V0.11 item; other V0/V1–V5 work and full final gates remain open. This change
+establishes correctness, not a compiler-preparation speed improvement.
