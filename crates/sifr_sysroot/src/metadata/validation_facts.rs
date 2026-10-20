@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 
 type References = Arc<[(RecordId, u16)]>;
-const MAX_FACT_BYTES: u64 = 8 * 1024 * 1024;
+const MAX_FACT_BYTES: u64 = 32 * 1024 * 1024;
 // Covers the key, Arc, FIFO slot and conservative map/node allocation overhead.
 const ENTRY_OVERHEAD: u64 = 256;
 
@@ -39,7 +39,6 @@ impl ValidationFacts {
         store: &MetadataStore,
         id: RecordId,
         entry: &Entry,
-        root_bytes: Option<&[u8]>,
     ) -> Result<References> {
         if let Some(refs) = self.records.get(&id) {
             #[cfg(test)]
@@ -48,17 +47,10 @@ impl ValidationFacts {
             }
             return Ok(Arc::clone(refs));
         }
-        let owned;
-        let bytes = match root_bytes {
-            Some(bytes) => bytes,
-            None => {
-                owned = store.read_payload(entry)?;
-                &owned
-            }
-        };
+        let bytes = store.read_payload(entry)?;
         // This performs canonical decoding and all field validation. Failed facts
         // are never retained. Reference kinds and graph verdicts remain caller-owned.
-        let refs: References = super::decode::references(store, entry.kind, bytes)?.into();
+        let refs: References = super::decode::references(store, entry.kind, &bytes)?.into();
         let retained_charge = charge(&refs);
         if retained_charge <= self.limit {
             while self.bytes > self.limit - retained_charge {

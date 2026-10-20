@@ -129,19 +129,30 @@ impl MetadataStore {
     /// structural type cycles and excessive depth/work are rejected before a
     /// provider may project them into owned compiler values.
     pub(super) fn validate_graph(&self, root: RecordId, root_bytes: &[u8]) -> Result<()> {
-        // Lazy consumers retain their existing decode/read accounting. Facts are
-        // shared only by complete validation, not across demanded records.
-        self.validate_graph_with_facts(
-            root,
-            Some(root_bytes),
-            &mut super::validation_facts::ValidationFacts::new(0),
-        )
+        // Lazy consumers keep the original payload and decode path, with no fact
+        // cache or shared-reference allocation added to demanded traversal.
+        self.validate_graph_records(root, |id, entry| {
+            let owned;
+            let bytes = if id == root {
+                root_bytes
+            } else {
+                owned = self.read_payload(entry)?;
+                &owned
+            };
+            super::decode::references(self, entry.kind, bytes)
+        })
     }
     pub(super) fn validate_graph_with_facts(
         &self,
         root: RecordId,
-        root_bytes: Option<&[u8]>,
         facts: &mut super::validation_facts::ValidationFacts,
+    ) -> Result<()> {
+        self.validate_graph_records(root, |id, entry| facts.references(self, id, entry))
+    }
+    fn validate_graph_records<R: AsRef<[(RecordId, u16)]>>(
+        &self,
+        root: RecordId,
+        mut references: impl FnMut(RecordId, &super::container::Entry) -> Result<R>,
     ) -> Result<()> {
         let root_kind = self
             .directory
@@ -177,11 +188,10 @@ impl MetadataStore {
             if work > self.limits.retained_bytes {
                 return Err(err("demanded graph exceeds decode work budget"));
             }
-            let refs =
-                facts.references(self, id, entry, if id == root { root_bytes } else { None })?;
+            let refs = references(id, entry)?;
             colors.insert(id, 1);
             stack.push((id, true, depth));
-            for &(child, kind) in refs.iter().rev() {
+            for &(child, kind) in refs.as_ref().iter().rev() {
                 if self.directory.get(&child).is_none_or(|e| e.kind != kind) {
                     return Err(err("missing or wrong-kind graph reference"));
                 }

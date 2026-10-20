@@ -98,10 +98,10 @@ fn each_root_keeps_depth_and_work_limits_after_earlier_success() {
             store.limits.retained_bytes = work;
             let mut facts = ValidationFacts::new(budget);
             store
-                .validate_graph_with_facts(reference::<Type>(2).id, None, &mut facts)
+                .validate_graph_with_facts(reference::<Type>(2).id, &mut facts)
                 .unwrap();
             assert_eq!(
-                store.validate_graph_with_facts(reference::<Type>(3).id, None, &mut facts),
+                store.validate_graph_with_facts(reference::<Type>(3).id, &mut facts),
                 Err(err(error)),
             );
             assert_eq!(

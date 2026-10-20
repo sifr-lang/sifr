@@ -325,7 +325,7 @@ impl MetadataStore {
     /// Producer qualification checks every payload without retaining decoded records.
     pub fn validate_complete(&self) -> Result<()> {
         let mut facts =
-            super::validation_facts::ValidationFacts::new(self.limits.retained_bytes / 8);
+            super::validation_facts::ValidationFacts::new(self.limits.retained_bytes / 2);
         self.validate_complete_with_facts(&mut facts)
     }
     pub(super) fn validate_complete_with_facts(
@@ -333,7 +333,7 @@ impl MetadataStore {
         facts: &mut super::validation_facts::ValidationFacts,
     ) -> Result<()> {
         for (id, entry) in &self.directory {
-            let references = facts.references(self, *id, entry, None)?;
+            let references = facts.references(self, *id, entry)?;
             for &(reference, kind) in references.iter() {
                 if self
                     .directory
@@ -343,7 +343,7 @@ impl MetadataStore {
                     return Err(err("missing or wrong-kind complete record reference"));
                 }
             }
-            self.validate_graph_with_facts(*id, None, facts)?;
+            self.validate_graph_with_facts(*id, facts)?;
         }
         Ok(())
     }
