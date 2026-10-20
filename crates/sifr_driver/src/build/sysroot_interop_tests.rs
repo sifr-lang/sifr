@@ -172,8 +172,15 @@ fn merged_user_and_private_stdlib_interop_both_resolve() {
 
     let (generated, context) = attach_stdlib_rust_interop(
         generated,
-        Some(package.bind(user_context())),
+        Some(package.bind(user_context(&root))),
         &stdlib_interop,
+    );
+    assert_eq!(
+        context
+            .as_ref()
+            .expect("merged context")
+            .sysroot_runtime_crate,
+        Some(root.resolved().paths.runtime_crate)
     );
     let generated =
         apply_package_rust_interop_metadata(generated, context).expect("merged interop resolves");
@@ -214,7 +221,7 @@ fn merged_user_and_private_stdlib_interop_keeps_user_trust_separate() {
         "app",
         "@rust(bridge.user_noop, panic=trusted_no_panic)\ndef user_noop() -> None:\n    pass\n",
     );
-    let mut context = user_context();
+    let mut context = user_context(&root);
     let app_package_id = context
         .module_packages
         .get("app")
@@ -287,7 +294,7 @@ fn user_interop(module_name: &str, source: &str) -> InteropBuildPlan {
     sifr_codegen::interop_build_plan_for_named_modules([(Some(module_name), &lowered.module)])
 }
 
-fn user_context() -> PackageRustInteropContext {
+fn user_context(root: &TempSysroot) -> PackageRustInteropContext {
     let package_id = SifrPackageId("sifr-app@0.1.0#path".to_string());
     let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
     let package = SifrPackageMetadata {
@@ -346,16 +353,9 @@ fn user_context() -> PackageRustInteropContext {
                 display_path: "/ws/app/sifr/app.sifr".to_string(),
             },
         )]),
-        sysroot_runtime_crate: Some(test_runtime_crate()),
+        sysroot_runtime_crate: Some(root.resolved().paths.runtime_crate),
         sysroot_trust: None,
     }
-}
-
-fn test_runtime_crate() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("driver crate should have crates parent")
-        .join("sifr_runtime")
 }
 
 fn base_project() -> GeneratedBinaryProject {
