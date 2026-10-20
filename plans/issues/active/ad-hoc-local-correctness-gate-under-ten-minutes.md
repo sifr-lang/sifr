@@ -2147,3 +2147,37 @@ V0.11a addition), complete compile-fail corpus, required fmt/file-size/area/meth
 policy checks and scoped independent review. Preserve intermediate failures;
 full final create-PR/merge gates and V5 remain mandatory at phase end. Separate
 recorded lexical/opaque ABI follow-ups remain outside this dispatch repair.
+
+
+### V0.11b diagnostic result and implementation boundary
+
+Test-only candidate `00d9570b56a92c9c5e9fe6ab236ff602a5552579`:
+`v011b-runtime-codegen-baseline` completed in 290.906024 seconds and reproduced
+all fifteen failures while the five passing controls remained clean. The twelve
+explicit errors are typed builtin declines for AsyncGenerator `aclose`, JoinSet
+add/CPU/blocking helpers, TaskGroup CPU/context and TaskScope blocking helpers.
+Network and both process fixtures expose a missing TryExcept statement; the
+TryExcept boolean entrypoint collapses nested `Err` into `false`, so their actual
+nested cause is not yet established. Preserve raw HIR-bearing error lines and
+`v011b-runtime-diagnostics.json`; do not claim three additional causes from a
+masked diagnostic. Keep the same aggregate regression to test the hypothesis.
+
+Implement explicit typed registry support for the missing runtime helper
+contracts, with exact receiver identity and arity. Share canonical TaskScope/
+TaskGroup type construction between lowering and codegen; retain the existing
+frontend authority. Route task-owner calls through the normal contextual
+receiver/argument machinery instead of the restricted leaf shortcut. Keep
+already working task join/cancel/timeout and JoinSet terminal paths in scope
+for regression checks, without a general Rust-method fallback. Preserve
+move-only handles, real coroutine argument adaptation and reusable context
+values. Correct JoinSet's rewritten `__sifr_add_task` and
+`__sifr_add_blocking_task` classification to mutable receivers and their known
+growth effect, matching the runtime's `&mut self` contract. Retain checked place
+validation rather than bypassing it in the backend.
+
+Add canonical-owner/type collision and arity controls, strict authority controls,
+and focused mutation metadata tests. Run affected type-system/lowering checks
+in addition to the original acceptance list. If the three TryExcept failures
+survive this repair, record their detailed cause and explicitly reconcile their
+V0.12 ownership before broadening implementation. No production diagnostic
+interface change is authorized by this boundary.
