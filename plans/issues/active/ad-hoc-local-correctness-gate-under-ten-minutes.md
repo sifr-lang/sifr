@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.11a callable-field repair validated; remaining runtime dispatch failures open
+current_stage: V0.11a merged; V0.11b runtime method diagnostics and typed dispatch
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -2111,3 +2111,39 @@ The original E0599 is repaired without changing its fixture or relaxing method
 authority. Fifteen current source-emission failures remain for the next bounded
 V0.11 item; other V0/V1–V5 work and full final gates remain open. This change
 establishes correctness, not a compiler-preparation speed improvement.
+
+
+V0.11a merged as #4373 at `d1c69e325457ce64594a61091ab2cb258a4c183e`.
+
+### V0.11b bounded scope: admitted runtime method emission
+
+Own the fifteen source-emission failures reproduced by the complete current
+positive suite: async-generator close (2), JoinSet add/spawn/terminal scenarios
+(6), TaskGroup CPU (2), TaskScope blocking (1), task context (1), scoped process
+(2), and HTTP/TLS loopback (1). Start with a single aggregate driver/codegen
+regression using the existing demanded-stdlib frontend/codegen helper and the
+unchanged fixtures. Require zero lowering error counts and no generated
+`compile_error!`; retain detailed per-fixture error evidence and collect all
+failures before asserting. Do not infer successful codegen from the presence
+of runtime support definitions alone. Include already passing task/async
+controls. This diagnostic step does not change production code or public
+compiler diagnostics.
+
+Static inspection suggests two dispatch gaps requiring validation: runtime
+builtin methods missing from registry handling, and task-owner shortcuts that
+accept only a subset of validated argument expression shapes. The generated
+runtime already implements the methods. Establish the concrete failing methods,
+receiver identities, argument conventions and runtime signatures before repair.
+Register the implementation boundary from that evidence. Retain canonical
+frontend authority, typed owner identity, argument/place/ownership semantics,
+method arity and strict decline; no arbitrary method fallback or compatibility
+route. Coordinate with V0.12 only if a demonstrated common cause requires it.
+
+Named acceptance for the eventual implementation: new aggregate codegen
+regression, focused wrong-owner/arity/authority/collision and ownership controls,
+all codegen library tests, unchanged fifteen native E2E fixtures plus related
+passing controls, all positive E2E fixtures after integration (now 730 with the
+V0.11a addition), complete compile-fail corpus, required fmt/file-size/area/method
+policy checks and scoped independent review. Preserve intermediate failures;
+full final create-PR/merge gates and V5 remain mandatory at phase end. Separate
+recorded lexical/opaque ABI follow-ups remain outside this dispatch repair.
