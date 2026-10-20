@@ -27101,7 +27101,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lib_project_codegen.rs::generate_rust_multi_with_metadata::literal-comparison::1",
-      "fingerprint": "f2d6df97c9d6fda7db62d0cc5b63641ff6bbc376467a5b5f5ce811e6b583ce76",
+      "fingerprint": "4d968b511b999ea21654d28aba3fba63c7c3e1733071d03d7f908f656020925c",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "let module_public = * module_name != \"main\"",
@@ -27113,7 +27113,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lib_project_codegen.rs::generate_rust_multi_with_metadata::literal-comparison::2",
-      "fingerprint": "389a6260919226dc233778feab71cf6caa8a3cfc2477c574118b2f3789d9d2bf",
+      "fingerprint": "a364df91432e44d3bad14fb92031ada1fb7c907aeec0c1093354b6a07ad98651",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "source ) | ( if name == \"main\"",
@@ -27437,7 +27437,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lib_test_project_codegen.rs::generate_rust_test_project_with_metadata::literal-comparison::1",
-      "fingerprint": "eaa88f8867b2f42c46ce13e1326c791f9bf1512cc2404c141647a1bb1ac7024d",
+      "fingerprint": "92f4fc0acc075308138d80c6ec7d0d6a1a0726506a6d6d1a7f4af8707fd0f797",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "source ) | ( if name == \"main\"",
