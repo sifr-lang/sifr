@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.14b1 accepted; V0.16c deterministic lowering-error control
+current_stage: V0.16c accepted; V0.14b2 production child lease ownership next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -191,12 +191,12 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Split into V0.14a preparation prerequisites and V0.14b process lease inheritance |
 | V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Merged #4378; declared prerequisites, 114 LSP and two native bridge tests, runner controls and review pass |
 | V0.14b | Process lease inheritance limited to the intended consuming children | E2E migration accepted in V0.14b1; production migration remains V0.14b2 |
-| V0.14b1 | Explicit E2E suite child lease ownership | Accepted: PR #4379; focused checks, all 732 positives and scoped review pass |
+| V0.14b1 | Explicit E2E suite child lease ownership | Merged #4379; focused checks, all 732 positives and scoped review pass |
 | V0.14b2 | Explicit production child lease ownership | Pending: native families/publication/resolution/artifact and semantic owners |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 | V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
-| V0.16c | Deterministic canonical lowering-error negative control | Pending: replace stale dependence on an already repaired positive fixture |
+| V0.16c | Deterministic canonical lowering-error negative control | Accepted #4380; driver boundary, all 64 ordinary E2E tests and scoped review pass |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -2834,3 +2834,88 @@ qualification has been claimed.
 Evidence: `v014b1-final-acceptance.json`, all named raw receipts and command specs,
 `v014b1-fork-transition-proof.json`, `v014b1-guard-reconciliation.json`, both raw
 reviews, and `reviews/ed625d0816507a86274e2847572863905ca04e45/review.md`.
+
+
+### V0.16c bounded scope and acceptance
+
+V0.14b1 merged as `e58a6355e4c44eff9dcb1550827a03d3de1570c9`
+([PR #4379](https://github.com/sifr-lang/sifr/pull/4379)). V0.16c starts there.
+Its root cause is a negative test depending on a temporary compiler deficiency:
+V0.7 repaired the positive enum fixture, but the old harness test still demanded
+its failure. The production lowering-error rejection is unchanged and remains
+required. No compiler behavior, fixture expectation, supported feature or runtime
+assertion may be weakened to make this test pass.
+
+Replace that dependency with private driver tests of the actual
+`resolve_single_file_metadata` boundary. Generate real valid codegen output, then
+exercise statement, expression and item lowering errors separately and together,
+checking canonical diagnostics and refusal to continue native preparation. Include
+zero-error success and a warmed-resolution control so a successful prior resolution
+cannot bypass error admission. Keep an E2E assertion that actual compiler diagnostics
+propagate as fixture failure before native planning. The repaired enum stays in the
+full positive corpus with all original assertions. No production test hooks or new
+public APIs are needed.
+
+Acceptance: focused driver boundary controls, affected E2E diagnostic/isolation
+checks, formatting/file-size/area/method guards, then the complete ordinary E2E test
+binary with its original corpus/runtime/harness assertions. Record explicit helper
+and separately qualified session ignores as such; never call them executed unless
+their parent control invoked them. Preserve the original stale failure and any new
+failure, run each diagnostic category under the 30-minute cap, and retain compiler
+preparation separately. Network preparation may fetch the published candidate's
+locked portable source graph. Obtain scoped independent review. Full final phase
+gates and V0.14b2/V1–V5 remain required.
+
+
+### V0.16c focused acceptance
+
+[PR #4380](https://github.com/sifr-lang/sifr/pull/4380) accepts implementation
+`3aa646507003b44fdd58e5b238c97b744beedd44` under the approved intermediate policy.
+The lowering-error control no longer depends on the repaired positive enum fixture.
+Private driver tests exercise each real production-boundary counter independently
+and together, before and after successful resolution, with exact diagnostic code,
+severity, count and message. The E2E control preserves actual compiler diagnostics
+as a fixture failure before native planning. Both strict no-Cargo assertions run
+in isolated exact-test subprocesses; unrelated parallel tests cannot pollute their
+process-wide trace. No production behavior, public API or positive fixture changed.
+
+| Final-candidate category | Result | Outer elapsed |
+| --- | --- | ---: |
+| Driver test preparation | Pass | 63.745s |
+| Driver boundary | Pass; all eight counter combinations and zero-error control | 6.189s |
+| E2E preparation | Pass | 72.941s |
+| Isolation controls | Four pass; eight workers | 3.689s |
+| Formatting/file-size/area/method guards | Pass | 55.744s |
+| Complete ordinary E2E through Cargo | 64 pass; zero failed; three explicit ignores | 223.311s |
+
+The complete ordinary E2E invocation has no filter or skip. It executes all 732
+positive, 569 negative and six runtime-failure fixtures, eight native parity cases,
+structured-lowering ratios, emitted-code safety, portable relocation, cache,
+isolation and harness assertions. The positive suite itself took 113.638s. Two
+ignored subprocess helpers are invoked and asserted by their parent controls; the
+separately qualified full-corpus session-equivalence oracle is not executed here.
+All accepted receipts have no safety stop, leftover process group or source mutation.
+These retained-build diagnostic times are not a matched speedup measurement or a
+complete verification-gate total.
+
+Independent remediation review is **SATISFIED**, keyed externally by the exact
+implementation candidate. Its complete ordinary-E2E condition is now satisfied.
+The initial review correctly rejected unisolated process-wide Cargo tracing; it
+remains preserved. The capacity-blocked preflight is not execution. A subsequent
+direct-binary diagnostic used the workspace working directory instead of Cargo's
+crate directory: four fixture-dependent tests failed and some missing-directory
+branches returned early. That attempt remains failed/incomplete; its nominal
+passes are not corpus coverage. The corrected complete Cargo invocation above
+supersedes it without changing its classification.
+
+Capacity recovery archived only checksum-verified obsolete test executables with
+no live consumers. Their raw receipts and bytes are retained. Evidence includes
+`v016c-final-acceptance.json`, command specs and receipts, both reviews,
+`v016c-full-e2e-launch-diagnosis.json`, and
+`reviews/3aa646507003b44fdd58e5b238c97b744beedd44/review.md`.
+
+Follow-ups: V4 owns fail-closed missing-corpus admission, bounded driver test-child
+execution and measured compiler-identity/test compilation costs. V3 retains the
+remaining reusable native fixture ownership migration. V0.14b2 production child
+leases are next. V1–V5 and the complete final create-PR/merge gates remain open;
+this acceptance does not establish the whole phase's sub-ten-minute objective.

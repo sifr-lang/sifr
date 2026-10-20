@@ -218,21 +218,59 @@ fn test_isolation_preserves_failure_and_recovers_healthy_sibling() {
 }
 
 #[test]
-fn test_structured_lowering_error_is_canonical_before_native_build() {
-    let source = std::fs::read_to_string("tests/e2e/pass/enum_value_property.sifr").unwrap();
-    let result =
-        sifr_driver::compile_with_metadata(&sifr_driver::CompilerContext::for_test(), &source);
-    match result {
-        sifr_driver::CompileResultFull::Errors { errors } => {
-            assert!(
-                errors
-                    .iter()
-                    .any(|e| e.message.contains("Rust lowering failed:"))
-            );
-        }
-        sifr_driver::CompileResultFull::Success { .. } => {
-            panic!("nonzero lowering error counters returned success")
-        }
+fn test_canonical_compiler_errors_stop_before_native_build() {
+    // Cargo tracing is process-wide. Keep the strict absence assertion isolated
+    // from other E2E tests without serializing their actual work.
+    const CHILD: &str = "SIFR_CANONICAL_ERROR_CONTROL_CHILD";
+    if env::var_os(CHILD).is_none() {
+        let mut command = Command::new(env::current_exe().expect("test executable"));
+        command.args([
+            "e2e_support::batch_isolation_tests::test_canonical_compiler_errors_stop_before_native_build",
+            "--exact", "--nocapture", "--test-threads=1",
+        ]).env(CHILD, "1");
+        let output = run_capture_bounded(command, Duration::from_secs(60));
+        assert!(output.status_ok, "{}\n{}", output.stdout, output.stderr);
+        assert!(
+            output.stdout.contains("1 passed; 0 failed"),
+            "{}",
+            output.stdout
+        );
+        return;
+    }
+    let source = "def main():\n    unknown_lowering_control\n";
+    let errors =
+        match sifr_driver::compile_with_metadata(&sifr_driver::CompilerContext::for_test(), source)
+        {
+            sifr_driver::CompileResultFull::Errors { errors } => errors,
+            sifr_driver::CompileResultFull::Success { .. } => {
+                panic!("undefined name compiled successfully")
+            }
+        };
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("unknown_lowering_control"))
+    );
+    let fixture = FixtureCase {
+        name: "canonical_error_control".into(),
+        path: PathBuf::from("canonical_error_control.sifr"),
+        source: source.into(),
+        source_hash: deterministic_hash(source),
+        _expected_stderr: Vec::new(),
+    };
+    let (result, invocations) =
+        sifr_driver::capture_cargo_invocations(|| compile_fixture(&fixture));
+    assert!(
+        invocations.is_empty(),
+        "failed source reached Cargo: {invocations:?}"
+    );
+    let failure = result.expect_err("compiler errors must not produce a native batch member");
+    assert!(failure.starts_with("sifr compilation failed:"));
+    for error in errors {
+        assert!(
+            failure.contains(&error.message),
+            "lost canonical diagnostic: {failure}"
+        );
     }
 }
 
