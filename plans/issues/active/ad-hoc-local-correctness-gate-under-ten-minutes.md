@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16b accepted; V0.14 process leases and preparation ordering
+current_stage: V0.16b merged; V0.14a explicit Python preparation prerequisites
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -188,10 +188,12 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b merged #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Merged #4375; complete named acceptance and scoped review pass |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Merged #4376; focused acceptance and scoped review pass |
-| V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
+| V0.14 | Process lease inheritance and complete preparation dependency ordering | Split into V0.14a preparation prerequisites and V0.14b process lease inheritance |
+| V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Current: bind preparation and failure propagation; retain independent continuation |
+| V0.14b | Process lease inheritance limited to the intended consuming children | Pending: preserve killed-owner protection without unrelated child inheritance |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
-| V0.16b | Application-profile fixture inventory reconciliation | Accepted: exact three-entry reconciliation; full runner self-test, profile plans, guards and review pass; PR #4377 |
+| V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -2612,3 +2614,35 @@ Evidence lives in the external implementation bundle: `v016b-final-acceptance.js
 V4 owns consolidating inventory maintenance so fixture additions cannot leave
 parallel declarations stale; this repair retains the current exact-corpus guard.
 Next bounded item is V0.14. Full final phase gates and V5 remain open.
+
+
+### V0.14a bounded scope and acceptance
+
+V0.16b merged as `5c40661094e51a83394703caad238167f52186e6` through
+[PR #4377](https://github.com/sifr-lang/sifr/pull/4377). V0.14a starts from this
+base and fixes only preparation dependency ownership. Existing LSP fixtures and
+Python bridge archive tests consume the pinned Python area's `.venv`. The current
+planner can leave SQL incremental-editor and full crate consumers eligible after
+Python example preparation fails, because their environment prerequisite is only
+an incidental effect of another area's preparation.
+
+Add one explicit locked environment preparation node when a selected consumer
+needs it. Bind the Python area, selected SQL LSP test graph and selected driver/LSP
+crate graphs to their actual prerequisite. Keep environment preparation separate
+from building/running compiled Python examples. Preserve exact tool/dependency
+pins, fixture interpreter authority and caller Cargo storage/flags. Do not create
+a fallback environment, weaken missing-environment failures, or remove Python
+assertions. Keep independent preparation and execution eligible after a normal
+failed prerequisite; safety/resource/cancellation failures retain current stopping
+semantics. General process lease inheritance is separately owned by V0.14b.
+
+Acceptance: reproduce the canonical graph's missing dependency; test environment
+selection, exact commands/pins/storage, SQL-only and crate-only selection, no-demand
+selection, prerequisite failure and independent continuation. Run the full runner
+self-test and existing preparation/area setup controls, validate unchanged emitted
+selection plans, and required guards. Execute actual locked environment preparation
+with unchanged manifest/lock hashes, then the affected LSP and bridge archive test
+consumers under their original assertions and the per-category diagnostic cap.
+Scoped independent review remains required. Environment bootstrap and compiler
+preparation are recorded separately; moving preparation earlier is not a speedup.
+Full final phase gates and V5 remain open.
