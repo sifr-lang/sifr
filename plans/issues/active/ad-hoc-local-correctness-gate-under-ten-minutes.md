@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.3a merged; V0.5 awaiting dependency-policy decision
+current_stage: V0.3a merged; V0.5 approved pinned-graph audit in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -178,7 +178,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
-| V0.5 | Maintained Cargo manifest/lock inventory admission | Diagnosed; pinned-owner policy conflict, decision requested |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Approved pinned-verification-graph audit; implementation in progress |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
@@ -445,7 +445,7 @@ all affected dependency/version/lock contracts and their negative controls, full
 `sifr_stdlib_manifest` tests, fmt/file-size checks and scoped independent review.
 The full phase gates remain deferred under the approved policy.
 
-### V0.5 diagnostic and ownership boundary — decision pending
+### V0.5 diagnostic and ownership boundary — policy approved
 
 Baseline `8858bde63f80b3b40860da3b1b7a48b31a91caaa`: the direct dependency target
 runs nine tests, six pass and three fail at tracked inventory admission (6.578s).
@@ -476,11 +476,16 @@ Further declaration inspection also exposes exact older anyhow/serde_json pins i
 `verification/tools/maintainability_builtin_input`. Its
 [architecture owner](ad-hoc-architecture-correctness-current-main.md) explicitly
 requires retaining the locked dependency graph and forbids dependency/API upgrades.
-This is an ownership-policy conflict, not permission to rewrite that graph or
-exclude it silently. The user has been asked whether to retain product version
-rules while adding explicit pinned-verification-graph identity/declaration/checksum
-contracts, rejecting drift, or leave this item blocked for its owners. **No policy
-change is approved or implemented yet.** No dependency version or lockfile changed.
+The user approved **“Audit pinned verification graphs (Recommended)”** on
+2026-10-20, before implementation. Retain product-version checks; admit only
+explicitly named verification graphs against approved manifest/lock identities
+and independently verified official registry checksums. Reject drift. This changes
+the uniform-release policy only for those pinned graphs; it does not authorize
+any dependency upgrade, lockfile change, blanket verification-directory exclusion,
+or weakening of the product contracts. Preserve the separately owned tooling
+pins. Add mutation controls for graph admission, input identity, declarations,
+source/checksum identity and product-policy boundaries. The full affected crate
+and independent review remain required before this bounded item merges.
 
 Evidence: `v05-inventory-before`, `v05-inventory-inspection.json`,
 `v05-all-contracts-inventory-only` (preparation failure),
@@ -489,6 +494,39 @@ Evidence: `v05-inventory-before`, `v05-inventory-inspection.json`,
 experiment was restored from its preserved original bytes after all tests ended;
 its exact patch remains externally reproducible against the recorded base.
 V0.5 is not complete, and the phase has no final-gate or timing acceptance.
+
+
+### V0.5 implementation and validation — review pending
+
+The approved audit covers **153 manifests, 35 locks, 211 direct declarations and
+44 exact maintained owner/lock dependency edges**. The two named verification
+graphs authenticate all **24 manifest/lock inputs** by SHA-256 before receiving
+an exception to uniform product release versions. Their **371 registry release
+identities** are checked against independently retrieved official checksums;
+the full lock identity also retains their exact Git revisions. Every registry
+declaration still participates in the exact path/table/alias/package/requirement
+inventory. Product declaration and resolved-edge version checks remain unchanged.
+No Cargo.toml, Cargo.lock, dependency version or verification tool pin changed.
+
+Fresh official-index retrieval verified all **471 required versions across 379
+packages** with zero missing versions or checksum mismatches. Existing September
+release observations retain their original timestamps; additional locked release
+rows carry the new response digest and observation timestamp. This is checksum
+reconciliation, not a claim that all historic release pins remain today's latest.
+Raw official responses and retrieval receipts are preserved in
+`v05-registry-evidence/` outside the reviewed tree.
+
+Focused audit: **15/15 tests**, 6.619s including preparation. The first full batch
+exposed one remaining stale count (seven rusqlite owners, including the CLI,
+versus six recorded); its failed evidence is retained. Final full crate batch:
+**108/108 tests**, no failures/ignored/filtered tests, **11.128s** including
+preparation (`v05-approved-all-contracts-final`). This retains all 102 original
+tests and adds six pinned-graph mutation/coverage controls. Format passed (19.186s),
+file-size guard passed (7.671s), and source dependency-direction guard passed
+(5.096s). Concurrent guard timings are diagnostic durations, not isolated speedup
+measurements. Six added controls reject missing/changed inputs, scope expansion,
+unapproved registry rows/checksums/sources, and product-version relaxation.
+Independent review and merge remain pending; final phase gates/timing remain open.
 
 ## Execution stages
 
@@ -1000,6 +1038,6 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** resolve the explicit V0.5 pinned-graph policy decision before
+**Next action:** implement the approved V0.5 pinned-graph audit policy before
 dependent implementation. Preserve the external diagnostic patch, failed evidence
 and unchanged dependency graphs. Other V0 repairs and full phase acceptance remain open.

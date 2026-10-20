@@ -114,6 +114,7 @@ pub(crate) fn current_edge(
 pub(crate) fn first_party_edges(name: &str, version: &str) -> BTreeSet<(String, String)> {
     let root = cargo_inventory::root();
     let owners = cargo_inventory::local_owners();
+    let pinned = cargo_inventory::pinned_graphs::approved();
     let mut actual = BTreeSet::new();
     for path in cargo_inventory::maintained_paths("Cargo.lock") {
         let lock = cargo_inventory::read_toml(&root.join(&path));
@@ -147,8 +148,12 @@ pub(crate) fn first_party_edges(name: &str, version: &str) -> BTreeSet<(String, 
                 "{path}: {} has an undeclared registry {name} edge; check alias/source ownership",
                 id.name
             );
-            current_edge(packages, relevant[0], name, version)
-                .unwrap_or_else(|error| panic!("{path}: {}: {error}", id.name));
+            if !pinned.contains(&path) {
+                current_edge(packages, relevant[0], name, version)
+                    .unwrap_or_else(|error| panic!("{path}: {}: {error}", id.name));
+            }
+            // Pinned graphs still participate in exact owner/edge inventory.
+            // Their complete lock identity and official checksums were checked above.
             actual.insert((path.clone(), id.name));
         }
     }

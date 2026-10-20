@@ -10,6 +10,9 @@ mod cargo_inventory;
 #[path = "support/registry_audit.rs"]
 mod registry_audit;
 
+#[path = "support/pinned_graph_tests.rs"]
+mod pinned_graph_tests;
+
 use std::collections::BTreeSet;
 const AUDIT: &str = include_str!("data/rust_latest_stable_registry.json");
 
@@ -34,6 +37,7 @@ fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
     );
     registry_audit::exact_packages(&audit, &declarations).test_unwrap("exact package inventory");
     let releases = registry_audit::releases(&audit).test_unwrap("registry releases");
+    let pinned = cargo_inventory::pinned_graphs::approved();
     let mut expected = Vec::new();
     let mut stale = Vec::new();
     for (name, release) in releases {
@@ -65,7 +69,9 @@ fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
                     .into(),
             };
             assert_eq!(declaration.package, name, "audit owner identity");
-            if !registry_audit::requirement_matches_latest(&declaration.requirement, latest) {
+            if !pinned.contains(&declaration.path)
+                && !registry_audit::requirement_matches_latest(&declaration.requirement, latest)
+            {
                 stale.push(format!(
                     "{} {} {}: {} selects {:?}; official latest is {latest}",
                     declaration.path,
