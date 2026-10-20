@@ -84230,7 +84230,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/native_cache.rs::acquire::literal-comparison::1",
-      "fingerprint": "bd9386ee41c8b131a80b85ba964d02c71a084df78df4c60c2502ead623316062",
+      "fingerprint": "99e3dc5416e0216e4baf99af2d95d9c41f0d24cecaaaf2662ce486a6bc8b1924",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if std :: fs :: read_dir ( & root ) ? . any ( | entry | entry . is_ok_and ( | entry | entry . file_name ( ) != \".locks\" ) )",
@@ -84470,7 +84470,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/pass_suite.rs::run_pass_suite::literal-comparison::1",
-      "fingerprint": "9e9f2975ae7643cc3746bfd1fb1f7cb776ed36e9649ccaf92aa3578910c6ec64",
+      "fingerprint": "c74ea9fe2e67297f035f84d06b68afad998f2f998c087faf356a2e93d1bdc062",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if env :: var ( \"SIFR_E2E_PROFILE\" ) . ok ( ) . as_deref ( ) == Some ( \"release\" )",

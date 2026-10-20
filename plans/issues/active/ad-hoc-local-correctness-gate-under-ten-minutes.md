@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.14a accepted; V0.14b process lease inheritance
+current_stage: V0.14b1 accepted; V0.16c deterministic lowering-error control
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -189,11 +189,14 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Merged #4375; complete named acceptance and scoped review pass |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Merged #4376; focused acceptance and scoped review pass |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Split into V0.14a preparation prerequisites and V0.14b process lease inheritance |
-| V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Accepted: declared prerequisites, 114 LSP and two native bridge tests, runner controls and review pass; PR #4378 |
-| V0.14b | Process lease inheritance limited to the intended consuming children | Pending: preserve killed-owner protection without unrelated child inheritance |
+| V0.14a | Explicit pinned Python environment prerequisite for all selected consumers | Merged #4378; declared prerequisites, 114 LSP and two native bridge tests, runner controls and review pass |
+| V0.14b | Process lease inheritance limited to the intended consuming children | E2E migration accepted in V0.14b1; production migration remains V0.14b2 |
+| V0.14b1 | Explicit E2E suite child lease ownership | Accepted: PR #4379; focused checks, all 732 positives and scoped review pass |
+| V0.14b2 | Explicit production child lease ownership | Pending: native families/publication/resolution/artifact and semantic owners |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 | V0.16b | Application-profile fixture inventory reconciliation | Merged #4377; focused acceptance and scoped review pass |
+| V0.16c | Deterministic canonical lowering-error negative control | Pending: replace stale dependence on an already repaired positive fixture |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -2708,3 +2711,126 @@ Evidence: external `v014a-final-acceptance.json`, `v014a-baseline-graph.json`,
 `v014a-final-graph.json`, `v014a-actual-environment/`, all named receipts, and
 `reviews/4ee052487a2fda39ddbd801127a3f51b0c4af4a0/review.md` with timing/follow-up context.
 V0.14b is next. Full final phase gates and V1–V5 remain open.
+
+
+### V0.14b bounded sequence and V0.14b1 acceptance contract
+
+V0.14a merged as `d594df65e44b958b1da195eb42d1f7f794c7707d`
+([PR #4378](https://github.com/sifr-lang/sifr/pull/4378)).
+V0.14b1 starts from that base and fixes E2E suite lease inheritance. The observed
+parallel native-cache failure is caused by globally clearing CLOEXEC on the
+suite descriptor: unrelated Cargo/fixture children inherit it and prolong ownership.
+V0.14b2 owns the separate migration of production native family, publication,
+resolution, artifact and semantic-storage consumers. V0.14b is incomplete until
+both steps preserve their original ownership contracts.
+
+V0.14b1 scope: add a Unix command-bound lease primitive that leaves parent
+file descriptors close-on-exec, explicitly bind the E2E suite lease to its Cargo
+build/retirement and fixture commands, and pass ownership through normal and
+failure-isolation harness paths. Preserve Windows' existing behavior; foreign
+execution remains outside this local goal. No test serialization, weakened
+lease protection, implicit global registry, changed corpus, skipped assertions,
+or cache-authorized Cargo bypass is permitted. The existing production entry
+lock policy remains visible and owned by V0.14b2 during this bounded migration.
+
+Acceptance: prove unrelated live children do not retain the suite lease while
+intended live children do; prove protection after owner death, release after
+child exit, independent simultaneous owners, command disposal/spawn failure,
+and unchanged parent CLOEXEC state. Run the original native-cache tests with
+parallel workers, affected harness/isolation/lifecycle controls, full positive
+E2E assertions, formatting/file-size and affected method/area guards, then scoped
+independent review. Keep preparation separate from execution and preserve every
+failed/interrupted attempt under the existing 30-minute diagnostic cap. Full
+final phase gates and V5 remain required.
+
+
+### V0.14b1 broader diagnostic and V0.16c owner
+
+The first E2E diagnostic candidate `7cf3bb0930c78bc1793e5d0071c7b901166c9790`
+prepared its binary in 91.462s, passed ten native-cache controls with eight workers
+in 7.691s, and passed all 732 original positive fixtures in 126.256s (suite 119.70s).
+The other E2E batch took 250.901s: 51 passed, two failed, three explicit helper/session
+qualification tests ignored, and eleven tests separately selected in the native-cache
+and positive categories. These observations do not qualify the complete phase.
+
+One failure is preparation: the offline diagnostic could not fetch its newly
+published exact candidate revision for the relocated portable project. Repeat that
+original assertion with network preparation enabled and unchanged locked resolution;
+retain the offline failure. V3 owns explicit input-bound preparation for this graph.
+
+**V0.16c (pending, next after V0.14b1):**
+`test_structured_lowering_error_is_canonical_before_native_build` uses the positive
+`enum_value_property.sifr` fixture as an expected lowering failure. The test body is
+unchanged from the V0.14b1 base, and V0.7 already proved that fixture should compile
+and run. This is a stale negative control, not a lease regression. Replace its
+reliance on an unfixed language feature with a deterministic control of the actual
+canonical lowering-error boundary, retaining proof that nonzero lowering errors
+cannot become successful native preparation. Keep the positive fixture's successful
+compilation/runtime assertions. Do not delete or skip the negative coverage. This
+unrelated control remains failed in the broad diagnostic and required before final
+gates; V0.14b1 acceptance must name its lease/fixture/isolation checks individually.
+
+Initial V0.14b1 review was NOT SATISFIED: two E2E release assertions retained the
+same concurrent pre-exec descriptor race already demonstrated in the primitive
+tests. Remediation bounds only test-side release waits, retains structured
+WouldBlock errors and immediate busy-owner rejection, protects test child cleanup,
+and consolidates cached/standalone fixture command preparation. The real owner-death
+and 30-second live-child negative controls remain. Fresh scoped review and affected
+validation are required after that remediation. Earlier failures and the guard run
+invalidated by an overlapping owned commit remain preserved; frozen guard evidence
+supersedes that invalid attempt only, without reclassifying it as a pass.
+
+
+### V0.14b1 focused acceptance
+
+[PR #4379](https://github.com/sifr-lang/sifr/pull/4379) accepts implementation
+`ed625d0816507a86274e2847572863905ca04e45` under the approved intermediate policy.
+The Unix E2E suite descriptor stays close-on-exec in its owner. Each intended Cargo
+build/retirement and fixture command explicitly receives an owned descriptor whose
+flag changes only in that child. Failure-isolation paths carry the same ownership.
+Unrelated concurrent child commands cannot keep the suite leased after exec. Windows'
+existing handle/Job behavior is unchanged; no foreign execution is claimed.
+
+The process controls retain actual killed-parent protection, independent concurrent
+owners, command reuse, multiple leases, failed spawn/disposal and release on child
+exit. A one-second test-only release wait accounts for transient pre-exec descriptor
+copies; it cannot conceal the 30-second inherited sleeper. Production contention
+still returns immediately. All non-contention errors retain their kind and fail
+the test immediately; the foreign-owner case requires its specific diagnostic.
+The guarded native children are killed and reaped even after assertion failure.
+
+| Final-candidate category | Result | Outer elapsed |
+| --- | --- | ---: |
+| E2E compiler preparation | Pass | 47.733s |
+| Cache-storage ownership controls | 10 pass; eight workers | 1.694s |
+| Original/new native-cache controls | 10 pass; eight workers | 6.198s |
+| Harness behavior controls | 19 pass | 5.189s |
+| Affected isolation/worker controls | Three pass; unrelated V0.16c remains separately failed | 6.183s |
+| Fixture isolation/failure/deadline controls | Four pass | 7.686s |
+| Full original positive E2E corpus | 732 pass; zero failed | 122.756s |
+| Original locked portable relocation assertion | Pass with network preparation | 21.699s |
+| Formatting/file-size/area/method guards | Pass; 17 method guard mutation controls | 46.668s |
+
+Every named final-candidate receipt reports no safety stop, leftover process group
+or source mutation. The full positive corpus still executes all original assertions;
+Cargo remains the freshness authority. Profile selections, generated source and
+application profiles are unchanged. These diagnostic timings are not a matched
+speedup measurement or a complete gate total; the repair removes incorrect lease
+retention and makes concurrent controls reliable.
+
+Independent remediation review is **SATISFIED**, externally keyed by the exact
+candidate; its named execution conditions are now satisfied. The initial NOT
+SATISFIED review, original failed storage attempts, permission failures, inventory
+failure, invalidated overlapping-commit guard run, and broader two-failure E2E batch
+remain preserved. The frozen successful guard runs do not relabel those attempts.
+
+The broader batch's portable assertion was rerun successfully with its actual
+published revision and locked resolution. The stale lowering negative control is
+still a failure owned by V0.16c, not an accepted skip or a phase-level pass. V0.16c is
+next; V0.14b2 and V1–V5 remain open. V3 also retains explicit preparation ownership
+for the portable graph. No complete create-PR/merge gate or sub-ten-minute phase
+qualification has been claimed.
+
+Evidence: `v014b1-final-acceptance.json`, all named raw receipts and command specs,
+`v014b1-fork-transition-proof.json`, `v014b1-guard-reconciliation.json`, both raw
+reviews, and `reviews/ed625d0816507a86274e2847572863905ca04e45/review.md`.

@@ -17,6 +17,29 @@ pub(crate) fn run_single_case_bounded(
     group_root: &Path,
     deadline: Duration,
 ) -> Result<(), String> {
+    execute_fixture(
+        case_command(artifact, fixture, deadline)?,
+        fixture,
+        group_root,
+        deadline,
+    )
+}
+
+pub(super) fn run_cached_case(
+    lease: &super::native_cache::NativeCache,
+    artifact: &Path,
+    fixture: &str,
+    group_root: &Path,
+    deadline: Duration,
+) -> Result<(), String> {
+    let mut command = case_command(artifact, fixture, deadline)?;
+    lease
+        .bind_command(&mut command)
+        .map_err(|error| format!("cannot bind fixture lease: {error}"))?;
+    execute_fixture(command, fixture, group_root, deadline)
+}
+
+fn case_command(artifact: &Path, fixture: &str, deadline: Duration) -> Result<Command, String> {
     if deadline.is_zero() {
         return Err("diagnostic isolation deadline exhausted; fixture blocked".to_owned());
     }
@@ -25,7 +48,7 @@ pub(crate) fn run_single_case_bounded(
     }
     let mut command = Command::new(artifact);
     command.args(["--case", fixture]);
-    execute_fixture(command, fixture, group_root, deadline)
+    Ok(command)
 }
 
 #[expect(clippy::print_stderr, reason = "per-fixture execution timing")]
@@ -35,6 +58,9 @@ pub(super) fn execute_fixture(
     group_root: &Path,
     deadline: Duration,
 ) -> Result<(), String> {
+    if deadline.is_zero() {
+        return Err("diagnostic isolation deadline exhausted; fixture blocked".to_owned());
+    }
     let start = std::time::Instant::now();
     let result = execute_fixture_inner(command, fixture, group_root, deadline);
     eprintln!(

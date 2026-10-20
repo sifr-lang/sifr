@@ -289,9 +289,15 @@ fn suite_lease_excludes_another_run_and_checks_checkout_ownership() {
     assert!(NativeCache::acquire(&root).is_err());
     let owner_path = first.root.join("owner");
     drop(first);
-    assert!(NativeCache::acquire(&root).is_ok());
+    assert!(acquire_after_release(&root).is_ok());
     write_changed(&owner_path, b"another checkout").unwrap();
-    assert!(NativeCache::acquire(&root).is_err());
+    let error = acquire_after_release(&root)
+        .err()
+        .expect("foreign checkout must fail");
+    assert!(
+        error.to_string().contains("another source checkout"),
+        "{error}"
+    );
 }
 
 #[cfg(unix)]
@@ -300,12 +306,15 @@ fn interrupted_owner_cannot_release_a_live_native_child_lease() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path().canonicalize().unwrap();
     let lease = NativeCache::acquire(&root).unwrap();
-    let mut child = Command::new("sleep").arg("30").spawn().unwrap();
+    let mut command = Command::new("sleep");
+    command.arg("30");
+    lease.bind_command(&mut command).unwrap();
+    let child = NativeChild(command.spawn().unwrap());
+    drop(command);
     drop(lease); // Equivalent to the owner process losing its descriptor.
     assert!(NativeCache::acquire(&root).is_err());
-    child.kill().unwrap();
-    child.wait().unwrap();
-    assert!(NativeCache::acquire(&root).is_ok());
+    drop(child);
+    assert!(acquire_after_release(&root).is_ok());
 }
 
 #[test]
@@ -366,5 +375,46 @@ fn invalid_retirement_records_cannot_select_other_packages_or_targets() {
     ] {
         write_changed(&p.project.join("retirement.json"), record.as_bytes()).unwrap();
         assert!(retirement_commands(&p.project, &p.target, "probe").is_err());
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn unrelated_live_children_do_not_keep_the_suite_busy() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().canonicalize().unwrap();
+    let owner = NativeCache::acquire(&root).unwrap();
+    let unrelated = NativeChild(Command::new("sleep").arg("30").spawn().unwrap());
+    drop(owner);
+    let next_owner =
+        acquire_after_release(&root).expect("unrelated child must not retain suite lease");
+    drop(next_owner);
+    drop(unrelated);
+}
+
+// Concurrent forks briefly retain CLOEXEC descriptors until exec. This bound
+// admits that transition but cannot conceal a 30-second live inherited lease.
+fn acquire_after_release(root: &Path) -> std::io::Result<NativeCache> {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
+    loop {
+        match NativeCache::acquire(root) {
+            Err(error)
+                if error.kind() == std::io::ErrorKind::WouldBlock
+                    && std::time::Instant::now() < deadline =>
+            {
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
+            result => return result,
+        }
+    }
+}
+
+#[cfg(unix)]
+struct NativeChild(std::process::Child);
+#[cfg(unix)]
+impl Drop for NativeChild {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
     }
 }

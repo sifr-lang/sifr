@@ -49,6 +49,7 @@ pub(super) fn blocked(group: BatchGroup, config: &RunnerConfig, reason: &str) ->
 }
 
 pub(super) fn isolate_failed_batches(
+    lease: &native_cache::NativeCache,
     original: Vec<GroupBuildOutcome>,
     config: &RunnerConfig,
     toolchain: &ToolchainInfo,
@@ -99,6 +100,7 @@ pub(super) fn isolate_failed_batches(
                 )
             } else {
                 build_batch_group_bounded(
+                    lease,
                     group,
                     config,
                     toolchain,

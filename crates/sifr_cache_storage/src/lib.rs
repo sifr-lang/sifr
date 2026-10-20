@@ -9,3 +9,8 @@ pub mod windows_storage_security;
 pub use unix::*;
 #[cfg(windows)]
 pub use windows::*;
+
+#[cfg(unix)]
+mod child_lease;
+#[cfg(unix)]
+pub use child_lease::inherit_lease_for_command;

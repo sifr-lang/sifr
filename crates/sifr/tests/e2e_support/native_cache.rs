@@ -5,12 +5,21 @@ use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct NativeCache {
-    // Inherited by native children on Unix, including after an interrupted owner.
-    _lease: File,
+    // Only explicitly bound native children inherit this lease on Unix.
+    lease: File,
     pub(crate) root: PathBuf,
 }
 
 impl NativeCache {
+    pub(crate) fn bind_command(&self, command: &mut std::process::Command) -> io::Result<()> {
+        #[cfg(unix)]
+        sifr_cache_storage::inherit_lease_for_command(command, &self.lease)?;
+        // Windows retains its existing inherited-handle and Job ownership policy.
+        #[cfg(windows)]
+        let _ = command;
+        Ok(())
+    }
+
     pub(crate) fn acquire(requested: &Path) -> io::Result<Self> {
         let absolute = if requested.is_absolute() {
             requested.to_path_buf()
@@ -20,10 +29,19 @@ impl NativeCache {
         // A new namespace leaves legacy per-group targets and evidence untouched.
         let root = absolute.join("cargo-v3");
         sifr_cache_storage::directory(&root)?;
+        #[cfg(unix)]
+        let lease = sifr_cache_storage::open_entry_lock(&root, "suite", false)?;
+        #[cfg(windows)]
         let lease = sifr_cache_storage::entry_lock(&root, "suite")?;
-        lease.try_lock().map_err(|error| io::Error::other(format!(
-            "cache is busy or cannot be locked ({}): {error}; choose a separate --cache-dir or wait for its owner", root.display()
-        )))?;
+        lease.try_lock().map_err(|error| {
+            let kind = match &error {
+                std::fs::TryLockError::WouldBlock => io::ErrorKind::WouldBlock,
+                std::fs::TryLockError::Error(error) => error.kind(),
+            };
+            io::Error::new(kind, format!(
+                "cache is busy or cannot be locked ({}): {error}; choose a separate --cache-dir or wait for its owner", root.display()
+            ))
+        })?;
         let owner = sifr_cache_storage::owner_scope()?;
         let owner_bytes = owner.as_os_str().as_encoded_bytes();
         let owner_path = root.join("owner");
@@ -44,10 +62,7 @@ impl NativeCache {
             }
             write_changed(&owner_path, owner_bytes)?;
         }
-        Ok(Self {
-            _lease: lease,
-            root,
-        })
+        Ok(Self { lease, root })
     }
 }
 
