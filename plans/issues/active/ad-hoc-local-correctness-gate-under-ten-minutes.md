@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.13 accepted; V0.16b application-profile fixture inventory
+current_stage: V0.13 merged; V0.16b application-profile fixture inventory
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -187,11 +187,11 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b merged #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Merged #4375; complete named acceptance and scoped review pass |
-| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Accepted: real runtime/generated ASAN execution, actual artifact proof, edit/restore timing and review pass; PR #4376 |
+| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Merged #4376; focused acceptance and scoped review pass |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
-| V0.16b | Application-profile fixture inventory reconciliation | Pending: runner self-test detects three prior E2E additions missing from the 729-entry authority |
+| V0.16b | Application-profile fixture inventory reconciliation | Current: reconcile the exact three prior fixture additions; retain complete-corpus assertions |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -2565,3 +2565,23 @@ both rejected flag implementations are preserved. Review's later-phase condition
 for V0.16b/full gates/V5 is tracked under the approved phase-end policy, not waived.
 Next: reconcile V0.16b's exact three entries, then V0.14 and V1–V5. No complete
 gate or sub-ten-minute claim is made.
+
+
+### V0.16b bounded scope and acceptance
+
+V0.13 merged as `1b326c724a46348369c717e8ba8e4529c7ae2cad` through
+[PR #4376](https://github.com/sifr-lang/sifr/pull/4376). This inventory-only item
+starts from that base. Reconcile the application-profile authority with exactly
+`callable_field_call_contexts.sifr`, `join_set_add_blocking_task.sifr`, and
+`task_context_reuse_across_spawns.sifr`, added by the earlier V0.11 repairs.
+Retain lexical ordering, every existing fixture, full-corpus selection, native-run
+assertions and both development/release application profiles. No source fixture,
+selector, runtime assertion, executable command or profile membership changes.
+
+Acceptance: preserve the failing baseline and prove the exact three-entry delta;
+run DX.10/native selection controls and the full canonical runner self-test;
+validate profiles and compare canonical emitted plans before/after; required
+runner/area guards and a scoped independent review. Prior execution evidence for
+all 732 positive fixtures remains unchanged-source evidence, not a new whole-gate
+pass. Full final phase gates and V5 remain required. V0.14 process/preparation work
+and V3/V4 input-inventory cost stay separate.
