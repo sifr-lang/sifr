@@ -12800,54 +12800,6 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/slice_parameter_cleanup.rs::visit_expr_method_call enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path::literal-comparison::1",
-      "fingerprint": "a56bc457991b784e0f1602a153968260b74c80c2fc451d8b20cf4f272058ceff",
-      "classification": "rust-ir-consumption",
-      "owner": "sifr_codegen",
-      "operation": "segments [ 0 ] == \"crate\"",
-      "inputs": "fn resolve_item_path ( module_path : & [ String ] , path : & syn :: Path )",
-      "outputs": "Option < ItemPath >",
-      "role": "inspect or rewrite generated Rust syntax/IR",
-      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path::literal-comparison::2",
-      "fingerprint": "07ad4f6f13491e7b001849c32fae63ca4d30ccb01fc4f0ce7204f5a7093e4ae2",
-      "classification": "rust-ir-consumption",
-      "owner": "sifr_codegen",
-      "operation": "let mut index = usize :: from ( segments [ 0 ] == \"crate\"",
-      "inputs": "fn resolve_item_path ( module_path : & [ String ] , path : & syn :: Path )",
-      "outputs": "Option < ItemPath >",
-      "role": "inspect or rewrite generated Rust syntax/IR",
-      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path::literal-comparison::3",
-      "fingerprint": "a19e61d7528c4e8b108301e29aef0e5636295b70f1117efa2766e5a81349df84",
-      "classification": "rust-ir-consumption",
-      "owner": "sifr_codegen",
-      "operation": "segments [ 0 ] == \"self\" )",
-      "inputs": "fn resolve_item_path ( module_path : & [ String ] , path : & syn :: Path )",
-      "outputs": "Option < ItemPath >",
-      "role": "inspect or rewrite generated Rust syntax/IR",
-      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path::literal-comparison::4",
-      "fingerprint": "e4d9f03540052856d7394d1c02361db5b3b53f50c576fa97995b9a97001dbd14",
-      "classification": "rust-ir-consumption",
-      "owner": "sifr_codegen",
-      "operation": "while segments . get ( index ) . is_some_and ( | segment | segment == \"super\" )",
-      "inputs": "fn resolve_item_path ( module_path : & [ String ] , path : & syn :: Path )",
-      "outputs": "Option < ItemPath >",
-      "role": "inspect or rewrite generated Rust syntax/IR",
-      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs::resolve_item_path enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup.rs::display_implementation_owners::literal-match::1",
       "fingerprint": "51df8bdd340d9a97082892e37975ea5ec68421e5364289f34c0b4391b850f236",
       "classification": "rust-ir-consumption",
@@ -84872,6 +84824,18 @@
       "role": "inspect or rewrite generated Rust syntax/IR",
       "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::resolve enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::resolve enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/project_borrow_cleanup.rs::ancestry_scalar_borrows_reach_callers_through_reexports::literal-comparison::1",
+      "fingerprint": "e188ceca9b70ade9d12a592601a9174aabc262a7c0b8e7235bd20cfe415bd298",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "_ ) | * name == \"base\" ) . unwrap ( ) . 1",
+      "inputs": "fn ancestry_scalar_borrows_reach_callers_through_reexports ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/project_borrow_cleanup.rs::ancestry_scalar_borrows_reach_callers_through_reexports enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/src/generated_rust_canonicalizer/project_borrow_cleanup.rs::ancestry_scalar_borrows_reach_callers_through_reexports enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }

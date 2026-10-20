@@ -59,11 +59,30 @@ pub(crate) fn rewrite_named_project_borrows(
         }
     }
     let shared_slices = api_cleanup::collect_project_shared_slice_params(&files);
-    let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
+    // Rewriting one call may make its caller borrow-only. Close the complete
+    // project graph before later per-file canonicalization can change that ABI.
+    loop {
+        let before = files
+            .iter()
+            .map(quote::ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>();
+        let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
+        for file in &mut files {
+            syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
+        }
+        let after = files
+            .iter()
+            .map(quote::ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>();
+        if before == after {
+            break;
+        }
+    }
     let mutability_facts = syntax_cleanup::collect_project_mutability_facts(&files);
     for file in &mut files {
         api_cleanup::rewrite_project_shared_slice_calls(file, &shared_slices);
-        syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
         syntax_cleanup::apply_project_mutability_facts(file, &mutability_facts);
     }
     let signatures = syntax_cleanup::collect_project_borrowed_string_params(&files);
@@ -157,5 +176,62 @@ mod tests {
             !main_compact.contains("imported_through(Box::new("),
             "{main}"
         );
+    }
+}
+
+#[cfg(test)]
+mod ancestry_tests {
+    use super::rewrite_named_project_borrows;
+
+    #[test]
+    fn ancestry_scalar_borrows_reach_callers_through_reexports() {
+        for reverse in [false, true] {
+            let mut sources = vec![
+                ("base", "pub struct Root; impl Root { pub fn new(value: SifrInt) -> SifrInt { value } }".to_string()),
+                ("middle", "use crate::base::Root as BaseRoot; pub struct Root; impl Root { pub fn new(value: SifrInt, middle: SifrInt) -> (SifrInt, SifrInt) { (BaseRoot::new(value), middle.clone()) } }".to_string()),
+                ("child", "use crate::middle::Root as MiddleRoot; pub struct Child; impl Child { pub fn new(value: SifrInt, middle: SifrInt, extra: SifrInt) -> ((SifrInt, SifrInt), SifrInt) { (MiddleRoot::new(value, middle), extra.clone()) } }".to_string()),
+                ("facade", "pub use crate::child::Child as PublicChild;".to_string()),
+                ("", "use crate::facade::PublicChild as Child; fn main() { Child::new(SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)); }".to_string()),
+            ];
+            if reverse {
+                sources.reverse();
+            }
+            let mut named = sources
+                .iter_mut()
+                .map(|(name, source)| (*name, source))
+                .collect::<Vec<_>>();
+            rewrite_named_project_borrows(&mut named).expect("ancestry borrow closure");
+            let first = named
+                .iter()
+                .map(|(_, source)| (**source).clone())
+                .collect::<Vec<_>>();
+            rewrite_named_project_borrows(&mut named).expect("stable project borrow closure");
+            assert_eq!(
+                first,
+                named
+                    .iter()
+                    .map(|(_, source)| (**source).clone())
+                    .collect::<Vec<_>>(),
+                "one invocation must close the complete call graph"
+            );
+            let main = sources
+                .iter()
+                .find(|(name, _)| name.is_empty())
+                .unwrap()
+                .1
+                .split_whitespace()
+                .collect::<String>();
+            assert!(
+                main.contains(
+                    "Child::new(SifrInt::from_i64(1),&SifrInt::from_i64(2),&SifrInt::from_i64(3)"
+                ),
+                "{main}"
+            );
+            let base = &sources.iter().find(|(name, _)| *name == "base").unwrap().1;
+            assert!(
+                base.contains("new(value: SifrInt)"),
+                "consumed integer must remain owned: {base}"
+            );
+        }
     }
 }
