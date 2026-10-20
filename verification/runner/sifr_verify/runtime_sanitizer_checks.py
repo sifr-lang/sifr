@@ -126,7 +126,7 @@ class SanitizerTargetTests(unittest.TestCase):
     def test_caller_flags_and_storage_survive_generated_target_selection(self):
         case = self.cases["generated-binary-asan-smoke"]
         inherited = {
-            "RUSTFLAGS": "-C 'link-arg=/owned/path with spaces'",
+            'RUSTFLAGS': '  --cfg v013_probe="value"  -C debuginfo=1  ',
             "CARGO_TARGET_DIR": "/owned/build",
             "CARGO_BUILD_TARGET": "other-target",
             "CARGO_BUILD_JOBS": "2",
@@ -134,11 +134,30 @@ class SanitizerTargetTests(unittest.TestCase):
         _, execute = self.run_case(case, "x86_64-unknown-linux-gnu", environment=inherited)
         env = execute.call_args.kwargs["env"]
         self.assertEqual(env["CARGO_ENCODED_RUSTFLAGS"].split("\x1f"),
-                         ["-C", "link-arg=/owned/path with spaces", "-Zsanitizer=address"])
+                         ["--cfg", 'v013_probe="value"', "-C", "debuginfo=1", "-Zsanitizer=address"])
         self.assertEqual(env["CARGO_TARGET_DIR"], "/owned/build")
         self.assertEqual(env["CARGO_BUILD_JOBS"], "2")
         self.assertEqual(env["CARGO_BUILD_TARGET"], "x86_64-unknown-linux-gnu")
         self.assertEqual(inherited["CARGO_BUILD_TARGET"], "other-target")
+
+
+    def test_plain_quotes_apostrophes_and_embedded_whitespace_match_cargo(self):
+        case = self.cases["runtime-asan-smoke"]
+        for flags in ("-Clink-arg=it's", '--cfg\tv013_probe="value"',
+                      '--cfg\nv013_probe="value"'):
+            with self.subTest(flags=flags):
+                _, execute = self.run_case(case, "x86_64-unknown-linux-gnu",
+                                           environment={"RUSTFLAGS": flags})
+                self.assertEqual(execute.call_args.kwargs["env"]["CARGO_ENCODED_RUSTFLAGS"].split(chr(31)),
+                                 [flags, "-Zsanitizer=address"])
+
+    def test_encoded_arguments_preserve_spaces_without_shell_quoting(self):
+        case = self.cases["runtime-asan-smoke"]
+        _, execute = self.run_case(case, "x86_64-unknown-linux-gnu", environment={
+            "CARGO_ENCODED_RUSTFLAGS": "-C" + chr(31) + "link-arg=/owned/path with spaces",
+        })
+        self.assertEqual(execute.call_args.kwargs["env"]["CARGO_ENCODED_RUSTFLAGS"].split(chr(31)),
+                         ["-C", "link-arg=/owned/path with spaces", "-Zsanitizer=address"])
 
     def test_encoded_flags_precede_plain_flags_without_losing_instrumentation(self):
         case = self.cases["runtime-asan-smoke"]

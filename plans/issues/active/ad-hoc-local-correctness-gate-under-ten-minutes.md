@@ -191,6 +191,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
+| V0.16b | Application-profile fixture inventory reconciliation | Pending: runner self-test detects three prior E2E additions missing from the 729-entry authority |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -2456,3 +2457,26 @@ representative compiler-edit timing recorded separately under the diagnostic cap
 and scoped independent review. Preserve historical failures. Full final phase
 gates and V5 remain required. General process supervision and preparation-consumer
 ordering remain owned by V0.14; do not broaden this item into that lifecycle work.
+
+### V0.13 policy validation and review remediation
+
+The first 16 sanitizer policy checks and required guards passed. A broader runner
+self-test fails in the unchanged DX.10 application-profile authority: it declares
+729 positive fixtures, while the repository has 732. The missing entries are
+`callable_field_call_contexts.sifr`, `join_set_add_blocking_task.sifr`, and
+`task_context_reuse_across_spawns.sifr`, introduced by V0.11. The authority is
+byte-identical to this item's base. V0.16b owns that exact reconciliation before
+final phase gates; `v013-runner-selftest` remains failed, not an implied pass.
+
+Initial scoped review of `35e113a0e5380ebf0902df274d7626e4dd038c5b` is
+**NOT SATISFIED**: using shell parsing for inherited plain Rust flags changes
+Cargo semantics. The correction splits on literal spaces, keeps quotes and
+apostrophes, preserves embedded tabs/newlines, and emits authoritative encoded
+flags with the declared instrumentation. Eighteen focused controls now pass.
+A direct Cargo comparison confirms all five exercised inputs keep their original
+outcomes and caller arguments: three valid cases compile, and two malformed
+embedded-whitespace cases remain rejected. The required ASAN flag reaches rustc.
+These are correctness controls, not performance qualification. Raw initial review
+and both probe results remain in the external implementation evidence bundle.
+Fresh affected checks and scoped remediation review remain required, together
+with real instrumented execution/artifact evidence and retained/edit timings.

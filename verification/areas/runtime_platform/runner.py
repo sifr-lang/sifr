@@ -432,6 +432,12 @@ def validate_sanitizer_inputs(case: dict[str, Any]) -> None:
             raise SystemExit(f"sanitizer case {case['id']} required input is missing or outside the repository: {raw}")
 
 
+def cargo_plain_rustflags(raw: str) -> list[str]:
+    # Cargo splits on literal spaces, not shell quoting or all whitespace.
+    # Keep quotes/apostrophes and embedded tabs/newlines for rustc to interpret.
+    return [flag for flag in raw.split(" ") if flag.strip()]
+
+
 def sanitizer_flag_modes(flags: list[str]) -> set[str]:
     modes = set()
     for index, flag in enumerate(flags):
@@ -449,7 +455,7 @@ def sanitizer_environment(case: dict[str, Any], host_triple: str) -> dict[str, s
     expected = {"asan": "address", "lsan": "leak", "tsan": "thread"}.get(case["tool"])
     if expected is None:
         return env
-    required = shlex.split(case.get("env", {}).get("RUSTFLAGS", ""))
+    required = cargo_plain_rustflags(case.get("env", {}).get("RUSTFLAGS", ""))
     if sanitizer_flag_modes(required) != {expected}:
         raise SystemExit(f"sanitizer case {case['id']} must declare {expected} instrumentation")
     # Cargo prefers encoded flags even when RUSTFLAGS is also present. Preserve
@@ -458,11 +464,11 @@ def sanitizer_environment(case: dict[str, Any], host_triple: str) -> dict[str, s
         encoded = env["CARGO_ENCODED_RUSTFLAGS"]
         flags = encoded.split("\x1f") if encoded else []
     else:
-        flags = shlex.split(inherited.get("RUSTFLAGS", ""))
+        flags = cargo_plain_rustflags(inherited.get("RUSTFLAGS", ""))
     if sanitizer_flag_modes(flags).difference({expected}):
         raise SystemExit(f"sanitizer case {case['id']} conflicts with inherited sanitizer instrumentation")
     flags.extend(required)
-    env["RUSTFLAGS"] = shlex.join(flags)
+    env["RUSTFLAGS"] = " ".join(flags)
     env["CARGO_ENCODED_RUSTFLAGS"] = "\x1f".join(flags)
     if case["scope"] == "generated_binary":
         # The selected compiler launches Cargo again. Target separation must
