@@ -2354,3 +2354,28 @@ borrowed arithmetic cleanup. Unknown, shadowed and primitive types retain their
 operations. No source assertion, lint suppression or quality-debt allowance is
 changed. These implementation changes require fresh affected tests, emissions
 and scoped review; the initial snapshot-only review does not approve them.
+
+V0.12 compiler repair validation at
+`906b48b8cb3f9aece2827a476edacf9d3b555499`: all **1,780 codegen tests pass**
+(345.619s outer; Cargo reports 5m29s preparation and 15.20s test execution).
+The four added tests cover borrowed vector/slice copies, reference depth, exact
+integer range items, and unknown/shadowed identities. The existing borrowed
+parameter regression now checks ordered Add/Sub call arguments in the Rust AST,
+retaining the borrowed signature and no-extra-reference assertions. Its earlier
+syntax-only failure remains in `v012-codegen-repair`; no assertion was dropped.
+
+Required guards pass in 48.186s. The exact dispatch inventory retains all existing
+classifications and 235 reviewed nodes; four new sites describe Rust-IR inspection
+and test assertions. It does not create a source-language dispatch authority.
+An independent Rust execution control verifies that vector copies through multiple
+reference layers remain owned and do not mutate their sources.
+
+The selected repaired CLI staged all **264** companions successfully and repeated
+all **41** originally changed companions byte-for-byte. Only the three diagnosed
+outputs changed: vector copying returns to `clone()` for borrowed vectors, and
+borrowed exact-integer operations use the established explicit operator calls.
+The complete staged safety inventory remains empty. The staging operation took
+660.265s including compiler preparation; it is not full-gate timing qualification.
+Those three generated files are reconciled; complete freshness, affected strict
+quality checks, native regressions, broader E2E coverage and new scoped review
+remain required before this item can merge.
