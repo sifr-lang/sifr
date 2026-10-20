@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.2 validated; independent review pending
+current_stage: V0.2 reviewed; merge pending; V0.3b next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -174,7 +174,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | Item | Bounded ownership / prerequisite | Status |
 | --- | --- | --- |
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
-| V0.2 | SQL provenance and moved-source qualification guards | Pending |
+| V0.2 | SQL provenance and moved-source qualification guards | Validated; 43 native tests and 33 checks pass; reviewed #4362 |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
@@ -548,7 +548,7 @@ mutations are optional additional controls; current exact product-path exclusion
 product helper controls and every-input mutation tests cover the required policy.
 
 
-### V0.2 SQL qualification — validated, review pending
+### V0.2 SQL qualification — validated and reviewed
 
 Base: `ad1e26aac38787b669414e8572dcf9146433ced6`. Exact pinned PostgreSQL parser
 repositories and WASI-Virt were materialized in the owned checkout. Initial
@@ -582,8 +582,8 @@ Canonical artifact producers, using Rust 1.98.1 and Python 3.14.7, regenerated a
 These are artifact-generation/preparation measurements, not complete gate timings.
 The source was frozen during each producer run; only that producer's declared
 artifact/receipt outputs could change. The source hashes were not patched to
-bless existing binaries. Runtime assertions, final lightweight qualification,
-guards, independent review and merge remain required before V0.2 closes.
+bless existing binaries. At this producer checkpoint, runtime assertions, final lightweight qualification,
+guards, independent review and merge remained required; completed results follow below.
 Evidence: `v02-lightweight-baseline[-cases]`, `v02-source-repairs-batch`, `v02-source-repairs-cases`,
 `v02-submodule-preparation.json`, `v02-sdk-prepare`, `v02-sdk-preparation.json`,
 `v02-virtualizer-build`, `v02-virtualizer-fetch`, `v02-virtualizer-build-prepared`,
@@ -613,8 +613,22 @@ gate or V5 timing scenario is qualified by this bounded validation.
 Evidence: `v02-lightweight-final[-cases]`, `v02-component-host-tests`,
 `v02-{mysql,sqlite,postgresql}-runtime-tests`, `v02-runtime-batch.json`, and
 `v02-policy-guards`. [PR #4362](https://github.com/sifr-lang/sifr/pull/4362)
-is open for independent review. Subsequent phase-record edits do not change the
-validated implementation inputs.
+received **SATISFIED**, no blockers, on exact candidate
+`e87c97ddf56a733c0d80b574d96213c733282030` against
+`ad1e26aac38787b669414e8572dcf9146433ced6`. Raw review:
+`reviews/e87c97ddf56a733c0d80b574d96213c733282030/review.md`, outside Git.
+Subsequent phase-record edits do not change the validated implementation inputs.
+
+Producer/reproducibility follow-up (existing on base, separate from V0.2): committed
+components contain registry-source and C-source build paths. The producer remaps
+only its repository Rust paths, and validation checks digest shape for some tool
+identities rather than proving a hermetic build. The producer owner should add
+registry/C-source path remapping and explicit output-affecting input qualification,
+then rebuild and compare bytes under independently located roots. Keep this as an
+explicit V5/release reproducibility limitation until that protocol is executed;
+V0.2 does not claim cross-machine byte identity. The optional stronger structural
+driver-delegation guard is separate; the existing text guard's required scope is
+preserved and mutation-tested.
 
 ## Execution stages
 
@@ -1126,13 +1140,15 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** repair V0.2 SQL qualification on owned branch
-`codex/local-gate-sql-qualification`, based on merged V0.5. Read-only provenance inspection on the reviewed candidate shows
-all three SQL family receipts differ only in `Cargo.lock`; the words receipt has
-no changed inputs. The changed lock adds the CLI's cache-storage dependency.
-Rebuild SQL artifacts with the actual pinned producer and preserve its receipts;
-do not merely refresh hashes. Follow moved SQL service ownership in qualification
-guards and retain every mutation control. Run each lightweight qualification and
-self-test, plus affected component producer/input tests and runtime qualification.
-Preserve original failures and the 30-minute per-category cap; split preparation
-by family when needed. Full phase acceptance and other V0 items remain open.
+**Next action:** merge reviewed V0.2, then open bounded V0.3b for Python runtime
+registry and LSP input-authority admission. Confirm current failures before edits.
+Arrow and DLPack runners retain old exact test inventories; review each added or
+renamed ownership assertion against its originating change before reconciling
+names, preserving missing/extra/duplicate rejection. The LSP selected-metadata
+fingerprint test also fails: inspect both its Cargo fixture validity and the
+production ancestor-input scan. Preserve selected environment invalidation and
+owning-root isolation; do not turn its invariance assertion into a pass by simply
+loosening the expectation. Run the affected runtime suites with pinned Python,
+LSP fingerprint/authoring and external-input generation controls, affected runner
+self-tests and standard guards. Other V0 items and full phase acceptance remain
+open; no final gate or V5 timing result is claimed.
