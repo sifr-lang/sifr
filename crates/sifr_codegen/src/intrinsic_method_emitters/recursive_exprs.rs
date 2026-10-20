@@ -117,6 +117,17 @@ impl RustEmitter {
                             &mut arg_exprs,
                         );
                     }
+                    if effective_object_ty.callable_field_type(method).is_some() {
+                        return Some(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Paren(Box::new(
+                                crate::RustExpr::Field {
+                                    expr: Box::new(object_expr),
+                                    field: method.clone(),
+                                },
+                            ))),
+                            args: arg_exprs,
+                        });
+                    }
                     return Some(crate::RustExpr::from_source_method(
                         object_expr,
                         method.clone(),

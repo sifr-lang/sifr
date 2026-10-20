@@ -25,7 +25,7 @@
       "relationship": "source_method_path -> nonbuiltin early return; builtin specializations end in methods registry or decline",
       "inputs": "fn try_lower_registry_expr_recursive ( & mut self , expr : & HirExpr , )",
       "outputs": "Option < crate :: RustExpr >",
-      "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279",
+      "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165",
       "references": [
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs",
@@ -46,7 +46,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr.rs",
@@ -209,7 +209,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -225,7 +225,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -246,7 +246,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -267,7 +267,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -309,7 +309,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -330,7 +330,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -351,7 +351,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -1622,7 +1622,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/lib_codegen_tests/emitted_rust_quality_codegen_tests.rs",
@@ -2497,7 +2497,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/lib_codegen_tests/emitted_rust_quality_codegen_tests.rs",
@@ -4023,7 +4023,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         },
         {
           "path": "crates/sifr_codegen/src/method_authority_tests/nonempty_pop.rs",
@@ -4257,7 +4257,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -4901,7 +4901,7 @@
         {
           "path": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs",
           "scope": "try_lower_registry_expr_recursive",
-          "context_fingerprint": "1d599b39c0e10b64267ef28970152068e1d79a08342ae740bb2d01d2b8773279"
+          "context_fingerprint": "f31dcd6c6fd01a05371cf6843425e3afd1cf885e2bffccec04a8ae5c606d8165"
         }
       ]
     },
@@ -23260,10 +23260,10 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-match::1",
-      "fingerprint": "1d4bda4429bcfab027cff43a1c7fba5014ff6f5f9e5ebdc9c2c1041e1537ef6e",
+      "fingerprint": "69f88a6f9447293bf7b6f8beb6609971506b480c8b22a5a2c1fa1bcc8673302f",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
-      "operation": "match expr { HirExpr :: Name { name , .. } => Some ( crate :: RustExpr :: Ident ( name . clone ( ) ) ) , HirExpr :: IfExpr { condition , then_expr , else_expr , .. } => Some ( crate :: RustExpr :: If { cond : Box :: new ( self . try_lower_registry_expr_strict ( condition ) ? ) , then_expr : Box :: new ( self . try_lower_registry_expr_strict ( then_expr ) ? ) , else_expr : Some ( Box :: new ( self . try_lower_registry_expr_strict ( else_expr ) ? ) ) , } ) , HirExpr :: FieldAccess { object , field , ty } => { if let Ok ( Some ( lowered ) ) = self . try_lower_structured_field_access_expr ( object , field , ty ) { return Some ( lowered ) ; } let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; Some ( self . lower_field_access_expr_with_lowered_object ( object , field , ty , lowered_object , ) ) } HirExpr :: IteratorCall { op , args , mutable_arg_places , .. } => { let func = registry_iterator_op_func_name ( op ) ; if let Some ( lowered ) = self . try_lower_registry_builtin_call_expr ( func , args , Some ( expr . ty ( ) ) , mutable_arg_places , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_registry_plain_call_with_signature ( func , args ) { return Some ( lowered ) ; } Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Ident ( func . to_string ( ) ) ) , args : self . try_lower_registry_exprs_strict ( args ) ? , } ) } HirExpr :: IntrinsicCall { intrinsic , args , .. } => self . try_lower_registry_intrinsic_call_expr ( * intrinsic , args , expr . ty ( ) ) , HirExpr :: Call { func , args , mutable_arg_places , .. } => { if let Some ( lowered ) = self . try_lower_registry_builtin_call_expr ( func , args , Some ( expr . ty ( ) ) , mutable_arg_places , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_registry_plain_call_with_places ( func , args , mutable_arg_places ) { return Some ( lowered ) ; } Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: stmt_support_emitter :: plain_call_target_for_ir ( func ) ) , args : self . try_lower_registry_exprs_strict ( args ) ? , } ) } HirExpr :: MethodCall { object , method , args , ty , receiver_convention , receiver_target , mutable_arg_places , .. } => { let source_path = crate :: method_call_emitter :: source_method_path ( expr ) . ok ( ) ? ; if ! source_path . is_builtin ( ) { let ( object_expr , effective_object_ty , mut arg_exprs ) = self . lower_recursive_method_receiver_and_args ( object , method , args , * receiver_convention , receiver_target . as_ref ( ) , mutable_arg_places , ) ? ; if let Some ( method_params ) = self . resolve_registry_method_params ( & effective_object_ty , method ) { self . apply_registry_method_arg_conventions ( args , & method_params , & mut arg_exprs , ) ; } return Some ( crate :: RustExpr :: from_source_method ( object_expr , method . clone ( ) , arg_exprs , ) ) ; } if let Some ( lowered ) = crate :: lower_expr :: try_lower_simple_method_call_expr ( expr ) { return Some ( lowered ) ; } let places = MethodCallPlaces :: new ( * receiver_convention , receiver_target . as_ref ( ) , mutable_arg_places , ) ; if let Some ( lowered ) = crate :: python_buffer_codegen :: lower_python_buffer_method ( self , object , method , args , places , ty , ) { return Some ( lowered ) ; } if let Some ( lowered ) = crate :: python_arrow_codegen :: lower_python_arrow_method ( self , object , method , args , places , ty , ) { return Some ( lowered ) ; } if let Some ( lowered ) = crate :: python_dlpack_codegen :: lower_python_dlpack_method ( self , object , method , args , places , ty , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_recursive_indexed_list_append ( object , method , args , receiver_target . as_ref ( ) , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_append_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_pop_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_len_expr ( expr ) { return Some ( lowered ) ; } let ( object_expr , effective_object_ty , mut arg_exprs ) = self . lower_recursive_method_receiver_and_args ( object , method , args , * receiver_convention , receiver_target . as_ref ( ) , mutable_arg_places , ) ? ; let method_params = self . resolve_registry_method_params ( & effective_object_ty , method ) ; self . adapt_owned_mapping_default ( & effective_object_ty , method , args , & mut arg_exprs , ) ; if matches ! ( crate :: resolve_alias_type_for_plain_call ( & effective_object_ty ) , Type :: Decimal | Type :: BigDecimal ) && matches ! ( method . as_str ( ) , \"quantize\" | \"round\" ) && args . len ( ) == 1 { let scale = crate :: integer_literal_decimal ( & args [ 0 ] ) . and_then ( | value | value . parse :: < i64 > ( ) . ok ( ) ) ? ; arg_exprs [ 0 ] = crate :: RustExpr :: Literal ( crate :: RustLiteral :: Int ( scale ) ) ; } if let Type :: List ( element_ty ) = crate :: resolve_alias_type_for_plain_call ( & effective_object_ty ) { if method == \"append\" && arg_exprs . len ( ) == 1 && args . len ( ) == 1 { let arg_ty = if let HirExpr :: Name { name , ty , .. } = & args [ 0 ] { self . local_binding_types . get ( name ) . cloned ( ) . unwrap_or_else ( || ty . clone ( ) ) } else { args [ 0 ] . ty ( ) . clone ( ) } ; let expects_option = crate :: helpers :: is_option_type ( element_ty . as_ref ( ) ) ; let has_option = crate :: helpers :: is_option_type ( & arg_ty ) ; let mut adjusted = arg_exprs [ 0 ] . clone ( ) ; let adapted = crate :: helpers :: flatten_option_value_for_target ( element_ty . as_ref ( ) , & arg_ty , adjusted . clone ( ) , ) ; let option_value_adapted = adapted != adjusted ; adjusted = adapted ; if expects_option && ! has_option && ! matches ! ( args [ 0 ] , HirExpr :: NoneLiteral ) { adjusted = crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Path ( vec ! [ \"Some\" . to_string ( ) ] ) ) , args : vec ! [ adjusted ] , } ; } else if ! expects_option && has_option && ! option_value_adapted { if ! crate :: helpers :: is_copy_type_for_codegen ( & arg_ty ) { adjusted = crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( adjusted ) ) ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , } ; } } arg_exprs [ 0 ] = self . materialize_reusable_value_for_ir ( & args [ 0 ] , adjusted ) ; } } if effective_object_ty . callable_field_type ( method ) . is_some ( ) { if let Some ( method_params ) = method_params . as_deref ( ) { self . apply_registry_method_arg_conventions ( args , method_params , & mut arg_exprs , ) ; } return Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( crate :: RustExpr :: Field { expr : Box :: new ( object_expr ) , field : method . clone ( ) , } ) ) ) , args : arg_exprs , } ) ; } if let Some ( lowered ) = methods :: lower_method_with_context ( & effective_object_ty , method , & object_expr , & arg_exprs , self . is_deque_data_field ( object ) , ) { return Some ( Self :: unwrap_compiler_verified_nonempty_pop_result ( & effective_object_ty , method , args , ty , object_expr , self . is_deque_data_field ( object ) , lowered . expr , ) ) ; } None } HirExpr :: ConstructorCall { class_name , args , ty , } => { let emitted_class_name = canonical_constructor_class_name ( class_name , ty ) ; let emitted_ctor_key = format ! ( \"{emitted_class_name}::new\" ) ; let source_ctor_key = format ! ( \"{class_name}::new\" ) ; let registry_ctor_key = if self . func_signatures . contains_key ( & emitted_ctor_key ) { & emitted_ctor_key } else { & source_ctor_key } ; if let Some ( mut lowered ) = self . try_lower_registry_plain_call_with_signature ( registry_ctor_key , args ) { if let crate :: RustExpr :: FnCall { func , .. } = & mut lowered { * * func = crate :: RustExpr :: Path ( vec ! [ emitted_class_name , \"new\" . to_string ( ) ] ) ; } return Some ( lowered ) ; } let mut path = emitted_class_name . split ( \"::\" ) . map ( str :: to_string ) . collect :: < Vec < _ > > ( ) ; path . push ( \"new\" . to_string ( ) ) ; let lowered_args = self . try_lower_registry_exprs_strict ( args ) ? ; let lowered_args = self . adapt_plain_call_args_with_signature_for_ir ( registry_ctor_key , args , lowered_args , ) ; Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Path ( path ) ) , args : lowered_args , } ) } HirExpr :: Index { object , index , ty , .. } => { if let Some ( witness ) = self . checked_place_read_witness ( object , index , ty ) { return Some ( witness ) ; } if matches ! ( crate :: resolve_alias_type_for_plain_call ( object . ty ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = Self :: clone_non_copy_name_expr_for_ir ( index , self . try_lower_registry_expr_strict ( index ) ? , ) ; let option_expr = self . lower_string_index_option_with_cache ( object , lowered_object , lowered_index , ) ; if crate :: helpers :: is_option_type ( ty ) { return Some ( option_expr ) ; } return None ; } if let Some ( lowered ) = self . try_lower_nested_list_element_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_list_indexed_dict_element_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_element_expr ( expr ) { return Some ( lowered ) ; } if let Some ( ( alias_name , key_ty , _value_ty ) ) = registry_defaultdict_alias_parts ( object . ty ( ) ) { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = self . try_lower_registry_expr_strict ( index ) ? ; let entry_expr = crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"entry\" . to_string ( ) , args : vec ! [ registry_defaultdict_key_arg ( index , lowered_index , key_ty ) ] , } ) , method : \"or_insert\" . to_string ( ) , args : vec ! [ registry_defaultdict_default_expr ( alias_name ) ] , } ; let value_expr = crate :: RustExpr :: MethodCall { receiver : Box :: new ( entry_expr ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , } ; if crate :: helpers :: is_option_type ( ty ) { return Some ( value_expr ) ; } return Some ( value_expr ) ; } let object_ty = crate :: resolve_alias_type_for_plain_call ( object . ty ( ) ) ; if let Type :: Union ( members ) = object_ty { let mut option_inner : Option < & Type > = None ; for member in members { let resolved_member = crate :: resolve_alias_type_for_plain_call ( member ) ; if matches ! ( resolved_member , Type :: None ) { continue ; } if option_inner . is_some ( ) { option_inner = None ; break ; } option_inner = Some ( resolved_member ) ; } if let Some ( inner_ty ) = option_inner { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = self . try_lower_registry_expr_strict ( index ) ? ; let inner_expr = match inner_ty { Type :: Dict ( key_ty , _ ) => { let key_is_string_like = matches ! ( crate :: resolve_alias_type_for_plain_call ( key_ty . as_ref ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) ; let key_arg = if let HirExpr :: StringLiteral ( value ) = index . as_ref ( ) { crate :: RustExpr :: Literal ( crate :: RustLiteral :: Str ( value . clone ( ) ) ) } else if key_is_string_like { self . string_view_expr ( index , lowered_index ) } else { crate :: RustExpr :: Ref { mutable : false , expr : Box :: new ( lowered_index ) , } } ; crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) , ) ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , } ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , } } Type :: List ( _ ) => crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , } , Type :: Bytes => crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__byte\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( crate :: RustExpr :: Deref ( Box :: new ( crate :: RustExpr :: Ident ( \"__byte\" . to_string ( ) ) , ) ) ) , ty : crate :: RustType :: Named ( \"u8\" . to_string ( ) ) , } ) , is_move : false , } ] , } , Type :: Str => self . lower_string_index_option_with_cache ( object , crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) , Self :: clone_non_copy_name_expr_for_ir ( index , lowered_index ) , ) , _ => return None , } ; let option_expr = crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( lowered_object , ) ) ) , method : \"as_ref\" . to_string ( ) , args : vec ! [ ] , } ) , method : \"and_then\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__v\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( inner_expr ) , is_move : false , } ] , } ; if crate :: helpers :: is_option_type ( ty ) { return Some ( option_expr ) ; } return Some ( option_expr ) ; } } if let Ok ( Some ( lowered ) ) = self . try_lower_structured_index_expr ( object , index , ty ) { Some ( lowered ) } else { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = self . try_lower_registry_expr_strict ( index ) ? ; match object_ty { Type :: Dict ( key_ty , value_ty ) => { let projection_method = crate :: helpers :: option_projection_method_for_owned_type ( value_ty . as_ref ( ) , ) ; let key_is_string_like = matches ! ( crate :: resolve_alias_type_for_plain_call ( key_ty . as_ref ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) ; let key_arg = if let HirExpr :: StringLiteral ( value ) = index . as_ref ( ) { crate :: RustExpr :: Literal ( crate :: RustLiteral :: Str ( value . clone ( ) ) ) } else if key_is_string_like { self . string_view_expr ( index , lowered_index ) } else { crate :: RustExpr :: Ref { mutable : false , expr : Box :: new ( lowered_index ) , } } ; Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , } ) , method : projection_method . to_string ( ) , args : vec ! [ ] , } ) } Type :: List ( element_ty ) => { let projection_method = crate :: helpers :: option_projection_method_for_owned_type ( element_ty . as_ref ( ) , ) ; Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : projection_method . to_string ( ) , args : vec ! [ ] , } ) } Type :: Bytes => Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__byte\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( crate :: RustExpr :: Deref ( Box :: new ( crate :: RustExpr :: Ident ( \"__byte\" . to_string ( ) ) , ) ) ) , ty : crate :: RustType :: Named ( \"u8\" . to_string ( ) ) , } ) , is_move : false , } ] , } ) , Type :: Str => Some ( self . lower_string_index_option_with_cache ( object , lowered_object , lowered_index , ) ) , _ => None , } } } HirExpr :: FString { parts , .. } => { let mut format_str = String :: new ( ) ; let mut lowered_args = Vec :: new ( ) ; for part in parts { match part { HirFStringPart :: Literal ( s ) => { for ch in s . chars ( ) { match ch { '{' => format_str . push_str ( \"{{\" ) , '}' => format_str . push_str ( \"}}\" ) , _ => format_str . push ( ch ) , } } } HirFStringPart :: Expr ( expr ) => { format_str . push_str ( \"{}\" ) ; if matches ! ( crate :: resolve_alias_type_for_plain_call ( expr . ty ( ) ) , Type :: None ) { lowered_args . push ( crate :: RustExpr :: Literal ( crate :: RustLiteral :: Str ( \"None\" . to_string ( ) ) , ) ) ; continue ; } let lowered_expr = self . try_lower_registry_expr_strict ( expr ) ? ; if let Some ( inner_ty ) = registry_option_inner_type ( expr . ty ( ) ) { let inner_format_str = if registry_uses_debug_display_format ( & inner_ty ) { \"{:?}\" . to_string ( ) } else { \"{}\" . to_string ( ) } ; lowered_args . push ( crate :: optional_display :: lower ( lowered_expr , inner_format_str , \"__v\" , ) ) ; } else if registry_uses_debug_display_format ( expr . ty ( ) ) { lowered_args . push ( crate :: RustExpr :: FormatMacro { name : \"format\" . to_string ( ) , format_str : \"{:?}\" . to_string ( ) , args : vec ! [ lowered_expr ] , } ) ; } else { lowered_args . push ( lowered_expr ) ; } } } } Some ( crate :: RustExpr :: FormatMacro { name : \"format\" . to_string ( ) , format_str , args : lowered_args , } ) } HirExpr :: TemplateString ( template ) => { self . try_lower_template_string_expr_for_ir ( template ) } HirExpr :: BoolOp { ty , .. } if matches ! ( crate :: resolve_alias_type_for_plain_call ( ty ) , Type :: Bool ) => { self . lower_condition_expr_for_ir ( expr ) . ok ( ) . flatten ( ) } HirExpr :: BoolOp { op , values , .. } if ! values . is_empty ( ) => { let lowered_op = match op . as_str ( ) { \"and\" => \"&&\" , \"or\" => \"||\" , _ => return None , } ; if op == \"and\" && values . len ( ) == 2 { if let Some ( guarded_name ) = Self :: registry_detect_is_some_guard_name ( & values [ 0 ] ) { if let Some ( guarded_compare ) = self . try_lower_registry_guarded_option_compare_expr ( & values [ 1 ] , & guarded_name , ) { return Some ( crate :: RustExpr :: BinOp { left : Box :: new ( self . try_lower_registry_expr_strict ( & values [ 0 ] ) ? ) , op : lowered_op . to_string ( ) , right : Box :: new ( guarded_compare ) , } ) ; } } } let mut iter = values . iter ( ) ; let mut lowered = self . try_lower_registry_expr_strict ( iter . next ( ) ? ) ? ; for value in iter { lowered = crate :: RustExpr :: BinOp { left : Box :: new ( lowered ) , op : lowered_op . to_string ( ) , right : Box :: new ( self . try_lower_registry_expr_strict ( value ) ? ) , } ; } Some ( lowered ) } HirExpr :: Compare { left , ops , comparators , .. } => self . try_lower_registry_compare_expr ( left , ops , comparators ) , HirExpr :: BinOp { left , op , right , ty , } if op == \"**\" => { let left_expr = self . try_lower_registry_expr_strict ( left ) ? ; let right_expr = self . try_lower_registry_expr_strict ( right ) ? ; match crate :: resolve_alias_type_for_plain_call ( ty ) { Type :: Int | Type :: LiteralInt ( _ ) => None , Type :: Float => Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( left_expr ) , ty : crate :: RustType :: F64 , } ) , method : \"powf\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( right_expr ) , ty : crate :: RustType :: F64 , } ] , } ) , _ => None , } } HirExpr :: BinOp { left , op , right , ty , } if op == \"+\" && matches ! ( ty , Type :: Str | Type :: LiteralStr ( _ ) ) => { Some ( crate :: RustExpr :: FormatMacro { name : \"format\" . to_string ( ) , format_str : \"{}{}\" . to_string ( ) , args : vec ! [ self . try_lower_registry_expr_strict ( left ) ? , self . try_lower_registry_expr_strict ( right ) ? , ] , } ) } HirExpr :: BinOp { left , op , right , ty , } if matches ! ( op . as_str ( ) , \"+\" | \"-\" | \"*\" | \"/\" | \"//\" | \"%\" ) && matches ! ( ty , Type :: Float | Type :: Int | Type :: LiteralInt ( _ ) ) => { if matches ! ( op . as_str ( ) , \"/\" | \"//\" | \"%\" ) && matches ! ( crate :: resolve_alias_type_for_plain_call ( left . ty ( ) ) , Type :: Int | Type :: LiteralInt ( _ ) ) && matches ! ( crate :: resolve_alias_type_for_plain_call ( right . ty ( ) ) , Type :: Int | Type :: LiteralInt ( _ ) ) { return None ; } let left_expr = self . try_lower_registry_expr_strict ( left ) ? ; let right_expr = self . try_lower_registry_expr_strict ( right ) ? ; let borrow_integer = | value | { if matches ! ( ty . resolve_alias ( ) , Type :: Int | Type :: LiteralInt ( _ ) ) { self . coerce_expr_to_sifr_int_comparison_operand ( value ) } else { value } } ; Some ( crate :: RustExpr :: BinOp { left : Box :: new ( borrow_integer ( left_expr ) ) , op : if op == \"//\" { \"/\" . to_string ( ) } else { op . clone ( ) } , right : Box :: new ( borrow_integer ( right_expr ) ) , } ) } HirExpr :: Slice { object , start , stop , step , .. } if matches ! ( crate :: resolve_alias_type_for_plain_call ( object . ty ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) => { self . try_lower_registry_string_slice_expr ( object , start . as_deref ( ) , stop . as_deref ( ) , step . as_deref ( ) , ) } HirExpr :: DictLiteral { keys , values , ty } => { self . try_lower_registry_dict_literal_expr ( keys , values , ty ) } HirExpr :: ListLiteral { elements , ty } => { if elements . is_empty ( ) { if let Some ( lowered ) = crate :: lower_expr :: typed_empty_list_expr ( ty ) { return Some ( lowered ) ; } } let list_ty = crate :: resolve_alias_type_for_plain_call ( ty ) ; let mut lowered = elements . iter ( ) . map ( | element | { let lowered = self . try_lower_registry_expr_strict ( element ) ? ; let lowered = if let Type :: List ( element_ty ) = list_ty { crate :: helpers :: adapt_collection_value_for_target ( element_ty . as_ref ( ) , element , lowered , ) } else { lowered } ; Some ( self . materialize_reusable_value_for_ir ( element , lowered ) ) } ) . collect :: < Option < Vec < _ > > > ( ) ? ; if matches ! ( list_ty , Type :: Bytes ) { lowered = lowered . into_iter ( ) . zip ( elements ) . map ( | ( lowered , element ) | { crate :: helpers :: adapt_bytes_element_for_storage ( element , lowered ) } ) . collect :: < Option < Vec < _ > > > ( ) ? ; } Some ( crate :: RustExpr :: Vec ( lowered ) ) } HirExpr :: TupleLiteral { elements , ty } => { let lowered = elements . iter ( ) . map ( | element | { let lowered = self . try_lower_registry_expr_strict ( element ) ? ; Some ( self . materialize_reusable_value_for_ir ( element , lowered ) ) } ) . collect :: < Option < Vec < _ > > > ( ) ? ; if crate :: homogeneous_large_tuple_backing_array ( ty ) . is_some ( ) { Some ( crate :: RustExpr :: Array ( lowered ) ) } else { Some ( crate :: RustExpr :: Tuple ( lowered ) ) } } HirExpr :: SetLiteral { elements , ty } => { self . try_lower_registry_set_literal_expr ( elements , ty ) } _ => None , }",
+      "operation": "match expr { HirExpr :: Name { name , .. } => Some ( crate :: RustExpr :: Ident ( name . clone ( ) ) ) , HirExpr :: IfExpr { condition , then_expr , else_expr , .. } => Some ( crate :: RustExpr :: If { cond : Box :: new ( self . try_lower_registry_expr_strict ( condition ) ? ) , then_expr : Box :: new ( self . try_lower_registry_expr_strict ( then_expr ) ? ) , else_expr : Some ( Box :: new ( self . try_lower_registry_expr_strict ( else_expr ) ? ) ) , } ) , HirExpr :: FieldAccess { object , field , ty } => { if let Ok ( Some ( lowered ) ) = self . try_lower_structured_field_access_expr ( object , field , ty ) { return Some ( lowered ) ; } let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; Some ( self . lower_field_access_expr_with_lowered_object ( object , field , ty , lowered_object , ) ) } HirExpr :: IteratorCall { op , args , mutable_arg_places , .. } => { let func = registry_iterator_op_func_name ( op ) ; if let Some ( lowered ) = self . try_lower_registry_builtin_call_expr ( func , args , Some ( expr . ty ( ) ) , mutable_arg_places , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_registry_plain_call_with_signature ( func , args ) { return Some ( lowered ) ; } Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Ident ( func . to_string ( ) ) ) , args : self . try_lower_registry_exprs_strict ( args ) ? , } ) } HirExpr :: IntrinsicCall { intrinsic , args , .. } => self . try_lower_registry_intrinsic_call_expr ( * intrinsic , args , expr . ty ( ) ) , HirExpr :: Call { func , args , mutable_arg_places , .. } => { if let Some ( lowered ) = self . try_lower_registry_builtin_call_expr ( func , args , Some ( expr . ty ( ) ) , mutable_arg_places , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_registry_plain_call_with_places ( func , args , mutable_arg_places ) { return Some ( lowered ) ; } Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: stmt_support_emitter :: plain_call_target_for_ir ( func ) ) , args : self . try_lower_registry_exprs_strict ( args ) ? , } ) } HirExpr :: MethodCall { object , method , args , ty , receiver_convention , receiver_target , mutable_arg_places , .. } => { let source_path = crate :: method_call_emitter :: source_method_path ( expr ) . ok ( ) ? ; if ! source_path . is_builtin ( ) { let ( object_expr , effective_object_ty , mut arg_exprs ) = self . lower_recursive_method_receiver_and_args ( object , method , args , * receiver_convention , receiver_target . as_ref ( ) , mutable_arg_places , ) ? ; if let Some ( method_params ) = self . resolve_registry_method_params ( & effective_object_ty , method ) { self . apply_registry_method_arg_conventions ( args , & method_params , & mut arg_exprs , ) ; } if effective_object_ty . callable_field_type ( method ) . is_some ( ) { return Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( crate :: RustExpr :: Field { expr : Box :: new ( object_expr ) , field : method . clone ( ) , } , ) ) ) , args : arg_exprs , } ) ; } return Some ( crate :: RustExpr :: from_source_method ( object_expr , method . clone ( ) , arg_exprs , ) ) ; } if let Some ( lowered ) = crate :: lower_expr :: try_lower_simple_method_call_expr ( expr ) { return Some ( lowered ) ; } let places = MethodCallPlaces :: new ( * receiver_convention , receiver_target . as_ref ( ) , mutable_arg_places , ) ; if let Some ( lowered ) = crate :: python_buffer_codegen :: lower_python_buffer_method ( self , object , method , args , places , ty , ) { return Some ( lowered ) ; } if let Some ( lowered ) = crate :: python_arrow_codegen :: lower_python_arrow_method ( self , object , method , args , places , ty , ) { return Some ( lowered ) ; } if let Some ( lowered ) = crate :: python_dlpack_codegen :: lower_python_dlpack_method ( self , object , method , args , places , ty , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_recursive_indexed_list_append ( object , method , args , receiver_target . as_ref ( ) , ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_append_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_pop_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_len_expr ( expr ) { return Some ( lowered ) ; } let ( object_expr , effective_object_ty , mut arg_exprs ) = self . lower_recursive_method_receiver_and_args ( object , method , args , * receiver_convention , receiver_target . as_ref ( ) , mutable_arg_places , ) ? ; let method_params = self . resolve_registry_method_params ( & effective_object_ty , method ) ; self . adapt_owned_mapping_default ( & effective_object_ty , method , args , & mut arg_exprs , ) ; if matches ! ( crate :: resolve_alias_type_for_plain_call ( & effective_object_ty ) , Type :: Decimal | Type :: BigDecimal ) && matches ! ( method . as_str ( ) , \"quantize\" | \"round\" ) && args . len ( ) == 1 { let scale = crate :: integer_literal_decimal ( & args [ 0 ] ) . and_then ( | value | value . parse :: < i64 > ( ) . ok ( ) ) ? ; arg_exprs [ 0 ] = crate :: RustExpr :: Literal ( crate :: RustLiteral :: Int ( scale ) ) ; } if let Type :: List ( element_ty ) = crate :: resolve_alias_type_for_plain_call ( & effective_object_ty ) { if method == \"append\" && arg_exprs . len ( ) == 1 && args . len ( ) == 1 { let arg_ty = if let HirExpr :: Name { name , ty , .. } = & args [ 0 ] { self . local_binding_types . get ( name ) . cloned ( ) . unwrap_or_else ( || ty . clone ( ) ) } else { args [ 0 ] . ty ( ) . clone ( ) } ; let expects_option = crate :: helpers :: is_option_type ( element_ty . as_ref ( ) ) ; let has_option = crate :: helpers :: is_option_type ( & arg_ty ) ; let mut adjusted = arg_exprs [ 0 ] . clone ( ) ; let adapted = crate :: helpers :: flatten_option_value_for_target ( element_ty . as_ref ( ) , & arg_ty , adjusted . clone ( ) , ) ; let option_value_adapted = adapted != adjusted ; adjusted = adapted ; if expects_option && ! has_option && ! matches ! ( args [ 0 ] , HirExpr :: NoneLiteral ) { adjusted = crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Path ( vec ! [ \"Some\" . to_string ( ) ] ) ) , args : vec ! [ adjusted ] , } ; } else if ! expects_option && has_option && ! option_value_adapted { if ! crate :: helpers :: is_copy_type_for_codegen ( & arg_ty ) { adjusted = crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( adjusted ) ) ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , } ; } } arg_exprs [ 0 ] = self . materialize_reusable_value_for_ir ( & args [ 0 ] , adjusted ) ; } } if effective_object_ty . callable_field_type ( method ) . is_some ( ) { if let Some ( method_params ) = method_params . as_deref ( ) { self . apply_registry_method_arg_conventions ( args , method_params , & mut arg_exprs , ) ; } return Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( crate :: RustExpr :: Field { expr : Box :: new ( object_expr ) , field : method . clone ( ) , } ) ) ) , args : arg_exprs , } ) ; } if let Some ( lowered ) = methods :: lower_method_with_context ( & effective_object_ty , method , & object_expr , & arg_exprs , self . is_deque_data_field ( object ) , ) { return Some ( Self :: unwrap_compiler_verified_nonempty_pop_result ( & effective_object_ty , method , args , ty , object_expr , self . is_deque_data_field ( object ) , lowered . expr , ) ) ; } None } HirExpr :: ConstructorCall { class_name , args , ty , } => { let emitted_class_name = canonical_constructor_class_name ( class_name , ty ) ; let emitted_ctor_key = format ! ( \"{emitted_class_name}::new\" ) ; let source_ctor_key = format ! ( \"{class_name}::new\" ) ; let registry_ctor_key = if self . func_signatures . contains_key ( & emitted_ctor_key ) { & emitted_ctor_key } else { & source_ctor_key } ; if let Some ( mut lowered ) = self . try_lower_registry_plain_call_with_signature ( registry_ctor_key , args ) { if let crate :: RustExpr :: FnCall { func , .. } = & mut lowered { * * func = crate :: RustExpr :: Path ( vec ! [ emitted_class_name , \"new\" . to_string ( ) ] ) ; } return Some ( lowered ) ; } let mut path = emitted_class_name . split ( \"::\" ) . map ( str :: to_string ) . collect :: < Vec < _ > > ( ) ; path . push ( \"new\" . to_string ( ) ) ; let lowered_args = self . try_lower_registry_exprs_strict ( args ) ? ; let lowered_args = self . adapt_plain_call_args_with_signature_for_ir ( registry_ctor_key , args , lowered_args , ) ; Some ( crate :: RustExpr :: FnCall { func : Box :: new ( crate :: RustExpr :: Path ( path ) ) , args : lowered_args , } ) } HirExpr :: Index { object , index , ty , .. } => { if let Some ( witness ) = self . checked_place_read_witness ( object , index , ty ) { return Some ( witness ) ; } if matches ! ( crate :: resolve_alias_type_for_plain_call ( object . ty ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = Self :: clone_non_copy_name_expr_for_ir ( index , self . try_lower_registry_expr_strict ( index ) ? , ) ; let option_expr = self . lower_string_index_option_with_cache ( object , lowered_object , lowered_index , ) ; if crate :: helpers :: is_option_type ( ty ) { return Some ( option_expr ) ; } return None ; } if let Some ( lowered ) = self . try_lower_nested_list_element_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_list_indexed_dict_element_expr ( expr ) { return Some ( lowered ) ; } if let Some ( lowered ) = self . try_lower_dict_indexed_list_element_expr ( expr ) { return Some ( lowered ) ; } if let Some ( ( alias_name , key_ty , _value_ty ) ) = registry_defaultdict_alias_parts ( object . ty ( ) ) { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = self . try_lower_registry_expr_strict ( index ) ? ; let entry_expr = crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"entry\" . to_string ( ) , args : vec ! [ registry_defaultdict_key_arg ( index , lowered_index , key_ty ) ] , } ) , method : \"or_insert\" . to_string ( ) , args : vec ! [ registry_defaultdict_default_expr ( alias_name ) ] , } ; let value_expr = crate :: RustExpr :: MethodCall { receiver : Box :: new ( entry_expr ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , } ; if crate :: helpers :: is_option_type ( ty ) { return Some ( value_expr ) ; } return Some ( value_expr ) ; } let object_ty = crate :: resolve_alias_type_for_plain_call ( object . ty ( ) ) ; if let Type :: Union ( members ) = object_ty { let mut option_inner : Option < & Type > = None ; for member in members { let resolved_member = crate :: resolve_alias_type_for_plain_call ( member ) ; if matches ! ( resolved_member , Type :: None ) { continue ; } if option_inner . is_some ( ) { option_inner = None ; break ; } option_inner = Some ( resolved_member ) ; } if let Some ( inner_ty ) = option_inner { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = self . try_lower_registry_expr_strict ( index ) ? ; let inner_expr = match inner_ty { Type :: Dict ( key_ty , _ ) => { let key_is_string_like = matches ! ( crate :: resolve_alias_type_for_plain_call ( key_ty . as_ref ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) ; let key_arg = if let HirExpr :: StringLiteral ( value ) = index . as_ref ( ) { crate :: RustExpr :: Literal ( crate :: RustLiteral :: Str ( value . clone ( ) ) ) } else if key_is_string_like { self . string_view_expr ( index , lowered_index ) } else { crate :: RustExpr :: Ref { mutable : false , expr : Box :: new ( lowered_index ) , } } ; crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) , ) ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , } ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , } } Type :: List ( _ ) => crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , } , Type :: Bytes => crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__byte\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( crate :: RustExpr :: Deref ( Box :: new ( crate :: RustExpr :: Ident ( \"__byte\" . to_string ( ) ) , ) ) ) , ty : crate :: RustType :: Named ( \"u8\" . to_string ( ) ) , } ) , is_move : false , } ] , } , Type :: Str => self . lower_string_index_option_with_cache ( object , crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) , Self :: clone_non_copy_name_expr_for_ir ( index , lowered_index ) , ) , _ => return None , } ; let option_expr = crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( lowered_object , ) ) ) , method : \"as_ref\" . to_string ( ) , args : vec ! [ ] , } ) , method : \"and_then\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__v\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( inner_expr ) , is_move : false , } ] , } ; if crate :: helpers :: is_option_type ( ty ) { return Some ( option_expr ) ; } return Some ( option_expr ) ; } } if let Ok ( Some ( lowered ) ) = self . try_lower_structured_index_expr ( object , index , ty ) { Some ( lowered ) } else { let lowered_object = self . try_lower_registry_expr_strict ( object ) ? ; let lowered_index = self . try_lower_registry_expr_strict ( index ) ? ; match object_ty { Type :: Dict ( key_ty , value_ty ) => { let projection_method = crate :: helpers :: option_projection_method_for_owned_type ( value_ty . as_ref ( ) , ) ; let key_is_string_like = matches ! ( crate :: resolve_alias_type_for_plain_call ( key_ty . as_ref ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) ; let key_arg = if let HirExpr :: StringLiteral ( value ) = index . as_ref ( ) { crate :: RustExpr :: Literal ( crate :: RustLiteral :: Str ( value . clone ( ) ) ) } else if key_is_string_like { self . string_view_expr ( index , lowered_index ) } else { crate :: RustExpr :: Ref { mutable : false , expr : Box :: new ( lowered_index ) , } } ; Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , } ) , method : projection_method . to_string ( ) , args : vec ! [ ] , } ) } Type :: List ( element_ty ) => { let projection_method = crate :: helpers :: option_projection_method_for_owned_type ( element_ty . as_ref ( ) , ) ; Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : projection_method . to_string ( ) , args : vec ! [ ] , } ) } Type :: Bytes => Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__byte\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( crate :: RustExpr :: Deref ( Box :: new ( crate :: RustExpr :: Ident ( \"__byte\" . to_string ( ) ) , ) ) ) , ty : crate :: RustType :: Named ( \"u8\" . to_string ( ) ) , } ) , is_move : false , } ] , } ) , Type :: Str => Some ( self . lower_string_index_option_with_cache ( object , lowered_object , lowered_index , ) ) , _ => None , } } } HirExpr :: FString { parts , .. } => { let mut format_str = String :: new ( ) ; let mut lowered_args = Vec :: new ( ) ; for part in parts { match part { HirFStringPart :: Literal ( s ) => { for ch in s . chars ( ) { match ch { '{' => format_str . push_str ( \"{{\" ) , '}' => format_str . push_str ( \"}}\" ) , _ => format_str . push ( ch ) , } } } HirFStringPart :: Expr ( expr ) => { format_str . push_str ( \"{}\" ) ; if matches ! ( crate :: resolve_alias_type_for_plain_call ( expr . ty ( ) ) , Type :: None ) { lowered_args . push ( crate :: RustExpr :: Literal ( crate :: RustLiteral :: Str ( \"None\" . to_string ( ) ) , ) ) ; continue ; } let lowered_expr = self . try_lower_registry_expr_strict ( expr ) ? ; if let Some ( inner_ty ) = registry_option_inner_type ( expr . ty ( ) ) { let inner_format_str = if registry_uses_debug_display_format ( & inner_ty ) { \"{:?}\" . to_string ( ) } else { \"{}\" . to_string ( ) } ; lowered_args . push ( crate :: optional_display :: lower ( lowered_expr , inner_format_str , \"__v\" , ) ) ; } else if registry_uses_debug_display_format ( expr . ty ( ) ) { lowered_args . push ( crate :: RustExpr :: FormatMacro { name : \"format\" . to_string ( ) , format_str : \"{:?}\" . to_string ( ) , args : vec ! [ lowered_expr ] , } ) ; } else { lowered_args . push ( lowered_expr ) ; } } } } Some ( crate :: RustExpr :: FormatMacro { name : \"format\" . to_string ( ) , format_str , args : lowered_args , } ) } HirExpr :: TemplateString ( template ) => { self . try_lower_template_string_expr_for_ir ( template ) } HirExpr :: BoolOp { ty , .. } if matches ! ( crate :: resolve_alias_type_for_plain_call ( ty ) , Type :: Bool ) => { self . lower_condition_expr_for_ir ( expr ) . ok ( ) . flatten ( ) } HirExpr :: BoolOp { op , values , .. } if ! values . is_empty ( ) => { let lowered_op = match op . as_str ( ) { \"and\" => \"&&\" , \"or\" => \"||\" , _ => return None , } ; if op == \"and\" && values . len ( ) == 2 { if let Some ( guarded_name ) = Self :: registry_detect_is_some_guard_name ( & values [ 0 ] ) { if let Some ( guarded_compare ) = self . try_lower_registry_guarded_option_compare_expr ( & values [ 1 ] , & guarded_name , ) { return Some ( crate :: RustExpr :: BinOp { left : Box :: new ( self . try_lower_registry_expr_strict ( & values [ 0 ] ) ? ) , op : lowered_op . to_string ( ) , right : Box :: new ( guarded_compare ) , } ) ; } } } let mut iter = values . iter ( ) ; let mut lowered = self . try_lower_registry_expr_strict ( iter . next ( ) ? ) ? ; for value in iter { lowered = crate :: RustExpr :: BinOp { left : Box :: new ( lowered ) , op : lowered_op . to_string ( ) , right : Box :: new ( self . try_lower_registry_expr_strict ( value ) ? ) , } ; } Some ( lowered ) } HirExpr :: Compare { left , ops , comparators , .. } => self . try_lower_registry_compare_expr ( left , ops , comparators ) , HirExpr :: BinOp { left , op , right , ty , } if op == \"**\" => { let left_expr = self . try_lower_registry_expr_strict ( left ) ? ; let right_expr = self . try_lower_registry_expr_strict ( right ) ? ; match crate :: resolve_alias_type_for_plain_call ( ty ) { Type :: Int | Type :: LiteralInt ( _ ) => None , Type :: Float => Some ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( left_expr ) , ty : crate :: RustType :: F64 , } ) , method : \"powf\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( right_expr ) , ty : crate :: RustType :: F64 , } ] , } ) , _ => None , } } HirExpr :: BinOp { left , op , right , ty , } if op == \"+\" && matches ! ( ty , Type :: Str | Type :: LiteralStr ( _ ) ) => { Some ( crate :: RustExpr :: FormatMacro { name : \"format\" . to_string ( ) , format_str : \"{}{}\" . to_string ( ) , args : vec ! [ self . try_lower_registry_expr_strict ( left ) ? , self . try_lower_registry_expr_strict ( right ) ? , ] , } ) } HirExpr :: BinOp { left , op , right , ty , } if matches ! ( op . as_str ( ) , \"+\" | \"-\" | \"*\" | \"/\" | \"//\" | \"%\" ) && matches ! ( ty , Type :: Float | Type :: Int | Type :: LiteralInt ( _ ) ) => { if matches ! ( op . as_str ( ) , \"/\" | \"//\" | \"%\" ) && matches ! ( crate :: resolve_alias_type_for_plain_call ( left . ty ( ) ) , Type :: Int | Type :: LiteralInt ( _ ) ) && matches ! ( crate :: resolve_alias_type_for_plain_call ( right . ty ( ) ) , Type :: Int | Type :: LiteralInt ( _ ) ) { return None ; } let left_expr = self . try_lower_registry_expr_strict ( left ) ? ; let right_expr = self . try_lower_registry_expr_strict ( right ) ? ; let borrow_integer = | value | { if matches ! ( ty . resolve_alias ( ) , Type :: Int | Type :: LiteralInt ( _ ) ) { self . coerce_expr_to_sifr_int_comparison_operand ( value ) } else { value } } ; Some ( crate :: RustExpr :: BinOp { left : Box :: new ( borrow_integer ( left_expr ) ) , op : if op == \"//\" { \"/\" . to_string ( ) } else { op . clone ( ) } , right : Box :: new ( borrow_integer ( right_expr ) ) , } ) } HirExpr :: Slice { object , start , stop , step , .. } if matches ! ( crate :: resolve_alias_type_for_plain_call ( object . ty ( ) ) , Type :: Str | Type :: LiteralStr ( _ ) ) => { self . try_lower_registry_string_slice_expr ( object , start . as_deref ( ) , stop . as_deref ( ) , step . as_deref ( ) , ) } HirExpr :: DictLiteral { keys , values , ty } => { self . try_lower_registry_dict_literal_expr ( keys , values , ty ) } HirExpr :: ListLiteral { elements , ty } => { if elements . is_empty ( ) { if let Some ( lowered ) = crate :: lower_expr :: typed_empty_list_expr ( ty ) { return Some ( lowered ) ; } } let list_ty = crate :: resolve_alias_type_for_plain_call ( ty ) ; let mut lowered = elements . iter ( ) . map ( | element | { let lowered = self . try_lower_registry_expr_strict ( element ) ? ; let lowered = if let Type :: List ( element_ty ) = list_ty { crate :: helpers :: adapt_collection_value_for_target ( element_ty . as_ref ( ) , element , lowered , ) } else { lowered } ; Some ( self . materialize_reusable_value_for_ir ( element , lowered ) ) } ) . collect :: < Option < Vec < _ > > > ( ) ? ; if matches ! ( list_ty , Type :: Bytes ) { lowered = lowered . into_iter ( ) . zip ( elements ) . map ( | ( lowered , element ) | { crate :: helpers :: adapt_bytes_element_for_storage ( element , lowered ) } ) . collect :: < Option < Vec < _ > > > ( ) ? ; } Some ( crate :: RustExpr :: Vec ( lowered ) ) } HirExpr :: TupleLiteral { elements , ty } => { let lowered = elements . iter ( ) . map ( | element | { let lowered = self . try_lower_registry_expr_strict ( element ) ? ; Some ( self . materialize_reusable_value_for_ir ( element , lowered ) ) } ) . collect :: < Option < Vec < _ > > > ( ) ? ; if crate :: homogeneous_large_tuple_backing_array ( ty ) . is_some ( ) { Some ( crate :: RustExpr :: Array ( lowered ) ) } else { Some ( crate :: RustExpr :: Tuple ( lowered ) ) } } HirExpr :: SetLiteral { elements , ty } => { self . try_lower_registry_set_literal_expr ( elements , ty ) } _ => None , }",
       "inputs": "fn try_lower_registry_expr_recursive ( & mut self , expr : & HirExpr , )",
       "outputs": "Option < crate :: RustExpr >",
       "role": "implement the canonical builtin method registry",
@@ -23277,7 +23277,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::1",
-      "fingerprint": "ca924d2b0601e2f043b2e51a63306957f5742886160ffd61fb90a13015876d22",
+      "fingerprint": "98a6baab401ea5d7c4adf31e6636d717e6dfb9c452dac265c1cfdc470f7455e5",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "HirExpr :: MethodCall { object , method , args , ty , receiver_convention , receiver_target , mutable_arg_places , .. }",
@@ -23294,7 +23294,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-match::2",
-      "fingerprint": "6345aa7e6bf44ad332a5fda222f6671f9eaabde38be7f174d1970786f517c605",
+      "fingerprint": "f644871c79879fe22ec930c1d5a484069148259d355b79e299f67ac32a7d7fb6",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "matches ! ( method . as_str ( ) , \"quantize\" | \"round\" )",
@@ -23311,7 +23311,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-comparison::1",
-      "fingerprint": "54f082d116b2c91cd65d2558700d477c08931e27a645f724bc80fe63d55d7693",
+      "fingerprint": "35076cd9068b48f4bae6f910319f0aa8ed769f625375579e5db220d99df4caf7",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "if method == \"append\"",
@@ -23328,7 +23328,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::2",
-      "fingerprint": "864a4148e6fb86dbdfd6362a6fe20dd63694a9703068088ff992db2e16ec66ff",
+      "fingerprint": "60f9e9782ab431cdcd03ee890ac6d5ad4ce0eefbd3d775adfa9a96592467a2af",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( adjusted ) ) ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , }",
@@ -23345,7 +23345,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::3",
-      "fingerprint": "c6daf6f6012b99d2b573c18de42fb44b72100740fc7f9de9f8ebe58bf5d4a309",
+      "fingerprint": "15631f86d136fcfa9790e3a162d52e0b07b80095920310d56bd375b94f9250d7",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"entry\" . to_string ( ) , args : vec ! [ registry_defaultdict_key_arg ( index , lowered_index , key_ty ) ] , } ) , method : \"or_insert\" . to_string ( ) , args : vec ! [ registry_defaultdict_default_expr ( alias_name ) ] , }",
@@ -23362,7 +23362,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::4",
-      "fingerprint": "fbf55af4247c13a07a853b3f1bc69a18d7c3c52481dc3ff2def997d47fa25794",
+      "fingerprint": "c9de2c02f246156497a0d0e538b79656c28225b675ecf9e56bdf75482a321273",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"entry\" . to_string ( ) , args : vec ! [ registry_defaultdict_key_arg ( index , lowered_index , key_ty ) ] , }",
@@ -23379,7 +23379,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::5",
-      "fingerprint": "9dc02724c0b20e7554aff74e275ad9169a082b57278ff9c93659251a07dc4289",
+      "fingerprint": "19f898ba29b7ce7a4ceb6016e025fc893ecb34dd6cb115916422c5c8d8e00ef2",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( entry_expr ) , method : \"clone\" . to_string ( ) , args : vec ! [ ] , }",
@@ -23396,7 +23396,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::6",
-      "fingerprint": "0adaf6ed747261e8445d4222542d4ed9b18d94a6201b6063230ac96552981043",
+      "fingerprint": "d3677bee0c1ee831f3a5cc3841f83bf3e3c147749a2b3fc9c4dfc68b71ebee12",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) , ) ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , } ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , }",
@@ -23413,7 +23413,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::7",
-      "fingerprint": "69bf383423304cfcde6436e32191c61fea556fc49313b8de7175525d4d0cc679",
+      "fingerprint": "aca6cde9d0b3eef7b1ba8f10a8fa6b328d70c4209182d97bf80d7ad57878bc63",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) , ) ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , }",
@@ -23430,7 +23430,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::8",
-      "fingerprint": "d3577a33465e83a42f47b9578cefa4d71ae6caeba65c30b70acdf18b5a6f8dd4",
+      "fingerprint": "073796ad008dd72b9e0af91b18373cc5ded565b71f903a2bbb4eb9d542a9089d",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"cloned\" . to_string ( ) , args : vec ! [ ] , }",
@@ -23447,7 +23447,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::9",
-      "fingerprint": "d8c836ddb4d21d00505e0ec2be9260782592b0c502717c712aadb3891144660f",
+      "fingerprint": "ea6a7d0a871cc8b96202ec58d634967097995c5ab59f20bb5a71b21b67086fa7",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , }",
@@ -23464,7 +23464,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::10",
-      "fingerprint": "81072daa6682e4e1f6ca2fefce79e28267056a6bc47c9eaf8ebbf7c4d513ccf7",
+      "fingerprint": "34266512f4a829a2fdbf86c2e614a6803980e3da2bf8dc322fb1b58f22c29c9d",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__byte\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( crate :: RustExpr :: Deref ( Box :: new ( crate :: RustExpr :: Ident ( \"__byte\" . to_string ( ) ) , ) ) ) , ty : crate :: RustType :: Named ( \"u8\" . to_string ( ) ) , } ) , is_move : false , } ] , }",
@@ -23481,7 +23481,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::11",
-      "fingerprint": "d8c836ddb4d21d00505e0ec2be9260782592b0c502717c712aadb3891144660f",
+      "fingerprint": "ea6a7d0a871cc8b96202ec58d634967097995c5ab59f20bb5a71b21b67086fa7",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Ident ( \"__v\" . to_string ( ) ) ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , }",
@@ -23498,7 +23498,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::12",
-      "fingerprint": "a98fd345dbe793a3e13d5588ba9e7fe85ba7c37a24c52f8c566652a5bb779491",
+      "fingerprint": "8ab167cfaa1898d11940601609ad453f41022ef725d5c14a075e517bcdcb5c03",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( lowered_object , ) ) ) , method : \"as_ref\" . to_string ( ) , args : vec ! [ ] , } ) , method : \"and_then\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__v\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( inner_expr ) , is_move : false , } ] , }",
@@ -23515,7 +23515,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::13",
-      "fingerprint": "c6f27f7cfd5c57b24760831a595bc0027320f29e48e18372f5c9f10bbe2e336e",
+      "fingerprint": "9bef0269e082b41f7bad491db08179d59187c71091359795d1451a2f79483ba7",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Paren ( Box :: new ( lowered_object , ) ) ) , method : \"as_ref\" . to_string ( ) , args : vec ! [ ] , }",
@@ -23532,7 +23532,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::14",
-      "fingerprint": "328924f5cf9050b8aa2dff60be0bcd1a0845248165cd16915c86141c5630a4a1",
+      "fingerprint": "62b7136fb0f4f07a206dfe9791bae75de02ebf896b0b4bcf7e6751c0e6940712",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , } ) , method : projection_method . to_string ( ) , args : vec ! [ ] , }",
@@ -23549,7 +23549,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::15",
-      "fingerprint": "7210c8643defcdb30cb31e07a64d750c190c0b144e6085aba130e7c55e643ea0",
+      "fingerprint": "ec2551da13d7af5ad2a49fe3f8c330a955ea31499870662303850f637c7af47b",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ key_arg ] , }",
@@ -23566,7 +23566,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::16",
-      "fingerprint": "41fc738a624136f25c692872975c439294759530f9a4bc21a87bb1d85382d032",
+      "fingerprint": "c0966c69ba59ca35275f97cfcb8df89ff833b70e7ea54efb4d2ee5adcd07df03",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : projection_method . to_string ( ) , args : vec ! [ ] , }",
@@ -23583,7 +23583,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::17",
-      "fingerprint": "60f7491569ac18c24e5f0c629ada69f308d0f7dfe3746cdc0faec993030d0684",
+      "fingerprint": "7da2a5cb83e05c3eabd92b4a08f3a0b379f0e07118790e12d4dacc49d8bb07b6",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , }",
@@ -23600,7 +23600,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::18",
-      "fingerprint": "fe89130eade0f6d32813c54aeaaa2f211a0b235fb0e35f6755820cdf787c5ad5",
+      "fingerprint": "2d9329e42b8892e972695da7bddc333f85c0da32228f7fdf3df3012c6b48ad06",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , } ) , method : \"map\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Closure { params : vec ! [ crate :: RustParam :: Named { name : \"__byte\" . to_string ( ) , ty : crate :: RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( crate :: RustExpr :: Deref ( Box :: new ( crate :: RustExpr :: Ident ( \"__byte\" . to_string ( ) ) , ) ) ) , ty : crate :: RustType :: Named ( \"u8\" . to_string ( ) ) , } ) , is_move : false , } ] , }",
@@ -23617,7 +23617,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::19",
-      "fingerprint": "60f7491569ac18c24e5f0c629ada69f308d0f7dfe3746cdc0faec993030d0684",
+      "fingerprint": "7da2a5cb83e05c3eabd92b4a08f3a0b379f0e07118790e12d4dacc49d8bb07b6",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( lowered_object ) , method : \"get\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( lowered_index ) , ty : crate :: RustType :: Named ( \"usize\" . to_string ( ) ) , } ] , }",
@@ -23634,7 +23634,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-match::3",
-      "fingerprint": "53055925a018589bc89cb794591cc2e54cdd3504c986bee8373774a9fc471e7a",
+      "fingerprint": "66254fb87b2b81d366fa75b08260c6a14204ebd2b760154553111eb393e06105",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "match op . as_str ( ) { \"and\" => \"&&\" , \"or\" => \"||\" , _ => return None , }",
@@ -23651,7 +23651,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-comparison::2",
-      "fingerprint": "73d61aebc8c9e5c6c7854ace86be7367793bb6b2aa0f39e1449dbe7db6a69eb3",
+      "fingerprint": "7aaae50f584005da618b1bcc13c678b3cef4c6f3968cbbec1550cc8bdb6fc471",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "if op == \"and\"",
@@ -23668,7 +23668,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-comparison::3",
-      "fingerprint": "12d13708cd661a840abf74cdf13617e38104f1bac3cd2625d45df2f430aae9c3",
+      "fingerprint": "b656388b871360e0b45f8452b81e164e8d823731153f669668bf566829dee338",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "if op == \"**\"",
@@ -23685,7 +23685,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::method-call-carrier::20",
-      "fingerprint": "c2aafe843b12fa4bc919d47fdd6385b7c99ce876b70f0f0b0ed103e118a9f0ed",
+      "fingerprint": "e33169e9aa58fd92827554f3e36ab1d61f3aa717bbf2b8e7f10f4697d6efa7af",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( crate :: RustExpr :: Cast { expr : Box :: new ( left_expr ) , ty : crate :: RustType :: F64 , } ) , method : \"powf\" . to_string ( ) , args : vec ! [ crate :: RustExpr :: Cast { expr : Box :: new ( right_expr ) , ty : crate :: RustType :: F64 , } ] , }",
@@ -23702,7 +23702,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-comparison::4",
-      "fingerprint": "533f26d45c2cca6e2331beedd5c2d6a92d0632be4b3d7d2882938b5ba24d6674",
+      "fingerprint": "6751c67f51526ac4b76881622c1ba738def08c3be61c8a100d8f29909c44b7ed",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "if op == \"+\"",
@@ -23719,7 +23719,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-match::4",
-      "fingerprint": "b3b4a3b654f0d4df842b37eb1d1722c8df1236c84540c4e18c21f513cc96af12",
+      "fingerprint": "183c66759dd85ea7d9b94ec91e69bbca9f592ac05ba8b9b42029ca118519c2be",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "matches ! ( op . as_str ( ) , \"+\" | \"-\" | \"*\" | \"/\" | \"//\" | \"%\" )",
@@ -23736,7 +23736,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-match::5",
-      "fingerprint": "70737e163203d4a12891201eba7dc0c81881f4222eb270cae233c0bf4c4f5491",
+      "fingerprint": "c901ef3c6ce4041cf958fe90a51cc5dd551e88857541950f971b288dee8e470c",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "matches ! ( op . as_str ( ) , \"/\" | \"//\" | \"%\" )",
@@ -23753,7 +23753,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs::try_lower_registry_expr_recursive::literal-comparison::5",
-      "fingerprint": "a55a25e3bcd47e35ebf128ac5ee1a20c0c56de25569516058e9eec1814d9040f",
+      "fingerprint": "8aab65abf8775acea38e388cb8294011299c0272bf900e52a38ddf326ae13c98",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "op : if op == \"//\"",

@@ -49,6 +49,8 @@ mod async_runtime_codegen_tests;
 #[cfg(test)]
 mod async_task_runtime_codegen_tests;
 #[cfg(test)]
+mod callable_field_codegen_tests;
+#[cfg(test)]
 mod canonical_codegen_tests;
 #[cfg(test)]
 mod character_comparison_codegen_tests;
