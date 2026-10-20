@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.12 merged; V0.13 sanitizer fixture and target propagation
+current_stage: V0.13 accepted; V0.16b application-profile fixture inventory
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -186,8 +186,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b merged #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
-| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Accepted: complete demos/freshness, typed cleanup repair and scoped review; PR #4375 |
-| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Current: repair declared input and exact instrumented target/environment; validate actual smoke outputs |
+| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Merged #4375; complete named acceptance and scoped review pass |
+| V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Accepted: real runtime/generated ASAN execution, actual artifact proof, edit/restore timing and review pass; PR #4376 |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
 | V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
@@ -2503,3 +2503,65 @@ executables define the expected ASAN symbols. These are preparation results,
 not smoke execution or V5 timing passes. Rust sources are unchanged by subsequent
 policy corrections. Final retained preparation, real smoke/artifact execution,
 representative edit timing, guards and fresh scoped review remain required.
+
+
+### V0.13 acceptance and measured edit cycle
+
+Implementation candidate `56ce1fc32bb96331b29057180c1591a89d2ae539` is accepted in
+[PR #4376](https://github.com/sifr-lang/sifr/pull/4376) under the approved
+focused intermediate policy. Independent remediation review is **SATISFIED**,
+with no remaining scoped blocker; raw review is externally keyed by that exact
+candidate. The earlier two failed reviews remain preserved. Twenty-two policy
+controls pass, as do formatting, file-size, area declarations and method-authority
+guards. Fourteen direct Cargo comparisons retain caller argument semantics.
+
+The canonical sanitizer smoke executes **two variants, both pass; zero skips and
+zero failures**, in 61.772s outer. Runtime and generated
+source assertions remain unchanged. Additional direct execution proves the
+runtime test actually runs (one passed), and selects the generated executable
+from the compiler's build report. Both that executed output and the compiler
+selected from Cargo artifact JSON define `__asan_init`, `__asan_report_load8`
+and `__asan_report_store8`; hashes and command environments are recorded.
+
+| Diagnostic category | Result | Outer elapsed |
+| --- | --- | ---: |
+| Retained runtime preparation | Pass | 4.694s |
+| Compiler preparation after policy flag-channel correction | Pass; first-party rebuild observed | 345.098s |
+| Unchanged compiler preparation baseline | Pass | 9.191s |
+| Representative compiler edit preparation | Pass | 215.928s |
+| Edited compiler/runtime/generated artifact assertions | Pass | 65.739s |
+| Restored compiler preparation | Pass | 177.509s |
+| Restored compiler/runtime/generated artifact assertions | Pass | 38.715s |
+
+The controlled edit changes one range-recognition expression from `args.len()`
+to equivalent `args.iter().count()`, then executes the unchanged nested-helper
+demo assertions with compiler and generated-program ASAN. The parent orchestrator
+checks the exact owned diff before restoring original bytes, outside the capped
+child process group. Final clean candidate preparation and original smoke-fixture
+artifact execution pass after restoration. This experiment makes no permanent
+Rust or fixture change. Each category retains the 30-minute cap, storage reserve,
+memory reserve and process cleanup receipts.
+
+These diagnostic observations overlap separate lightweight checks and use retained
+storage. They are not an idle-host A/B benchmark, full-gate sum or V5 qualification.
+The first-party rebuild after changing flag representation has matching Cargo
+artifact features/profiles/paths and build-script output facts; its precise dirty
+trigger is not proven. V3/V4 own fingerprint tracing and compilation/reuse work.
+Do not count that preparation as an unchanged warm build.
+
+A continuation diagnostic ran all 26 canonical runner self-test groups:
+**25 pass, one fails**, in 221.673s. The sole failure remains V0.16b's three
+missing application-profile entries; no failure was converted to a pass.
+Shared-fixture checks account for 194.373s. Source inspection shows repeated
+area-adapter input inventories, and an observed open descriptor points into the
+vendor input tree. V4 owns reducing repeated work without dropping input identity;
+this observation alone does not attribute every second to hashing.
+
+Evidence: external implementation bundle `v013-final-acceptance.json`,
+`v013-compiler-edit-experiment/`, the named receipts/artifact proofs, and
+`reviews/56ce1fc32bb96331b29057180c1591a89d2ae539/review.md`. The initial sweep-launch import failure,
+initial policy test-construction failure, earlier blocked runner execution and
+both rejected flag implementations are preserved. Review's later-phase condition
+for V0.16b/full gates/V5 is tracked under the approved phase-end policy, not waived.
+Next: reconcile V0.16b's exact three entries, then V0.14 and V1–V5. No complete
+gate or sub-ten-minute claim is made.
