@@ -236,3 +236,49 @@ fn method_slot_self_does_not_escape_into_a_nested_trait() {
     );
     assert!(!rust.contains(".as_str()"), "{rust}");
 }
+
+#[test]
+fn method_slot_self_and_constructor_keep_opaque_owner_paths() {
+    let rust = typed_compile_and_run(
+        r#"
+        struct Model;
+        impl Model { fn normalize(value: &str) -> usize { value.len() } }
+        mod other {
+            pub struct Other;
+            impl Other { pub fn normalize(value: String) -> usize { value.len() } }
+        }
+        mod owner {
+            pub struct Model;
+            impl Model {
+                pub fn normalize(value: &str) -> usize { value.len() }
+                pub fn serialize(&self, value: &str) -> usize { value.len() }
+            }
+        }
+        fn through_alias() {
+            use other::Other as Model;
+            impl Model {
+                fn invoke(value: String) -> usize { Self::normalize(value) }
+            }
+            assert_eq!(Model::invoke(String::from("hello")), 5);
+        }
+        fn through_local_module() {
+            mod owner {
+                pub struct Model;
+                impl Model {
+                    pub fn normalize(value: String) -> usize { value.len() }
+                    pub fn serialize(&self, value: String) -> usize { value.len() }
+                }
+            }
+            impl owner::Model {
+                fn invoke(value: String) -> usize { Self::normalize(value) }
+            }
+            assert_eq!(owner::Model::invoke(String::from("hello")), 5);
+            let receiver = owner::Model;
+            let value = String::from("hello");
+            assert_eq!(receiver.serialize(value), 5);
+        }
+        fn main() { through_alias(); through_local_module(); }
+    "#,
+    );
+    assert!(!rust.contains(".as_str()"), "{rust}");
+}
