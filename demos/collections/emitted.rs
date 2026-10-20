@@ -484,6 +484,24 @@ mod sifr_generated_project_nominals {
             self.data.clear();
         }
     }
+    impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
+        pub fn extend(&mut self, items: &[T]) {
+            #[expect(
+                clippy::explicit_iter_loop,
+                reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+            )]
+            for v in items.iter() {
+                self.data.push_back(v.clone());
+            }
+            let maxlen_opt: Option<SifrInt> = self.maxlen.clone();
+            if let Some(maxlen_opt) = maxlen_opt {
+                let maxlen: SifrInt = maxlen_opt;
+                while self.data.len() > maxlen {
+                    self.data.pop_front();
+                }
+            }
+        }
+    }
     impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn index(&self, value: &T, start: &SifrInt, stop: &Option<SifrInt>) -> Option<SifrInt> {
@@ -588,17 +606,25 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
     .into_iter()
     .collect::<std::collections::HashSet<_>>();
     actual.push(
-        left.r#union(&right)
-            .cloned()
-            .collect::<std::collections::HashSet<_>>()
-            .len()
+        {
+            let mut sifr_generated_result = left.clone();
+            sifr_generated_result.extend(right.iter().cloned());
+            sifr_generated_result
+        }
+        .len()
             == SifrInt::from_i64(5),
     );
     actual.push(
-        left.intersection(&right)
-            .cloned()
-            .collect::<std::collections::HashSet<_>>()
-            .len()
+        {
+            let mut sifr_generated_result = left;
+            let sifr_generated_set_arg_0 =
+                right.into_iter().collect::<std::collections::HashSet<_>>();
+            sifr_generated_result.retain(|sifr_generated_item| {
+                sifr_generated_set_arg_0.contains(sifr_generated_item)
+            });
+            sifr_generated_result
+        }
+        .len()
             == SifrInt::from_i64(1),
     );
     let counts: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> = from_list(&[
@@ -611,8 +637,8 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
     ]);
     actual.push(counts.get(&"x".to_string(), &SifrInt::from_i64(0)) == SifrInt::from_i64(3));
     actual.push(
-        format!("{:?}", counts.most_common(&Some(SifrInt::from_i64(2)))).as_str()
-            == "[(\"x\", 3), (\"y\", 2)]".to_string().as_str(),
+        format!("{:?}", counts.most_common(&Some(SifrInt::from_i64(2))))
+            == "[(\"x\", 3), (\"y\", 2)]",
     );
     actual
 }

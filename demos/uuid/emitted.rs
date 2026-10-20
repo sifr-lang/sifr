@@ -604,8 +604,8 @@ fn collect_generated_actual() -> Vec<bool> {
                 .get(sifr_generated_string_index_normalized)
                 .copied()
         }
-        .map(|character| character.to_string())
-            == Some("4".to_string()),
+        .map(Some)
+            == Some(Some('4')),
     );
     let obj: SifrGeneratedStdlibSifrX2euuidX2eUUID = uuid4_obj();
     actual.push(is_canonical_shape(&obj.to_str()) && obj.version() == SifrInt::from_i64(4));
@@ -650,10 +650,7 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
     actual.push(invalid_rejected);
     let ctor_passthrough: SifrGeneratedStdlibSifrX2euuidX2eUUID =
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new("550e8400-e29b-41d4-a716-44665544000z");
-    actual.push(
-        ctor_passthrough.to_str().as_str()
-            == "550e8400-e29b-41d4-a716-44665544000z".to_string().as_str(),
-    );
+    actual.push(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000z");
     let mut ctor_curly_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let ctor_curly: SifrGeneratedStdlibSifrX2euuidX2eUUID =

@@ -18,9 +18,9 @@ fn main() {
     let mut mapping: HashMap<String, SifrInt> =
         HashMap::from([("base".to_string(), SifrInt::from_i64(1))]);
     mapping.extend({
-        let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
-        sifr_generated_registry_dict_literal.insert("extra".to_string(), SifrInt::from_i64(2));
-        sifr_generated_registry_dict_literal
+        let mut sifr_generated_dict = HashMap::new();
+        sifr_generated_dict.insert("extra".to_string(), SifrInt::from_i64(2));
+        sifr_generated_dict
     });
     println!(
         "{}",

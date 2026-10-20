@@ -394,17 +394,11 @@ fn collect_actual() -> Vec<bool> {
         SifrInt::from_i64(1),
         SifrInt::from_i64(5),
     ];
-    actual.push(
-        format!("{:?}", nsmallest(&SifrInt::from_i64(3), &items)).as_str()
-            == "[1, 3, 5]".to_string().as_str(),
-    );
-    actual.push(
-        format!("{:?}", nlargest(&SifrInt::from_i64(2), &items)).as_str()
-            == "[9, 7]".to_string().as_str(),
-    );
+    actual.push(format!("{:?}", nsmallest(&SifrInt::from_i64(3), &items)) == "[1, 3, 5]");
+    actual.push(format!("{:?}", nlargest(&SifrInt::from_i64(2), &items)) == "[9, 7]");
     let mut empty_heap: Vec<SifrInt> = Vec::new();
     actual.push(heappop(&mut empty_heap).is_none());
-    actual.push(format!("{items:?}").as_str() == "[9, 3, 7, 1, 5]".to_string().as_str());
+    actual.push(format!("{items:?}") == "[9, 3, 7, 1, 5]");
     actual
 }
 fn main() {

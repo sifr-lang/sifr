@@ -404,8 +404,8 @@ pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2epathlibX2ePath;
 fn collect_path_helpers_actual() -> Vec<bool> {
     vec![
-        basename("/tmp/demo.txt").as_str() == "demo.txt".to_string().as_str(),
-        join_path("/tmp", "demo.txt").as_str() == "/tmp/demo.txt".to_string().as_str(),
+        basename("/tmp/demo.txt") == "demo.txt",
+        join_path("/tmp", "demo.txt") == "/tmp/demo.txt",
     ]
 }
 fn collect_path_class_actual() -> Vec<bool> {

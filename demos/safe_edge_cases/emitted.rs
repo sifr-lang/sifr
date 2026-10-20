@@ -1166,7 +1166,13 @@ mod sifr_generated_generated_support {
             } else if sifr_generated_chars_part.len() == SifrInt::from_i64(0) {
                 units.push("-".to_string());
             } else {
-                units.push(format!("{part}-"));
+                units.push({
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(part.len().saturating_add(1usize));
+                    sifr_generated_concat.push_str(part.as_str());
+                    sifr_generated_concat.push('-');
+                    sifr_generated_concat
+                });
             }
             index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
         }

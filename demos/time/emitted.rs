@@ -964,10 +964,8 @@ fn collect_clock_actual() -> Vec<bool> {
     actual
 }
 fn collect_format_actual() -> Vec<bool> {
-    let mut actual: Vec<bool> = vec![
-        strftime("%Y-%m-%d %H:%M:%S", 0.0_f64).as_str()
-            == "1970-01-01 00:00:00".to_string().as_str(),
-    ];
+    let mut actual: Vec<bool> =
+        vec![strftime("%Y-%m-%d %H:%M:%S", 0.0_f64) == "1970-01-01 00:00:00"];
     let gmt: SifrGeneratedStdlibSifrX2etimeX2estructTime = gmtime_struct(0.0_f64);
     actual.push(
         gmt.tm_year == SifrInt::from_i64(1970)

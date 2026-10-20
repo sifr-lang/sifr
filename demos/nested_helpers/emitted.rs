@@ -88,8 +88,8 @@ fn count_configurations(n: &SifrInt) -> SifrInt {
                 continue;
             }
             cols.insert(j.clone());
-            posdiag.insert(::std::ops::Add::add(i, &j));
-            negdiag.insert(::std::ops::Sub::sub(i, &j));
+            posdiag.insert(i + &j);
+            negdiag.insert(i - &j);
             count = ::std::ops::Add::add(
                 &count,
                 &backtrack(
@@ -101,8 +101,8 @@ fn count_configurations(n: &SifrInt) -> SifrInt {
                 ),
             );
             cols.remove(&j);
-            posdiag.remove(&::std::ops::Add::add(i, &j));
-            negdiag.remove(&::std::ops::Sub::sub(i, &j));
+            posdiag.remove(&(i + &j));
+            negdiag.remove(&(i - &j));
         }
         count
     }

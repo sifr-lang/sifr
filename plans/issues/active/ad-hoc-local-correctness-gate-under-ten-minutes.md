@@ -2311,3 +2311,28 @@ focused regression checks for any actual code change, required guards, and scope
 independent review. Existing phase-end full correctness gates and V5 remain
 mandatory. Separate sanitizer/process/caching/compilation work stays in its
 recorded item. No demo source renames or unrelated refactors are implied.
+
+### V0.12 measured baseline and companion reconciliation
+
+At `9198c640e48dc7cd7df6b660e312f6bc83b37d46`, all ten canonical demos pass
+in 10.190s after their portable dependency graphs are prepared. The initial
+14.694s attempt failed on an unprepared offline Git dependency, before Rust
+validation. Full-profile preparation was intentionally stopped after 549.512s
+and 46 of 93 graphs, including all ten demos: it is incomplete, not a profile
+pass. V3/V4 retain the excessive preparation and revision-root lifecycle work.
+
+The complete freshness baseline compared 264 companions in 271.472s: 41 stale,
+zero orphaned. Staging those 41 emissions outside Git took 68.226s with four
+workers. Every emission succeeded without a `compile_error!` marker. All 61
+distinct replacement blocks were inspected: string construction/comparison and
+character slicing, collection ownership/deque methods, borrowed-list copying,
+integer operator rendering, optional-character comparison, and the existing
+BigDecimal precision/half-even rounding policy. These are current compiler
+outputs; no demo source or assertion is changed.
+
+The proposed complete set of 264 companions has zero generated safety findings
+under the existing exact-debt policy. No debt allowance is added. Evidence is
+retained in `v012-companion-proposal/report.json`, its per-file diffs and
+`change-cohorts.json`, and `v012-safety-proposal.json` outside the reviewed tree.
+Complete freshness, deterministic comparisons, affected quality contracts,
+guards and independent review remain pending on the implementation candidate.

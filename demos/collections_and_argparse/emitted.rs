@@ -151,14 +151,15 @@ mod sifr_generated_generated_support {
                 let sifr_generated_slice_len = sifr_generated_slice_src.len();
                 let sifr_generated_slice_start =
                     SifrInt::from_i64(2).clamp_slice_bound(sifr_generated_slice_len);
-                let sifr_generated_slice_stop = SifrInt::from(sifr_generated_slice_src.len())
+                let sifr_generated_slice_stop = SifrInt::from(sifr_generated_chars_name.len())
                     .clamp_slice_bound(sifr_generated_slice_len);
-                sifr_generated_slice_src
-                    .iter()
-                    .skip(sifr_generated_slice_start)
-                    .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
-                    .copied()
-                    .collect::<String>()
+                String::from_iter(
+                    sifr_generated_slice_src
+                        .iter()
+                        .skip(sifr_generated_slice_start)
+                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
+                        .copied(),
+                )
             }
             .replace('-', "_");
         }
@@ -168,14 +169,15 @@ mod sifr_generated_generated_support {
                 let sifr_generated_slice_len = sifr_generated_slice_src.len();
                 let sifr_generated_slice_start =
                     SifrInt::from_i64(1).clamp_slice_bound(sifr_generated_slice_len);
-                let sifr_generated_slice_stop = SifrInt::from(sifr_generated_slice_src.len())
+                let sifr_generated_slice_stop = SifrInt::from(sifr_generated_chars_name.len())
                     .clamp_slice_bound(sifr_generated_slice_len);
-                sifr_generated_slice_src
-                    .iter()
-                    .skip(sifr_generated_slice_start)
-                    .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
-                    .copied()
-                    .collect::<String>()
+                String::from_iter(
+                    sifr_generated_slice_src
+                        .iter()
+                        .skip(sifr_generated_slice_start)
+                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
+                        .copied(),
+                )
             }
             .replace('-', "_");
         }

@@ -117,11 +117,8 @@ fn collect_filter_actual() -> Vec<bool> {
         "notes.txt".to_string(),
         "lib.py".to_string(),
     ];
-    actual.push(
-        format!("{:?}", filter(&names, "*.py")).as_str()
-            == "[\"main.py\", \"lib.py\"]".to_string().as_str(),
-    );
-    actual.push(format!("{:?}", filter(&names, "README*")).as_str() == "[]".to_string().as_str());
+    actual.push(format!("{:?}", filter(&names, "*.py")) == "[\"main.py\", \"lib.py\"]");
+    actual.push(format!("{:?}", filter(&names, "README*")) == "[]");
     actual
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {
