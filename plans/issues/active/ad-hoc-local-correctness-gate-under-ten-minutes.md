@@ -1728,3 +1728,17 @@ repairs compiler-generated method-slot adapters by retaining their known input
 contracts; it does not claim general transactional ABI optimization across opaque
 foreign code. This concern must remain visible in the phase's final correctness
 assessment rather than being treated as a passing probe.
+
+
+V0.8 diagnostic refinement: the first nested-owner test also exposed a pre-existing
+qualified cross-module trait-call liveness failure (E0576), preserved in
+`v08-new-tests-against-base` and `v08-static-probe-direct-call`. V0.11 owns that
+separate liveness defect. Keep the same two runtime assertions but invoke the
+trait within its module in the bounded borrow regression. The resulting
+`v08-static-probe-module-local-call` compiles before cleanup and fails specifically
+with the two expected E0308 `Self::normalize` mismatches afterward. The first
+focused candidate had four passing checks and this unrelated liveness failure
+(459.045 seconds, 456 seconds preparation, 0.81 seconds tests); it is not a pass.
+The first guard run passed format/area/method-policy/self-tests but failed the
+900-line guard at 903. Move call resolution beside declared-method facts to keep
+the main typed-rewriter source below its limit. Both attempts remain retained.

@@ -58,12 +58,13 @@ fn method_slot_static_self_borrows_resolve_the_enclosing_owner() {
             impl Slot for Other {
                 fn invoke(value: String) -> String { Self::normalize(value) }
             }
+            pub fn run() {
+                assert_eq!(<Model as Slot>::invoke(String::from("hello")), "HELLO");
+                assert_eq!(<Other as Slot>::invoke(String::from("HELLO")), "hello");
+            }
         }
-        fn main() {
-            assert_eq!(<nested::Model as nested::Slot>::invoke(String::from("hello")), "HELLO");
-            assert_eq!(<nested::Other as nested::Slot>::invoke(String::from("HELLO")), "hello");
-        }
-    "#,
+        fn main() { nested::run(); }
+"#,
     );
     assert_eq!(
         rust.matches("fn normalize(value: &str)").count(),

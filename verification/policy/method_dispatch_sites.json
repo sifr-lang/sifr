@@ -84862,7 +84862,7 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_sysroot/src/native_context_tests.rs::native_launch_subprocess_entry enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::resolve::literal-comparison::1",
+      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::resolve::literal-comparison::1",
       "fingerprint": "f83cfbf3e280f3fd95d52d9601c754d39f247ca80f5021ae46cc1a7146bc7308",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
@@ -84870,8 +84870,8 @@
       "inputs": "fn resolve ( & self , path : & syn :: Path )",
       "outputs": "Option < & Callable >",
       "role": "inspect or rewrite generated Rust syntax/IR",
-      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::resolve enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::resolve enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::resolve enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::resolve enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }
