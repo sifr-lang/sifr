@@ -35,6 +35,7 @@
       "id": "generated-binary-asan-smoke",
       "suites": ["sanitizer-smoke", "sanitizer-full"],
       "scope": "generated_binary",
+      "required_files": ["crates/sifr/tests/e2e/pass/break_continue.sifr"],
       "tool": "asan",
       "supported_host_triples": [
         "aarch64-apple-darwin",
@@ -57,7 +58,7 @@
         "sifr",
         "--",
         "run",
-        "demos/hello.sifr"
+        "crates/sifr/tests/e2e/pass/break_continue.sifr"
       ],
       "skip_reason": "requires nightly Rust sanitizer support and llvm-symbolizer for generated binary execution",
       "finding_promotion": "Promote minimized Sifr source plus generated Rust evidence into generated_code_quality and regression coverage."

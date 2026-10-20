@@ -212,6 +212,11 @@ surface coverage are enforced by `diagnostics:rules`.
 
 ## Fuzz, Sanitizer, And Release Evidence
 
+Sanitizer manifests declare required source files and validate them before builds.
+Instrumented compiler and generated-program builds both target the current host.
+Caller Rust flags and build storage are preserved; conflicting sanitizer flags
+fail before execution instead of silently changing the declared instrumentation.
+
 Deterministic local fuzz/property evidence:
 
 ```bash

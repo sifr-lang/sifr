@@ -362,6 +362,7 @@ def validate_sanitizer_case(case: object, seen: set[str]) -> None:
         "env",
         "finding_promotion",
         "id",
+        "required_files",
         "required_rustup_components",
         "required_rustup_toolchains",
         "required_tools",
@@ -412,6 +413,83 @@ def validate_sanitizer_case(case: object, seen: set[str]) -> None:
             raise SystemExit(f"sanitizer case {case_id} component entries must be objects")
         required_string(component, "toolchain")
         required_string(component, "component")
+    validate_sanitizer_inputs(case)
+
+
+def validate_sanitizer_inputs(case: dict[str, Any]) -> None:
+    paths = case.get("required_files", [])
+    if not isinstance(paths, list) or not all(isinstance(path, str) and path for path in paths):
+        raise SystemExit(f"sanitizer case {case['id']} required_files must be a string list")
+    # Source arguments must be declared, so a stale command cannot bypass its
+    # preflight by listing some other existing input.
+    for argument in case["command"]:
+        if argument.endswith(".sifr") and argument not in paths:
+            raise SystemExit(f"sanitizer case {case['id']} has undeclared source input: {argument}")
+    for raw in paths:
+        path = Path(raw)
+        resolved = (REPO_ROOT / path).resolve()
+        if path.is_absolute() or not resolved.is_relative_to(REPO_ROOT.resolve()) or not resolved.is_file():
+            raise SystemExit(f"sanitizer case {case['id']} required input is missing or outside the repository: {raw}")
+
+
+# Rust str::trim uses Unicode White_Space. Python also strips U+001C–U+001F,
+# which Cargo keeps, so use the Rust set when validating sanitizer conflicts.
+RUST_FLAG_WHITESPACE = (
+    "\t\n\v\f\r \x85\xa0\u1680"
+    "\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a"
+    "\u2028\u2029\u202f\u205f\u3000"
+)
+
+
+def cargo_plain_rustflags(raw: str) -> list[str]:
+    # Validation only. Keep the original representation for Cargo execution.
+    return [flag for part in raw.split(" ") if (flag := part.strip(RUST_FLAG_WHITESPACE))]
+
+
+def sanitizer_flag_modes(flags: list[str]) -> set[str]:
+    modes = set()
+    for index, flag in enumerate(flags):
+        if flag.startswith("-Zsanitizer="):
+            modes.add(flag.removeprefix("-Zsanitizer="))
+        elif flag == "-Z" and index + 1 < len(flags) and flags[index + 1].startswith("sanitizer="):
+            modes.add(flags[index + 1].removeprefix("sanitizer="))
+    return modes
+
+
+def sanitizer_environment(case: dict[str, Any], host_triple: str) -> dict[str, str]:
+    inherited = os.environ.copy()
+    env = inherited | case.get("env", {})
+    env.setdefault("CARGO_NET_OFFLINE", "true")
+    expected = {"asan": "address", "lsan": "leak", "tsan": "thread"}.get(case["tool"])
+    if expected is None:
+        return env
+    required = cargo_plain_rustflags(case.get("env", {}).get("RUSTFLAGS", ""))
+    if sanitizer_flag_modes(required) != {expected}:
+        raise SystemExit(f"sanitizer case {case['id']} must declare {expected} instrumentation")
+    # Cargo prefers encoded flags even when RUSTFLAGS is also present. Preserve
+    # caller options in that same order, then append the required instrumentation.
+    raw = inherited.get("RUSTFLAGS", "")
+    encoded = env.get("CARGO_ENCODED_RUSTFLAGS")
+    if encoded is None:
+        flags = cargo_plain_rustflags(raw)
+    else:
+        flags = encoded.split("\x1f") if encoded else []
+    if sanitizer_flag_modes(flags).difference({expected}):
+        raise SystemExit(f"sanitizer case {case['id']} conflicts with inherited sanitizer instrumentation")
+    # Preserve the caller's input format and bytes. Cargo owns parsing of plain
+    # flags; converting them to encoded flags could split a literal U+001F.
+    declared = case["env"]["RUSTFLAGS"]
+    env["RUSTFLAGS"] = f"{raw} {declared}" if raw else declared
+    if encoded is not None:
+        if any("\x1f" in flag for flag in required):
+            raise SystemExit(f"sanitizer case {case['id']} has an unrepresentable declared encoded flag")
+        addition = "\x1f".join(required)
+        env["CARGO_ENCODED_RUSTFLAGS"] = f"{encoded}\x1f{addition}" if encoded else addition
+    if case["scope"] == "generated_binary":
+        # The selected compiler launches Cargo again. Target separation must
+        # reach that child too, so host proc macros remain uninstrumented.
+        env["CARGO_BUILD_TARGET"] = host_triple
+    return env
 
 
 def required_string(payload: dict[str, Any], key: str) -> str:
@@ -426,8 +504,8 @@ def sanitizer_command(case: dict[str, Any], host_triple: str) -> list[str]:
     if case["tool"] in {"asan", "lsan", "tsan"}:
         # Keep sanitizer instrumentation on the runtime target. Instrumenting
         # host proc macros would require an instrumented rustc to load them.
-        # Use an outer Cargo argument, not an inherited CARGO_BUILD_TARGET that
-        # could change generated-program artifact paths in nested Cargo builds.
+        # Keep the outer command explicit. Generated-binary cases additionally
+        # propagate this target in sanitizer_environment for nested Cargo.
         boundary = command.index("--") if "--" in command else len(command)
         command[boundary:boundary] = ["--target", host_triple]
     return command
@@ -437,6 +515,7 @@ def run_sanitizer_case(suite_name: str, case: dict[str, Any], host_triple: str) 
     case_id = str(case["id"])
     command = list(case["command"])
     started = time.perf_counter()
+    validate_sanitizer_inputs(case)
     skip_reasons = sanitizer_skip_reasons(case, host_triple)
     if skip_reasons:
         elapsed_ms = (time.perf_counter() - started) * 1000.0
@@ -460,9 +539,7 @@ def run_sanitizer_case(suite_name: str, case: dict[str, Any], host_triple: str) 
 
     command = sanitizer_command(case, host_triple)
     timeout_seconds = int(case["timeout_seconds"])
-    env = os.environ.copy()
-    env.update({str(key): str(value) for key, value in case.get("env", {}).items()})
-    env.setdefault("CARGO_NET_OFFLINE", "true")
+    env = sanitizer_environment(case, host_triple)
     try:
         result = subprocess.run(
             command,
