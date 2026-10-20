@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.3b validated; independent review pending
+current_stage: V0.3b reviewed; merge pending; V0.6a next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -175,9 +175,9 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | --- | --- | --- |
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
 | V0.2 | SQL provenance and moved-source qualification guards | Merged #4362; 43 native tests and 33 checks pass; review SATISFIED |
-| V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
+| V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher merged in V0.3a; Python registries/fixtures qualified and reviewed in V0.3b |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
-| V0.3b | Python runtime registries and LSP selected-input admission | Validated in #4363; independent review pending |
+| V0.3b | Python runtime registries and LSP selected-input admission | Validated in #4363; review SATISFIED |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
@@ -1202,11 +1202,42 @@ LSP declaration authoring 397.250s (all four canonical commands), buffer release
 5/5 in 1.700s, Arrow 15/15 in 1.241s, and DLPack 21/21 in 0.865s. These are runner
 case times including their preparation. The large authoring time includes nested
 CLI/Cargo preparation, not only LSP assertions. The explicitly filtered run used
-`--allow-partial-certification`; its certification remains partial and cannot
-satisfy final Python-area/phase qualification. Exact runtime inventories, real
+`--allow-partial-certification`; the captured certification status is
+`not-selected`, and this run cannot satisfy final Python-area/phase qualification. Exact runtime inventories, real
 PyArrow transfer, missing/duplicate/extra/substituted admission controls all ran.
 The runtime Cargo integration target reports zero selected tests separately;
 coverage credit is only the 41 exact named module tests, not those filtered targets.
 Raw reports, receipts, stdout/stderr and resource evidence are retained locally
-and remotely. PR [#4363](https://github.com/sifr-lang/sifr/pull/4363) is draft;
-independent review and merge are pending.
+and remotely. PR [#4363](https://github.com/sifr-lang/sifr/pull/4363) is reviewed;
+merge is pending.
+
+
+V0.3b review on `a0bb8008c56df8313ec1a8d7b65d6e27f2ca83f4`:
+**SATISFIED**, no blocking findings. Raw review is preserved outside Git as
+`reviews/a0bb8008c56df8313ec1a8d7b65d6e27f2ca83f4/review.md` in the implementation
+evidence root. Later edits only record review/status and correct the certification
+label from “partial” to the actual report's `not-selected`; no implementation or
+validation input changes. Documentation diff and local links checked.
+
+Separate LSP freshness follow-up: ancestor events outside a package root are not
+routed back to that descendant root by `watcher_events.rs`, and watcher-covered
+documents skip polling. On-demand observation sees the drift, but event-driven
+refresh can wait until a request. This also affects existing ancestor Cargo/config/
+toolchain inputs; it is not introduced by V0.3b. Owner: LSP external-input watcher
+routing, outside this bounded admission repair. A manifest-failure/repair selection
+test is an optional review suggestion; root manifest changes are already hashed
+and existing invalid-manifest repair controls pass.
+
+**Next bounded item V0.6a — interop fixture authority.** First reproduce current
+Rust interop contract failures with the retained driver test target. Repair the
+owned fixture/input boundary for the recorded missing Cargo manifests and bridge
+source directory. Preserve production rejection of absent real Cargo authority;
+no fallback, skipped probes or missing-input success. Keep pure contract assertions
+and real Cargo probe/runtime integration explicit and require both. Run the complete
+affected contract/probe groups, missing-manifest/source negative controls and the
+full driver library diagnostic batch to identify downstream failures without
+repeated preparation. Keep ownership/pruning and emitted-output/key assertions in
+separate V0.6 follow-ups; other V0 semantic defects retain their named owners.
+Required guards: formatting, source direction, file size and any affected area
+contracts. Apply the approved focused intermediate review policy, then continue
+through the remaining phase items. Final integrated gates/V5 remain open.
