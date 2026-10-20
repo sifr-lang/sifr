@@ -454,8 +454,43 @@ class Cursor:
     );
     assert!(rust.contains("steps: &SifrInt"), "{rust}");
     assert!(!rust.contains("&steps"), "{rust}");
-    assert!(rust.contains("+ steps"), "{rust}");
-    assert!(rust.contains("- steps"), "{rust}");
+    struct BorrowedOperations(Vec<String>);
+    impl<'ast> syn::visit::Visit<'ast> for BorrowedOperations {
+        fn visit_expr_call(&mut self, call: &'ast syn::ExprCall) {
+            if let syn::Expr::Path(path) = call.func.as_ref() {
+                let operation = path
+                    .path
+                    .segments
+                    .iter()
+                    .map(|segment| segment.ident.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::");
+                if matches!(
+                    operation.as_str(),
+                    "std::ops::Add::add" | "std::ops::Sub::sub"
+                ) {
+                    assert_eq!(call.args.len(), 2);
+                    assert!(matches!(&call.args[1], syn::Expr::Path(argument)
+                        if argument.path.is_ident("steps")));
+                    self.0.push(operation);
+                }
+            }
+            syn::visit::visit_expr_call(self, call);
+        }
+    }
+    let mut operations = BorrowedOperations(Vec::new());
+    syn::visit::Visit::visit_file(
+        &mut operations,
+        &syn::parse_file(&rust).expect("Rust parses"),
+    );
+    assert_eq!(
+        operations.0,
+        [
+            "std::ops::Add::add",
+            "std::ops::Sub::sub",
+            "std::ops::Add::add"
+        ]
+    );
 }
 
 #[test]

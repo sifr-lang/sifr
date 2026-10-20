@@ -18085,7 +18085,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-match::1",
-      "fingerprint": "daf8434a7844e3174051aef3ca09bd62ac1070ed87f4b2f5e6bb7da2ecd885c0",
+      "fingerprint": "d7298db0f06dd385888e6482bd68a02a8ad2ea51772dc98cf6feff9a435af756",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( expression , syn :: Expr :: Macro ( vector ) if vector . mac . path . is_ident ( \"vec\" ) && vector . mac . tokens . is_empty ( ) )",
@@ -18097,7 +18097,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-comparison::1",
-      "fingerprint": "9e65cf540dc4e161b811c844a09c2eacb51c6bd61f2a3f47d88ef337f176f30d",
+      "fingerprint": "83f7177a3d172be5df061e0abab9472c5b770a15350ae4b810ca917b2a78e71e",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "if call . method == \"unwrap_or_else\"",
@@ -18109,7 +18109,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-match::2",
-      "fingerprint": "1520ceebec595c2c6b671b5eedc1d05c8c046c389d25d7542d75c39512c296e4",
+      "fingerprint": "d1ce6c6f7efe64f322af94835712d9b4fc16eebac0ad249ad175292dfb5e9422",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( fallback . body . as_ref ( ) , syn :: Expr :: Path ( path ) if path . qself . is_none ( ) && path . path . is_ident ( \"None\" ) )",
@@ -18121,7 +18121,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-match::3",
-      "fingerprint": "1028aa357f7161e3d2d313e1c255749cf53199c306ef3696ad0596c2f04f2447",
+      "fingerprint": "4d12f02612b856da6deb527696f19d8cf77af30f3ed0ab1b2764fb527bfacd28",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( call . method . to_string ( ) . as_str ( ) , \"clone\" | \"as_str\" )",
@@ -18133,7 +18133,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-match::4",
-      "fingerprint": "a7c0ee088125f956efdcf1208902913f1265614faa98a23df0e814761e98b1dc",
+      "fingerprint": "70c43d5fd86e8a6d4aeb11ba48dd6b77c7fdfe426f6d242ee258d5c5f7135bd4",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( call . method . to_string ( ) . as_str ( ) , \"is_empty\" | \"len\" )",
@@ -18145,7 +18145,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-comparison::2",
-      "fingerprint": "06d4aee546e2b961581d593ed8b583e205b5193783f8fac935d03021c5f45dde",
+      "fingerprint": "5ea5f8a2c1854b4a1ac3b7cc4c0f162373626e2c2905bc9d8e36c76fdf8ef296",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "view . method == \"as_str\"",
@@ -18157,7 +18157,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-comparison::3",
-      "fingerprint": "3f13e7d7ceae66f04c027fd7554969051672f576999a97b89e893bc6e7fd2365",
+      "fingerprint": "8f10e011bab32d883bb9d3334e1c547086807724b627c198c6727c514b54e4ef",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "if call . method == \"to_vec\"",
@@ -18169,7 +18169,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-comparison::4",
-      "fingerprint": "9e65cf540dc4e161b811c844a09c2eacb51c6bd61f2a3f47d88ef337f176f30d",
+      "fingerprint": "83f7177a3d172be5df061e0abab9472c5b770a15350ae4b810ca917b2a78e71e",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "if call . method == \"unwrap_or_else\"",
@@ -18181,7 +18181,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-comparison::5",
-      "fingerprint": "093c15cc5824713fac4702277a5108f67bf9a551073a1ddaae6b5daba6b7f352",
+      "fingerprint": "4011a3d30729e936698f8f01effc2d17392f3353f912eb6686e7f93589ffde0d",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "map . method == \"map\"",
@@ -18193,7 +18193,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::visit_expr_mut::literal-comparison::6",
-      "fingerprint": "7da2f45001381e5d4deb1a9031c00ccbcb0ffc06c41a5c9e067515324fe50424",
+      "fingerprint": "eaa8b1f6700dca55fbc23696680f58b9344322eb2a8493d5be3116b230590367",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "call . method == \"clone\"",
@@ -18229,7 +18229,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::rewrite_vector_collect::literal-comparison::1",
-      "fingerprint": "cdf96c72f762b93994fabcc9384ef02011c813f6228e4ca14c48ca2d8901eab0",
+      "fingerprint": "d4ccde9cea86ceddb80deeff4d257cdb1c4b870afacfb4681976c93b10f92ae4",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "if collect . method != \"collect\"",
@@ -18241,7 +18241,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::rewrite_vector_collect::literal-match::1",
-      "fingerprint": "b796e83550864550262486b560c8e3dc2a8d96525d3a09547d9d237d56aa0742",
+      "fingerprint": "fed25063eb2c8338fe327d01f319ad90cf01f1dfa974119d4886884dc0212ffa",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( copied . method . to_string ( ) . as_str ( ) , \"cloned\" | \"copied\" )",
@@ -18253,7 +18253,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs::rewrite_vector_collect::literal-comparison::2",
-      "fingerprint": "961d6e8fda6332aebc571a620eefb33db2350ade328c090cf50c3ba817605f9b",
+      "fingerprint": "e1b336ba25da6ff69cbec4f4770b6f0436da3da7e40f39cda663f67130b9299c",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "if iterated . method != \"iter\"",
@@ -18553,10 +18553,10 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_field_cleanup.rs::imported_name::literal-match::1",
-      "fingerprint": "f2905f95fda5ad58588975131dcf867a41f6980738c037554353d2fc9ba9bd39",
+      "fingerprint": "ebcac0cc22809cf00d44d645501900018476858cd536f4850a0bf769fb3d8c4d",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
-      "operation": "match bound . to_string ( ) . as_str ( ) { \"String\" => \"std::string::String\" , \"SifrInt\" => \"sifr_runtime::SifrInt\" , \"Option\" => \"std::option::Option\" , \"Some\" => \"std::option::Option::Some\" , \"None\" => \"std::option::Option::None\" , \"Result\" => \"std::result::Result\" , \"HashMap\" => \"std::collections::HashMap\" , \"HashSet\" => \"std::collections::HashSet\" , \"Vec\" => \"std::vec::Vec\" , \"vec\" => \"std::vec\" , \"Box\" => \"std::boxed::Box\" , \"Clone\" => \"std::clone::Clone\" , _ => \"\" , }",
+      "operation": "match bound . to_string ( ) . as_str ( ) { \"String\" => \"std::string::String\" , \"SifrInt\" => \"sifr_runtime::SifrInt\" , \"SifrRange\" => \"sifr_runtime::SifrRange\" , \"Option\" => \"std::option::Option\" , \"Some\" => \"std::option::Option::Some\" , \"None\" => \"std::option::Option::None\" , \"Result\" => \"std::result::Result\" , \"HashMap\" => \"std::collections::HashMap\" , \"HashSet\" => \"std::collections::HashSet\" , \"Vec\" => \"std::vec::Vec\" , \"vec\" => \"std::vec\" , \"Box\" => \"std::boxed::Box\" , \"Clone\" => \"std::clone::Clone\" , _ => \"\" , }",
       "inputs": "fn imported_name ( & mut self , source : & syn :: Ident , bound : & syn :: Ident , path : & [ String ] )",
       "outputs": "implicit unit / macro expansion",
       "role": "inspect or rewrite generated Rust syntax/IR",
@@ -18745,7 +18745,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs::iterator_element::literal-match::1",
-      "fingerprint": "fd2678ab9eecb9b1c8dc0422f50de9cbfb678d3f8d5650b1bd9bee5d7c9747f7",
+      "fingerprint": "c9db84299b0330d9387f1efc72977caf23aeff8293c9b3a7574f76a06deabae6",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( call . func . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . segments . len ( ) == 2 && path . path . segments [ 0 ] . ident == \"Box\" && path . path . segments [ 1 ] . ident == \"new\" )",
@@ -18757,7 +18757,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs::iterator_element::literal-comparison::1",
-      "fingerprint": "0b705a3f4cb42138d7e45e87f1aa5059791ccaf6f58944d3e82dd3e0304cc39e",
+      "fingerprint": "73a81c28e8e0af9981a19374cc26aa71899c2f4940aebceb611774c72c900b4a",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "path . path . segments [ 0 ] . ident == \"Box\"",
@@ -18769,7 +18769,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs::iterator_element::literal-comparison::2",
-      "fingerprint": "884612b03fdb90e2b3f1c4e19ab284122e4ed75ca0a5afc64bf79e7ff661ec5a",
+      "fingerprint": "3da750daf55a5b0ede5a183b21558d4461ee04c42b8239e021f164f039a787c3",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "path . path . segments [ 1 ] . ident == \"new\" )",
@@ -18781,7 +18781,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs::iterator_element::literal-match::2",
-      "fingerprint": "26566746e147a83573d2e8883a92b4e6639b7acd154801f7e74830fde88a11bf",
+      "fingerprint": "0b19348ce51af3a232e2e4df3ced4804eac3a1eef0e5b21ec450092faf72a37d",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "match call . method . to_string ( ) . as_str ( ) { \"iter\" | \"iter_mut\" | \"into_iter\" if call . args . is_empty ( ) => { let ty = self . ty ( & call . receiver ) ? ; let element = self . standard_generic ( unreference ( & ty ) , \"Vec\" ) . or_else ( || match unreference ( & ty ) { syn :: Type :: Slice ( slice ) => Some ( slice . elem . as_ref ( ) ) , _ => None , } , ) ? ; return Some ( match call . method . to_string ( ) . as_str ( ) { \"iter_mut\" => syn :: parse_quote ! ( & mut # element ) , \"iter\" => syn :: parse_quote ! ( & # element ) , _ if matches ! ( ty , syn :: Type :: Reference ( _ ) ) => syn :: parse_quote ! ( & # element ) , _ => element . clone ( ) , } ) ; } \"cloned\" | \"copied\" if call . args . is_empty ( ) => { return match self . iterator_element ( & call . receiver ) ? { syn :: Type :: Reference ( reference ) => Some ( * reference . elem ) , _ => None , } ; } \"enumerate\" if call . args . is_empty ( ) => { let element = self . iterator_element ( & call . receiver ) ? ; return Some ( syn :: parse_quote ! ( ( usize , # element ) ) ) ; } \"map\" if call . args . len ( ) == 1 => { let syn :: Expr :: Closure ( closure ) = & call . args [ 0 ] else { return None ; } ; if closure . inputs . len ( ) != 1 { return None ; } let element = self . iterator_element ( & call . receiver ) ? ; let mut nested = Rewriter { iteration_dispatch_closed : self . iteration_dispatch_closed , ambiguous_clone_scopes : self . ambiguous_clone_scopes , ambiguous_string_pattern_scopes : self . ambiguous_string_pattern_scopes , scalar_shadows : self . scalar_shadows , functions : self . functions , structures : self . structures , local_items : self . local_items . clone ( ) , self_type : self . self_type . clone ( ) , scope : self . scope . clone ( ) , module_depth : self . module_depth , bindings : self . bindings . clone ( ) , discardable_assignments : HashMap :: new ( ) , float_expectations : Default :: default ( ) , } ; nested . bind ( & closure . inputs [ 0 ] , Some ( element ) ) ; return nested . ty ( & closure . body ) ; } _ => { } }",
@@ -18793,7 +18793,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs::iterator_element::literal-match::3",
-      "fingerprint": "fed33873c11cdad874741f33a942e60b633bc7af27e78220d0ad644dd18b7e02",
+      "fingerprint": "b8d0b442735a1f9bdd8da2b0a2dfa82241b8167f452e709438c8ca4763a5110e",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "match call . method . to_string ( ) . as_str ( ) { \"iter_mut\" => syn :: parse_quote ! ( & mut # element ) , \"iter\" => syn :: parse_quote ! ( & # element ) , _ if matches ! ( ty , syn :: Type :: Reference ( _ ) ) => syn :: parse_quote ! ( & # element ) , _ => element . clone ( ) , }",
@@ -18805,7 +18805,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs::iterator_element::literal-comparison::3",
-      "fingerprint": "36c301be1e7df18f809f46ab6dca615bce36bf7c218c8fd615eb9fc4e251bddf",
+      "fingerprint": "5f06cac4ddbdf755a7f1c1a694957ca128199d58e0be1073dab33ebaca904e9b",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "\"map\" if call . args . len ( ) == 1",
@@ -84876,6 +84876,54 @@
         "lower_method_impl"
       ],
       "admission_relationship": "methods::lower_method_impl canonical registry -> exact compiler task-owner or typed JoinSet/AsyncGenerator receiver, explicit method and arity; receives contextual operands after source method admission"
+    },
+    {
+      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs::is_standard_integer_range::literal-comparison::1",
+      "fingerprint": "2cdf59bc67ab45082cd04f823e985c4fe59f5bc7af20b6a82eb398ca24078d10",
+      "classification": "rust-ir-consumption",
+      "owner": "sifr_codegen",
+      "operation": "path . path . segments [ 0 ] . ident == \"SifrRange\"",
+      "inputs": "fn is_standard_integer_range ( & self , expression : & syn :: Expr )",
+      "outputs": "bool",
+      "role": "inspect or rewrite generated Rust syntax/IR",
+      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs::is_standard_integer_range enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs::is_standard_integer_range enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs::is_standard_integer_range::literal-comparison::2",
+      "fingerprint": "ceec947ea144632a0f032fc36e817aa73ea6f6e31a744d4a3e0b31acaf61d39e",
+      "classification": "rust-ir-consumption",
+      "owner": "sifr_codegen",
+      "operation": "path . path . segments [ 1 ] . ident == \"new_known_nonzero\"",
+      "inputs": "fn is_standard_integer_range ( & self , expression : & syn :: Expr )",
+      "outputs": "bool",
+      "role": "inspect or rewrite generated Rust syntax/IR",
+      "caller_admission_relationship": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs::is_standard_integer_range enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs::is_standard_integer_range enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call::literal-match::1",
+      "fingerprint": "c4774e54c6300b12119194ef06f94493c630fde72ba235c06893e618f36738ab",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( operation . as_str ( ) , \"std::ops::Add::add\" | \"std::ops::Sub::sub\" )",
+      "inputs": "fn visit_expr_call ( & mut self , call : & ' ast syn :: ExprCall )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call::literal-match::2",
+      "fingerprint": "d75474c88ec9ad5e7b25a551aadd1715ca9ea28fb5acda9ea9984a94db0c0b76",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( & call . args [ 1 ] , syn :: Expr :: Path ( argument ) if argument . path . is_ident ( \"steps\" ) )",
+      "inputs": "fn visit_expr_call ( & mut self , call : & ' ast syn :: ExprCall )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/src/lib_codegen_tests/corpus_repair_codegen_tests.rs::visit_expr_call enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     }
   ]
 }
