@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.8 merged; V0.9 ancestry/upcast investigation
+current_stage: V0.9 validated and reviewed; V0.10 CLI parity next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -183,7 +183,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
-| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
+| V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Validated/reviewed; PR #4371 |
 | V0.10 | CLI eager/deferred schema parity | Pending |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
@@ -1896,3 +1896,49 @@ already pass at this checkpoint. `v09-guards-repaired` passes all guards in
 45.681 seconds. Its independent review is SATISFIED with no blockers, conditional
 on final tests, so this is not accepted final evidence. Re-review the rendering
 correction and rerun the complete codegen suite plus unchanged native group.
+
+
+### V0.9 final validation and review
+
+Implementation `226b8f3acb5c09d3198fc147e98566249dafb16c`, base
+`01ed090d1fdcad7677f2e8107bd323732bb4da8e`, PR
+[#4371](https://github.com/sifr-lang/sifr/pull/4371). Exact-candidate receipts and
+hashes are reconciled in `v09-final-validation.json` under
+`continuation-evidence/local-gate-implementation-20261020/`.
+
+- `v09-codegen-final`: **1,770 passed**, zero failed/ignored/filtered;
+  334.399 seconds outer, 318 preparation, 14.55 execution. The inventory retains
+  all previous 1,766 IDs and adds four root-cause/boundary tests.
+- `v09-native-final`: **19 passed**, zero failed/ignored, 797 filtered outside
+  this named group; 374.444 seconds outer, 336 preparation, 36.14 execution.
+  The exact nineteen baseline IDs are retained. Both historical failures now
+  compile and execute; all imported/generic/union/ancestry runtime assertions
+  remain unchanged. No full-driver pass is inferred from this focused group.
+- `v09-guards-final`: all formatting, size, area contracts, method authority and
+  mutation self-tests plus diff check pass in 48.176 seconds. The inventory has
+  6,391 sites and the same 234 constituents: four obsolete local path comparisons
+  disappear when resolution uses the existing shared helper, and one test
+  comparison is added. Every other site/class/owner remains unchanged.
+
+All final receipts bind the reviewed candidate with no timeout, reserve stop,
+leftover process group or source drift. Independent review is **SATISFIED**, no
+blockers: `reviews/226b8f3acb5c09d3198fc147e98566249dafb16c/review.md`. Its required
+codegen/guard/native conditions are now satisfied. The earlier review and failed
+attempts remain retained; the interrupted initial review was not accepted.
+
+Follow-ups: V4 owns avoiding repeated whole-project token rendering during
+fixed-point analysis and investigating optional convergence diagnostics without
+changing correctness. Visibility uses normalized audiences; equivalent relative
+spelling is preserved for immediate parents, without promising identical spelling
+for every equivalent source declaration. Imported ancestry remains covered by the
+unchanged native tests; the existing emitter publicizes non-main module types.
+The native unit control uses the selected pinned toolchain in the package cwd.
+No final full-gate or under-ten-minute result is claimed; V0.10 and V5 remain open.
+
+Additional V4 source finding: `sifr_identity::build::emit_local_token` visits the
+whole package, including test files, and emits source/configuration tokens.
+Moving tests only to another directory in that same package cannot remove that
+identity input. Evaluate cohesive public-behavior test ownership together with
+production-input identity; do not omit genuine production dependencies or expose
+private APIs just to move tests. The observed 318/336-second preparations are
+separate library/test contexts, not an additive full-gate forecast.
