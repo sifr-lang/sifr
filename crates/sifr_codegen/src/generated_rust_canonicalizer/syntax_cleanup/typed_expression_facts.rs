@@ -147,7 +147,9 @@ impl Rewriter<'_> {
             let syn::Type::Path(owner) = self.self_type.as_ref()? else {
                 return None;
             };
-            if owner.qself.is_some() || owner.path.leading_colon.is_some() {
+            if owner.qself.is_some() || owner.path.leading_colon.is_some()
+                || local_type_name(&owner.path).is_some_and(|name|
+                    self.local_items.types.contains_key(&name)) {
                 return None;
             }
             parts.splice(
@@ -188,7 +190,7 @@ impl Rewriter<'_> {
         if owner.qself.is_some() {
             return None;
         }
-        if local_type_name(&owner.path).is_some_and(|name| self.local_structures.contains_key(&name)) {
+        if local_type_name(&owner.path).is_some_and(|name| self.local_items.types.contains_key(&name)) {
             return None;
         }
         let mut path = owner.path.clone();
@@ -231,7 +233,7 @@ impl Rewriter<'_> {
             }
         }
         self.bindings = outer;
-        self.local_structures = outer_types;
+        self.local_items = outer_types;
     }
     fn align_comparison_references(
         &self,
@@ -312,8 +314,8 @@ impl Rewriter<'_> {
             .map(|segment| segment.ident.to_string())
             .collect::<Vec<_>>();
         let structure = if let Some(local) = local_type_name(&owner.path)
-            .and_then(|name| self.local_structures.get(&name)) {
-            if self.local_structures.contains_key("*") { return None; }
+            .and_then(|name| self.local_items.types.get(&name)) {
+            if self.local_items.types.contains_key("*") { return None; }
             let structure = local.as_ref()?;
             if !structure.generics.params.is_empty() { return None; }
             structure

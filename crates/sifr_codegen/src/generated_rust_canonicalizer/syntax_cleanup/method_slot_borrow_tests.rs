@@ -4,13 +4,26 @@ use std::process::Command;
 
 fn compile_and_run(source: &str) -> String {
     let canonical = canonicalize_generated_rust_source(source).expect("canonical Rust");
+    compile_pair(source, &canonical);
+    canonical
+}
+
+fn typed_compile_and_run(source: &str) -> String {
+    let mut file = syn::parse_file(source).expect("Rust fixture");
+    super::rewrite(&mut file);
+    let canonical = prettyplease::unparse(&file);
+    compile_pair(source, &canonical);
+    canonical
+}
+
+fn compile_pair(source: &str, canonical: &str) {
     let directory = tempfile::Builder::new()
         .prefix("sifr-method-slot-borrows-")
         .tempdir()
         .expect("owned native regression directory")
         .keep();
     // Keep both inputs and compiler diagnostics, including on failure.
-    for (name, text) in [("before", source), ("after", canonical.as_str())] {
+    for (name, text) in [("before", source), ("after", canonical)] {
         let input = directory.join(format!("{name}.rs"));
         let binary = directory.join(format!("{name}{}", std::env::consts::EXE_SUFFIX));
         std::fs::write(&input, text).expect("write native input");
@@ -39,7 +52,6 @@ fn compile_and_run(source: &str) -> String {
             directory.display()
         );
     }
-    canonical
 }
 
 #[test]
@@ -130,24 +142,97 @@ fn method_slot_decoded_input_types_survive_opaque_runtime_boundaries() {
 }
 
 #[test]
-fn method_slot_constructor_facts_do_not_cross_shadowing_bindings_or_items() {
-    let mut file = syn::parse_file(
+fn method_slot_constructor_facts_keep_value_and_type_namespaces_separate() {
+    let rust = typed_compile_and_run(
         r#"
         struct Model;
-        impl Model { fn normalize(&self, value: &str) {} }
-        fn run(opaque: Other, value: String) {
-            let Model = opaque;
-            Model.normalize(value);
-            { struct Model { field: i32 }
-              let receiver = Model { field: 1 };
-              receiver.normalize(value); }
+        impl Model { fn normalize(&self, value: &str) -> usize { value.len() } }
+        struct Other;
+        impl Other {
+            fn normalize(&self, value: String) -> usize {
+                let length = value.len();
+                std::mem::drop(value);
+                length
+            }
+        }
+        fn main() {
+            {
+                const Model: Other = Other;
+                let receiver = Model;
+                let value = String::from("hello");
+                assert_eq!(receiver.normalize(value), 5);
+                let typed: Model = crate::Model;
+                assert_eq!(typed.normalize("hello"), 5);
+            }
+            {
+                static Model: Other = Other;
+                let receiver = &Model;
+                let value = String::from("hello");
+                assert_eq!(receiver.normalize(value), 5);
+            }
+            let receiver = { const Model: Other = Other; Model };
+            let value = String::from("hello");
+            assert_eq!(receiver.normalize(value), 5);
+            let marker = Model;
+            {
+                const marker: Other = Other;
+                let receiver = marker;
+                let value = String::from("hello");
+                assert_eq!(receiver.normalize(value), 5);
+            }
+            assert_eq!(marker.normalize("hello"), 5);
+            // The value shadow must not leak out of its lexical block.
+            let receiver = Model;
+            assert_eq!(receiver.normalize("hello"), 5);
         }
     "#,
-    )
-    .expect("Rust fixture");
-    super::rewrite(&mut file);
-    let rust = prettyplease::unparse(&file);
-    assert!(rust.contains("Model.normalize(value)"), "{rust}");
-    assert!(rust.contains("receiver.normalize(value)"), "{rust}");
+    );
+    assert!(!rust.contains(".as_str()"), "{rust}");
+}
+
+#[test]
+fn method_slot_self_does_not_resolve_a_shadowed_block_local_owner() {
+    let rust = typed_compile_and_run(
+        r#"
+        struct Model;
+        impl Model { fn normalize(value: &str) -> usize { value.len() } }
+        fn main() {
+            struct Model;
+            impl Model {
+                fn normalize(value: String) -> usize { value.len() }
+                fn invoke(value: String) -> usize { Self::normalize(value) }
+            }
+            assert_eq!(Model::invoke(String::from("hello")), 5);
+        }
+    "#,
+    );
+    assert!(!rust.contains(".as_str()"), "{rust}");
+}
+
+#[test]
+fn method_slot_self_does_not_escape_into_a_nested_trait() {
+    let rust = typed_compile_and_run(
+        r#"
+        struct Model;
+        impl Model {
+            fn normalize(value: &str) -> usize { value.len() }
+            fn run() {
+                trait Local {
+                    fn normalize(value: String) -> usize;
+                    fn invoke(value: String) -> usize {
+                        let text: String = value;
+                        Self::normalize(text)
+                    }
+                }
+                struct Other;
+                impl Local for Other {
+                    fn normalize(value: String) -> usize { value.len() }
+                }
+                assert_eq!(<Other as Local>::invoke(String::from("hello")), 5);
+            }
+        }
+        fn main() { Model::run(); }
+    "#,
+    );
     assert!(!rust.contains(".as_str()"), "{rust}");
 }

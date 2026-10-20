@@ -1752,3 +1752,22 @@ its receiver-call assertion. The failed run took 331.980 seconds including
 316 seconds preparation and 13.81 seconds tests. The review started on that
 candidate was stopped before mutation once this failure was known; its partial
 output is not an accepted review. Revalidate and review the final candidate.
+
+
+V0.8 candidate `d3af617f95ce829b1a6e071652feaf1d17ac8e85` passed all 1,763
+codegen tests (47.749 seconds outer, 32.79 preparation, 13.79 test execution), all
+required guards (48.182 seconds), and the two existing native method-slot tests
+(89.47 seconds test execution after 337 seconds preparation). Its scoped review
+was SATISFIED with no blockers, retained outside Git at
+`reviews/d3af617f95ce829b1a6e071652feaf1d17ac8e85/review.md`.
+
+Before merging, address the review's lexical-edge findings because they concern
+the new identity/type inference: distinguish local value items from type items,
+retain both namespaces across nested block inference, prevent block-local impl
+owners from resolving to an outer same-named owner, and clear an enclosing impl's
+`Self` while visiting a nested trait. Replace the invalid binding-shaped shadow
+control with actual compiling/running local-const/static/type-namespace controls,
+and add native local-impl/nested-trait controls. The typed cleanup alone is used
+for these controls to isolate identity resolution from unrelated whole-pipeline
+optimizations; the three primary native regressions still exercise the complete
+canonicalizer. Revalidate and obtain a fresh scoped review after this refinement.

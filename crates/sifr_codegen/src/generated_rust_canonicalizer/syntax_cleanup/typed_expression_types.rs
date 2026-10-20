@@ -267,7 +267,7 @@ impl Rewriter<'_> {
                             scalar_shadows: self.scalar_shadows,
                             functions: self.functions,
                             structures: self.structures,
-            local_structures: self.local_structures.clone(),
+            local_items: self.local_items.clone(),
                             self_type: self.self_type.clone(),
                             scope: self.scope.clone(),
                             module_depth: self.module_depth,
@@ -296,7 +296,7 @@ impl Rewriter<'_> {
                     scalar_shadows: self.scalar_shadows,
                     functions: self.functions,
                     structures: self.structures,
-            local_structures: self.local_structures.clone(),
+            local_items: self.local_items.clone(),
                     self_type: self.self_type.clone(),
                     scope: self.scope.clone(),
                     module_depth: self.module_depth,
@@ -304,6 +304,7 @@ impl Rewriter<'_> {
                     discardable_assignments: HashMap::new(),
                     float_expectations: Default::default(),
                 };
+                nested.enter_local_type_scope(&block.block);
                 for stmt in &block.block.stmts {
                     if let syn::Stmt::Local(local) = stmt {
                         nested.bind(

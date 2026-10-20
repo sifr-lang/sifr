@@ -63,7 +63,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
         scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
         structures: &facts.structures,
-        local_structures: HashMap::new(),
+        local_items: LocalItemScope::default(),
         self_type: None,
         scope: Vec::new(),
         module_depth: 0,
@@ -91,7 +91,7 @@ struct Rewriter<'facts> {
     scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
     structures: &'facts HashMap<String, syn::ItemStruct>,
-    local_structures: HashMap<String, Option<syn::ItemStruct>>,
+    local_items: LocalItemScope,
     self_type: Option<syn::Type>,
     scope: Vec<String>,
     module_depth: usize,
@@ -361,6 +361,13 @@ impl VisitMut for Rewriter<'_> {
         visit_mut::visit_item_impl_mut(self, implementation);
         self.self_type = previous;
     }
+    fn visit_item_trait_mut(&mut self, item: &mut syn::ItemTrait) {
+        // A trait's Self is its implementing type, never an enclosing impl.
+        let previous = self.self_type.take();
+        visit_mut::visit_item_trait_mut(self, item);
+        self.self_type = previous;
+    }
+
     fn visit_item_mod_mut(&mut self, module: &mut syn::ItemMod) {
         self.scope.push(module.ident.to_string());
         let previous = std::mem::replace(&mut self.module_depth, self.scope.len());
