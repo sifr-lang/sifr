@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.6a1 validated and reviewed; V0.6a2 real fixtures next
+current_stage: V0.6a1 merged; V0.6a2 real fixture authority in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -1320,3 +1320,9 @@ belong to V0.6c. Review also notes that the test adapter assumes declarations
 and a context; check that assumption if future tests reuse it. Final integrated
 create-PR/merge gates and V5 remain open; this intermediate repair makes no
 whole-gate runtime claim.
+
+V0.6a1 merged as #4364 at `a425c6b99658925c32fa2869da882e1f9f687173`.
+V0.6a2 now supplies owned real Cargo/bridge/sysroot inputs for qualification tests.
+It retains same-fixture cache comparisons and explicit absent-manifest/source
+rejection controls. The existing sysroot Cargo-key shape assertion remains a
+separate V0.6c failure; no production fallback or qualification bypass is added.

@@ -397,17 +397,19 @@ fn package_rust_interop_abort_policy_accepts_trust_and_abort_strategy() {
     };
     let mut context = bridge_context(trust);
     let package_root = temp_package_root("rust_interop_panic_abort_profile");
-    std::fs::create_dir_all(package_root.join("src")).expect("create package source root");
+    std::fs::create_dir_all(package_root.join("src/bridges")).expect("create bridge source root");
     std::fs::write(
         package_root.join("Cargo.toml"),
         "[package]\nname = \"sifr-app\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[profile.release]\npanic = \"abort\"\n",
     )
     .expect("write package cargo profile");
+    std::fs::write(package_root.join("src/lib.rs"), "pub mod bridges;\n")
+        .expect("write package-local bridge target");
     std::fs::write(
-        package_root.join("src/lib.rs"),
-        "pub mod bridges { pub mod hash { pub fn digest() -> String { String::new() } } }\n",
+        package_root.join("src/bridges/mod.rs"),
+        "pub mod hash { pub fn digest() -> String { String::new() } }\n",
     )
-    .expect("write package-local bridge target");
+    .expect("write declared bridge source");
     context
         .graph
         .packages

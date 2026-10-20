@@ -5,6 +5,8 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
     PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
+use super::rust_interop_test_support::CargoFixture;
+use super::sysroot_interop_test_support::TempSysroot;
 use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot, RustInteropTrustRequirementKind};
 use sifr_package::{
@@ -13,10 +15,7 @@ use sifr_package::{
     SifrPackageName, TrustPolicy,
 };
 use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate};
-use sifr_sysroot::{
-    COMPILER_SIFR_VERSION, ResolvedSysroot, SUPPORTED_SYSROOT_SCHEMA_VERSION, SysrootManifest,
-    SysrootPaths,
-};
+
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -33,7 +32,9 @@ fn attach_stdlib_rust_interop(
 
 #[test]
 fn private_stdlib_interop_resolves_sysroot_crate_target() {
+    let root = TempSysroot::new("qualified-resolution");
     let interop = private_stdlib_interop(
+        &root,
         "@rust(sifr_stdlib.test_bridge.noop)\ndef noop() -> None:\n    pass\n",
     );
 
@@ -48,7 +49,7 @@ fn private_stdlib_interop_resolves_sysroot_crate_target() {
             dependency_name,
             sysroot_root,
             ..
-        } if dependency_name == "sifr_stdlib" && sysroot_root == "/opt/sifr"
+        } if dependency_name == "sifr_stdlib" && sysroot_root == &root.path.display().to_string()
     ));
     assert_eq!(generated.interop.rust.trust_requirements.len(), 1);
     assert!(generated.interop.rust.trust_requirements[0].trusted);
@@ -65,7 +66,9 @@ fn private_stdlib_interop_resolves_sysroot_crate_target() {
 
 #[test]
 fn private_stdlib_interop_rejects_omitted_policy_for_runtime_target() {
+    let root = TempSysroot::new("qualified-resolution");
     let interop = private_stdlib_interop(
+        &root,
         "@rust(sifr_runtime.test_bridge.noop)\ndef noop() -> None:\n    pass\n",
     );
 
@@ -85,7 +88,9 @@ fn private_stdlib_interop_rejects_omitted_policy_for_runtime_target() {
 
 #[test]
 fn private_stdlib_interop_rejects_non_sysroot_target_root() {
+    let root = TempSysroot::new("qualified-resolution");
     let interop = private_stdlib_interop(
+        &root,
         "@rust(user_backend.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
     );
 
@@ -99,13 +104,19 @@ fn private_stdlib_interop_rejects_non_sysroot_target_root() {
     assert!(diagnostics[0].message.contains("canonical sysroot crate"));
     assert_eq!(
         diagnostics[0].spans[0].file.as_deref(),
-        Some("/opt/sifr/stdlib/_sifr/test_bridge.sifr")
+        Some(
+            root.private_path("_sifr.test_bridge")
+                .to_string_lossy()
+                .as_ref()
+        )
     );
 }
 
 #[test]
 fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
+    let root = TempSysroot::new("qualified-resolution");
     let interop = private_stdlib_interop(
+        &root,
         "@rust(sifr_stdlib.test_bridge.noop)\ndef noop() -> None:\n    pass\n",
     );
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
@@ -148,7 +159,10 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
 
 #[test]
 fn merged_user_and_private_stdlib_interop_both_resolve() {
+    let package = CargoFixture::bridge();
+    let root = TempSysroot::new("merged-resolution");
     let stdlib_interop = private_stdlib_interop(
+        &root,
         "@rust(sifr_stdlib.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
     );
     let mut generated = base_project();
@@ -157,8 +171,11 @@ fn merged_user_and_private_stdlib_interop_both_resolve() {
         "@rust(bridge.user_noop, panic=trusted_no_panic)\ndef user_noop() -> None:\n    pass\n",
     );
 
-    let (generated, context) =
-        attach_stdlib_rust_interop(generated, Some(user_context()), &stdlib_interop);
+    let (generated, context) = attach_stdlib_rust_interop(
+        generated,
+        Some(package.bind(user_context())),
+        &stdlib_interop,
+    );
     let generated =
         apply_package_rust_interop_metadata(generated, context).expect("merged interop resolves");
 
@@ -188,7 +205,9 @@ fn merged_user_and_private_stdlib_interop_both_resolve() {
 
 #[test]
 fn merged_user_and_private_stdlib_interop_keeps_user_trust_separate() {
+    let root = TempSysroot::new("merged-resolution");
     let stdlib_interop = private_stdlib_interop(
+        &root,
         "@rust(sifr_stdlib.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
     );
     let mut generated = base_project();
@@ -221,10 +240,18 @@ fn merged_user_and_private_stdlib_interop_keeps_user_trust_separate() {
     assert!(diagnostics[0].message.contains("bridge.user_noop"));
 }
 
-fn private_stdlib_interop(source: &str) -> StdlibRustInterop {
-    let parsed =
-        sifr_syntax::parse_module_raw(source, Some("/opt/sifr/stdlib/_sifr/test_bridge.sifr"))
-            .expect("private declaration parses");
+fn private_stdlib_interop(root: &TempSysroot, source: &str) -> StdlibRustInterop {
+    root.write_private("_sifr.test_bridge", source);
+    root.write_stdlib_crate("pub mod test_bridge { pub fn noop() {} }\n");
+    let parsed = sifr_syntax::parse_module_raw(
+        source,
+        Some(
+            root.private_path("_sifr.test_bridge")
+                .to_string_lossy()
+                .as_ref(),
+        ),
+    )
+    .expect("private declaration parses");
     assert!(parsed.has_valid_syntax());
     let lowered = sifr_lowering::lower_module_sysroot_private_declaration_with_externals(
         parsed.suite(),
@@ -242,10 +269,10 @@ fn private_stdlib_interop(source: &str) -> StdlibRustInterop {
             "_sifr.test_bridge".to_string(),
             StdlibRustInteropModuleSource {
                 source: source.to_string(),
-                display_path: "/opt/sifr/stdlib/_sifr/test_bridge.sifr".to_string(),
+                display_path: root.private_path("_sifr.test_bridge").display().to_string(),
             },
         )]),
-        sysroot: Some(fake_sysroot()),
+        sysroot: Some(root.resolved()),
     }
 }
 
@@ -342,22 +369,5 @@ fn base_project() -> GeneratedBinaryProject {
         cache_key_fragment: None,
         bridge_modules: Default::default(),
         python_runtime: None,
-    }
-}
-
-fn fake_sysroot() -> ResolvedSysroot {
-    let root = PathBuf::from("/opt/sifr");
-    ResolvedSysroot {
-        root: root.clone(),
-        manifest: SysrootManifest {
-            schema_version: SUPPORTED_SYSROOT_SCHEMA_VERSION,
-            sifr_version: COMPILER_SIFR_VERSION.to_string(),
-            target_triple: "test-target".to_string(),
-            built_by_compiler_commit: "abcdef0".to_string(),
-            sysroot_content_sha256: "0".repeat(64),
-            cargo_lock_sha256: "1".repeat(64),
-        },
-        paths: SysrootPaths::from_root(&root),
-        cargo_lock_content_sha256: "2".repeat(64),
     }
 }

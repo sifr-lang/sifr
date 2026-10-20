@@ -2,6 +2,7 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
     PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
+use super::rust_interop_test_support::CargoFixture;
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{TextRange, TextSize};
 use sifr_codegen::{
@@ -385,13 +386,14 @@ fn package_rust_interop_mapped_value_rejects_resource_clone_policy() {
 
 #[test]
 fn package_rust_interop_records_declared_transitive_bridge_native_links() {
+    let fixture = CargoFixture::bridge();
     let declaration = declaration_entry("bridge.hash", RustInteropDecoratorKind::Function);
     let generated = base_project_with_contracts(vec![declaration], Vec::new());
     let trust = TrustPolicy {
         native_links: vec!["ring_core_0_17_14_".to_string()],
         ..TrustPolicy::default()
     };
-    let mut context = package_context(trust, Vec::new());
+    let mut context = fixture.bind(package_context(trust, Vec::new()));
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -413,19 +415,21 @@ fn package_rust_interop_records_declared_transitive_bridge_native_links() {
 
 #[test]
 fn package_rust_interop_records_declared_native_links_for_direct_crate_bindings() {
+    let fixture = CargoFixture::bridge();
+    let native = CargoFixture::new("native", "pub fn hash() {}\n");
     let declaration = declaration_entry("native.hash", RustInteropDecoratorKind::Function);
     let generated = base_project_with_contracts(vec![declaration], Vec::new());
     let trust = TrustPolicy {
         native_links: vec!["psm_s".to_string()],
         ..TrustPolicy::default()
     };
-    let context = package_context(
+    let context = fixture.bind(package_context(
         trust,
         vec![backend_with_manifest(
             "native",
-            PathBuf::from("/ws/native/Cargo.toml"),
+            native.path().join("Cargo.toml"),
         )],
-    );
+    ));
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("package-scoped native-link trust should cover direct crate bindings");
@@ -441,6 +445,31 @@ fn package_rust_interop_records_declared_native_links_for_direct_crate_bindings(
                     && requirement.required_entry == "psm_s"
                     && requirement.trusted
             })
+    );
+}
+
+#[test]
+fn package_rust_interop_rejects_missing_declared_bridge_source() {
+    let fixture = CargoFixture::new("sifr-app", "pub mod bridges { pub fn hash() {} }\n");
+    let generated = base_project_with_contracts(
+        vec![declaration_entry(
+            "bridge.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        Vec::new(),
+    );
+    let mut context = fixture.bind(package_context(TrustPolicy::default(), Vec::new()));
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "missing declared bridge must fail",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CARGO-0001");
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("unreadable Rust bridge source")
     );
 }
 

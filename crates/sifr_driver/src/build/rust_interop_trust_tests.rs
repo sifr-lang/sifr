@@ -156,19 +156,25 @@ fn package_rust_interop_rejects_untrusted_unsafe_bridge_file() {
 
 #[test]
 fn package_rust_interop_cache_changes_with_proc_macro_trust_policy() {
+    let fixture = CargoFixture::bridge();
+    let native = CargoFixture::new("native", "pub fn hash() {}\n");
     let cache_fragment = |rust_proc_macros: Vec<String>| {
         apply_package_rust_interop_metadata(
             base_project(vec![declaration_entry(
                 "native.hash",
                 RustInteropDecoratorKind::Function,
             )]),
-            Some(package_context(
+            Some(fixture.bind(package_context(
                 TrustPolicy {
                     rust_proc_macros,
                     ..TrustPolicy::default()
                 },
-                vec![backend("native", false)],
-            )),
+                vec![backend_with_manifest(
+                    "native",
+                    false,
+                    native.path().join("Cargo.toml"),
+                )],
+            ))),
         )
         .expect("interop metadata should apply")
         .interop
