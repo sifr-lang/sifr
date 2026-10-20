@@ -132,6 +132,52 @@ fn collect_structures(
 }
 
 impl Rewriter<'_> {
+    fn resolve(&self, path: &syn::Path) -> Option<&Callable> {
+        if path.leading_colon.is_some() {
+            return None;
+        }
+        let mut parts = path
+            .segments
+            .iter()
+            .map(|s| s.ident.to_string())
+            .collect::<Vec<_>>();
+        // `Self` denotes the enclosing implementation's type, including in a
+        // trait adapter calling an inherent method. It is not a module name.
+        if parts.first().is_some_and(|part| part == "Self") {
+            let syn::Type::Path(owner) = self.self_type.as_ref()? else {
+                return None;
+            };
+            if owner.qself.is_some() || owner.path.leading_colon.is_some()
+                || self.local_type_path_is_opaque(&owner.path) {
+                return None;
+            }
+            parts.splice(
+                0..1,
+                owner
+                    .path
+                    .segments
+                    .iter()
+                    .map(|part| part.ident.to_string()),
+            );
+        }
+        if parts.len() == 1 && self.bindings.contains_key(&parts[0]) {
+            return None;
+        }
+        if parts.len() > 1 {
+            let qualified =
+                super::scoped_imports::qualified_path(&self.scope[..self.module_depth], &parts)?;
+            return self.functions.get(&qualified.join("::"));
+        }
+        for depth in (self.module_depth..=self.scope.len()).rev() {
+            let mut key = self.scope[..depth].to_vec();
+            key.extend(parts.iter().cloned());
+            if let Some(function) = self.functions.get(&key.join("::")) {
+                return Some(function);
+            }
+        }
+        None
+    }
+
     fn declared_method(
         &self,
         receiver: &syn::Type,
@@ -143,7 +189,7 @@ impl Rewriter<'_> {
         if owner.qself.is_some() {
             return None;
         }
-        if local_type_name(&owner.path).is_some_and(|name| self.local_structures.contains_key(&name)) {
+        if local_type_name(&owner.path).is_some_and(|name| self.local_items.types.contains_key(&name)) {
             return None;
         }
         let mut path = owner.path.clone();
@@ -186,7 +232,7 @@ impl Rewriter<'_> {
             }
         }
         self.bindings = outer;
-        self.local_structures = outer_types;
+        self.local_items = outer_types;
     }
     fn align_comparison_references(
         &self,
@@ -267,8 +313,8 @@ impl Rewriter<'_> {
             .map(|segment| segment.ident.to_string())
             .collect::<Vec<_>>();
         let structure = if let Some(local) = local_type_name(&owner.path)
-            .and_then(|name| self.local_structures.get(&name)) {
-            if self.local_structures.contains_key("*") { return None; }
+            .and_then(|name| self.local_items.types.get(&name)) {
+            if self.local_items.types.contains_key("*") { return None; }
             let structure = local.as_ref()?;
             if !structure.generics.params.is_empty() { return None; }
             structure

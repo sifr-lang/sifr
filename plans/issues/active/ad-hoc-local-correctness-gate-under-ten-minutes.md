@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.16 validated and reviewed; V0.8 method-slot repair next
+current_stage: V0.8 validated and reviewed; V0.9 ancestry repair next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -182,7 +182,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
-| V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
+| V0.8 | Generated method-slot argument conventions (codegen owner) | Validated/reviewed; PR #4370 |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
@@ -190,7 +190,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
-| V0.16 | Method-policy inventory reconciliation | Validated/reviewed #4369; full method guard passes |
+| V0.16 | Method-policy inventory reconciliation | Merged #4369; full method guard passes |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -1673,3 +1673,174 @@ Independent review is **SATISFIED**, no blockers. Raw evidence:
 are reflected above. No runtime tests were replaced or marked passing by this
 record reconciliation. The separately recorded V0.7 runtime validation remains
 unchanged. Continue with V0.8; complete integrated gates and V5 remain open.
+
+
+V0.16 merged as #4369 at `bbd4a94beab12b7ea4d7d4184d267c0c0a2c83bf`.
+
+### V0.8 bounded scope: preserve generated method-slot call/signature agreement
+
+`v08-current-native-baseline` reproduces the same four `String` versus `&str`
+errors on the current compiler (47.729 seconds). The original Sifr slot methods
+have owned string inputs; generated slot calls follow those declared conventions,
+while their target signatures are subsequently borrowed. Investigate the exact
+canonicalization boundary before changing slot argument emission. Use small
+before/after programs against the public canonicalization API and actual rustc
+compilation to discriminate incomplete call rewriting from emitter conventions.
+The first simple `Self`/receiver/generic-tuple probes passed because their bodies
+did not qualify for the string-borrow rewrite. With a qualifying `to_uppercase`
+body, four reduced programs fail after canonicalization while their original
+Rust compiles/runs. Three checked-in native regressions likewise compile/run
+before and fail after the retained baseline canonicalizer (`v08-new-tests-against-base`). No blanket borrow, name fallback, global
+optimization disablement or fixture weakening is authorized by this diagnosis.
+
+Acceptance: a root-cause regression that fails before and compiles/runs after
+canonicalization; relevant ownership/borrow identity controls and complete
+codegen unit suite; the unchanged native method-slot runtime case (mutable,
+shared and no-context variants) and lifetime/thread/shared-context rejection
+case; affected policy/area/format/size contracts and scoped independent review.
+Keep V0.9 ancestry/upcast, V0.11 unrelated E2E cases and final gates/V5 open.
+
+
+### V0.8 implementation and remaining diagnostic boundary
+
+The typed cleanup treated `Self` as a literal module/type owner and could not
+resolve those inherent calls. Unit-struct receiver values also lacked a type
+fact. Resolve `Self` through the actual enclosing implementation, and derive unit
+constructor types only from known declarations, retaining lexical shadowing and
+opaque-type boundaries. Slot decoding now emits the already-known HIR input type
+on its local binding, including receiver/value tuples. This preserves semantic
+information across the external runtime call without guessing that helper's
+return type. The existing borrow-only string optimization remains enabled; slot
+argument conventions and original runtime/negative fixtures are unchanged.
+
+The three primary native regressions execute original and canonical Rust for
+nested owner identity, unit receiver dispatch and typed opaque-decoder boundaries.
+Additional native lexical controls check that local values, types, traits,
+imports and modules do not acquire an outer declaration's identity; the successive
+validation records below bind each candidate's exact test inventory. The method-policy update refreshes ten existing Rust-IR
+fingerprints and adds the `Self` identity comparison, with existing ownership,
+classification and all 234 constituent records unchanged.
+
+Separate follow-up, owned by V0.11's emitted-Rust correctness investigation:
+unannotated values returned by unknown external generic calls can still expose
+string-signature rewrites whose callers lack sufficient type facts. The retained
+`v08-syntax-probe/borrow-results.json` records those pre-existing cases. V0.8
+repairs compiler-generated method-slot adapters by retaining their known input
+contracts; it does not claim general transactional ABI optimization across opaque
+foreign code. This concern must remain visible in the phase's final correctness
+assessment rather than being treated as a passing probe.
+
+
+V0.8 diagnostic refinement: the first nested-owner test also exposed a pre-existing
+qualified cross-module trait-call liveness failure (E0576), preserved in
+`v08-new-tests-against-base` and `v08-static-probe-direct-call`. V0.11 owns that
+separate liveness defect. Keep the same two runtime assertions but invoke the
+trait within its module in the bounded borrow regression. The resulting
+`v08-static-probe-module-local-call` compiles before cleanup and fails specifically
+with the two expected E0308 `Self::normalize` mismatches afterward. The first
+focused candidate had four passing checks and this unrelated liveness failure
+(459.045 seconds, 456 seconds preparation, 0.81 seconds tests); it is not a pass.
+The first guard run passed format/area/method-policy/self-tests but failed the
+900-line guard at 903. Move call resolution beside declared-method facts to keep
+the main typed-rewriter source below its limit. Both attempts remain retained.
+
+
+`v08-codegen-all` on `97f1374e6ba97ef9e0e322a47f4c90c264886bc4`
+ran all 1,763 tests: 1,762 passed and one existing emitter text assertion failed
+because it required an untyped tuple binding. All four new regressions passed.
+Update that assertion to require the preserved `(Record, String)` type; retain
+its receiver-call assertion. The failed run took 331.980 seconds including
+316 seconds preparation and 13.81 seconds tests. The review started on that
+candidate was stopped before mutation once this failure was known; its partial
+output is not an accepted review. Revalidate and review the final candidate.
+
+
+V0.8 candidate `d3af617f95ce829b1a6e071652feaf1d17ac8e85` passed all 1,763
+codegen tests (47.749 seconds outer, 32.79 preparation, 13.79 test execution), all
+required guards (48.182 seconds), and the two existing native method-slot tests
+(89.47 seconds test execution after 337 seconds preparation). Its scoped review
+was SATISFIED with no blockers, retained outside Git at
+`reviews/d3af617f95ce829b1a6e071652feaf1d17ac8e85/review.md`.
+
+Before merging, address the review's lexical-edge findings because they concern
+the new identity/type inference: distinguish local value items from type items,
+retain both namespaces across nested block inference, prevent block-local impl
+owners from resolving to an outer same-named owner, and clear an enclosing impl's
+`Self` while visiting a nested trait. Replace the invalid binding-shaped shadow
+control with actual compiling/running local-const/static/type-namespace controls,
+and add native local-impl/nested-trait controls. The typed cleanup alone is used
+for these controls to isolate identity resolution from unrelated whole-pipeline
+optimizations; the three primary native regressions still exercise the complete
+canonicalizer. Revalidate and obtain a fresh scoped review after this refinement.
+
+
+Candidate `a5e1d362b4fb69f7ac2a759a9ec015392be20c1d` passes all 1,765 codegen
+tests (372.562 seconds outer, 356 preparation, 14.32 execution), required guards
+(49.833 seconds), and both native slot tests (392.056 seconds outer, 303 preparation,
+87.02 execution). Its renewed scoped review is SATISFIED with no blockers, raw
+record `reviews/a5e1d362b4fb69f7ac2a759a9ec015392be20c1d/review.md`.
+
+Close its remaining opaque-owner suggestion in the same bounded identity repair:
+local imports make the owner opaque, and a local module can shadow the leading
+segment of a qualified owner path. Apply that proof boundary to both new `Self`
+lookup and unit-constructor inference. A seventh native control covers local
+aliases, local-module `Self`, and a receiver constructed through that module.
+Successful native unit checks now remove their owned scratch directories; panic
+or interruption preserves failed/incomplete inputs and diagnostics. The helper
+owns only its freshly allocated temporary directory.
+
+The review's generic-parameter shadowing suggestion is assigned to V0.11's
+emitted-Rust investigation alongside the existing opaque-call ABI/liveness
+follow-ups. It is not claimed covered by this slot-adapter repair. The measured
+codegen-test and driver preparation costs also remain inputs to V4's build-time
+work; the diagnostic two-job allocation is not a ten-minute acceptance result.
+
+
+`v08-opaque-owner-before` proves the new alias/module control fails on the
+unrepaired resolver: original Rust compiles and executes, but typed cleanup adds
+incorrect `.as_str()` calls and rustc rejects both `Self::normalize` calls with
+E0308. The attempt took 330.985 seconds, including 328 seconds preparation and
+0.49 seconds test execution; its failure inputs remain retained. The final
+control separately exercises the local-module constructor path without the
+opaque import from the first program masking its inference.
+
+
+### V0.8 final validation and review
+
+Implementation candidate `849bf963c4ca11523db33e6fb252b4fbf0802d5d`, base
+`bbd4a94beab12b7ea4d7d4184d267c0c0a2c83bf`, PR
+[#4370](https://github.com/sifr-lang/sifr/pull/4370). Final receipts and file hashes
+are reconciled in `v08-final-validation.json` under
+`continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v08-opaque-codegen-all`: **1,766 passed, zero failed/ignored/filtered**;
+  356.967 seconds outer, 340 preparation, 15.21 test execution. The inventory
+  comparison retains every one of the previous 1,759 test IDs and adds seven
+  native regression/control tests. Expected-panic test labels are included in
+  the reconciliation; no test IDs are lost to its parser.
+- `v08-opaque-native-slots`: both unchanged native tests pass, including all five
+  runtime outputs and exact lifetime/thread/shared-context rejection diagnostics;
+  394.014 seconds outer, 303 preparation, 88.68 test execution. The 814 filtered
+  driver tests are outside this named intermediate check, not implied passes.
+- `v08-complete-guards`: formatting, size, all area contracts, method-policy
+  reconciliation, mutation self-tests and diff check pass in 45.171 seconds.
+  The final inventory has 6,394 sites and 234 nodes: twenty existing Rust-IR
+  records refreshed and one Self identity comparison added; no existing owner,
+  class or constituent record changed.
+- `v08-native-scratch-cleanup.json`: no new native-input directories remain after
+  the successful codegen run, while the earlier failure's original/rewritten
+  sources and diagnostics are still retained.
+
+All successful receipts bind the same candidate, with no timeout, reserve stop,
+leftover process group or source drift. Independent review is **SATISFIED**, with
+no blockers; raw evidence is
+`reviews/849bf963c4ca11523db33e6fb252b4fbf0802d5d/review.md`. Its final pre-existing
+receiver-method lookup follow-up (local imports or multi-segment local owners)
+is assigned to V0.11 alongside the recorded generic/opaque-call/liveness items.
+The cosmetic include-file spacing suggestion does not change validation.
+
+This closes the bounded method-slot repair after merge under the approved
+intermediate policy. It does not complete the phase or establish the ten-minute
+acceptance result. V4 retains the measured production-library/libtest preparation
+costs as work; V0.9 ancestry/upcast is next. Complete integrated gates and V5 remain
+mandatory, and all failed/superseded attempts above remain preserved.

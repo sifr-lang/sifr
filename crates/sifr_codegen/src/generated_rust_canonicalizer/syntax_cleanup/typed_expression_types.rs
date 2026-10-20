@@ -18,10 +18,7 @@ impl Rewriter<'_> {
                 let output = &closure.output;
                 Some(syn::parse_quote!(fn(#(#inputs),*) #output))
             }
-            syn::Expr::Path(path) => self
-                .bindings
-                .get(&path.path.get_ident()?.to_string())?
-                .clone(),
+            syn::Expr::Path(path) => self.path_value_type(path),
             syn::Expr::Binary(binary) if matches!(binary.op, syn::BinOp::Add(_) | syn::BinOp::Sub(_) | syn::BinOp::Mul(_) | syn::BinOp::Div(_) | syn::BinOp::Rem(_)) => {
                 let left = self.ty(&binary.left)?;
                 let right = self.ty(&binary.right)?;
@@ -270,7 +267,7 @@ impl Rewriter<'_> {
                             scalar_shadows: self.scalar_shadows,
                             functions: self.functions,
                             structures: self.structures,
-            local_structures: self.local_structures.clone(),
+            local_items: self.local_items.clone(),
                             self_type: self.self_type.clone(),
                             scope: self.scope.clone(),
                             module_depth: self.module_depth,
@@ -299,7 +296,7 @@ impl Rewriter<'_> {
                     scalar_shadows: self.scalar_shadows,
                     functions: self.functions,
                     structures: self.structures,
-            local_structures: self.local_structures.clone(),
+            local_items: self.local_items.clone(),
                     self_type: self.self_type.clone(),
                     scope: self.scope.clone(),
                     module_depth: self.module_depth,
@@ -307,6 +304,7 @@ impl Rewriter<'_> {
                     discardable_assignments: HashMap::new(),
                     float_expectations: Default::default(),
                 };
+                nested.enter_local_type_scope(&block.block);
                 for stmt in &block.block.stmts {
                     if let syn::Stmt::Local(local) = stmt {
                         nested.bind(

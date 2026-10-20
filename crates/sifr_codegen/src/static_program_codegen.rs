@@ -402,7 +402,10 @@ mod tests {
         let emitted =
             emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]));
 
-        assert!(emitted.contains("let (receiver, value) ="), "{emitted}");
+        assert!(
+            emitted.contains("let (receiver, value): (Record, String) ="),
+            "{emitted}"
+        );
         assert!(emitted.contains("receiver.serialize(value)"), "{emitted}");
     }
 }

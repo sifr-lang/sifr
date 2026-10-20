@@ -63,7 +63,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
         scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
         structures: &facts.structures,
-        local_structures: HashMap::new(),
+        local_items: LocalItemScope::default(),
         self_type: None,
         scope: Vec::new(),
         module_depth: 0,
@@ -91,7 +91,7 @@ struct Rewriter<'facts> {
     scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
     structures: &'facts HashMap<String, syn::ItemStruct>,
-    local_structures: HashMap<String, Option<syn::ItemStruct>>,
+    local_items: LocalItemScope,
     self_type: Option<syn::Type>,
     scope: Vec<String>,
     module_depth: usize,
@@ -104,33 +104,6 @@ struct Rewriter<'facts> {
 include!("typed_type_shapes.rs");
 
 impl Rewriter<'_> {
-    fn resolve(&self, path: &syn::Path) -> Option<&Callable> {
-        if path.leading_colon.is_some() {
-            return None;
-        }
-        let parts = path
-            .segments
-            .iter()
-            .map(|s| s.ident.to_string())
-            .collect::<Vec<_>>();
-        if parts.len() == 1 && self.bindings.contains_key(&parts[0]) {
-            return None;
-        }
-        if parts.len() > 1 {
-            let qualified =
-                super::scoped_imports::qualified_path(&self.scope[..self.module_depth], &parts)?;
-            return self.functions.get(&qualified.join("::"));
-        }
-        for depth in (self.module_depth..=self.scope.len()).rev() {
-            let mut key = self.scope[..depth].to_vec();
-            key.extend(parts.iter().cloned());
-            if let Some(function) = self.functions.get(&key.join("::")) {
-                return Some(function);
-            }
-        }
-        None
-    }
-
     fn bind(&mut self, pattern: &syn::Pat, ty: Option<syn::Type>) {
         match pattern {
             syn::Pat::Ident(binding) => {
@@ -388,6 +361,13 @@ impl VisitMut for Rewriter<'_> {
         visit_mut::visit_item_impl_mut(self, implementation);
         self.self_type = previous;
     }
+    fn visit_item_trait_mut(&mut self, item: &mut syn::ItemTrait) {
+        // A trait's Self is its implementing type, never an enclosing impl.
+        let previous = self.self_type.take();
+        visit_mut::visit_item_trait_mut(self, item);
+        self.self_type = previous;
+    }
+
     fn visit_item_mod_mut(&mut self, module: &mut syn::ItemMod) {
         self.scope.push(module.ident.to_string());
         let previous = std::mem::replace(&mut self.module_depth, self.scope.len());
@@ -879,3 +859,7 @@ impl VisitMut for Rewriter<'_> {
 }
 
 include!("typed_expression_tests.rs");
+
+#[cfg(test)]
+#[path = "method_slot_borrow_tests.rs"]
+mod method_slot_borrow_tests;
