@@ -5215,11 +5215,6 @@
           "context_fingerprint": "08d02d0123a250b49f9ffc3e2ecfb7ae51c7935630a966f60049e8d8bce71b05"
         },
         {
-          "path": "crates/sifr_codegen/src/lower_expr/iterators_and_callables.rs",
-          "scope": "<module>",
-          "context_fingerprint": "9b3330c175cbe860d76f386d31108fd67345a6b94f72aa3da78d3a20769882f2"
-        },
-        {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_compound_tests.rs",
           "scope": "defers_exact_integer_floor_division_to_proof_aware_lowering",
           "context_fingerprint": "6e8b05b36b1042af3d7b57b60f53d432e2dd054968bc91ef7a217525b31d1a7b"

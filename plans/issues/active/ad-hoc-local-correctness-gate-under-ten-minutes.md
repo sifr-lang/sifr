@@ -2181,3 +2181,20 @@ in addition to the original acceptance list. If the three TryExcept failures
 survive this repair, record their detailed cause and explicitly reconcile their
 V0.12 ownership before broadening implementation. No production diagnostic
 interface change is authorized by this boundary.
+
+
+V0.11b first implementation `1e1edce1cbaa193b513c0bc8e9b51ba1790e5dc0`:
+canonical task-owner control passed (13.274567 seconds); full lowering/type-system
+suites passed 1,148 and 154 tests respectively (113.836628 seconds outer), with
+one pre-existing ignored lowering deque test requiring the driver-loaded stdlib
+registry, not counted as passing. All 1,774 codegen tests passed in
+`v011b-codegen-all` (392.030126 seconds outer); an unused import from the removed
+shortcut is corrected next. Guards passed (45.194222 seconds, 6,394 sites and
+235 nodes). Native and aggregate post-repair validation remain pending.
+
+Add direct native coverage for moving a BlockingTask into JoinSet, alongside the
+new context-reuse native fixture. This exercises the second rewritten add helper
+and its mutable receiver/affine ownership contract, rather than relying on the
+registry arity control alone. Both new fixtures join the aggregate regression
+(22 fixtures) and the full positive corpus (732 fixtures). Existing assertions
+are retained. Review and final phase gates remain open.

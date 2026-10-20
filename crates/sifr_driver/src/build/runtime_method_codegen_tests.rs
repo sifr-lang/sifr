@@ -10,6 +10,7 @@ fn runtime_method_fixtures_emit_without_lowering_errors() {
         "async_generator_aclose_before_start",
         "async_generator_aclose_result",
         "async_generator_basic",
+        "join_set_add_blocking_task",
         "join_set_add_task_join_all",
         "join_set_bound_terminal_await",
         "join_set_cancel_all_evidence",
