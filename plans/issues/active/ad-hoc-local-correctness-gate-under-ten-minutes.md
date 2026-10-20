@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.7 validated and reviewed; V0.16 policy inventory next
+current_stage: V0.16 validated and reviewed; V0.8 method-slot repair next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -181,7 +181,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
 | V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Complete; all four repairs merged |
-| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Validated/reviewed #4368; native and three E2E cases pass |
+| V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Pending |
 | V0.10 | CLI eager/deferred schema parity | Pending |
@@ -190,7 +190,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
-| V0.16 | Method-policy inventory reconciliation | Pending; 99 baseline diagnostics reproduced |
+| V0.16 | Method-policy inventory reconciliation | Validated/reviewed #4369; full method guard passes |
 
 V0.1 starts with packaging Python regressions before any compiler rebuild. Its
 scope includes matching the canonical format, keeping unsupported-format rejection,
@@ -1614,3 +1614,62 @@ next to reconcile those records with source and independent review before furthe
 compiler repairs. `v016-inventory-analysis` is read-only preliminary analysis,
 not an inventory repair or acceptance result. Final integrated gates and V5 remain
 open.
+
+
+V0.7 merged as #4368 at `1384e2a89262bf7cc67ad4d39364bcb8d2d8228e`.
+
+### V0.16 bounded scope: reconcile reviewed method-policy records
+
+The preliminary audit resolves 99 guard diagnostics to 49 missing records,
+40 stale records and two obsolete keys. All additions and 38 updates describe
+test assertions/harness operations. The other two updates retain the existing
+compiler-policy role and identical `main` routing comparisons; their enclosing
+`from_entrypoint_with_stages` signature now has the already-implemented
+`prepared_native` argument. The obsolete keys describe the moved E2E pass runner
+and the removed literal `/opt/sifr` fixture. Add the pass-runner record at its
+current location; remove the obsolete fixture comparison without inventing a
+replacement literal site.
+
+Update only `verification/policy/method_dispatch_sites.json` and this phase
+record. Preserve unchanged rows, owner/admission rules, canonical authorities,
+node/reference relationships and all compiler/test source. Require exact
+source/schema reconciliation, method-policy mutation self-tests, checks that the
+change touches only the audited records, file-size and area contracts, local-link
+checks and independent review. No compiler rebuild is justified for these
+inventory/record-only inputs. Rust/verification inputs on the merged base are
+byte-identical to the audited V0.7 candidate (Git diff over `crates`, `scripts`
+and `verification` verified empty); retain the prior 99-diagnostic baseline.
+
+This repairs evidence binding; it does not waive enforcement or prove new runtime
+coverage. V0.8 is next after this bounded closure, and complete final gates/V5
+remain mandatory.
+
+
+### V0.16 validation and review
+
+Candidate `2fbbf117205d98f3e613c20241b27b4d440d4cd9`, base
+`1384e2a89262bf7cc67ad4d39364bcb8d2d8228e`, PR
+[#4369](https://github.com/sifr-lang/sifr/pull/4369). Only the method-policy
+inventory and phase record changed. All 234 constituent records, policy versions,
+existing owners/classes and admission relationships are unchanged. Existing rows
+retain their order. Six of the interop test updates also bind the actual current
+operation text (`plan` probe access after the contract/qualification split),
+while retaining the same test-assertion ownership.
+
+Evidence under `continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v016-reconciliation.json`: 49 additions, 40 updates and two obsolete keys
+  removed, with exact before/after inventory hashes and unchanged-row checks.
+- `v016-method-policy`: complete source/schema/reference reconciliation passes,
+  **6,393 sites and 234 reviewed nodes**, 35.156 seconds. This clears all 99
+  previously recorded inventory diagnostics, rather than only passing a delta.
+- `v016-method-policy-selftest`: mutation self-tests pass, 1.139 seconds.
+- `v016-area-size-guards`: file-size and all area contracts pass, 3.641 seconds.
+- Diff, local-link and existing owner/class checks pass. Successful receipts
+  bind the exact candidate without timeout, leftover processes or source drift.
+
+Independent review is **SATISFIED**, no blockers. Raw evidence:
+`reviews/2fbbf117205d98f3e613c20241b27b4d440d4cd9/review.md`. Its wording suggestions
+are reflected above. No runtime tests were replaced or marked passing by this
+record reconciliation. The separately recorded V0.7 runtime validation remains
+unchanged. Continue with V0.8; complete integrated gates and V5 remain open.
