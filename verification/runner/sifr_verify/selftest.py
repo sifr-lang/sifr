@@ -16,6 +16,7 @@ from verification.json_schema_202012 import lint_schema
 
 from .progress_checks import policy_checks as progress_checks
 from .preparation_checks import policy_checks as preparation_checks
+from .python_preparation_checks import policy_checks as python_preparation_checks
 from .build_allocation_checks import policy_checks as build_allocation_checks
 from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
@@ -64,6 +65,7 @@ def run_all() -> list[str]:
     checks = [
         ("R3 command progress and stage accounting", progress_checks),
         ("preparation dependency and failure accounting", preparation_checks),
+        ("pinned Python preparation ownership", python_preparation_checks),
         ("compiler and native build allocation checks", build_allocation_checks),
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),

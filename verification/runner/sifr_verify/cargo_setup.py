@@ -15,6 +15,7 @@ from .paths import REPO_ROOT
 from .cargo_fixture_setup import prepare_locked_fixture_caches
 from .cargo_crate_setup import prepare_crate_test_binaries
 from .area_cargo_setup import prepare_area_graphs
+from .python_preparation import python_consumers, prepare_python_environment
 
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
@@ -60,11 +61,20 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
             if owner in consumers:
                 consumers[owner].append(name)
 
+    python_owners = python_consumers(profile)
+
+    def area_requires(area):
+        return (("workspace", "python_environment") if f"area_{area}" in python_owners
+                else ("workspace",))
+
     add("workspace", (), lambda: command_runner(command, env=setup_env))
     crate_owners = [name for name in consumers if name in {
         "toolchain_cargo_test_sifr_smoke", "toolchain_cargo_test_sifr_full"}]
     add("fixtures", ("workspace",),
         lambda: prepare_locked_fixture_caches(profile, setup_env, command_runner))
+    if python_owners:
+        add("python_environment", (),
+            lambda: prepare_python_environment(setup_env, command_runner), python_owners)
 
     def generated():
         if not any(area["area"] == "generated_code_quality"
@@ -81,7 +91,10 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
 
     add("generated", ("workspace",), generated, ("area_generated_code_quality",))
     if crate_test_mode(profile) is not None:
-        add("crate_tests", ("workspace", "fixtures"),
+        requires = ("workspace", "fixtures")
+        if python_owners.intersection(crate_owners):
+            requires += ("python_environment",)
+        add("crate_tests", requires,
             lambda: prepare_crate_test_binaries(profile, compiler_env, command_runner), crate_owners)
     adapters = (
         ("authoring", prepare_authoring_test_binaries, "python_interop"),
@@ -93,12 +106,12 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
     )
     for name, adapter, area in adapters:
         if f"area_{area}" in consumers:
-            add(name, ("workspace",),
+            add(name, area_requires(area),
                 lambda fn=adapter: fn(profile, setup_env, command_runner), (f"area_{area}",))
     for area in profile.get("selected_areas", []):
         if area["area"] in {"sql_platform", "fuzz_property", "python_interop"}:
             selected = profile | {"selected_areas": [area]}
-            add("area_graph_" + area["area"], ("workspace",),
+            add("area_graph_" + area["area"], area_requires(area["area"]),
                 lambda p=selected: prepare_area_graphs(p, compiler_env, command_runner),
                 (f"area_{area['area']}",))
     if "area_rust_interop" in consumers:

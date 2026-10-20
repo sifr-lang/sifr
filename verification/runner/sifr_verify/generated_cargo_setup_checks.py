@@ -62,8 +62,11 @@ class SetupPolicyTests(unittest.TestCase):
         self.assertEqual(commands[0][0], ["cargo", "fetch", "--locked"])
         self.assertEqual(commands[1][0], ["cargo", "fetch", "--locked", "--manifest-path",
                                          str(locked_fixture_manifests(load_profile("merge"))[0])])
-        self.assertIn("sifr_verify.generated_cargo_setup", commands[2][0])
-        self.assertEqual(commands[2][0][-1], REVISION)
+        self.assertEqual(commands[2][0][:3], ["uv", "run", "--project"])
+        self.assertIn("--locked", commands[2][0])
+        self.assertTrue(commands[2][0][-1].endswith("/runner/prepare_environment.py"))
+        self.assertIn("sifr_verify.generated_cargo_setup", commands[3][0])
+        self.assertEqual(commands[3][0][-1], REVISION)
         compiler_env = compiler_setup.call_args.args[1]
         self.assertIsNot(compiler_env, env)
         self.assertIs(area_setup.call_args.args[1], compiler_env)

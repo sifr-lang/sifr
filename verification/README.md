@@ -112,6 +112,15 @@ run is diagnostic evidence, never acceptance. The phase's approved intermediate
 policy retains focused checks and independent review before each intermediate
 merge, followed by complete integrated final gates.
 
+Selected Python-area, SQL LSP, LSP crate and driver native-archive consumers depend on
+the locked Python interop environment. Preparation uses that project's exact pins
+and `.venv`, independently of an activated environment or ambient
+`UV_PROJECT_ENVIRONMENT`; Cargo targets, flags and job allocations are preserved.
+Environment preparation is separate from compiled Python examples. With
+`--no-fail-fast`, an environment failure blocks its consumers while independent
+work continues; an example failure does not invalidate a successfully prepared
+environment. Bootstrap time remains part of preparation accounting.
+
 ### Build allocations
 
 The profile runner keeps compiler Cargo jobs separate from native E2E jobs.
