@@ -46,7 +46,7 @@ fn root() -> (tempfile::TempDir, PathBuf) {
 fn unrelated_child_never_retains_an_owner_or_prepared_command_lease() {
     let (_temp, root) = root();
     let owner = lock(&root, "suite");
-    owner.try_lock().unwrap();
+    assert_released(&owner);
     let mut intended = sleeper();
     inherit_lease_for_command(&mut intended, &owner).unwrap();
     let unrelated = Running(sleeper().spawn().unwrap());
@@ -57,7 +57,7 @@ fn unrelated_child_never_retains_an_owner_or_prepared_command_lease() {
         Err(std::fs::TryLockError::WouldBlock)
     ));
     drop(intended);
-    contender.try_lock().unwrap();
+    assert_released(&contender);
     assert!(unrelated.0.id() > 0);
 }
 
@@ -65,7 +65,7 @@ fn unrelated_child_never_retains_an_owner_or_prepared_command_lease() {
 fn intended_child_retains_lease_without_changing_parent_descriptor_flags() {
     let (_temp, root) = root();
     let owner = lock(&root, "suite");
-    owner.try_lock().unwrap();
+    assert_released(&owner);
     let before = flags(&owner);
     assert_ne!(before & libc::FD_CLOEXEC, 0);
     let mut command = sleeper();
@@ -82,7 +82,7 @@ fn intended_child_retains_lease_without_changing_parent_descriptor_flags() {
         Err(std::fs::TryLockError::WouldBlock)
     ));
     drop(intended);
-    contender.try_lock().unwrap();
+    assert_released(&contender);
     drop(unrelated);
 }
 
@@ -91,8 +91,8 @@ fn parallel_owners_pass_only_their_own_lease() {
     let (_temp, root) = root();
     let first = lock(&root, "first");
     let second = lock(&root, "second");
-    first.try_lock().unwrap();
-    second.try_lock().unwrap();
+    assert_released(&first);
+    assert_released(&second);
     let spawn = |lease: &File| {
         let mut command = sleeper();
         inherit_lease_for_command(&mut command, lease).unwrap();
@@ -110,13 +110,13 @@ fn parallel_owners_pass_only_their_own_lease() {
     assert!(first_waiter.try_lock().is_err());
     assert!(second_waiter.try_lock().is_err());
     drop(first_child);
-    first_waiter.try_lock().unwrap();
+    assert_released(&first_waiter);
     assert!(matches!(
         second_waiter.try_lock(),
         Err(std::fs::TryLockError::WouldBlock)
     ));
     drop(second_child);
-    second_waiter.try_lock().unwrap();
+    assert_released(&second_waiter);
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn failed_spawn_and_unused_command_release_owned_descriptors_on_drop() {
     let (_temp, root) = root();
     for should_spawn in [false, true] {
         let owner = lock(&root, "suite");
-        owner.try_lock().unwrap();
+        assert_released(&owner);
         let mut command = Command::new(root.join("absent-program"));
         inherit_lease_for_command(&mut command, &owner).unwrap();
         drop(owner);
@@ -147,7 +147,7 @@ fn command_reuse_and_multiple_leases_keep_each_live_consumer_protected() {
     let owners = [lock(&root, "first"), lock(&root, "second")];
     let mut command = sleeper();
     for owner in &owners {
-        owner.try_lock().unwrap();
+        assert_released(owner);
         inherit_lease_for_command(&mut command, owner).unwrap();
     }
     let first = Running(command.spawn().unwrap());
@@ -164,7 +164,7 @@ fn command_reuse_and_multiple_leases_keep_each_live_consumer_protected() {
     }
     drop(second);
     for waiter in &waiters {
-        waiter.try_lock().unwrap();
+        assert_released(waiter);
     }
 }
 
@@ -175,7 +175,7 @@ fn killed_owner_helper() {
     };
     let root = PathBuf::from(root);
     let owner = lock(&root, "suite");
-    owner.try_lock().unwrap();
+    assert_released(&owner);
     let mut command = sleeper();
     inherit_lease_for_command(&mut command, &owner).unwrap();
     let mut child = Running(command.spawn().unwrap());
