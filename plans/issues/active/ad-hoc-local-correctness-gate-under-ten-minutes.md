@@ -1881,3 +1881,18 @@ consumed, resolves declared module aliases, normalizes restricted audiences to
 absolute scopes, and leaves unrelated structs, generic type parameters,
 external paths and private/custom trait contracts alone. New tests check
 fixed-point stability, source ordering, transitive parents and those boundaries.
+
+
+V0.9 intermediate validation preserves both new baseline failures in
+`v09-new-regressions-before` (342.024 seconds, 338 preparation). The initial
+candidate failed compilation on the pinned Syn 3 trait-implementation tuple
+shape; `v09-codegen-all` retains that 12.748-second failure. The corrected
+candidate `ba7ee037d04e81432469cd9805b460f271452d09` passes 1,769 of 1,770 codegen
+tests in 362.931 seconds (346 preparation, 15.05 execution); the remaining
+existing test requires `pub(super)` instead of its equivalent `pub(crate)` in
+a top-level module. Preserve that original assertion and render immediate-parent
+audiences as `pub(super)`. Both ancestry regressions and added boundary controls
+already pass at this checkpoint. `v09-guards-repaired` passes all guards in
+45.681 seconds. Its independent review is SATISFIED with no blockers, conditional
+on final tests, so this is not accepted final evidence. Re-review the rendering
+correction and rerun the complete codegen suite plus unchanged native group.

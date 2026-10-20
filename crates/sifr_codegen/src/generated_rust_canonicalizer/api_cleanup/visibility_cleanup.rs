@@ -189,6 +189,11 @@ fn apply_demands(items: &mut [syn::Item], scope: &[String], demands: &HashMap<It
                     if widen {
                         item.vis = match requested {
                             None => syn::parse_quote!(pub),
+                            Some(path)
+                                if scope.len() == path.len() + 1 && scope.starts_with(path) =>
+                            {
+                                syn::parse_quote!(pub(super))
+                            }
                             Some(path) if path.is_empty() => syn::parse_quote!(pub(crate)),
                             Some(path) => {
                                 let parts = path
