@@ -316,14 +316,10 @@ pub(crate) fn run_batch_outcomes(
         .iter()
         .map(|case| {
             let status =
-                match (|| {
-                    if !artifact.is_absolute() { return Err("fixture executable must have an absolute Cargo-selected path".to_owned()); }
-                    let mut command = Command::new(artifact);
-                    command.args(["--case", &case.fixture.name]);
-                    lease.bind_command(&mut command).map_err(|error| format!("cannot bind fixture lease: {error}"))?;
-                    fixture_execution::execute_fixture(command, &case.fixture.name, &group_outcome.group_root,
-                        group_outcome.execution_deadline.map_or(std::time::Duration::from_secs(30 * 60), |end| end.saturating_duration_since(Instant::now())))
-                })() {
+                match fixture_execution::run_cached_case(lease, artifact, &case.fixture.name,
+                    &group_outcome.group_root, group_outcome.execution_deadline.map_or(
+                        std::time::Duration::from_secs(30 * 60),
+                        |end| end.saturating_duration_since(Instant::now()))) {
                     Ok(()) => Ok(()),
                     Err(err) => Err(format!(
                         "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",

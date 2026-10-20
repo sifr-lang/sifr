@@ -84230,7 +84230,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/native_cache.rs::acquire::literal-comparison::1",
-      "fingerprint": "77c871a57edfc11c815b03c74529b0f9ddf951ce86aa550a73d355c5b83122b1",
+      "fingerprint": "99e3dc5416e0216e4baf99af2d95d9c41f0d24cecaaaf2662ce486a6bc8b1924",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if std :: fs :: read_dir ( & root ) ? . any ( | entry | entry . is_ok_and ( | entry | entry . file_name ( ) != \".locks\" ) )",
