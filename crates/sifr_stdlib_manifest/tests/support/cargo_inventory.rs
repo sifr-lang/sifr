@@ -4,6 +4,9 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
+#[path = "pinned_graphs.rs"]
+pub(crate) mod pinned_graphs;
+
 pub(crate) const INVENTORY: &str = include_str!("maintained_cargo_inventory.json");
 pub(crate) const REGISTRY: &str = "registry+https://github.com/rust-lang/crates.io-index";
 

@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.3a qualified and reviewed; V0.5 inventory repair next
+current_stage: V0.5 reviewed; merge pending; V0.2 next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -176,9 +176,9 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
 | V0.2 | SQL provenance and moved-source qualification guards | Pending |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
-| V0.3a | Rustup-selected native Cargo/rustc launch context | Qualified and independently approved; PR #4360 |
+| V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
-| V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Implemented; 108/108 tests pass; independent review satisfied; PR #4361 |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
@@ -393,8 +393,9 @@ qualify generated Rust execution, which retains its separate assertions.
 
 Independent review is SATISFIED with no blockers on that same implementation
 candidate. Raw review: `reviews/6cf4b5c178912cb0a4184a9469ba620ad49e8ea6/review.md`,
-external to the reviewed tree. Effective on merging
-[#4360](https://github.com/sifr-lang/sifr/pull/4360). The 50 libtest rows include
+external to the reviewed tree. Merged in
+[#4360](https://github.com/sifr-lang/sifr/pull/4360) as
+`8858bde63f80b3b40860da3b1b7a48b31a91caaa`. The 50 libtest rows include
 49 assertion-bearing tests and one subprocess-dispatch helper that returns early
 in the parent run; its real child assertions are exercised by the parent tests.
 Review suggestions retained for later identity/timing work: measure launcher-file
@@ -443,6 +444,107 @@ pass. Required acceptance: exact tracked inventory and declaration comparisons,
 all affected dependency/version/lock contracts and their negative controls, full
 `sifr_stdlib_manifest` tests, fmt/file-size checks and scoped independent review.
 The full phase gates remain deferred under the approved policy.
+
+### V0.5 diagnostic and ownership boundary — policy approved
+
+Baseline `8858bde63f80b3b40860da3b1b7a48b31a91caaa`: the direct dependency target
+runs nine tests, six pass and three fail at tracked inventory admission (6.578s).
+Independent Git-index/TOML inspection confirms **153 manifests / 35 locks** versus
+133 / 26 recorded, with no removals, and 211 direct declarations versus 201 recorded.
+Two additional registry package names, libfuzzer-sys and windows-sys, need audited
+source evidence. New lock identities also require official checksum verification;
+no new release metadata has been blessed.
+
+A diagnostic update of the exact tracked inventory alone lets the full affected
+crate progress. Its first build failed because the isolated checkout had not yet
+materialized two required demo gitlinks, not because their source files were
+missing from the pinned repositories. Independent owned checkouts of the exact
+tracked HTTP (`76fea17316d37aa536f7bd618660613cbef793d2`) and application
+(`af14ce5adbcc1cc6d775ba8b1800c50aeb0e9afa`) revisions repair that preparation.
+The complete `cargo test --locked --offline -p sifr_stdlib_manifest --no-fail-fast`
+then executes **102 tests: 97 pass, five fail**, in 17.212s including preparation.
+No tests are filtered/ignored. The compile-failed attempt remains preserved.
+
+The five failures expose:
+- stale exact num-bigint and rusqlite owner/lock edge inventories;
+- missing audited checksum rows for newly admitted lock identities;
+- stale manifest/declaration counts and registry owner rows;
+- a real version-policy mismatch: the fuzz graph resolves syn 3.0.6 while the
+  uniform first-party edge contract requires 3.0.5.
+
+Further declaration inspection also exposes exact older anyhow/serde_json pins in
+`verification/tools/maintainability_builtin_input`. Its
+[architecture owner](ad-hoc-architecture-correctness-current-main.md) explicitly
+requires retaining the locked dependency graph and forbids dependency/API upgrades.
+The user approved **“Audit pinned verification graphs (Recommended)”** on
+2026-10-20, before implementation. Retain product-version checks; admit only
+explicitly named verification graphs against approved manifest/lock identities
+and independently verified official registry checksums. Reject drift. This changes
+the uniform-release policy only for those pinned graphs; it does not authorize
+any dependency upgrade, lockfile change, blanket verification-directory exclusion,
+or weakening of the product contracts. Preserve the separately owned tooling
+pins. Add mutation controls for graph admission, input identity, declarations,
+source/checksum identity and product-policy boundaries. The full affected crate
+and independent review remain required before this bounded item merges.
+
+Evidence: `v05-inventory-before`, `v05-inventory-inspection.json`,
+`v05-all-contracts-inventory-only` (preparation failure),
+`v05-submodule-preparation.json`, `v05-all-contracts-prepared`,
+`v05-reconciliation.json`, and `v05-inventory-only.patch`. The inventory-only
+experiment was restored from its preserved original bytes after all tests ended;
+its exact patch remains externally reproducible against the recorded base.
+V0.5 is not complete, and the phase has no final-gate or timing acceptance.
+
+
+### V0.5 implementation and validation — reviewed
+
+The approved audit covers **153 manifests, 35 locks, 211 direct declarations and
+44 exact maintained owner/lock dependency edges**. The two named verification
+graphs authenticate all **24 manifest/lock inputs** by SHA-256 before receiving
+an exception to uniform product release versions. Their **371 registry release
+identities** are checked against independently retrieved official checksums;
+the full lock identity also retains their exact Git revisions. Every registry
+declaration still participates in the exact path/table/alias/package/requirement
+inventory. Product declaration and resolved-edge version checks remain unchanged.
+No Cargo.toml, Cargo.lock, dependency version or verification tool pin changed.
+
+Fresh official-index retrieval verified all **471 required versions across 379
+packages** with zero missing versions or checksum mismatches. Existing September
+release observations retain their original timestamps; additional locked release
+rows carry the new response digest and observation timestamp. This is checksum
+reconciliation, not a claim that all historic release pins remain today's latest.
+Raw official responses and retrieval receipts are preserved in
+`v05-registry-evidence/` outside the reviewed tree.
+
+Focused audit: **15/15 tests**, 6.619s including preparation. The first full batch
+exposed one remaining stale count (seven rusqlite owners, including the CLI,
+versus six recorded); its failed evidence is retained. Final full crate batch:
+**108/108 tests**, no failures/ignored/filtered tests, **11.128s** including
+preparation (`v05-approved-all-contracts-final`). This retains all 102 original
+tests and adds six pinned-graph mutation/coverage controls. Format passed (19.186s),
+file-size guard passed (7.671s), and source dependency-direction guard passed
+(5.096s). Concurrent guard timings are diagnostic durations, not isolated speedup
+measurements. The initial Python guards used the system 3.14.4 interpreter;
+a final toolchain audit caught that mismatch. Both guards were rerun successfully
+through the locked verification environment with asserted **Python 3.14.7**, in
+6.591s combined (`v05-pinned-python-guards`). The pinned rerun is the acceptance
+evidence; earlier runs remain diagnostic evidence. Six added controls reject missing/changed inputs, scope expansion,
+unapproved registry rows/checksums/sources, and product-version relaxation.
+Independent review: **SATISFIED**, no blockers, for implementation
+`f4981e547d33514744567ea31f80bcc5846e5df2` against
+`8858bde63f80b3b40860da3b1b7a48b31a91caaa`. Raw review is preserved outside Git
+at `reviews/f4981e547d33514744567ea31f80bcc5846e5df2/review.md`.
+[PR #4361](https://github.com/sifr-lang/sifr/pull/4361) awaits merge; final phase
+gates/timing remain open. CI's benchmark-inclusive create-PR job stops before tests
+because `SIFR_PERFORMANCE_REFERENCE` is unset (`ci-4361-create-pr.log`); this is
+not a CI pass. The approved intermediate local policy remains applicable.
+
+Review follow-ups: the dependency-release owner should separately refresh historical
+September release pins; this item only reconciles official checksum evidence.
+Cross-platform qualification should consider raw-byte pinned-input hashes under
+Windows line-ending conversion. Direct exemption-routing and Git-revision-specific
+mutations are optional additional controls; current exact product-path exclusion,
+product helper controls and every-input mutation tests cover the required policy.
 
 ## Execution stages
 
@@ -954,6 +1056,13 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge qualified V0.3a, then implement V0.5. Continue bounded
-V0 repairs, retaining the stopped broad diagnostic and all incomplete evidence.
-Preserve the investigation baseline and failures while collecting current evidence.
+**Next action:** merge reviewed V0.5, then repair V0.2 SQL qualification on a
+new owned branch. Read-only provenance inspection on the reviewed candidate shows
+all three SQL family receipts differ only in `Cargo.lock`; the words receipt has
+no changed inputs. The changed lock adds the CLI's cache-storage dependency.
+Rebuild SQL artifacts with the actual pinned producer and preserve its receipts;
+do not merely refresh hashes. Follow moved SQL service ownership in qualification
+guards and retain every mutation control. Run each lightweight qualification and
+self-test, plus affected component producer/input tests and runtime qualification.
+Preserve original failures and the 30-minute per-category cap; split preparation
+by family when needed. Full phase acceptance and other V0 items remain open.

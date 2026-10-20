@@ -1,0 +1,3005 @@
+{
+  "schema_version": 1,
+  "approved_at": "2026-10-20",
+  "approval": "LOCAL-GATE V0.5: audit pinned verification graphs",
+  "roots": [
+    "verification/fuzz",
+    "verification/tools/maintainability_builtin_input"
+  ],
+  "files": {
+    "verification/fuzz/Cargo.lock": "4750f037c4957e7a70e8a3f24dc443beb50586ce274e05f8fbeba62f806db167",
+    "verification/fuzz/Cargo.toml": "da843afad4025defded8d6d013605bcc53068eabf4fc255d971f3de3ab8f85f0",
+    "verification/fuzz/project_fixtures/base/alpha/Cargo.toml": "660b9bf47aea54185aab14b785f375b337dd55202c7daeee4c86e4970a6872a9",
+    "verification/fuzz/project_fixtures/base/app/Cargo.toml": "74e1b1e28d6646d6ec2b47e4f740a9e3bb2394b0519f6daa1d42eb1d64873af2",
+    "verification/fuzz/project_fixtures/base/beta/Cargo.toml": "56860246f80920a12d4a70f66472208e40c591280dc658d7d50911461c7dd1b3",
+    "verification/fuzz/project_fixtures/base/gamma/Cargo.toml": "35a0d9ad70e63375e346a0cbb644e41e9325e5b32cf5674e5397a1bb71bfa743",
+    "verification/tools/maintainability_builtin_input/Cargo.lock": "5924c19cff95a1aec44afcee9448712436df93d263793ccd2105a11abf1b2971",
+    "verification/tools/maintainability_builtin_input/Cargo.toml": "50b054396cd547242856a2b1c02b417ab27934f459f87fb6ff142780861dcf18",
+    "verification/tools/maintainability_builtin_input/fixtures/Cargo.lock": "1a8b6ee8063827fbf754c1491a843f6516fdf8fd89792276bcb162c3e2120c0d",
+    "verification/tools/maintainability_builtin_input/fixtures/Cargo.toml": "83ead154c3f707c783e0fe6d4640dc11728d466830677a61070954a363062fab",
+    "verification/tools/maintainability_builtin_input/fixtures/field_origin/Cargo.toml": "46ee0f2c2cdb0f9d31d4452a1c03633e9a73e1e184c0dae49f7648dec4886cd6",
+    "verification/tools/maintainability_builtin_input/fixtures/fixture_root/Cargo.toml": "aca24488fa19dcd3be760793a89d8b1f4d5c1a8f7f01fe2a1cdc2076ae127880",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_alpha/Cargo.lock": "2abb64a47b62bc4faf160bc6957ce179c577ccf6d22313750f14feb7c3580265",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_alpha/Cargo.toml": "b40e4318cef4239b5f0030bd4a7da764d3c2dde8fb9bd2eecadff08042b541ff",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_attributes/Cargo.lock": "78b27bebde15ea8ceeddad85d5bdfd00d3a3f4d7e7ded3b19cba0c51508286cc",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_attributes/Cargo.toml": "e9f1a4abea3caf99bb96c6d7b5632f6327498deb1f6c9073e816781c6cb68aec",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_bom/Cargo.lock": "d63f5d85fe3655c0f69c9d376056791f3dbff908f111d919af6d036d5c402f3e",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_bom/Cargo.toml": "39f55ba9b8bfc9dae18e968140b0500a4b8f6a15ed12a15637ed95c89740afc3",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_crlf/Cargo.lock": "c6a2e146ecfe719e2b94be8d894a5f6dbfd6a50fda1396d948983929022c6f20",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_crlf/Cargo.toml": "b43e4819358365f315297babc498e405b7d42c80c155b238b4577325058e1718",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_hrtb/Cargo.lock": "18da5363e4456dda0b2e17aa846ec34b2fe8ee0d525c58da242619dd349bf64e",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_hrtb/Cargo.toml": "7e84984d8401c8ce8de9489270a66750becd9bda414567f55dc7786879bd143d",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_unicode/Cargo.lock": "8d02deeadffd666f4d2a2ad876009394ec3b6c6da3a46df52a38751dfdd76c56",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_unicode/Cargo.toml": "c771672f9356772d01607bd9185a8251e96b28ca3d0cafd5cb3219d7360802f6"
+  },
+  "registry": [
+    {
+      "name": "addr2line",
+      "version": "0.26.1",
+      "checksum": "59317f77929f0e679d39364702289274de2f0f0b22cbf50b2b8cff2169a0b27a",
+      "source_url": "https://index.crates.io/ad/dr/addr2line",
+      "response_sha256": "bfc77b639c40fea63c19ffa00a7ec8e9623b9068a27e21165ad03e8cb12d6c5f",
+      "observed_at": "2026-10-20T09:28:34.826193+00:00"
+    },
+    {
+      "name": "aho-corasick",
+      "version": "1.1.5",
+      "checksum": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba",
+      "source_url": "https://index.crates.io/ah/o-/aho-corasick",
+      "response_sha256": "60e7d05b4bfb7309ee1e597142a14c90a9a21e9ab61231b751c11e2b82657baf",
+      "observed_at": "2026-10-20T09:28:34.797821+00:00"
+    },
+    {
+      "name": "allocator-api2",
+      "version": "0.2.21",
+      "checksum": "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923",
+      "source_url": "https://index.crates.io/al/lo/allocator-api2",
+      "response_sha256": "889c09a210c4707c103352815913f694e68ae153ae14cc464d5a153900b8d221",
+      "observed_at": "2026-10-20T09:28:34.785336+00:00"
+    },
+    {
+      "name": "anyhow",
+      "version": "1.0.102",
+      "checksum": "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c",
+      "source_url": "https://index.crates.io/an/yh/anyhow",
+      "response_sha256": "a8f12dc30f839cf138322e7150b62a867c19d043b8a367f4857314de182693f8",
+      "observed_at": "2026-10-20T09:28:34.811800+00:00"
+    },
+    {
+      "name": "anyhow",
+      "version": "1.0.104",
+      "checksum": "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470",
+      "source_url": "https://index.crates.io/an/yh/anyhow",
+      "response_sha256": "a8f12dc30f839cf138322e7150b62a867c19d043b8a367f4857314de182693f8",
+      "observed_at": "2026-10-20T09:28:34.811800+00:00"
+    },
+    {
+      "name": "ar_archive_writer",
+      "version": "0.5.3",
+      "checksum": "73cd58deff2140a0a8eae87e417bd01db68a33e148aa93d1e8cd837e55e312b6",
+      "source_url": "https://index.crates.io/ar/_a/ar_archive_writer",
+      "response_sha256": "ce31617ee1493a570549cbb4513e3c89950c1706b082fad01994111c8d3e4204",
+      "observed_at": "2026-10-20T09:28:34.786279+00:00"
+    },
+    {
+      "name": "arbitrary",
+      "version": "1.4.2",
+      "checksum": "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1",
+      "source_url": "https://index.crates.io/ar/bi/arbitrary",
+      "response_sha256": "cd561af15ec1cf2ecb0943dba83e2761da0fc1823bdd5f698a88f17131e2f37a",
+      "observed_at": "2026-10-20T09:28:34.787550+00:00"
+    },
+    {
+      "name": "arrayvec",
+      "version": "0.7.6",
+      "checksum": "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50",
+      "source_url": "https://index.crates.io/ar/ra/arrayvec",
+      "response_sha256": "bb534491b780e64ba6452b8973564dc0767aca2f58e5d3e3d95fc2046962a333",
+      "observed_at": "2026-10-20T09:28:34.798958+00:00"
+    },
+    {
+      "name": "arrayvec",
+      "version": "0.7.8",
+      "checksum": "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56",
+      "source_url": "https://index.crates.io/ar/ra/arrayvec",
+      "response_sha256": "bb534491b780e64ba6452b8973564dc0767aca2f58e5d3e3d95fc2046962a333",
+      "observed_at": "2026-10-20T09:28:34.798958+00:00"
+    },
+    {
+      "name": "async-trait",
+      "version": "0.1.92",
+      "checksum": "82f6aeea286b8eb4dd3431a1be1b59d290ace00f5bfd8e2a159bc2a05e2c1667",
+      "source_url": "https://index.crates.io/as/yn/async-trait",
+      "response_sha256": "a680d58e98ea45a3d16ffacf9a7163c7b32d6ca2c38f74563bb2e021db8a74d6",
+      "observed_at": "2026-10-20T09:28:34.901005+00:00"
+    },
+    {
+      "name": "attribute-derive",
+      "version": "0.10.5",
+      "checksum": "05832cdddc8f2650cc2cc187cc2e952b8c133a48eb055f35211f61ee81502d77",
+      "source_url": "https://index.crates.io/at/tr/attribute-derive",
+      "response_sha256": "adfca2d3e206e18418692c5c8cc2f0c9a75cb51c9dec2b7f6484c863307b8123",
+      "observed_at": "2026-10-20T09:28:34.855618+00:00"
+    },
+    {
+      "name": "attribute-derive-macro",
+      "version": "0.10.5",
+      "checksum": "0a7cdbbd4bd005c5d3e2e9c885e6fa575db4f4a3572335b974d8db853b6beb61",
+      "source_url": "https://index.crates.io/at/tr/attribute-derive-macro",
+      "response_sha256": "87b3edc4d7e723b4f6e86053df94c6058d8d22ff5cac4fbb95a9278919e54480",
+      "observed_at": "2026-10-20T09:28:34.851123+00:00"
+    },
+    {
+      "name": "autocfg",
+      "version": "1.5.1",
+      "checksum": "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53",
+      "source_url": "https://index.crates.io/au/to/autocfg",
+      "response_sha256": "60e52e9e0cf800ffcb1b365fc5e4ec9d35bbacea049fb8cff46453961e2f07f3",
+      "observed_at": "2026-10-20T09:28:34.865898+00:00"
+    },
+    {
+      "name": "bigdecimal",
+      "version": "0.4.11",
+      "checksum": "8fa3f3d8cbf4dffcfe4991de61d012bef509a409ecbe9dd41049bfe32b4d4653",
+      "source_url": "https://index.crates.io/bi/gd/bigdecimal",
+      "response_sha256": "8f1d0575ed0d5b87a483dd816e3872cffac537327f24b66ffad4da9800fd4aa7",
+      "observed_at": "2026-10-20T09:28:34.901274+00:00"
+    },
+    {
+      "name": "bitflags",
+      "version": "2.12.1",
+      "checksum": "84d7ced0ae9557296835c32bf1b1e02b44c746701f898460fb000d7eaa84f00a",
+      "source_url": "https://index.crates.io/bi/tf/bitflags",
+      "response_sha256": "d3aa8cbad37c9526e2cf25544efcb8ba215649143476a2dd732e413e570cd017",
+      "observed_at": "2026-10-20T09:28:34.969489+00:00"
+    },
+    {
+      "name": "bitflags",
+      "version": "2.13.2",
+      "checksum": "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06",
+      "source_url": "https://index.crates.io/bi/tf/bitflags",
+      "response_sha256": "d3aa8cbad37c9526e2cf25544efcb8ba215649143476a2dd732e413e570cd017",
+      "observed_at": "2026-10-20T09:28:34.969489+00:00"
+    },
+    {
+      "name": "block-buffer",
+      "version": "0.10.4",
+      "checksum": "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71",
+      "source_url": "https://index.crates.io/bl/oc/block-buffer",
+      "response_sha256": "122617d2ea1d3810b4a8bd59c6903a643a83e6305f8862fb4f0663a982e29f68",
+      "observed_at": "2026-10-20T09:28:34.995682+00:00"
+    },
+    {
+      "name": "block-buffer",
+      "version": "0.12.1",
+      "checksum": "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa",
+      "source_url": "https://index.crates.io/bl/oc/block-buffer",
+      "response_sha256": "122617d2ea1d3810b4a8bd59c6903a643a83e6305f8862fb4f0663a982e29f68",
+      "observed_at": "2026-10-20T09:28:34.995682+00:00"
+    },
+    {
+      "name": "borsh",
+      "version": "1.6.1",
+      "checksum": "cfd1e3f8955a5d7de9fab72fc8373fade9fb8a703968cb200ae3dc6cf08e185a",
+      "source_url": "https://index.crates.io/bo/rs/borsh",
+      "response_sha256": "23663cfa573796b5dea67aac9da40dae03eceba4b51252ac6f8f8fda86d9d59e",
+      "observed_at": "2026-10-20T09:28:35.039554+00:00"
+    },
+    {
+      "name": "borsh",
+      "version": "1.8.1",
+      "checksum": "553c5d846a6ba5150c65e3b1b8ec073bcf1abc20f9b7220de384a4443ea4e20a",
+      "source_url": "https://index.crates.io/bo/rs/borsh",
+      "response_sha256": "23663cfa573796b5dea67aac9da40dae03eceba4b51252ac6f8f8fda86d9d59e",
+      "observed_at": "2026-10-20T09:28:35.039554+00:00"
+    },
+    {
+      "name": "borsh-derive",
+      "version": "1.8.1",
+      "checksum": "12cdfe656708a01f89b451a7d36466e6fe6c414de0aa18fc54f864f6f9ca9f56",
+      "source_url": "https://index.crates.io/bo/rs/borsh-derive",
+      "response_sha256": "b0c0cae8745e28c90ba960e3084e4c53f3158d72b6a7061ccba84b39d6b67db3",
+      "observed_at": "2026-10-20T09:28:35.034010+00:00"
+    },
+    {
+      "name": "boxcar",
+      "version": "0.2.14",
+      "checksum": "36f64beae40a84da1b4b26ff2761a5b895c12adc41dc25aaee1c4f2bbfe97a6e",
+      "source_url": "https://index.crates.io/bo/xc/boxcar",
+      "response_sha256": "df5f0f302b3b2909897b357a5609643fc8b211588706f27412e55a0699a7e59d",
+      "observed_at": "2026-10-20T09:28:35.056925+00:00"
+    },
+    {
+      "name": "bstr",
+      "version": "1.13.1",
+      "checksum": "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f",
+      "source_url": "https://index.crates.io/bs/tr/bstr",
+      "response_sha256": "0e8ee3144c0fd388616a0854e01cc8a16d8510c82ac5dd71b9b46fdf06a2867b",
+      "observed_at": "2026-10-20T09:28:35.109001+00:00"
+    },
+    {
+      "name": "bumpalo",
+      "version": "3.20.3",
+      "checksum": "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649",
+      "source_url": "https://index.crates.io/bu/mp/bumpalo",
+      "response_sha256": "b82adac95e488c63b1c0ce16fc2fd3daca477de1a84e3af93dc1560c0e5ce3de",
+      "observed_at": "2026-10-20T09:28:35.114934+00:00"
+    },
+    {
+      "name": "bytes",
+      "version": "1.11.1",
+      "checksum": "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33",
+      "source_url": "https://index.crates.io/by/te/bytes",
+      "response_sha256": "5e1c8945e6678b050b5b029b65cda0adc935c7f5e8548e116752097d206ad5ee",
+      "observed_at": "2026-10-20T09:28:35.121387+00:00"
+    },
+    {
+      "name": "bytes",
+      "version": "1.12.1",
+      "checksum": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04",
+      "source_url": "https://index.crates.io/by/te/bytes",
+      "response_sha256": "5e1c8945e6678b050b5b029b65cda0adc935c7f5e8548e116752097d206ad5ee",
+      "observed_at": "2026-10-20T09:28:35.121387+00:00"
+    },
+    {
+      "name": "camino",
+      "version": "1.2.2",
+      "checksum": "e629a66d692cb9ff1a1c664e41771b3dcaf961985a9774c0eb0bd1b51cf60a48",
+      "source_url": "https://index.crates.io/ca/mi/camino",
+      "response_sha256": "ff347f9b620f52334971bf56f74e4a31df5f5a58bdf4bd7d9fdab4ae1f133d4d",
+      "observed_at": "2026-10-20T09:28:35.119727+00:00"
+    },
+    {
+      "name": "cargo-platform",
+      "version": "0.3.3",
+      "checksum": "dd0061da739915fae12ea00e16397555ed4371a6bb285431aab930f61b0aa4ba",
+      "source_url": "https://index.crates.io/ca/rg/cargo-platform",
+      "response_sha256": "5c0943c561801f10625a6ba2fd34dcd25bbeafdcd86140e7b27331a3cb8ee252",
+      "observed_at": "2026-10-20T09:28:35.137733+00:00"
+    },
+    {
+      "name": "cargo_metadata",
+      "version": "0.23.1",
+      "checksum": "ef987d17b0a113becdd19d3d0022d04d7ef41f9efe4f3fb63ac44ba61df3ade9",
+      "source_url": "https://index.crates.io/ca/rg/cargo_metadata",
+      "response_sha256": "1f04044ead42fa7628ba5a2ad398ec2b47be7bece51970554e69ebb0854feb97",
+      "observed_at": "2026-10-20T09:28:35.184273+00:00"
+    },
+    {
+      "name": "castaway",
+      "version": "0.2.4",
+      "checksum": "dec551ab6e7578819132c713a93c022a05d60159dc86e7a7050223577484c55a",
+      "source_url": "https://index.crates.io/ca/st/castaway",
+      "response_sha256": "2c571a912cc9d05fb35666589f85bb8cefbf28672d1afe59ee152c8d3932cad2",
+      "observed_at": "2026-10-20T09:28:35.166976+00:00"
+    },
+    {
+      "name": "cc",
+      "version": "1.5.1",
+      "checksum": "f360145194ee8e21db5ee7f3fcd4fe52210864c75c985dae33218202c8bbe040",
+      "source_url": "https://index.crates.io/2/cc",
+      "response_sha256": "1eac6b2b10d65d773e9bcd8e87ce205338fbf25dff42c08e7401f86862db6d2a",
+      "observed_at": "2026-10-20T09:28:35.209051+00:00"
+    },
+    {
+      "name": "cfg-if",
+      "version": "1.0.4",
+      "checksum": "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801",
+      "source_url": "https://index.crates.io/cf/g-/cfg-if",
+      "response_sha256": "093922503d2239eb28afdcc1d3c334aac7abc9d9269f96907d5ff1144e841010",
+      "observed_at": "2026-10-20T09:28:35.182854+00:00"
+    },
+    {
+      "name": "cfg-if",
+      "version": "1.0.5",
+      "checksum": "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600",
+      "source_url": "https://index.crates.io/cf/g-/cfg-if",
+      "response_sha256": "093922503d2239eb28afdcc1d3c334aac7abc9d9269f96907d5ff1144e841010",
+      "observed_at": "2026-10-20T09:28:35.182854+00:00"
+    },
+    {
+      "name": "cfg_aliases",
+      "version": "0.2.1",
+      "checksum": "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724",
+      "source_url": "https://index.crates.io/cf/g_/cfg_aliases",
+      "response_sha256": "c980c93f3af1a63303f7e63c88ed5498cec27a699bafe9d77812f640f363a0bc",
+      "observed_at": "2026-10-20T09:28:35.182652+00:00"
+    },
+    {
+      "name": "cfg_aliases",
+      "version": "0.2.2",
+      "checksum": "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527",
+      "source_url": "https://index.crates.io/cf/g_/cfg_aliases",
+      "response_sha256": "c980c93f3af1a63303f7e63c88ed5498cec27a699bafe9d77812f640f363a0bc",
+      "observed_at": "2026-10-20T09:28:35.182652+00:00"
+    },
+    {
+      "name": "char_str",
+      "version": "0.0.2",
+      "checksum": "576ba56f6ca18ebb069d0d07260407171712aff4dfe15ee3f8982dc16a455bcf",
+      "source_url": "https://index.crates.io/ch/ar/char_str",
+      "response_sha256": "5e9dde1131512183768d4ea25b02496478c8f8e250f486b59395a262e66a49dc",
+      "observed_at": "2026-10-20T09:28:35.861179+00:00"
+    },
+    {
+      "name": "cobs",
+      "version": "0.3.0",
+      "checksum": "0fa961b519f0b462e3a3b4a34b64d119eeaca1d59af726fe450bbba07a9fc0a1",
+      "source_url": "https://index.crates.io/co/bs/cobs",
+      "response_sha256": "51653d35a9b861396d8240df6adcf58426b38136231fb895103c8c13ef17470d",
+      "observed_at": "2026-10-20T09:28:35.219388+00:00"
+    },
+    {
+      "name": "collection_literals",
+      "version": "1.0.3",
+      "checksum": "2550f75b8cfac212855f6b1885455df8eaee8fe8e246b647d69146142e016084",
+      "source_url": "https://index.crates.io/co/ll/collection_literals",
+      "response_sha256": "809e17e388c8af65ff577d7a038ff1e57853e160dcd603b655ef7660be24cda1",
+      "observed_at": "2026-10-20T09:28:35.228918+00:00"
+    },
+    {
+      "name": "compact_str",
+      "version": "0.10.0",
+      "checksum": "79fcda08c33bb58b97008b2cdada6622500e949e060f5913361763121abd2416",
+      "source_url": "https://index.crates.io/co/mp/compact_str",
+      "response_sha256": "605b3af114bae9a6e0cd67c9c3aecbe98fcea912d4bb752a4dc68d43a391dac2",
+      "observed_at": "2026-10-20T09:28:35.245731+00:00"
+    },
+    {
+      "name": "const-oid",
+      "version": "0.10.2",
+      "checksum": "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c",
+      "source_url": "https://index.crates.io/co/ns/const-oid",
+      "response_sha256": "91d6eab181f4b58564d22d2d52daf06ee35c89254d8872be78cb163371c3c7a6",
+      "observed_at": "2026-10-20T09:28:35.234795+00:00"
+    },
+    {
+      "name": "core_detect",
+      "version": "1.0.0",
+      "checksum": "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48",
+      "source_url": "https://index.crates.io/co/re/core_detect",
+      "response_sha256": "7d0d27a54c8771a104e0e150ce1ace2f77b3f78451fc47aff0e7278ba3f2af76",
+      "observed_at": "2026-10-20T09:28:35.259960+00:00"
+    },
+    {
+      "name": "countme",
+      "version": "3.0.1",
+      "checksum": "7704b5fdd17b18ae31c4c1da5a2e0305a2bf17b5249300a9ee9ed7b72114c636",
+      "source_url": "https://index.crates.io/co/un/countme",
+      "response_sha256": "5bd8601fc61f56e2d7a4daf5dbc71d5fccff128dd0d0301f10d1d54890ce8f2f",
+      "observed_at": "2026-10-20T09:28:35.285306+00:00"
+    },
+    {
+      "name": "cov-mark",
+      "version": "2.2.0",
+      "checksum": "90863d8442510cddf7f46618c4f92413774635771a3e80830c8b30d183420b14",
+      "source_url": "https://index.crates.io/co/v-/cov-mark",
+      "response_sha256": "01f266fd519658dc8c97c8f64adeb744d87acb4a9bb5fb8e1d19c0af6e7b5f64",
+      "observed_at": "2026-10-20T09:28:35.280016+00:00"
+    },
+    {
+      "name": "cpp_demangle",
+      "version": "0.5.1",
+      "checksum": "0667304c32ea56cb4cd6d2d7c0cfe9a2f8041229db8c033af7f8d69492429def",
+      "source_url": "https://index.crates.io/cp/p_/cpp_demangle",
+      "response_sha256": "50ddc3b9ab765a9b9802b12059181b55915989a58cce4501d57e8c506610dcf9",
+      "observed_at": "2026-10-20T09:28:35.294367+00:00"
+    },
+    {
+      "name": "cpufeatures",
+      "version": "0.2.17",
+      "checksum": "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280",
+      "source_url": "https://index.crates.io/cp/uf/cpufeatures",
+      "response_sha256": "f947bbced0242d2afec044c148bf0220e8c6cc4d1d454f35c3e7a32cbd215b8d",
+      "observed_at": "2026-10-20T09:28:35.299665+00:00"
+    },
+    {
+      "name": "cpufeatures",
+      "version": "0.3.1",
+      "checksum": "5ca28b0ae3115b884660db4118d803791fd6756b6e88f39c0f3f7859060d7566",
+      "source_url": "https://index.crates.io/cp/uf/cpufeatures",
+      "response_sha256": "f947bbced0242d2afec044c148bf0220e8c6cc4d1d454f35c3e7a32cbd215b8d",
+      "observed_at": "2026-10-20T09:28:35.299665+00:00"
+    },
+    {
+      "name": "cranelift-assembler-x64",
+      "version": "0.135.3",
+      "checksum": "9d620e7c8e86c48ff33f750fd49a2f3fa39529e6bfe59639dfdfcbf81329f737",
+      "source_url": "https://index.crates.io/cr/an/cranelift-assembler-x64",
+      "response_sha256": "3d0d695c93ba4f1fe9cf9c0b65a44854b909d25053f61e33f7e0201dd7eb4b6a",
+      "observed_at": "2026-10-20T09:28:35.371937+00:00"
+    },
+    {
+      "name": "cranelift-assembler-x64-meta",
+      "version": "0.135.3",
+      "checksum": "75015effc364f66dfda9f45f3d78b5509957303258521143839adfd762eade60",
+      "source_url": "https://index.crates.io/cr/an/cranelift-assembler-x64-meta",
+      "response_sha256": "2190dfa7b1704bbac685f2204c18b0b872983fa9edc6f5d655b7d4c6ae9a5e64",
+      "observed_at": "2026-10-20T09:28:35.359116+00:00"
+    },
+    {
+      "name": "cranelift-bforest",
+      "version": "0.135.1",
+      "checksum": "7828208a36e6627481cea61bd24c6234e31411d5c58b48e80ca094a1d593b944",
+      "source_url": "https://index.crates.io/cr/an/cranelift-bforest",
+      "response_sha256": "6b2381a15f2c0c98357c35092134427f816f45332d47939b96de45c8d6d85c4e",
+      "observed_at": "2026-10-20T09:28:35.406573+00:00"
+    },
+    {
+      "name": "cranelift-bitset",
+      "version": "0.135.1",
+      "checksum": "a58c8447cc59ef98c49096679f81392ad0acec2224cea2bef52011f5169f9d02",
+      "source_url": "https://index.crates.io/cr/an/cranelift-bitset",
+      "response_sha256": "412e75c4884a9451bd96a8bbbb43554e8946ef7005851137b59344a2c5ecdda3",
+      "observed_at": "2026-10-20T09:28:35.415184+00:00"
+    },
+    {
+      "name": "cranelift-codegen",
+      "version": "0.135.1",
+      "checksum": "ce520e899df1de583e7b564eafd66760fbc147d72894d2278ddac57a1489fcc0",
+      "source_url": "https://index.crates.io/cr/an/cranelift-codegen",
+      "response_sha256": "a2d954b2a68b6cb540b15752c409b50981a1efb409b2962efe532951a4e05f75",
+      "observed_at": "2026-10-20T09:28:35.660969+00:00"
+    },
+    {
+      "name": "cranelift-codegen-meta",
+      "version": "0.135.1",
+      "checksum": "8d8ab23e63d78ea6bbda18ae1ed9c958bc1cb88d90fb5e95f5ba62e9c019474b",
+      "source_url": "https://index.crates.io/cr/an/cranelift-codegen-meta",
+      "response_sha256": "ed3af0549d0d53fe526e83b89c2e802e03f348785770f68572f83eddba71c4a5",
+      "observed_at": "2026-10-20T09:28:35.437352+00:00"
+    },
+    {
+      "name": "cranelift-codegen-shared",
+      "version": "0.135.3",
+      "checksum": "2f2bd3116e2cdef47a5755c484fa5feca18bd77ea7db418e492f72faaa7582f2",
+      "source_url": "https://index.crates.io/cr/an/cranelift-codegen-shared",
+      "response_sha256": "dd663f8355e1244284401fe4c3141449b28a6a6d7582d43a8f882af60bcbd63e",
+      "observed_at": "2026-10-20T09:28:35.441366+00:00"
+    },
+    {
+      "name": "cranelift-control",
+      "version": "0.135.3",
+      "checksum": "9706989f98e3f7f1b1bc16450089c0393b141f79701590f7bf830c3a531454a2",
+      "source_url": "https://index.crates.io/cr/an/cranelift-control",
+      "response_sha256": "758fa6f7d735b9ddc9debce26a17b34a1d8cae4c38991d5ba834d028b5f04bbc",
+      "observed_at": "2026-10-20T09:28:35.458728+00:00"
+    },
+    {
+      "name": "cranelift-entity",
+      "version": "0.135.1",
+      "checksum": "e0ec225d6b79c5d61358cb5ea081a1384ec541dbf8c1a8c618d187875af326ad",
+      "source_url": "https://index.crates.io/cr/an/cranelift-entity",
+      "response_sha256": "13a992141df61fad6de27f3cbd110600b06ef4a1d721fd2b8dc200c4082a0ff1",
+      "observed_at": "2026-10-20T09:28:35.521139+00:00"
+    },
+    {
+      "name": "cranelift-frontend",
+      "version": "0.135.1",
+      "checksum": "7d3a96a09bd9bd3cf6df2de2ea15d7418f493e946a8eaa1acfe39297a67ed3f3",
+      "source_url": "https://index.crates.io/cr/an/cranelift-frontend",
+      "response_sha256": "3e81c075ae133201e4370923de3b2aa3d3b5c2c70897f7ba9679dbf12f1b86c3",
+      "observed_at": "2026-10-20T09:28:35.722028+00:00"
+    },
+    {
+      "name": "cranelift-isle",
+      "version": "0.135.1",
+      "checksum": "bd28f593c36afbdc9aa17305c0bb66c39ce0530e1caffcf389fbec053950083e",
+      "source_url": "https://index.crates.io/cr/an/cranelift-isle",
+      "response_sha256": "115b048da1a917a14d4c2b085c67c879a498703378dbe308a79090e3df1c9c8c",
+      "observed_at": "2026-10-20T09:28:35.629357+00:00"
+    },
+    {
+      "name": "cranelift-native",
+      "version": "0.135.1",
+      "checksum": "2987ca47affc261aa31ac643fb80dd7f8274cebf878003ba9f50cd6ff2c1055f",
+      "source_url": "https://index.crates.io/cr/an/cranelift-native",
+      "response_sha256": "574504f53b8721edf10e5d934bc3ebf8ea1aef7460832f5bf90944f239c714d1",
+      "observed_at": "2026-10-20T09:28:35.722699+00:00"
+    },
+    {
+      "name": "cranelift-srcgen",
+      "version": "0.135.3",
+      "checksum": "1f739117ccbeec70314433f304ced82abe89e75ff32ab676c2d7da661358af1e",
+      "source_url": "https://index.crates.io/cr/an/cranelift-srcgen",
+      "response_sha256": "2674aba8ac836c2e1be34ae2a673af3071d8f31c04d1d9e2cff759d91380e8d5",
+      "observed_at": "2026-10-20T09:28:35.548365+00:00"
+    },
+    {
+      "name": "crc32fast",
+      "version": "1.5.2",
+      "checksum": "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78",
+      "source_url": "https://index.crates.io/cr/c3/crc32fast",
+      "response_sha256": "6d1bc690539c28abe19be99b19fce5b101a8d1db6fe1e811cddcd7b3318e05ee",
+      "observed_at": "2026-10-20T09:28:35.577248+00:00"
+    },
+    {
+      "name": "crossbeam-channel",
+      "version": "0.5.15",
+      "checksum": "82b8f8f868b36967f9606790d1903570de9ceaf870a7bf9fbbd3016d636a2cb2",
+      "source_url": "https://index.crates.io/cr/os/crossbeam-channel",
+      "response_sha256": "f014603ce10bf266454dff7557583d0f1ea5bb2b31a8e208d8ee6016d1d23be3",
+      "observed_at": "2026-10-20T09:28:35.694175+00:00"
+    },
+    {
+      "name": "crossbeam-deque",
+      "version": "0.8.6",
+      "checksum": "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51",
+      "source_url": "https://index.crates.io/cr/os/crossbeam-deque",
+      "response_sha256": "a1df4ae01163f4cb17a145d7796b4ed7508a943b6d7d0dd65697d1013257eac6",
+      "observed_at": "2026-10-20T09:28:35.723726+00:00"
+    },
+    {
+      "name": "crossbeam-epoch",
+      "version": "0.9.18",
+      "checksum": "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e",
+      "source_url": "https://index.crates.io/cr/os/crossbeam-epoch",
+      "response_sha256": "6d289c4719c03f2aa4874dbc1c27442851e3adc8a22fb02931d54a8717610388",
+      "observed_at": "2026-10-20T09:28:35.752525+00:00"
+    },
+    {
+      "name": "crossbeam-queue",
+      "version": "0.3.12",
+      "checksum": "0f58bbc28f91df819d0aa2a2c00cd19754769c2fad90579b3592b1c9ba7a3115",
+      "source_url": "https://index.crates.io/cr/os/crossbeam-queue",
+      "response_sha256": "7df74447ff78b89252a7f96fde6ed36321a3e1d517488ae727a70e923fcb986e",
+      "observed_at": "2026-10-20T09:28:35.748255+00:00"
+    },
+    {
+      "name": "crossbeam-utils",
+      "version": "0.8.21",
+      "checksum": "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28",
+      "source_url": "https://index.crates.io/cr/os/crossbeam-utils",
+      "response_sha256": "22504ff96fea3119a1b599fc7d67075902aedaf8a2acbe81d5609babc848c05b",
+      "observed_at": "2026-10-20T09:28:35.754908+00:00"
+    },
+    {
+      "name": "crypto-common",
+      "version": "0.1.7",
+      "checksum": "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a",
+      "source_url": "https://index.crates.io/cr/yp/crypto-common",
+      "response_sha256": "694d6109ac84d0e80af5a064e452755ad3d3ef74addbd3e0a3b112abf48c861f",
+      "observed_at": "2026-10-20T09:28:35.764102+00:00"
+    },
+    {
+      "name": "crypto-common",
+      "version": "0.2.2",
+      "checksum": "ce6e4c961d6cd6c9a86db418387425e8bdeaf05b3c8bc1411e6dca4c252f1453",
+      "source_url": "https://index.crates.io/cr/yp/crypto-common",
+      "response_sha256": "694d6109ac84d0e80af5a064e452755ad3d3ef74addbd3e0a3b112abf48c861f",
+      "observed_at": "2026-10-20T09:28:35.764102+00:00"
+    },
+    {
+      "name": "dashmap",
+      "version": "6.2.1",
+      "checksum": "e6361d5c062261c78a176addb82d4c821ae42bed6089de0e12603cd25de2059c",
+      "source_url": "https://index.crates.io/da/sh/dashmap",
+      "response_sha256": "39a03494bf4a9e95b8076340e229dc4dec32a174f746c9c70d665752deefb14f",
+      "observed_at": "2026-10-20T09:28:35.791192+00:00"
+    },
+    {
+      "name": "deranged",
+      "version": "0.5.8",
+      "checksum": "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c",
+      "source_url": "https://index.crates.io/de/ra/deranged",
+      "response_sha256": "aa8be5ca64acb0b0f049ed7f773e50cb064686b632caf6722b9e2bdb0ad3655c",
+      "observed_at": "2026-10-20T09:28:35.811386+00:00"
+    },
+    {
+      "name": "derive-where",
+      "version": "1.6.1",
+      "checksum": "d08b3a0bcc0d079199cd476b2cae8435016ec11d1c0986c6901c5ac223041534",
+      "source_url": "https://index.crates.io/de/ri/derive-where",
+      "response_sha256": "ee8fb261d54119d8e9d64051e4d18f1d28122ad3ab9d14cdf1ef399daab809d0",
+      "observed_at": "2026-10-20T09:28:35.805061+00:00"
+    },
+    {
+      "name": "derive-where",
+      "version": "1.7.0",
+      "checksum": "2e2b94854e8576378ccda7c8de8a66ed8b4e8acbd2c50ec3418ea6c8aaf4b567",
+      "source_url": "https://index.crates.io/de/ri/derive-where",
+      "response_sha256": "ee8fb261d54119d8e9d64051e4d18f1d28122ad3ab9d14cdf1ef399daab809d0",
+      "observed_at": "2026-10-20T09:28:35.805061+00:00"
+    },
+    {
+      "name": "digest",
+      "version": "0.10.7",
+      "checksum": "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292",
+      "source_url": "https://index.crates.io/di/ge/digest",
+      "response_sha256": "59f9abb0ee56765e0b2c05ae52ccf037303a7ae6a090f5f340383334b9ea1c6e",
+      "observed_at": "2026-10-20T09:28:35.855175+00:00"
+    },
+    {
+      "name": "digest",
+      "version": "0.11.3",
+      "checksum": "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2",
+      "source_url": "https://index.crates.io/di/ge/digest",
+      "response_sha256": "59f9abb0ee56765e0b2c05ae52ccf037303a7ae6a090f5f340383334b9ea1c6e",
+      "observed_at": "2026-10-20T09:28:35.855175+00:00"
+    },
+    {
+      "name": "dissimilar",
+      "version": "1.0.11",
+      "checksum": "aeda16ab4059c5fd2a83f2b9c9e9c981327b18aa8e3b313f7e6563799d4f093e",
+      "source_url": "https://index.crates.io/di/ss/dissimilar",
+      "response_sha256": "94a4a5b108c7ea6d6a8f5c4b98a702a675d79e9815d3392ff06b576558224f67",
+      "observed_at": "2026-10-20T09:28:35.843910+00:00"
+    },
+    {
+      "name": "drop_bomb",
+      "version": "0.1.5",
+      "checksum": "9bda8e21c04aca2ae33ffc2fd8c23134f3cac46db123ba97bd9d3f3b8a4a85e1",
+      "source_url": "https://index.crates.io/dr/op/drop_bomb",
+      "response_sha256": "dce4ae868e53ff7b706ddf36447247f5625ee2889c665cae39c0d632cf253916",
+      "observed_at": "2026-10-20T09:28:35.851621+00:00"
+    },
+    {
+      "name": "dyn-clone",
+      "version": "1.0.20",
+      "checksum": "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555",
+      "source_url": "https://index.crates.io/dy/n-/dyn-clone",
+      "response_sha256": "6126428991b257d5727d8e8eeec52f075ab1fde73b326d7f00e4556c1527ad8f",
+      "observed_at": "2026-10-20T09:28:35.871065+00:00"
+    },
+    {
+      "name": "either",
+      "version": "1.16.0",
+      "checksum": "91622ff5e7162018101f2fea40d6ebf4a78bbe5a49736a2020649edf9693679e",
+      "source_url": "https://index.crates.io/ei/th/either",
+      "response_sha256": "35302bccae5b56d8c4c66a92120cc88f158b2ee82f389a477907e395d01e8bcd",
+      "observed_at": "2026-10-20T09:28:35.875463+00:00"
+    },
+    {
+      "name": "either",
+      "version": "1.18.0",
+      "checksum": "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34",
+      "source_url": "https://index.crates.io/ei/th/either",
+      "response_sha256": "35302bccae5b56d8c4c66a92120cc88f158b2ee82f389a477907e395d01e8bcd",
+      "observed_at": "2026-10-20T09:28:35.875463+00:00"
+    },
+    {
+      "name": "embedded-io",
+      "version": "0.4.0",
+      "checksum": "ef1a6892d9eef45c8fa6b9e0086428a2cca8491aca8f787c534a3d6d0bcb3ced",
+      "source_url": "https://index.crates.io/em/be/embedded-io",
+      "response_sha256": "5df9f777670e4e81333efc166f0ae77f22e3f7881018a10aef91a3a6ded4fa0a",
+      "observed_at": "2026-10-20T09:28:35.897499+00:00"
+    },
+    {
+      "name": "embedded-io",
+      "version": "0.6.1",
+      "checksum": "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d",
+      "source_url": "https://index.crates.io/em/be/embedded-io",
+      "response_sha256": "5df9f777670e4e81333efc166f0ae77f22e3f7881018a10aef91a3a6ded4fa0a",
+      "observed_at": "2026-10-20T09:28:35.897499+00:00"
+    },
+    {
+      "name": "ena",
+      "version": "0.14.4",
+      "checksum": "eabffdaee24bd1bf95c5ef7cec31260444317e72ea56c4c91750e8b7ee58d5f1",
+      "source_url": "https://index.crates.io/3/e/ena",
+      "response_sha256": "7b45d6f66e88b1eba5cdfd839a0d2857c5dd0694ccbeaf87c137956d43794199",
+      "observed_at": "2026-10-20T09:28:35.911816+00:00"
+    },
+    {
+      "name": "encoding_rs",
+      "version": "0.8.42",
+      "checksum": "8e985e0451871ad22fb8d2b6b076e2028a502a0d3950998c2c5c0a4f9b5d9679",
+      "source_url": "https://index.crates.io/en/co/encoding_rs",
+      "response_sha256": "93c3092c151e6993687adc192ddcad6e0106738c2af0183b16dfacd38545e88b",
+      "observed_at": "2026-10-20T09:28:35.931284+00:00"
+    },
+    {
+      "name": "equivalent",
+      "version": "1.0.2",
+      "checksum": "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f",
+      "source_url": "https://index.crates.io/eq/ui/equivalent",
+      "response_sha256": "357c762682a097493601e2a51a75e473ab3c1d0e876b543352c67c8a9b3b4152",
+      "observed_at": "2026-10-20T09:28:35.915795+00:00"
+    },
+    {
+      "name": "errno",
+      "version": "0.3.14",
+      "checksum": "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb",
+      "source_url": "https://index.crates.io/er/rn/errno",
+      "response_sha256": "49f9272c19fd91100581009c2caabab0ca1fae26af4bc0175dcd3aabded3c5fa",
+      "observed_at": "2026-10-20T09:28:35.925384+00:00"
+    },
+    {
+      "name": "fastrand",
+      "version": "2.4.1",
+      "checksum": "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6",
+      "source_url": "https://index.crates.io/fa/st/fastrand",
+      "response_sha256": "3dc52a8b46b0b421c30baec14ff476cda34f63f2ccfe75be431e005064469333",
+      "observed_at": "2026-10-20T09:28:35.923500+00:00"
+    },
+    {
+      "name": "find-msvc-tools",
+      "version": "0.1.14",
+      "checksum": "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484",
+      "source_url": "https://index.crates.io/fi/nd/find-msvc-tools",
+      "response_sha256": "782f2bd425a45754a59a62100b354aa52ee3429cceb45132ae42de589c6997ab",
+      "observed_at": "2026-10-20T09:28:35.927385+00:00"
+    },
+    {
+      "name": "fixedbitset",
+      "version": "0.5.7",
+      "checksum": "1d674e81391d1e1ab681a28d99df07927c6d4aa5b027d7da16ba32d1d21ecd99",
+      "source_url": "https://index.crates.io/fi/xe/fixedbitset",
+      "response_sha256": "fa95cfdd221d94e5982dc843744dc79893384e13d406bf51378acebbe1dfd414",
+      "observed_at": "2026-10-20T09:28:35.932933+00:00"
+    },
+    {
+      "name": "fnv",
+      "version": "1.0.7",
+      "checksum": "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1",
+      "source_url": "https://index.crates.io/3/f/fnv",
+      "response_sha256": "9208080f56cde823836c5040b567ec77452dd4ad0d1d622c54adb064130368d4",
+      "observed_at": "2026-10-20T09:28:35.949025+00:00"
+    },
+    {
+      "name": "foldhash",
+      "version": "0.1.5",
+      "checksum": "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2",
+      "source_url": "https://index.crates.io/fo/ld/foldhash",
+      "response_sha256": "885b4bdd5f82ee2ecd0ff441a3d673a5b3c2195d37b7e774eada359e64a709dd",
+      "observed_at": "2026-10-20T09:28:35.960665+00:00"
+    },
+    {
+      "name": "foldhash",
+      "version": "0.2.0",
+      "checksum": "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb",
+      "source_url": "https://index.crates.io/fo/ld/foldhash",
+      "response_sha256": "885b4bdd5f82ee2ecd0ff441a3d673a5b3c2195d37b7e774eada359e64a709dd",
+      "observed_at": "2026-10-20T09:28:35.960665+00:00"
+    },
+    {
+      "name": "fsevent-sys",
+      "version": "4.1.0",
+      "checksum": "76ee7a02da4d231650c7cea31349b889be2f45ddb3ef3032d2ec8185f6313fd2",
+      "source_url": "https://index.crates.io/fs/ev/fsevent-sys",
+      "response_sha256": "ca138c538b1cc59fe07fbd116de3293ebcf117a9e4388e520680a8e36a956f3a",
+      "observed_at": "2026-10-20T09:28:35.964580+00:00"
+    },
+    {
+      "name": "fst",
+      "version": "0.4.7",
+      "checksum": "7ab85b9b05e3978cc9a9cf8fea7f01b494e1a09ed3037e16ba39edc7a29eb61a",
+      "source_url": "https://index.crates.io/3/f/fst",
+      "response_sha256": "6b95402aeae893a219c733c58bc8a29a0797a389fcc776f9740b40da2b3f31c8",
+      "observed_at": "2026-10-20T09:28:35.982706+00:00"
+    },
+    {
+      "name": "futures",
+      "version": "0.3.34",
+      "checksum": "9a31d2a3fbaaeb2af2368bbdd904aa8e812d3c04a1ee10d3171f52d556e5d0a3",
+      "source_url": "https://index.crates.io/fu/tu/futures",
+      "response_sha256": "0ef0df812cd911d444c2fe2cb63776e83aa74ba41540fa9a517f16f927fe7974",
+      "observed_at": "2026-10-20T09:28:35.997911+00:00"
+    },
+    {
+      "name": "futures-channel",
+      "version": "0.3.34",
+      "checksum": "b1f9e3d69d39e4862ffed03ed071a76f9a13ba1d9109d355b0f0aa6b15e393c4",
+      "source_url": "https://index.crates.io/fu/tu/futures-channel",
+      "response_sha256": "59f202bd65d76d39ca0218864a164c6e98964a577e86c4251754e87956ae73c4",
+      "observed_at": "2026-10-20T09:28:35.974912+00:00"
+    },
+    {
+      "name": "futures-core",
+      "version": "0.3.34",
+      "checksum": "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e",
+      "source_url": "https://index.crates.io/fu/tu/futures-core",
+      "response_sha256": "9b24e771005b4548343ec4b73fe3531a8cbcf6fa7c6eb923a5058e8aab093915",
+      "observed_at": "2026-10-20T09:28:35.997683+00:00"
+    },
+    {
+      "name": "futures-io",
+      "version": "0.3.34",
+      "checksum": "53c0fa8157de1303bfffdaa1cc2a673bfffb60102f76b0ef4441659124373fed",
+      "source_url": "https://index.crates.io/fu/tu/futures-io",
+      "response_sha256": "cb13768409a4f71fd81e9ecd0d1386e227b9ce32fe71e8fb316a7d1c2d66c12b",
+      "observed_at": "2026-10-20T09:28:36.004599+00:00"
+    },
+    {
+      "name": "futures-sink",
+      "version": "0.3.34",
+      "checksum": "1944426bf7d03f1d14f708785e4b33efd750b36d48a157b836b3efc15ede8e1d",
+      "source_url": "https://index.crates.io/fu/tu/futures-sink",
+      "response_sha256": "d637309312a7ad42855913cb1ad66966757261af1d88257bf204d18e0a77b92f",
+      "observed_at": "2026-10-20T09:28:35.999723+00:00"
+    },
+    {
+      "name": "futures-task",
+      "version": "0.3.34",
+      "checksum": "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd",
+      "source_url": "https://index.crates.io/fu/tu/futures-task",
+      "response_sha256": "c794739f0584a2f30df719a2a02c44e5f1bee407866f59b59848d4d2febd13c7",
+      "observed_at": "2026-10-20T09:28:36.002565+00:00"
+    },
+    {
+      "name": "futures-util",
+      "version": "0.3.34",
+      "checksum": "0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc",
+      "source_url": "https://index.crates.io/fu/tu/futures-util",
+      "response_sha256": "94602b140f797d3cc59ac8c068d4fed7203b823a010e1c1ca14eb4e75999c84a",
+      "observed_at": "2026-10-20T09:28:36.028027+00:00"
+    },
+    {
+      "name": "generic-array",
+      "version": "0.14.7",
+      "checksum": "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a",
+      "source_url": "https://index.crates.io/ge/ne/generic-array",
+      "response_sha256": "10188269e0fc189b3c5c3c9286b0c459fd691d66f13f70422c78340cd2344264",
+      "observed_at": "2026-10-20T09:28:36.033802+00:00"
+    },
+    {
+      "name": "get-size-derive2",
+      "version": "0.10.3",
+      "checksum": "c736d226c32e496b8377813b52269e11ad3a48d8373b68862d0364f04fd1229d",
+      "source_url": "https://index.crates.io/ge/t-/get-size-derive2",
+      "response_sha256": "e6e88d2fad3cf0cff22f80b44bd51df7fa7ffebbba93091f52111f93a10fc6b7",
+      "observed_at": "2026-10-20T09:28:36.682152+00:00"
+    },
+    {
+      "name": "get-size2",
+      "version": "0.10.3",
+      "checksum": "b411f34418305908ab15a82ff78958c2a9aee9a272b2a2e663836b20a4e4b9d3",
+      "source_url": "https://index.crates.io/ge/t-/get-size2",
+      "response_sha256": "8916ffba28b04333da77fc85433e56d10295bb5c737866937022d2c4712a4f1f",
+      "observed_at": "2026-10-20T09:28:36.706416+00:00"
+    },
+    {
+      "name": "getopts",
+      "version": "0.2.24",
+      "checksum": "cfe4fbac503b8d1f88e6676011885f34b7174f46e59956bba534ba83abded4df",
+      "source_url": "https://index.crates.io/ge/to/getopts",
+      "response_sha256": "c1a9f614f587ad5650bad244d08e24b2f28c0f8b0bf197e8edafd99ea4fdd73e",
+      "observed_at": "2026-10-20T09:28:36.040343+00:00"
+    },
+    {
+      "name": "getrandom",
+      "version": "0.2.17",
+      "checksum": "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0",
+      "source_url": "https://index.crates.io/ge/tr/getrandom",
+      "response_sha256": "4f871328d4b65bd7c3511d8a359e8f2ff119866af406254a86ff7c675512913a",
+      "observed_at": "2026-10-20T09:28:36.061378+00:00"
+    },
+    {
+      "name": "getrandom",
+      "version": "0.3.4",
+      "checksum": "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd",
+      "source_url": "https://index.crates.io/ge/tr/getrandom",
+      "response_sha256": "4f871328d4b65bd7c3511d8a359e8f2ff119866af406254a86ff7c675512913a",
+      "observed_at": "2026-10-20T09:28:36.061378+00:00"
+    },
+    {
+      "name": "getrandom",
+      "version": "0.4.3",
+      "checksum": "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099",
+      "source_url": "https://index.crates.io/ge/tr/getrandom",
+      "response_sha256": "4f871328d4b65bd7c3511d8a359e8f2ff119866af406254a86ff7c675512913a",
+      "observed_at": "2026-10-20T09:28:36.061378+00:00"
+    },
+    {
+      "name": "gimli",
+      "version": "0.33.0",
+      "checksum": "0bf7f043f89559805f8c7cacc432749b2fa0d0a0a9ee46ce47164ed5ba7f126c",
+      "source_url": "https://index.crates.io/gi/ml/gimli",
+      "response_sha256": "f4cbba33f185242d1de4d5c2537a5427ce19e074c9ef465c400ace302acea518",
+      "observed_at": "2026-10-20T09:28:36.060905+00:00"
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.14.5",
+      "checksum": "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1",
+      "source_url": "https://index.crates.io/ha/sh/hashbrown",
+      "response_sha256": "a713c43dbc6c92bbcec527544196023ca4271afed3dd5abbe766e70c67f512c6",
+      "observed_at": "2026-10-20T09:28:36.091667+00:00"
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.15.5",
+      "checksum": "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1",
+      "source_url": "https://index.crates.io/ha/sh/hashbrown",
+      "response_sha256": "a713c43dbc6c92bbcec527544196023ca4271afed3dd5abbe766e70c67f512c6",
+      "observed_at": "2026-10-20T09:28:36.091667+00:00"
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.16.1",
+      "checksum": "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100",
+      "source_url": "https://index.crates.io/ha/sh/hashbrown",
+      "response_sha256": "a713c43dbc6c92bbcec527544196023ca4271afed3dd5abbe766e70c67f512c6",
+      "observed_at": "2026-10-20T09:28:36.091667+00:00"
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.17.1",
+      "checksum": "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a",
+      "source_url": "https://index.crates.io/ha/sh/hashbrown",
+      "response_sha256": "a713c43dbc6c92bbcec527544196023ca4271afed3dd5abbe766e70c67f512c6",
+      "observed_at": "2026-10-20T09:28:36.091667+00:00"
+    },
+    {
+      "name": "hashlink",
+      "version": "0.12.0",
+      "checksum": "a5081f264ed7adee96ea4b4778b6bb9da0a7228b084587aa3bd3ff05da7c5a3b",
+      "source_url": "https://index.crates.io/ha/sh/hashlink",
+      "response_sha256": "a8db5f73ab92fb395086a1648678534ff7f1e8b1934e449ed9c897a893840c5b",
+      "observed_at": "2026-10-20T09:28:36.073282+00:00"
+    },
+    {
+      "name": "heck",
+      "version": "0.5.0",
+      "checksum": "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea",
+      "source_url": "https://index.crates.io/he/ck/heck",
+      "response_sha256": "00bc5d214f534f46b6d145c00dabb90b7b568db1a54c701198272cdaafb1b667",
+      "observed_at": "2026-10-20T09:28:36.080853+00:00"
+    },
+    {
+      "name": "hybrid-array",
+      "version": "0.4.15",
+      "checksum": "27f864f10dfb56725ce5ce5472bc52252c8f93a4ab86327122cebf62c5f59a17",
+      "source_url": "https://index.crates.io/hy/br/hybrid-array",
+      "response_sha256": "94398eb4d20764cd1b38e808d447ae6d0844f7c21e21aaaccacf3eb5feaab546",
+      "observed_at": "2026-10-20T09:28:36.128313+00:00"
+    },
+    {
+      "name": "id-arena",
+      "version": "2.3.0",
+      "checksum": "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954",
+      "source_url": "https://index.crates.io/id/-a/id-arena",
+      "response_sha256": "3a39e8997042520a3d72f718138c190a8174be6e70ba1e97287be15a771bd989",
+      "observed_at": "2026-10-20T09:28:36.214520+00:00"
+    },
+    {
+      "name": "indexmap",
+      "version": "2.14.0",
+      "checksum": "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
+      "source_url": "https://index.crates.io/in/de/indexmap",
+      "response_sha256": "40c32ec5860cc3e23155cafc712892fe7b7ac3558b75115d8bb3d70b89247792",
+      "observed_at": "2026-10-20T09:28:36.247943+00:00"
+    },
+    {
+      "name": "indexmap",
+      "version": "2.14.2",
+      "checksum": "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
+      "source_url": "https://index.crates.io/in/de/indexmap",
+      "response_sha256": "40c32ec5860cc3e23155cafc712892fe7b7ac3558b75115d8bb3d70b89247792",
+      "observed_at": "2026-10-20T09:28:36.247943+00:00"
+    },
+    {
+      "name": "inotify",
+      "version": "0.11.2",
+      "checksum": "533e68a5842e734946fe159fb03fc9bbbb254f590dd0d8ad321ae5ff7beca2c1",
+      "source_url": "https://index.crates.io/in/ot/inotify",
+      "response_sha256": "fd03c63f6657a88895de7ccc01a77a7c7ba99b0152fcdd74aad5cf187f87ff4d",
+      "observed_at": "2026-10-20T09:28:36.240535+00:00"
+    },
+    {
+      "name": "inotify-sys",
+      "version": "0.1.5",
+      "checksum": "e05c02b5e89bff3b946cedeca278abc628fe811e604f027c45a8aa3cf793d0eb",
+      "source_url": "https://index.crates.io/in/ot/inotify-sys",
+      "response_sha256": "1c5240e9a48d67b9552de87aada30bae36767006e558719d778a304d5f1abf44",
+      "observed_at": "2026-10-20T09:28:36.243656+00:00"
+    },
+    {
+      "name": "interpolator",
+      "version": "0.5.0",
+      "checksum": "71dd52191aae121e8611f1e8dc3e324dd0dd1dee1e6dd91d10ee07a3cfb4d9d8",
+      "source_url": "https://index.crates.io/in/te/interpolator",
+      "response_sha256": "67534376473ae834b977c7149fb9ab8cf948c87799c768825ea06da5399cc476",
+      "observed_at": "2026-10-20T09:28:36.266259+00:00"
+    },
+    {
+      "name": "intrusive-collections",
+      "version": "0.10.1",
+      "checksum": "80e165935eba36cb526af8389effd2005a741adcbb6ed32106cc68e3f7b92960",
+      "source_url": "https://index.crates.io/in/tr/intrusive-collections",
+      "response_sha256": "4b6372816d78271d8cad1439919e3aea5779d76e0ac641f4755f4e04481fb5eb",
+      "observed_at": "2026-10-20T09:28:36.271752+00:00"
+    },
+    {
+      "name": "inventory",
+      "version": "0.3.24",
+      "checksum": "a4f0c30c76f2f4ccee3fe55a2435f691ca00c0e4bd87abe4f4a851b1d4dac39b",
+      "source_url": "https://index.crates.io/in/ve/inventory",
+      "response_sha256": "67b444c782dae95042d7975475729f4e0ca21aa6134cc8a79b719bf4076e35d4",
+      "observed_at": "2026-10-20T09:28:36.271525+00:00"
+    },
+    {
+      "name": "is-macro",
+      "version": "0.3.8",
+      "checksum": "8267aa6001e25494f3015f9663bbd88a18240c74483afa5f0934a1b3e4c388e9",
+      "source_url": "https://index.crates.io/is/-m/is-macro",
+      "response_sha256": "eaef9f0a212003fae0b2f40a4483d4145e00b2ff5a02884cbf09c324a0a3888a",
+      "observed_at": "2026-10-20T09:28:36.282109+00:00"
+    },
+    {
+      "name": "itertools",
+      "version": "0.14.0",
+      "checksum": "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285",
+      "source_url": "https://index.crates.io/it/er/itertools",
+      "response_sha256": "84045ed05f2f5c4065b3aab9271a2c84ff03f82009c6f404235f6de8914afe84",
+      "observed_at": "2026-10-20T09:28:36.294712+00:00"
+    },
+    {
+      "name": "itertools",
+      "version": "0.15.0",
+      "checksum": "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc",
+      "source_url": "https://index.crates.io/it/er/itertools",
+      "response_sha256": "84045ed05f2f5c4065b3aab9271a2c84ff03f82009c6f404235f6de8914afe84",
+      "observed_at": "2026-10-20T09:28:36.294712+00:00"
+    },
+    {
+      "name": "itoa",
+      "version": "1.0.18",
+      "checksum": "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682",
+      "source_url": "https://index.crates.io/it/oa/itoa",
+      "response_sha256": "5e275f1d7a32dd49bc850af460efbf99064cd058f4566f5f86a969e2a535eece",
+      "observed_at": "2026-10-20T09:28:36.302208+00:00"
+    },
+    {
+      "name": "jobserver",
+      "version": "0.1.35",
+      "checksum": "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3",
+      "source_url": "https://index.crates.io/jo/bs/jobserver",
+      "response_sha256": "c73ef45ba352ed81ea88f9d18ace9719ea523e74f1b234cd4b0feaed988d5313",
+      "observed_at": "2026-10-20T09:28:36.308737+00:00"
+    },
+    {
+      "name": "jod-thread",
+      "version": "1.0.0",
+      "checksum": "a037eddb7d28de1d0fc42411f501b53b75838d313908078d6698d064f3029b24",
+      "source_url": "https://index.crates.io/jo/d-/jod-thread",
+      "response_sha256": "3bce9c33d0e46b159c643bb5c2b117939fba373b7a4a3db3c1684e9bdacaefae",
+      "observed_at": "2026-10-20T09:28:36.307510+00:00"
+    },
+    {
+      "name": "kqueue",
+      "version": "1.2.0",
+      "checksum": "273c0752728918e0ac4976f2b275b6fefb9ecd400585dec929419f3844cd87b5",
+      "source_url": "https://index.crates.io/kq/ue/kqueue",
+      "response_sha256": "a6dca4a0319ef69450ce462975b2bfc5f6886188254c52f1a5b209951e1b3876",
+      "observed_at": "2026-10-20T09:28:36.312355+00:00"
+    },
+    {
+      "name": "kqueue-sys",
+      "version": "1.1.2",
+      "checksum": "07293a4e297ac234359b510362495713f75ea345d5307140414f20c69ffeb087",
+      "source_url": "https://index.crates.io/kq/ue/kqueue-sys",
+      "response_sha256": "453b0899fa2b3439ed1fdbb8db8a49d527225ccc6bb9dfd4c139ce3e3173eaad",
+      "observed_at": "2026-10-20T09:28:36.314818+00:00"
+    },
+    {
+      "name": "la-arena",
+      "version": "0.3.1",
+      "checksum": "3752f229dcc5a481d60f385fa479ff46818033d881d2d801aa27dffcfb5e8306",
+      "source_url": "https://index.crates.io/la/-a/la-arena",
+      "response_sha256": "548c096fcbc244fd7c4eb9454b6afb1f37640f690eccf592fbec9a1ab32560c0",
+      "observed_at": "2026-10-20T09:28:36.318704+00:00"
+    },
+    {
+      "name": "lazy_static",
+      "version": "1.5.0",
+      "checksum": "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe",
+      "source_url": "https://index.crates.io/la/zy/lazy_static",
+      "response_sha256": "6ddaa92126b6724ec4b08a4e4e6ca0b2906dc7dd3a05a56c245b3e3be6704f39",
+      "observed_at": "2026-10-20T09:28:36.328597+00:00"
+    },
+    {
+      "name": "leb128fmt",
+      "version": "0.1.0",
+      "checksum": "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2",
+      "source_url": "https://index.crates.io/le/b1/leb128fmt",
+      "response_sha256": "3df8898e7bd40faae5672ad6617986900d6134fd27f640e57103f37ca5ab447a",
+      "observed_at": "2026-10-20T09:28:36.336697+00:00"
+    },
+    {
+      "name": "libc",
+      "version": "0.2.186",
+      "checksum": "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66",
+      "source_url": "https://index.crates.io/li/bc/libc",
+      "response_sha256": "de437e8dbc298365b02d7ec43a8e8480094eecde6bd7d4ddbc52553d92ae571f",
+      "observed_at": "2026-10-20T09:28:36.355693+00:00"
+    },
+    {
+      "name": "libc",
+      "version": "0.2.189",
+      "checksum": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2",
+      "source_url": "https://index.crates.io/li/bc/libc",
+      "response_sha256": "de437e8dbc298365b02d7ec43a8e8480094eecde6bd7d4ddbc52553d92ae571f",
+      "observed_at": "2026-10-20T09:28:36.355693+00:00"
+    },
+    {
+      "name": "libfuzzer-sys",
+      "version": "0.4.13",
+      "checksum": "a9fd2f41a1cba099f79a0b6b6c35656cf7c03351a7bae8ff0f28f25270f929d2",
+      "source_url": "https://index.crates.io/li/bf/libfuzzer-sys",
+      "response_sha256": "24f9df2d46acb912c1a28d5b1fd400e092694e155199a99609e881e7b0c4da7d",
+      "observed_at": "2026-10-20T09:28:36.349110+00:00"
+    },
+    {
+      "name": "libm",
+      "version": "0.2.16",
+      "checksum": "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981",
+      "source_url": "https://index.crates.io/li/bm/libm",
+      "response_sha256": "16d3903238abf2b92dc66c4a026132d491d21abe77678eeb465f005038b9517a",
+      "observed_at": "2026-10-20T09:28:36.361435+00:00"
+    },
+    {
+      "name": "line-index",
+      "version": "0.1.2",
+      "checksum": "3e27e0ed5a392a7f5ba0b3808a2afccff16c64933312c84b57618b49d1209bd2",
+      "source_url": "https://index.crates.io/li/ne/line-index",
+      "response_sha256": "2104c2667acdfeb4562037224f3a2ff68fb431e010a08b524e87055e17b9172d",
+      "observed_at": "2026-10-20T09:28:36.367946+00:00"
+    },
+    {
+      "name": "linux-raw-sys",
+      "version": "0.12.1",
+      "checksum": "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53",
+      "source_url": "https://index.crates.io/li/nu/linux-raw-sys",
+      "response_sha256": "4cef178ea82fc38ea711a33df62bff0bef3e3c2569e0061080896a192baca324",
+      "observed_at": "2026-10-20T09:28:36.397084+00:00"
+    },
+    {
+      "name": "lock_api",
+      "version": "0.4.14",
+      "checksum": "224399e74b87b5f3557511d98dff8b14089b3dadafcab6bb93eab67d3aace965",
+      "source_url": "https://index.crates.io/lo/ck/lock_api",
+      "response_sha256": "ce9a3aa558365205135acd3053b73281a52bdd797e1462f4c4aa64640e3c5fb0",
+      "observed_at": "2026-10-20T09:28:36.381422+00:00"
+    },
+    {
+      "name": "log",
+      "version": "0.4.31",
+      "checksum": "113b30b4cd05f7c06868fdb2854f66a7b9fece9a48425351cd532e810d74024f",
+      "source_url": "https://index.crates.io/3/l/log",
+      "response_sha256": "77bf6b28e1f98f2177ddd68b0234ca3f6e1e6bc6e89d2523cdb6db393f4f3ea2",
+      "observed_at": "2026-10-20T09:28:36.398934+00:00"
+    },
+    {
+      "name": "log",
+      "version": "0.4.34",
+      "checksum": "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6",
+      "source_url": "https://index.crates.io/3/l/log",
+      "response_sha256": "77bf6b28e1f98f2177ddd68b0234ca3f6e1e6bc6e89d2523cdb6db393f4f3ea2",
+      "observed_at": "2026-10-20T09:28:36.398934+00:00"
+    },
+    {
+      "name": "mach2",
+      "version": "0.6.0",
+      "checksum": "dae608c151f68243f2b000364e1f7b186d9c29845f7d2d85bd31b9ad77ad552b",
+      "source_url": "https://index.crates.io/ma/ch/mach2",
+      "response_sha256": "461c7b34a1e2d74395bc23570b38f7e5630c014307865c5ec96bd2ae5d22bda4",
+      "observed_at": "2026-10-20T09:28:36.409320+00:00"
+    },
+    {
+      "name": "manyhow",
+      "version": "0.11.4",
+      "checksum": "b33efb3ca6d3b07393750d4030418d594ab1139cee518f0dc88db70fec873587",
+      "source_url": "https://index.crates.io/ma/ny/manyhow",
+      "response_sha256": "d9cad60f26ed57c2a2fc84d74ee26974c330fd6722d872c35a041a3419e192ff",
+      "observed_at": "2026-10-20T09:28:36.418325+00:00"
+    },
+    {
+      "name": "manyhow-macros",
+      "version": "0.11.4",
+      "checksum": "46fce34d199b78b6e6073abf984c9cf5fd3e9330145a93ee0738a7443e371495",
+      "source_url": "https://index.crates.io/ma/ny/manyhow-macros",
+      "response_sha256": "abea18ff156a592a341ed72d89b800ed93316f908bcb1a5f8570db0271d62997",
+      "observed_at": "2026-10-20T09:28:36.426379+00:00"
+    },
+    {
+      "name": "memchr",
+      "version": "2.8.1",
+      "checksum": "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8",
+      "source_url": "https://index.crates.io/me/mc/memchr",
+      "response_sha256": "577209be17cbaaf1a862c0e01a84d515d91bcc229476fd34e67ffd44a5a84f27",
+      "observed_at": "2026-10-20T09:28:36.427485+00:00"
+    },
+    {
+      "name": "memchr",
+      "version": "2.8.3",
+      "checksum": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98",
+      "source_url": "https://index.crates.io/me/mc/memchr",
+      "response_sha256": "577209be17cbaaf1a862c0e01a84d515d91bcc229476fd34e67ffd44a5a84f27",
+      "observed_at": "2026-10-20T09:28:36.427485+00:00"
+    },
+    {
+      "name": "memfd",
+      "version": "0.6.6",
+      "checksum": "57804b2c9b69967f1536a56f86297e367a33b19e98852ed624b84551cdbc0d90",
+      "source_url": "https://index.crates.io/me/mf/memfd",
+      "response_sha256": "ed3235a0b0932b447da534190739fa6e960002a796dcdefcdcdb94532b1df838",
+      "observed_at": "2026-10-20T09:28:36.436977+00:00"
+    },
+    {
+      "name": "memoffset",
+      "version": "0.9.1",
+      "checksum": "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a",
+      "source_url": "https://index.crates.io/me/mo/memoffset",
+      "response_sha256": "ceda143d37fa45f6f3e67476b79440f88d502705952cf4e99192f09f8ae80405",
+      "observed_at": "2026-10-20T09:28:36.447919+00:00"
+    },
+    {
+      "name": "mio",
+      "version": "1.2.1",
+      "checksum": "02bd0af71c67b473010cbbc60715ee815645a4dc942899111f494b4b737d6fda",
+      "source_url": "https://index.crates.io/3/m/mio",
+      "response_sha256": "7c86eac1151d864b95b9cda116c39f79e22dda6b36f92f784bb48f4e5fe6b6f1",
+      "observed_at": "2026-10-20T09:28:36.477716+00:00"
+    },
+    {
+      "name": "miow",
+      "version": "0.6.1",
+      "checksum": "536bfad37a309d62069485248eeaba1e8d9853aaf951caaeaed0585a95346f08",
+      "source_url": "https://index.crates.io/mi/ow/miow",
+      "response_sha256": "a8a699359c1de50ecdb1e4459a99b8e38f66b519af1a18b6a2974f19a3e7305d",
+      "observed_at": "2026-10-20T09:28:36.458147+00:00"
+    },
+    {
+      "name": "multiversion_no_op",
+      "version": "1.0.0",
+      "checksum": "743fb55ba31b18fb1ecef6bdc9aa2743314978ac084044301a7eee33fb99a20d",
+      "source_url": "https://index.crates.io/mu/lt/multiversion_no_op",
+      "response_sha256": "d175448aa42e744919c055d02b632c5c8f1b3037e69eafc207974b4dd6d8a8ff",
+      "observed_at": "2026-10-20T09:28:36.466120+00:00"
+    },
+    {
+      "name": "nohash-hasher",
+      "version": "0.2.0",
+      "checksum": "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451",
+      "source_url": "https://index.crates.io/no/ha/nohash-hasher",
+      "response_sha256": "9d62bdd5ffbef7a7b6c22e79fefca66ed76e9a83cc37a682d318f1fb84daaead",
+      "observed_at": "2026-10-20T09:28:36.490581+00:00"
+    },
+    {
+      "name": "notify",
+      "version": "8.2.0",
+      "checksum": "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3",
+      "source_url": "https://index.crates.io/no/ti/notify",
+      "response_sha256": "6921a080de6c2ec25f9591cce84441e5a8afe5e28bc27e60fe8424735b3fb408",
+      "observed_at": "2026-10-20T09:28:36.537996+00:00"
+    },
+    {
+      "name": "notify-types",
+      "version": "2.1.0",
+      "checksum": "42b8cfee0e339a0337359f3c88165702ac6e600dc01c0cc9579a92d62b08477a",
+      "source_url": "https://index.crates.io/no/ti/notify-types",
+      "response_sha256": "24b4c19bf5865b17d10629d8221973b9ce08c1ffbef3df271c85689ca5a15b70",
+      "observed_at": "2026-10-20T09:28:36.509387+00:00"
+    },
+    {
+      "name": "nu-ansi-term",
+      "version": "0.50.3",
+      "checksum": "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5",
+      "source_url": "https://index.crates.io/nu/-a/nu-ansi-term",
+      "response_sha256": "4d856c47af5c10cbf9e14884f83e7a04236ea141ce047c3130a5df11ddb74988",
+      "observed_at": "2026-10-20T09:28:36.512177+00:00"
+    },
+    {
+      "name": "num-bigint",
+      "version": "0.4.8",
+      "checksum": "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367",
+      "source_url": "https://index.crates.io/nu/m-/num-bigint",
+      "response_sha256": "96d8afcfa019a6c065f282a5c18888c6ddb7308f6e9dfd95da27d537d1aca848",
+      "observed_at": "2026-10-20T09:28:36.539163+00:00"
+    },
+    {
+      "name": "num-bigint",
+      "version": "0.5.1",
+      "checksum": "93e7820bc0a80a0238e650327316f929ba18d5be054b647490a3a6a339f3e7c0",
+      "source_url": "https://index.crates.io/nu/m-/num-bigint",
+      "response_sha256": "96d8afcfa019a6c065f282a5c18888c6ddb7308f6e9dfd95da27d537d1aca848",
+      "observed_at": "2026-10-20T09:28:36.539163+00:00"
+    },
+    {
+      "name": "num-conv",
+      "version": "0.2.2",
+      "checksum": "521739c6d2bac4aa25192232afe6841231376b2b26d4d9fae5ecf8ca5772e441",
+      "source_url": "https://index.crates.io/nu/m-/num-conv",
+      "response_sha256": "fbf9e6b3975428a96ea37452e7101241e285f62703975886b9d78b6f40f84595",
+      "observed_at": "2026-10-20T09:28:36.551920+00:00"
+    },
+    {
+      "name": "num-integer",
+      "version": "0.1.47",
+      "checksum": "7ce2d95d4b3734dc35aa2f45e1aa22cd416814592a4f9d9205e11affd5b8e10b",
+      "source_url": "https://index.crates.io/nu/m-/num-integer",
+      "response_sha256": "5de871ff11e4c41c4bc34ae504802e8b3fac32bf4f0dc8c5f9daeec1465caeab",
+      "observed_at": "2026-10-20T09:28:36.552509+00:00"
+    },
+    {
+      "name": "num-traits",
+      "version": "0.2.19",
+      "checksum": "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841",
+      "source_url": "https://index.crates.io/nu/m-/num-traits",
+      "response_sha256": "15b5132965f616441319773bc71cc14547a115e8f2023e93d18e02a5b23240df",
+      "observed_at": "2026-10-20T09:28:36.553269+00:00"
+    },
+    {
+      "name": "num_threads",
+      "version": "0.1.7",
+      "checksum": "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9",
+      "source_url": "https://index.crates.io/nu/m_/num_threads",
+      "response_sha256": "b69a274e78822f6a9fd7438c9ac430eb4a6a7592e13869c38fdbd348ca2b89d9",
+      "observed_at": "2026-10-20T09:28:36.559832+00:00"
+    },
+    {
+      "name": "object",
+      "version": "0.39.1",
+      "checksum": "2e5a6c098c7a3b6547378093f5cc30bc54fd361ce711e05293a5cc589562739b",
+      "source_url": "https://index.crates.io/ob/je/object",
+      "response_sha256": "54e7ee7f32972190f1980e6266bcec173bca6d51b173177b3bc02d51e925d632",
+      "observed_at": "2026-10-20T09:28:36.591680+00:00"
+    },
+    {
+      "name": "once_cell",
+      "version": "1.21.4",
+      "checksum": "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50",
+      "source_url": "https://index.crates.io/on/ce/once_cell",
+      "response_sha256": "01e5bf656ebaac2c7502405054837f773f6ebaa24c3be59456bc5882940f0e90",
+      "observed_at": "2026-10-20T09:28:36.576340+00:00"
+    },
+    {
+      "name": "oorandom",
+      "version": "11.1.5",
+      "checksum": "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e",
+      "source_url": "https://index.crates.io/oo/ra/oorandom",
+      "response_sha256": "3780ac64ea254261eed3b53c8d92be5eea65ebc512dd59e17636878d4bd8e5d2",
+      "observed_at": "2026-10-20T09:28:36.586777+00:00"
+    },
+    {
+      "name": "ordermap",
+      "version": "1.2.2",
+      "checksum": "16a756ddcdeb6c0efc8927bdf0ed112885815a35ba350472a467be5104f01ca1",
+      "source_url": "https://index.crates.io/or/de/ordermap",
+      "response_sha256": "00148732181985ea10bba4748e2539cd0423889a32a881a1d0fdb2bef2b28246",
+      "observed_at": "2026-10-20T09:28:37.269291+00:00"
+    },
+    {
+      "name": "parking_lot",
+      "version": "0.12.5",
+      "checksum": "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a",
+      "source_url": "https://index.crates.io/pa/rk/parking_lot",
+      "response_sha256": "3ff9554d63611d130ff552badedd8fe2c2d61a13733c08387dd2cd4c9be78590",
+      "observed_at": "2026-10-20T09:28:36.592824+00:00"
+    },
+    {
+      "name": "parking_lot_core",
+      "version": "0.9.12",
+      "checksum": "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1",
+      "source_url": "https://index.crates.io/pa/rk/parking_lot_core",
+      "response_sha256": "4fc142e32a201a7478e85138f06f471823e6e198498c65604959110ce9fd83e8",
+      "observed_at": "2026-10-20T09:28:36.600896+00:00"
+    },
+    {
+      "name": "perf-event",
+      "version": "0.4.8",
+      "checksum": "b4d6393d9238342159080d79b78cb59c67399a8e7ecfa5d410bd614169e4e823",
+      "source_url": "https://index.crates.io/pe/rf/perf-event",
+      "response_sha256": "b099986c138f341d0ead6378adcc85a3e788b162a298a8a56c5a9b6a3c5bb4dc",
+      "observed_at": "2026-10-20T09:28:36.611195+00:00"
+    },
+    {
+      "name": "perf-event-open-sys",
+      "version": "4.0.0",
+      "checksum": "7c44fb1c7651a45a3652c4afc6e754e40b3d6e6556f1487e2b230bfc4f33c2a8",
+      "source_url": "https://index.crates.io/pe/rf/perf-event-open-sys",
+      "response_sha256": "0912b64a0033b0ceac50f260325c3e4afd89654af6004c6c40b4c8712bc3fa9c",
+      "observed_at": "2026-10-20T09:28:36.611026+00:00"
+    },
+    {
+      "name": "petgraph",
+      "version": "0.8.3",
+      "checksum": "8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455",
+      "source_url": "https://index.crates.io/pe/tg/petgraph",
+      "response_sha256": "180993bddfc484e8e09f50038380565ed4e37fb31c7d788e8246de517aeb1c21",
+      "observed_at": "2026-10-20T09:28:36.630573+00:00"
+    },
+    {
+      "name": "phf",
+      "version": "0.11.3",
+      "checksum": "1fd6780a80ae0c52cc120a26a1a42c1ae51b247a253e4e06113d23d2c2edd078",
+      "source_url": "https://index.crates.io/3/p/phf",
+      "response_sha256": "4b94ecc6b983b2c30b2b7102653a9cfe9ee9424e389567a5376c1bd722f58ff0",
+      "observed_at": "2026-10-20T09:28:36.632302+00:00"
+    },
+    {
+      "name": "phf_codegen",
+      "version": "0.11.3",
+      "checksum": "aef8048c789fa5e851558d709946d6d79a8ff88c0440c587967f8e94bfb1216a",
+      "source_url": "https://index.crates.io/ph/f_/phf_codegen",
+      "response_sha256": "0aea8523aed1300686d6e64cff54bfd5320f3ee3cc4a6ab7fcb3ad3fcb8b0b7d",
+      "observed_at": "2026-10-20T09:28:36.622668+00:00"
+    },
+    {
+      "name": "phf_generator",
+      "version": "0.11.3",
+      "checksum": "3c80231409c20246a13fddb31776fb942c38553c51e871f8cbd687a4cfb5843d",
+      "source_url": "https://index.crates.io/ph/f_/phf_generator",
+      "response_sha256": "22ea1979480e22dbfab852c4c7981027d3184515192dd580b0dfc2faf7051f9e",
+      "observed_at": "2026-10-20T09:28:36.634657+00:00"
+    },
+    {
+      "name": "phf_shared",
+      "version": "0.11.3",
+      "checksum": "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5",
+      "source_url": "https://index.crates.io/ph/f_/phf_shared",
+      "response_sha256": "900fc843d45dd032dd6a68ca18c71ba68d2e83537be192570deab5aa998f4540",
+      "observed_at": "2026-10-20T09:28:36.633983+00:00"
+    },
+    {
+      "name": "pin-project-lite",
+      "version": "0.2.17",
+      "checksum": "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd",
+      "source_url": "https://index.crates.io/pi/n-/pin-project-lite",
+      "response_sha256": "e20f708e7c6ae67a97b9dc9fa4147d84c6b03fa2c6f841848e75a770424d1b26",
+      "observed_at": "2026-10-20T09:28:36.648040+00:00"
+    },
+    {
+      "name": "pkg-config",
+      "version": "0.3.34",
+      "checksum": "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548",
+      "source_url": "https://index.crates.io/pk/g-/pkg-config",
+      "response_sha256": "5bb3b4001e6f96b9e7c250ec5577873662144513a5b38733e4a627ed150f07b4",
+      "observed_at": "2026-10-20T09:28:36.650075+00:00"
+    },
+    {
+      "name": "portable-atomic",
+      "version": "1.13.1",
+      "checksum": "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49",
+      "source_url": "https://index.crates.io/po/rt/portable-atomic",
+      "response_sha256": "077036e01b4f68452698ee8ad474c713e6d5a96302a8280e75658926165e749b",
+      "observed_at": "2026-10-20T09:28:36.674743+00:00"
+    },
+    {
+      "name": "postcard",
+      "version": "1.1.3",
+      "checksum": "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24",
+      "source_url": "https://index.crates.io/po/st/postcard",
+      "response_sha256": "e1942dbb5654a70f28993826eac542ec7ea8857d1c0a64ba15d40e5eaa61a6d4",
+      "observed_at": "2026-10-20T09:28:36.667498+00:00"
+    },
+    {
+      "name": "powerfmt",
+      "version": "0.2.0",
+      "checksum": "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391",
+      "source_url": "https://index.crates.io/po/we/powerfmt",
+      "response_sha256": "6e544722119eb91475c3044fbda6588b29401eec454907ea79659ab1e55f9714",
+      "observed_at": "2026-10-20T09:28:36.681950+00:00"
+    },
+    {
+      "name": "ppv-lite86",
+      "version": "0.2.21",
+      "checksum": "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9",
+      "source_url": "https://index.crates.io/pp/v-/ppv-lite86",
+      "response_sha256": "98f78024f142c873b7c4b2333e61e27d3ef980da3141b7b0840f86c2709a8414",
+      "observed_at": "2026-10-20T09:28:36.718894+00:00"
+    },
+    {
+      "name": "prettyplease",
+      "version": "0.3.0",
+      "checksum": "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0",
+      "source_url": "https://index.crates.io/pr/et/prettyplease",
+      "response_sha256": "45b426a8bf53fc00412191f6cfb20fdbfd1d046ddaf0f5605d1c453705d9ca11",
+      "observed_at": "2026-10-20T09:28:36.762941+00:00"
+    },
+    {
+      "name": "proc-macro-crate",
+      "version": "3.5.0",
+      "checksum": "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f",
+      "source_url": "https://index.crates.io/pr/oc/proc-macro-crate",
+      "response_sha256": "29de374ea009c8101a42ab7e4b62009c0d7c329b3650ff1fe0c3c1a5e810721e",
+      "observed_at": "2026-10-20T09:28:37.419316+00:00"
+    },
+    {
+      "name": "proc-macro-utils",
+      "version": "0.10.0",
+      "checksum": "eeaf08a13de400bc215877b5bdc088f241b12eb42f0a548d3390dc1c56bb7071",
+      "source_url": "https://index.crates.io/pr/oc/proc-macro-utils",
+      "response_sha256": "baa67014dbff4979d60da67afa02eb639f9b080477e687844414ef22fb19eb5c",
+      "observed_at": "2026-10-20T09:28:36.761988+00:00"
+    },
+    {
+      "name": "proc-macro2",
+      "version": "1.0.106",
+      "checksum": "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934",
+      "source_url": "https://index.crates.io/pr/oc/proc-macro2",
+      "response_sha256": "955448bc91f9c490e3bdc028f9d79a561b4f43142025ec46a99bdacaa140233c",
+      "observed_at": "2026-10-20T09:28:36.796953+00:00"
+    },
+    {
+      "name": "proc-macro2",
+      "version": "1.0.107",
+      "checksum": "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9",
+      "source_url": "https://index.crates.io/pr/oc/proc-macro2",
+      "response_sha256": "955448bc91f9c490e3bdc028f9d79a561b4f43142025ec46a99bdacaa140233c",
+      "observed_at": "2026-10-20T09:28:36.796953+00:00"
+    },
+    {
+      "name": "psm",
+      "version": "0.1.32",
+      "checksum": "4dcd034599e63b970727f70d79e02d62390a4a84f7c6b827c27c46d5ac3fa622",
+      "source_url": "https://index.crates.io/3/p/psm",
+      "response_sha256": "bdb338d570e52a200721e3e4547aa40162b5ef665f75fd3049e6b0fd84e1d1d5",
+      "observed_at": "2026-10-20T09:28:36.807276+00:00"
+    },
+    {
+      "name": "pulley-interpreter",
+      "version": "48.0.1",
+      "checksum": "f755d75e0809a4738a3e4880eeeb852fadbe1de5a437505b84f09c381657012a",
+      "source_url": "https://index.crates.io/pu/ll/pulley-interpreter",
+      "response_sha256": "511025cf00337c54246b9320cb3b1fed947babb110331dff1ea3f45ec5ab0d10",
+      "observed_at": "2026-10-20T09:28:36.842446+00:00"
+    },
+    {
+      "name": "pulley-macros",
+      "version": "48.0.1",
+      "checksum": "c7e69fa1c4a555946f82e7894a7df88b0e9ee03b4266829b4811467c616ce51d",
+      "source_url": "https://index.crates.io/pu/ll/pulley-macros",
+      "response_sha256": "448dc0c031a65acd0ee894b785c6a15b9dbd104aee37ab3fe05390fc776fa512",
+      "observed_at": "2026-10-20T09:28:36.851331+00:00"
+    },
+    {
+      "name": "quote",
+      "version": "1.0.45",
+      "checksum": "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924",
+      "source_url": "https://index.crates.io/qu/ot/quote",
+      "response_sha256": "4359f39471050245ed6788ac1d3ee77f398405fb410433a755435f5ec1adb745",
+      "observed_at": "2026-10-20T09:28:36.860009+00:00"
+    },
+    {
+      "name": "quote",
+      "version": "1.0.47",
+      "checksum": "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001",
+      "source_url": "https://index.crates.io/qu/ot/quote",
+      "response_sha256": "4359f39471050245ed6788ac1d3ee77f398405fb410433a755435f5ec1adb745",
+      "observed_at": "2026-10-20T09:28:36.860009+00:00"
+    },
+    {
+      "name": "quote-use",
+      "version": "0.8.4",
+      "checksum": "9619db1197b497a36178cfc736dc96b271fe918875fbf1344c436a7e93d0321e",
+      "source_url": "https://index.crates.io/qu/ot/quote-use",
+      "response_sha256": "d97d1fb9c12113d84ff8ce992e92751c1857ac0eba159da72989e3a753e39691",
+      "observed_at": "2026-10-20T09:28:36.851106+00:00"
+    },
+    {
+      "name": "quote-use-macros",
+      "version": "0.8.4",
+      "checksum": "82ebfb7faafadc06a7ab141a6f67bcfb24cb8beb158c6fe933f2f035afa99f35",
+      "source_url": "https://index.crates.io/qu/ot/quote-use-macros",
+      "response_sha256": "1b2983fe12621c326b2fdad9572f5b48d5c25500d3bbae49d417b92ebfed6f99",
+      "observed_at": "2026-10-20T09:28:36.852075+00:00"
+    },
+    {
+      "name": "r-efi",
+      "version": "5.3.0",
+      "checksum": "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f",
+      "source_url": "https://index.crates.io/r-/ef/r-efi",
+      "response_sha256": "10dc3ea7b06f5e4f925d9e352ad2ab2014801241f31d710f097c107d47dc0f12",
+      "observed_at": "2026-10-20T09:28:36.887992+00:00"
+    },
+    {
+      "name": "r-efi",
+      "version": "6.0.0",
+      "checksum": "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf",
+      "source_url": "https://index.crates.io/r-/ef/r-efi",
+      "response_sha256": "10dc3ea7b06f5e4f925d9e352ad2ab2014801241f31d710f097c107d47dc0f12",
+      "observed_at": "2026-10-20T09:28:36.887992+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_abi",
+      "version": "0.166.0",
+      "checksum": "e2cf1b1ffe31b6226c00b40cddfda65002b7729f9f4ed2d547b5856cdab0011c",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_abi",
+      "response_sha256": "53be0462044a2d015f8d7765c469db9a020edf6868a53506a56f140baca50032",
+      "observed_at": "2026-10-20T09:28:36.929613+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_ast_ir",
+      "version": "0.166.0",
+      "checksum": "2ef42605e36e1305e815ccfc8830eb870f74d78534bca19a61629149536d8e98",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_ast_ir",
+      "response_sha256": "81c6c939b169f76d17f5e94265aabb2bea4b2fde21071e083716f68b9abd4a42",
+      "observed_at": "2026-10-20T09:28:36.902674+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_hashes",
+      "version": "0.166.0",
+      "checksum": "b9f5542968215c17275920791b2fa13a43014287506ed0450777c79845102e86",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_hashes",
+      "response_sha256": "76bb4d9724a526500ff33829b341cd9447032c701167db1bc86d26e48e051793",
+      "observed_at": "2026-10-20T09:28:36.900869+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_index",
+      "version": "0.166.0",
+      "checksum": "1d9e47b9ca7d92cfb0d6653503adbabd41938b84474317397a664326b208d6c6",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_index",
+      "response_sha256": "ced6fe008a86333a3d296a847172eae7cd0f4d198071321de143886933de299b",
+      "observed_at": "2026-10-20T09:28:36.926744+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_index_macros",
+      "version": "0.166.0",
+      "checksum": "4d744a7a2852a22f06210bcff9e4667ed0cacbfbe94894cc294044d25e876341",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_index_macros",
+      "response_sha256": "d0cbdca4d7526d52d68796bacce837db567714543a33ba36d45444cd4d0724fa",
+      "observed_at": "2026-10-20T09:28:36.946639+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_lexer",
+      "version": "0.166.0",
+      "checksum": "527c12b3731b7d0692498012810b85b2b8dfdb8b514321ed6afc434bd1c70191",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_lexer",
+      "response_sha256": "8245ce856533e3c7682f3555daae2055174b8a530d42bd9868b4b554d67cddc6",
+      "observed_at": "2026-10-20T09:28:36.952405+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_next_trait_solver",
+      "version": "0.166.0",
+      "checksum": "a7a9663a8d7c369e934aac2b74a638537ad7eb4be75b4530d765384dc071c936",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_next_trait_solver",
+      "response_sha256": "7837be0eb6d4038f913404088084a50d875d197ff0fb314ec0786b76c0873183",
+      "observed_at": "2026-10-20T09:28:36.953718+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_parse_format",
+      "version": "0.166.0",
+      "checksum": "2c038b7a8b0f784d4e441ad8ab991fbbdaa5e0be482e59c639a846a1c8126951",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_parse_format",
+      "response_sha256": "d743e796251c83e02289b757834f863814d7627e7591b154fe68b579f4b21d44",
+      "observed_at": "2026-10-20T09:28:36.966105+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_pattern_analysis",
+      "version": "0.166.0",
+      "checksum": "42ca286f90e99bb97cd9274c088f3c874a05d1ee90cabf40a3928afedabe99fd",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_pattern_analysis",
+      "response_sha256": "17f2c1d0134cb79247a57897b8321f0f3b4881cd51d192b6a53ac20583001aac",
+      "observed_at": "2026-10-20T09:28:37.001990+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_type_ir",
+      "version": "0.166.0",
+      "checksum": "26d6efb6008f665a9485e0afecf9f4950a6c4bedd8ddd330a9df8986a6c0160b",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_type_ir",
+      "response_sha256": "8d62fe3b2308b600de9f08a9847be36d529d47097fc1b7b18d4f223e4869280e",
+      "observed_at": "2026-10-20T09:28:37.004777+00:00"
+    },
+    {
+      "name": "ra-ap-rustc_type_ir_macros",
+      "version": "0.166.0",
+      "checksum": "5f4fd2355e2bbf1f343c730f623596efc6e465b5e3685b606a437567ebb75bf8",
+      "source_url": "https://index.crates.io/ra/-a/ra-ap-rustc_type_ir_macros",
+      "response_sha256": "f34ee0a740d40101058736804c4dc6d64ef9d809df678594b9caf1d18845aeab",
+      "observed_at": "2026-10-20T09:28:37.002486+00:00"
+    },
+    {
+      "name": "rand",
+      "version": "0.8.8",
+      "checksum": "e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c",
+      "source_url": "https://index.crates.io/ra/nd/rand",
+      "response_sha256": "a0a700a1316cb0d4a2be91383f23d9b8151fa84d6b8a3c860feaddd4623402b1",
+      "observed_at": "2026-10-20T09:28:37.018051+00:00"
+    },
+    {
+      "name": "rand",
+      "version": "0.9.5",
+      "checksum": "b9ef1d0d795eb7d84685bca4f72f3649f064e6641543d3a8c415898726a57b41",
+      "source_url": "https://index.crates.io/ra/nd/rand",
+      "response_sha256": "a0a700a1316cb0d4a2be91383f23d9b8151fa84d6b8a3c860feaddd4623402b1",
+      "observed_at": "2026-10-20T09:28:37.018051+00:00"
+    },
+    {
+      "name": "rand_chacha",
+      "version": "0.3.1",
+      "checksum": "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88",
+      "source_url": "https://index.crates.io/ra/nd/rand_chacha",
+      "response_sha256": "539b0317389eeab5995dda3bcfb406547cbcdf31185e16683f15ca1b501f8cac",
+      "observed_at": "2026-10-20T09:28:37.001049+00:00"
+    },
+    {
+      "name": "rand_chacha",
+      "version": "0.9.0",
+      "checksum": "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb",
+      "source_url": "https://index.crates.io/ra/nd/rand_chacha",
+      "response_sha256": "539b0317389eeab5995dda3bcfb406547cbcdf31185e16683f15ca1b501f8cac",
+      "observed_at": "2026-10-20T09:28:37.001049+00:00"
+    },
+    {
+      "name": "rand_core",
+      "version": "0.6.4",
+      "checksum": "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c",
+      "source_url": "https://index.crates.io/ra/nd/rand_core",
+      "response_sha256": "681ee2cd97e29b263aa7449034f4779670f4ccb2d71de2539fb0045cac798b8c",
+      "observed_at": "2026-10-20T09:28:37.007752+00:00"
+    },
+    {
+      "name": "rand_core",
+      "version": "0.9.5",
+      "checksum": "76afc826de14238e6e8c374ddcc1fa19e374fd8dd986b0d2af0d02377261d83c",
+      "source_url": "https://index.crates.io/ra/nd/rand_core",
+      "response_sha256": "681ee2cd97e29b263aa7449034f4779670f4ccb2d71de2539fb0045cac798b8c",
+      "observed_at": "2026-10-20T09:28:37.007752+00:00"
+    },
+    {
+      "name": "rayon",
+      "version": "1.12.0",
+      "checksum": "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d",
+      "source_url": "https://index.crates.io/ra/yo/rayon",
+      "response_sha256": "62c52516e821afab163d6d2981761ca58129ae5685361b9107d478c02582df7b",
+      "observed_at": "2026-10-20T09:28:37.041280+00:00"
+    },
+    {
+      "name": "rayon-core",
+      "version": "1.13.0",
+      "checksum": "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91",
+      "source_url": "https://index.crates.io/ra/yo/rayon-core",
+      "response_sha256": "b24f6c5185e4d927a341b6a65a19a47f6848efb4b87d98126c21369cf44094cc",
+      "observed_at": "2026-10-20T09:28:37.037123+00:00"
+    },
+    {
+      "name": "redox_syscall",
+      "version": "0.5.18",
+      "checksum": "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d",
+      "source_url": "https://index.crates.io/re/do/redox_syscall",
+      "response_sha256": "0c656d287f2a4a8cd25f0b8d7c445af566eea46d079205222b0d4e3f7f489c46",
+      "observed_at": "2026-10-20T09:28:37.059608+00:00"
+    },
+    {
+      "name": "ref-cast",
+      "version": "1.0.27",
+      "checksum": "7e440fb4e4b4147295338efb76001ab9e4efc0e5839df2c47fc5ac2381d365c3",
+      "source_url": "https://index.crates.io/re/f-/ref-cast",
+      "response_sha256": "861c923631ce395a35a41df5524996832221cdf46b9d7b730bc6db8d89a916c1",
+      "observed_at": "2026-10-20T09:28:37.071880+00:00"
+    },
+    {
+      "name": "ref-cast-impl",
+      "version": "1.0.27",
+      "checksum": "92ecd8964f8453721699a1ed72037b0db49ce2f5a5138486ee89bed6f67cdf3a",
+      "source_url": "https://index.crates.io/re/f-/ref-cast-impl",
+      "response_sha256": "42701a29b57fceb4e376dc5906968eb6bc8197a6a0e050a0f8054960d67fd260",
+      "observed_at": "2026-10-20T09:28:37.077848+00:00"
+    },
+    {
+      "name": "regalloc2",
+      "version": "0.15.2",
+      "checksum": "757712e8e61590d6d4f5d563483755538b5aa13467837a3b41cd9832509a7f85",
+      "source_url": "https://index.crates.io/re/ga/regalloc2",
+      "response_sha256": "a3ea2bc6cd918e090e83232aa34f05af131dcac24a594ac8686454de1de46621",
+      "observed_at": "2026-10-20T09:28:37.106991+00:00"
+    },
+    {
+      "name": "regex-automata",
+      "version": "0.4.18",
+      "checksum": "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2",
+      "source_url": "https://index.crates.io/re/ge/regex-automata",
+      "response_sha256": "d8ad563f44a52f6a2623e0b5a009b0cb4dbba592250d94ca17b8362ee3cb78ca",
+      "observed_at": "2026-10-20T09:28:37.149450+00:00"
+    },
+    {
+      "name": "ring",
+      "version": "0.17.14",
+      "checksum": "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7",
+      "source_url": "https://index.crates.io/ri/ng/ring",
+      "response_sha256": "53e4f7b2aac2d09174abecf713e93395c3ff09b4a27254babcdf11fc55b49121",
+      "observed_at": "2026-10-20T09:28:37.211399+00:00"
+    },
+    {
+      "name": "rowan",
+      "version": "0.17.0",
+      "checksum": "14b574c58582fa59fa43a2feb6608b8744184659f08a2e0117e4b8224d95ed61",
+      "source_url": "https://index.crates.io/ro/wa/rowan",
+      "response_sha256": "f23e2907ccf8e30ee6b2d6c5e2cfa2615e9fb675b793fc7b90192f4cd8d98118",
+      "observed_at": "2026-10-20T09:28:37.219810+00:00"
+    },
+    {
+      "name": "rust_decimal",
+      "version": "1.43.0",
+      "checksum": "7653272e75dcac41dc199fbea6f5797633994fafd339943c06c9af16bf29cd3a",
+      "source_url": "https://index.crates.io/ru/st/rust_decimal",
+      "response_sha256": "a6db6fdb378275d9fc7e26bd32935576311020c085f2b7c50e3c4ac3b1d741ee",
+      "observed_at": "2026-10-20T09:28:37.356155+00:00"
+    },
+    {
+      "name": "rustc-demangle",
+      "version": "0.1.28",
+      "checksum": "b74b56ffa8bb2830709a538c2cbcae9aa062db0d2a42563bfb09bdaae44020eb",
+      "source_url": "https://index.crates.io/ru/st/rustc-demangle",
+      "response_sha256": "36c2054e4864c5ec14327384ddb906a4813419b3c4600e608e437468abc0ec7e",
+      "observed_at": "2026-10-20T09:28:37.285497+00:00"
+    },
+    {
+      "name": "rustc-hash",
+      "version": "1.1.0",
+      "checksum": "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2",
+      "source_url": "https://index.crates.io/ru/st/rustc-hash",
+      "response_sha256": "16991d141c50649ba11ce52163be60de83f094a5d660923e321480728f1a629f",
+      "observed_at": "2026-10-20T09:28:37.320057+00:00"
+    },
+    {
+      "name": "rustc-hash",
+      "version": "2.1.2",
+      "checksum": "94300abf3f1ae2e2b8ffb7b58043de3d399c73fa6f4b73826402a5c457614dbe",
+      "source_url": "https://index.crates.io/ru/st/rustc-hash",
+      "response_sha256": "16991d141c50649ba11ce52163be60de83f094a5d660923e321480728f1a629f",
+      "observed_at": "2026-10-20T09:28:37.320057+00:00"
+    },
+    {
+      "name": "rustc-hash",
+      "version": "2.1.3",
+      "checksum": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d",
+      "source_url": "https://index.crates.io/ru/st/rustc-hash",
+      "response_sha256": "16991d141c50649ba11ce52163be60de83f094a5d660923e321480728f1a629f",
+      "observed_at": "2026-10-20T09:28:37.320057+00:00"
+    },
+    {
+      "name": "rustc-literal-escaper",
+      "version": "0.0.7",
+      "checksum": "8be87abb9e40db7466e0681dc8ecd9dcfd40360cb10b4c8fe24a7c4c3669b198",
+      "source_url": "https://index.crates.io/ru/st/rustc-literal-escaper",
+      "response_sha256": "775ee0e11dc982481a43e86719d707d993b2de2c121e689f83dbaf8505f6979a",
+      "observed_at": "2026-10-20T09:28:37.324035+00:00"
+    },
+    {
+      "name": "rustc-stable-hash",
+      "version": "0.1.2",
+      "checksum": "781442f29170c5c93b7185ad559492601acdc71d5bb0706f5868094f45cfcd08",
+      "source_url": "https://index.crates.io/ru/st/rustc-stable-hash",
+      "response_sha256": "952047a52e40b3967a7fbfa41a333b7cac52e109b527aa231402a1e899d77ed4",
+      "observed_at": "2026-10-20T09:28:37.364776+00:00"
+    },
+    {
+      "name": "rustc_apfloat",
+      "version": "0.2.3+llvm-462a31f5a5ab",
+      "checksum": "486c2179b4796f65bfe2ee33679acf0927ac83ecf583ad6c91c3b4570911b9ad",
+      "source_url": "https://index.crates.io/ru/st/rustc_apfloat",
+      "response_sha256": "fa9d0edb8d845d85b6ef47d40a00aca5eaee35e706a7f819d41ab30385cbc523",
+      "observed_at": "2026-10-20T09:28:37.365147+00:00"
+    },
+    {
+      "name": "rustix",
+      "version": "1.1.5",
+      "checksum": "891efababe418670775f199f0d233d84843c227a0949a883ce15b37c78d6629d",
+      "source_url": "https://index.crates.io/ru/st/rustix",
+      "response_sha256": "58f60e0414bc1677377bbe47b43ad3a13528c41a4a92f48a7eb585e2154cb57c",
+      "observed_at": "2026-10-20T09:28:37.582090+00:00"
+    },
+    {
+      "name": "rustversion",
+      "version": "1.0.22",
+      "checksum": "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d",
+      "source_url": "https://index.crates.io/ru/st/rustversion",
+      "response_sha256": "d6ea4dfdc92457fa63dd58a0cb66e2ee9246ec50f246782c1eb39007d4ed1f8d",
+      "observed_at": "2026-10-20T09:28:37.409046+00:00"
+    },
+    {
+      "name": "rustversion",
+      "version": "1.0.23",
+      "checksum": "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f",
+      "source_url": "https://index.crates.io/ru/st/rustversion",
+      "response_sha256": "d6ea4dfdc92457fa63dd58a0cb66e2ee9246ec50f246782c1eb39007d4ed1f8d",
+      "observed_at": "2026-10-20T09:28:37.409046+00:00"
+    },
+    {
+      "name": "ryu",
+      "version": "1.0.23",
+      "checksum": "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f",
+      "source_url": "https://index.crates.io/3/r/ryu",
+      "response_sha256": "2d75021df0545cbef0c4d5565c60b0fe07134c11f6b5b014b9cfd99d112a3ed8",
+      "observed_at": "2026-10-20T09:28:37.419554+00:00"
+    },
+    {
+      "name": "salsa",
+      "version": "0.28.5",
+      "checksum": "27d2e6e19e39591cd99c01ac4141544b4d012cfd0831348629b8187fa9fe6d34",
+      "source_url": "https://index.crates.io/sa/ls/salsa",
+      "response_sha256": "a65dd02d99b6f277da1c313e6bd99aa275d71fe7ca2cc17465436c71a98de48b",
+      "observed_at": "2026-10-20T09:28:37.519517+00:00"
+    },
+    {
+      "name": "salsa-macro-rules",
+      "version": "0.28.5",
+      "checksum": "baf90a551c38f25ed8489111d3d5827aa18e1b85963f5e6a298505b1d1e2cb7e",
+      "source_url": "https://index.crates.io/sa/ls/salsa-macro-rules",
+      "response_sha256": "4c33b8e65518376dd3ae19af96ee2c595a9f8c48019b99a05490318d3cf6aaaf",
+      "observed_at": "2026-10-20T09:28:37.481641+00:00"
+    },
+    {
+      "name": "salsa-macros",
+      "version": "0.28.5",
+      "checksum": "69dd77f86ec10e72e314f4ddf7c44c8d349e73cdff1aad524ba9668603fb0549",
+      "source_url": "https://index.crates.io/sa/ls/salsa-macros",
+      "response_sha256": "8759233ce72de62cc3aa7c071fa6cf692ed6019543b5158d7a242d480e218bb2",
+      "observed_at": "2026-10-20T09:28:37.536909+00:00"
+    },
+    {
+      "name": "same-file",
+      "version": "1.0.6",
+      "checksum": "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502",
+      "source_url": "https://index.crates.io/sa/me/same-file",
+      "response_sha256": "a4a415f52a327838c7eb29dcb7434d82d3b5d2ff45c82cb834950410ae0381ed",
+      "observed_at": "2026-10-20T09:28:37.527675+00:00"
+    },
+    {
+      "name": "schemars",
+      "version": "1.2.2",
+      "checksum": "687274d293b6cdc6e73e0fee520bf2049650090d7164f87672d212a3c530cf4a",
+      "source_url": "https://index.crates.io/sc/he/schemars",
+      "response_sha256": "d643fcba05b5a4f27bc9d6380114f9b46e0c37d36aa0c99522481c3b16e047a4",
+      "observed_at": "2026-10-20T09:28:37.632747+00:00"
+    },
+    {
+      "name": "schemars_derive",
+      "version": "1.2.2",
+      "checksum": "d98c67716b46af2f0b8cf752abc930f6f9aecfbf671ecfb531db8a31dbe4e2ba",
+      "source_url": "https://index.crates.io/sc/he/schemars_derive",
+      "response_sha256": "fd5762571c5ba1a4ae1bca56d03c4b5a1bbe0e0b20eedeea9c09c357a34a198a",
+      "observed_at": "2026-10-20T09:28:37.601001+00:00"
+    },
+    {
+      "name": "scopeguard",
+      "version": "1.2.0",
+      "checksum": "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49",
+      "source_url": "https://index.crates.io/sc/op/scopeguard",
+      "response_sha256": "c713b0531b312c2906973e4fc9530b17ff1591f563449eb63d179343dd1b7df7",
+      "observed_at": "2026-10-20T09:28:37.589432+00:00"
+    },
+    {
+      "name": "semver",
+      "version": "1.0.28",
+      "checksum": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd",
+      "source_url": "https://index.crates.io/se/mv/semver",
+      "response_sha256": "9ba964837f38bc25aed784bde55c745be4b4d48c21d1e180fb234c8dca2bf4d0",
+      "observed_at": "2026-10-20T09:28:37.601828+00:00"
+    },
+    {
+      "name": "serde",
+      "version": "1.0.228",
+      "checksum": "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e",
+      "source_url": "https://index.crates.io/se/rd/serde",
+      "response_sha256": "9eb6e78eab279f168b5787e4eb801765e1d5a2b40c50789e12166a616d73bbc5",
+      "observed_at": "2026-10-20T09:28:37.679664+00:00"
+    },
+    {
+      "name": "serde",
+      "version": "1.0.229",
+      "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+      "source_url": "https://index.crates.io/se/rd/serde",
+      "response_sha256": "9eb6e78eab279f168b5787e4eb801765e1d5a2b40c50789e12166a616d73bbc5",
+      "observed_at": "2026-10-20T09:28:37.679664+00:00"
+    },
+    {
+      "name": "serde_core",
+      "version": "1.0.228",
+      "checksum": "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad",
+      "source_url": "https://index.crates.io/se/rd/serde_core",
+      "response_sha256": "58280b0772569b5900e04a8672d3541e2340b31a54c348a269b1beee3552811a",
+      "observed_at": "2026-10-20T09:28:37.617076+00:00"
+    },
+    {
+      "name": "serde_core",
+      "version": "1.0.229",
+      "checksum": "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48",
+      "source_url": "https://index.crates.io/se/rd/serde_core",
+      "response_sha256": "58280b0772569b5900e04a8672d3541e2340b31a54c348a269b1beee3552811a",
+      "observed_at": "2026-10-20T09:28:37.617076+00:00"
+    },
+    {
+      "name": "serde_derive",
+      "version": "1.0.228",
+      "checksum": "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79",
+      "source_url": "https://index.crates.io/se/rd/serde_derive",
+      "response_sha256": "9e45aa13a3855f66e4aad308ee5035a49e5690054189ce1216964d548f4d53de",
+      "observed_at": "2026-10-20T09:28:37.695415+00:00"
+    },
+    {
+      "name": "serde_derive",
+      "version": "1.0.229",
+      "checksum": "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348",
+      "source_url": "https://index.crates.io/se/rd/serde_derive",
+      "response_sha256": "9e45aa13a3855f66e4aad308ee5035a49e5690054189ce1216964d548f4d53de",
+      "observed_at": "2026-10-20T09:28:37.695415+00:00"
+    },
+    {
+      "name": "serde_derive_internals",
+      "version": "0.30.0",
+      "checksum": "f852137cce035d6a4df67ccce505ff6b3e9fd3a10e3e52b24dc71e650bb1a9bd",
+      "source_url": "https://index.crates.io/se/rd/serde_derive_internals",
+      "response_sha256": "6f73c09de77983292f7c718a2a0c5132df66095bb2f5d47637102699d7c7139e",
+      "observed_at": "2026-10-20T09:28:37.657355+00:00"
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.150",
+      "checksum": "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9",
+      "source_url": "https://index.crates.io/se/rd/serde_json",
+      "response_sha256": "320ccb6ff902a966f5a6b47d8592d9778cd39ef225e5fbc300990f02db91995c",
+      "observed_at": "2026-10-20T09:28:37.728717+00:00"
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.151",
+      "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+      "source_url": "https://index.crates.io/se/rd/serde_json",
+      "response_sha256": "320ccb6ff902a966f5a6b47d8592d9778cd39ef225e5fbc300990f02db91995c",
+      "observed_at": "2026-10-20T09:28:37.728717+00:00"
+    },
+    {
+      "name": "serde_spanned",
+      "version": "1.1.1",
+      "checksum": "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26",
+      "source_url": "https://index.crates.io/se/rd/serde_spanned",
+      "response_sha256": "677183dd2674856f4a562313f22923707badae895dbcda173b291f92e3d052c7",
+      "observed_at": "2026-10-20T09:28:37.666899+00:00"
+    },
+    {
+      "name": "sha2",
+      "version": "0.10.9",
+      "checksum": "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283",
+      "source_url": "https://index.crates.io/sh/a2/sha2",
+      "response_sha256": "82ee9e7e65a28c6818dfe81322720136c8ff9cdea9c88ad5d04e098353015ba0",
+      "observed_at": "2026-10-20T09:28:37.715439+00:00"
+    },
+    {
+      "name": "sha2",
+      "version": "0.11.0",
+      "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+      "source_url": "https://index.crates.io/sh/a2/sha2",
+      "response_sha256": "82ee9e7e65a28c6818dfe81322720136c8ff9cdea9c88ad5d04e098353015ba0",
+      "observed_at": "2026-10-20T09:28:37.715439+00:00"
+    },
+    {
+      "name": "sharded-slab",
+      "version": "0.1.7",
+      "checksum": "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6",
+      "source_url": "https://index.crates.io/sh/ar/sharded-slab",
+      "response_sha256": "915135ac5a9bbc6362b6a5969055908e8a211515cfc5fe31df422e7c6cf4076b",
+      "observed_at": "2026-10-20T09:28:37.710639+00:00"
+    },
+    {
+      "name": "shlex",
+      "version": "2.0.1",
+      "checksum": "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba",
+      "source_url": "https://index.crates.io/sh/le/shlex",
+      "response_sha256": "e8f4bfd70f87bb7a82a31fc1ab0e0d6fc6df32f6a5d208865197f317552b1639",
+      "observed_at": "2026-10-20T09:28:37.731718+00:00"
+    },
+    {
+      "name": "simdutf8",
+      "version": "0.1.5",
+      "checksum": "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e",
+      "source_url": "https://index.crates.io/si/md/simdutf8",
+      "response_sha256": "8ac50b92dcce1aa692df931f4a76d3488d5d0d77e402a171320d78e5931e8317",
+      "observed_at": "2026-10-20T09:28:37.737203+00:00"
+    },
+    {
+      "name": "siphasher",
+      "version": "1.0.4",
+      "checksum": "33f4fe9184a62d842c9ef383018f3306d8ba224fd9d836f56d7288308847c256",
+      "source_url": "https://index.crates.io/si/ph/siphasher",
+      "response_sha256": "508c3924ec7a09b57f04953590bee04d9a681a00824287a8e716e4d6137534cd",
+      "observed_at": "2026-10-20T09:28:37.744733+00:00"
+    },
+    {
+      "name": "slab",
+      "version": "0.4.12",
+      "checksum": "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5",
+      "source_url": "https://index.crates.io/sl/ab/slab",
+      "response_sha256": "a3ecdd40d53663f488b4ff98e5d37ae13aa22eec1e852bbe0eebfa835413c913",
+      "observed_at": "2026-10-20T09:28:37.742601+00:00"
+    },
+    {
+      "name": "smallvec",
+      "version": "1.15.1",
+      "checksum": "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03",
+      "source_url": "https://index.crates.io/sm/al/smallvec",
+      "response_sha256": "819134f9e8992b74ff599ece84d3bf00e1a763f1e1fbbb101977d90ccd57a2a8",
+      "observed_at": "2026-10-20T09:28:37.762123+00:00"
+    },
+    {
+      "name": "smallvec",
+      "version": "1.16.2",
+      "checksum": "f9395f0f0eee849a9b707b2f06bb92a6a422090e2123bb2ef8e87a0e61892a8e",
+      "source_url": "https://index.crates.io/sm/al/smallvec",
+      "response_sha256": "819134f9e8992b74ff599ece84d3bf00e1a763f1e1fbbb101977d90ccd57a2a8",
+      "observed_at": "2026-10-20T09:28:37.762123+00:00"
+    },
+    {
+      "name": "smol_str",
+      "version": "0.3.6",
+      "checksum": "4aaa7368fcf4852a4c2dd92df0cace6a71f2091ca0a23391ce7f3a31833f1523",
+      "source_url": "https://index.crates.io/sm/ol/smol_str",
+      "response_sha256": "a2cbaeb984af00b31244b5607ae977a093db9bc30f7ee63e13063622dc6439e9",
+      "observed_at": "2026-10-20T09:28:37.764791+00:00"
+    },
+    {
+      "name": "stable_deref_trait",
+      "version": "1.2.1",
+      "checksum": "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596",
+      "source_url": "https://index.crates.io/st/ab/stable_deref_trait",
+      "response_sha256": "8b37c6dcd76afb95e8e43168908698a5ed6c2e76a84e808c4aea9a29e61856a3",
+      "observed_at": "2026-10-20T09:28:37.769251+00:00"
+    },
+    {
+      "name": "stacker",
+      "version": "0.1.25",
+      "checksum": "707f49d46706bacf8a2b00d51dace3f9de527c13eec3778f570c411f89e69967",
+      "source_url": "https://index.crates.io/st/ac/stacker",
+      "response_sha256": "f4e07d658e211e7c994b5d56b0ef955dbd13e7cc4d099f1ead2e643dd5f96991",
+      "observed_at": "2026-10-20T09:28:37.774932+00:00"
+    },
+    {
+      "name": "static_assertions",
+      "version": "1.1.0",
+      "checksum": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f",
+      "source_url": "https://index.crates.io/st/at/static_assertions",
+      "response_sha256": "684f5d09e9f84759af65d0cacd47935f0107b0d77c4f4bd855bc391edf30a0ac",
+      "observed_at": "2026-10-20T09:28:37.778252+00:00"
+    },
+    {
+      "name": "syn",
+      "version": "2.0.117",
+      "checksum": "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99",
+      "source_url": "https://index.crates.io/3/s/syn",
+      "response_sha256": "bf3c3b2623e984ab1d93f0c88d35e2fb2d9e0579cd3eacecd992fcb29a487a51",
+      "observed_at": "2026-10-20T09:28:37.871254+00:00"
+    },
+    {
+      "name": "syn",
+      "version": "2.0.119",
+      "checksum": "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297",
+      "source_url": "https://index.crates.io/3/s/syn",
+      "response_sha256": "bf3c3b2623e984ab1d93f0c88d35e2fb2d9e0579cd3eacecd992fcb29a487a51",
+      "observed_at": "2026-10-20T09:28:37.871254+00:00"
+    },
+    {
+      "name": "syn",
+      "version": "3.0.3",
+      "checksum": "53e9bae58849f64dfa4f5d5ae372c8341f7305f82a3868709269343628b659a3",
+      "source_url": "https://index.crates.io/3/s/syn",
+      "response_sha256": "bf3c3b2623e984ab1d93f0c88d35e2fb2d9e0579cd3eacecd992fcb29a487a51",
+      "observed_at": "2026-10-20T09:28:37.871254+00:00"
+    },
+    {
+      "name": "syn",
+      "version": "3.0.6",
+      "checksum": "8593e8e72159ed2257d083c7a454a85cbf854f37a0966d8d483aff8c8a3ebcee",
+      "source_url": "https://index.crates.io/3/s/syn",
+      "response_sha256": "bf3c3b2623e984ab1d93f0c88d35e2fb2d9e0579cd3eacecd992fcb29a487a51",
+      "observed_at": "2026-10-20T09:28:37.871254+00:00"
+    },
+    {
+      "name": "synstructure",
+      "version": "0.13.2",
+      "checksum": "728a70f3dbaf5bab7f0c4b1ac8d7ae5ea60a4b5549c8a5914361c99147a709d2",
+      "source_url": "https://index.crates.io/sy/ns/synstructure",
+      "response_sha256": "919dc9ca5c851ec1d6d2431321ce79fe5401b7a6823430762f0eda8308eb9d4c",
+      "observed_at": "2026-10-20T09:28:37.807060+00:00"
+    },
+    {
+      "name": "target-lexicon",
+      "version": "0.13.5",
+      "checksum": "adb6935a6f5c20170eeceb1a3835a49e12e19d792f6dd344ccc76a985ca5a6ca",
+      "source_url": "https://index.crates.io/ta/rg/target-lexicon",
+      "response_sha256": "9f4675d87903e066492bd28a50e5cad3fd56441615a693d62008e4540cf6cbb1",
+      "observed_at": "2026-10-20T09:28:37.818065+00:00"
+    },
+    {
+      "name": "tempfile",
+      "version": "3.27.0",
+      "checksum": "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd",
+      "source_url": "https://index.crates.io/te/mp/tempfile",
+      "response_sha256": "a8524b74684766e9c100e3036719ffef0dd238302352496cc99a62eab3f6ad10",
+      "observed_at": "2026-10-20T09:28:37.841995+00:00"
+    },
+    {
+      "name": "termcolor",
+      "version": "1.4.1",
+      "checksum": "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755",
+      "source_url": "https://index.crates.io/te/rm/termcolor",
+      "response_sha256": "90b53a440be1f862a06afa7361b9c670ae805c09cbb3f44c57425bb1d9662aba",
+      "observed_at": "2026-10-20T09:28:37.826423+00:00"
+    },
+    {
+      "name": "text-size",
+      "version": "1.1.1",
+      "checksum": "f18aa187839b2bdb1ad2fa35ead8c4c2976b64e4363c386d45ac0f7ee85c9233",
+      "source_url": "https://index.crates.io/te/xt/text-size",
+      "response_sha256": "897cac0da03b59f2f1cd4d55d0e5b79676415c78606ff1ec2efaa0650fe606ea",
+      "observed_at": "2026-10-20T09:28:37.829935+00:00"
+    },
+    {
+      "name": "thin-vec",
+      "version": "0.2.18",
+      "checksum": "b0f7e269b48f0a7dd0146680fa24b50cc67fc0373f086a5b2f99bd084639b482",
+      "source_url": "https://index.crates.io/th/in/thin-vec",
+      "response_sha256": "75e776836162566b203ca51e58203b80ebd51df6f1021a6be94d22e8ca2100a3",
+      "observed_at": "2026-10-20T09:28:37.877227+00:00"
+    },
+    {
+      "name": "thin-vec",
+      "version": "0.2.20",
+      "checksum": "4568d7e143ec86d2021c338bae2afa88699e84b8e0af523626654fe6f03a1748",
+      "source_url": "https://index.crates.io/th/in/thin-vec",
+      "response_sha256": "75e776836162566b203ca51e58203b80ebd51df6f1021a6be94d22e8ca2100a3",
+      "observed_at": "2026-10-20T09:28:37.877227+00:00"
+    },
+    {
+      "name": "thiserror",
+      "version": "2.0.18",
+      "checksum": "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4",
+      "source_url": "https://index.crates.io/th/is/thiserror",
+      "response_sha256": "320c3e915f0afe44092342b497ec2189a5c502fbc0e1bd816e8db3e8c6d82914",
+      "observed_at": "2026-10-20T09:28:37.891875+00:00"
+    },
+    {
+      "name": "thiserror",
+      "version": "2.0.21",
+      "checksum": "09e52cb86a36cede5cb101bf8908837b3e4c6e5e59fe7fd85c23fb56200d189e",
+      "source_url": "https://index.crates.io/th/is/thiserror",
+      "response_sha256": "320c3e915f0afe44092342b497ec2189a5c502fbc0e1bd816e8db3e8c6d82914",
+      "observed_at": "2026-10-20T09:28:37.891875+00:00"
+    },
+    {
+      "name": "thiserror-impl",
+      "version": "2.0.18",
+      "checksum": "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5",
+      "source_url": "https://index.crates.io/th/is/thiserror-impl",
+      "response_sha256": "a6346a79d7139dc845c4dc27d0374d35f82ef16b71a456412fdd2eaa137c7422",
+      "observed_at": "2026-10-20T09:28:37.893000+00:00"
+    },
+    {
+      "name": "thiserror-impl",
+      "version": "2.0.21",
+      "checksum": "fe5197923287db20a58125f0bc85c062f7f2c892de97b18c356f9efb14b28524",
+      "source_url": "https://index.crates.io/th/is/thiserror-impl",
+      "response_sha256": "a6346a79d7139dc845c4dc27d0374d35f82ef16b71a456412fdd2eaa137c7422",
+      "observed_at": "2026-10-20T09:28:37.893000+00:00"
+    },
+    {
+      "name": "thread_local",
+      "version": "1.1.9",
+      "checksum": "f60246a4944f24f6e018aa17cdeffb7818b76356965d03b07d6a9886e8962185",
+      "source_url": "https://index.crates.io/th/re/thread_local",
+      "response_sha256": "8ee75e0ff106781437e7f9243dd91431dce1cdca61931e4d3df88540ea472090",
+      "observed_at": "2026-10-20T09:28:37.891634+00:00"
+    },
+    {
+      "name": "time",
+      "version": "0.3.47",
+      "checksum": "743bd48c283afc0388f9b8827b976905fb217ad9e647fae3a379a9283c4def2c",
+      "source_url": "https://index.crates.io/ti/me/time",
+      "response_sha256": "b574ab0ea1b19243597030482e4c8e61b25f92c2fcc8438be2c0ea5a34fc3f0c",
+      "observed_at": "2026-10-20T09:28:37.940421+00:00"
+    },
+    {
+      "name": "time-core",
+      "version": "0.1.8",
+      "checksum": "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca",
+      "source_url": "https://index.crates.io/ti/me/time-core",
+      "response_sha256": "469819f5aff17460119e3f772813282e6d3b4cac8b5051462c8b7908a287dd75",
+      "observed_at": "2026-10-20T09:28:37.897592+00:00"
+    },
+    {
+      "name": "time-macros",
+      "version": "0.2.27",
+      "checksum": "2e70e4c5a0e0a8a4823ad65dfe1a6930e4f4d756dcd9dd7939022b5e8c501215",
+      "source_url": "https://index.crates.io/ti/me/time-macros",
+      "response_sha256": "81150216d7be9f50c423e046ca2fdc15a8f8c33dff7a83c2477fb7004bc00b95",
+      "observed_at": "2026-10-20T09:28:37.910922+00:00"
+    },
+    {
+      "name": "tinyvec",
+      "version": "1.13.3",
+      "checksum": "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee",
+      "source_url": "https://index.crates.io/ti/ny/tinyvec",
+      "response_sha256": "534b808f492577127a1144fc5ab5c1b474b275b5c7db993647dc65920ede2538",
+      "observed_at": "2026-10-20T09:28:37.927778+00:00"
+    },
+    {
+      "name": "toml",
+      "version": "1.1.2+spec-1.1.0",
+      "checksum": "81f3d15e84cbcd896376e6730314d59fb5a87f31e4b038454184435cd57defee",
+      "source_url": "https://index.crates.io/to/ml/toml",
+      "response_sha256": "9a0dace2b08e7488dba7f6c06f6d91f2162634825fbb2e2d271524849597ce43",
+      "observed_at": "2026-10-20T09:28:38.058792+00:00"
+    },
+    {
+      "name": "toml",
+      "version": "1.1.6+spec-1.1.0",
+      "checksum": "920602543f0911ab71da12c50d59701da54c196d1a2bf5cb4b75667f137a406a",
+      "source_url": "https://index.crates.io/to/ml/toml",
+      "response_sha256": "9a0dace2b08e7488dba7f6c06f6d91f2162634825fbb2e2d271524849597ce43",
+      "observed_at": "2026-10-20T09:28:38.058792+00:00"
+    },
+    {
+      "name": "toml_datetime",
+      "version": "1.1.1+spec-1.1.0",
+      "checksum": "3165f65f62e28e0115a00b2ebdd37eb6f3b641855f9d636d3cd4103767159ad7",
+      "source_url": "https://index.crates.io/to/ml/toml_datetime",
+      "response_sha256": "3c3f35d22f6e95d34eb6234007367c88471e11933f22149c5105a4681d8d84b8",
+      "observed_at": "2026-10-20T09:28:37.999941+00:00"
+    },
+    {
+      "name": "toml_edit",
+      "version": "0.25.15+spec-1.1.0",
+      "checksum": "1340ea94a5856333492c9064b02c778b191dd2c853778d9609debdcdfea3a614",
+      "source_url": "https://index.crates.io/to/ml/toml_edit",
+      "response_sha256": "594f89b5279e8e56686c48c9f9a17f462cc07850a4757b1d06a22e265e564353",
+      "observed_at": "2026-10-20T09:28:38.108450+00:00"
+    },
+    {
+      "name": "toml_parser",
+      "version": "1.1.2+spec-1.1.0",
+      "checksum": "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526",
+      "source_url": "https://index.crates.io/to/ml/toml_parser",
+      "response_sha256": "cdb357d89bf93443cc2fc39c9ec93d91a94c61ce68a08fe099835c373d4e6829",
+      "observed_at": "2026-10-20T09:28:38.079594+00:00"
+    },
+    {
+      "name": "toml_parser",
+      "version": "1.1.3+spec-1.1.0",
+      "checksum": "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56",
+      "source_url": "https://index.crates.io/to/ml/toml_parser",
+      "response_sha256": "cdb357d89bf93443cc2fc39c9ec93d91a94c61ce68a08fe099835c373d4e6829",
+      "observed_at": "2026-10-20T09:28:38.079594+00:00"
+    },
+    {
+      "name": "toml_writer",
+      "version": "1.1.1+spec-1.1.0",
+      "checksum": "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db",
+      "source_url": "https://index.crates.io/to/ml/toml_writer",
+      "response_sha256": "bf0f6b0fa6e0dc5a8aec560958c2aefc57307046bdd07732497e22f14de1554a",
+      "observed_at": "2026-10-20T09:28:38.074016+00:00"
+    },
+    {
+      "name": "toml_writer",
+      "version": "1.1.2+spec-1.1.0",
+      "checksum": "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2",
+      "source_url": "https://index.crates.io/to/ml/toml_writer",
+      "response_sha256": "bf0f6b0fa6e0dc5a8aec560958c2aefc57307046bdd07732497e22f14de1554a",
+      "observed_at": "2026-10-20T09:28:38.074016+00:00"
+    },
+    {
+      "name": "tracing",
+      "version": "0.1.44",
+      "checksum": "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100",
+      "source_url": "https://index.crates.io/tr/ac/tracing",
+      "response_sha256": "cc3729d2157b49521b392d44449c33dbda73d4481335d95beb43187652f93302",
+      "observed_at": "2026-10-20T09:28:38.166544+00:00"
+    },
+    {
+      "name": "tracing-attributes",
+      "version": "0.1.31",
+      "checksum": "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da",
+      "source_url": "https://index.crates.io/tr/ac/tracing-attributes",
+      "response_sha256": "343b15e631de59e145bda3209cb86cf55ee2167327245df711e86028b195b55e",
+      "observed_at": "2026-10-20T09:28:38.145786+00:00"
+    },
+    {
+      "name": "tracing-core",
+      "version": "0.1.36",
+      "checksum": "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a",
+      "source_url": "https://index.crates.io/tr/ac/tracing-core",
+      "response_sha256": "fa141f94b31205f180344004d268bdf5800ba6b0708c5e5122b5416fb992466f",
+      "observed_at": "2026-10-20T09:28:38.144874+00:00"
+    },
+    {
+      "name": "tracing-log",
+      "version": "0.2.0",
+      "checksum": "ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3",
+      "source_url": "https://index.crates.io/tr/ac/tracing-log",
+      "response_sha256": "1cfcd452b034559cbdfcbb4b765fca7d182287562a2c457f6eb06d2c116c019a",
+      "observed_at": "2026-10-20T09:28:38.173860+00:00"
+    },
+    {
+      "name": "tracing-subscriber",
+      "version": "0.3.23",
+      "checksum": "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319",
+      "source_url": "https://index.crates.io/tr/ac/tracing-subscriber",
+      "response_sha256": "1dd5fbffcaaec4533a908744cdc130e15ca06c124c32a4a8de3d307c91cb9cfe",
+      "observed_at": "2026-10-20T09:28:38.217385+00:00"
+    },
+    {
+      "name": "tracing-tree",
+      "version": "0.4.1",
+      "checksum": "ac87aa03b6a4d5a7e4810d1a80c19601dbe0f8a837e9177f23af721c7ba7beec",
+      "source_url": "https://index.crates.io/tr/ac/tracing-tree",
+      "response_sha256": "350a82b264030d736f2ef13125beb57b9f767088ebb527284838feca864bf786",
+      "observed_at": "2026-10-20T09:28:38.192361+00:00"
+    },
+    {
+      "name": "triomphe",
+      "version": "0.1.15",
+      "checksum": "dd69c5aa8f924c7519d6372789a74eac5b94fb0f8fcf0d4a97eb0bfc3e785f39",
+      "source_url": "https://index.crates.io/tr/io/triomphe",
+      "response_sha256": "5a8e2ca9850d397b43b89f74a8b5121cfaecedffb9ee0e503bb2308bf0811b59",
+      "observed_at": "2026-10-20T09:28:38.193789+00:00"
+    },
+    {
+      "name": "typed-arena",
+      "version": "2.0.2",
+      "checksum": "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a",
+      "source_url": "https://index.crates.io/ty/pe/typed-arena",
+      "response_sha256": "3ef030e65e6ad2553324f6bb676f00a21f41b9c63318c5a499cba6e527b75210",
+      "observed_at": "2026-10-20T09:28:38.193350+00:00"
+    },
+    {
+      "name": "typeid",
+      "version": "1.0.3",
+      "checksum": "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c",
+      "source_url": "https://index.crates.io/ty/pe/typeid",
+      "response_sha256": "1c1f3bd0ccc9651ae1bb2eceb3dda402b856cd1ed6a177db9014e1747107f49c",
+      "observed_at": "2026-10-20T09:28:38.207316+00:00"
+    },
+    {
+      "name": "typenum",
+      "version": "1.20.1",
+      "checksum": "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20",
+      "source_url": "https://index.crates.io/ty/pe/typenum",
+      "response_sha256": "1f1fcc1b809a17356e58ff98d756623949107f3091049b0f40c1f1ee4321567b",
+      "observed_at": "2026-10-20T09:28:38.201717+00:00"
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.24",
+      "checksum": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75",
+      "source_url": "https://index.crates.io/un/ic/unicode-ident",
+      "response_sha256": "4c12cadce7c0428aeaac8dc8f2f607bdc523b42be795c7fda601dd42a0f4cbeb",
+      "observed_at": "2026-10-20T09:28:38.217779+00:00"
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.26",
+      "checksum": "d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954",
+      "source_url": "https://index.crates.io/un/ic/unicode-ident",
+      "response_sha256": "4c12cadce7c0428aeaac8dc8f2f607bdc523b42be795c7fda601dd42a0f4cbeb",
+      "observed_at": "2026-10-20T09:28:38.217779+00:00"
+    },
+    {
+      "name": "unicode-normalization",
+      "version": "0.1.25",
+      "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8",
+      "source_url": "https://index.crates.io/un/ic/unicode-normalization",
+      "response_sha256": "67fa9c8e1467b5a8fcc8c7b15304a2e40fea3685e6e62baf747be174d3f67715",
+      "observed_at": "2026-10-20T09:28:38.237649+00:00"
+    },
+    {
+      "name": "unicode-properties",
+      "version": "0.1.4",
+      "checksum": "7df058c713841ad818f1dc5d3fd88063241cc61f49f5fbea4b951e8cf5a8d71d",
+      "source_url": "https://index.crates.io/un/ic/unicode-properties",
+      "response_sha256": "0afeb2a0e5d0fbdfd03bf73ac0e64d8b84a30f895459b708044aef2af7b7651a",
+      "observed_at": "2026-10-20T09:28:38.236162+00:00"
+    },
+    {
+      "name": "unicode-width",
+      "version": "0.2.2",
+      "checksum": "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254",
+      "source_url": "https://index.crates.io/un/ic/unicode-width",
+      "response_sha256": "2e0cf1fe242f88f67f7eb3560482239e4ded9327342d93e7b9d88afb059a9d4e",
+      "observed_at": "2026-10-20T09:28:38.240508+00:00"
+    },
+    {
+      "name": "unicode_names2",
+      "version": "1.3.0",
+      "checksum": "d1673eca9782c84de5f81b82e4109dcfb3611c8ba0d52930ec4a9478f547b2dd",
+      "source_url": "https://index.crates.io/un/ic/unicode_names2",
+      "response_sha256": "a23bd43fed8bd9dd41071d8dfae0d6b9f782fc465d6a1170dd024b28d643511f",
+      "observed_at": "2026-10-20T09:28:38.246147+00:00"
+    },
+    {
+      "name": "unicode_names2_generator",
+      "version": "1.3.0",
+      "checksum": "b91e5b84611016120197efd7dc93ef76774f4e084cd73c9fb3ea4a86c570c56e",
+      "source_url": "https://index.crates.io/un/ic/unicode_names2_generator",
+      "response_sha256": "fe55d9983462e92819753f49dbcb59de1c2b082f607f916cb2f2f0387b31c251",
+      "observed_at": "2026-10-20T09:28:38.251580+00:00"
+    },
+    {
+      "name": "untrusted",
+      "version": "0.9.0",
+      "checksum": "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1",
+      "source_url": "https://index.crates.io/un/tr/untrusted",
+      "response_sha256": "2be5d039854423fb45862f248c48492c9a2b44a959908d613ca19bf134ca785d",
+      "observed_at": "2026-10-20T09:28:38.248132+00:00"
+    },
+    {
+      "name": "valuable",
+      "version": "0.1.1",
+      "checksum": "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65",
+      "source_url": "https://index.crates.io/va/lu/valuable",
+      "response_sha256": "8b7957366b56b500215cd2fc1260be0e66ebf961d560ae7c198c7978a3e69d48",
+      "observed_at": "2026-10-20T09:28:38.269306+00:00"
+    },
+    {
+      "name": "version_check",
+      "version": "0.9.5",
+      "checksum": "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a",
+      "source_url": "https://index.crates.io/ve/rs/version_check",
+      "response_sha256": "b5e6471ac234b3d292a466da5e856c09da2081bcee8f0f285202d5d54f3ce417",
+      "observed_at": "2026-10-20T09:28:38.271397+00:00"
+    },
+    {
+      "name": "walkdir",
+      "version": "2.5.0",
+      "checksum": "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b",
+      "source_url": "https://index.crates.io/wa/lk/walkdir",
+      "response_sha256": "7c6e7457834bc28c46e216f5da22ddd77af67e0ff14ece671bf13671a7238882",
+      "observed_at": "2026-10-20T09:28:38.277274+00:00"
+    },
+    {
+      "name": "wasi",
+      "version": "0.11.1+wasi-snapshot-preview1",
+      "checksum": "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b",
+      "source_url": "https://index.crates.io/wa/si/wasi",
+      "response_sha256": "808ec7ca7eb436c8927170e7a0411c8fe264b934831a68ee434d78a5fcc1ffef",
+      "observed_at": "2026-10-20T09:28:38.277507+00:00"
+    },
+    {
+      "name": "wasip2",
+      "version": "1.0.3+wasi-0.2.9",
+      "checksum": "20064672db26d7cdc89c7798c48a0fdfac8213434a1186e5ef29fd560ae223d6",
+      "source_url": "https://index.crates.io/wa/si/wasip2",
+      "response_sha256": "a539649d2cd32fe68b01a73eb8a4a4225a5a1d42f0f68b9007a64358e09ccf53",
+      "observed_at": "2026-10-20T09:28:38.283933+00:00"
+    },
+    {
+      "name": "wasm-bindgen",
+      "version": "0.2.126",
+      "checksum": "4b067c0c11094aef6b7a801c1e34a26affafdf3d051dba08456b868789aaf9a4",
+      "source_url": "https://index.crates.io/wa/sm/wasm-bindgen",
+      "response_sha256": "98b6d50b16e8c36053afa93b42c589ab73fe458d9a4737d4539134dae5fda0c5",
+      "observed_at": "2026-10-20T09:28:38.378067+00:00"
+    },
+    {
+      "name": "wasm-bindgen-macro",
+      "version": "0.2.126",
+      "checksum": "167ce5e579f6bcf889c4f7175a8a5a585de84e8ff93976ce393efa5f2837aab1",
+      "source_url": "https://index.crates.io/wa/sm/wasm-bindgen-macro",
+      "response_sha256": "7b20a6f288e7cf5296d2386c98307ae4376c0e62828d8ce2bc39e1509df0375e",
+      "observed_at": "2026-10-20T09:28:38.354528+00:00"
+    },
+    {
+      "name": "wasm-bindgen-macro-support",
+      "version": "0.2.126",
+      "checksum": "f3997c7839262f4ef12cf90b818d6340c18e80f263f1a94bf157d0ec4420380e",
+      "source_url": "https://index.crates.io/wa/sm/wasm-bindgen-macro-support",
+      "response_sha256": "47cdd1e9db53fb68e291246d8e841ac85d424add24b220864db41c3d3c24b735",
+      "observed_at": "2026-10-20T09:28:38.361186+00:00"
+    },
+    {
+      "name": "wasm-bindgen-shared",
+      "version": "0.2.126",
+      "checksum": "dc1b4cb0cc549fcf58d7dfc081778139b3d283a081644e833e84682ad71cea24",
+      "source_url": "https://index.crates.io/wa/sm/wasm-bindgen-shared",
+      "response_sha256": "4953ed24bc9e869b95ec81cc79bf668ce7740e141fdc53ee3b45d40a6a5cfe8a",
+      "observed_at": "2026-10-20T09:28:38.338379+00:00"
+    },
+    {
+      "name": "wasm-encoder",
+      "version": "0.254.0",
+      "checksum": "09480d646178e5fdd12bb06e812d0af9a3a191dbc9cd697fdc86687beade7393",
+      "source_url": "https://index.crates.io/wa/sm/wasm-encoder",
+      "response_sha256": "e9c19a71b7ee1d20d4f4ae8eb500bdf210b05c1cbb369d288aab29fc25cc6a07",
+      "observed_at": "2026-10-20T09:28:38.363175+00:00"
+    },
+    {
+      "name": "wasm-metadata",
+      "version": "0.254.0",
+      "checksum": "b01df5f3b4ca7881e843f3bc0fb8a3905d79c68692250dcb8e33e698705ccdb6",
+      "source_url": "https://index.crates.io/wa/sm/wasm-metadata",
+      "response_sha256": "fa0be9bf5a3e983364d29c54d891c3e0d8a41b2d9bf0a08962c82d7b18e386e3",
+      "observed_at": "2026-10-20T09:28:38.392520+00:00"
+    },
+    {
+      "name": "wasmparser",
+      "version": "0.254.0",
+      "checksum": "d5769a29f799fbab136aaf65b4fe5384cd7d93fe6fc9ba0dcb6c8382a1f16e27",
+      "source_url": "https://index.crates.io/wa/sm/wasmparser",
+      "response_sha256": "26b33988a2f40c473aee8d1cbcd4fa43233c1efff721952085d221be8bbd0b4c",
+      "observed_at": "2026-10-20T09:28:38.438324+00:00"
+    },
+    {
+      "name": "wasmprinter",
+      "version": "0.254.0",
+      "checksum": "64e3ba11e024f504698f87b629b2b66c22a1231758de7607754963f7d198be39",
+      "source_url": "https://index.crates.io/wa/sm/wasmprinter",
+      "response_sha256": "4c7b71ec2e5f3c1b476bd5a7b980b8ac4e23946161214bc89ed905214b90c2b7",
+      "observed_at": "2026-10-20T09:28:38.458412+00:00"
+    },
+    {
+      "name": "wasmtime",
+      "version": "48.0.1",
+      "checksum": "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime",
+      "response_sha256": "dc8d9674ae4320c23219e2ae880556aaa3c6cc8f32004d4e653a5f5686661207",
+      "observed_at": "2026-10-20T09:28:38.932363+00:00"
+    },
+    {
+      "name": "wasmtime-environ",
+      "version": "48.0.1",
+      "checksum": "00c1070d95484d048994ec109cd42c4932ac07e6ee3cc1886fb90c7a18ec29da",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-environ",
+      "response_sha256": "bdfb7eadc9c71496dcafa6703d24b6b2e7a11c2a4e3774546380667cfe3909ec",
+      "observed_at": "2026-10-20T09:28:38.678892+00:00"
+    },
+    {
+      "name": "wasmtime-internal-component-macro",
+      "version": "48.0.1",
+      "checksum": "f3d2b2f9f89a65bb2277d82fbdd49263d27d8233bc717d750c4b13a23d57721c",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-component-macro",
+      "response_sha256": "c05dec3aad2b193805a9481395e5c937245a593e04d387e6d7237334e4ccc0e2",
+      "observed_at": "2026-10-20T09:28:38.489906+00:00"
+    },
+    {
+      "name": "wasmtime-internal-component-util",
+      "version": "48.0.1",
+      "checksum": "2c0fe8292115fda08875f29064ae9f7f0b2c1ffbb323146eae538ae34b8a613f",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-component-util",
+      "response_sha256": "bd009de8189b7b3f3f1893345999e570f93b3cde46166f56720f1ff1f444c100",
+      "observed_at": "2026-10-20T09:28:38.449642+00:00"
+    },
+    {
+      "name": "wasmtime-internal-core",
+      "version": "48.0.1",
+      "checksum": "821385794cf44baf2967fd2515368429ed2bff9b9b256f62d09a0f1301474fd8",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-core",
+      "response_sha256": "8601f89bf0f0a02709f1ef3ea7acada63f915f253f1dfaecadbc0e65cf155054",
+      "observed_at": "2026-10-20T09:28:38.478923+00:00"
+    },
+    {
+      "name": "wasmtime-internal-cranelift",
+      "version": "48.0.1",
+      "checksum": "0238b4a52773457ad1b8a1a26be90486e0ca0108cf46b9be16cc1d8d8cabdfa1",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-cranelift",
+      "response_sha256": "4f3c15869860b062faa030666b24471e977c305ae723ddea79e905c0638c3e0a",
+      "observed_at": "2026-10-20T09:28:38.796799+00:00"
+    },
+    {
+      "name": "wasmtime-internal-fiber",
+      "version": "48.0.1",
+      "checksum": "596f1d85e06cbf9c9add9c78ea135171c5753264ffe94a83dcc082a1ff49fc9b",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-fiber",
+      "response_sha256": "c96a677f126173c23eb545d342068ebd6efe1511ba7c99807a1e0a6db0981cfc",
+      "observed_at": "2026-10-20T09:28:38.680672+00:00"
+    },
+    {
+      "name": "wasmtime-internal-jit-debug",
+      "version": "48.0.1",
+      "checksum": "365faed74827bb0116785bab5872372df1baaec9ec0003c83bc99ccdc595f689",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-jit-debug",
+      "response_sha256": "ba0d331b6d31174f7563b3e5436f8b4750a2043c4d6760347eca251e18e1e116",
+      "observed_at": "2026-10-20T09:28:38.682659+00:00"
+    },
+    {
+      "name": "wasmtime-internal-jit-icache-coherence",
+      "version": "48.0.1",
+      "checksum": "3cce25afd9e7ac4957292a5c6a219951dd0f140b8417e7378a97f50b67c3b96f",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-jit-icache-coherence",
+      "response_sha256": "9df4720735757a37b19a635cb98c3bd7371f4a9ab827ee6f0bcee68b64ab865a",
+      "observed_at": "2026-10-20T09:28:38.680439+00:00"
+    },
+    {
+      "name": "wasmtime-internal-unwinder",
+      "version": "48.0.1",
+      "checksum": "a1fdea09d51e39c774984ca68a7d7486767e5b2935f5e686fa654aabcfc3c42d",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-unwinder",
+      "response_sha256": "847cfc8810cfb22c5bc107a0e347a037d82f1faf5e1343e33e818d636e2d4e89",
+      "observed_at": "2026-10-20T09:28:38.699864+00:00"
+    },
+    {
+      "name": "wasmtime-internal-versioned-export-macros",
+      "version": "48.0.1",
+      "checksum": "97e48a5f514c38c2f74249724cb3501e45548d3311ca9e3881694859fd6ba116",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-versioned-export-macros",
+      "response_sha256": "8398a66a6de83e0772575a8956681e75284bd067e8bec47827ab50c1e6dd39c6",
+      "observed_at": "2026-10-20T09:28:38.856761+00:00"
+    },
+    {
+      "name": "wasmtime-internal-wit-bindgen",
+      "version": "48.0.1",
+      "checksum": "07429ab53576255be2d298e04b2e1f381e39645465adbaebd69314b5430165c0",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime-internal-wit-bindgen",
+      "response_sha256": "f44e58fadf72f3cd38e16b2a85cb02a14adecdee49077c5dd2b839db7bdf420e",
+      "observed_at": "2026-10-20T09:28:38.888872+00:00"
+    },
+    {
+      "name": "winapi-util",
+      "version": "0.1.11",
+      "checksum": "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22",
+      "source_url": "https://index.crates.io/wi/na/winapi-util",
+      "response_sha256": "e18521d1f3a004fd5ddd011dde518ba7989bf0397174e0f0e5fba5e5cead023f",
+      "observed_at": "2026-10-20T09:28:38.833812+00:00"
+    },
+    {
+      "name": "windows-link",
+      "version": "0.2.1",
+      "checksum": "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5",
+      "source_url": "https://index.crates.io/wi/nd/windows-link",
+      "response_sha256": "2f6055c24a984135453c9932bd3c2d82e5885d0cc9a27877f7b24a405e7c8830",
+      "observed_at": "2026-10-20T09:28:38.844746+00:00"
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.52.0",
+      "checksum": "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d",
+      "source_url": "https://index.crates.io/wi/nd/windows-sys",
+      "response_sha256": "2faa637e651ef2166c886b88a623f14a58013a749c0368303dbd2a6a7da62a87",
+      "observed_at": "2026-10-20T09:28:39.002940+00:00"
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.60.2",
+      "checksum": "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb",
+      "source_url": "https://index.crates.io/wi/nd/windows-sys",
+      "response_sha256": "2faa637e651ef2166c886b88a623f14a58013a749c0368303dbd2a6a7da62a87",
+      "observed_at": "2026-10-20T09:28:39.002940+00:00"
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "checksum": "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc",
+      "source_url": "https://index.crates.io/wi/nd/windows-sys",
+      "response_sha256": "2faa637e651ef2166c886b88a623f14a58013a749c0368303dbd2a6a7da62a87",
+      "observed_at": "2026-10-20T09:28:39.002940+00:00"
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.52.6",
+      "checksum": "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973",
+      "source_url": "https://index.crates.io/wi/nd/windows-targets",
+      "response_sha256": "3452f88b45a81f84b4efc353fb54d389900835d13c994786444a4556578a1887",
+      "observed_at": "2026-10-20T09:28:38.956734+00:00"
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.53.5",
+      "checksum": "4945f9f551b88e0d65f3db0bc25c33b8acea4d9e41163edf90dcd0b19f9069f3",
+      "source_url": "https://index.crates.io/wi/nd/windows-targets",
+      "response_sha256": "3452f88b45a81f84b4efc353fb54d389900835d13c994786444a4556578a1887",
+      "observed_at": "2026-10-20T09:28:38.956734+00:00"
+    },
+    {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.52.6",
+      "checksum": "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3",
+      "source_url": "https://index.crates.io/wi/nd/windows_aarch64_gnullvm",
+      "response_sha256": "bed91703cf6b0c84ef5f3c34145ac4e5b5b301cedb71d96e0ab380e67903a2a5",
+      "observed_at": "2026-10-20T09:28:38.944458+00:00"
+    },
+    {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.53.1",
+      "checksum": "a9d8416fa8b42f5c947f8482c43e7d89e73a173cead56d044f6a56104a6d1b53",
+      "source_url": "https://index.crates.io/wi/nd/windows_aarch64_gnullvm",
+      "response_sha256": "bed91703cf6b0c84ef5f3c34145ac4e5b5b301cedb71d96e0ab380e67903a2a5",
+      "observed_at": "2026-10-20T09:28:38.944458+00:00"
+    },
+    {
+      "name": "windows_aarch64_msvc",
+      "version": "0.52.6",
+      "checksum": "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469",
+      "source_url": "https://index.crates.io/wi/nd/windows_aarch64_msvc",
+      "response_sha256": "9be6a4634a5404574dfd059e04c3d37250d8c5cbbbbdb3f0149f52e402a196f9",
+      "observed_at": "2026-10-20T09:28:38.950265+00:00"
+    },
+    {
+      "name": "windows_aarch64_msvc",
+      "version": "0.53.1",
+      "checksum": "b9d782e804c2f632e395708e99a94275910eb9100b2114651e04744e9b125006",
+      "source_url": "https://index.crates.io/wi/nd/windows_aarch64_msvc",
+      "response_sha256": "9be6a4634a5404574dfd059e04c3d37250d8c5cbbbbdb3f0149f52e402a196f9",
+      "observed_at": "2026-10-20T09:28:38.950265+00:00"
+    },
+    {
+      "name": "windows_i686_gnu",
+      "version": "0.52.6",
+      "checksum": "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b",
+      "source_url": "https://index.crates.io/wi/nd/windows_i686_gnu",
+      "response_sha256": "3e11f0dd2bba89aeec7f4eeb60376fc44d4ed02ba643ee4bef85e13e3e309c29",
+      "observed_at": "2026-10-20T09:28:38.961167+00:00"
+    },
+    {
+      "name": "windows_i686_gnu",
+      "version": "0.53.1",
+      "checksum": "960e6da069d81e09becb0ca57a65220ddff016ff2d6af6a223cf372a506593a3",
+      "source_url": "https://index.crates.io/wi/nd/windows_i686_gnu",
+      "response_sha256": "3e11f0dd2bba89aeec7f4eeb60376fc44d4ed02ba643ee4bef85e13e3e309c29",
+      "observed_at": "2026-10-20T09:28:38.961167+00:00"
+    },
+    {
+      "name": "windows_i686_gnullvm",
+      "version": "0.52.6",
+      "checksum": "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66",
+      "source_url": "https://index.crates.io/wi/nd/windows_i686_gnullvm",
+      "response_sha256": "54b61ecdc75892e2ecb300af82416402ce983aa9ce45cfa32556dd90d4903e45",
+      "observed_at": "2026-10-20T09:28:38.967437+00:00"
+    },
+    {
+      "name": "windows_i686_gnullvm",
+      "version": "0.53.1",
+      "checksum": "fa7359d10048f68ab8b09fa71c3daccfb0e9b559aed648a8f95469c27057180c",
+      "source_url": "https://index.crates.io/wi/nd/windows_i686_gnullvm",
+      "response_sha256": "54b61ecdc75892e2ecb300af82416402ce983aa9ce45cfa32556dd90d4903e45",
+      "observed_at": "2026-10-20T09:28:38.967437+00:00"
+    },
+    {
+      "name": "windows_i686_msvc",
+      "version": "0.52.6",
+      "checksum": "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66",
+      "source_url": "https://index.crates.io/wi/nd/windows_i686_msvc",
+      "response_sha256": "ff10deca2efe3840a0b5ca398e8a6735d6d29b3964f5382c44516198dadf8172",
+      "observed_at": "2026-10-20T09:28:39.002185+00:00"
+    },
+    {
+      "name": "windows_i686_msvc",
+      "version": "0.53.1",
+      "checksum": "1e7ac75179f18232fe9c285163565a57ef8d3c89254a30685b57d83a38d326c2",
+      "source_url": "https://index.crates.io/wi/nd/windows_i686_msvc",
+      "response_sha256": "ff10deca2efe3840a0b5ca398e8a6735d6d29b3964f5382c44516198dadf8172",
+      "observed_at": "2026-10-20T09:28:39.002185+00:00"
+    },
+    {
+      "name": "windows_x86_64_gnu",
+      "version": "0.52.6",
+      "checksum": "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78",
+      "source_url": "https://index.crates.io/wi/nd/windows_x86_64_gnu",
+      "response_sha256": "14e58eb975cd09b665d5e4e8296e3e8fbe649c8c5530d51c6ce6e211cfa613bd",
+      "observed_at": "2026-10-20T09:28:39.006699+00:00"
+    },
+    {
+      "name": "windows_x86_64_gnu",
+      "version": "0.53.1",
+      "checksum": "9c3842cdd74a865a8066ab39c8a7a473c0778a3f29370b5fd6b4b9aa7df4a499",
+      "source_url": "https://index.crates.io/wi/nd/windows_x86_64_gnu",
+      "response_sha256": "14e58eb975cd09b665d5e4e8296e3e8fbe649c8c5530d51c6ce6e211cfa613bd",
+      "observed_at": "2026-10-20T09:28:39.006699+00:00"
+    },
+    {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.52.6",
+      "checksum": "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d",
+      "source_url": "https://index.crates.io/wi/nd/windows_x86_64_gnullvm",
+      "response_sha256": "cb3ac6b86bc8e73c220ae3754a563f0b398e85e0410f6c1adb9d1fd8a3042822",
+      "observed_at": "2026-10-20T09:28:39.010130+00:00"
+    },
+    {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.53.1",
+      "checksum": "0ffa179e2d07eee8ad8f57493436566c7cc30ac536a3379fdf008f47f6bb7ae1",
+      "source_url": "https://index.crates.io/wi/nd/windows_x86_64_gnullvm",
+      "response_sha256": "cb3ac6b86bc8e73c220ae3754a563f0b398e85e0410f6c1adb9d1fd8a3042822",
+      "observed_at": "2026-10-20T09:28:39.010130+00:00"
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.52.6",
+      "checksum": "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec",
+      "source_url": "https://index.crates.io/wi/nd/windows_x86_64_msvc",
+      "response_sha256": "4ece67c0169b40a384e90ee21c630603f7a27d04aa840dc0f1a708eeb647a7ef",
+      "observed_at": "2026-10-20T09:28:39.019426+00:00"
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.53.1",
+      "checksum": "d6bbff5f0aada427a1e5a6da5f1f98158182f26556f345ac9e04d36d0ebed650",
+      "source_url": "https://index.crates.io/wi/nd/windows_x86_64_msvc",
+      "response_sha256": "4ece67c0169b40a384e90ee21c630603f7a27d04aa840dc0f1a708eeb647a7ef",
+      "observed_at": "2026-10-20T09:28:39.019426+00:00"
+    },
+    {
+      "name": "winnow",
+      "version": "0.7.15",
+      "checksum": "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945",
+      "source_url": "https://index.crates.io/wi/nn/winnow",
+      "response_sha256": "8ccdbd515f63aacd0a9d1b841bc5f83a6cd91f3ce4cb8a490d89e9a63bf5d58c",
+      "observed_at": "2026-10-20T09:28:39.087073+00:00"
+    },
+    {
+      "name": "winnow",
+      "version": "1.0.3",
+      "checksum": "0592e1c9d151f854e6fd382574c3a0855250e1d9b2f99d9281c6e6391af352f1",
+      "source_url": "https://index.crates.io/wi/nn/winnow",
+      "response_sha256": "8ccdbd515f63aacd0a9d1b841bc5f83a6cd91f3ce4cb8a490d89e9a63bf5d58c",
+      "observed_at": "2026-10-20T09:28:39.087073+00:00"
+    },
+    {
+      "name": "winnow",
+      "version": "1.0.4",
+      "checksum": "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81",
+      "source_url": "https://index.crates.io/wi/nn/winnow",
+      "response_sha256": "8ccdbd515f63aacd0a9d1b841bc5f83a6cd91f3ce4cb8a490d89e9a63bf5d58c",
+      "observed_at": "2026-10-20T09:28:39.087073+00:00"
+    },
+    {
+      "name": "wit-bindgen",
+      "version": "0.57.1",
+      "checksum": "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e",
+      "source_url": "https://index.crates.io/wi/t-/wit-bindgen",
+      "response_sha256": "1b771df60ea9371bdb31e915efcec6ce1fc3d71a81126b5705c7904acf052631",
+      "observed_at": "2026-10-20T09:28:39.041611+00:00"
+    },
+    {
+      "name": "wit-component",
+      "version": "0.254.0",
+      "checksum": "b0e65bb94c369b3c4741ce3d1d2704b1fec93db7c540df0e521a097e7ceeb5be",
+      "source_url": "https://index.crates.io/wi/t-/wit-component",
+      "response_sha256": "bf08490cc44453067daeaad40db6063b0b90ca9bda2e1cc02d453c75858e99c2",
+      "observed_at": "2026-10-20T09:28:39.132416+00:00"
+    },
+    {
+      "name": "wit-parser",
+      "version": "0.254.0",
+      "checksum": "1655131e4f7d3f0cb141f6eca71315ca40eff0f3d4de7cff0a82bacedd8c89b4",
+      "source_url": "https://index.crates.io/wi/t-/wit-parser",
+      "response_sha256": "603ccd989a15fbe9968d42e96e3e14a92647d5ff5a7ba25109c4a1b095ee2bdd",
+      "observed_at": "2026-10-20T09:28:39.173952+00:00"
+    },
+    {
+      "name": "zerocopy",
+      "version": "0.8.59",
+      "checksum": "6df92bf3d9227be3d53173901ddbffac2babc27ae50f397776ffd6dc33f800cb",
+      "source_url": "https://index.crates.io/ze/ro/zerocopy",
+      "response_sha256": "4464dd6e5a90cd722eadef633442c6ce263fff8cf62727e5a9aff0a1bceaf6f7",
+      "observed_at": "2026-10-20T09:28:39.174525+00:00"
+    },
+    {
+      "name": "zerocopy-derive",
+      "version": "0.8.59",
+      "checksum": "ac4f328cf2f05d084e496c3e9c3f33ed0a183656a16e1fcec4d464d8373aec82",
+      "source_url": "https://index.crates.io/ze/ro/zerocopy-derive",
+      "response_sha256": "4517137f6f4432c09ce68e2e6b66175f662d8fe917e17fb51ef61e94172c2daa",
+      "observed_at": "2026-10-20T09:28:39.184215+00:00"
+    },
+    {
+      "name": "zmij",
+      "version": "1.0.21",
+      "checksum": "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa",
+      "source_url": "https://index.crates.io/zm/ij/zmij",
+      "response_sha256": "bf81df6dbb5da354e0b03658806f2ab9e549f8ad331cf567de3ad7b06e048b0e",
+      "observed_at": "2026-10-20T09:28:39.087815+00:00"
+    },
+    {
+      "name": "zmij",
+      "version": "1.0.23",
+      "checksum": "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b",
+      "source_url": "https://index.crates.io/zm/ij/zmij",
+      "response_sha256": "bf81df6dbb5da354e0b03658806f2ab9e549f8ad331cf567de3ad7b06e048b0e",
+      "observed_at": "2026-10-20T09:28:39.087815+00:00"
+    },
+    {
+      "name": "zstd",
+      "version": "0.14.0",
+      "checksum": "bf06bd8162af0734b344780deb55b42a2429ae430870d13fcc12f238e880fe6e",
+      "source_url": "https://index.crates.io/zs/td/zstd",
+      "response_sha256": "f35dc564727e5da847da4e0acc917668a9c8a6321f3f6a116e8beca0b22a0542",
+      "observed_at": "2026-10-20T09:28:39.229677+00:00"
+    },
+    {
+      "name": "zstd-safe",
+      "version": "8.0.0",
+      "checksum": "ae42c0555055784c70058d19ba8e275528e8a99a706684868ace5da4e716a4ab",
+      "source_url": "https://index.crates.io/zs/td/zstd-safe",
+      "response_sha256": "138ba90e3c03693c02d8b2216d5726a6e924a17056f9b2c581bdc23124bce584",
+      "observed_at": "2026-10-20T09:28:39.241137+00:00"
+    },
+    {
+      "name": "zstd-sys",
+      "version": "2.1.0+zstd.1.5.7",
+      "checksum": "0ef0a8027ec3ee71300ab3bcbcd0393f434aa72b91ca6d635a39941deae8eea0",
+      "source_url": "https://index.crates.io/zs/td/zstd-sys",
+      "response_sha256": "ee15f0e0812ec4ac8de7495a3473795f8864fbe9fe4eff400ef858b44b40cd75",
+      "observed_at": "2026-10-20T09:28:39.243949+00:00"
+    }
+  ]
+}

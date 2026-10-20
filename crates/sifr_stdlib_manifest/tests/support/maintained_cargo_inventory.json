@@ -3,9 +3,11 @@
     "Cargo.toml",
     "crates/sifr/Cargo.toml",
     "crates/sifr_analysis/Cargo.toml",
+    "crates/sifr_cache_storage/Cargo.toml",
     "crates/sifr_codegen/Cargo.toml",
     "crates/sifr_compiler_component/Cargo.toml",
     "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+    "crates/sifr_compiler_services/Cargo.toml",
     "crates/sifr_diagnostics/Cargo.toml",
     "crates/sifr_driver/Cargo.toml",
     "crates/sifr_format/Cargo.toml",
@@ -40,7 +42,10 @@
     "crates/sifr_syntax/Cargo.toml",
     "crates/sifr_sysroot/Cargo.toml",
     "crates/sifr_type_system/Cargo.toml",
+    "demos/branch_paths/Cargo.toml",
     "demos/csv/Cargo.toml",
+    "demos/mode_consistency/Cargo.toml",
+    "demos/mode_consistency/negative_cases/type_error_project/Cargo.toml",
     "demos/parse_safety/Cargo.toml",
     "demos/python_binding_authoring/Cargo.toml",
     "demos/python_dlpack/Cargo.toml",
@@ -132,7 +137,22 @@
     "verification/areas/rust_interop/fixtures/shared_bridge_crate/examples/shared_hash_bridge/rust/sifr_shared_hash_bridge/Cargo.toml",
     "verification/areas/rust_interop/fixtures/static_program_arena_bridge/examples/static_program_runtime/Cargo.toml",
     "verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/Cargo.toml",
-    "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml"
+    "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml",
+    "verification/fuzz/Cargo.toml",
+    "verification/fuzz/project_fixtures/base/alpha/Cargo.toml",
+    "verification/fuzz/project_fixtures/base/app/Cargo.toml",
+    "verification/fuzz/project_fixtures/base/beta/Cargo.toml",
+    "verification/fuzz/project_fixtures/base/gamma/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/field_origin/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/fixture_root/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_alpha/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_attributes/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_bom/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_crlf/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_hrtb/Cargo.toml",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_unicode/Cargo.toml"
   ],
   "locks": [
     "Cargo.lock",
@@ -160,9 +180,26 @@
     "verification/areas/rust_interop/fixtures/shared_bridge_crate/examples/shared_hash_bridge/Cargo.lock",
     "verification/areas/rust_interop/fixtures/static_program_arena_bridge/examples/static_program_runtime/Cargo.lock",
     "verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/Cargo.lock",
-    "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.lock"
+    "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.lock",
+    "verification/fuzz/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_alpha/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_attributes/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_bom/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_crlf/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_hrtb/Cargo.lock",
+    "verification/tools/maintainability_builtin_input/fixtures/source_binder/include_probe_unicode/Cargo.lock"
   ],
   "edges": [
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr",
+      "package": "rusqlite",
+      "manifests": [
+        "crates/sifr/Cargo.toml"
+      ]
+    },
     {
       "lock": "Cargo.lock",
       "owner": "sifr-demo-parse-safety",
@@ -185,6 +222,22 @@
       "package": "syn",
       "manifests": [
         "crates/sifr_codegen/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_compiler_services",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_compiler_services/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_compiler_services",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_compiler_services/Cargo.toml"
       ]
     },
     {
@@ -417,6 +470,78 @@
       "package": "num-bigint",
       "manifests": [
         "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_codegen",
+      "package": "prettyplease",
+      "manifests": [
+        "crates/sifr_codegen/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_codegen",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_codegen/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_compiler_services",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_compiler_services/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_compiler_services",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_compiler_services/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_driver",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_driver/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_driver",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_driver/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_frontend",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_frontend/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_ir",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_ir/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_lowering",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_lowering/Cargo.toml"
       ]
     }
   ]
