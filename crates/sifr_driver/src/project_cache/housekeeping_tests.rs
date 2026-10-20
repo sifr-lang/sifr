@@ -33,6 +33,8 @@ fn abandoned_stages_reclaimed_live_locks_preserved() {
         return;
     }
     let (root, file, cache) = tests::fixture();
+    // Eligible workspace hints require an owned, non-group-writable workspace.
+    fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();
     assert_eq!(tests::run(&cache, &file).1.status, "published");
     let store = tests::store(&cache, &file);
     let latest = store.latest().unwrap();
@@ -205,6 +207,8 @@ fn pressure_prune_counts_are_truthful() {
         return;
     }
     let (_root, file, cache) = tests::fixture();
+    // Eligible workspace hints require an owned, non-group-writable workspace.
+    fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();
     assert_eq!(
         prune(&cache, file.parent().unwrap(), false, false).examined_entries,
         0

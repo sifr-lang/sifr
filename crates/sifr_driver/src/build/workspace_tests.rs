@@ -484,6 +484,7 @@ fn n06_live_holder_outlasts_idle_window_then_waiter_acquires() {
 #[cfg(unix)]
 fn n06_family_prune_preserves_inherited_live_child_then_reclaims_owner() {
     let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
         .prefix("sifr-n06-family-")
         .tempdir()
         .unwrap();
@@ -552,6 +553,7 @@ fn family_case() {
 #[cfg(unix)]
 fn n06_abandoned_stage_prunes_only_matching_owner_scope() {
     let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
         .prefix("sifr-n06-stage-")
         .tempdir()
         .unwrap();
@@ -604,6 +606,7 @@ fn stage_case() {
 #[cfg(unix)]
 fn n06_orphan_auxiliary_roots_require_owner_and_lease() {
     let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
         .prefix("sifr-n06-aux-")
         .tempdir()
         .unwrap();
