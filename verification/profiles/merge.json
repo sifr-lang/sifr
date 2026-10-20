@@ -301,6 +301,21 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_stdlib_artifact",
+        "package": "sifr_stdlib_artifact",
+        "command": [
+          "test",
+          "-p",
+          "sifr_stdlib_artifact"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_stdlib_imports",
         "package": "sifr_stdlib_imports",
         "command": [

@@ -96,5 +96,33 @@ class ClippyIsolationTests(unittest.TestCase):
                 self.assertEqual((root / name / "src/main.rs").read_text(encoding="utf-8"), source)
 
 
+class ProducerFingerprintTests(unittest.TestCase):
+    def test_moved_stdlib_owner_invalidates_materialization_even_with_same_mtime(self):
+        from unittest.mock import patch
+        import generated_code_quality as gcq
+        with tempfile.TemporaryDirectory(prefix="sifr-gcq-identity-") as directory:
+            root = Path(directory)
+            files = [root / "crates/sifr_stdlib_artifact/Cargo.toml",
+                     root / "crates/sifr_stdlib_artifact/src/metadata.rs"]
+            for path in files:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("original owner input\n", encoding="utf-8")
+            with patch.object(gcq, "REPO_ROOT", root):
+                self.assertEqual(set(gcq.producer_fingerprint_files()), set(files))
+                for path in files:
+                    gcq.producer_fingerprint.cache_clear()
+                    before = gcq.producer_fingerprint()
+                    original = path.read_bytes()
+                    times = path.stat()
+                    path.write_bytes(original.replace(b"original", b"modified"))
+                    os.utime(path, ns=(times.st_atime_ns, times.st_mtime_ns))
+                    gcq.producer_fingerprint.cache_clear()
+                    self.assertNotEqual(before, gcq.producer_fingerprint(), str(path))
+                    path.write_bytes(original)
+                    gcq.producer_fingerprint.cache_clear()
+                    self.assertEqual(before, gcq.producer_fingerprint())
+            gcq.producer_fingerprint.cache_clear()
+
+
 if __name__ == "__main__":
     unittest.main()

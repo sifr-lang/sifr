@@ -39,6 +39,7 @@ ALL_SIFR_CRATES = {
     "sifr_runtime",
     "sifr_source",
     "sifr_stdlib",
+    "sifr_stdlib_artifact",
     "sifr_stdlib_imports",
     "sifr_stdlib_manifest",
     "sifr_sysroot",
@@ -167,6 +168,14 @@ RULES = (
         crate="sifr_ipc",
         allowed_normal_dependencies=frozenset({"postcard", "serde", "sifr_identity"}),
         forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_ipc", "sifr_identity"}),
+    ),
+    CrateRule(
+        crate="sifr_stdlib_artifact",
+        allowed_normal_dependencies=frozenset({"sifr_identity", "sifr_ir", "sifr_type_system"}),
+        forbidden_source_references=frozenset(
+            (ALL_SIFR_CRATES | {"sifr_compiler_services"})
+            - {"sifr_stdlib_artifact", "sifr_identity", "sifr_ir", "sifr_type_system"}
+        ),
     ),
     CrateRule(
         crate="sifr_stdlib_imports",
@@ -541,6 +550,7 @@ def seed_valid_repo(root: Path) -> None:
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
         "sifr_ipc": ["postcard", "serde", "sifr_identity"],
         "sifr_stdlib": ["sifr_runtime"],
+        "sifr_stdlib_artifact": ["sifr_identity", "sifr_ir", "sifr_type_system"],
         "sifr_stdlib_imports": ["sifr_stdlib_manifest", "sifr_identity"],
         "sifr_codegen": ["sifr_ir", "sifr_stdlib_manifest"],
         "sifr_lint": ["sifr_frontend", "sifr_ir"],
@@ -641,6 +651,20 @@ def run_self_test() -> int:
             root / "crates" / "sifr_ipc" / "src" / "lib.rs"
         ).write_text("pub fn leak() { sifr_stdlib_manifest::STDLIB_FEATURE_SPECS; }\n", encoding="utf-8"),
         "sifr_ipc: crates/sifr_ipc/src/lib.rs references sifr_stdlib_manifest",
+        failures,
+    )
+    assert_self_test_case(
+        "shared stdlib data upward dependency",
+        lambda root: write_manifest(root / "crates/sifr_stdlib_artifact",
+                                    "sifr_stdlib_artifact", ["sifr_codegen"]),
+        "sifr_stdlib_artifact: unexpected normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "shared stdlib data upward source reference",
+        lambda root: (root / "crates/sifr_stdlib_artifact/src/lib.rs").write_text(
+            "use sifr_compiler_services::CompilerContext;\n", encoding="utf-8"),
+        "sifr_stdlib_artifact: crates/sifr_stdlib_artifact/src/lib.rs references sifr_compiler_services",
         failures,
     )
     assert_self_test_case(
