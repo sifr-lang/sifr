@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.3a qualified and reviewed; V0.5 inventory repair next
+current_stage: V0.3a merged; V0.5 awaiting dependency-policy decision
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -176,9 +176,9 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
 | V0.2 | SQL provenance and moved-source qualification guards | Pending |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
-| V0.3a | Rustup-selected native Cargo/rustc launch context | Qualified and independently approved; PR #4360 |
+| V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
-| V0.5 | Maintained Cargo manifest/lock inventory admission | Pending |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Diagnosed; pinned-owner policy conflict, decision requested |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
@@ -393,8 +393,9 @@ qualify generated Rust execution, which retains its separate assertions.
 
 Independent review is SATISFIED with no blockers on that same implementation
 candidate. Raw review: `reviews/6cf4b5c178912cb0a4184a9469ba620ad49e8ea6/review.md`,
-external to the reviewed tree. Effective on merging
-[#4360](https://github.com/sifr-lang/sifr/pull/4360). The 50 libtest rows include
+external to the reviewed tree. Merged in
+[#4360](https://github.com/sifr-lang/sifr/pull/4360) as
+`8858bde63f80b3b40860da3b1b7a48b31a91caaa`. The 50 libtest rows include
 49 assertion-bearing tests and one subprocess-dispatch helper that returns early
 in the parent run; its real child assertions are exercised by the parent tests.
 Review suggestions retained for later identity/timing work: measure launcher-file
@@ -443,6 +444,51 @@ pass. Required acceptance: exact tracked inventory and declaration comparisons,
 all affected dependency/version/lock contracts and their negative controls, full
 `sifr_stdlib_manifest` tests, fmt/file-size checks and scoped independent review.
 The full phase gates remain deferred under the approved policy.
+
+### V0.5 diagnostic and ownership boundary — decision pending
+
+Baseline `8858bde63f80b3b40860da3b1b7a48b31a91caaa`: the direct dependency target
+runs nine tests, six pass and three fail at tracked inventory admission (6.578s).
+Independent Git-index/TOML inspection confirms **153 manifests / 35 locks** versus
+133 / 26 recorded, with no removals, and 211 direct declarations versus 201 recorded.
+Two additional registry package names, libfuzzer-sys and windows-sys, need audited
+source evidence. New lock identities also require official checksum verification;
+no new release metadata has been blessed.
+
+A diagnostic update of the exact tracked inventory alone lets the full affected
+crate progress. Its first build failed because the isolated checkout had not yet
+materialized two required demo gitlinks, not because their source files were
+missing from the pinned repositories. Independent owned checkouts of the exact
+tracked HTTP (`76fea17316d37aa536f7bd618660613cbef793d2`) and application
+(`af14ce5adbcc1cc6d775ba8b1800c50aeb0e9afa`) revisions repair that preparation.
+The complete `cargo test --locked --offline -p sifr_stdlib_manifest --no-fail-fast`
+then executes **102 tests: 97 pass, five fail**, in 17.212s including preparation.
+No tests are filtered/ignored. The compile-failed attempt remains preserved.
+
+The five failures expose:
+- stale exact num-bigint and rusqlite owner/lock edge inventories;
+- missing audited checksum rows for newly admitted lock identities;
+- stale manifest/declaration counts and registry owner rows;
+- a real version-policy mismatch: the fuzz graph resolves syn 3.0.6 while the
+  uniform first-party edge contract requires 3.0.5.
+
+Further declaration inspection also exposes exact older anyhow/serde_json pins in
+`verification/tools/maintainability_builtin_input`. Its
+[architecture owner](ad-hoc-architecture-correctness-current-main.md) explicitly
+requires retaining the locked dependency graph and forbids dependency/API upgrades.
+This is an ownership-policy conflict, not permission to rewrite that graph or
+exclude it silently. The user has been asked whether to retain product version
+rules while adding explicit pinned-verification-graph identity/declaration/checksum
+contracts, rejecting drift, or leave this item blocked for its owners. **No policy
+change is approved or implemented yet.** No dependency version or lockfile changed.
+
+Evidence: `v05-inventory-before`, `v05-inventory-inspection.json`,
+`v05-all-contracts-inventory-only` (preparation failure),
+`v05-submodule-preparation.json`, `v05-all-contracts-prepared`,
+`v05-reconciliation.json`, and `v05-inventory-only.patch`. The inventory-only
+experiment was restored from its preserved original bytes after all tests ended;
+its exact patch remains externally reproducible against the recorded base.
+V0.5 is not complete, and the phase has no final-gate or timing acceptance.
 
 ## Execution stages
 
@@ -954,6 +1000,6 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge qualified V0.3a, then implement V0.5. Continue bounded
-V0 repairs, retaining the stopped broad diagnostic and all incomplete evidence.
-Preserve the investigation baseline and failures while collecting current evidence.
+**Next action:** resolve the explicit V0.5 pinned-graph policy decision before
+dependent implementation. Preserve the external diagnostic patch, failed evidence
+and unchanged dependency graphs. Other V0 repairs and full phase acceptance remain open.
