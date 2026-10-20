@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from sql_service_qualification import SERVICE_PATH, assert_source_mutations, service_source
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RECORD = REPO_ROOT / "verification/areas/sql_platform/data/schema_polymorphism_qualification.json"
 CONTRACT = REPO_ROOT / "crates/sifr_sql_contract/src/requirement.rs"
@@ -19,7 +21,7 @@ QUERY = REPO_ROOT / "crates/sifr_frontend/src/sql_queries.rs"
 MANIFEST = REPO_ROOT / "crates/sifr_package/src/manifest/sql_profiles.rs"
 MANIFEST_REQUIREMENTS = REPO_ROOT / "crates/sifr_package/src/manifest/sql_profiles/requirements.rs"
 RESOLVER = REPO_ROOT / "crates/sifr_package/src/sql_requirements.rs"
-DRIVER = REPO_ROOT / "crates/sifr_driver/src/build/sql_profiles.rs"
+SERVICE = REPO_ROOT / SERVICE_PATH
 POSTGRESQL = REPO_ROOT / "crates/sifr_sql_postgresql/src/component.rs"
 DOC = REPO_ROOT / "internal_docs/sql_schema_polymorphism.md"
 FIXTURE = REPO_ROOT / "verification/areas/sql_platform/fixtures/schema_polymorphism"
@@ -94,6 +96,7 @@ def contains(path: Path, tokens: tuple[str, ...]) -> None:
 
 
 def validate_sources() -> None:
+    service_source(REPO_ROOT)
     contains(CONTRACT, (
         "pub struct ProviderSchemaRequirement", "pub struct SchemaRequirementProof",
         "pub struct SchemaRequirementRegistry", "verify_compatible_slice",
@@ -125,7 +128,7 @@ def validate_sources() -> None:
         "pub fn resolve_sql_requirements", "reachable_packages",
         "build_provider_schema_requirement",
     ))
-    contains(DRIVER, (
+    contains(SERVICE, (
         "SchemaRequirementRegistry", "resolve_sql_requirements",
         "schema_normalization_from_response", ".build_artifact(",
     ))
@@ -165,7 +168,11 @@ def self_test(payload: dict[str, Any]) -> None:
             continue
         accepted.append(label)
     require(not accepted, f"schema polymorphism mutations were accepted: {', '.join(accepted)}")
-    print(f"schema polymorphism qualification self-test ok: mutations={len(mutations)}")
+    source_count = assert_source_mutations(validate_sources, REPO_ROOT, (
+        "SchemaRequirementRegistry", "resolve_sql_requirements",
+        "schema_normalization_from_response", ".build_artifact(",
+    ))
+    print(f"schema polymorphism qualification self-test ok: mutations={len(mutations)} source_mutations={source_count}")
 
 
 def main() -> int:

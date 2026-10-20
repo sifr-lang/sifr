@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.5 reviewed; merge pending; V0.2 next
+current_stage: V0.2 reviewed; merge pending; V0.3b next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -174,11 +174,11 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | Item | Bounded ownership / prerequisite | Status |
 | --- | --- | --- |
 | V0.1 | Distribution metadata format admission and its producer/fixture parity controls | Merged #4357; named checks and independent review pass |
-| V0.2 | SQL provenance and moved-source qualification guards | Pending |
+| V0.2 | SQL provenance and moved-source qualification guards | Validated; 43 native tests and 33 checks pass; reviewed #4362 |
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
-| V0.5 | Maintained Cargo manifest/lock inventory admission | Implemented; 108/108 tests pass; independent review satisfied; PR #4361 |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
@@ -534,7 +534,8 @@ Independent review: **SATISFIED**, no blockers, for implementation
 `f4981e547d33514744567ea31f80bcc5846e5df2` against
 `8858bde63f80b3b40860da3b1b7a48b31a91caaa`. Raw review is preserved outside Git
 at `reviews/f4981e547d33514744567ea31f80bcc5846e5df2/review.md`.
-[PR #4361](https://github.com/sifr-lang/sifr/pull/4361) awaits merge; final phase
+[PR #4361](https://github.com/sifr-lang/sifr/pull/4361) merged as
+`ad1e26aac38787b669414e8572dcf9146433ced6`; final phase
 gates/timing remain open. CI's benchmark-inclusive create-PR job stops before tests
 because `SIFR_PERFORMANCE_REFERENCE` is unset (`ci-4361-create-pr.log`); this is
 not a CI pass. The approved intermediate local policy remains applicable.
@@ -545,6 +546,89 @@ Cross-platform qualification should consider raw-byte pinned-input hashes under
 Windows line-ending conversion. Direct exemption-routing and Git-revision-specific
 mutations are optional additional controls; current exact product-path exclusion,
 product helper controls and every-input mutation tests cover the required policy.
+
+
+### V0.2 SQL qualification — validated and reviewed
+
+Base: `ad1e26aac38787b669414e8572dcf9146433ced6`. Exact pinned PostgreSQL parser
+repositories and WASI-Virt were materialized in the owned checkout. Initial
+lightweight batch ran **33 commands: 23 passed, 10 failed**, in 8.094s. Four
+commands stopped on SQL component source provenance; six inspected the former
+driver implementation instead of the current compiler-services owner.
+
+Three source qualification guards now follow the canonical SQL service and also
+require the driver's public delegation. Existing 25 payload mutation cases are
+retained, with **15 additional source mutation controls** covering the delegation,
+provider resolution, query registry and schema requirement authority. After this
+repair the batch runs **29/33 successfully** (14.168s); the same four producer
+provenance failures remain until artifact regeneration. These failed attempts
+remain external evidence, not passing qualification.
+
+The official WASI SDK 34 archive digest, size and every extracted file/link were
+verified (26.091s including download/extraction). WASI-Virt's first offline build
+stopped on a missing cached locked dependency (0.640s); locked dependency fetch
+completed in 3.141s and the actual offline producer build completed in 69.680s.
+No dependency manifest or lock was changed.
+
+Canonical artifact producers, using Rust 1.98.1 and Python 3.14.7, regenerated all
+**ten SQL component artifacts** and their actual producer receipts:
+
+| Producer | Supported variants | Elapsed including producer checks |
+|---|---|---:|
+| MySQL | 8.4, 9.7, 26.7 | 52.177s |
+| SQLite | 3.53.4 | 51.580s |
+| PostgreSQL | 13 through 18 | 309.356s |
+
+These are artifact-generation/preparation measurements, not complete gate timings.
+The source was frozen during each producer run; only that producer's declared
+artifact/receipt outputs could change. The source hashes were not patched to
+bless existing binaries. At this producer checkpoint, runtime assertions, final lightweight qualification,
+guards, independent review and merge remained required; completed results follow below.
+Evidence: `v02-lightweight-baseline[-cases]`, `v02-source-repairs-batch`, `v02-source-repairs-cases`,
+`v02-submodule-preparation.json`, `v02-sdk-prepare`, `v02-sdk-preparation.json`,
+`v02-virtualizer-build`, `v02-virtualizer-fetch`, `v02-virtualizer-build-prepared`,
+and `v02-{mysql,sqlite,postgresql}-producer`.
+
+
+V0.2 final validation on implementation
+`3d01c1638ed672ef56b38c8405457d37a6ba1dd1`:
+
+| Check | Executed coverage | Elapsed including preparation |
+|---|---|---:|
+| Lightweight SQL qualification / mutations | 33/33 commands pass | 9.647s |
+| Component host and sandbox | 18/18 tests pass | 4.382s |
+| MySQL compiler and component execution | 9/9 tests, all three component variants | 19.383s |
+| SQLite compiler and component execution | 14/14 tests, the supported component | 9.376s |
+| PostgreSQL component execution and registrations | 2/2 tests, all six majors | 190.983s |
+| File-size, source direction and area contracts | All pass, Python 3.14.7 | 8.157s |
+
+All **43 native tests** executed with no ignored/filtered tests. Cargo checked the
+candidate at the retained native build location; the suites read and execute the
+new artifact bytes there. All ten SQL variants passed actual host execution,
+including the existing diagnostic/schema assertions. The native checks ran
+sequentially with their own cap; lightweight/guard checks overlapped preparation,
+so their durations must not be summed into a gate-wall-time claim. No full phase
+gate or V5 timing scenario is qualified by this bounded validation.
+
+Evidence: `v02-lightweight-final[-cases]`, `v02-component-host-tests`,
+`v02-{mysql,sqlite,postgresql}-runtime-tests`, `v02-runtime-batch.json`, and
+`v02-policy-guards`. [PR #4362](https://github.com/sifr-lang/sifr/pull/4362)
+received **SATISFIED**, no blockers, on exact candidate
+`e87c97ddf56a733c0d80b574d96213c733282030` against
+`ad1e26aac38787b669414e8572dcf9146433ced6`. Raw review:
+`reviews/e87c97ddf56a733c0d80b574d96213c733282030/review.md`, outside Git.
+Subsequent phase-record edits do not change the validated implementation inputs.
+
+Producer/reproducibility follow-up (existing on base, separate from V0.2): committed
+components contain registry-source and C-source build paths. The producer remaps
+only its repository Rust paths, and validation checks digest shape for some tool
+identities rather than proving a hermetic build. The producer owner should add
+registry/C-source path remapping and explicit output-affecting input qualification,
+then rebuild and compare bytes under independently located roots. Keep this as an
+explicit V5/release reproducibility limitation until that protocol is executed;
+V0.2 does not claim cross-machine byte identity. The optional stronger structural
+driver-delegation guard is separate; the existing text guard's required scope is
+preserved and mutation-tested.
 
 ## Execution stages
 
@@ -1056,13 +1140,15 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V0.5, then repair V0.2 SQL qualification on a
-new owned branch. Read-only provenance inspection on the reviewed candidate shows
-all three SQL family receipts differ only in `Cargo.lock`; the words receipt has
-no changed inputs. The changed lock adds the CLI's cache-storage dependency.
-Rebuild SQL artifacts with the actual pinned producer and preserve its receipts;
-do not merely refresh hashes. Follow moved SQL service ownership in qualification
-guards and retain every mutation control. Run each lightweight qualification and
-self-test, plus affected component producer/input tests and runtime qualification.
-Preserve original failures and the 30-minute per-category cap; split preparation
-by family when needed. Full phase acceptance and other V0 items remain open.
+**Next action:** merge reviewed V0.2, then open bounded V0.3b for Python runtime
+registry and LSP input-authority admission. Confirm current failures before edits.
+Arrow and DLPack runners retain old exact test inventories; review each added or
+renamed ownership assertion against its originating change before reconciling
+names, preserving missing/extra/duplicate rejection. The LSP selected-metadata
+fingerprint test also fails: inspect both its Cargo fixture validity and the
+production ancestor-input scan. Preserve selected environment invalidation and
+owning-root isolation; do not turn its invariance assertion into a pass by simply
+loosening the expectation. Run the affected runtime suites with pinned Python,
+LSP fingerprint/authoring and external-input generation controls, affected runner
+self-tests and standard guards. Other V0 items and full phase acceptance remain
+open; no final gate or V5 timing result is claimed.

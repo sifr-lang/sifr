@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from sql_service_qualification import assert_source_mutations, service_source
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AREA_ROOT = REPO_ROOT / "verification/areas/sql_platform"
 CONTRACT = AREA_ROOT / "data/incremental_editor_qualification.json"
@@ -89,7 +91,7 @@ def validate_sources() -> None:
     runtime = (REPO_ROOT / "crates/sifr_analysis/src/sql_editor_runtime.rs").read_text(encoding="utf-8")
     host = (REPO_ROOT / "crates/sifr_analysis/src/host/construction.rs").read_text(encoding="utf-8")
     invalidation = (REPO_ROOT / "crates/sifr_analysis/src/sql_incremental_cache.rs").read_text(encoding="utf-8")
-    profiles = (REPO_ROOT / "crates/sifr_driver/src/build/sql_profiles.rs").read_text(encoding="utf-8")
+    profiles = service_source(REPO_ROOT)
     component = (REPO_ROOT / "crates/sifr_sql_contract/src/component.rs").read_text(encoding="utf-8")
     budgets = (REPO_ROOT / "crates/sifr_lsp/src/sql_editor_contract.rs").read_text(encoding="utf-8")
     cancellation = (REPO_ROOT / "crates/sifr_lsp/src/cancellation.rs").read_text(encoding="utf-8")
@@ -124,7 +126,7 @@ def validate_sources() -> None:
             "analysis host does not load resolved SQL profiles")
     require("processor_kind" in profiles and "Some(\"sql\")" in profiles
             and "query_component" in profiles,
-            "driver does not resolve the SQL provider processor")
+            "SQL service does not resolve the SQL provider processor")
     require("PROVIDER_ANALYSIS_PAYLOAD_TAG" in component,
             "provider analysis has no common response envelope")
     for token in (
@@ -171,7 +173,10 @@ def self_test(payload: dict[str, Any]) -> None:
             continue
         accepted += 1
     require(accepted == 0, f"incremental editor mutations accepted: {accepted}")
-    print(f"SQL incremental editor self-test ok: mutations={len(mutations)}")
+    source_count = assert_source_mutations(validate_sources, REPO_ROOT, (
+        "processor_kind", 'Some("sql")', "query_component",
+    ))
+    print(f"SQL incremental editor self-test ok: mutations={len(mutations)} source_mutations={source_count}")
 
 
 def main() -> int:
