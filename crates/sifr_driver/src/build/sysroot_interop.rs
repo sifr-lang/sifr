@@ -298,7 +298,6 @@ mod tests {
     };
     use sifr_stdlib_manifest::StdlibFeature;
     use std::collections::HashSet;
-    use std::fs;
 
     fn attach_stdlib_rust_interop(
         mut generated: GeneratedBinaryProject,

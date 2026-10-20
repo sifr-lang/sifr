@@ -15,7 +15,6 @@ use sifr_package::{
     SifrPackageName, TrustPolicy,
 };
 use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate};
-
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 
