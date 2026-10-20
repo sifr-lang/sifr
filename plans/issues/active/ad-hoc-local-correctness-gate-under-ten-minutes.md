@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.11b merged; V0.12 demo compilation and generated freshness investigation
+current_stage: V0.12 accepted; V0.13 sanitizer fixture and target propagation pending
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -186,7 +186,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
 | V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b merged #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
-| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Current: measure complete canonical demos and freshness after V0.11b |
+| V0.12 | Demo async-generator/TryExcept emission and generated freshness | Accepted: complete demos/freshness, typed cleanup repair and scoped review; PR #4375 |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
 | V0.15 | Test-root include source-direction guard | Merged #4359; named checks and review pass |
@@ -2379,3 +2379,55 @@ The complete staged safety inventory remains empty. The staging operation took
 Those three generated files are reconciled; complete freshness, affected strict
 quality checks, native regressions, broader E2E coverage and new scoped review
 remain required before this item can merge.
+
+### V0.12 final intermediate acceptance
+
+Implementation candidate `313d9d869a487bdeb0c0b68654fdaaf191209920`,
+[PR #4375](https://github.com/sifr-lang/sifr/pull/4375), passes all named
+intermediate acceptance checks. The final net change is 38 generated companions;
+the three repaired outputs returned to their baseline bytes. No demo source or
+assertion changed, and no quality debt or lint suppression was added.
+
+| Check | Result | Observed outer time |
+|---|---|---:|
+| Complete generated inventory and freshness | 264 comparisons pass | 294.986s |
+| Complete positive E2E corpus | 732 pass | 126.769s |
+| Complete negative E2E corpus | 569 pass | 8.687s |
+| Portable generated-graph preparation | 51 pass; manifest/lock hashes unchanged | 693.584s |
+| Affected strict Clippy and generated safety | 41 pass; empty findings | 112.748s |
+| Complete canonical demos | 10 pass | 30.700s |
+| Canonical panic scan and negative controls | pass | 1.680s |
+| Canonical formatting and negative control | pass | 1.686s |
+| Canonical determinism and negative control | pass | 94.236s |
+| Canonical Clippy and negative controls | pass | 10.687s |
+| Native semantic controls | six original assertion-bearing demos pass | 122.817s |
+
+The positive corpus executed every fixture with 186/186 native cache hits:
+60.003s source compilation, 41.385s native checks/builds and 8.683s execution.
+These are diagnostic timings, not the V5 acceptance matrix. Generated preparation
+alone still exceeds ten minutes; V2/V3/V4 must eliminate the demonstrated repeated
+work before the complete gate can meet its target.
+
+All 1,780 codegen tests and required guards passed on the identical compiler/test
+inputs at `906b48b8cb3f9aece2827a476edacf9d3b555499`; only three generated
+companions and this phase record changed afterward. All 264 companion formatting
+checks are covered, with the final three rechecked using the canonical Rust 2024
+command. The selected CLI hash remains
+`0956feb8404b0b126098784e4235de914626a7820e7f49d580fbfe23e30304ee`.
+All 264 repaired emissions succeeded and all 41 affected repeat comparisons were
+byte-identical. Input reconciliation is retained outside Git.
+
+Scoped independent review is **SATISFIED**, with its pending-test conditions now
+fulfilled. Raw review: `reviews/313d9d869a487bdeb0c0b68654fdaaf191209920/review.md`
+in the external implementation evidence bundle. `v012-final-acceptance.json`
+binds results and review to the implementation candidate. Historical stale,
+strict-Clippy, test-rendering, inventory and helper failures remain preserved.
+The record-only closure commit does not alter validated implementation inputs.
+
+Separate follow-up owners: formatting/guard ownership should cover Rust files
+included through `include!`; future codegen quality work owns conservative global
+shadow detection. A same-shape positive range-shadow control is a nonblocking
+codegen-test suggestion. These are not additional V0.12 merge requirements.
+Full integrated create-PR/merge correctness gates and the V5 timing matrix remain
+open. Next bounded implementation item: V0.13 sanitizer fixture and target
+propagation, retaining compiler and generated-program instrumentation.
