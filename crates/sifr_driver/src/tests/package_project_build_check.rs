@@ -457,7 +457,9 @@ def main():\n    print(parse_json())\n",
         !generated_project_root.join(".cargo/config.toml").exists(),
         "package-owned generated builds should not copy sysroot Cargo config"
     );
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("package binary should run");
 
@@ -511,7 +513,9 @@ fn test_build_const_specialization_without_structural_runtime() {
     let generated = std::fs::read_to_string(generated_project_root(&artifact).join("src/main.rs"))
         .expect("generated source should be retained");
     assert!(!generated.contains("sifr_runtime::interop::structural"));
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("non-structural specialization binary should run");
     assert!(output.status.success());
@@ -559,7 +563,9 @@ def main():\n    print(crc32(b\"abc\"))\n",
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("direct Rust interop project should build");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("package binary should run");
 
@@ -597,7 +603,9 @@ def main() -> None:\n    local: PythonError = PythonError(\"local\", 7)\n    ass
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("canonical and source PythonError declarations should build together");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("package binary should run");
 

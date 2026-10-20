@@ -11,6 +11,7 @@ mod entrypoint_resolution;
 mod entrypoint_single_file;
 mod entrypoint_stages;
 mod materialize;
+pub(crate) mod native_child_leases;
 mod native_link_policy;
 #[cfg(test)]
 mod native_reuse_tests;

@@ -126,7 +126,7 @@ pub fn ensure_with_hook(
             return Ok(prepared);
         }
     }
-    let lock = sifr_cache_storage::entry_lock(&root, &key).map_err(fail)?;
+    let lock = sifr_cache_storage::open_entry_lock(&root, &key, cfg!(windows)).map_err(fail)?;
     if path.is_file() {
         if let Ok(prepared) = validate(&path, inputs.compatibility, lock.try_clone().map_err(fail)?)
         {
@@ -378,3 +378,7 @@ pub fn development_metadata_path(
     );
     Ok(cache.join("metadata").join(format!("{key}.sifrmeta")))
 }
+
+#[cfg(all(test, unix))]
+#[path = "ensure_child_lease_tests.rs"]
+mod child_lease_tests;

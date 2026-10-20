@@ -7,6 +7,7 @@ use std::process::Command;
 
 #[derive(Clone, Debug)]
 pub(crate) struct CargoResolutionPolicy {
+    pub(crate) child_leases: super::native_child_leases::NativeChildLeases,
     pub(crate) application_profile: crate::ApplicationProfile,
     pub(crate) native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
     pub(crate) lock_mode: CargoLockMode,
@@ -22,7 +23,8 @@ impl CargoResolutionPolicy {
         sifr_sysroot::NativeToolchain::resolve_at(&cwd)
     }
     pub(crate) fn cargo_command(&self) -> Result<Command, Vec<RenderedDiagnostic>> {
-        self.native_toolchain
+        let mut command = self
+            .native_toolchain
             .as_ref()
             .map_err(Clone::clone)
             .and_then(sifr_sysroot::NativeToolchain::cargo_command)
@@ -30,7 +32,26 @@ impl CargoResolutionPolicy {
                 vec![super::cargo_resolution::cargo_resolution_error(
                     error.clone(),
                 )]
-            })
+            })?;
+        self.child_leases.bind(&mut command).map_err(|error| {
+            vec![super::cargo_resolution::cargo_resolution_error(
+                error.to_string(),
+            )]
+        })?;
+        Ok(command)
+    }
+
+    pub(crate) fn with_lease(
+        &self,
+        lease: &std::fs::File,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let mut next = self.clone();
+        next.child_leases = self.child_leases.with(lease).map_err(|error| {
+            vec![super::cargo_resolution::cargo_resolution_error(
+                error.to_string(),
+            )]
+        })?;
+        Ok(next)
     }
 
     pub(crate) fn normal() -> Self {
@@ -41,6 +62,7 @@ impl CargoResolutionPolicy {
         native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
     ) -> Self {
         Self {
+            child_leases: Default::default(),
             application_profile: crate::ApplicationProfile::Release,
             native_toolchain,
             lock_mode: CargoLockMode::Normal,

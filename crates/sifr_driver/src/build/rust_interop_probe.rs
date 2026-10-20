@@ -147,11 +147,16 @@ pub(super) fn execute_direct_cargo_probe(
         })
         .flatten();
     let cargo_prefix_args = probe_cargo_vendor_args(vendor_dir);
-    let prepared_resolution =
-        prepare_cargo_resolution(&probe_root, &probe.cargo_resolution, &cargo_prefix_args)
-            .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
-    let mut command = probe
+    let owned_policy = probe
         .cargo_resolution
+        .with_lease(family.lease())
+        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
+    let prepared_resolution =
+        prepare_cargo_resolution(&probe_root, &owned_policy, &cargo_prefix_args)
+            .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
+    let mut command = prepared_resolution
+        .command_policy(&owned_policy)
+        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?
         .cargo_command()
         .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
     command

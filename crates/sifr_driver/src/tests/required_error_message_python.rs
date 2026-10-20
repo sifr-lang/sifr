@@ -41,7 +41,9 @@ def main():
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("canonical PythonError must build with the selected runtime");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("execute native PythonError assertions");
     assert!(output.status.success(), "{output:?}");

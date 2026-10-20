@@ -294,7 +294,9 @@ fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
     assert!(first.binary_path().exists());
     assert!(!first.build_report().cache_hit());
 
-    let first_output = std::process::Command::new(first.binary_path())
+    let first_output = first
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("first cached binary should run");
     assert!(first_output.status.success());
@@ -309,7 +311,9 @@ fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
     assert!(second.build_report().cache_hit());
     assert_eq!(first.binary_path(), second.binary_path());
 
-    let second_output = std::process::Command::new(second.binary_path())
+    let second_output = second
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("second cached binary should run");
     assert!(second_output.status.success());
@@ -351,7 +355,9 @@ fn test_cached_project_binary_invalidates_when_sources_change() {
     assert!(!second.build_report().cache_hit());
     assert_ne!(first.binary_path(), second.binary_path());
 
-    let output = std::process::Command::new(second.binary_path())
+    let output = second
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("updated cached binary should run");
     assert!(output.status.success());

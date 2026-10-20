@@ -77,11 +77,43 @@ fn storage_child() {
             "test-trust",
         )
         .unwrap();
-        let mut descendant = Command::new("sleep").arg("60").spawn().unwrap();
+        let mut command = Command::new("sleep");
+        command.arg("60");
+        super::super::native_child_leases::bind(&mut command, family.lease()).unwrap();
+        let mut descendant = command.spawn().unwrap();
         let ready = PathBuf::from(std::env::var("SIFR_DX3_READY").unwrap());
         std::fs::write(ready.with_extension("pid"), descendant.id().to_string()).unwrap();
         std::fs::write(&ready, family.root.as_os_str().as_encoded_bytes()).unwrap();
         descendant.wait().unwrap();
+        return;
+    }
+    #[cfg(unix)]
+    if mode == "committed-descendant" {
+        let prepared =
+            prepare_cached_artifact("fixture", "child-owned", &scope, "one", &required).unwrap();
+        let PreparedArtifactCache::Miss(pending) = prepared else {
+            panic!("fresh root")
+        };
+        std::fs::write(pending.workspace_root().join("payload"), b"complete").unwrap();
+        let entry = pending.commit(&required).unwrap();
+        let mut command = Command::new("sleep");
+        command.arg("60");
+        entry.bind_command(&mut command).unwrap();
+        let mut intended = command.spawn().unwrap();
+        let unrelated = Command::new("sleep").arg("60").spawn().unwrap();
+        let ready = PathBuf::from(std::env::var("SIFR_DX3_READY").unwrap());
+        std::fs::write(ready.with_extension("pid"), intended.id().to_string()).unwrap();
+        std::fs::write(
+            ready.with_extension("unrelated"),
+            unrelated.id().to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            &ready,
+            entry.workspace_root().as_os_str().as_encoded_bytes(),
+        )
+        .unwrap();
+        intended.wait().unwrap();
         return;
     }
     if mode == "prune" {
@@ -169,7 +201,10 @@ fn storage_child() {
             }
             std::fs::write(stage.join("payload"), b"complete").unwrap();
             if mode == "descendant" {
-                let mut descendant = Command::new("sleep").arg("60").spawn().unwrap();
+                let mut command = Command::new("sleep");
+                command.arg("60");
+                pending.bind_command(&mut command).unwrap();
+                let mut descendant = command.spawn().unwrap();
                 let ready = PathBuf::from(std::env::var("SIFR_DX3_READY").unwrap());
                 std::fs::write(ready.with_extension("pid"), descendant.id().to_string()).unwrap();
                 std::fs::write(&ready, stage.as_os_str().as_encoded_bytes()).unwrap();
@@ -672,4 +707,82 @@ fn auxiliary_case() {
 fn write_owned_fixture(path: impl AsRef<Path>, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
     use std::io::Write;
     crate::cache_storage::new_private_file(path.as_ref())?.write_all(contents.as_ref())
+}
+
+#[cfg(unix)]
+struct ObservedChild(u32);
+#[cfg(unix)]
+impl ObservedChild {
+    #[allow(unsafe_code)]
+    fn alive(&self) -> bool {
+        // SAFETY: a zero signal observes the numeric PID recorded by our helper.
+        unsafe { libc::kill(self.0 as i32, 0) == 0 }
+    }
+    #[allow(unsafe_code)]
+    fn stop(&mut self) {
+        if self.0 != 0 {
+            // SAFETY: the owned helper recorded this live child's PID before exit.
+            unsafe {
+                libc::kill(self.0 as i32, libc::SIGKILL);
+            }
+            self.0 = 0;
+        }
+    }
+}
+#[cfg(unix)]
+impl Drop for ObservedChild {
+    fn drop(&mut self) {
+        self.stop();
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn committed_artifact_survives_killed_owner_without_unrelated_retention() {
+    let fixture = tempfile::Builder::new()
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700))
+        .prefix("sifr-committed-child-")
+        .tempdir()
+        .unwrap();
+    let root = fixture.path();
+    let ready = root.join("ready");
+    let mut owner = child(root, "committed-descendant", &ready).spawn().unwrap();
+    wait_ready(&ready);
+    let mut intended = ObservedChild(
+        std::fs::read_to_string(ready.with_extension("pid"))
+            .unwrap()
+            .parse()
+            .unwrap(),
+    );
+    let unrelated = ObservedChild(
+        std::fs::read_to_string(ready.with_extension("unrelated"))
+            .unwrap()
+            .parse()
+            .unwrap(),
+    );
+    let entry = PathBuf::from(std::fs::read_to_string(&ready).unwrap());
+    let key = entry.file_name().unwrap().to_str().unwrap();
+    let lease = super::super::native_child_leases::open(entry.parent().unwrap(), key).unwrap();
+    owner.kill().unwrap();
+    owner.wait().unwrap();
+    assert!(intended.alive() && unrelated.alive());
+    assert!(
+        matches!(lease.try_lock(), Err(std::fs::TryLockError::WouldBlock)),
+        "killed owner lost its live artifact consumer"
+    );
+    intended.stop();
+    let start = Instant::now();
+    loop {
+        match lease.try_lock() {
+            Ok(()) => break,
+            Err(std::fs::TryLockError::WouldBlock) if start.elapsed() < Duration::from_secs(1) => {
+                std::thread::sleep(Duration::from_millis(5))
+            }
+            error => panic!("unrelated child retained artifact lease: {error:?}"),
+        }
+    }
+    assert!(
+        unrelated.alive(),
+        "release must happen while unrelated child remains alive"
+    );
 }

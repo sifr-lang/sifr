@@ -191,7 +191,9 @@ pub(super) fn built_package_output(entrypoint: &PackageEntrypoint) -> std::proce
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("Rust interop package should build");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("Rust interop package binary should run");
     assert!(

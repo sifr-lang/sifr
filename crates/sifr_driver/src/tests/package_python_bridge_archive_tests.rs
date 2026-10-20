@@ -67,7 +67,9 @@ fn archived_biip_bridge_builds_and_runs_without_checkout_or_extraction() {
     std::fs::create_dir_all(&run_root).expect("run root should be created");
     std::fs::set_permissions(&run_root, std::fs::Permissions::from_mode(0o555))
         .expect("run root should become read-only");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .current_dir(&run_root)
         .env("TMPDIR", &run_root)
         .output()
@@ -154,7 +156,9 @@ fn two_packages_can_execute_the_same_bridge_module_path_without_collision() {
         .expect("app bridge checkout should be removable");
     std::fs::remove_dir_all(library.root.join("src/python_bridges"))
         .expect("dependency bridge checkout should be removable");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("two-package bridge binary should run");
 

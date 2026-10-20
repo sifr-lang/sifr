@@ -10,6 +10,14 @@ pub struct CachedBinaryArtifact {
 }
 
 impl CachedBinaryArtifact {
+    /// Create an executable command that retains this cached artifact in its
+    /// intended child. A bare path used by Command::new carries no ownership.
+    pub fn command(&self) -> std::io::Result<std::process::Command> {
+        let mut command = std::process::Command::new(&self.binary_path);
+        self._cache_lease.bind_command(&mut command)?;
+        Ok(command)
+    }
+
     /// Test observations use the actual materialized Cargo source, independently
     /// of the immutable captured executable bundle.
     #[cfg(test)]

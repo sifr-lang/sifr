@@ -89,7 +89,9 @@ def main() -> Result[None, PythonError]:
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("typed raw Python API package should build");
-    let output = std::process::Command::new(artifact.binary_path())
+    let output = artifact
+        .command()
+        .expect("cached artifact command")
         .output()
         .expect("typed raw Python API package should run");
 
