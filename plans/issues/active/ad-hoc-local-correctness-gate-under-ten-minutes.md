@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.17 coverage taxonomy repair; V1 semantic/native separation remains open
+current_stage: V0.17 accepted; V1 semantic/native separation and V2 repeated validation remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -3351,3 +3351,31 @@ compiler inputs remain unchanged. Use the approved focused-intermediate policy
 and a scoped independent review; no compiler rebuild is required if this remains
 verification policy and documentation work only. Complete final create-PR/merge
 and V5 acceptance remain mandatory and open.
+
+
+### V0.17 acceptance — precise taxonomy and preserved planning record
+
+PR [#4385](https://github.com/sifr-lang/sifr/pull/4385) accepts implementation
+`e85c572e802d682fc812018dc24821a74cb970a0`. The two exact technical tokens are
+accepted with same-line negative controls; the numbered SQL heading is descriptive
+and the historical inventory is preserved in the planning/review archive, with
+both relative links corrected. Rust code, schema bytes, independently pinned
+verification graphs, profiles and the other active plan's status are unchanged.
+
+All five coverage-area cases, taxonomy self-tests, profile validity, file-size,
+whitespace and changed-link checks passed. The complete bounded validation took
+74.181 seconds, with no resource stop, leftover process group or source mutation.
+The unchanged-input and content-preservation assertions passed. No compiler build
+was needed for these policy/documentation-only changes.
+
+Evidence: `v017-final-validation/{spec.json,receipt.json,stdout,stderr,resources}`,
+`v017-validation-details.json` and `v017-coverage-area-result.json` in the external
+LOCAL-GATE evidence root. Independent review is **SATISFIED**, with no blocking
+findings, under `reviews/e85c572e802d682fc812018dc24821a74cb970a0/`. Suggestions
+about still narrower vocabulary matching and spelling consistency are optional
+follow-up policy work; they do not establish a regression in this candidate.
+The original failed V1b1 coverage-area evidence remains failed and retained.
+
+This closure changes only this phase record. V1 semantic/native separation,
+V2–V5, complete integrated create-PR/merge gates and the ten-minute goal remain
+open. No runtime gain is attributed to the taxonomy repair.
