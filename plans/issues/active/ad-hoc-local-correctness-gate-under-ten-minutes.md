@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b1 shared stdlib artifact ownership
+current_stage: V0.17 coverage taxonomy repair; V1 semantic/native separation remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -3218,3 +3218,136 @@ method/safety policy checks affected by the move, whitespace and changed-link ch
 Run focused checks first and diagnose preparation failures before repeating. Retain
 build targets, inspect capacity before preparation, freeze the candidate for named
 validation and independent review. The phase-end full gate policy remains unchanged.
+
+### V1b1 shared stdlib artifact ownership — accepted implementation
+
+Implementation candidate `cc52c0ed0cc9945fc151caa77b62a7fcadc199a1` in
+[PR #4384](https://github.com/sifr-lang/sifr/pull/4384) moves the checked stdlib
+records and signature aliases to `sifr_stdlib_artifact`. Its resolved dependency
+closure contains IR and types and excludes codegen, compiler services and the
+driver. Codegen retains the emission view, syntax-session lifetime and rendering.
+All consumers and compiled identities use the new data owner. The moved record
+definitions are unchanged apart from documentation, and `StdlibRustSource` is an
+exact byte move. No runtime or full-gate improvement is claimed for this prerequisite.
+
+The maintained first-party inventory and both affected lock graphs are coherent.
+The root lock preserves all 858 existing external package records; the independent
+fuzz lock preserves all 234. The latter also restores an already-declared codegen
+`serde_json` edge and updates only the approved lock hash in the verification
+policy. No external version, checksum or official-registry approval changes.
+Actual fuzz `cargo metadata --locked --offline` resolution passes. This is a
+first-party graph repair under the approved pinned-verification policy, not a
+release-version alignment of the independently owned tools.
+
+Named validation on that implementation candidate:
+
+| Check | Observed coverage | Outer seconds |
+|---|---|---:|
+| Codegen preparation | Retained target | 2.188 |
+| Codegen library | 1,780 passed | 17.189 |
+| Compiler-services preparation | Retained target | 2.684 |
+| Compiler-services library | 26 passed | 43.715 |
+| Driver preparation | Retained target | 2.687 |
+| Metadata producer | 15 passed; subprocess helper invoked by parent controls | 170.785 |
+| Metadata reader | 9 passed; full corpus explicitly executed below | 40.721 |
+| Stdlib regressions | 56 passed | 47.215 |
+| E2E preparation | Retained target | 4.687 |
+| Positive native E2E | 732 selected, 732 outcomes, 732 passed | 120.250 |
+| Exact source/metadata Rust corpus | All 732; no selection, byte/source-map equality | 112.243 |
+| Format/size/area/method/safety checks | Includes 17 method and 12 safety controls | 248.305 |
+| Source dependency direction | Passed | 7.141 |
+| Manifest and dependency contracts | 108 passed | 13.149 |
+| Structural and resolved-graph checks | Passed; includes actual fuzz lock resolution | 1.642 |
+
+These are command durations from concurrent correctness work, not a sum that can
+be presented as one gate's wall time. Producer/reader helper and corpus exclusions
+are reconciled explicitly, not counted as silent passes. The 732-case emitted
+source corpus remains retained as a baseline for the subsequent semantic/native
+separation.
+
+Evidence is retained outside Git in `v1b1-final-acceptance.json`, its raw command
+specifications/receipts/output, `v1b1-pinned-corpus-output/coverage.json`, and the
+candidate-keyed independent review. Historical import compilation errors, stale
+method fingerprints, manifest inventory/count failures, the initially incomplete
+fuzz lock, resource-admission refusals and disk-reserve cancellation remain
+preserved. The short exact selector that ran zero tests is explicitly rejected;
+only the fully qualified entrypoint with all 732 outcomes is accepted. Earlier
+candidate evidence is never relabelled as this candidate's execution.
+
+Resource maintenance archived only obsolete session-owned outputs after checking
+consumers and verifying copied bytes. Current compatible build artifacts and all
+failure evidence remain retained. Both normal and CLI feature graphs were already
+prepared. The final verification-only repair changed no Rust/Cargo/toolchain input;
+its work allocation was 4 GiB, and the 20-GiB disk and 2-GiB memory
+reserves remained enforced. An inherited numeric field in the preceding pinned
+admission receipt disagreed with its 6-GiB allocation check; the explicit
+clarification preserves the raw record and corrects that accounting.
+
+Scoped remediation review is **SATISFIED**, with no blocking findings, at
+`reviews/cc52c0ed0cc9945fc151caa77b62a7fcadc199a1/review.md` outside Git. The earlier review correctly blocked on
+missing coverage/profile membership and the moved-owner GCQ producer fingerprint;
+its raw report is retained under `reviews/26d61f8fdb716565ea3f1cf1b83325ea9ffa83a1/`.
+Both defects are repaired. All four standard profiles enroll the owner, the
+resolved compiler configuration count remains 17, and all seven supported emitted
+plans preserve every existing selection. The complete runner self-test, 23
+profile/allocation/scope controls, four generated-quality controls (including
+same-mtime content mutation), and the permanent dependency-direction controls pass.
+The additive artifact test harness builds and contains zero standalone tests; its
+behavior is exercised by the existing codegen, metadata and full corpus checks.
+This is not the rejected zero-fixture E2E invocation.
+
+The broader coverage-area run is still **failed**, solely on five taxonomy
+complaints in four baseline files. Membership, readiness, profile assignment and
+negative-control cases passed. `v1b1-reviewed-contract-reconciliation.json` binds
+the unchanged validator and complained-about files to base `9d85202e`. The full
+failed area and its raw output remain retained; V0.17 below owns its repair before
+final acceptance. No Rust implementation changed during the inventory/cache-key
+remediation, but every named Rust/native check was nevertheless rerun on the final
+implementation candidate.
+
+Follow-ups stay in their named phase owners:
+
+- V4: changing only verification-policy JSON changed the production manifest
+  source token and rebuilt manifest/import/lowering/codegen units. Separate
+  test-only identity inputs without weakening actual compiled-input coverage.
+- V4: normal and CLI preparation resolve distinct transitive feature variants.
+  Establish which variants are required before attempting to unify them.
+- V3: GCQ producer fingerprinting already omitted IR and type-system inputs
+  before this item. Repair complete producer keys in that owner with mutation
+  controls; this item restores coverage of the newly moved owner only.
+- V3: the preceding run retired 185 old group IDs and built 186 different IDs;
+  there was no overlap, so it does not demonstrate that TTL removed reusable
+  current outputs. The final run reused all 186 current native artifacts after
+  Cargo validation and still executed every fixture assertion. This is a reuse
+  observation across different compiler candidates, not an optimization trial.
+
+V1's semantic/native boundary, V2–V5, the complete final create-PR/merge gates and
+sub-600-second acceptance remain open.
+
+### V0.17 bounded repair — coverage taxonomy precision and record ownership
+
+The complete coverage-area sweep on V1b1 found five complaints in four unchanged
+baseline files. Register this as a separate repair before the next compiler
+architecture item. Preserve the failed broad-area evidence and the accepted
+V1b1 implementation; do not rewrite historical statuses.
+
+Investigate the exact matching expressions, then distinguish technical vocabulary
+from delivery labels. The observed matches are `compiler capability evidence` in
+the builtin-input schema, `contract_planning_tests` in two Rust module declarations,
+`Item 5` in the SQL tooling reference heading, and the planning-record link in the
+historical validation-entry inventory. The schema complaint is the technical
+phrase, not its adapter identifier. Keep schema validation rules, independently
+pinned tool graphs, Rust code and test selection unchanged. Retain narrowly scoped
+technical vocabulary with negative controls proving an unrelated delivery label
+on the same line is still rejected. Replace the numbered SQL heading with its
+technical purpose. Put the historical execution-planning inventory under the
+planning/review tree, preserving its content and correcting all changed links;
+do not erase historical observations or change the other active plan's status.
+
+Named validation: taxonomy self-tests and the complete taxonomy scan; all five
+coverage-area cases, including its existing negative controls; profile validity,
+file-size, whitespace and changed-link checks. Prove schema/manifest/lock and
+compiler inputs remain unchanged. Use the approved focused-intermediate policy
+and a scoped independent review; no compiler rebuild is required if this remains
+verification policy and documentation work only. Complete final create-PR/merge
+and V5 acceptance remain mandatory and open.
