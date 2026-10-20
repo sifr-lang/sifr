@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.3b merged; V0.6a1 contract planning boundary in progress
+current_stage: V0.6a1 validated and reviewed; V0.6a2 real fixtures next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -1247,7 +1247,7 @@ V0.3b merged as #4363 at `817409bcea035fa8d5f50ecbde1a3d813c2012b8`.
 
 V0.6a subdivision after source/history inspection:
 
-- **V0.6a1, current:** expose the existing contract-planning stage to its unit
+- **V0.6a1, validated:** expose the existing contract-planning stage to its unit
   tests, separately from native qualification. Commit
   `1cc3aadc4e66786d45ef5635def04bf2b32bb9a3` correctly removed a normal-mode
   missing-manifest success fallback. Sixteen positive contract-only tests had
@@ -1263,7 +1263,7 @@ V0.6a subdivision after source/history inspection:
   fixture/cache/ownership failures from the full driver diagnostic batch.
 - **V0.6a2:** repair real inputs for tests that claim qualified metadata, cache
   authority, bridge aliases or installed sysroot resolution, including the missing
-  bridge directory. These must execute real probes with owned, valid fixtures;
+  bridge directory, abort-profile panic test and both native-links tests. These must execute real probes with owned, valid fixtures;
   no synthetic-success path. Preserve relevant filesystem failure controls.
 - **V0.6b/c:** ownership/pruning and emitted-output/cache-key assertions remain
   separately bounded after current failures are reproduced.
@@ -1273,3 +1273,50 @@ Planning cannot create runnable or cache-qualified success. Existing real probe
 and native/runtime coverage remains required in the integrated gate. No removed
 assertions, fallback compiler, dependency changes or timing claim are authorized
 by the subdivision. Standard Rust/area guards and scoped independent review apply.
+
+
+### V0.6a1 contract planning closure
+
+Implementation/review candidate `5b80358887226b5c6f25036c17e2ed214b102cab`,
+base `817409bcea035fa8d5f50ecbde1a3d813c2012b8`, PR
+[#4364](https://github.com/sifr-lang/sifr/pull/4364). Named checks pass and scoped
+independent review is SATISFIED, no blockers. The production planning and remaining
+qualification bodies are byte-identical to the base; the test adapter returns
+only a probe plan. Sixteen contract-only assertions retain their contents and
+real compatible/incompatible native signature controls still execute qualification.
+
+Evidence below lives outside Git under
+`continuation-evidence/local-gate-implementation-20261020/`:
+
+- `v06a1-planning-admission`: new missing-manifest rejection control passes,
+  72.243 seconds including preparation.
+- `v06a1-policy-guards`: formatting, file size, source direction and all area
+  manifests pass, 21.152 seconds. `v06a1-fixture-matrix`: canonical Rust interop
+  matrix and self-tests pass, 13.147 seconds; pinned verification Python 3.14.7.
+- `v06a1-driver-library`: completed full diagnostic, **711 passed, 23 failed,
+  81 ignored, zero filtered**, 829.49 libtest / 832.687 outer seconds. No timeout,
+  leftover workers or unexpected tracked changes. The suite is FAILED, not a
+  passing gate. `v06a1-final-inventory.json` reconciles every remaining failure
+  with the historical inventory: all sixteen targeted failures now pass, the
+  new admission control passes, and no new failure ID appears. The 81 ignored
+  native/corpus cases remain explicit final-gate obligations.
+- `v06a-driver-library-before` remains INCOMPLETE: cancelled at 865.458 seconds
+  after discovering rotational temporary storage distorted durable-publication
+  testing. Its completed affected prefix remains valid diagnostic evidence;
+  it is neither a gate pass nor a matched performance baseline.
+- Candidate scratch storage was explicitly moved to a session-owned SSD directory.
+  `v06a1-history-observation.json` observed the actual 4,097-publication history
+  test at 247.829 seconds with 0.25-second stdout polling. This is approximate
+  external observation, not an isolated benchmark or claimed code speedup.
+- `v06a1-production-order-audit.json` records unchanged body hashes. Raw review:
+  `reviews/5b80358887226b5c6f25036c17e2ed214b102cab/review.md`.
+  The final diagnostic receipt was reconciled after review, before merge.
+
+Remaining failures: sixteen real-input admission cases belong to V0.6a2,
+including the abort-profile panic test and both native-links tests. Three
+workspace ownership plus two housekeeping failures belong to V0.6b. The
+sysroot Cargo cache-key assertion and attached-API emitted-output assertion
+belong to V0.6c. Review also notes that the test adapter assumes declarations
+and a context; check that assumption if future tests reuse it. Final integrated
+create-PR/merge gates and V5 remain open; this intermediate repair makes no
+whole-gate runtime claim.
