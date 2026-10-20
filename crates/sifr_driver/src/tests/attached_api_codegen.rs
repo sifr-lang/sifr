@@ -208,7 +208,11 @@ fn type_parameter_bounds(file: &syn::File, function: &str, parameter: &str) -> V
         .iter()
         .map(|bound| match bound {
             syn::TypeParamBound::Trait(bound) => {
-                assert!(matches!(bound.modifier, syn::TraitBoundModifier::None));
+                bound
+                    .modifiers
+                    .require_empty()
+                    .expect("ordinary trait bound");
+                assert!(bound.maybe.is_none());
                 assert!(bound.lifetimes.is_none());
                 rust_path(&bound.path)
             }
