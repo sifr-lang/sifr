@@ -25,6 +25,8 @@ mod python_interop;
 mod python_interop_shared_target_tests;
 mod python_runtime;
 mod report;
+#[cfg(test)]
+mod runtime_method_codegen_tests;
 mod rust_formatter;
 mod rust_interop;
 #[cfg(test)]
