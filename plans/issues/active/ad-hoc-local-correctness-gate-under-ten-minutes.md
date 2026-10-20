@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.5 reviewed; merge pending; V0.2 next
+current_stage: V0.5 merged; V0.2 SQL qualification in progress
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -178,7 +178,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.3 | Canonical launch context and Python runtime registry/fixture admission | Launcher qualified in V0.3a; Python registry/fixtures pending |
 | V0.3a | Rustup-selected native Cargo/rustc launch context | Merged #4360; full affected preparation and independent review pass |
 | V0.4 | Distribution archive baseline fixtures and downstream governance assertions | Merged #4357; named checks and independent review pass |
-| V0.5 | Maintained Cargo manifest/lock inventory admission | Implemented; 108/108 tests pass; independent review satisfied; PR #4361 |
+| V0.5 | Maintained Cargo manifest/lock inventory admission | Merged #4361; 108/108 tests pass; independent review satisfied |
 | V0.6 | Driver interop test inputs, output/key contracts and ownership/pruning | Pending |
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Pending |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Pending |
@@ -534,7 +534,8 @@ Independent review: **SATISFIED**, no blockers, for implementation
 `f4981e547d33514744567ea31f80bcc5846e5df2` against
 `8858bde63f80b3b40860da3b1b7a48b31a91caaa`. Raw review is preserved outside Git
 at `reviews/f4981e547d33514744567ea31f80bcc5846e5df2/review.md`.
-[PR #4361](https://github.com/sifr-lang/sifr/pull/4361) awaits merge; final phase
+[PR #4361](https://github.com/sifr-lang/sifr/pull/4361) merged as
+`ad1e26aac38787b669414e8572dcf9146433ced6`; final phase
 gates/timing remain open. CI's benchmark-inclusive create-PR job stops before tests
 because `SIFR_PERFORMANCE_REFERENCE` is unset (`ci-4361-create-pr.log`); this is
 not a CI pass. The approved intermediate local policy remains applicable.
@@ -545,6 +546,48 @@ Cross-platform qualification should consider raw-byte pinned-input hashes under
 Windows line-ending conversion. Direct exemption-routing and Git-revision-specific
 mutations are optional additional controls; current exact product-path exclusion,
 product helper controls and every-input mutation tests cover the required policy.
+
+
+### V0.2 SQL qualification — implementation under validation
+
+Base: `ad1e26aac38787b669414e8572dcf9146433ced6`. Exact pinned PostgreSQL parser
+repositories and WASI-Virt were materialized in the owned checkout. Initial
+lightweight batch ran **33 commands: 23 passed, 10 failed**, in 8.094s. Four
+commands stopped on SQL component source provenance; six inspected the former
+driver implementation instead of the current compiler-services owner.
+
+Three source qualification guards now follow the canonical SQL service and also
+require the driver's public delegation. Existing 25 payload mutation cases are
+retained, with **15 additional source mutation controls** covering the delegation,
+provider resolution, query registry and schema requirement authority. After this
+repair the batch runs **29/33 successfully** (14.168s); the same four producer
+provenance failures remain until artifact regeneration. These failed attempts
+remain external evidence, not passing qualification.
+
+The official WASI SDK 34 archive digest, size and every extracted file/link were
+verified (26.091s including download/extraction). WASI-Virt's first offline build
+stopped on a missing cached locked dependency (0.640s); locked dependency fetch
+completed in 3.141s and the actual offline producer build completed in 69.680s.
+No dependency manifest or lock was changed.
+
+Canonical artifact producers, using Rust 1.98.1 and Python 3.14.7, regenerated all
+**ten SQL component artifacts** and their actual producer receipts:
+
+| Producer | Supported variants | Elapsed including producer checks |
+|---|---|---:|
+| MySQL | 8.4, 9.7, 26.7 | 52.177s |
+| SQLite | 3.53.4 | 51.580s |
+| PostgreSQL | 13 through 18 | 309.356s |
+
+These are artifact-generation/preparation measurements, not complete gate timings.
+The source was frozen during each producer run; only that producer's declared
+artifact/receipt outputs could change. The source hashes were not patched to
+bless existing binaries. Runtime assertions, final lightweight qualification,
+guards, independent review and merge remain required before V0.2 closes.
+Evidence: `v02-lightweight-baseline[-cases]`, `v02-source-repairs[-cases]`,
+`v02-submodule-preparation.json`, `v02-sdk-prepare`, `v02-sdk-preparation.json`,
+`v02-virtualizer-build`, `v02-virtualizer-fetch`, `v02-virtualizer-build-prepared`,
+and `v02-{mysql,sqlite,postgresql}-producer`.
 
 ## Execution stages
 
@@ -1056,8 +1099,8 @@ out-of-scope work separately; no unresolved in-scope coverage or timing scenario
 may be described as completed. A missed target triggers further root-cause work,
 not a scope reduction or a promised speedup based on overlapping timings.
 
-**Next action:** merge reviewed V0.5, then repair V0.2 SQL qualification on a
-new owned branch. Read-only provenance inspection on the reviewed candidate shows
+**Next action:** repair V0.2 SQL qualification on owned branch
+`codex/local-gate-sql-qualification`, based on merged V0.5. Read-only provenance inspection on the reviewed candidate shows
 all three SQL family receipts differ only in `Cargo.lock`; the words receipt has
 no changed inputs. The changed lock adds the CLI's cache-storage dependency.
 Rebuild SQL artifacts with the actual pinned producer and preserve its receipts;
