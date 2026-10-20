@@ -10,8 +10,7 @@ use sifr_type_system::Type;
 use std::collections::HashSet;
 
 pub(in crate::lower) fn is_task_scope_type(ty: &Type) -> bool {
-    ty.resolve_alias() == &super::task_owner_scope_state::task_scope_type()
-        || ty.resolve_alias() == &super::task_owner_scope_state::task_group_type()
+    sifr_type_system::is_task_owner_type(ty)
 }
 
 pub(in crate::lower) fn is_task_group_type(ty: &Type) -> bool {

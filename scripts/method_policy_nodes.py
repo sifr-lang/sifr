@@ -6,6 +6,7 @@ Shape predicates do not independently admit source methods.
 """
 CODEGEN = 'crates/sifr_codegen/src/'
 CONSTITUENTS = {
+    ('methods/runtime.rs', 'lower_runtime_receiver_method'): 'methods::lower_method_impl canonical registry -> exact compiler task-owner or typed JoinSet/AsyncGenerator receiver, explicit method and arity; receives contextual operands after source method admission',
     ('stmt_support_emitter/stmt_expr_method_and_question_mark.rs', 'macro_rules!::stmt_expr_method_call'): 'source_method_path -> is_builtin; builtin specializations end in registry or builtin_method_decline; nonbuiltins branch separately',
     ('intrinsic_method_emitters/recursive_exprs.rs', 'try_lower_registry_expr_recursive'): 'source_method_path -> nonbuiltin early return; builtin specializations end in methods registry or decline',
     ('lower_expr/iterators_and_callables.rs', 'try_lower_simple_method_call_expr'): 'source_method_path -> is_builtin before task/iterator specialization',

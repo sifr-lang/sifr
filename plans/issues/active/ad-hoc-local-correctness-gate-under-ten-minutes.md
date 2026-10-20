@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.11a callable-field repair validated; remaining runtime dispatch failures open
+current_stage: V0.11b validated for merge; V0.12 demo compilation and generated freshness next
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -185,7 +185,7 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
 | V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
-| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Current complete inventory: 16 failures after V0.7; V0.11a callable-field repair validated, 15 runtime-dispatch investigations open |
+| V0.11 | Nineteen positive E2E failures (coordinate #4344) | V0.11a merged #4373; V0.11b validated #4374: all 732 positive and 569 negative fixtures pass; independent review SATISFIED |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
@@ -2111,3 +2111,173 @@ The original E0599 is repaired without changing its fixture or relaxing method
 authority. Fifteen current source-emission failures remain for the next bounded
 V0.11 item; other V0/V1–V5 work and full final gates remain open. This change
 establishes correctness, not a compiler-preparation speed improvement.
+
+
+V0.11a merged as #4373 at `d1c69e325457ce64594a61091ab2cb258a4c183e`.
+
+### V0.11b bounded scope: admitted runtime method emission
+
+Own the fifteen source-emission failures reproduced by the complete current
+positive suite: async-generator close (2), JoinSet add/spawn/terminal scenarios
+(6), TaskGroup CPU (2), TaskScope blocking (1), task context (1), scoped process
+(2), and HTTP/TLS loopback (1). Start with a single aggregate driver/codegen
+regression using the existing demanded-stdlib frontend/codegen helper and the
+unchanged fixtures. Require zero lowering error counts and no generated
+`compile_error!`; retain detailed per-fixture error evidence and collect all
+failures before asserting. Do not infer successful codegen from the presence
+of runtime support definitions alone. Include already passing task/async
+controls. This diagnostic step does not change production code or public
+compiler diagnostics.
+
+Static inspection suggests two dispatch gaps requiring validation: runtime
+builtin methods missing from registry handling, and task-owner shortcuts that
+accept only a subset of validated argument expression shapes. The generated
+runtime already implements the methods. Establish the concrete failing methods,
+receiver identities, argument conventions and runtime signatures before repair.
+Register the implementation boundary from that evidence. Retain canonical
+frontend authority, typed owner identity, argument/place/ownership semantics,
+method arity and strict decline; no arbitrary method fallback or compatibility
+route. Coordinate with V0.12 only if a demonstrated common cause requires it.
+
+Named acceptance for the eventual implementation: new aggregate codegen
+regression, focused wrong-owner/arity/authority/collision and ownership controls,
+all codegen library tests, unchanged fifteen native E2E fixtures plus related
+passing controls, all positive E2E fixtures after integration (now 730 with the
+V0.11a addition), complete compile-fail corpus, required fmt/file-size/area/method
+policy checks and scoped independent review. Preserve intermediate failures;
+full final create-PR/merge gates and V5 remain mandatory at phase end. Separate
+recorded lexical/opaque ABI follow-ups remain outside this dispatch repair.
+
+
+### V0.11b diagnostic result and implementation boundary
+
+Test-only candidate `00d9570b56a92c9c5e9fe6ab236ff602a5552579`:
+`v011b-runtime-codegen-baseline` completed in 290.906024 seconds and reproduced
+all fifteen failures while the five passing controls remained clean. The twelve
+explicit errors are typed builtin declines for AsyncGenerator `aclose`, JoinSet
+add/CPU/blocking helpers, TaskGroup CPU/context and TaskScope blocking helpers.
+Network and both process fixtures expose a missing TryExcept statement; the
+TryExcept boolean entrypoint collapses nested `Err` into `false`, so their actual
+nested cause is not yet established. Preserve raw HIR-bearing error lines and
+`v011b-runtime-diagnostics.json`; do not claim three additional causes from a
+masked diagnostic. Keep the same aggregate regression to test the hypothesis.
+
+Implement explicit typed registry support for the missing runtime helper
+contracts, with exact receiver identity and arity. Share canonical TaskScope/
+TaskGroup type construction between lowering and codegen; retain the existing
+frontend authority. Route task-owner calls through the normal contextual
+receiver/argument machinery instead of the restricted leaf shortcut. Keep
+already working task join/cancel/timeout and JoinSet terminal paths in scope
+for regression checks, without a general Rust-method fallback. Preserve
+move-only handles, real coroutine argument adaptation and reusable context
+values. Correct JoinSet's rewritten `__sifr_add_task` and
+`__sifr_add_blocking_task` classification to mutable receivers and their known
+growth effect, matching the runtime's `&mut self` contract. Retain checked place
+validation rather than bypassing it in the backend.
+
+Add canonical-owner/type collision and arity controls, strict authority controls,
+and focused mutation metadata tests. Run affected type-system/lowering checks
+in addition to the original acceptance list. If the three TryExcept failures
+survive this repair, record their detailed cause and explicitly reconcile their
+V0.12 ownership before broadening implementation. No production diagnostic
+interface change is authorized by this boundary.
+
+
+V0.11b first implementation `1e1edce1cbaa193b513c0bc8e9b51ba1790e5dc0`:
+canonical task-owner control passed (13.274567 seconds); full lowering/type-system
+suites passed 1,148 and 154 tests respectively (113.836628 seconds outer), with
+one pre-existing ignored lowering deque test requiring the driver-loaded stdlib
+registry, not counted as passing. All 1,774 codegen tests passed in
+`v011b-codegen-all` (392.030126 seconds outer); an unused import from the removed
+shortcut is corrected next. Guards passed (45.194222 seconds, 6,394 sites and
+235 nodes). Native and aggregate post-repair validation remain pending.
+
+Add direct native coverage for moving a BlockingTask into JoinSet, alongside the
+new context-reuse native fixture. This exercises the second rewritten add helper
+and its mutable receiver/affine ownership contract, rather than relying on the
+registry arity control alone. Both new fixtures join the aggregate regression
+(22 fixtures) and the full positive corpus (732 fixtures). Existing assertions
+are retained. Review and final phase gates remain open.
+
+
+V0.11b integration regression and repair boundary: candidate
+`1ce62b3f3beb56d1dbcb1311d42f66867314fd18` passes the corrected 22-fixture
+aggregate (7.694606 seconds outer / 4.04 seconds execution), all 22 focused native
+fixtures (390.262610 seconds outer / 22.018239 seconds suite), and all 569
+compile-fail fixtures (9.189224 seconds outer). Full positive integration completes
+732 outcomes in 157.810195 seconds outer: 731 pass, and the unchanged
+`task_handle_collection_loop_consumed` fails native Rust compilation with E0277
+because structured emission uses `handles.iter().cloned()` for non-Clone task
+handles. Prior conditional review is not accepted. Preserve all failed evidence.
+
+The old simple-loop path had a local task-list consuming override; the shared
+iterator ownership planner still selected Preserve/Clone for the same named list.
+Removing the restricted task-owner expression shortcut makes the surrounding
+async scope use structured emission, exposing this disagreement. Move the existing
+Task-list Consume/Move rule into the shared planner and remove the duplicate
+simple-loop override, so both paths agree. Do not make task handles clonable or
+change the original fixture. Add a planner regression and whole-source generated
+Rust regression; include the original fixture in the aggregate and focused native
+selection (now 23, with the full positive inventory unchanged at 732). Rerun all
+codegen tests, aggregate, focused native, full positive/negative suites and guards;
+request updated independent review. This is an in-scope regression correction.
+
+
+### V0.11b validated closure: runtime dispatch and consuming task-list iteration
+
+Implementation candidate `ffa7a4ebfd3c55b5b72fadc08bde9185540f5cee`, PR #4374,
+base `d1c69e325457ce64594a61091ab2cb258a4c183e`. All named acceptance now passes.
+The aggregate establishes that the twelve explicit runtime method declines and
+three masked TryExcept failures share the repaired dispatch path. The integrated
+native run also validates the consuming task-list regression repair. No original
+native fixture or assertion was changed: all 730 fixture files at the base are
+identical, with two new fixtures for context reuse and BlockingTask transfer.
+
+| Check / evidence label | Result | Outer seconds | Execution / suite seconds |
+| --- | --- | ---: | ---: |
+| `v011b-task-loop-codegen` | Seven focused task-handle controls pass | 306.528268 | 0.04 |
+| `v011b-loop-codegen-all` | 1,776 pass; all 1,772 previous IDs retained, four added | 18.308197 | See raw test receipt |
+| `v011b-loop-aggregate` | All 23 original/new/control fixtures emit without lowering errors | 232.884251 | 9.11 |
+| `v011b-loop-native` | All 23 native fixtures compile and execute | 299.740247 | 14.332693 |
+| `v011b-loop-positive-all` | All 732 pass; zero source/native/runtime or original batch failures | 115.849885 | 109.275594 |
+| `v011b-loop-negative-all` | All 569 compile-fail fixtures pass | 9.246120 | See raw test receipt |
+| `v011b-loop-guards` | fmt, size, all area manifests, method policy and 17 mutation self-tests pass | 52.141451 | Not separately measured |
+
+The full positive suite includes source compilation 52.195900 seconds, native
+compilation 47.908274 seconds, and runtime assertions 9.007272 seconds. These are
+observations with retained preparation, not the complete correctness gate or a
+prediction for compiler edits. Preparation remains explicit in every outer time.
+The earlier 1,148 lowering / 154 type-system passes are reused only after checking
+that those crate sources and workspace Cargo/lock/toolchain/config inputs are
+unchanged since `1e1edce1cbaa193b513c0bc8e9b51ba1790e5dc0`. The pre-existing
+ignored bare-deque lowering test remains separately recorded, not a pass.
+
+Raw review is outside Git at
+`reviews/ffa7a4ebfd3c55b5b72fadc08bde9185540f5cee/review.md` in the owned evidence
+bundle. Verdict SATISFIED, no blockers; all conditional test requirements are now
+fulfilled. `v011b-final-validation.json` binds each command, candidate, receipt,
+stdout/stderr/resource hash, fixture names, test-ID reconciliation and review hash.
+The invalid new-fixture assertion and the later full-suite task-loop failure are
+preserved; neither earlier conditional review is used as acceptance evidence.
+
+Follow-ups remain explicit: frontend move tracking for task-list comprehensions
+and non-name places must reject or represent consumption consistently; it
+currently only marks named for-loop sources moved. This is a pre-existing
+lowering/ownership gap outside the repaired named-loop contract. A future
+compiler-generated temporary JoinSet using `__sifr_add_blocking_task` also needs
+its internal mutation classification; source calls already have checked mutable
+places and the native transfer fixture passes. Neither follow-up removes or
+weakens required phase assertions.
+
+V4 build-context evidence now identifies real feature differences between the
+retained driver and CLI codegen graphs, including `ruff_text_size` serde and
+proc-macro dependency features; see `v011b-build-context-differences.json` and its
+source fingerprint snapshots. Do not omit identities to force reuse. Three
+obsolete prior-day owned test executables were archived and hash-verified before
+removal to restore disk reserve; libraries/incremental caches, current executables
+and failure evidence remain. Restore instructions and hashes are retained in
+`v011b-obsolete-test-binaries/receipt.json`.
+
+This is intermediate acceptance under the approved phase policy. Full final
+create-PR/merge correctness gates and V5 remain open. Next: V0.12 canonical demo
+compilation and generated companion freshness, using this repaired compiler.

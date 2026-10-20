@@ -103,6 +103,12 @@ pub(crate) fn infer_source_access_mode(
     if matches!(resolved, Type::Iterator(_)) {
         return SourceAccessMode::Consume;
     }
+    if matches!(resolved, Type::List(element) if matches!(element.resolve_alias(), Type::Task(_, _)))
+    {
+        // Frontend-admitted task-handle list loops consume the collection. The
+        // handles cannot be cloned, regardless of the statement emission path.
+        return SourceAccessMode::Consume;
+    }
     if is_copy_type_for_codegen(resolved) {
         // Copy-typed sources (for example `range`) can be consumed directly
         // without mutating the original binding.

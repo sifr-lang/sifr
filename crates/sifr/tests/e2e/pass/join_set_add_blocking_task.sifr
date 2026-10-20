@@ -1,0 +1,12 @@
+@blocking_io
+def worker() -> Result[int, ValueError]:
+    return 41
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(worker)
+    joins = task.JoinSet[int, ValueError]()
+    item_id = joins.add(handle)
+    results = await joins.join_all()
+    assert str(item_id) == "0"
+    assert str(results) == "[Ok(41)]"
+    return None

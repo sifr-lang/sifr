@@ -9,6 +9,7 @@ mod dispatch;
 mod fixed_width;
 mod list;
 pub(crate) use list::lower_string_contains;
+mod runtime;
 mod set;
 mod string;
 
@@ -31,6 +32,9 @@ fn lower_method_impl(
 ) -> Option<LoweredMethod> {
     if method == "len" && !supports_builtin_len(object_ty) {
         return None;
+    }
+    if let Some(expr) = runtime::lower_runtime_receiver_method(object_ty, method, object, args) {
+        return Some(LoweredMethod { expr });
     }
     let resolved_object_ty = object_ty.resolve_alias();
     let expr = match (resolved_object_ty, method) {

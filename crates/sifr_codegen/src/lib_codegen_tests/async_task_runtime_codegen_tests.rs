@@ -635,3 +635,13 @@ fn test_failure_annotation_lowers_to_private_failure_type() {
             .contains("fn observe(failure: &__SifrFailure<ValueError>)")
     );
 }
+
+#[test]
+fn task_handle_list_iteration_consumes_handles_through_structured_emission() {
+    let rust = generate_rust_from_source(include_str!(
+        "../../../sifr/tests/e2e/pass/task_handle_collection_loop_consumed.sifr"
+    ));
+    assert!(!rust.contains("compile_error!"), "{rust}");
+    assert!(rust.contains("for handle in handles.into_iter()"), "{rust}");
+    assert!(!rust.contains("handles.iter().cloned()"), "{rust}");
+}

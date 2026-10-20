@@ -77,9 +77,11 @@ pub(in crate::lower) fn receiver_convention_for_non_class_method(
         },
         Type::JoinSet(_, _) => match method {
             "__sifr_join_all" | "__sifr_cancel_all" => ReceiverConvention::Owned,
-            "add" | "__sifr_spawn_blocking" | "__sifr_spawn_cpu" => {
-                ReceiverConvention::MutableBorrow
-            }
+            "add"
+            | "__sifr_add_task"
+            | "__sifr_add_blocking_task"
+            | "__sifr_spawn_blocking"
+            | "__sifr_spawn_cpu" => ReceiverConvention::MutableBorrow,
             _ => ReceiverConvention::SharedBorrow,
         },
         Type::Class { .. } if super::task_scope_calls::is_task_scope_type(object_ty) => {
@@ -392,7 +394,13 @@ mod tests {
             ReceiverFactInvalidation::None
         );
         let join_set = Type::JoinSet(Box::new(Type::Int), Box::new(Type::Never));
-        for method in ["add", "__sifr_spawn_blocking", "__sifr_spawn_cpu"] {
+        for method in [
+            "add",
+            "__sifr_add_task",
+            "__sifr_add_blocking_task",
+            "__sifr_spawn_blocking",
+            "__sifr_spawn_cpu",
+        ] {
             let summary = summary(&join_set, method);
             assert_eq!(summary.effect, ReceiverMutationEffect::Growth);
             assert_eq!(

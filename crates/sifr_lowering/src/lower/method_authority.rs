@@ -326,8 +326,7 @@ pub(super) fn builtin(
 }
 
 fn is_compiler_task_owner(receiver: &Type, method: &str) -> bool {
-    let is_owner = receiver == &super::task_owner_scope_state::task_scope_type()
-        || receiver == &super::task_owner_scope_state::task_group_type();
+    let is_owner = sifr_type_system::is_task_owner_type(receiver);
     is_owner
         && matches!(
             method,

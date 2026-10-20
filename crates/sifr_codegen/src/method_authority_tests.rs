@@ -801,3 +801,5 @@ include!("method_authority_tests/nonempty_pop.rs");
 include!("method_authority_tests/scalar_deque_representation.rs");
 
 mod nominal_accessors;
+
+mod runtime_methods;

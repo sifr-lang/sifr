@@ -21,8 +21,10 @@ mod shared_vec;
 #[cfg(test)]
 mod structural_record_tests;
 mod substitution;
+mod task_owners;
 #[cfg(test)]
 mod type_capability_identity_tests;
+pub use task_owners::{is_task_owner_type, task_group_type, task_scope_type};
 mod types;
 pub use shared_vec::SharedVec;
 pub mod union;

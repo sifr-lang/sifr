@@ -1,0 +1,19 @@
+from sifr.task import Context, current_context
+
+async def worker() -> int:
+    await task.sleep(0.0)
+    assert str(current_context()) == "shared"
+    return 1
+
+async def main() -> Result[None, ScopeFailure]:
+    context: Context = Context("shared")
+    async with task.scope() as scope:
+        first = task.spawn_scoped(worker(), ctx=context)
+        second = task.spawn_scoped(worker(), ctx=context)
+        assert str(context) == "shared"
+        first_result = await first
+        second_result = await second
+        assert str(first_result) == "Ok(1)"
+        assert str(second_result) == "Ok(1)"
+    assert str(context) == "shared"
+    return None
