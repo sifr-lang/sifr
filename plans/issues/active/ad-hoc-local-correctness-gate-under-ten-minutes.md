@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.10 validated and reviewed; V0.11 E2E inventory next
+current_stage: V0.10 merged; V0.11 current E2E failure reconciliation
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -184,8 +184,8 @@ bounded and sequential. V0.1/V0.4 merged in PR #4357 at `ae729a7c7aa4b4e0d38aa4a
 | V0.7 | Nominal collision dispatch (coordinate emitted-Rust owner) | Merged #4368; native and three E2E cases pass |
 | V0.8 | Generated method-slot argument conventions (codegen owner) | Merged #4370; 1,766 codegen tests, both native checks and review pass |
 | V0.9 | Ancestry constructors and consuming-upcast visibility (codegen owner) | Merged #4371; 1,770 codegen and 19 native tests pass; review SATISFIED |
-| V0.10 | CLI eager/deferred schema parity | Validated/reviewed; PR #4372 |
-| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Pending |
+| V0.10 | CLI eager/deferred schema parity | Merged #4372; all 12 named CLI tests and guards pass; review SATISFIED |
+| V0.11 | Nineteen positive E2E failures (coordinate #4344) | Current inventory in progress; three nominal-accessor cases already fixed by V0.7 |
 | V0.12 | Demo async-generator/TryExcept emission and generated freshness | Pending |
 | V0.13 | Sanitizer fixture/target propagation with instrumentation retained | Pending |
 | V0.14 | Process lease inheritance and complete preparation dependency ordering | Pending |
@@ -2002,3 +2002,24 @@ process arguments and eight retained codegen fingerprint records are in
 in dependency fingerprints are evidence for investigation, not proof of cache
 corruption or of an unnecessary feature variant. V0.11 current E2E failure
 reconciliation is next; final complete gates and V5 remain mandatory.
+
+
+V0.10 merged as #4372 at `2c6adad497949b4a7855c5e26f150e62609916b7`.
+
+### V0.11 discovery boundary: current complete positive E2E inventory
+
+Issue #4344 remains open and unassigned; its technical compiler/codegen owner and
+nineteen historical cases are explicitly coordinated by this phase. Three nominal
+accessor cases already passed unchanged in V0.7. Run the entire current positive
+E2E inventory against the integrated current compiler before assuming the other
+sixteen remain the only failures. Preserve every fixture and assertion, stage,
+error and timing. Use the retained owned Cargo/native targets, two compiler jobs,
+two frontend/run workers and one native group with two Cargo jobs, reserving
+20 GiB disk and 2 GiB available memory with the 30-minute category cap.
+
+This is discovery, not a new full-gate pass: negative/runtime-failure corpora and
+all other final selected verifications remain required. Group reproduced failures
+by actual compiler boundary, then register the next bounded V0.11 subitem and its
+regressions/acceptance before editing compiler code. Do not silently absorb
+separate V0.12 demo/async work or the recorded lexical identity follow-ups; reconcile
+shared causes explicitly when evidence shows they coincide.
