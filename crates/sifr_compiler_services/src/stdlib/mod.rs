@@ -1,10 +1,12 @@
 mod bootstrap;
 mod interop;
+mod native;
 mod re_exports;
 pub use bootstrap::{
-    collect_public_constant_integer_value_exports, compile_stdlib_sources_with_sysroot,
-    function_type_from_hir, function_type_from_params, signature_params, stdlib_class_template,
+    collect_public_constant_integer_value_exports, function_type_from_hir,
+    function_type_from_params, signature_params,
 };
+pub use native::{compile_stdlib_sources_with_sysroot, stdlib_class_template};
 use sifr_lowering::ExternalDefs;
 use sifr_stdlib_artifact::StdlibCode;
 use sifr_sysroot::ResolvedSysroot;

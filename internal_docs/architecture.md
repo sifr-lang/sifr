@@ -623,6 +623,7 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   signature/capture inference remains intact. Unreachable-statement checks use
   the canonical validated CFG without constructing unused rich flow facts.
 - `sifr_stdlib_artifact` owns shared checked stdlib HIR, emission metadata, Rust source records and signature types. Codegen retains emission views, syntax sessions and rendering algorithms; compiler services and the driver consume the same data owner. Its source identity participates in compiler input tokens. This boundary alone does not remove the remaining source-bootstrap dependency on codegen.
+- Within compiler services, `stdlib/bootstrap.rs` owns the canonical checked-source loop: ordered parsing/lowering, canonical HIR, exports and transitive imports. `stdlib/native.rs` observes those checked modules to render Rust, retain interop and build native support maps. Rendering precedes installing the current module's exports, preserving error and dependency order. The private checked inventory is not an admitted semantic-only artifact; the public bootstrap still returns the complete native result. A borrowed observer keeps the checked loop from being instantiated separately for each consumer.
 - `sifr_compiler_services` owns source stdlib bootstrap, indexed metadata encoding
   and production, prepared metadata, and project-result transport. Its producer
   receives cancellation from the driver through an explicit callback and uses
