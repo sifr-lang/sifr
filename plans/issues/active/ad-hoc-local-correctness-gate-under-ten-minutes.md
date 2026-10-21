@@ -5462,3 +5462,56 @@ checks pass again (2.399s), all 16 optimized-Python scope checks pass (0.638s), 
 file-size checks pass (5.660s). This affects only the coverage self-check; emitted
 selection and frozen evidence remain unchanged. The earlier candidate and its
 archive remain diagnostic history, not review of this final candidate.
+
+
+### V4g closure — frozen coverage preservation / #4403
+
+PR [#4403](https://github.com/sifr-lang/sifr/pull/4403) merged as `5f62d3fd26`
+after independent **SATISFIED** review with no blockers on candidate
+`95f2499e73e2f1397ef9f6f41eaa9cc946ba2020`, base `1ef6aa18eada6c80636021c03cad5482c28b1b95`.
+The 56-file archive `v4g-final-evidence.tar.gz` was independently verified,
+SHA-256 `5c55139bc6aa5d0de9940a76bee0368ba8822e143a8b7e291cbb1803e270250d`.
+Raw review is outside Git at `reviews/95f2499e73e2f1397ef9f6f41eaa9cc946ba2020/response.md`,
+SHA-256 `ffa673d314b0f0c225e5139a2b82ac7631d232c751a3d15cd7fe6d23f7a85073`.
+Follow-ups: if future grouping keys permit additional integration-only groups,
+explicitly qualify their isolation; the current planner cannot produce that case.
+Future additions to a filtered integration group currently fail closed and need an
+explicit contract extension. The mutation tests use the full merge profile while
+the scope entry uses correctness selection; an existing equality test preserves
+that equivalence. None reduces present coverage or blocks this bounded repair.
+
+### V1e bounded investigation — JIT compiler build/runtime tradeoff
+
+The refreshed SQL build timings place roughly 161 seconds of LLVM work in the
+Cranelift codegen unit, overlapping other units. Prior blanket optimization-zero
+measurements hurt metadata validation, and the build-only helper experiment did
+not materially reduce the whole protocol. Neither establishes the effect of this
+specific runtime dependency. Test one diagnostic override: `cranelift-codegen` at
+opt0, preserving every other resolved profile field, package, feature and target.
+Keep all first-party compiler/metadata code at its existing optimization levels.
+This is a measured feasibility experiment, not approval of a production override.
+
+Compare complete canonical clean-A, unchanged-A and independent-clean-B SQL
+qualification for a fresh baseline and candidate on identical source, with the
+same six-worker allocation, locked/offline resolution, path maps and debug/LTO
+settings. Preserve all seven artifact rejection controls, exact three linked
+executable selection/equality within each protocol, zero-fresh clean builds,
+complete-fresh reuse and owned-target cleanup. Observe actual Cargo profiles;
+reject accidental additional optimization/feature changes. Keep the existing
+30-minute cap per diagnostic category, resource preflight and reserves.
+
+Measure the runtime cost as well: compile the existing, unchanged PostgreSQL
+component integration-test source and support against the exact native libraries
+from each clean SQL graph, with identical probe compiler flags. Preserve every
+assertion and every supported checked-in PostgreSQL component. Run repeated fresh
+processes, including its valid queries, syntax/schema diagnostics, source spans,
+sequence and view checks. Record probe preparation separately from canonical
+build stages and total diagnostic wall time. It may not change Cargo target
+inputs or freshness. Preserve source/guest/library hashes, flags, logs, outcomes
+and any runtime regression. Do not infer total-gate savings by subtracting one
+unit's duration or accept faster compilation at an unqualified runtime cost.
+
+If promising, register exact production changes and full semantic/runtime/profile
+identity acceptance before implementing them. This diagnostic does not replace
+normal compiler, E2E, native/Python or final phase gates; V1 feasibility and the
+sub-600-second V5 matrix remain mandatory.
