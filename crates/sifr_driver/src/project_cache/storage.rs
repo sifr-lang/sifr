@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
     collections::BTreeSet,
-    fs::{self, File},
+    fs,
     io::{self, Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
