@@ -494,3 +494,114 @@ fn provider_validation_preserves_valid_compile_time_templates() {
         }
     }
 }
+
+#[test]
+fn editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes() {
+    use sifr_analysis::{AnalysisHost, ProjectRoot, SourcePath};
+    let project = Project::new();
+    let schema = project.root.path().join("db/schema.sql");
+    let good_schema = "CREATE TABLE users (id INTEGER NOT NULL);";
+    std::fs::write(&schema, good_schema).expect("original schema");
+    let source = "from sifr.sql.schemas import app\n@app.query\ndef selected():\n    return app.sql(t\"SELECT id FROM users\")\n";
+    project.source("main.sifr", source);
+    let checked = project.cli(&["check", "src/main.sifr", "--offline"]);
+    assert!(
+        checked.status.success(),
+        "{}",
+        String::from_utf8_lossy(&checked.stderr)
+    );
+    let path = project.root.path().join("src/main.sifr");
+    let root = ProjectRoot {
+        root: SourcePath::new(project.root.path()),
+        entrypoint: SourcePath::new(&path),
+    };
+    let compiler = sifr_compiler_services::CompilerContext::for_test_tokens(
+        sifr_analysis::compiled_input_tokens(),
+        "sql-owner-reload",
+    );
+    let mut editor = AnalysisHost::open_project(&compiler, &root).expect("configured editor");
+    let diagnostics = |editor: &mut AnalysisHost| {
+        let file = editor.document_file_for_path(&path).expect("current file");
+        editor.diagnostics(file).expect("diagnostics").into_value()
+    };
+    assert!(diagnostics(&mut editor).is_empty());
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("unchanged reload");
+    assert!(diagnostics(&mut editor).is_empty());
+    std::fs::write(&schema, "CREATE TABLE users (renamed INTEGER NOT NULL);")
+        .expect("changed schema");
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("changed schema reload");
+    let changed = diagnostics(&mut editor);
+    assert!(
+        changed.iter().any(|d| d.code == "SIFR-SQLITE-0005"),
+        "{changed:?}"
+    );
+    std::fs::write(&schema, good_schema).expect("restore schema");
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("schema recovery");
+    assert!(diagnostics(&mut editor).is_empty());
+
+    let artifact = project.root.path().join("provider/components/sqlite.wasm");
+    let bytes = std::fs::read(&artifact).expect("component bytes");
+    let modified = std::fs::metadata(&artifact)
+        .expect("metadata")
+        .modified()
+        .expect("mtime");
+    let mut corrupt = bytes.clone();
+    corrupt[0] ^= 1;
+    let replace = |contents: &[u8]| {
+        std::fs::write(&artifact, contents).expect("replace component");
+        std::fs::File::options()
+            .write(true)
+            .open(&artifact)
+            .expect("component file")
+            .set_times(std::fs::FileTimes::new().set_modified(modified))
+            .expect("retain mtime");
+        assert_eq!(
+            std::fs::metadata(&artifact)
+                .expect("metadata")
+                .modified()
+                .expect("mtime"),
+            modified
+        );
+    };
+    replace(&corrupt);
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("failed profile becomes diagnostics");
+    let rejected = diagnostics(&mut editor);
+    assert!(
+        rejected
+            .iter()
+            .any(|d| d.code == sifr_diagnostics::DiagnosticCode::COMPONENT_INTEGRITY.code()),
+        "{rejected:?}"
+    );
+    replace(&bytes);
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("component recovery");
+    assert!(diagnostics(&mut editor).is_empty());
+
+    let manifest = project.root.path().join("sifr.toml");
+    let enabled = std::fs::read_to_string(&manifest).expect("enabled profiles");
+    let disabled = enabled
+        .split("[sql.profiles.")
+        .next()
+        .expect("base manifest");
+    std::fs::write(&manifest, disabled).expect("disable profiles");
+    project.source("main.sifr", "def main():\n    pass\n");
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("disable reload");
+    assert!(diagnostics(&mut editor).is_empty());
+    std::fs::write(&manifest, enabled).expect("enable profiles");
+    project.source("main.sifr", source);
+    editor
+        .refresh_project_sources_and_sql(&root)
+        .expect("later enable");
+    assert!(diagnostics(&mut editor).is_empty());
+}
