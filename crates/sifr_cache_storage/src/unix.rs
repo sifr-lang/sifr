@@ -5,6 +5,10 @@ use std::os::unix::fs::{FileExt, MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
 use std::time::{Duration, Instant};
 
+#[path = "unix_deadline.rs"]
+mod deadline;
+use deadline::LeaseDeadline;
+
 pub fn owner_scope() -> io::Result<PathBuf> {
     let cwd = std::env::current_dir()?.canonicalize()?;
     Ok(cwd
@@ -215,8 +219,8 @@ pub fn lock_bounded_with_hooks(
     mut waiting: impl FnMut() -> io::Result<()>,
 ) -> io::Result<()> {
     let started = Instant::now();
-    let mut idle_since = started;
-    let mut last_change = file.metadata().and_then(|meta| meta.modified()).ok();
+    let last_change = file.metadata().and_then(|meta| meta.modified()).ok();
+    let mut deadline = LeaseDeadline::new(started, last_change, hard_limit, idle_limit);
     loop {
         cancelled()?;
         let attempt = if shared {
@@ -233,24 +237,11 @@ pub fn lock_bounded_with_hooks(
             }
             Err(std::fs::TryLockError::WouldBlock) => {
                 let changed = file.metadata().and_then(|meta| meta.modified()).ok();
-                if changed.is_some() && changed != last_change {
-                    last_change = changed;
-                    idle_since = Instant::now();
-                }
-                let hard_remaining = hard_limit.saturating_sub(started.elapsed());
-                let idle_remaining = idle_limit.saturating_sub(idle_since.elapsed());
-                if hard_remaining.is_zero() {
-                    return Err(lease_timeout(file, path, hard_limit));
-                }
-                if idle_remaining.is_zero() {
-                    return Err(lease_timeout(file, path, idle_limit));
-                }
+                let delay = deadline
+                    .next_poll(Instant::now(), changed)
+                    .map_err(|limit| lease_timeout(file, path, limit))?;
                 waiting()?;
-                std::thread::sleep(
-                    Duration::from_millis(10)
-                        .min(hard_remaining)
-                        .min(idle_remaining),
-                );
+                std::thread::sleep(delay);
             }
             Err(std::fs::TryLockError::Error(error)) => return Err(error),
         }
@@ -349,37 +340,28 @@ mod tests {
         owner.try_lock().unwrap();
         let waiter = entry_lock(&root, "metadata-key").unwrap();
         let lock_path = root.join(".locks/metadata-key");
-        let idle = lock_bounded_with_hooks(
-            &waiter,
-            &lock_path,
-            false,
-            Duration::from_millis(250),
-            Duration::from_millis(40),
-            || Ok(()),
-            || Ok(()),
-        );
-        let idle_error = idle.unwrap_err();
-        assert_eq!(idle_error.kind(), io::ErrorKind::TimedOut);
-        assert!(idle_error.to_string().contains("40ms"));
-        let activity =
-            LeaseActivity::start_with_interval(&owner, Duration::from_millis(10)).unwrap();
-        let live = lock_bounded_with_hooks(
-            &waiter,
-            &lock_path,
-            false,
-            Duration::from_millis(140),
-            Duration::from_millis(40),
-            || Ok(()),
-            || Ok(()),
-        );
-        let live_error = live.unwrap_err();
-        assert_eq!(live_error.kind(), io::ErrorKind::TimedOut);
-        assert!(live_error.to_string().contains("140ms"));
-        assert!(
-            lock_path.exists(),
-            "timeout must preserve the owner's lock inode"
-        );
-        drop(activity);
+        let inode = fs::metadata(&lock_path).unwrap().ino();
+        // Deadline policy is covered with controlled timestamps in `deadline`.
+        // These real lock attempts prove that either kind of timed-out waiter
+        // preserves the owner's exclusion and stable lock inode.
+        for shared in [false, true] {
+            let error = lock_bounded_with_hooks(
+                &waiter,
+                &lock_path,
+                shared,
+                Duration::ZERO,
+                Duration::ZERO,
+                || Ok(()),
+                || Ok(()),
+            )
+            .unwrap_err();
+            assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+            assert_eq!(fs::metadata(&lock_path).unwrap().ino(), inode);
+            assert!(matches!(
+                waiter.try_lock(),
+                Err(std::fs::TryLockError::WouldBlock)
+            ));
+        }
         owner.unlock().unwrap();
         lock_bounded_with_hooks(
             &waiter,
@@ -391,6 +373,51 @@ mod tests {
             || Ok(()),
         )
         .unwrap();
+        waiter.unlock().unwrap();
+    }
+
+    #[test]
+    fn lease_activity_renews_real_owner_notes_until_dropped() {
+        let root = tempfile::Builder::new()
+            .permissions(fs::Permissions::from_mode(0o700))
+            .tempdir()
+            .unwrap();
+        let root = root.path().canonicalize().unwrap();
+        let owner = entry_lock(&root, "renewal").unwrap();
+        owner.try_lock().unwrap();
+        let waiter = entry_lock(&root, "renewal").unwrap();
+        let path = root.join(".locks/renewal");
+        let inode = fs::metadata(&path).unwrap().ino();
+        let activity =
+            LeaseActivity::start_with_interval(&owner, Duration::from_millis(10)).unwrap();
+        let prefix = format!("last_exclusive_pid={} ", std::process::id());
+        let failure_bound = Instant::now() + Duration::from_secs(10);
+        let mut notes = std::collections::BTreeSet::new();
+        // Each subsequent note requires the preceding record_lock_owner call
+        // (including sync_data) to have completed. Three distinct full notes
+        // therefore prove at least two completed real renewals. Poll for actual
+        // progress, without assuming a flush finishes within the poll interval.
+        while notes.len() < 3 {
+            let note = fs::read_to_string(&path).unwrap();
+            if note.starts_with(&prefix) && note.ends_with('\n') {
+                notes.insert(note);
+            }
+            assert!(
+                Instant::now() < failure_bound,
+                "renewal worker made insufficient progress"
+            );
+            if notes.len() < 3 {
+                std::thread::sleep(Duration::from_millis(1));
+            }
+        }
+        drop(activity); // Stop and join the actual worker before releasing ownership.
+        assert_eq!(fs::metadata(&path).unwrap().ino(), inode);
+        assert!(matches!(
+            waiter.try_lock(),
+            Err(std::fs::TryLockError::WouldBlock)
+        ));
+        owner.unlock().unwrap();
+        waiter.try_lock().unwrap();
         waiter.unlock().unwrap();
     }
 
