@@ -26,7 +26,7 @@ enum MigrationCommand {
 }
 
 pub async fn run_migration_command(
-    compiler: &sifr_driver::CompilerContext,
+    compiler: &sifr_semantic_services::SemanticContext,
     arguments: &[String],
     workspace_root: &Path,
     database_path: Option<&str>,
@@ -94,7 +94,7 @@ pub async fn run_migration_command(
 }
 
 fn build(
-    compiler: &sifr_driver::CompilerContext,
+    compiler: &sifr_semantic_services::SemanticContext,
     workspace_root: &Path,
     profile: &str,
 ) -> Result<CommandOutcome, CommandError> {
@@ -133,10 +133,10 @@ fn build(
 }
 
 fn compile_migration_source(
-    compiler: &sifr_driver::CompilerContext,
+    compiler: &sifr_semantic_services::SemanticContext,
     source: &str,
 ) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String> {
-    sifr_driver::compile_sql_migration_source(compiler, source).map_err(|failures| {
+    sifr_semantic_services::compile_sql_migration_source(compiler, source).map_err(|failures| {
         failures
             .into_iter()
             .map(|failure| failure.message)

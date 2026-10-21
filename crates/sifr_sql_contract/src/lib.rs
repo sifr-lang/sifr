@@ -142,3 +142,5 @@ pub use value_identity::{
     SQL_VALUE_IDENTITIES, SqlValueIdentity, sql_value_identity,
     sql_value_type_for_frontend_identity,
 };
+
+pub const QUERY_SIGNATURE_ARTIFACT_NAME: &str = "sifr-query-signatures.json";

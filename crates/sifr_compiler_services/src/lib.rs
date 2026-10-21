@@ -1,12 +1,12 @@
 //! Lower compiler capabilities shared by the driver and editor.
 mod diagnostics;
 pub mod editor;
-pub mod export_policy;
+pub use sifr_semantic_services::export_policy;
 pub mod metadata;
-pub mod private_re_exports;
+pub use sifr_semantic_services::private_re_exports;
 pub mod python;
-pub mod sql_diagnostics;
-pub mod sql_editor;
+pub use sifr_semantic_services::sql_diagnostics;
+pub use sifr_semantic_services::sql_editor;
 pub mod stdlib;
 
 mod application_profile;

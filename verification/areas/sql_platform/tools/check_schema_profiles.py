@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from sql_service_qualification import assert_source_mutations, service_source
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RECORD = REPO_ROOT / "verification/areas/sql_platform/data/schema_profile_qualification.json"
 
@@ -72,13 +74,7 @@ def validate(payload: Any) -> None:
             )
         ),
         "component": (REPO_ROOT / "crates/sifr_compiler_component/src/protocol.rs").read_text(encoding="utf-8"),
-        "dispatch": "\n".join(
-            (REPO_ROOT / path).read_text(encoding="utf-8")
-            for path in (
-                "crates/sifr_driver/src/build/sql_profiles.rs",
-                "crates/sifr_compiler_services/src/sql_editor.rs",
-            )
-        ),
+        "dispatch": service_source(REPO_ROOT),
         "schema_component": (REPO_ROOT / "crates/sifr_sql_contract/src/component.rs").read_text(encoding="utf-8"),
     }
     required_tokens = {
@@ -102,6 +98,9 @@ def validate(payload: Any) -> None:
 
 
 def self_test(payload: dict[str, Any]) -> None:
+    assert_source_mutations(lambda: validate(payload), REPO_ROOT, (
+        "prepare_sql_profiles", "ComponentHost", "load_schema_sources",
+    ))
     mutations: list[tuple[str, dict[str, Any]]] = []
     missing_kind = copy.deepcopy(payload)
     missing_kind["object_kinds"].pop()

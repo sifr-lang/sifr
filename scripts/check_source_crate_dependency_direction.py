@@ -13,6 +13,7 @@ import tempfile
 import tomllib
 
 from source_test_includes import exclusively_test_includes
+import semantic_dependency_graph as semantic_graph
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,7 @@ ALL_SIFR_CRATES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_metadata",
+    "sifr_semantic_services",
     "sifr_package",
     "sifr_runtime",
     "sifr_source",
@@ -114,6 +116,7 @@ GENERATED_DEPENDENCY_SPEC_DEFINITION_PATTERNS = (
 )
 
 PROVIDER_CONSTRUCTION_SCAN_CRATES = (
+    "sifr_semantic_services",
     "sifr_compiler_services",
     "sifr_analysis",
     "sifr_driver",
@@ -128,7 +131,7 @@ INLINE_TEST_MODULE_PATTERN = re.compile(
 )
 PROVIDER_COMPOSITION_ROOTS = {
     # These entry points assemble providers, then pass them into lower services.
-    Path("crates/sifr_compiler_services/src/sql_editor.rs"),
+    Path("crates/sifr_semantic_services/src/sql_editor.rs"),
     Path("crates/sifr_driver/src/guided_project_graph.rs"),
     Path("crates/sifr_frontend/src/workspace_session.rs"),
 }
@@ -248,6 +251,7 @@ RULES = (
         forbidden_source_references=frozenset({"sifr_driver"}),
         scan_manifest_targets=True,
     ),
+    semantic_graph.semantic_rule(CrateRule),
     CrateRule(
         crate="sifr_compiler_services",
         forbidden_all_dependencies=frozenset({"sifr", "sifr_driver", "sifr_analysis", "sifr_lsp"}),
@@ -534,6 +538,7 @@ def validate(root: Path) -> list[str]:
         failures.extend(validate_crate_rule(root, rule))
     failures.extend(generated_dependency_spec_violations(root))
     failures.extend(provider_construction_violations(root))
+    failures.extend(semantic_graph.manifest_failures(root, sys.modules[__name__]))
     return failures
 
 
@@ -602,7 +607,7 @@ def assert_self_test_case(
 def run_self_test() -> int:
     from source_direction_checks import check_split_sources_and_composition_roots, check_data_owner_boundaries
 
-    failures: list[str] = []
+    failures: list[str] = semantic_graph.self_test()
     check_split_sources_and_composition_roots(sys.modules[__name__], failures)
     check_data_owner_boundaries(sys.modules[__name__], failures)
     SELF_TEST_TMP_ROOT.mkdir(exist_ok=True)
@@ -879,7 +884,7 @@ def main() -> int:
     if args.self_test:
         return run_self_test()
 
-    failures = validate(REPO_ROOT)
+    failures = validate(REPO_ROOT) + semantic_graph.validate_resolved(REPO_ROOT)
     if failures:
         print("source crate dependency-direction guardrail: FAIL", file=sys.stderr)
         for failure in failures:

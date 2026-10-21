@@ -22,6 +22,7 @@
     "crates/sifr_package/Cargo.toml",
     "crates/sifr_runtime/Cargo.toml",
     "crates/sifr_rust_interop_catalog/Cargo.toml",
+    "crates/sifr_semantic_services/Cargo.toml",
     "crates/sifr_source/Cargo.toml",
     "crates/sifr_sql_contract/Cargo.toml",
     "crates/sifr_sql_dependency_lock/Cargo.toml",
@@ -300,6 +301,14 @@
     },
     {
       "lock": "Cargo.lock",
+      "owner": "sifr_semantic_services",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_semantic_services/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
       "owner": "sifr_sql_dependency_lock",
       "package": "rusqlite",
       "manifests": [
@@ -544,6 +553,14 @@
       "package": "num-bigint",
       "manifests": [
         "crates/sifr_lowering/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/fuzz/Cargo.lock",
+      "owner": "sifr_semantic_services",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_semantic_services/Cargo.toml"
       ]
     }
   ]

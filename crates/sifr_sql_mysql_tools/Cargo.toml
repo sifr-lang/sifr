@@ -21,7 +21,7 @@ mysql_async = { workspace = true, features = ["aws-lc-rs", "minimal-rust", "rust
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
-sifr_driver = { workspace = true }
+sifr_semantic_services = { workspace = true }
 sifr_sql_contract = { workspace = true }
 sifr_sql_mysql = { workspace = true }
 sifr_sql_runtime = { workspace = true }

@@ -103,6 +103,20 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_semantic_services",
+        "package": "sifr_semantic_services",
+        "command": [
+          "test",
+          "-p",
+          "sifr_semantic_services"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_compiler_component",
         "package": "sifr_compiler_component",
         "command": [

@@ -2,7 +2,7 @@ use sifr_sql_contract::QuerySignatureArtifact;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub const QUERY_SIGNATURE_ARTIFACT_NAME: &str = "sifr-query-signatures.json";
+pub use sifr_sql_contract::QUERY_SIGNATURE_ARTIFACT_NAME;
 
 pub fn emit_query_signature_artifact(
     output_dir: &Path,

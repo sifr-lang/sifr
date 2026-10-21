@@ -38,6 +38,7 @@ members = [
     "crates/sifr_codegen",
     "crates/sifr_cache_storage",
     "crates/sifr_compiler_services",
+    "crates/sifr_semantic_services",
     "crates/sifr_driver",
     "crates/sifr",
     "crates/sifr_rust_interop_catalog",
@@ -60,6 +61,7 @@ authors = ["Yaser Al-Najjar"]
 license = "MIT"
 
 [workspace.dependencies]
+sifr_semantic_services = { path = "crates/sifr_semantic_services" }
 sifr_stdlib_artifact = { path = "crates/sifr_stdlib_artifact" }
 sifr_identity = { path = "crates/sifr_identity" }
 csv = { package = "csv", version = "=1.4.0", default-features = false, features = [] }

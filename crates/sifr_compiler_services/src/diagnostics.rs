@@ -1,31 +1,8 @@
+use sifr_diagnostics::DiagnosticCode;
 pub(crate) use sifr_diagnostics::RenderedDiagnostic;
-use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+pub(crate) use sifr_semantic_services::diagnostics::diagnostic_with_code;
 use std::any::Any;
-use std::collections::BTreeMap;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-pub(crate) fn diagnostic_with_code(
-    message: impl Into<String>,
-    code: DiagnosticCode,
-) -> RenderedDiagnostic {
-    let message = message.into();
-    let mut args = BTreeMap::new();
-    args.insert(
-        "message".to_string(),
-        DiagnosticArg::String(message.clone()),
-    );
-    RenderedDiagnostic {
-        code: code.code().to_string(),
-        severity: code.declared_severity(),
-        message,
-        message_template: "{message}".to_string(),
-        args,
-        url: code.docs_url(),
-        spans: Vec::new(),
-        children: Vec::new(),
-        help: None,
-        suggestions: Vec::new(),
-    }
-}
 fn panic_payload_message(payload: &(dyn Any + Send)) -> String {
     if let Some(msg) = payload.downcast_ref::<&str>() {
         return (*msg).to_string();

@@ -1629,6 +1629,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_metadata",
  "sifr_package",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
  "sifr_stdlib_imports",
@@ -1673,6 +1674,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_metadata",
  "sifr_package",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
  "sifr_stdlib_imports",
@@ -1782,6 +1784,33 @@ dependencies = [
  "sifr_syntax",
  "sifr_sysroot",
  "toml",
+]
+
+[[package]]
+name = "sifr_semantic_services"
+version = "0.0.0"
+dependencies = [
+ "num-bigint 0.5.1",
+ "ruff_python_ast",
+ "ruff_text_size",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_cache_storage",
+ "sifr_compiler_component",
+ "sifr_diagnostics",
+ "sifr_frontend",
+ "sifr_identity",
+ "sifr_ir",
+ "sifr_lowering",
+ "sifr_metadata",
+ "sifr_package",
+ "sifr_sql_contract",
+ "sifr_stdlib_imports",
+ "sifr_stdlib_manifest",
+ "sifr_syntax",
+ "sifr_sysroot",
+ "sifr_type_system",
 ]
 
 [[package]]

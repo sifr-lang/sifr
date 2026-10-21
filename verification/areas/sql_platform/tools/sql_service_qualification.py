@@ -6,7 +6,9 @@ from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import patch
 
-SERVICE_PATH = "crates/sifr_compiler_services/src/sql_editor.rs"
+SERVICE_PATH = "crates/sifr_semantic_services/src/sql_editor.rs"
+NATIVE_PATH = "crates/sifr_compiler_services/src/lib.rs"
+NATIVE_MARKERS = ("pub use sifr_semantic_services::sql_editor;",)
 DRIVER_PATH = "crates/sifr_driver/src/build/sql_profiles.rs"
 DRIVER_MARKERS = ("pub use sifr_compiler_services::sql_editor::{", "prepare_sql_profiles")
 
@@ -15,6 +17,9 @@ def service_source(root: Path) -> str:
     driver = (root / DRIVER_PATH).read_text(encoding="utf-8")
     if any(marker not in driver for marker in DRIVER_MARKERS):
         raise ValueError("driver does not delegate SQL profile preparation to compiler_services")
+    native = (root / NATIVE_PATH).read_text(encoding="utf-8")
+    if any(marker not in native for marker in NATIVE_MARKERS):
+        raise ValueError("native services do not delegate SQL profiles to semantic_services")
     return (root / SERVICE_PATH).read_text(encoding="utf-8")
 
 
@@ -22,6 +27,7 @@ def assert_source_mutations(validate: Callable[[], None], root: Path, markers: t
     """Require a passing baseline, then reject each removed authority independently."""
     validate()
     cases = [(root / DRIVER_PATH, marker) for marker in DRIVER_MARKERS]
+    cases.extend((root / NATIVE_PATH, marker) for marker in NATIVE_MARKERS)
     cases.extend((root / SERVICE_PATH, marker) for marker in markers)
     original_read = Path.read_text
     for target, marker in cases:

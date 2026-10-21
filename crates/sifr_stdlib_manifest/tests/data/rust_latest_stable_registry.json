@@ -2,8 +2,8 @@
   "schema_version": 2,
   "audited_at": "2026-09-09",
   "source": "https://index.crates.io/{prefix}/{crate}",
-  "maintained_manifests": 155,
-  "direct_declarations": 212,
+  "maintained_manifests": 156,
+  "direct_declarations": 213,
   "packages": [
     {
       "name": "aho-corasick",
@@ -2949,6 +2949,13 @@
           "requirement": "3.27.0"
         },
         {
+          "path": "crates/sifr_semantic_services/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
           "path": "crates/sifr_sql_mysql_tools/Cargo.toml",
           "table": "dev-dependencies",
           "alias": "tempfile",
@@ -3849,5 +3856,5 @@
       ]
     }
   ],
-  "reconciled_at": "2026-10-20"
+  "reconciled_at": "2026-10-21"
 }

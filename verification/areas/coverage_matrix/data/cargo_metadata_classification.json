@@ -2,6 +2,25 @@
   "schema_version": 1,
   "packages": [
     {
+      "name": "sifr_semantic_services",
+      "classification": "first_party_compiler",
+      "targets": [
+        {
+          "name": "sifr_semantic_services",
+          "kind": "lib",
+          "classification": "first_party_compiler",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_compiler",
+          "profile_assignment": "merge"
+        }
+      ],
+      "features": []
+    },
+    {
       "name": "sifr-demo-csv",
       "classification": "test_fixture",
       "targets": [{"name": "sifr-demo-csv", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],

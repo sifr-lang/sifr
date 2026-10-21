@@ -97,9 +97,9 @@ fn fail(message: &str) -> ExitCode {
     ExitCode::FAILURE
 }
 
-fn compiler_context() -> sifr_driver::CompilerContext {
+fn compiler_context() -> sifr_semantic_services::SemanticContext {
     if cfg!(test) {
-        return sifr_driver::CompilerContext::for_test_tokens(
+        return sifr_semantic_services::SemanticContext::for_test_tokens(
             vec![(env!("CARGO_PKG_NAME"), env!("SIFR_LOCAL_INPUT_TOKEN"))],
             "sql-tool-unit",
         );
@@ -108,5 +108,5 @@ fn compiler_context() -> sifr_driver::CompilerContext {
         Ok(identity) => identity,
         Err(error) => panic!("{error}"),
     };
-    sifr_driver::CompilerContext::new(identity)
+    sifr_semantic_services::SemanticContext::new(identity)
 }
