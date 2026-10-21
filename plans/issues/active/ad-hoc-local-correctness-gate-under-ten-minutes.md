@@ -5515,3 +5515,58 @@ If promising, register exact production changes and full semantic/runtime/profil
 identity acceptance before implementing them. This diagnostic does not replace
 normal compiler, E2E, native/Python or final phase gates; V1 feasibility and the
 sub-600-second V5 matrix remain mandatory.
+
+
+### V4e diagnostic continuation — all create-PR crate configurations complete
+
+On unchanged diagnostic candidate `bd154f70ba8a3f813463bb6bb37bade0ec6c2613`, all
+thirteen canonical create-PR smoke crate configurations subsequently completed
+successfully, each with its own 30-minute cap. No completed category changed source,
+left descendants or hit a resource/cancellation limit. These were separate runs
+with retained preparation; their sum is not one integrated profile measurement.
+The ten-crate continuation used four build jobs; the others used two. All used
+one libtest thread and retained the canonical package/feature/filter selections.
+
+| Configuration | Outer seconds, including its remaining preparation |
+| --- | ---: |
+| Compiler component | 5.686 |
+| SQL contract | 4.688 |
+| MySQL | 12.193 |
+| SQLite | 6.688 |
+| PostgreSQL | 42.706 |
+| Ten-crate diagnostics/frontend/LSP/package group | 342.061 |
+| Lowering | 212.808 |
+| Stdlib default | 0.682 |
+| Stdlib feature API | 3.686 |
+| Runtime default | 8.687 |
+| Runtime HTTP | 18.195 |
+| CLI binary default selection | 155.964 |
+| Driver library default selection | 818.916 |
+| **Sum of these separate completed diagnostic categories** | **1632.958** |
+
+The ten-crate group's test preparation reports 93 seconds; its 114 LSP unit tests
+report 213.18 seconds. Driver preparation accounts for roughly 54 seconds and its
+harness reports **752 passed, 82 ignored, 0 failed**, with **764.33 seconds** in
+execution. Those 82 ignored native cases belong to the separate full-profile
+native selection and have not been executed by this default driver invocation.
+The retained-history-over-4096 stress assertion passes. This complete driver
+observation, even without preparation, is above the full-gate target and requires
+further attribution; successful focused history timings are not the whole suite.
+
+Before the final six configurations, the allocation preflight paused at 27.57 GiB
+free. Four additional obsolete, inactive, session-owned service/analysis executables
+were copied and independently hash-verified before removing original copies,
+recovering 4.016 GiB and restoring 31.586 GiB free. All archived bytes remain
+recoverable outside Git. The original not-started capacity record is preserved,
+followed by the later successful receipts; no failed attempt was reclassified.
+
+The 115-file archive `v4e-crate-evidence.tar.gz` was independently verified,
+SHA-256 `25492b224646619cb80abfcb55f0d6b146f519c9ba8be1a34d60e6b42943281c`.
+It retains the earlier incomplete integrated attempt, source/command/resource
+bindings, category logs, timings and recovery proofs. Archived executable payloads
+remain separately retained. Generated preparation's earlier unpublished-revision
+failure still requires a successful retry; merge-only crate configurations,
+ignored native cases, area/toolchain verifications and final gates remain open.
+Stable libtest rejects both JSON output and report-time flags; the read-only
+capability checks are retained separately. Do not enable unstable toolchain
+workarounds or infer exact case timings from unlabelled nested output.
