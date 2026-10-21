@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4i process-local project lease lifetime; integrated acceptance remains open
+current_stage: V1f lowering build/runtime tradeoff; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -5750,3 +5750,85 @@ all failures. The full driver pass is correctness evidence, not a whole-gate
 speed claim or a new production scheduling policy. Run formatting, size and
 affected ownership guardrails, then exact-candidate independent review.
 Final native selection, integrated gates and V5 remain open.
+
+### V4i closure — process-local lease release / #4405
+
+PR [#4405](https://github.com/sifr-lang/sifr/pull/4405) merged candidate
+`95984515b9ac0afa323b434377a2ac5f1b097af1` as
+`d872d2329f5fb970a54ed563da3d7908b3bf7d64`. Project publication, staging,
+generation readers and housekeeping now release their process-local lock
+explicitly when the final owner drops. Namespace readers share that owner through
+`Arc`; intentional native child leases retain their existing ownership.
+
+All three new controls pass with the production guard. A synchronized real
+fork/pre-exec control exercises exclusive and shared locks, shared-owner lifetime
+and live exclusion. Replacing only explicit unlock with close-only release makes
+that regression fail with `WouldBlock`; independent readers and failed admission
+have separate passing controls.
+
+The complete two-thread default driver selection passes: **755 active tests,
+zero failures, 82 ignored, zero filtered**, preserving every prior case and adding
+the three regressions. This includes all 48 project-cache tests, all three native
+child-lease controls and the complete 4,097-publication history. The harness takes
+347.420s, Cargo execution with tracing 349.927s, and the complete diagnostic
+367.910s including retained preparation/discovery/cleanup. Formatting, file-size,
+source dependency ownership and driver maintainability checks also pass.
+
+These are correctness diagnostics, not V5 timing acceptance: preparation reused
+the retained target after an earlier 100.761s intentionally interrupted build,
+and lightweight guardrails overlapped the beginning of the run. The interrupted
+attempt detected an obsolete import; its stop record and partial evidence remain.
+No successful speedup is inferred from V4h's failed parallel run, and no production
+libtest allocation changes here.
+
+All 87 files in `v4i-evidence.tar.gz` are independently verified; archive SHA-256:
+`fc74058524f2c535da45fdc2702978449600a6c8bf26a903585f9f6b975694b4`.
+The exact-candidate independent review is **SATISFIED**, with no blockers; raw
+review SHA-256:
+`0178d97bd4f72215333993cc51c544dd9a8c2fe78e1e10946a37c1b8f92b3f1c`.
+
+V4 follow-up owner: the editor reader in
+`crates/sifr_compiler_services/src/editor/saved_checks.rs` still takes namespace
+and generation locks as raw files. An unrelated fork can similarly delay their
+release and subsequent exclusive pruning. That separately owned reader was not
+changed in V4i; reconcile its shared lease lifetime explicitly rather than
+assuming the driver repair covers it. The guard's documented close-on-drop
+behavior after an unlock error remains unchanged. Final native selection,
+complete phase gates and V5 remain open.
+
+### V1f bounded investigation — lowering optimization tradeoff
+
+The mandatory SQL clean/unchanged/independent-clean protocol still exceeds the
+complete gate budget by itself. V1e showed that making the JIT compiler cheap to
+build caused an unacceptable runtime regression. Keep that rejected option
+closed. The remaining concrete candidate is the native `sifr_lowering` unit:
+V1e's clean-A observation spends 170.120s there, including 158.360s of codegen
+in the baseline. Its opt1 candidate in V1a did not solve the whole build path.
+
+Measure one narrower diagnostic override:
+`profile.dev.package.sifr_lowering.opt-level=0`. Keep the JIT/compiler-component
+dependencies, type-system optimization, debug assertions, overflow checks and
+all other effective profile fields unchanged. Do not edit production profiles.
+Use the unchanged canonical three-build SQL protocol, all seven rejection
+controls, exact resolved units and features, and within-profile equality of all
+three linked tools. Run one protocol at a time with six Cargo workers, the same
+CPU/memory/disk reserves and the existing 30-minute category cap.
+
+Compile runtime probes from those exact native artifacts before their canonical
+target cleanup: the unchanged PostgreSQL component tests and unchanged
+`sifr_sql_tool/tests/migration_source.rs` tests, including real canonical source
+checking and full source-stdlib preparation. Preserve all source fixtures and
+assertions; compile probes with identical flags in baseline and candidate.
+Measure preparation separately, then execute in fresh processes. Complete at
+least one runtime comparison promptly; reject and stop further repetitions if
+it already demonstrates an unacceptable tradeoff. Preserve interruptions as
+incomplete. If viable, complete three runtime observations and compare exact
+outcomes; these limited probes still cannot authorize a production profile.
+
+A matched baseline is needed for the newly added source-checking probe, rather
+than extrapolating from V1e's JIT-only runtime result. Compare complete elapsed
+protocol time, not additive overlapping unit durations. Verify compiler/SQL/
+fixture/toolchain equivalence between the frozen source and this prospective
+record. Any source, inventory or harness error invalidates its affected result.
+Adoption would require a new implementation contract and broader semantic/native/
+installed qualification; full phase timing and final gates remain mandatory.
