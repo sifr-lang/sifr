@@ -4092,3 +4092,37 @@ corpora. Include preparation and cleanup. The existing SQL trace contains a
 167.05-second codegen unit (normal clean A), but overlapping unit durations are
 not additive savings predictions. V1 feasibility and final phase gates remain
 open until measured acceptance succeeds.
+
+#### V1b4 selected construction/admission contract
+
+Select a complete typed in-memory `CheckedStdlib` for source semantic consumers;
+retain format-5 complete native artifacts for native production and installed
+consumers. Fresh-process diagnostic N/S/S/N preparation was 0.672875 / 0.207799 /
+0.211957 / 0.656064 seconds, with source capture separately 0.0116–0.0318 seconds.
+All four checked projections exactly matched complete native serialization
+(portable digest `df5aaca26bc0424e901cd1457419191d3ed1e0345da0b1980cca8c0f070c9a6b`).
+This is construction evidence, not a SQL qualification or final gate speed claim.
+Evidence: external `v1b4-checked-fresh-probe-proof.json`; retain the earlier
+single-process probe and the initial missing-include diagnostic failure.
+
+A lower `sifr_semantic_services` crate owns canonical checked bootstrap, shared
+metadata consumption/nominal projection, captured source identities, and real
+SQL frontend/profile services. Native services consume these owners and retain
+Rust generation, native metadata production/qualification, interop and previews.
+Source semantic contexts capture selected sysroot inputs and retain the complete
+checked product for their immutable lifetime; no empty native product, persistent
+semantic cache or native capability is implied. Installed contexts use the same
+strict descriptor, target, compiler and content admission as native consumers.
+Explicit metadata overrides are validated against captured source compatibility
+without fallback. Failures are not memoized; independent contexts do not inherit
+another identity's owner. Native format 5, descriptor schema 1 and serialization
+remain unchanged. Share the canonical single-file frontend pipeline with native
+callers; preserve ordering, query finalization and diagnostics. Native dependency
+maps must match the checked owner, with a programmer-invariant assertion.
+
+Register the new first-party crate in workspace, identity and applicable profile
+inventories, retaining all existing selections and external dependency pins.
+Intentional root/fuzz lock changes may add only the first-party ownership graph;
+update approved lock identities with proof of unchanged external versions and
+checksums. Permanent resolved-graph controls must reject native dependencies in
+SQL production closure and raw metadata below frontend/lowering/codegen owners.
