@@ -240,13 +240,8 @@ pub(super) fn materialize_cached_binary_project_with_report(
     let snapshot = super::native_storage::NativeSnapshot::inspect(
         &report.native_executable,
         &binary_relative_path(project_name),
+        &report.native_libraries,
     )
-    .and_then(|snapshot| {
-        snapshot.with_runtime(
-            &report.native_libraries,
-            &binary_relative_path(project_name),
-        )
-    })
     .map_err(|error| vec![build_error(error.to_string())])?;
     cache_key.push_str("\n[final-native-bundle]\n");
     cache_key.push_str(&snapshot.identity);
@@ -378,14 +373,17 @@ pub(super) fn materialize_binary_project_at_path_with_target(
     let output_parent = destination
         .parent()
         .ok_or_else(|| vec![build_error("native output has no directory".to_owned())])?;
-    super::native_storage::NativeSnapshot::inspect(&executable, Path::new(output_name))
-        .and_then(|snapshot| snapshot.with_runtime(&native_libraries, Path::new(output_name)))
-        .and_then(|snapshot| snapshot.capture(output_parent))
-        .map_err(|error| {
-            vec![cargo_build_error(format!(
-                "failed to publish native output bundle: {error}"
-            ))]
-        })?;
+    super::native_storage::NativeSnapshot::inspect(
+        &executable,
+        Path::new(output_name),
+        &native_libraries,
+    )
+    .and_then(|snapshot| snapshot.capture(output_parent))
+    .map_err(|error| {
+        vec![cargo_build_error(format!(
+            "failed to publish native output bundle: {error}"
+        ))]
+    })?;
     prepared_resolution.assert_unchanged()?;
     let cargo_elapsed = cargo_start.elapsed();
 
