@@ -216,7 +216,7 @@ fn test_build_panic_boundary_wrapper_runtime() {
     );
     let entrypoint = package_root.entrypoint("panic-wrapper-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "ok:safe|ordinary bridge error|mapped: Rust bridge panicked|Rust bridge panicked|Rust bridge panicked|mapped: Rust bridge panicked"
@@ -280,7 +280,7 @@ fn test_build_call_scoped_callback_runtime() {
     );
     let entrypoint = package_root.entrypoint("call-scoped-callback-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "first,second|callback rejected|Rust bridge panicked|8"
@@ -398,7 +398,7 @@ fn test_build_async_reqwest_loopback_runtime() {
     );
     let entrypoint = package_root.entrypoint("reqwest-loopback-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
@@ -429,7 +429,7 @@ fn test_build_opaque_resource_lifecycle_runtime() {
     let package_root = inputs.finish();
     let entrypoint = package_root.entrypoint("resource-lifecycle-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
@@ -460,7 +460,7 @@ fn test_build_opaque_resource_alias_rejection_runtime() {
     let package_root = inputs.finish();
     let entrypoint = package_root.entrypoint("resource-lifecycle-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
 
     assert_eq!(
         observed_resource_state(&output),

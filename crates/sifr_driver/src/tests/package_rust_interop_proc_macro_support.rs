@@ -56,7 +56,7 @@ fn test_build_trusted_proc_macro_and_deterministic_codegen() {
         errors.is_empty(),
         "trusted proc-macro package must pass compiler checking: {errors:#?}"
     );
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "Ok(\"id=1404|payload=sifr-rust-interop|serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed|prost-build=0.14.4;message=sifr.probe.Probe\")"

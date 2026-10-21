@@ -31,7 +31,7 @@ fn test_build_backend_loopback_and_sqlx_offline_metadata() {
         "bridge-safe backend package must pass compiler checking: {errors:#?}"
     );
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains(

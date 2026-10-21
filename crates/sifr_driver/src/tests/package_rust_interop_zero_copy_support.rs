@@ -25,7 +25,7 @@ fn test_build_zero_copy_crate_backed_view_lifecycle() {
     let package_root = inputs.finish();
     let entrypoint = package_root.entrypoint("crate-backed-view-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),

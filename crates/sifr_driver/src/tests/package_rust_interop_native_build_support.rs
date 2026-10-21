@@ -73,7 +73,7 @@ fn test_build_native_build_script_trusted_artifacts() {
         errors.is_empty(),
         "trusted native package must pass compiler checking: {errors:#?}"
     );
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "Ok(\"cc=1.4.5;compiled=sifr_cc_probe|bindgen=0.73.2;function=sifr_bindgen_probe|cxx=1.0.200;bridge=sifr_cxx_probe;value=1000198|zstd=0.14.0;level=3|compressed=zstd-roundtrip\")"

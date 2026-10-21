@@ -30,7 +30,7 @@ fn test_build_cli_tooling_probe_and_anyhow_adapter() {
         "bridge-safe CLI/tooling package must pass compiler checking: {errors:#?}"
     );
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains(

@@ -122,7 +122,10 @@ impl ReusableScenario {
             .expect("owned Rust interop fixture should build")
     }
 
-    pub(crate) fn output(&self, entrypoint: &PackageEntrypoint) -> std::process::Output {
+    pub(crate) fn built_package_output(
+        &self,
+        entrypoint: &PackageEntrypoint,
+    ) -> std::process::Output {
         let artifact = self.build(entrypoint);
         let output = artifact
             .command()
@@ -138,7 +141,7 @@ impl ReusableScenario {
     }
 
     pub(crate) fn stdout(&self, entrypoint: &PackageEntrypoint) -> String {
-        String::from_utf8_lossy(&self.output(entrypoint).stdout)
+        String::from_utf8_lossy(&self.built_package_output(entrypoint).stdout)
             .trim()
             .to_string()
     }

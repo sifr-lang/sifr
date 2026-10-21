@@ -50,7 +50,7 @@ fn test_package_resource_alias_use_after_close_rejected() {
     );
     let package_root = inputs.finish();
     let entrypoint = package_root.entrypoint("package-resource-runtime");
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     assert_eq!(
         observed_resource_state(&output),
         ObservedRuntimeState::Closed

@@ -19,7 +19,7 @@ pub(super) fn run_lifecycle_runtime() {
     let package_root = inputs.finish();
     let entrypoint = package_root.entrypoint("subscription-lifecycle-runtime");
 
-    let output = package_root.output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
