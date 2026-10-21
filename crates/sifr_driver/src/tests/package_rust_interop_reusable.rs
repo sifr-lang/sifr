@@ -152,6 +152,19 @@ impl ReusableScenario {
         self.leases()
             .bind(&mut command)
             .expect("bind fixture Cargo ownership");
+        #[cfg(unix)]
+        {
+            use std::os::unix::process::CommandExt;
+            #[allow(unsafe_code)]
+            // SAFETY: umask is allocation-free and runs only in this owned child
+            // after fork. The concurrent test parent's creation policy is unchanged.
+            unsafe {
+                command.pre_exec(|| {
+                    libc::umask(0o077);
+                    Ok(())
+                });
+            }
+        }
         command
     }
 }

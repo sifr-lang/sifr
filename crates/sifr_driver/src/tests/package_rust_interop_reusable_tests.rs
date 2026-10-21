@@ -231,3 +231,7 @@ fn variants_are_isolated_and_current_inputs_replace_each_authority_kind() {
         );
     }
 }
+
+#[cfg(unix)]
+#[path = "package_rust_interop_reusable_permissions_tests.rs"]
+mod permissions;

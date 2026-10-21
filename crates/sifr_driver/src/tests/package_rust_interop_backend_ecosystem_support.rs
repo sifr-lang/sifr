@@ -78,7 +78,8 @@ fn test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network() 
 
     let stale = metadata.replacen("SELECT 13::INT4 AS value", "SELECT 12::INT4 AS value", 1);
     assert_ne!(stale, metadata, "SQLx query mutation must change metadata");
-    std::fs::write(&query_path, stale).expect("stale SQLx query cache should be written");
+    crate::build::native_storage::write_changed(&query_path, stale.as_bytes())
+        .expect("stale SQLx query cache should be privately recreated");
     assert_sqlx_metadata_mutation_is_rejected(
         &package_root,
         &entrypoint,
