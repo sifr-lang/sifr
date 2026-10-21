@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b4 semantic/native graph separation implemented; qualification and integrated acceptance remain open
+current_stage: V1b4 reviewed and qualified; V1c independent-build scheduling investigation next; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -686,9 +686,10 @@ or count an unexecuted installed check as a fast pass.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: The SQL full-protocol profile trial and sanitizer retention tests
-are recorded; V1b1 shared artifact data is accepted. Semantic/native separation
-and complete build-path feasibility remain open.
+Current evidence: V1b1–V1b4 ownership separation and native/installed/SQL qualification
+are accepted. The same-source six-worker SQL protocol passes in 788.350s, still
+above the budget. V1c investigates overlap of independent builds; complete build-path
+feasibility remains open. Earlier profile and sanitizer observations are retained.
 
 Decision: Treat SQL as the first hard feasibility gate. Keep the measured whole critical
 path, not individual unit-duration subtraction. The larger architecture work is conditional
@@ -1134,7 +1135,7 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | --- | --- | --- |
 | Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
 | V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.20 / #4389; final completeness pending |
-| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384, V1b2 / #4390 and V1b3 / #4391 accepted; semantic/native graph split and feasibility pending |
+| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 through V1b4 / #4392 accepted; V1c scheduling and full feasibility pending |
 | V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
 | V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
@@ -4181,3 +4182,146 @@ builds pass; declare the used feature explicitly instead of relying on that
 incidental activation. Preserve all `160e24c` qualification evidence with its
 observed identity. Recheck the resolved features and affected candidate artifacts
 before final review; previous receipts are not silently relabeled.
+
+### V1b4 closure — semantic consumption/native production / #4392
+
+Exact implementation candidate `27859a22fcc61bc959a3ee1243fa330d7adb2513`,
+based on `8509b21ac40302cf39b536850331b556ca1b17db`, passes all 56 named
+applicable validation categories and independent review. All three linked SQL
+tools retain canonical frontend and component-host execution while excluding
+`driver`, native compiler services, codegen and native stdlib-artifact ownership
+from their actual production dependency closure. The semantic owner retains
+complete checked source data and shares strict installed metadata consumption;
+native consumers retain full production, interop and runtime behavior. No new
+persisted role, fallback, schema change or external dependency upgrade is included.
+
+| Named observation | Executed result | Wall seconds |
+| --- | --- | ---: |
+| Semantic / native services | 13 / 22 tests pass; all 31 original service tests retained | 28.328 / 59.230 |
+| Driver stdlib / metadata producer / reader | 56 / 15 / 12 tests pass | 48.213 / 125.254 / 30.198 |
+| Complete semantic/native frontend comparison | All 1,307 positive/negative/runtime-failure source inputs | 81.730 |
+| Complete source/metadata emission comparison | All 732 positive fixtures | 105.746 |
+| E2E preparation / positive / negative / runtime-failure | Preparation plus 732 / 569 / 6 outcomes pass | 51.728 / 155.771 / 7.686 / 11.194 |
+| Distribution full / internal qualification | All 72 variants / nine controls pass | 227.359 / 28.698 |
+| SQL behavior, editor and host tools | All 21 categories; 438 ordinary tests pass | 890.102 total |
+| Three-worker linked SQL protocol | Clean A, unchanged A, independent clean B; three equal executable hash sets and seven mutation controls | 1,045.844 |
+| Real source/installed admission | Version-matched package, identity/diagnostic parity, integrity and recovery | 258.846 |
+| Version-matched reference corpus | All 732 fixtures; initial test preparation 17m03s, assertion body 108.83s | 1,137.507 |
+| Complete installed qualification | 732 public emissions/maps, four native cases, relocation, editor generations, rejection/recovery | 901.000 |
+
+These are named category observations with their preparation included, not an
+additive full-gate duration or matched before/after speedup. Optional ignored
+live-database tests are not passes. The SQL protocol still exceeds ten minutes;
+V1 feasibility and complete integrated acceptance remain open.
+
+All 1,464 source/Rust files, source maps and remaining corpus fields match the
+accepted V1b3 output. Only the already declared duplicate-free unordered module
+set compares as a set. The real compiler/metadata identities change. A separately
+recorded identity-aligned diagnostic proves complete physical metadata equality
+under controlled baseline compatibility; it is never published as actual product
+identity. The actual corrected candidate is used throughout final qualification.
+Its explicit identity build-feature declaration leaves all 490 observed Cargo
+package/target/feature/profile artifact entries unchanged from the preceding
+implementation. The unchanged SQL stage reports every unit fresh, and both
+independent clean stages report every unit non-fresh. All owned protocol targets
+are removed.
+
+Preserve all earlier failures and their observed candidate identities: the moved
+import/inventory/guard omissions, unsuccessful capacity-copy operation, and the
+external reference setup that paired a 0.0.0-linked test compiler with beta sources.
+That reference correctly failed version admission before any fixture executed.
+The replacement uses the canonical matching version/source contract and a retained
+version-owned target. No version check was weakened. The split-brain guard still
+reports its three proven pre-existing test-include findings and is **not a pass**;
+V4 owns its repair along with the previously recorded field-checker work.
+
+`v1b4c-final-acceptance.json` binds all 56 passing categories to exact-candidate
+specifications, receipts, outputs and resource observations. The complete portable
+packet `v1b4c-evidence.tar.gz` has SHA-256
+`4dddd43299c656b263b3eb67baf4cdb969d365ffca0ffce55277c3a27ff6187f`.
+All 5,342 manifest file hashes and sizes were verified locally before review.
+Independent review is **SATISFIED**, with no blockers, outside the reviewed tree
+at `reviews/27859a22fcc61bc959a3ee1243fa330d7adb2513/response.md` (SHA-256
+`0f63b17c5614db7e637b662a6f5b1faccb20eba55fe3914fb34a219991578312`).
+It independently recomputes all 280 per-category evidence hashes and confirms
+ownership, admission, publication/lease ordering, tests and graph separation.
+This closure changes phase records only.
+
+Follow-ups for the remaining phase: V4 must register recurring execution of the
+new 1,307-input semantic/native comparison, make the graph self-test survive
+Python optimization, and retain the native-map invariant in release builds rather
+than relying only on `debug_assert_eq!`. Preserve the established editor host
+lifecycle when V2 adds bounded compiled-component reuse; analysis already retains
+its Engine across configured reloads. V3/V4 retain version/profile invalidation,
+large debug-artifact preparation/copy costs and complete fixture ownership.
+Installed command attribution is 492.545s for public emits, 105.609s for native
+cases and 108.075s for other recorded commands; the remaining 194.771s includes
+copies, hashing, editor operations, setup/reporting and cleanup and is not a pure
+I/O estimate. Full final create-PR/merge correctness gates and V5 remain mandatory.
+
+#### Additional same-source worker-allocation diagnostic
+
+After named qualification, a six-worker trial on the same frozen implementation
+passes the complete canonical SQL protocol in **788.350s**, versus **1,045.844s**
+with three workers. Clean A / unchanged A / clean B take 385.659 / 8.108 / 392.886s.
+All 490 actual package/target/feature/profile entries match the earlier protocol;
+each clean stage has zero fresh entries and the unchanged stage has 490. All
+three executable hashes match within the trial, all seven controls pass, and
+all owned targets are removed. Two-second process-tree RSS samples reach about
+4.07 GiB; shared pages may be counted twice and sampling is not an exact peak.
+The declared allocation is eight GiB plus the unchanged two-GiB memory reserve,
+six Cargo workers and two reserved CPU slots. No other build overlaps the trial.
+
+The observed reduction is 257.493s (24.6%) in one sequential same-source comparison,
+not a statistical result or a complete-gate saving. Independent protocol path maps
+change embedded product identities, so cross-protocol binary equality is not
+claimed. Both complete measurements include preparation and cleanup. Six workers
+still do not meet 600 seconds. This is diagnostic evidence, not an adopted resource
+policy. The 36-file supplemental packet `v1b4j6-evidence.tar.gz`, SHA-256
+`0374e74c9230d61c4661da222373acdd9c25bba0cdbd9972ec31ec2154f6f4be`,
+was independently hash/size verified after collection. It supplements the reviewed
+implementation without changing code or replacing the earlier protocol evidence.
+
+### V1c bounded investigation — overlap independent SQL builds
+
+The six-worker sequential experiment still exceeds 600 seconds. Investigate
+whether the two independent clean builds can run concurrently without losing
+reproducibility coverage. Independent output trees are a required property;
+the existing temporal serialization is not itself a comparison assertion. Do
+not assume this makes the complete gate fit: measure the whole protocol first.
+
+Start with an external diagnostic using the existing canonical host selection,
+locked/offline identities, path maps, `build_native`, artifact selectors and all
+seven rejection controls. Keep empty distinct A/B targets, the unchanged A
+rebuild, three linked executable comparisons, actual clean/reused Cargo artifact
+freshness and cleanup. Inspect build-script output ownership and confirm no B
+output/input points into A. Hold source/configuration fixed; record actual start
+and completion order. Shared registry source and operating-system caches remain
+as in the sequential protocol, never a substitute for independent build output.
+
+Admit a total of six Cargo jobs, three per clean build, with two CPU slots
+reserved, an eight-GiB memory allocation plus the existing two-GiB reserve, and
+12 GiB of disk allocation plus the existing 20-GiB reserve. Record sampled
+aggregate residency and actual capacity; reject insufficient admission rather
+than lowering reserves. No other build may overlap this diagnostic. Retain the
+30-minute cap and all failed/incomplete receipts. Compare complete elapsed time
+with the same-source sequential observations; a single trial is diagnostic,
+not V5 acceptance or an additive savings estimate.
+
+Production adoption is conditional on the measured result and explicit process
+ownership. Use bounded shared supervision for the two build commands; preserve
+signal/deadline propagation, bounded output, child/descendant cleanup, failure
+reporting and removal of owned temporary outputs only after all consumers stop.
+Test sibling failure, cancellation, deadline, malformed/missing outputs and
+insufficient capacity. Do not call the main-thread-only `process_execution.execute`
+from threads or introduce unowned workers. The source change must remain a small
+explicit independent-build schedule, not a general daemon or distributed runner.
+Keep the historical sequential observations as the diagnostic reference; do not
+add an automatic fallback after a concurrent failure.
+
+Named acceptance includes focused orchestration and process-owner mutation tests,
+all seven original SQL controls, the actual complete linked native protocol and
+resolved unit/feature/profile parity, source ownership and cleanup proofs, and
+independent exact-candidate review. Compiler/runtime implementations are unchanged
+by this scheduling item; retain their already observed evidence without relabeling
+it as execution on a new candidate. Complete final gates and V5 remain mandatory.
