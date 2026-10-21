@@ -151,7 +151,7 @@ RULES = (
         forbidden_all_dependencies=frozenset(
             (ALL_SIFR_CRATES | {"sifr_compiler_services"}) - {"sifr_metadata", "sifr_identity"}),
         scan_manifest_targets=True,
-        allowed_normal_dependencies=frozenset({"serde", "serde_json", "sha2", "zstd", "sifr_identity"}),
+        allowed_normal_dependencies=frozenset({"serde", "serde_json", "sha2", "zstd", "ring", "sifr_identity"}),
         forbidden_source_references=frozenset(
             (ALL_SIFR_CRATES | {"sifr_compiler_services"}) - {"sifr_metadata", "sifr_identity"}
         ),
@@ -560,7 +560,7 @@ edition = "2024"
 def seed_valid_repo(root: Path) -> None:
     allowed_deps = {
         "sifr_identity": ["sha2"],
-        "sifr_metadata": ["serde", "serde_json", "sha2", "zstd", "sifr_identity"],
+        "sifr_metadata": ["serde", "serde_json", "sha2", "zstd", "ring", "sifr_identity"],
         "sifr_source": ["ruff_text_size", "sifr_identity"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
         "sifr_ipc": ["postcard", "serde", "sifr_identity"],

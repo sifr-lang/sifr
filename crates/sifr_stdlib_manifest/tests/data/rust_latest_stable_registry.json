@@ -3,7 +3,7 @@
   "audited_at": "2026-09-09",
   "source": "https://index.crates.io/{prefix}/{crate}",
   "maintained_manifests": 155,
-  "direct_declarations": 211,
+  "direct_declarations": 212,
   "packages": [
     {
       "name": "aho-corasick",
@@ -2283,6 +2283,13 @@
         }
       ],
       "declarations": [
+        {
+          "path": "crates/sifr_metadata/Cargo.toml",
+          "table": "dependencies",
+          "alias": "ring",
+          "package": "ring",
+          "requirement": "=0.17.14"
+        },
         {
           "path": "crates/sifr_sysroot/Cargo.toml",
           "table": "dependencies",
