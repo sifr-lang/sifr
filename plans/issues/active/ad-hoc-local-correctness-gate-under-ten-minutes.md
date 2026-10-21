@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4i process-local project lease lifetime; integrated acceptance remains open
+current_stage: V1g combined semantic build/runtime tradeoff; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -5750,3 +5750,170 @@ all failures. The full driver pass is correctness evidence, not a whole-gate
 speed claim or a new production scheduling policy. Run formatting, size and
 affected ownership guardrails, then exact-candidate independent review.
 Final native selection, integrated gates and V5 remain open.
+
+### V4i closure — process-local lease release / #4405
+
+PR [#4405](https://github.com/sifr-lang/sifr/pull/4405) merged candidate
+`95984515b9ac0afa323b434377a2ac5f1b097af1` as
+`d872d2329f5fb970a54ed563da3d7908b3bf7d64`. Project publication, staging,
+generation readers and housekeeping now release their process-local lock
+explicitly when the final owner drops. Namespace readers share that owner through
+`Arc`; intentional native child leases retain their existing ownership.
+
+All three new controls pass with the production guard. A synchronized real
+fork/pre-exec control exercises exclusive and shared locks, shared-owner lifetime
+and live exclusion. Replacing only explicit unlock with close-only release makes
+that regression fail with `WouldBlock`; independent readers and failed admission
+have separate passing controls.
+
+The complete two-thread default driver selection passes: **755 active tests,
+zero failures, 82 ignored, zero filtered**, preserving every prior case and adding
+the three regressions. This includes all 48 project-cache tests, all three native
+child-lease controls and the complete 4,097-publication history. The harness takes
+347.420s, Cargo execution with tracing 349.927s, and the complete diagnostic
+367.910s including retained preparation/discovery/cleanup. Formatting, file-size,
+source dependency ownership and driver maintainability checks also pass.
+
+These are correctness diagnostics, not V5 timing acceptance: preparation reused
+the retained target after an earlier 100.761s intentionally interrupted build,
+and lightweight guardrails overlapped the beginning of the run. The interrupted
+attempt detected an obsolete import; its stop record and partial evidence remain.
+No successful speedup is inferred from V4h's failed parallel run, and no production
+libtest allocation changes here.
+
+All 87 files in `v4i-evidence.tar.gz` are independently verified; archive SHA-256:
+`fc74058524f2c535da45fdc2702978449600a6c8bf26a903585f9f6b975694b4`.
+The exact-candidate independent review is **SATISFIED**, with no blockers; raw
+review SHA-256:
+`0178d97bd4f72215333993cc51c544dd9a8c2fe78e1e10946a37c1b8f92b3f1c`.
+
+V4 follow-up owner: the editor reader in
+`crates/sifr_compiler_services/src/editor/saved_checks.rs` still takes namespace
+and generation locks as raw files. An unrelated fork can similarly delay their
+release and subsequent exclusive pruning. That separately owned reader was not
+changed in V4i; reconcile its shared lease lifetime explicitly rather than
+assuming the driver repair covers it. The guard's documented close-on-drop
+behavior after an unlock error remains unchanged. Final native selection,
+complete phase gates and V5 remain open.
+
+### V1f bounded investigation — lowering optimization tradeoff
+
+The mandatory SQL clean/unchanged/independent-clean protocol still exceeds the
+complete gate budget by itself. V1e showed that making the JIT compiler cheap to
+build caused an unacceptable runtime regression. Keep that rejected option
+closed. The remaining concrete candidate is the native `sifr_lowering` unit:
+V1e's clean-A observation spends 170.120s there, including 158.360s of codegen
+in the baseline. Its opt1 candidate in V1a did not solve the whole build path.
+
+Measure one narrower diagnostic override:
+`profile.dev.package.sifr_lowering.opt-level=0`. Cargo's actual artifact metadata
+confirms that this package override changes both the native library and its host
+build script from opt2 to opt0; record both units. Keep the JIT/compiler-component
+dependencies, type-system optimization, debug assertions, overflow checks and
+every other unit/profile field unchanged. Do not edit production profiles.
+Use the unchanged canonical three-build SQL protocol, all seven rejection
+controls, exact resolved units and features, and within-profile equality of all
+three linked tools. Run one protocol at a time with six Cargo workers, the same
+CPU/memory/disk reserves and the existing 30-minute category cap.
+
+Compile runtime probes from those exact native artifacts before their canonical
+target cleanup: the unchanged PostgreSQL component tests and unchanged
+`sifr_sql_tool/tests/migration_source.rs` tests, including real canonical source
+checking and full source-stdlib preparation. Preserve all source fixtures and
+assertions; compile probes with identical flags in baseline and candidate.
+Measure preparation separately, then execute in fresh processes. Complete at
+least one runtime comparison promptly; reject and stop further repetitions if
+it already demonstrates an unacceptable tradeoff. Preserve interruptions as
+incomplete. If viable, complete three runtime observations and compare exact
+outcomes; these limited probes still cannot authorize a production profile.
+
+A matched baseline is needed for the newly added source-checking probe, rather
+than extrapolating from V1e's JIT-only runtime result. Compare complete elapsed
+protocol time, not additive overlapping unit durations. Verify compiler/SQL/
+fixture/toolchain equivalence between the frozen source and this prospective
+record. Any source, inventory or harness error invalidates its affected result.
+Adoption would require a new implementation contract and broader semantic/native/
+installed qualification; full phase timing and final gates remain mandatory.
+
+### V1f outcome — lowering alone does not solve the build budget
+
+Both complete diagnostic protocols pass on frozen implementation
+`95984515b9ac0afa323b434377a2ac5f1b097af1`; the prospective phase records differ
+only in this Markdown file. No production profile or source was changed.
+
+| Observation | Normal development profile | Lowering opt0 diagnostic |
+| --- | ---: | ---: |
+| Clean A | 387.104s | 364.125s |
+| Unchanged A | 6.589s | 6.563s |
+| Independent clean B | 394.767s | 363.463s |
+| Complete build protocol, excluding external probe preparation | 789.540s | 735.175s |
+| External probe preparation | 3.230s | 3.385s |
+| Source migration probe, three-run median / worst | 0.557s / 0.591s | 1.194s / 1.215s |
+| PostgreSQL component probe, three-run median / worst | 38.377s / 38.450s | 38.439s / 38.631s |
+| Whole diagnostic, including preparation and six probe processes | 910.919s | 858.405s |
+
+All 490 package/target/feature entries match in every stage. Each clean stage
+reports zero fresh entries; unchanged A reports all 490 fresh. Only the native
+lowering library and its host build script change optimization level, from two
+to zero. Other profile fields, runtime environment, fixture hashes and normalized
+test outcomes match. All seven rejection controls pass; the three linked tool
+hashes match across each protocol's builds; all owned targets are removed.
+The four original tests execute in each of three fresh-process repetitions per
+profile. The source probe performs canonical source-stdlib checking but uses its
+existing test dialect; it is not complete SQL/native/installed qualification.
+
+The single matched build observation saves 54.365s (6.9%), while source checking
+is 2.142 times slower and component runtime is effectively unchanged. Do not adopt
+the lowering-only override: it still misses the complete gate budget by itself.
+This is not a statistical estimate or a claim that the entire gate becomes faster.
+
+Cargo's clean-A trace illustrates the overlap: lowering falls from 170.280s to
+25.030s, but frontend remains 84.650s and Cranelift remains 201.020s. These unit
+durations cannot be summed as savings. The PostgreSQL build-script compile unit
+is reported unblocked at 23.360s but starts at 282.130s in the candidate. Thus its
+late C compilation is not, by itself, proof of a component-host dependency block;
+resource scheduling contributes. No scheduler change or crate split is qualified
+by this observation.
+
+`v1f-comparison.json` binds the actual inventories, profile differences, source
+hashes, tool identities and complete runtime outcomes. The portable packet
+`v1f-evidence.tar.gz` has SHA-256
+`574972f663143aa53c7cbcd6d3feb5a6817c11d875a64a4a36341bb8305898ca`;
+all 126 manifest files were independently hash/size verified. Both wrappers
+report no reserve stop, remaining descendants or tracked source mutation.
+All final phase gates and V5 remain open.
+
+### V1g bounded investigation — combined semantic compilation costs
+
+V1f rules out treating one crate's codegen reduction as the full build saving.
+Test one coherent extension on the same frozen source: opt0 for
+`sifr_lowering`, `sifr_frontend`, `sifr_semantic_services` and
+`sifr_sql_contract`, leaving the global development profile and all other
+package overrides unchanged. In particular retain the optimized type system,
+Cranelift and hashing dependencies. Do not reopen V1e's rejected Cranelift opt0
+or change guest JIT policy. This remains an external diagnostic, not a production
+profile edit.
+
+Use the same canonical clean A / unchanged A / independent clean B protocol,
+seven rejection controls, six Cargo workers, two Rayon workers during builds,
+memory/disk reserves, 30-minute category cap, linked-tool equality and cleanup.
+Compare all actual units and features. The expected profile differences are the
+four native libraries plus lowering's host build script; the other three build
+scripts already use opt0. Reject any other unit/profile drift.
+
+Reuse V1f's recorded baseline only after verifying exact source/toolchain,
+protocol, probe, guest, environment and allocation identities; do not rerun an
+unchanged baseline merely to produce another record. Compile and run the same
+unchanged migration-source and six-major PostgreSQL probes from the candidate's
+actual clean-A libraries. Preserve three fresh-process observations and exact
+outcomes, or explicitly stop and classify incomplete if a first complete
+comparison demonstrates an unacceptable tradeoff. Include preparation in the
+whole diagnostic and report its separate build-protocol subtotal.
+
+The purpose is to find whether these overlapping compiler units collectively
+constrain feasibility, not to approve a speculative profile. If this candidate
+still cannot fit the build budget or its runtime penalty defeats the saving,
+record that result and stop this profile experiment. Adoption requires a separate
+implementation contract and complete affected compiler, semantic/native, SQL,
+source/installed and final phase qualification. No cached test success or omitted
+reproducibility build may satisfy the goal.
