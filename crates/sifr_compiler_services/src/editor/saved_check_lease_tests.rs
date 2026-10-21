@@ -3,11 +3,21 @@ use super::*;
 use sifr_frontend::{DiskSourceProvider, SourceProvider, persistence::CapturingSourceProvider};
 use std::{
     io::Write,
-    os::unix::{net::UnixStream, process::CommandExt},
+    os::unix::{fs::OpenOptionsExt, net::UnixStream, process::CommandExt},
     process::Command,
     thread::{self, JoinHandle},
     time::Duration,
 };
+
+fn write_private(path: impl AsRef<Path>, bytes: impl AsRef<[u8]>) -> io::Result<()> {
+    File::options()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o600)
+        .open(path)?
+        .write_all(bytes.as_ref())
+}
 
 struct Fixture {
     _temp: tempfile::TempDir,
@@ -27,7 +37,7 @@ impl Fixture {
         sifr_cache_storage::directory(&workspace).unwrap();
         let workspace = workspace.canonicalize().unwrap();
         let source = workspace.join("main.sifr");
-        fs::write(&source, "def main() -> None:\n    pass\n").unwrap();
+        write_private(&source, "def main() -> None:\n    pass\n").unwrap();
         let inputs =
             manifestless_inputs(&CompilerContext::for_test(), "metadata-one", &source).unwrap();
         let context = inputs.identity().unwrap();
@@ -62,7 +72,7 @@ impl Fixture {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        fs::write(
+        write_private(
             namespace.join("owner.json"),
             serde_json::to_vec(&serde_json::json!({
                 "schema": 1, "workspace": workspace, "device": device,
@@ -71,13 +81,13 @@ impl Fixture {
             .unwrap(),
         )
         .unwrap();
-        fs::write(generation.join(record_id), bytes).unwrap();
-        fs::write(
+        write_private(generation.join(record_id), bytes).unwrap();
+        write_private(
             generation.join("manifest.json"),
             serde_json::to_vec(&manifest).unwrap(),
         )
         .unwrap();
-        fs::write(
+        write_private(
             root.join("latest"),
             serde_json::to_vec(&serde_json::json!({
                 "schema": 1, "workspace": workspace_id,
@@ -217,7 +227,7 @@ fn rejected_saved_reader_releases_every_acquired_lease() {
         } else {
             fixture.generation.join("manifest.json")
         };
-        fs::write(path, b"{}").unwrap();
+        write_private(path, b"{}").unwrap();
         assert!(fixture.load().is_err());
         fixture.assert_available();
     }
