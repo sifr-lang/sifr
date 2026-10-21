@@ -164,6 +164,29 @@ def module_target(owner: Path, name: str, explicit: str | None) -> Path | None:
     return None
 
 
+
+# Only literal source-relative includes establish an ownership edge. Inspect the
+# macro token in scrubbed code so comments and string contents cannot own files.
+INCLUDE_PATTERN = re.compile(
+    r'(?P<attrs>(?:#\[[^\]\n]+\]\s*)*)'
+    r'(?P<macro>\binclude)\s*!\s*(?P<opening>[({\[])\s*'
+    r'(?:"(?P<path>[^"\\\n]+)"|r(?P<hashes>#{0,16})"'
+    r'(?P<raw_path>[^"\n]+)"(?P=hashes))\s*,?\s*(?P<closing>[)}\]])'
+)
+
+
+def include_declarations(text: str, code: str):
+    for match in INCLUDE_PATTERN.finditer(text):
+        if code[match.start("macro"):match.end("macro")] != "include":
+            continue
+        if {"(": ")", "{": "}", "[": "]"}[match["opening"]] != match["closing"]:
+            continue
+        # Attribute-looking text inside a comment must not create a test gate.
+        attrs = code[match.start("attrs"):match.end("attrs")]
+        gated = bool(re.search(r'#\[cfg\s*\(\s*test\s*\)\s*\]', attrs))
+        yield match, gated, match["path"] or match["raw_path"]
+
+
 def test_only_files(paths: list[Path]) -> set[Path]:
     path_set = {p.resolve() for p in paths}
     incoming: dict[Path, list[tuple[Path, bool]]] = defaultdict(list)
@@ -174,6 +197,10 @@ def test_only_files(paths: list[Path]) -> set[Path]:
         for match, gated, explicit in module_declarations(text, code):
             if match.group("kind") != ";": continue
             target = module_target(owner, match.group("name"), explicit)
+            if target in path_set:
+                incoming[target].append((owner.resolve(), gated or within(match.start(), ranges)))
+        for match, gated, relative in include_declarations(text, code):
+            target = (owner.parent / relative).resolve()
             if target in path_set:
                 incoming[target].append((owner.resolve(), gated or within(match.start(), ranges)))
     test_only: set[Path] = set()
@@ -263,6 +290,54 @@ def violations(paths: list[Path]) -> list[str]:
     )]
 
 
+
+def run_include_self_test() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-test-includes-") as tmp:
+        root = Path(tmp)
+        owner, child, leaf, production = [root / name for name in
+                                         ("lib.rs", "fixture.rs", "leaf.rs", "production.rs")]
+        forbidden = "fn fixture() { sifr_syntax::parse_module_raw(src, None); }"
+        leaf.write_text(forbidden)
+        child.write_text('include!("leaf.rs");')
+        owner.write_text('#[cfg(test)]\nmod fixture;\n')
+        paths = [owner, child, leaf]
+        assert not violations(paths), "test module include descendant rejected"
+        child.write_text('include!(r#"leaf.rs"#);')
+        assert not violations(paths), "literal raw include rejected"
+        owner.write_text('#[cfg(test)]\nmod tests { include!("fixture.rs"); }')
+        assert not violations(paths), "inline test include descendant rejected"
+        owner.write_text('#[cfg(test)]\ninclude!("fixture.rs");')
+        assert not violations(paths), "direct test-gated include rejected"
+        owner.write_text('include!("fixture.rs");')
+        assert violations(paths), "production include descendant escaped"
+        owner.write_text('#[cfg(test)]\nmod fixture;\n')
+        production.write_text('include!("leaf.rs");')
+        assert violations(paths + [production]), "mixed production/test ownership escaped"
+        owner.write_text('#[cfg(test)]\ninclude!("fixture.rs");\ninclude!("fixture.rs");')
+        assert violations(paths), "production duplicate include escaped"
+        for decoy in (
+            '// #[cfg(test)]\ninclude!("fixture.rs");',
+            '/* #[cfg(test)] */\ninclude!("fixture.rs");',
+            '#[cfg(test)]\nmod tests { /* include!("fixture.rs"); */ }',
+            '#[cfg(test)]\nmod tests { let s = r##"include!("fixture.rs");"##; }',
+            '#[cfg(test)]\ninclude!(concat!("fixture", ".rs"));',
+            '#[cfg(test)]\ninclude!("fixture.rs" + suffix);',
+        ):
+            owner.write_text(decoy)
+            assert violations(paths), f"unsupported or decoy include exempted source: {decoy}"
+        owner.write_text('#[cfg(test)]\nmod fixture;\n')
+        child.write_text('include!("leaf.rs");')
+        leaf.write_text(forbidden + '\ninclude!("fixture.rs");')
+        assert violations(paths), "include cycle must remain conservatively checked"
+        child.write_text("")
+        leaf.write_text(forbidden)
+        assert violations(paths), "unreferenced forbidden source escaped"
+        owner.write_text('#[cfg(test)]\nmod fixture;\n')
+        child.write_text('include!("leaf.rs");')
+        production.write_text('#[path = "fixture.rs"]\nmod fixture;')
+        assert violations(paths + [production]), "production module owner escaped"
+
+
 def run_self_test() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-v03b-f25-") as tmp:
         root = Path(tmp)
@@ -330,6 +405,7 @@ def run_self_test() -> None:
         assert not violations([cli])
         extra = cli.read_text() + '\nfn duplicate() { sifr_syntax::parse_module(src, None); }\n'
         assert violations_text(cli, extra), "same-file duplicate escaped"
+    run_include_self_test()
     for rel in (
         Path("crates/sifr_compiler_services/src/metadata/locations.rs"),
         Path("crates/sifr_semantic_services/src/stdlib/bootstrap.rs"),
