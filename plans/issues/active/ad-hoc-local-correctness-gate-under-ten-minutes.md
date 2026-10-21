@@ -655,7 +655,7 @@ runner, fallback compiler or elaborate scheduler is justified by current evidenc
 - [ ] Implementation and acceptance complete.
 
 Current evidence: Bounded repairs and their acceptance are recorded below. V0.20
-filesystem ledger reconciliation and final integrated completeness remain open.
+formatter failure propagation and final integrated completeness remain open.
 
 Decision: No final timing promise until the failed setup paths execute their downstream
 assertions. Independent measured optimizations may proceed with matched outcomes; they
