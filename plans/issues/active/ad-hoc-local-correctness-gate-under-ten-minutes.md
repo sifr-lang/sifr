@@ -6454,7 +6454,9 @@ disk and 2-GiB memory reserves and actual resource monitors were unchanged; both
 helper versions and the allocation decision are retained.
 
 The traces contain 745 nested Cargo and 6,425 rustc process observations, with no
-unparsed exec events or missing compiler completion signals. Fifty-three nonzero
+unparsed exec events or missing rustc completion signals. The separate C-tool
+attribution retains missing parent-completion events; it does not claim complete
+C-tool duration coverage. Fifty-three nonzero
 compiler exits occur in passing rejection roles. The original summary incorrectly
 classified these as absent completions; preserved `trace-summary-v2.json` files
 correct that analysis using the same raw signals. This never changed a test
@@ -6499,6 +6501,8 @@ partitioning and repeated outer Cargo preparation. No profile switch or shared
 trust-context shortcut is authorized by these observations. Remaining Python
 examples, command matrices, mandatory cold SQL feasibility, final integrated
 gates and all V5 scenarios remain required.
+
+Record-only closure and next contract: [#4417](https://github.com/sifr-lang/sifr/pull/4417).
 
 ### V3h bounded implementation — retained Rust-interop fixture inputs
 
