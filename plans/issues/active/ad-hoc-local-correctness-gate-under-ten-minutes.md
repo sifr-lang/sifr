@@ -4652,6 +4652,8 @@ complete sub-600-second V5 matrix remain mandatory.
 
 ### V1d diagnostic outcome — helper improvement is not a cold-gate improvement
 
+Record PR: [#4396](https://github.com/sifr-lang/sifr/pull/4396).
+
 On unchanged implementation `dd65d042ae3414f0120b61cbbe297240df7b36a4`, with the
 prospective plan merged as `3a662f50326c928002160d1ea48db2631ae3fa44`, an external
 build-dependency probe runs the actual `emit_local_token` and
