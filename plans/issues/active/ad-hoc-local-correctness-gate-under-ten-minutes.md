@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3c explicit compiler/generated-Cargo context ownership repair; integrated acceptance remains open
+current_stage: V4c complete-corpus compiler-context investigation; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -5026,8 +5026,9 @@ The first three frozen-candidate comparisons completed: current wrapper/new GCQ
 root 179.788s, preserved compiler context/initial root 174.284s, preserved context/
 second new GCQ root 101.743s. Materialization alone was 169.215s, 166.023s and
 93.487s respectively. All 24 outputs match byte for byte under the same selected
-compiler; the third run creates no new native family. The reverse-order current
-wrapper control is still running against its unchanged checkout. This demonstrates
+compiler; the third run creates no new native family. At registration, the reverse-order current
+wrapper control was still running against its unchanged checkout; its completed
+result is recorded below. This demonstrates
 avoidable repeated context setup, not a full-gate timing forecast. Evidence belongs
 to `v3c-context-probe`; preserve all four categories before final acceptance.
 
@@ -5055,3 +5056,105 @@ freshness protocol with an explicitly bounded two-worker allocation and preserve
 its exact outcome; unrelated baseline drift retains its owner. Record all diagnostics,
 capacity, input identities and the 30-minute per-category cap. Require exact-candidate
 independent review; final integrated gates and the V5 timing matrix remain open.
+
+
+### V3c acceptance — explicit compiler and generated-Cargo contexts
+
+PR [#4399](https://github.com/sifr-lang/sifr/pull/4399) merged as
+`c874d7bfd1cb3786954939f06afd99d2dec6ec30`; reviewed and validated candidate
+`aad7aaadf13277b5df3a0c3f208ad7cf89b7689d`. The merged tree matches that candidate.
+Generic GCQ execution now inherits the caller environment, including compiler
+build/emit, helper scripts and produced executables. Corpus check, Cargo fmt and
+native Cargo build explicitly select their generated target; Clippy already did.
+With a shared root, the target remains exactly shared-root/cargo-target. Without
+one, standalone generated Cargo uses its run-owned target. Compiler cache identity,
+argv/flags/wrappers, fixtures, assertions, selection and leases remain unchanged.
+
+All 18 GCQ self-tests pass (1.145s), including four new controls with subcases for
+present/absent caller targets/shared roots, complete environment preservation,
+child-only overrides, failures/truncation, and corpus/fmt/native target ownership.
+The previous implementation fails eight of those subcases with zero harness errors.
+All 45 preparation-policy tests pass (3.140s), as do file-size checks (7.140s),
+structural/selection contracts (0.645s) and complete-checkout inventory (20.687s).
+All previous test classes are unchanged. Removing only the target-routing additions
+leaves the production assertion/argv AST unchanged; all six generated Cargo calls
+have explicit targets. Inventories remain 93 positive, five negative and 264 companion
+sources, with no profile or compiler/native-family implementation changes.
+
+All 93 positive entries materialize through the final canonical compiler:
+concurrency 62.234s, demos 186.303s, E2E representatives 440.441s, multi-module
+36.707s, stdlib flows 119.258s; sequential aggregate **844.943s**. All 452 output
+files match the qualified predecessor: 270 exactly, 182 Cargo manifest/lock files
+only after substituting the expected exact revision. All 93 graphs fetch locked
+without manifest/lock drift (36.711s). Real private-output, damaged-old-output and
+same-mtime provider controls pass (149.774s). All seven smoke gates pass (95.236s),
+as does focused Clippy with its controls (16.696s). Complete freshness passes for
+all 264 companion sources (351.889s), using the actual freshness/debt protocol with
+an external two-worker allocation override. Production worker policy is unchanged.
+No resource cap, orphan cleanup or tracked source mutation occurred in these runs.
+
+The completed frozen-candidate context comparison has four categories:
+current wrapper/new root 179.788s; preserved context/initial root 174.284s; preserved
+context/another new GCQ root 101.743s; current wrapper/reverse-order new root
+180.791s. All 32 materializations match byte for byte with one selected compiler
+identity. A/B/D create a new native family; C creates none. Networking first
+requests take approximately 95/94/34/100s, while repeated requests take about 34s.
+This isolates avoidable repeated context setup. It is not a complete-gate forecast;
+the remaining 845s materialization cost alone still exceeds the phase objective.
+Do not add these savings to overlapping earlier measurements.
+
+Evidence `v3c-final-evidence.tar.gz`, SHA-256
+`cf42ecb067d777c279db72dead8b0fe8cb761e3e3ff0d46e26acb2b5d726a3b5`, contains 866
+independently verified manifest files. `v3c-final-acceptance-summary.json` binds the
+final receipts and output comparisons to the candidate. Independent review is
+**SATISFIED**, no blockers, in
+`reviews/aad7aaadf13277b5df3a0c3f208ad7cf89b7689d/response.md`, SHA-256
+`56bf5e1c115acd596789a8232aba56c952a365679d8f9c5d6d8919acff05342f`.
+The reviewer confirms target ownership between preparation and execution and all
+six Cargo call sites. The formerly pending reverse-order observation is now closed.
+Future gate additions retain responsibility for explicit target routing and controls.
+
+CI is not claimed green: job 119193367056 stops at missing
+SIFR_PERFORMANCE_REFERENCE; job 119193367364 reports a missing first E2E signature
+through the unchanged direct Cargo entrypoint. Its underlying temporary run log is
+not published, so the underlying test failure remains unknown. Both logs are retained;
+CI/runner diagnostics and final integrated qualification retain ownership. Initial
+log retrieval failures are recorded separately and are not validation results.
+V1 feasibility, native/Python fixture reuse, preparation-source retention, typed
+within-invocation artifact ownership, global budgets, complete final gates and V5
+remain open. No full-phase or sub-ten-minute acceptance is claimed.
+
+### V4c bounded investigation — repeated compiler setup across the complete corpus
+
+The canonical 93-entry materialization still costs 844.943s and complete companion
+freshness 351.889s with the V3c ownership fix. Earlier V3a experiments matched CLI
+bytes for only three entries when using the correct workspace mode and a shared
+CompilerContext; the wrong-mode predecessor is invalid evidence. Do not generalize
+that small prototype or adopt a batch interface from those measurements alone.
+
+First audit the current CLI build/materialize and emit paths against the public
+CompilerContext APIs. Identify preparation and per-entry validation explicitly:
+workspace selection, application profile, compiler/product identity, metadata,
+Rust probes, diagnostics, private outputs and failure behavior. A byte match cannot
+prove that a required validation step ran; retain an assertion/path inventory too.
+
+Keep the complete qualified V3c checkout/candidate frozen for diagnostic comparison.
+Capture its canonical Cargo artifact messages and selected compiler/product identity;
+bind any external Rust prototype to those exact libraries and tool versions. Run
+both sides with identical working directory, PATH, target, flags, wrapper and resource
+allocation. Compare fresh-context and shared-context API execution without adding
+an output-success cache. Every entry must still pass through canonical compilation.
+Cover all 93 positive entries and all 264 companions in capped categories, retaining
+complete output/diagnostic differences. Exercise failing input, same-mtime imported
+edits, failed-then-successful requests, repeated entry order and private consumer
+isolation where the proposed lifetime is relevant. Preserve distinct intentional
+determinism repetitions; do not merge semantically different modes or input owners.
+
+Measure preparation, per-entry work, actual process/probe behavior and memory. Use
+the established allocation/reserve checks and 30-minute category cap. Preserve
+failed/incomplete evidence, including a prototype that omits canonical behavior.
+Register a concrete production boundary and acceptance contract only after the
+complete comparison shows a useful, correct simplification. No production batching,
+new daemon, profile change or assertion deduplication is authorized by this diagnostic
+entry alone. The user's full phase scope remains active, including final integrated
+correctness gates and the complete V5 scenario matrix.
