@@ -5283,3 +5283,41 @@ failed execution (0.649s) and source remain preserved. A shell quoting failure w
 preparing that correction did not mutate sources or execute tests. No false failure
 is reclassified as a passing test. Exact-candidate review and merge remain pending
 at this record. Complete final phase gates and V5 are still required.
+
+### V4d closure — literal test include ownership / #4401
+
+PR [#4401](https://github.com/sifr-lang/sifr/pull/4401) merged as
+`98d53e68fd` after focused validation and independent **SATISFIED** review, with no
+blockers, on candidate `fc9f8e90d47d1910ed7ac2d3da80b198198fb9aa` against
+`0904d38ef15ec750d313338f23cf38c8d7e26804`. Evidence `v4d-evidence.tar.gz`, SHA-256
+`b521203cbeccd8170d6fc86baac28e8a942123df13f81e390d39fb74b53577c0`, contains 34
+independently verified files. Raw review lives outside Git at
+`reviews/fc9f8e90d47d1910ed7ac2d3da80b198198fb9aa/response.md`, SHA-256
+`25c3ba66f1e47ff858fd21fc416293a31c75f34ab741b372083e0a56c6f3fff2`.
+The reviewer independently identifies nine newly classified test-only files, with
+no current production owner and exactly the three expected findings removed.
+
+Follow-ups remain separate: source ownership should eventually seed Cargo target
+roots as production owners even if they also have gated incoming edges; the old
+`#[path] mod` route already had that limitation, and no current source is affected.
+Compound cfg expressions and inner cfg attributes remain conservatively checked.
+No full-phase timing or final acceptance is claimed.
+
+### V4e bounded investigation — refreshed integrated failure inventory
+
+Run the actual current correctness-only profile with `--no-fail-fast`, after a
+fresh resource/ownership/tool/plan preflight. The purpose is to discover independent
+failures across the integrated changes before choosing the next repair; this is
+not the final acceptance candidate. Preserve canonical selection, prerequisites,
+commands and assertions. Use the existing owned compiler target and bounded worker
+allocation. Do not count a missing, failed, capped or prerequisite-blocked category
+as passing, and do not replace a failed assertion with a successful filter.
+
+Apply the existing 30-minute cap to the diagnostic invocation and retain canonical
+step timings/output and process cleanup. If the aggregate cap stops the profile,
+record which categories ran and which remain unexecuted; subsequent diagnostics
+may execute remaining canonical categories separately under their own caps. Do not
+silently continue consumers whose actual preparation failed. Preserve the exact
+candidate, resource allocation, identities and observed test counts. Assign each
+failure to its existing phase owner or a newly bounded repair before modifying it.
+Complete final create-PR/merge gates and V5 remain mandatory.
