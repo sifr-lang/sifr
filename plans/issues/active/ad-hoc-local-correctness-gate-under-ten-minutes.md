@@ -6540,3 +6540,104 @@ across parent death. Preserve unrelated-child noninheritance. Run focused driver
 regressions, formatting, size, ownership and applicable coverage self-tests, then
 one exact-candidate independent review. Full final phase gates and V5 remain
 required; no ten-minute result follows merely from this repair.
+
+### V3h closure — retained native fixtures and private child outputs
+
+Merged [#4418](https://github.com/sifr-lang/sifr/pull/4418), candidate
+`f9f033797d6c79d1b0207b2ce1e81459c933bbef`, merge
+`a889d7df46f595e84984a2167dd8c7dba53f9348`. Final static overlays now precede a
+single owned fixture reconciliation. Metadata, checking, native compilation,
+direct Cargo controls and runtime commands retain explicit intended-child leases.
+Fresh A/B and armed-sentinel targets and all assertions remain independent.
+
+The first candidate's complete repeat exposed three real permission regressions:
+SQLx recreated query metadata and native/proc-macro sentinel outputs inherited
+mode 0664. Four exact offending files were renamed into a private evidence
+quarantine under exclusive fixture leases; their bytes, modes and identities were
+preserved. The repair uses the existing private writer for SQLx recreation and
+sets umask 0077 only in the owned Cargo child after fork. It leaves the parent mask
+and strict fixture validation unchanged. A subprocess control starts from parent
+mask 0002, performs two fresh Cargo builds, verifies private recreated files and
+successful reacquisition, and verifies that the parent mask remains unchanged.
+
+| Final-candidate validation | Observed result |
+| --- | --- |
+| Fixture / child-lease controls | 8 / 3 pass; guarded 97.249s including rebuild |
+| Static, ownership and matrix checks | 6 pass; 246 matrix self-tests; guarded 27.735s |
+| Repaired native scenarios | All three pass twice; four recreated files mode 0600 |
+| Complete Rust-interop category | Same 43 roles pass; 824.152s |
+| Additional freshness observations | 6 pass; 118.546s; no missing fingerprints or dirty reasons |
+| Ordinary driver regressions | 768 pass, 82 explicitly ignored native roles; 850 total |
+| Ordinary driver wall time | 355.091s execution, 2.368s inventory; guarded 363.396s |
+
+The 43-role baseline was 3,359.339s; the retained repeat is 824.152s, a measured
+2,535.188s (75.47%) reduction. Both have 481 Cargo invocations; rustc invocations
+fall from 5,653 to 379. All 53 expected nonzero compiler outcomes match per role.
+There are no unparsed exec events or missing rustc completions. Every captured
+fixture mutation is explained by an intentional control. Snapshot roots are those
+exposed by explicit Cargo metadata manifest paths; direct-Cargo-only sentinels are
+covered separately by actual controls, repeats and explicit permission inspection.
+The six fd2-only observations establish Cargo freshness, not compiler counts.
+
+These are instrumented diagnostic observations, not idle-host statistical results
+or a complete gate. Retained preparation from the prior candidate is declared;
+every final-candidate assertion ran again. Initial retained preparation and failed
+repeats remain separately recorded. The earlier 42-versus-43 orchestration error
+was reconciled by executing the omitted adjacent role. A stale local diagnostic
+helper caused a separate 51.728s cancelled repeat; its source, raw logs and process
+cleanup receipt remain preserved. Neither failed nor cancelled run counts as a
+pass. All completed diagnostic process sessions ended empty and tracked source
+stayed frozen. Parallel driver completion timestamps are not individual durations.
+
+Frozen evidence: `v3h-fixed-evidence.tar.gz`, 150,945 files, 29,816,214 bytes,
+SHA-256 `e4a0f4c59559c245bac5babdfc0e8bce23e2982b9d7003e8ec3a669cfaf59789`.
+The local `local-gate-implementation-20261020/v3h-fixed-reviewed-diagnostic`
+extraction was checked against every manifest hash and size; carried baseline
+summaries also match the prior frozen V3g manifest. Independent exact-candidate
+review is **SATISFIED**, no blockers; response SHA-256
+`e00f65911aa911af48ae0e13a7d32f4d5c90c0b56846cf9354ff38551a61af9d`, stored
+outside the reviewed tree under `reviews/f9f033797d6c79d1b0207b2ce1e81459c933bbef`.
+Test-maintenance follow-ups retain consistent safety comments and using the private
+writer if future mutations recreate files rather than modifying existing ones.
+
+[CI qualification](https://github.com/sifr-lang/sifr/actions/runs/39679071645/job/119496483938)
+stops before correctness setup because `SIFR_PERFORMANCE_REFERENCE` is unset.
+[Determinism](https://github.com/sifr-lang/sifr/actions/runs/39679071645/job/119496483862)
+reports a missing signature without published inner diagnosis; its root cause is
+not established. Prior Windows qualification failed in unchanged libpg_query/18
+MSVC C sources requiring unavailable Unix headers. These retain their CI and
+cross-platform SQL owners. No CI-green, full-gate or V5 claim is made.
+
+### V3i bounded investigation — streaming native bundle bytes
+
+The remaining native bundle path reads entire files into memory for identity and
+holds two full file buffers for each content comparison. An actual advanced-data
+executable is 894,150,648 bytes; comparing two copies requires about 1.79 GB of
+payload allocation. Observed advanced-role peak RSS is about 1.85 million KiB.
+Additional filesystem reads vary across retained runs even with zero rustc work.
+The allocation is proven by code; neither its end-to-end cost nor streaming gains
+are established. Large debug sections remain part of the required artifact bytes.
+
+First run an isolated, owned prototype against the actual retained bundle, using
+fresh byte reads and alternating baseline/proposed observations. Preserve exact
+IdentityEncoder field framing, order and digest; executable, sidecar and runtime
+library inventory; basename-conflict rejection; source/destination error handling;
+leases; capture semantics; and every fresh content verification. Bound working
+memory without memoizing content, trusting size/mtime as equality, removing debug
+information, changing profiles or dropping assertions. Hashing a declared stream
+length must fail on truncation, extra bytes or read errors without leaving a
+partially updated encoder. Equality must handle partial reads and interruptions.
+
+Use isolated owned copies and existing leases when reading mutable source paths.
+Keep source code unchanged during measurement. Record elapsed, CPU, filesystem
+I/O, peak RSS, input identity, allocation/reserves and all failures. No OS cache
+flushing or cold-build timing claim. Cover empty/boundary/large streams, equal and
+unequal content, unchanged-size/mtime corruption, sidecars/runtime basenames,
+read failures and identity equivalence. Apply the 30-minute diagnostic cap and
+existing disk/memory reserves. Stop if the safe working allocation cannot fit.
+
+This contract authorizes prototype diagnostics only. Adopt production changes
+only after evidence supports a separately recorded bounded implementation contract
+with affected tests and exact-candidate review. Full native coverage, remaining
+Python examples and command matrices, cold SQL feasibility, integrated resource
+scheduling, final create-PR/merge gates and all V5 scenarios remain required.
