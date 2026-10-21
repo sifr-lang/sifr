@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1g combined semantic build/runtime tradeoff; integrated acceptance remains open
+current_stage: V4j editor saved-check lease lifetime; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -5917,3 +5917,87 @@ record that result and stop this profile experiment. Adoption requires a separat
 implementation contract and complete affected compiler, semantic/native, SQL,
 source/installed and final phase qualification. No cached test success or omitted
 reproducibility build may satisfy the goal.
+
+### V1g outcome — combined profile still exceeds build feasibility
+
+The V4i closure, V1f result and prospective V1g contract were merged in
+[#4406](https://github.com/sifr-lang/sifr/pull/4406), candidate
+`84d6a36852dda8ef00d0a07dbd4d68e7726d32ee`, merge
+`2b7d752fb8e5f1cb48d26a6aebf078adcdc2402b`. The frozen implementation remains
+`95984515b9ac0afa323b434377a2ac5f1b097af1`; differences are phase Markdown only.
+
+The combined diagnostic passes the complete SQL build protocol in **675.300s**
+excluding 3.341s of external probe preparation. Clean A / unchanged A / clean B
+take **328.654 / 6.684 / 338.956s**. Compared with V1f's unchanged 789.540s
+baseline, the observed reduction is 114.240s (14.5%), still above the complete
+gate's 600-second budget before other required tests.
+
+The baseline was reused under the prospective input-bound diagnostic contract,
+not executed again: all 126 archived evidence files, actual source/toolchain,
+protocol/probe/guest hashes, runtime environment and allocation match. All 490
+resolved package/target/feature entries match in all three stages. The only
+profile differences are the four declared native libraries and lowering's host
+build script. All debug assertions, overflow checks and other profile fields
+remain unchanged. Both clean stages have zero fresh entries; unchanged A has all
+490 fresh. Seven rejection controls and three linked-tool byte comparisons pass,
+and all owned build targets are removed.
+
+All four original runtime tests pass in each of three fresh-process repetitions,
+with matching normalized outcomes. Source checking has median/worst
+**1.189 / 1.206s**, versus **0.557 / 0.591s** normally: 2.133 times the baseline
+median. PostgreSQL component median/worst is **37.914 / 38.244s**, versus
+**38.377 / 38.450s** normally. Do not claim a component-runtime speedup from these
+three observations. The whole candidate diagnostic, including preparation,
+cleanup and all six runtime processes, takes **797.319s**.
+
+The first attempt failed preflight in 0.685s because the diagnostic compared
+raw `rustc -vV` output with the canonical record's trimmed output. The complete
+version, compiler commit and LLVM version matched; only a trailing newline
+differed. Preserve that failed receipt and original helper. The corrected helper
+normalizes that newline and starts a separate recorded attempt. Both wrappers
+report no resource-reserve stop, remaining descendants or tracked mutation.
+
+`v1g-comparison.json` reconciles all inventories, profile differences and outcomes.
+`v1g-evidence.tar.gz`, SHA-256
+`de746b956cf80e4c721666eb6ea3ff7af4e1ce1341eb4b137c6a8052a19fcf08`,
+contains 72 independently hash/size-verified files, including the immutable V1f
+baseline archive. No production profile is changed. Stop this profile experiment;
+it does not establish build feasibility or qualify broader compiler behavior.
+V1, the remaining execution/fixture work, complete final gates and V5 stay open.
+
+### V4j bounded repair — shared editor/project process-local leases
+
+Address the explicit V4i review follow-up in
+`sifr_compiler_services::editor::saved_checks`: namespace and generation readers
+still hold raw `File` locks, so an unrelated child paused between fork and exec
+can retain their locks after the Rust reader is dropped. This is the same
+demonstrated process-local ownership gap, not permission to change intentionally
+inherited native-child leases or increase test concurrency.
+
+Move the proven `ProcessLease` implementation to the existing shared
+`sifr_cache_storage` owner. Document unique file ownership, sharing through
+`Arc<ProcessLease>` when needed, and the prohibition on using it for child-owned
+locks. Driver storage/housekeeping and editor saved checks must consume this one
+implementation. Preserve nonblocking admission, stable inodes, complete record
+validation, durability, GC selection and all native-child lease behavior.
+Both consumers already depend on the shared storage crate; no dependency pins or
+profile membership need to change.
+
+Keep the existing driver lease regressions and their exact test IDs through a
+test-only harness importing the shared production type. Add an editor regression
+using a real complete saved generation and stable namespace/generation lock
+files. Pause a real child before exec with a bounded readiness handshake; drop
+the actual editor reader and require both exclusive locks to be available before
+the child continues. The original raw-file implementation must fail this control.
+The test must always release/reap its owned child, including on assertion failure.
+Also exercise failed owner/generation admission and retain existing malformed
+saved-check behavior. Do not substitute sleeps for readiness.
+
+Validate the failing original editor path, the corrected editor/service and
+cache-storage suites, the shared guard's close-only negative mutant, all driver
+project-cache and intentional native-child controls. Use the complete default
+driver suite if it is more efficient than repeated preparation of those families.
+Run formatting, size and affected source/ownership guards, and confirm unchanged
+profile selections. Update the architecture's project-storage ownership record.
+Exact-candidate independent review remains required before this intermediate
+implementation merge; complete final phase gates and V5 are not waived.
