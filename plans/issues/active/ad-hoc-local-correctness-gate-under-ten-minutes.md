@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b2 merged; V1b3 checked bootstrap implementation and validation; integrated acceptance remains open
+current_stage: V1b3 reviewed; V1b4 semantic/native graph separation registered; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -1134,7 +1134,7 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | --- | --- | --- |
 | Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
 | V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.20 / #4389; final completeness pending |
-| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 and V1b2 / #4390 accepted; semantic/native split and feasibility pending |
+| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384, V1b2 / #4390 and V1b3 / #4391 accepted; semantic/native graph split and feasibility pending |
 | V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
 | V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
@@ -3977,3 +3977,118 @@ the test-ownership walk follows `mod` edges but not `include!` descendants of
 controls; do not exempt production includes or count this guard as passing.
 The existing bootstrap parser/lowerer site controls pass. The complete coverage
 area, dependency direction, method/filesystem ledgers, format and size checks pass.
+
+
+### V1b3 closure — checked bootstrap and native observer / #4391
+
+Exact implementation candidate `55853501c71eae78a50741adfcd8f24935676dc4`
+passes all 22 named acceptance categories and independent review. The canonical
+checked loop owns source-order parse/lower, canonical HIR, exports/re-exports and
+transitive imports. A borrowed native observer retains private interop before
+empty-private handling and renders before current-module export installation.
+The public result remains complete native data; format 5, dependency versions,
+profiles and selected tests remain unchanged. No semantic-only artifact is admitted.
+
+| Named observation | Executed result | Wall seconds |
+| --- | --- | ---: |
+| Compiler services | All 31 tests, including five new boundary controls | 77.298 |
+| Driver preparation | Lower owners fresh; services/driver rebuild | 73.819 |
+| Driver stdlib | All 56 assertions pass | 50.774 |
+| Metadata producer / reader | 15 / 9 tests pass | 129.815 / 27.759 |
+| Explicit complete emission corpus | All 732 fixtures pass | 107.796 |
+| E2E preparation | Pass, including runner overhead | 90.099 |
+| Positive / negative / runtime-failure E2E | 732 / 569 / 6 inputs pass | 123.869 / 7.748 / 11.251 |
+| Sysroot CLI | All three tests pass | 5.749 |
+| Distribution full / qualification | 72 variants / nine internal qualification controls pass | 247.530 / 28.757 |
+| Real installed/source admission | Exact metadata/diagnostics, integrity and rejection/recovery pass | 226.353 |
+
+All observations above run on the exact implementation candidate. The ignored
+producer child is exercised by its parent process protocols; the complete
+normally ignored corpus is explicitly executed. Positive E2E reports 732 outcomes,
+732 passes, zero failures and zero original batch failures. Compiled native
+artifacts may be reused; assertions execute. These overlapping workloads and
+retained-target observations are not additive full-gate timing or a matched
+speedup estimate. The earlier approximately 82-second E2E number was Cargo's
+build duration; the complete receipt is 90.099 seconds.
+
+Against the accepted V1b2 runtime candidate, all 1,464 source/Rust files, source
+maps and remaining row fields match exactly. The portable metadata digest also
+matches exactly: `df5aaca26bc0424e901cd1457419191d3ed1e0345da0b1980cca8c0f070c9a6b`.
+Only the already declared unordered `stdlib_modules` report array is compared
+as a set, rejecting duplicates. The physical metadata/compiler envelope changes
+as expected. No controlled-envelope rewrite is needed for this item.
+
+The real installed check uses the versioned dev-profile binary built by the
+successful self-update case and canonical packaging. It verifies complete
+structural metadata, exact source/installed identity and valid/invalid diagnostic
+parity, installed integrity, incompatible/missing/corrupt metadata rejection,
+restoration and lazy checking without navigation source. It is not production
+release qualification or the full installed-public-emit corpus; final contracts
+retain those obligations.
+
+The final method ledger (6,400 sites), filesystem ledger (3,316 sites), coverage
+area, dependency direction, canonical bootstrap-site controls, formatting and
+file-size checks pass. Preserve the initial test compile failure and the full
+split-brain guard failure. An exact baseline archive reproduces the three
+codegen test-include findings; V4 owns `include!` test-reachability controls and
+repair. The full split-brain guard is not counted as passing. The first external
+final-guard script had a quoting NameError before any checks; its separate
+corrected script ran the final checks successfully.
+
+`v1b3-final-acceptance.json` binds 22 categories to specifications, receipts,
+outputs and resource hashes. `v1b3-structure-proof.json` records unchanged
+schemas/manifests/profiles and actual lower-owner Cargo freshness. The complete
+corpus, current metadata artifact, installed observations and failed evidence
+are in `v1b3-evidence.tar.gz`, SHA-256
+`817167adb48719b0ed050ab060775b74c68940a2aba4ac56dd1839a418cf18e7`.
+All 1,673 manifest file hashes were verified after collection. Independent
+review is **SATISFIED**, with no blockers, at
+`reviews/55853501c71eae78a50741adfcd8f24935676dc4/review.md`, outside the reviewed
+tree. It confirms ordering, lifetimes, API and policy preservation and accepts
+the recorded named evidence without repeating broad validation. This closure
+changes records only.
+
+Follow-ups: V1b4 owns the invariant that the native observer's live dependency
+map matches the checked map installed at completion, plus the permanent
+transitive dependency protection identified in V1b2. V4 retains the baseline
+field-checker and test-include guard repairs. A read-only ELF inspection found
+1,205,774,477 bytes of debug sections in the 1,312,681,704-byte ordinary dev CLI;
+V4 may measure limited-debug development/test preparation with unchanged
+assertions and diagnostic/backtrace requirements. This does **not** explain the
+SQL bottleneck: historical source and actual normal/opt1 SQL trial settings
+both explicitly used `CARGO_PROFILE_DEV_DEBUG=0`. Do not rerun a redundant SQL
+debug-disable experiment or infer timing savings from binary sizes.
+
+### V1b4 bounded implementation — semantic consumption and native production
+
+Deliver the actual dependency cut needed by the three linked SQL tools. Keep
+canonical frontend checking for migrations and the real component host for SQL
+profiles; remove driver/native-emitter ownership from their normal resolved
+Cargo closure. Preserve common checked HIR, semantic/nominal authority, source
+ordering and diagnostics rather than adding a SQL-specific parser or lowerer.
+Move native production/interop/preview behavior to its honest native owner and
+share only the lower representations and operations actually needed by both.
+
+First resolve the construction and admission contract from real callers. A
+complete typed in-memory checked-stdlib product and an explicitly role-versioned
+persisted artifact are distinct designs; compare their preparation/lifetime needs
+before selecting one. Never pass an empty/default native product as semantic
+success. A new persisted role requires explicit schema/version, keys, descriptor
+and consumer admission, corruption/incompatibility controls and native rejection.
+A typed in-memory product does not waive selected-sysroot/identity correctness,
+installed rejection behavior, complete native production or source/installed
+parity. Record the chosen contract before changing its implementation; do not
+mark the remaining role/admission requirements satisfied merely by moving code.
+
+Keep external dependency/tool versions and assertions. Preserve the native
+compiler's complete metadata, Rust output, interop and installed-package behavior.
+Register any necessary schema/profile changes explicitly. Add permanent resolved
+transitive graph controls and enforce the checked/native dependency-map invariant.
+Qualify the actual three-tool clean-A, unchanged-A and independent-clean-B protocol
+with all seven mutation controls, within-profile executable byte equality, real
+migration/provider/editor/host-tool behavior, missing compiler/product/version
+and incompatible metadata failures, and the affected complete native/installed
+corpora. Include preparation and cleanup. The existing SQL trace contains a
+167.05-second codegen unit (normal clean A), but overlapping unit durations are
+not additive savings predictions. V1 feasibility and final phase gates remain
+open until measured acceptance succeeds.
