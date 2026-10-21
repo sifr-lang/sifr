@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V2b component reuse accepted; V4b nested CLI preparation attribution next; integrated acceptance remains open
+current_stage: V4b attribution complete without code change; V1d build-only optimization investigation next; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4553,3 +4553,96 @@ profiles. Do not add ambient-binary discovery, hidden Cargo preparation, stale
 artifact fallback or a new service. Register the concrete implementation and
 named checks after attribution, before editing source. This investigation is not
 a waiver of full final gates or a sub-ten-minute result.
+
+
+V4b first attribution result (implementation unchanged): retained CLI preparation
+reports 458/458 fresh artifacts before and after executing the existing LSP
+parity test directly. The three categories pass in 6.202s, 5.695s and 5.685s.
+The compiler and LSP test binary hashes/inodes remain unchanged. This rejects
+attributing the earlier 2m20s CLI preparation to the nested command alone; it
+does not measure the outer LSP test preparation or intervening package-test step.
+Before implementation, extend the control to include exact LSP library
+preparation, the same parity execution, CLI preparation, the original package
+host-tool category, then CLI preparation again. Capture artifact freshness and
+actual fingerprint reasons at each transition. Do not relocate a test or claim
+rebuild savings without evidence supporting the relevant preparation boundary.
+
+
+### V4b attribution closure — no repeated CLI rebuild reproduced
+
+No implementation, test selection or coverage change is made. On unchanged
+implementation candidate `dd65d042ae3414f0120b61cbbe297240df7b36a4`, all nine
+bounded diagnostic categories pass. The merged phase plan differs from that
+candidate only in Markdown; source and retained targets remain fixed.
+
+| Controlled category | Seconds | Cargo artifact result |
+|---|---:|---|
+| CLI test preparation A | 6.202 | 458/458 fresh |
+| Existing LSP parity test, direct execution | 5.695 | Real CLI command and original assertions pass |
+| CLI test preparation A again | 5.685 | 458/458 fresh |
+| Outer LSP library preparation | 24.702 | 449/450 fresh; one LSP test binary rebuilt |
+| Parity test after outer preparation | 4.683 | Real CLI command and original assertions pass |
+| CLI preparation after LSP preparation/execution | 4.684 | 458/458 fresh |
+| Original package host-tool category | 2.685 | 293/293 fresh; seven selected tests pass |
+| CLI preparation after package transition | 4.682 | 458/458 fresh |
+| Settled LSP preparation | 3.182 | 450/450 fresh |
+
+Cargo attributes the one LSP test rebuild to `FsStatusOutdated(StaleDependency)`:
+its build-script dependency has a newer timestamp. The rebuilt LSP test binary
+is byte-identical. Across all nine artifact snapshots, the compiler SHA-256 is
+`f222589d5f61f6b08cea7e3119470c34847bb8f1acdcebc8a2cf16693ef14dce`
+and LSP test SHA-256 is
+`d715cd96e7da4f54db534f77bb8119b5661a5833cb67d2eca1a46f78a9145f90`.
+Snapshot/hash collection is recorded outside category timings; these are attribution
+experiments, not full-gate measurements. Every category retains the cap/reserves,
+cleanup and source-change checks; no category stopped or left a process group.
+
+The controlled evidence rejects blaming the earlier 140-second CLI preparation
+on repeated invalidation from these unchanged LSP/package transitions. That older
+run has no captured Cargo dirty reasons, so its precise cause remains unproven.
+Do not infer that all caches are correct in every edit scenario. The proposed
+parity-test relocation is not pursued on this evidence. The meaningful next
+question is compilation cost on cache misses and after real input edits.
+
+Evidence packet `v4b-evidence.tar.gz`, SHA-256
+`d43564868df61e3a52ffb3f753e1f64ae86c3d8525841e046d11dacf1eb048c4`,
+contains 72 hash-verified manifest entries, including full fingerprint logs,
+artifact freshness, snapshots, commands and unchanged-source receipts. This
+record-only closure needs documentation checks, not another external code review
+or a repeated full gate. Final integrated gates and V5 remain open.
+
+### V1d bounded investigation — build-only Rust optimization
+
+Refresh cold SQL critical-path evidence on the current implementation before
+adopting a profile change. The prior six-worker independent-clean timing at
+`27859a22fcc61bc959a3ee1243fa330d7adb2513` includes Cranelift codegen (197.41s),
+lowering (168.35s), frontend (107.77s), metadata (79.83s), PostgreSQL C preparation
+(57.16s) and SQL-tool identity build scripts (about 20–23s each). These durations
+overlap and are not additive. The canonical native qualification already sets
+`CARGO_PROFILE_DEV_DEBUG=0`; resolved `cc` already enables `parallel`. Neither
+repeating those settings nor extrapolating older timings is an optimization.
+The captured effective profiles identify build-only `sifr_identity` and `sha2`
+as optimization level zero, while target/runtime versions retain levels one/two.
+
+First measure the existing build-helper workload and a standard Cargo build-only
+optimization override. Keep normal target/runtime optimization, Engine policy,
+feature selection, dependency versions, fixture assertions and qualification
+scope unchanged. Verify actual emitted Cargo unit profiles rather than assuming
+an environment/configuration override took effect. Do not infer end-to-end gains
+from a helper micro-measurement.
+
+For any promising candidate, compare the complete canonical clean-A, unchanged-A,
+independent-clean-B SQL protocol on the same source and declared six-worker
+allocation. Preserve linked binary identity/equality within each protocol, all
+seven rejection controls, preparation and cleanup, and zero-fresh/complete-fresh
+expectations for clean/reused builds. Use owned targets, capacity preflight,
+20 GiB disk and 2 GiB memory reserves, and a 30-minute category cap. Record changed
+host-build profiles separately from unchanged native target profiles and compare
+resolved features/units. A build-only override must not silently alter C compiler
+optimization or normal runtime code. Retain failed/no-benefit experiments.
+
+No production profile change is registered yet. If the diagnostic is beneficial,
+register its exact manifest/configuration scope, input/provenance implications
+and focused acceptance checks before implementation. Blanket opt0 remains
+unaccepted. Compiler-edit costs, full current-host correctness coverage and the
+complete sub-600-second V5 matrix remain mandatory.
