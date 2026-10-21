@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3g complete native-role diagnosis; V1 feasibility and integrated acceptance remain open
+current_stage: V3h retained Rust-interop fixture ownership; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -6420,3 +6420,119 @@ bounded repair after identifying a root cause; do not silently change native
 selection, result reuse, Cargo authority, trust, features, durability or public
 diagnostics. The remaining Python examples, command matrices, cold SQL
 feasibility, integrated execution and V5 acceptance remain separately required.
+
+### V3g closure — complete native inventory and repeated cold fixture authority
+
+The observed candidate is `e22445c7bf4b887c2d767cc8fb7422510c182fce`.
+The canonical merge inventory exactly matches V4e: six CLI and 82 driver native
+roles. All **88 passed**, including complete 732-positive-fixture emission and
+1,307-fixture semantic/native frontend comparisons. No role failed, timed out or
+was skipped. The protocol child helper remains explicitly identified; role counts
+are not counts of independent semantic assertions. Required preparation passed,
+and every owned process session ended empty with no tracked-source change.
+
+| Diagnostic category | Roles | Sum of outer role times |
+| --- | ---: | ---: |
+| CLI generated builds | 6 | 106.498s |
+| Package/workspace metadata builds | 7 | 51.115s |
+| Process protocol helper | 1 | 3.838s |
+| Complete emission/semantic corpora | 2 | 193.133s |
+| Python interoperability | 9 | 389.322s |
+| Rust interoperability | 43 | 3,359.339s |
+| Package namespaces/specialization | 2 | 26.195s |
+| Workspace/project compilation | 18 | 161.876s |
+
+Role time totals **4,291.316s**. Separate preparation is **215.032s**; between-role
+orchestration is **17.687s**. The sequential campaign took **4,524.035s**. These are
+instrumented diagnostic observations, not a complete gate runtime or V5 result.
+Per-category caps stayed at 30 minutes. The largest role was resource alias
+rejection at **396.494s**, followed by resource lifecycle at **379.985s**. Read-only
+analysis and one disk inventory overlapped parts of the campaign, so these are
+not idle-host comparative benchmarks. From role 030, smaller native graphs used an
+8-GiB prospective data working allocation; advanced-data retained 20 GiB. The 20-GiB
+disk and 2-GiB memory reserves and actual resource monitors were unchanged; both
+helper versions and the allocation decision are retained.
+
+The traces contain 745 nested Cargo and 6,425 rustc process observations, with no
+unparsed exec events or missing compiler completion signals. Fifty-three nonzero
+compiler exits occur in passing rejection roles. The original summary incorrectly
+classified these as absent completions; preserved `trace-summary-v2.json` files
+correct that analysis using the same raw signals. This never changed a test
+result. Cargo separately reported 109.980s of fresh outer test-graph preparation
+across the 88 isolated invocations; that time is already included in role totals.
+
+The HTTP loopback role takes 258.919s. Its observed Cargo intervals cover 247.799s,
+while the generated runtime command takes 0.181s. The same TLS build-script basename
+appears in two separate Cargo families: 89.427s for the probe and 108.291s for final
+build. These are nested/overlapping process intervals, not additive removable
+savings, and matching basenames alone do not prove complete build equivalence.
+
+Repeating that exact role with the same selected test binary passes in 257.336s.
+An fd2-write observer captures 310 missing Cargo fingerprints and two generated
+probe-root file freshness reasons, with no unparsed fingerprint messages. The
+repeat selects new probe/final mutable families. Independent reproductions of
+`IdentityEncoder`, lockfile digests and probe-family policy exactly match both
+observed probe-family hashes. The canonical lockfile bytes, native toolchain,
+owner and trust/environment policy are unchanged; changing the temporary
+fixture lockfile path accounts for the changed probe family. This proves the
+fixture-lifetime cause without removing authority fields or bypassing Cargo.
+The two probe-root freshness reasons remain legitimate work; not every compiler
+invocation is labeled waste.
+
+Conversely, the retained advanced-data fixture's 13 files (163,640 bytes) preserve
+all captured bytes, timestamps, inode identities and modes relative to V3f after
+preparation and both selected roles. Its selected preparation/runtime roles pass
+in 56.307s/35.864s with zero rustc invocations. Different initial states prevent
+using those observations as a paired V3f-versus-V3g speedup claim.
+
+Frozen evidence: `v3g-evidence.tar.gz`, **126,195** files,
+SHA-256 `d02d0e2c2c061d87f0628f719bbf04826a45ce516c7f4dd5843f410eb5c5ce47`. It includes every per-role command/result/resource/trace,
+process guard, inventory, helper version, source identity proof, corrected summary,
+repeat diagnostic, manifest and sortable `v3g-report.html`. Local extraction is
+`local-gate-implementation-20261020/v3g-reviewed-diagnostic` and is verified against
+the per-file manifest. This is record-only diagnosis; no implementation review is
+claimed or required. The phase remains open.
+
+Next: retain final Rust-interop fixture inputs under explicit ownership. Separate
+follow-ups retain the observed probe/final target split, full Python import-probe
+partitioning and repeated outer Cargo preparation. No profile switch or shared
+trust-context shortcut is authorized by these observations. Remaining Python
+examples, command matrices, mandatory cold SQL feasibility, final integrated
+gates and all V5 scenarios remain required.
+
+### V3h bounded implementation — retained Rust-interop fixture inputs
+
+Generalize the existing `ReusableScenario` owner across the native Rust-interop
+scenario tests. Preserve each scenario's current assertions and intentional
+pristine-to-mutated transitions. Canonical fixture bytes and final static
+manifest/source/bridge overlays are prepared before a single reconciliation;
+unchanged retained files keep their timestamps. Ownership identity includes the
+checkout, fixture, scenario and named test variant, not a fresh PID/time suffix.
+Keep the accepted advanced-data identity unchanged.
+
+Route every use of the retained inputs through that explicit owner: metadata,
+canonical package checking, native builds, direct Cargo controls and generated
+runtime commands. Add a private ownership parameter to the existing canonical
+check path if needed; retain its public default and behavior. Do not introduce a
+second checker, implicit path-based ownership inference, globally inheritable
+descriptors, or a compatibility fallback. Audit all direct command and mutation
+helpers, including native build-script and SQLx mutation controls.
+
+Fresh independent native build-script targets A/B and the armed-sentinel control
+remain fresh. No assertion pass is cached. Keep complete lock, toolchain, source,
+Python, trust, profile and finalized-artifact identities. Do not change generated
+application profiles, Cargo family partition policy, dependency versions, fixture
+selection, emitted diagnostics, runtime outputs or expected failures in this item.
+
+Acceptance: preserve the exact selected native names and every scenario branch;
+run all affected Rust-interop roles and their prerequisites under the existing
+30-minute per-category cap. Demonstrate repeated unchanged runs of the expensive
+HTTP, resource, backend and advanced-data cases with actual Cargo freshness
+reasons, file bytes/metadata and compiler/process evidence; report cold retained
+preparation separately, and include it in later integrated acceptance. Validate
+source/manifest/lock/bridge/trust mutations, variant separation, stale-file and
+type reconciliation, alias/size rejection and explicit intended-child ownership
+across parent death. Preserve unrelated-child noninheritance. Run focused driver
+regressions, formatting, size, ownership and applicable coverage self-tests, then
+one exact-candidate independent review. Full final phase gates and V5 remain
+required; no ten-minute result follows merely from this repair.
