@@ -171,13 +171,13 @@ fn package(name: &str, root: &Path, manifest_source: &str) -> SifrPackageMetadat
 #[test]
 fn profile_clones_share_the_prepared_engine_policy_and_empty_profiles_stay_lazy() {
     let empty = PreparedSqlProfiles::default();
-    assert!(empty.compilation.is_none());
+    assert!(empty.compilation().is_none());
     assert!(
         empty
             .component_host(ComponentHostLimits::default())
             .is_err()
     );
-    assert!(empty.compilation.is_none());
+    assert!(empty.compilation().is_none());
     let limits = ComponentHostLimits {
         max_wasm_stack_bytes: 1024 * 1024,
         ..ComponentHostLimits::default()

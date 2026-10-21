@@ -138,13 +138,19 @@ fn profile_import_diagnostic(
 }
 
 impl PreparedSqlProfiles {
+    /// The owner also serves requirement-only projects without a query host.
+    #[must_use]
+    pub fn compilation(&self) -> Option<ComponentCompilation> {
+        self.compilation.clone()
+    }
+
     /// Requests share compiled code with schema preparation and profile clones;
     /// each returned host still owns separate response-cache/execution state.
     pub fn component_host(
         &self,
         limits: ComponentHostLimits,
     ) -> Result<ComponentHost, ComponentError> {
-        let compilation = self.compilation.clone().ok_or_else(|| {
+        let compilation = self.compilation().ok_or_else(|| {
             ComponentError::new(
                 ComponentErrorKind::Execution,
                 "SQL profiles have no initialized component owner",

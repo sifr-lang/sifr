@@ -71,7 +71,7 @@ impl SqlEditorRuntime {
     }
 
     pub(super) fn compilation(&self) -> Option<ComponentCompilation> {
-        self.host.as_ref().map(ComponentHost::compilation)
+        self.profiles.compilation()
     }
 
     pub(super) fn set_cancellation(&mut self, cancellation: Option<Arc<AtomicBool>>) {
