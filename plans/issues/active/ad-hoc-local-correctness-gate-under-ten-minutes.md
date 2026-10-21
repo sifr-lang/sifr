@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4b attribution complete without code change; V1d build-only optimization investigation next; integrated acceptance remains open
+current_stage: V1d build-helper diagnostic complete without profile adoption; V2c durable-history attribution next; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4648,3 +4648,96 @@ register its exact manifest/configuration scope, input/provenance implications
 and focused acceptance checks before implementation. Blanket opt0 remains
 unaccepted. Compiler-edit costs, full current-host correctness coverage and the
 complete sub-600-second V5 matrix remain mandatory.
+
+
+### V1d diagnostic outcome — helper improvement is not a cold-gate improvement
+
+Record PR: [#4396](https://github.com/sifr-lang/sifr/pull/4396).
+
+On unchanged implementation `dd65d042ae3414f0120b61cbbe297240df7b36a4`, with the
+prospective plan merged as `3a662f50326c928002160d1ea48db2631ae3fa44`, an external
+build-dependency probe runs the actual `emit_local_token` and
+`emit_product_identity` functions against the SQL tool's complete source inventory.
+Its resolved external dependencies are a verified subset of the root lockfile.
+Three repeated workloads have medians 12.394s at build-only opt0, 1.911s at
+build-only opt1, and 2.859s with only `sifr_identity` and SHA-256 0.11.0 overridden
+to opt1. All nine emitted identity outputs have the same SHA-256,
+`d2c3893493d87b2be7695789eeeb60239a2669cd90cae8f0ca289ca799ae7084`.
+These helper timings are not whole-build or whole-gate savings.
+
+The complete canonical SQL protocol then runs sequentially for baseline and the
+narrow two-library override, with the same frozen source, six Cargo workers,
+resource allocation/reserves, debug-off policy and runtime optimization levels.
+The actual override is version-qualified for SHA-256 0.11.0; version 0.10.9 is
+unchanged. This is one matched diagnostic observation, not statistical acceptance.
+
+| Stage | Baseline seconds | Selective helper override seconds |
+|---|---:|---:|
+| Clean A | 386.896 | 384.806 |
+| Unchanged A | 7.021 | 6.888 |
+| Independent clean B | 391.757 | 385.444 |
+| Canonical protocol, including preparation and cleanup | 786.744 | 778.281 |
+| Complete diagnostic category, including admission/observation overhead | 787.352 | 779.872 |
+
+Both protocols pass all seven rejection controls, all three linked executable
+comparisons, zero-fresh clean builds, complete-fresh unchanged builds and owned
+target cleanup. All 490 resolved package/target/feature units match. Exactly two
+host build-dependency units change opt0 to opt1; all 269 native target units and
+all other emitted profile fields remain unchanged. No category reaches its cap,
+violates resource reserves, changes source or leaves a process group behind.
+Independent protocol path maps differ, so cross-protocol executable equality is
+not claimed; equality holds across all three stages within each protocol.
+
+In clean A, the three SQL-tool identity scripts fall from 18.38–19.59s to
+4.02–4.61s. Their work overlaps other compilation. The complete diagnostic gain
+is only 7.480s (0.95%), and both observations remain above 600 seconds. Do not
+adopt this profile change as a demonstrated cold-gate optimization. V4 may revisit
+it for a measured real edit cycle; no production manifest/profile, test selection
+or component provenance changes are made here.
+
+The trace also records PostgreSQL's build-script compile as unblocked by its
+serde_json build dependency at 23.49s but starting at 293.33s, followed by its C
+build at 307.54–363.84s. Treat this as queueing evidence, not proof that moving
+source files or deleting a dependency will recover that interval. Cranelift,
+lowering and frontend machine-code generation remain substantial overlapping
+work. V1 feasibility and all final gates remain open.
+
+The packet `v1d-diagnostic-evidence.tar.gz` has SHA-256
+`99a02ba492a6bdd4231fa8b5f55224f5188e161788b8f8b463755770c01066ab`;
+all 1,646 manifest hashes and sizes were independently verified after collection.
+It contains commands, actual profiles, Cargo timings/build-script output, complete
+protocol receipts, probe outputs and the source-frozen observation scripts.
+This is a record-only closure and needs documentation checks only.
+
+### V2c bounded investigation — durable-history repeated validation
+
+Measure the current exact `history_over_4096_keeps_publishing_and_recent_aba`
+test, retaining all 4,097 publications, periodic pruning, retention assertions,
+recent ABA restoration and old-record eviction. Include Cargo preparation and
+cleanup; preserve the 30-minute category cap, source freeze and existing disk/
+memory reserves. Capture the existing history report when the test completes;
+missing/capped execution is not a pass. Inspect the actual read/hash/decode and
+filesystem work before choosing an implementation. Other history controls remain
+separate named categories if the long test reaches the cap.
+
+The source currently authenticates and deserializes every retained record during
+generation admission, repeats admission before and after publication, and reads
+records again for consumers. Its stored record digest JSON-serializes an already
+serialized byte vector. A candidate to measure is a bounded Store-owned cache of
+validated immutable record facts: read and authenticate current bytes on every
+admission, bind reuse to both the observed byte digest and expected stored record
+identity, and reuse only successfully validated schema/context/diagnostic facts.
+A cache hit must never replace current file ownership, path, size, generation or
+retention checks. Keep the existing disk format, stored digest definition, fsync,
+publication and lease/GC semantics unless later evidence justifies and explicitly
+registers a broader change. No timestamp-only trust, global cache or cached error.
+
+Before implementation, register the concrete cache representation, residency
+bounds and exact affected controls. Required acceptance includes all project-cache
+and history tests, same-path/same-mtime corruption, mismatched record identity,
+invalid schema/context/diagnostics, cache misses/hits/eviction and release, active
+readers, concurrent publication, interrupted/crashed writers, pruning and storage
+failure. Preserve every original assertion and all 4,097 publications. Add focused
+controls for any new reuse path and compare measured complete baseline/candidate
+work. Formatting, affected policy inventories, file-size checks and independent
+exact-candidate review remain required. Full phase gates and V5 remain open.
