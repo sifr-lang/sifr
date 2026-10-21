@@ -5392,3 +5392,73 @@ both emitted correctness plans and all eight profile/mode compiler plans compare
 identically against the unchanged baseline (15.266s total). Canonical `profiles
 check` passes (2.190s), as do file-size guardrails (8.173s). No full integrated pass
 or ten-minute timing acceptance is claimed. Exact-candidate review is next.
+
+
+### V4f closure — complete crate failure collection / #4402
+
+PR [#4402](https://github.com/sifr-lang/sifr/pull/4402) merged as `1ef6aa18ea`
+after independent **SATISFIED** review with no blockers on candidate
+`cc63437e74e2e093fe64c5b83bbf80b50c4ce07d`, base `98d53e68fd5e192eccfae3530335c8a4ff6c83a0`.
+The 43-file evidence archive `v4f-evidence.tar.gz` was independently verified,
+SHA-256 `8a57f3b6033d1a6b1fd2ce8564ca9a410a8ada6f3e49a21e4b01da70d4677dab`.
+Raw review remains outside Git at `reviews/cc63437e74e2e093fe64c5b83bbf80b50c4ce07d/response.md`,
+SHA-256 `b2ca60ddceeff11858a9440b45dd62741d6cc73131c60fa744941beb2b5c03fa`.
+Reviewer suggestions: use the process layer's literal `safety_deadline` cause in
+future test maintenance (the current rule correctly rejects every non-exit cause),
+and document that terminal failure takes aggregate precedence while prior ordinary
+failures remain in individual logs/status lines. The latter is intentional here.
+The frozen-scope count mismatch remains failed and is assigned to V4g below.
+
+### V4g contract — preserve frozen coverage across new crate enrollment
+
+The frozen-scope self-test compares only the number of Cargo configurations against
+17. PR #4392 deliberately enrolled the separate semantic-services owner, producing
+18 configurations. PRs #4384 and #4390 additionally enrolled stdlib-artifact and
+metadata inside the existing additive compiler group. Preserve those enrollments
+and the original frozen evidence; neither reduce coverage nor rewrite history.
+
+Replace the stale crate-count assertion with a comparison against every frozen
+configuration's actual IDs, execution/preparation commands and isolation class.
+Project only newly enrolled package pairs out of an expanded additive group when
+comparing its old required membership; retain every original flag, filter and
+relative order. Additional isolated configurations are allowed. Missing, duplicate,
+regrouped or weakened original selections must fail. Do not change production
+profile selection, runner execution or the remaining scope assertions.
+
+Acceptance: unchanged current selection passes; baseline count check reproduces
+its known failure. Negative controls must reject loss/reordering/duplication of
+original ownership, altered features or native filters, changed preparation, and
+broken isolation, even when the number of configurations stays the same. Retain
+all original frozen configuration bytes and compare emitted plans before/after.
+Run execution-scope, configuration-plan/native/collection, preparation and profile
+contracts and file-size checks; require independent exact-candidate review. Final
+phase gates and V5 remain open.
+
+
+### V4g implementation and validation
+
+The frozen-scope check now compares every original configuration's IDs, command
+flags/filter order, preparation and isolation. Only plain new `test -p <package>`
+entries in an additive group are projected away for the historical comparison;
+new isolated groups remain selected. The original frozen evidence is byte-identical.
+The checker uses explicit exceptions and remains effective under Python `-O`.
+
+All 54 related execution-scope/configuration/native/collection/preparation tests
+pass (2.945s), including seven new positive/negative coverage controls. All 16
+scope and coverage tests also pass with optimized Python (1.667s). Canonical scope,
+configuration, preparation and qualification policies and the independent emitted
+plan comparison pass (2.886s); both correctness plans and eight compiler profile/mode
+plans are unchanged. The unchanged baseline still fails its old `18 != 17` count
+assertion. Profile validation (0.641s) and file-size guardrails (6.650s) pass.
+The initial scope-only run passed before replacing Python assertions with explicit
+checks (2.202s); final evidence above covers the hardened implementation. Review
+and merge remain next; no complete gate or ten-minute acceptance is claimed.
+
+
+Before review, the same coverage comparison was strengthened to retain original
+configuration order as well as ownership/order within each configuration. The
+negative control swaps two original configurations and must fail. All 54 related
+checks pass again (2.399s), all 16 optimized-Python scope checks pass (0.638s), and
+file-size checks pass (5.660s). This affects only the coverage self-check; emitted
+selection and frozen evidence remain unchanged. The earlier candidate and its
+archive remain diagnostic history, not review of this final candidate.
