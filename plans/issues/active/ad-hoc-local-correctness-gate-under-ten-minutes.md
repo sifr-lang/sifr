@@ -4172,3 +4172,12 @@ Follow both existing native and driver delegation links to the semantic owner;
 mutation controls must reject removal of either link and the original mechanisms.
 The same inventory sweep registers the semantic library and build script in the
 coverage matrix with the existing first-party compiler/merge classification.
+
+
+V1b4 qualification found that the semantic-services build script used the
+feature-gated identity build API without requesting `sifr_identity/build` on
+its own build dependency. Existing dependency unification made the observed
+builds pass; declare the used feature explicitly instead of relying on that
+incidental activation. Preserve all `160e24c` qualification evidence with its
+observed identity. Recheck the resolved features and affected candidate artifacts
+before final review; previous receipts are not silently relabeled.
