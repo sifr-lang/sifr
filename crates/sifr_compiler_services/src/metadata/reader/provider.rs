@@ -1,5 +1,5 @@
 //! Native capability wrapper around the shared immutable metadata owner.
-use super::{Result, wire};
+use super::Result;
 use std::sync::Arc;
 #[derive(Debug)]
 pub struct Provider(Arc<sifr_semantic_services::metadata::reader::Provider>);

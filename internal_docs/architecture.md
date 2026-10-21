@@ -42,7 +42,7 @@ explicit fetch methods. Runtime execution requires verified schema evidence and 
   The query substrate adds stable reusable-template identities, top-level `RowOf`, typed fragments, static hygienic aliases, explicit cardinality adapters, and audited unsafe syntax. The frontend lowers accepted provider analysis to closed SQL HIR with normal Sifr parameter and structural-row types. The driver supplies one production profile-module registry. Generated schema names use one injective and reversible codec. [`sql_query_fragments.md`](./sql_query_fragments.md) records these contracts.
   The PostgreSQL compiler embeds exact `libpg_query` sources for PostgreSQL 13 through 18. Its owned adapter, catalog, analyzer, diagnostics, and server matrix are defined in [`sql_postgresql_compiler.md`](./sql_postgresql_compiler.md).
   The PostgreSQL runtime uses a verified and bounded raw-driver bridge. It owns typed session reset, explicit fetch contracts, consuming transactions, streams, cancellation cleanup, and live PostgreSQL 13 through 18 qualification. [`sql_postgresql_runtime.md`](./sql_postgresql_runtime.md) records the implemented boundary.
-  Incremental SQL analysis uses frontend-owned semantic keys and bounded values, plus an analysis-owned dependency index. The language server uses lossless virtual SQL documents, exact bidirectional maps, schema-aware editor facts, structured fixes, cancellation checkpoints, and named latency budgets. [`sql_incremental_editor.md`](./sql_incremental_editor.md) records this boundary. The SQL editor profile service in `sifr_compiler_services` discovers locked profiles, prepares exact component and schema identities, and renders source-backed profile-import diagnostics for compiler and editor callers. The driver retains build orchestration and native materialization. The editor retains a component host only while prepared SQL profiles exist; enabling profiles initializes the host before publishing them, configured reloads retain it, and disabling profiles releases it. Profile-load diagnostics and cancellation remain available without a component host. Provider-neutral schema lifecycle rules and the PostgreSQL live catalog adapter are host-only crates. They write one deterministic, atomic artifact generation and never enter the standard library or application graph. [`sql_schema_tools.md`](./sql_schema_tools.md) records this boundary.
+  Incremental SQL analysis uses frontend-owned semantic keys and bounded values, plus an analysis-owned dependency index. The language server uses lossless virtual SQL documents, exact bidirectional maps, schema-aware editor facts, structured fixes, cancellation checkpoints, and named latency budgets. [`sql_incremental_editor.md`](./sql_incremental_editor.md) records this boundary. The SQL editor profile service in `sifr_semantic_services` discovers locked profiles, prepares exact component and schema identities, and renders source-backed profile-import diagnostics for compiler and editor callers. The driver retains build orchestration and native materialization. The editor retains a component host only while prepared SQL profiles exist; enabling profiles initializes the host before publishing them, configured reloads retain it, and disabling profiles releases it. Profile-load diagnostics and cancellation remain available without a component host. Provider-neutral schema lifecycle rules and the PostgreSQL live catalog adapter are host-only crates. They write one deterministic, atomic artifact generation and never enter the standard library or application graph. [`sql_schema_tools.md`](./sql_schema_tools.md) records this boundary.
   The migration compiler checks every baseline path and creates one nominal state
   for each step. The runtime records exact recovery evidence and never creates a
   rollback plan. [`sql_migrations.md`](./sql_migrations.md) records this boundary.
@@ -365,7 +365,8 @@ sifr/
     sifr_stdlib_artifact/   (checked stdlib data shared by metadata and native emission; no emitter dependency)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_cache_storage/     (private cache entry, lease, bounded wait, and atomic publication primitives)
-    sifr_compiler_services/ (stdlib and metadata services; Python and SQL editor services; generated preview and saved editor checks)
+    sifr_semantic_services/ (checked stdlib, shared metadata reader, SQL frontend/profile services)
+    sifr_compiler_services/ (native stdlib and metadata production; Python services; generated preview and saved editor checks)
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
     sifr_format/            (Sifr-facing Ruff-backed formatter API, config conversion, diagnostics, and text edits)
     sifr_analysis/          (editor query host; routes formatting through sifr_format)
@@ -623,18 +624,42 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   signature/capture inference remains intact. Unreachable-statement checks use
   the canonical validated CFG without constructing unused rich flow facts.
 - `sifr_stdlib_artifact` owns shared checked stdlib HIR, emission metadata, Rust source records and signature types. Codegen retains emission views, syntax sessions and rendering algorithms; compiler services and the driver consume the same data owner. Its source identity participates in compiler input tokens. This boundary alone does not remove the remaining source-bootstrap dependency on codegen.
-- Within compiler services, `stdlib/bootstrap.rs` owns the canonical checked-source loop: ordered parsing/lowering, canonical HIR, exports and transitive imports. `stdlib/native.rs` observes those checked modules to render Rust, retain interop and build native support maps. Rendering precedes installing the current module's exports, preserving error and dependency order. The private checked inventory is not an admitted semantic-only artifact; the public bootstrap still returns the complete native result. A borrowed observer keeps the checked loop from being instantiated separately for each consumer.
-- `sifr_compiler_services` owns source stdlib bootstrap, indexed metadata encoding
-  and production, prepared metadata, and project-result transport. Its producer
-  receives cancellation from the driver through an explicit callback and uses
-  `sifr_cache_storage` for private files, leases, Unix bounded waits,
-  Windows cancellable lease polling, and atomic publication. `sifr_compiler_services` also owns the single metadata reader, provider/navigation cache, tooling sysroot views, `stdlib_external_defs`, and `CompilerContext`. The context pins compiler identity, resolved sysroot, and cache root for its provider generation. The driver reexports those capabilities and retains CLI cache policy and pruning. Dependencies point
-  from driver to the lower services and storage, and from services to storage.
-  Analysis and LSP depend directly on the lower services, never on driver; the
-  source crate dependency-direction guard resolves Cargo package aliases and
-  checks build, dev, feature and target declarations plus explicit target
-  sources. The lower Python service resolves frozen package snapshots and editor environments, validates live binding and certification identities, inspects declaration targets with a cancellation boundary, applies compiler probe status, and renders package diagnostics. LSP retains document ownership and cache invalidation; driver retains build execution and generated-project adaptation.
-  The lower editor service builds generated Rust preview from the C01 frontend product, shares SQL query finalization and source-map projection with the driver, and restores saved diagnostics only after read-only cache-owner, metadata, record and current-source validation. The driver retains project-cache publication, build/test orchestration and pruning.
+- `sifr_semantic_services::stdlib/bootstrap.rs` owns the canonical checked-source loop:
+  ordered parsing/lowering, canonical HIR, exports and transitive imports. Native
+  `sifr_compiler_services::stdlib/native.rs` observes those modules to render Rust,
+  retain interop and build support maps. Rendering precedes installing current
+  exports; the native observer's dependency map must match the checked inventory.
+  A borrowed observer avoids separate instantiations of the checked loop.
+- `sifr_semantic_services::SemanticContext` pins compiler identity and selected
+  sysroot. Source sessions retain a complete typed checked product in memory;
+  they do not publish metadata or claim native support. Installed sessions share
+  the native consumer's strict format-5 descriptor, compatibility and content
+  admission. Explicit source metadata overrides are validated exactly, without
+  fallback. Failed construction is retryable and never memoized. Context clones
+  share their immutable owner; separate contexts and changed overrides do not.
+- `sifr_semantic_services` owns the shared metadata reader, nominal projections,
+  provider/navigation caches, source-input capture and project transport DTOs.
+  SQL tools depend on this crate and the real component host, excluding driver,
+  native services and codegen from their production dependency graph. They use
+  the canonical frontend product, single-file projection and query finalization
+  shared with native callers. SQL profiles and package diagnostics have one lower
+  owner; native services reexport them for existing editor and compiler callers.
+- `sifr_compiler_services` retains native stdlib materialization, indexed metadata
+  encoding/production, native qualification, Python interop and generated previews.
+  Its provider wraps the shared reader, retaining the same nominal and navigation
+  owners while adding native materialization. `CompilerContext` pins native
+  provider identity, resolved sysroot and cache root. Production still uses
+  `sifr_cache_storage` private files, leases, bounded waits and atomic publication;
+  cancellation and complete validation remain required before publication.
+  Driver retains CLI cache policy, project-cache publication, build/test
+  orchestration and pruning. Analysis and LSP use compiler services directly,
+  never driver. Dependency guards check aliases, build/dev/target declarations,
+  transitive manifest edges and Cargo's resolved graph.
+  The Python service resolves frozen package snapshots and editor environments,
+  validates live binding/certification identities, and inspects targets with
+  cancellation boundaries. The editor preview uses the canonical frontend and
+  native generation. Saved diagnostics require read-only cache-owner, metadata,
+  record and current-source validation. LSP owns document invalidation.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
@@ -1514,7 +1539,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **Canonical suggestion model:** suggestion payloads are structured logical suggestions with one or more text replacement edits plus applicability (`MachineApplicable`, `MaybeIncorrect`, `HasPlaceholders`, or `Unspecified`). Replacement text lives in suggestion edits, not duplicated help children.
 - **Span mapping:** semantic diagnostics preserve byte ranges as `SourceSpan` values before rendering. `sifr_source` owns source text, line maps, and UTF-8/UTF-16/UTF-32 position conversion primitives. Renderers derive display paths, byte offsets, 1-based UTF-8 character line/column positions, source snippets, and related spans at the source-map boundary without defining a separate line-map authority. Codegen/rustc diagnostics use `.sifr` source mapping where available; unmapped compiler failures use `SIFR-INTERNAL-*`.
 - **Producer/presentation boundary:** producers own canonical diagnostic identity, source spans, related spans, and structured context before a diagnostic reaches output formatting. `sifr_diagnostics` owns source-map rendering and the `human`, `json`, and `compact` presentation once producers have supplied canonical diagnostic data. Workspace and package discovery must attach resolver details as args/children on source-level import diagnostics instead of replacing source problems with workspace-discovery-specific codes.
-- **Package diagnostic conversion:** `sifr_compiler_services::python::render_package_diagnostic` is the shared package-to-rendered conversion path, reexported by the driver. It preserves `PackageDiagnostic.help` and useful `PackageDiagnosticOrigin` fields as JSON args while leaving diagnostics spanless when no honest source/config byte range is available.
+- **Package diagnostic conversion:** `sifr_semantic_services::package_diagnostics::render_package_diagnostic` is the shared package-to-rendered conversion path, reexported by native compiler services and the driver. It preserves `PackageDiagnostic.help` and useful `PackageDiagnosticOrigin` fields as JSON args while leaving diagnostics spanless when no honest source/config byte range is available.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
 - **Generation vs rendering separation:** semantic compiler layers construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
 - **JSON renderer rules:** CLI `json` output preserves the existing `RenderedDiagnostic[]` transport and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
@@ -2089,12 +2114,14 @@ The private indexed stdlib wire schema lives in `sifr_metadata`, with explicit
 type/declaration/binder/payload records and a bounded, shared lazy decoder.
 Lightweight `sifr_sysroot` layout, resolution and integrity have no dependency on
 this raw transport owner, so metadata implementation edits do not rebuild the
-manifest/import/lowering/codegen path. Compiler services and driver bind their
+manifest/import/lowering/codegen path. Semantic and native compiler services and driver bind their
 compiled input identities directly to the metadata owner. The format and decoder
 contracts are unchanged by this ownership separation. The
 [historical payload inventory](compiler_dx_metadata_consumers.md) records
 the DX.5–DX.7 field classification and overlay/lifetime migration.
-Normal commands use the metadata consumers activated by DX.7.
+Native commands and installed semantic tools use the shared metadata consumers.
+Source semantic tools retain complete checked definitions in memory without
+native emission or a second persisted format.
 DX.6 adds the linked canonical source producer and shared write-through preparation
 in `sifr_compiler_services::metadata`, with a driver adapter. The CLI `sysroot build-metadata`, bare driver
 tests, verification preparation and native packaging use that same operation.

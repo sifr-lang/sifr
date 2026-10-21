@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b3 reviewed; V1b4 semantic/native graph separation registered; integrated acceptance remains open
+current_stage: V1b4 semantic/native graph separation implemented; qualification and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4126,3 +4126,37 @@ Intentional root/fuzz lock changes may add only the first-party ownership graph;
 update approved lock identities with proof of unchanged external versions and
 checksums. Permanent resolved-graph controls must reject native dependencies in
 SQL production closure and raw metadata below frontend/lowering/codegen owners.
+
+
+#### V1b4 development checkpoint — qualification still open
+
+Initial implementation `7ace84ac6` compiled the semantic, native-service and
+native-driver test binaries in 228.559 seconds. Thirteen semantic-service tests,
+22 native-service tests, 12 metadata-reader tests, 15 producer tests, 56 stdlib
+tests and the explicit 1,307-fixture semantic/native frontend comparison passed.
+The comparison covers all 732 positive, 569 negative and six runtime-failure
+source fixtures; successful frontend results preserve generated Rust and SQL
+migration projections, and failures preserve rendered diagnostics. Real native
+execution and the previous captured native corpus remain separate requirements.
+The earlier `bac8d713b` preparation failed on a missing moved filesystem import
+before assertions; that receipt is retained. Runtime checks overlapped cache
+relocation and are correctness observations, not timing acceptance.
+
+`v1b4-test-inventory-proof.json` confirms all 31 original services tests remain
+selected across the two owners, with four additional semantic-context tests.
+Every pre-existing field in all five profile files is unchanged; four profiles
+add the semantic crate's unit group. `v1b4-lock-graph-proof.json` confirms exact
+external package records (including versions/checksums/dependencies) remain
+unchanged in root and fuzz locks: 858 and 234 external records respectively.
+Only first-party graph entries and the approved fuzz-lock digest changed.
+Resolved and conservative manifest graph controls pass, including transitive
+aliases, edge kinds and target predicates. Newly moved filesystem effects retain
+their reviewed classifications; new test effects are explicitly classified.
+
+A full incremental-cache copy was stopped after 771.473 seconds because it
+caused substantial filesystem contention; it did not replace the original
+cache. Capacity recovery instead verifies older individual entries before
+relocation, preserving logical paths and current entries on their original
+volume. Retain both operation receipts and per-file hash evidence. Final source,
+installed/native corpus, linked SQL clean-A/reused-A/clean-B qualification,
+independent review and final phase gates are not yet accepted.

@@ -42,7 +42,10 @@ fn validate(
     lease: File,
 ) -> Result<Arc<PreparedMetadata>> {
     let bytes = read_bounded(path)?;
-    PreparedMetadata::from_complete_bytes(path.to_owned(), bytes, expected, lease, None)
+    let prepared =
+        PreparedMetadata::from_complete_bytes(path.to_owned(), bytes, expected, lease, None)?;
+    prepared.store.release_unpinned()?;
+    Ok(prepared)
 }
 /// Shared write-through entrypoint for CLI development, linked tests and packaging.
 /// Only successful immutable owners are memoized. Every failed attempt releases its OS lock.

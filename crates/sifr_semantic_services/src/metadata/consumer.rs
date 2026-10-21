@@ -30,7 +30,6 @@ impl PreparedMetadata {
         let metadata_id = sifr_sysroot::sha256_hex(&bytes);
         let store = wire::MetadataStore::open_bytes(bytes, compatibility, wire::Limits::default())?;
         store.validate_complete()?;
-        store.release_unpinned()?;
         Ok(Arc::new(Self {
             path,
             metadata_id,

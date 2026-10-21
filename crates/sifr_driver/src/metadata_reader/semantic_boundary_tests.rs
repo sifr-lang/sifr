@@ -40,7 +40,7 @@ fn semantic_native_full_frontend_corpus() {
                         &native.code,
                         Some("main"),
                     );
-                    if format!("{expected_sql:?}") != format!("{actual_sql:?}") {
+                    if expected_sql != actual_sql {
                         Some("migration projection differs".to_string())
                     } else if expected_rust.rust_source != actual_rust.rust_source {
                         Some("generated Rust differs".to_string())
