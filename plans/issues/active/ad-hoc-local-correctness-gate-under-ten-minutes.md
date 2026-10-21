@@ -4408,3 +4408,12 @@ evidence. Precise target-specific producer inventories remain V3 work, not an
 exception introduced here. Extend the real application regression with configured
 reload, changed schema, same-path/same-mtime corruption, recovery and disable/enable
 checks; a configured reload passes its resident owner into profile preparation.
+
+The complete producer-input comparison also finds three already stale inputs on
+the V2b base: root Cargo.toml, root Cargo.lock and sifr_sql_contract/src/lib.rs.
+They belong to earlier work in this same phase. Five additional host/test source
+inputs change in V2b. All three SQL families have these eight differences; the
+independent words producer has none. Preserve this attribution in
+`v2b-provenance-drift-attribution.json`; do not attribute all producer drift to the
+new cache or imply the earlier focused SQL checks included this qualification.
+Canonical regeneration reconciles the current full phase-owned source state.
