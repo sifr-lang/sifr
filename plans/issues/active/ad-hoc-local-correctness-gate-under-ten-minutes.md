@@ -5258,3 +5258,28 @@ controls continue to detect production calls. Run the complete repository guard,
 its self-tests, affected manifest/inventory contracts and file-size checks with the
 pinned Python. Require exact-candidate independent review. This removes a known
 false blocker; it does not claim a runtime improvement or waive final phase gates.
+
+### V4d implementation and focused validation
+
+Literal includes now participate in the existing test-ownership graph, using their
+source file's directory. Normal/raw literals and macro delimiters are recognized;
+comments, strings and unsupported expressions do not establish ownership. Direct
+`cfg(test)`, inline test modules and cross-file test owners are recognized. A file
+with a production owner, an unresolved ownership cycle or no known owner remains
+checked. No compiler code, approved parser site or profile membership changes.
+
+The repository guard passes (21.656s); all existing and added self-tests pass
+(0.643s). An independent baseline/candidate comparison (36.157s) reproduces exactly
+the three previously recorded `method_authority_tests` findings on the baseline and
+zero on the candidate across the same Rust source inventory. The baseline fails the
+new positive include regression while passing all new negative controls and every
+existing self-test. An AST comparison proves all prior self-test assertions and
+unaffected guard functions unchanged. Manifest registration still runs the guard
+and its self-tests once each. File-size checks pass (2.655s).
+
+The first new self-test failed because its synthetic production module used the
+wrong Rust module-relative path; the corrected fixture uses an explicit path. That
+failed execution (0.649s) and source remain preserved. A shell quoting failure while
+preparing that correction did not mutate sources or execute tests. No false failure
+is reclassified as a passing test. Exact-candidate review and merge remain pending
+at this record. Complete final phase gates and V5 are still required.
