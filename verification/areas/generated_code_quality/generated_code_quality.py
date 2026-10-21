@@ -14,6 +14,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Iterable
@@ -56,26 +57,6 @@ from source_quality_checks import (
     gate_intrinsic_panic_lint as run_intrinsic_panic_lint_gate,
     run_strict_clippy,
 )
-
-# Inputs that change generated Rust or its compile environment. Manifest metadata
-# remains part of per-entry selection, not producer cache invalidation.
-PRODUCER_FINGERPRINT_CRATES = (
-    "sifr", "sifr_codegen", "sifr_driver", "sifr_frontend", "sifr_ipc",
-    "sifr_lowering", "sifr_metadata", "sifr_package", "sifr_runtime", "sifr_stdlib",
-    "sifr_stdlib_artifact", "sifr_stdlib_imports", "sifr_stdlib_manifest", "sifr_syntax",
-)
-PRODUCER_FINGERPRINT_INPUTS = [
-    "Cargo.lock",
-    "Cargo.toml",
-    "stdlib",
-    *[
-        f"crates/{crate}/{path}"
-        for crate in PRODUCER_FINGERPRINT_CRATES
-        for path in ("Cargo.toml", "build.rs", "src")
-    ],
-]
-PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}
-PRODUCER_CACHE_SCHEMA = b"generated-code-quality-materialization-v2\0"
 
 POSITIVE_GROUPS = {
     "concurrency-runtime-readiness",
@@ -292,45 +273,6 @@ def shared_artifact_root() -> Path | None:
     return (REPO_ROOT / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
 
 
-def producer_fingerprint_files() -> list[Path]:
-    files: list[Path] = []
-    for relative in PRODUCER_FINGERPRINT_INPUTS:
-        path = REPO_ROOT / relative
-        if path.is_file():
-            files.append(path)
-        elif path.is_dir():
-            files.extend(
-                candidate
-                for candidate in path.rglob("*")
-                if candidate.is_file() and candidate.suffix in PRODUCER_FINGERPRINT_EXTENSIONS
-            )
-    return sorted(files)
-
-
-@functools.cache
-def producer_fingerprint() -> str:
-    digest = hashlib.sha256()
-    digest.update(PRODUCER_CACHE_SCHEMA)
-    for path in producer_fingerprint_files():
-        digest.update(path.relative_to(REPO_ROOT).as_posix().encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()[:16]
-
-
-def entry_cache_key(entry: Entry) -> str:
-    digest = hashlib.sha256()
-    digest.update(producer_fingerprint().encode("utf-8"))
-    digest.update(b"\0")
-    digest.update(entry.id.encode("utf-8"))
-    digest.update(b"\0")
-    digest.update(entry.source_path.encode("utf-8"))
-    digest.update(b"\0")
-    digest.update(entry.absolute_source.read_bytes())
-    return digest.hexdigest()[:16]
-
-
 def run_command(
     args: list[str],
     *,
@@ -365,35 +307,16 @@ def sifr_binary() -> str:
 
 def materialize_entry(entry: Entry, run_root: Path) -> Path:
     run_root.mkdir(parents=True, exist_ok=True)
-    shared_root = shared_artifact_root()
-    cache_key = entry_cache_key(entry)
-    entry_root = (
-        shared_root / "entries" / f"{entry.id}-{cache_key}"
-        if shared_root is not None
-        else run_root / entry.id
-    )
-    entry_root.mkdir(parents=True, exist_ok=True)
+    # Canonical compilation owns semantic freshness, including imports, external
+    # inputs and compiler changes. Never infer it from a Python source inventory
+    # or the presence of a previous manifest. Private outputs also prevent a
+    # later request from replacing files while an earlier consumer reads them.
+    entry_root = Path(tempfile.mkdtemp(prefix="entry-", dir=run_root))
     crate_root = entry_root / "sifr_output"
-    if (crate_root / "Cargo.toml").is_file():
-        print(
-            f"[sifr-artifact-cache] namespace=generated-code-quality key={cache_key} "
-            f"cache_hit=true workspace={crate_root}"
-        )
-    else:
-        print(
-            f"[sifr-artifact-cache] namespace=generated-code-quality key={cache_key} "
-            f"cache_hit=false workspace={crate_root} miss_reason=not_materialized"
-        )
-        run_command(
-            [
-                sifr_binary(),
-                "build",
-                entry.source_path,
-                "-o",
-                str(entry_root),
-                "--materialize-only",
-            ]
-        )
+    print(f"[sifr-materialization] entry={entry.id} workspace={crate_root} reuse=false", flush=True)
+    run_command(
+        [sifr_binary(), "build", entry.source_path, "-o", str(entry_root), "--materialize-only"]
+    )
     cargo_toml = crate_root / "Cargo.toml"
     if not cargo_toml.is_file():
         raise RuntimeError(f"{entry.id}: generated crate missing Cargo.toml at {cargo_toml}")
