@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4j editor saved-check lease lifetime; V1 feasibility and integrated acceptance remain open
+current_stage: V4k deterministic lease deadline controls; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -6001,3 +6001,85 @@ Run formatting, size and affected source/ownership guards, and confirm unchanged
 profile selections. Update the architecture's project-storage ownership record.
 Exact-candidate independent review remains required before this intermediate
 implementation merge; complete final phase gates and V5 are not waived.
+
+
+### V4j closure — shared process-local lease owner / #4408
+
+PR [#4408](https://github.com/sifr-lang/sifr/pull/4408) merged as
+`dda9fb2ba53330e59ee22f971daa5e794229f8e1` after **SATISFIED** independent review
+of candidate `67da62e36af1aa874de2bae079ec8d6ac15e0d63`, base
+`6c1c599f2ef77ca872bd2f4b591d712efbe27b0f`, with no blockers. One shared
+`ProcessLease` now protects both driver project storage and editor saved-check
+readers. Intentionally inherited native-child ownership is unchanged.
+
+The original private-fixture editor reader failed the real paused-child control
+with namespace `WouldBlock`; the fixed editor controls and all 24 compiler-service
+tests passed. Shared guard controls passed, while the close-only negative mutant
+failed as required. The full default driver suite passed 755 tests with 82
+explicitly ignored, preserving its exact 837-test inventory and all 48
+project-cache and intentional native-child controls. Preparation was 81.294s,
+execution 349.342s, complete wrapper 434.952s. Formatting, file size, source
+ownership, driver maintainability and unchanged emitted plans passed. This is
+intermediate correctness evidence, not full-gate or V5 timing acceptance.
+
+Cache-storage validation remains **failed**, not waived or reclassified: both
+complete runs had nine passes and one failure in the unchanged
+`idle_and_live_lease_waits_remain_bounded` control. One isolated single-test pass
+did not establish a fix. V4k below owns this explicit follow-up. The initial
+permissive editor fixture and missing test-harness `io` import attempts also
+remain preserved as failed diagnostics, separate from the original production
+regression. CI run `39634057520`, job `119339672832`, failed before correctness
+setup because the full-profile performance reference was unset; no CI-green
+claim or workflow repair is included. Cross-platform fixture birth-time support
+remains outside this current-host speed target.
+
+Manifest-verified 158-file archive `v4j-evidence.tar.gz`, SHA-256
+`62b23732e92cc5db5c8e9235e57dcec20d9e3b5ae52e83f6c0027297e38b86fb`.
+Raw review is outside Git at
+`reviews/67da62e36af1aa874de2bae079ec8d6ac15e0d63/request.2OcUOk/response.md`,
+SHA-256 `61506c855185f54a7be3e8d9fcbc1898768bc8dda1d89872324d28918abc60ea`.
+The review correctly reported the heartbeat cause as uninstrumented at its input
+snapshot; the later V4k syscall observation below supplies new evidence without
+rewriting that review. Final integrated gates and the whole phase remain open.
+
+### V4k bounded repair — deterministic lease deadlines and real renewal evidence
+
+Own the unchanged storage-control failure discovered during V4j. Two complete
+unmodified suites failed `idle_and_live_lease_waits_remain_bounded`; the individual
+test passed once. A subsequent syscall-observed complete suite also failed. The
+worker's three `fdatasync` calls took 30.454 / 30.598 / 31.133ms, in addition to
+its configured 10ms interval. Writes were 41.666 and 41.323ms apart, exceeding
+the test's 40ms idle allowance. The waiter returned before the next renewal,
+while the owner remained locked. This demonstrates a test assumption failure;
+it does not justify weakening production idle/hard deadlines or durability.
+Original observation archive `v4k-heartbeat-observation.tar.gz`, SHA-256
+`45f98ebb5f59e623a60f63543dd6eeb0e9296055f64ef9f28ef00c4ce754d5a2`.
+
+Separate the two responsibilities currently coupled by tiny wall-clock budgets.
+Extract only the private elapsed-deadline state/calculation used by the real
+waiter, accepting observed monotonic time and file modification identity. Test
+that actual production calculation with deterministic timestamps: idle boundary,
+renewal resets only idle, hard deadline remains absolute despite renewal,
+hard-before-idle precedence, unchanged/unavailable modification observations,
+and bounded poll delays. Keep the original test ID, and retain real held-lock
+coverage: timeout/cancellation must preserve the stable inode and exclusion;
+a waiter must acquire after owner release. Add separate real `LeaseActivity`
+evidence for multiple completed owner-note renewals and worker shutdown. Observe
+actual progress with a generous failure bound; do not assume a disk flush or
+thread scheduling latency below 40ms. Do not replace the renewal worker with a
+mock in the I/O test.
+
+Preserve exported APIs, default 30s idle / 41-minute hard / 5s renewal policy,
+nonblocking admission, cancellation ordering, lock inode ownership, fsync,
+process-local and intentionally inherited child lease behavior. No lock breaking,
+timeout extension, ignored test, fallback or retry-until-green behavior. This
+item is an independent verification reliability repair, not a V4j regression or
+an asserted whole-gate speedup.
+
+Named acceptance: focused deterministic deadline controls; full cache-storage
+suite on both owned temporary storage locations; disabled-renewal and disabled
+idle-reset negative controls; shared guard and real editor regressions; affected
+driver live-holder, wedged-owner and metadata wait controls; formatting, size,
+affected source ownership and unchanged emitted correctness selections.
+Use the approved intermediate review policy with exact candidate/evidence.
+Final integrated gates and all V5 timing scenarios remain required.
