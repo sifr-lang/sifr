@@ -283,3 +283,7 @@ pub fn restore_editor_checks(
     }
     Vec::new()
 }
+
+#[cfg(all(test, unix))]
+#[path = "saved_check_lease_tests.rs"]
+mod lease_tests;
