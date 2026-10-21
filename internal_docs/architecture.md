@@ -2084,10 +2084,15 @@ of the ambient Unix umask or Windows token default owner. Caller-owned output
 roots retain their ambient ACL policy while rejecting aliases;
 generated-directory creation and stale cleanup honor the same boundary.
 
-DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
-explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
-The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the
-source-to-wire field classification and the completed overlay/lifetime migration.
+The private indexed stdlib wire schema lives in `sifr_metadata`, with explicit
+type/declaration/binder/payload records and a bounded, shared lazy decoder.
+Lightweight `sifr_sysroot` layout, resolution and integrity have no dependency on
+this raw transport owner, so metadata implementation edits do not rebuild the
+manifest/import/lowering/codegen path. Compiler services and driver bind their
+compiled input identities directly to the metadata owner. The format and decoder
+contracts are unchanged by this ownership separation. The
+[historical payload inventory](compiler_dx_metadata_consumers.md) records
+the DX.5–DX.7 field classification and overlay/lifetime migration.
 Normal commands use the metadata consumers activated by DX.7.
 DX.6 adds the linked canonical source producer and shared write-through preparation
 in `sifr_compiler_services::metadata`, with a driver adapter. The CLI `sysroot build-metadata`, bare driver

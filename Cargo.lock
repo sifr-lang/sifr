@@ -7553,6 +7553,7 @@ dependencies = [
  "sifr_identity",
  "sifr_ir",
  "sifr_lowering",
+ "sifr_metadata",
  "sifr_package",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
@@ -7599,6 +7600,7 @@ dependencies = [
  "sifr_identity",
  "sifr_ir",
  "sifr_lowering",
+ "sifr_metadata",
  "sifr_package",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
@@ -7733,6 +7735,18 @@ dependencies = [
  "sifr_source",
  "tempfile",
  "url",
+]
+
+[[package]]
+name = "sifr_metadata"
+version = "0.0.0"
+dependencies = [
+ "ring",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_identity",
+ "zstd 0.14.0",
 ]
 
 [[package]]
@@ -8172,7 +8186,6 @@ dependencies = [
  "sha2 0.11.0",
  "sifr_identity",
  "toml",
- "zstd 0.14.0",
 ]
 
 [[package]]

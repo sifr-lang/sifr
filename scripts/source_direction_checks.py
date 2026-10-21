@@ -59,3 +59,59 @@ def check_split_sources_and_composition_roots(guard, failures: list[str]) -> Non
             if not any(str(path.relative_to(root)) in x and 'outside a composition root' in x for x in actual):
                 failures.append(f"lower provider construction escaped: {crate}: {actual}")
             path.unlink()
+
+
+def check_data_owner_boundaries(guard, failures: list[str]) -> None:
+    assert_self_test_case = guard.assert_self_test_case
+    write_manifest = guard.write_manifest
+    assert_self_test_case(
+        "shared stdlib data upward dependency",
+        lambda root: write_manifest(root / "crates/sifr_stdlib_artifact",
+                                    "sifr_stdlib_artifact", ["sifr_codegen"]),
+        "sifr_stdlib_artifact: unexpected normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "shared stdlib data upward source reference",
+        lambda root: (root / "crates/sifr_stdlib_artifact/src/lib.rs").write_text(
+            "use sifr_compiler_services::CompilerContext;\n", encoding="utf-8"),
+        "sifr_stdlib_artifact: crates/sifr_stdlib_artifact/src/lib.rs references sifr_compiler_services",
+        failures,
+    )
+    for consumer in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_frontend"):
+        assert_self_test_case(
+            f"{consumer} raw metadata dependency",
+            lambda root, consumer=consumer: write_manifest(
+                root / "crates" / consumer, consumer, ["sifr_metadata"]),
+            f"{consumer}: forbidden dependency", failures,
+        )
+        assert_self_test_case(
+            f"{consumer} raw metadata re-export",
+            lambda root, consumer=consumer: (root / "crates" / consumer / "src/lib.rs").write_text(
+                "pub use sifr_metadata::*;\n"),
+            f"{consumer}: crates/{consumer}/src/lib.rs references sifr_metadata", failures,
+        )
+    assert_self_test_case(
+        "metadata reverse compiler dependency",
+        lambda root: write_manifest(root / "crates/sifr_metadata", "sifr_metadata", ["sifr_codegen"]),
+        "sifr_metadata: unexpected normal dependency", failures,
+    )
+    assert_self_test_case(
+        "metadata reverse compiler source reference",
+        lambda root: (root / "crates/sifr_metadata/src/lib.rs").write_text(
+            "use sifr_compiler_services::CompilerContext;\n"),
+        "sifr_metadata: crates/sifr_metadata/src/lib.rs references sifr_compiler_services", failures,
+    )
+
+    def alias_edge(root, consumer, dependency):
+        path = root / "crates" / consumer / "Cargo.toml"
+        with path.open("a") as manifest:
+            manifest.write('\n[target.\'cfg(unix)\'.dev-dependencies]\n'
+                           f'wire_alias = {{ package = "{dependency}", path = "../{dependency}" }}\n')
+    for consumer, dependency in [(name, "sifr_metadata") for name in
+            ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_frontend")] + [("sifr_metadata", "sifr_codegen")]:
+        assert_self_test_case(
+            f"{consumer} target-specific aliased dev edge",
+            lambda root, consumer=consumer, dependency=dependency: alias_edge(root, consumer, dependency),
+            f"{consumer}: forbidden dependency", failures,
+        )

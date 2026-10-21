@@ -306,7 +306,7 @@ RULES = (
             words_pattern(("default_manifest_path",)),
             re.compile(r"current_executable\.parent\(\)[^\n]*" + joined("install", ".json")),
         ),
-        ("crates/sifr/src/", "crates/sifr_sysroot/src/"),
+        ("crates/sifr/src/", "crates/sifr_sysroot/src/", "crates/sifr_metadata/src/"),
     ),
 )
 
@@ -469,7 +469,18 @@ def run_self_test() -> None:
         retained = root / "crates/sifr_lint/src/lib.rs"
         retained.parent.mkdir(parents=True, exist_ok=True)
         retained.write_text("enum RuleStatus { Deprecated }\n", encoding="utf-8")
+        layout_paths = []
+        for owner in ("sifr", "sifr_sysroot", "sifr_metadata"):
+            relative = Path("crates") / owner / "src/metadata/layout_probe.rs"
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("fn default_manifest_path() {}\n", encoding="utf-8")
+            layout_paths.append(relative)
         failures = scan(root)
+        for relative in layout_paths:
+            if not any(failure.rule_id == "flat-install-layout" and failure.path == relative
+                       for failure in failures):
+                raise SystemExit(f"flat installation lookup escaped relocated owner: {relative}")
         excluded_paths = {
             archive.relative_to(root),
             generated.relative_to(root),

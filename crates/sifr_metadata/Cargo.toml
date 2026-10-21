@@ -1,0 +1,21 @@
+[package]
+name = "sifr_metadata"
+links = "sifr_metadata_compiled_identity"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+zstd = "=0.14.0"
+ring = "=0.17.14"
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }
+
+[lints]
+workspace = true

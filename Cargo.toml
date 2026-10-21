@@ -3,6 +3,7 @@ members = [
     "crates/sifr_identity",
     "crates/sifr_source",
     "crates/sifr_sysroot",
+    "crates/sifr_metadata",
     "crates/sifr_diagnostics",
     "crates/sifr_runtime",
     "crates/sifr_structural_identity",
@@ -84,6 +85,7 @@ sifr_python_parser = { package = "ruff_python_parser", path = "third_party/ruff/
 sifr_diagnostics = { path = "crates/sifr_diagnostics" }
 sifr_source = { path = "crates/sifr_source" }
 sifr_sysroot = { path = "crates/sifr_sysroot" }
+sifr_metadata = { path = "crates/sifr_metadata" }
 sifr_runtime = { path = "crates/sifr_runtime" }
 sifr_structural_identity = { path = "crates/sifr_structural_identity" }
 sifr_compiler_component = { path = "crates/sifr_compiler_component" }

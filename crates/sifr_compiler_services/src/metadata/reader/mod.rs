@@ -1,6 +1,6 @@
 //! Bounded projections from one immutable indexed metadata owner.
 pub use decode::Decode;
-use sifr_sysroot::metadata as wire;
+use sifr_metadata as wire;
 use wire::Result;
 mod decode;
 mod navigation;

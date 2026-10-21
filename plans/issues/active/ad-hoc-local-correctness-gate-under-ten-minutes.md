@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b2 raw metadata ownership; semantic/native separation and integrated acceptance remain open
+current_stage: V1b2 reviewed; V1b3 checked bootstrap registered next; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -51,6 +51,10 @@ intermediate repairs and complete create-PR/merge gates on the final integrated
 phase candidate. This supersedes the original planning-only requirement to run
 full candidate gates for every intermediate implementation PR; it does not waive
 any final coverage, failure semantics or timing acceptance.
+
+The user also authorized continuing this phase to completion in the same task.
+This supersedes the new-session/stop-after-one-item defaults; close each bounded
+item before starting the next.
 
 Each intermediate item requires named affected tests, regression controls,
 applicable area/workflow contracts, required formatting/file-size checks, and a
@@ -1130,7 +1134,7 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | --- | --- | --- |
 | Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
 | V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.20 / #4389; final completeness pending |
-| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 accepted; semantic/native split and feasibility pending |
+| V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 and V1b2 / #4390 accepted; semantic/native split and feasibility pending |
 | V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
 | V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
@@ -3785,3 +3789,173 @@ restoration receipts; preserve current compatible build targets and failure
 records. Keep the 30-minute category cap. V1 semantic/native separation, full
 SQL clean/reused/independent-clean qualification, final integrated gates and V5
 remain mandatory after this bounded prerequisite.
+
+
+#### V1b2 discovered legacy field-check failure
+
+The first extraction candidate `0959472a31342b2aba4dc0ff0dd23bfba1a27f2b`
+passes 14 of 15 focused policy/verification categories; the legacy payload-field
+check fails. A source archive of the exact pre-extraction base
+`c569420aea1779486d381defdc198ea096c5e2b2` reproduces that failure before any
+relocation: `ExternalDefs field inventory changed`. The baseline probe had
+expected to reach the stale site list, but execution stops at the earlier field
+comparison; retain that diagnostic and its original failed expectation.
+
+`ExternalDefs` contains two process-local capabilities, `provider` and
+`typed_method_processor`, both optional `Arc<dyn ...>` authorities. All other
+field names match `SemanticExports`; the old checker only classifies `provider`
+as host-only. This is checker drift, not a field dropped by the extraction.
+The historical inventory still exists at its original documentation path; it was
+not moved into a history directory. V4 owns correcting the live field
+classification and its regression controls, separately from preserving the
+historical site catalogue. Do not mark this failed check as passing or silently
+remove its final reconciliation obligation.
+
+V1b2 retains its stronger relocation-specific proofs: every raw metadata source
+and fixture is byte-identical, format and payload field order are unchanged,
+producer/reader and full-corpus parity must execute, and installed/source
+admission must pass. Preserve the legacy failure and its unchanged-input hashes
+alongside these results under the approved intermediate policy. The new crate's
+initial compile also exposed an omitted `ring` declaration; add the same existing
+pin to the new owner and reconcile its audited direct declaration. Keep that
+failed 8.782-second preparation attempt; no test executed successfully in it.
+
+
+#### V1b2 policy ownership preservation
+
+The final owner audit found one path-scoped rule that also needs the new owner:
+the no-compatibility check's flat-install-layout prohibition currently covers
+CLI and sysroot sources. Retain its coverage of the moved metadata source by
+adding the new crate prefix, with a negative control for every covered owner.
+This is part of V1b2's ownership/inventory preservation; it does not add a fallback
+or change compiler behavior. Validate the real guard and its canonical self-test.
+The compiler/runtime candidate is frozen in its separate validation checkout;
+prove unchanged compiler and runtime inputs before reusing its evidence for
+this Python-policy-only follow-up.
+
+
+#### V1b2 discovered producer fingerprint omission
+
+The complete native corpus passes all 732 positive, 569 negative and six
+runtime-failure inputs. The new GCQ same-mtime ownership control then fails:
+the producer fingerprint enumerates each registered crate's manifest and source
+but omits its `build.rs`, including the new metadata owner's identity emitter.
+Retain this failed execution. Correct the registered producer-root inventory to
+include existing build scripts, and prove equal-mtime content edits and restoration
+for both moved owners' build scripts as well as their manifests/source. Preserve
+all three real Clippy-isolation controls. This is the V1b2 producer-identity
+acceptance boundary, not a cache bypass. V3 still owns complete producer/input
+inventory and materialization reuse across all toolchain/environment contexts.
+The Rust candidate and completed native evidence remain frozen; execute changed
+GCQ controls on the corrected candidate and prove unaffected inputs before reuse.
+
+
+### V1b2 closure — raw metadata ownership / #4390
+
+Implementation candidate `20d783933d8000e63e0263008833cd4027ce04bf` passed
+its named acceptance and independent review. The 35 moved source/fixture files
+remain byte-identical; format 5, fields, validation semantics and external
+package versions/checksums are unchanged. Lightweight sysroot/manifest/imports,
+lowering, frontend and codegen do not depend on the raw metadata owner.
+Services/driver use it directly and include its compiled input tokens.
+All 17 merge configurations remain selected; profile membership is additive.
+
+Runtime observations belong to `4b9f39d19a391305255a706e9423026bb145432b`.
+The final candidate differs only in phase records, the compatibility policy and
+GCQ fingerprint/controls. `v1b2-final-input-equivalence.json` proves unchanged
+Rust/compiler/runtime, generator, profile and distribution/sysroot inputs.
+Compatibility controls ran on `87e8f7c3f8e2c8dfbd1fed95d319e00933219414`;
+GCQ controls and the final size guard ran on the final implementation candidate.
+Do not relabel these observations as execution on another SHA.
+
+| Named observation | Result | Wall seconds |
+| --- | --- | ---: |
+| Raw metadata / remaining sysroot | 28 / 27 tests pass | 58.759 / 9.224 |
+| Services / producer / reader | 26 / 15 / 9 tests pass | 101.454 / 133.780 / 28.698 |
+| Full source/provider emission corpus | All 732 fixtures pass | 106.243 |
+| Initial driver preparation | Workspace-change preparation passes | 687.599 |
+| Metadata-only edit / restore | Correct consumers rebuild; lower compiler owners remain fresh | 18.717 / 12.264 |
+| E2E executable preparation | Pass | 696.199 |
+| Positive / negative / runtime-failure E2E | 732 / 569 / 6 inputs pass | 271.396 / 7.690 / 62.841 |
+| Dependency audit / sysroot CLI | 15 / 3 tests pass | 12.704 / 6.195 |
+| Distribution full / qualification | 72 / 1 variants pass | 855.229 / 28.703 |
+| Real installed/source admission | Exact metadata identities/diagnostics and rejection/recovery pass | 230.813 |
+| Corrected GCQ ownership controls | All four tests pass, including three Clippy-isolation controls | 1.140 |
+
+These are distinct, sometimes overlapping workloads, not an additive full-gate
+runtime or a matched speedup ratio. The controlled source edit changes the real
+metadata compiled tokens; restoring its bytes restores both tokens exactly.
+The initial preparation results above still exceed ten minutes. V1's remaining
+build work and V5 acceptance cannot be inferred from the fast metadata edit.
+
+All 1,464 emitted source/Rust files and other corpus row fields/source maps match
+the accepted baseline. Only the previously declared unordered `stdlib_modules`
+HashSet report array is compared as a set, with duplicate rejection; 191 rows
+reorder. The initial cross-candidate portable-hash equality check failed because
+that digest includes workspace/lock-bound stdlib inputs and record anchors.
+Preserve the failed comparison. An isolated diagnostic using the real retained
+producer under the exact baseline compatibility envelope reproduces all
+6,563,453 physical metadata bytes and the baseline portable digest. It publishes
+nothing; actual candidate corpus, installed admission and native tests keep their
+real changed identities. `v1b2-identity-aligned-projection-proof.json` and
+`v1b2-qualified-corpus-comparison.json` bind these distinct proofs.
+
+The installed check packages the exact native dev-profile binary built by the
+successful self-update distribution case. It validates complete structural data,
+source/installed metadata and diagnostics parity, incompatible/missing/corrupt
+metadata rejection, restoration and lazy checking without navigation source.
+It is not production release qualification or the complete installed-public-emit
+corpus; those retain their owning final contracts. The original omitted-ring
+compile, legacy field checker failure, initial digest-comparison failure and
+GCQ build-script omission are preserved. The latter omission is repaired by
+including existing build scripts for registered producer crates.
+
+`v1b2-final-acceptance.json` binds 41 successful named categories to raw
+specifications, receipts, output and resource hashes. The collected external
+bundle is `v1b2-evidence.tar.gz`, SHA-256 `a8152ef9dbfeba39f101afa85546f792ea1c12856b042615e4a7f647cb3b25ef`.
+Independent review is **SATISFIED**, with no blocking findings, stored outside
+the reviewed tree at `reviews/20d783933d8000e63e0263008833cd4027ce04bf/review.md`.
+The reviewer checked the full diff and all acceptance-row evidence hashes without
+repeating broad validation. This closure changes records only.
+
+The planning-only regression-control entry now points to `sifr_metadata`; its
+28-test filter and unchanged source anchors are verified from executed evidence.
+Follow-ups remain explicit: V1 owns permanent transitive graph guards alongside
+the next ownership boundary; V3 owns complete GCQ producer inputs (including the
+pre-existing omissions of sysroot, compiler services and identity); V4 owns the
+legacy live field checker, historical/current documentation clarity and report
+ordering. Historical metadata consumer documents stay unchanged. Final gates,
+semantic/native separation, V2–V5 and measured sub-600-second acceptance remain
+open.
+
+### V1b3 bounded implementation — canonical checked bootstrap and native observer
+
+Separate the existing stdlib bootstrap's checked-source loop from native
+materialization while preserving its full-native public result and format-5
+output. One canonical loop owns ordered parsing/lowering, canonicalization,
+export/re-export accumulation, checked HIR and transitive import facts. Native
+materialization owns the syntax session, Rust-source identities, backend
+features, emission support and private interop. Do not add an alternate parser
+or lowerer, a fake complete native result with empty defaults, or a semantic-only
+product before explicit artifact roles and admission exist.
+
+Preserve event and error order: retain private declarations and empty private
+HIR/interop; emit a nonempty module before installing its own exports/signature
+support; later modules see prior successfully installed state. Keep canonical
+source order, existing diagnostics and source locations. Split helpers by
+responsibility below 900 lines. Do not change optimization, incremental modes,
+external tool/dependency versions, profiles or test selection in this item.
+
+Named validation: focused real-source observer ordering, failure and empty-private
+controls; all existing driver stdlib assertions (56 before additions); services,
+producer and reader tests; the complete 732 source/provider emission corpus and
+732 positive, 569 negative and six runtime-failure inputs. Compare exact emitted
+outputs and portable projection against V1b2 under appropriate equal-input
+conditions; preserve unexpected differences for diagnosis. Retain source/installed
+admission, affected inventory/schema/direction/method/filesystem contracts and
+classifications, formatting, file-size and links. Review the exact candidate.
+
+This item prepares the mandatory semantic/native boundary; it does not claim a
+Cargo dependency reduction or gate timing. Explicit role/versioned metadata,
+construction/consumer ownership and the complete three-SQL-tool clean/reused/
+independent-clean qualification remain required before accepting V1.

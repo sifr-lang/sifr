@@ -483,6 +483,20 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_metadata",
+        "package": "sifr_metadata",
+        "command": [
+          "test",
+          "-p",
+          "sifr_metadata"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_sysroot",
         "package": "sifr_sysroot",
         "command": [

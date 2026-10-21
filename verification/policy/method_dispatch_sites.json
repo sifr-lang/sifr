@@ -83389,7 +83389,7 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/manifest.rs::validate_sifr_version enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/decode.rs::references::typed-authority-match::1",
+      "site": "crates/sifr_metadata/src/metadata/decode.rs::references::typed-authority-match::1",
       "fingerprint": "8eecfec7f8966228d96de2950c6cac72bb3f43487eddeb67b7e020bc00fb64b7",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83397,11 +83397,11 @@
       "inputs": "fn references ( store : & MetadataStore , kind : u16 , bytes : & [ u8 ] , )",
       "outputs": "Result < Vec < ( RecordId , u16 ) > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/decode.rs::references enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/decode.rs::references enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/decode.rs::references enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/decode.rs::references enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/hir_expr_refs.rs::references::method-call-carrier::1",
+      "site": "crates/sifr_metadata/src/metadata/hir_expr_refs.rs::references::method-call-carrier::1",
       "fingerprint": "d7bf517da6cd3b730dc732398ccbe2c0fdf93f39b80f2224661542db028780a6",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83409,11 +83409,11 @@
       "inputs": "fn references ( & self , out : & mut Vec < ( RecordId , u16 ) > )",
       "outputs": "implicit unit / macro expansion",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/hir_expr_refs.rs::references enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/hir_expr_refs.rs::references enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/hir_expr_refs.rs::references enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/hir_expr_refs.rs::references enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/hir_nodes.rs::<module>::method-call-carrier::1",
+      "site": "crates/sifr_metadata/src/metadata/hir_nodes.rs::<module>::method-call-carrier::1",
       "fingerprint": "ff0b5026cd7ae1e16303be91a8c68d14df4dd156adf3f7bc11720bd38f8484b1",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83421,11 +83421,11 @@
       "inputs": "module scope",
       "outputs": "implicit unit / macro expansion",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/hir_nodes.rs::<module> enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/hir_nodes.rs::<module> enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/hir_nodes.rs::<module> enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/hir_nodes.rs::<module> enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/physical.rs::frame_size::literal-comparison::1",
+      "site": "crates/sifr_metadata/src/metadata/physical.rs::frame_size::literal-comparison::1",
       "fingerprint": "70e7f765066e1146408609c5a01f68624a3646700c335284c277d1afd7956ba6",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83433,11 +83433,11 @@
       "inputs": "fn frame_size ( bytes : & [ u8 ] , expanded : usize )",
       "outputs": "Result < usize >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/physical.rs::frame_size enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/physical.rs::frame_size enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/physical.rs::frame_size enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/physical.rs::frame_size enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/test_dispatch.rs::roundtrip_case::typed-authority-match::1",
+      "site": "crates/sifr_metadata/src/metadata/test_dispatch.rs::roundtrip_case::typed-authority-match::1",
       "fingerprint": "0c636795e8c480329b41028812f58d10ae5da6b5bc036938e51bfbb3c933973e",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83445,11 +83445,11 @@
       "inputs": "fn roundtrip_case ( kind : u16 , bytes : & [ u8 ] )",
       "outputs": "Vec < u8 >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/test_dispatch.rs::roundtrip_case enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/test_dispatch.rs::roundtrip_case enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/test_dispatch.rs::roundtrip_case enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/test_dispatch.rs::roundtrip_case enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/test_dispatch.rs::insert_default::typed-authority-match::1",
+      "site": "crates/sifr_metadata/src/metadata/test_dispatch.rs::insert_default::typed-authority-match::1",
       "fingerprint": "e888f9d4aae93257797c402585b79acde6fe9c74a73107a336368deab455d7c5",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83457,11 +83457,11 @@
       "inputs": "fn insert_default ( encoder : & mut MetadataEncoder , kind : u16 , bytes : & [ u8 ] )",
       "outputs": "implicit unit / macro expansion",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/test_dispatch.rs::insert_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/test_dispatch.rs::insert_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/test_dispatch.rs::insert_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/test_dispatch.rs::insert_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/test_dispatch.rs::get_default::typed-authority-match::1",
+      "site": "crates/sifr_metadata/src/metadata/test_dispatch.rs::get_default::typed-authority-match::1",
       "fingerprint": "d47432070ef496686a7b11c88bb97bfc9e9615b22d057959921c35759e0d9ba6",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83469,11 +83469,11 @@
       "inputs": "fn get_default ( store : & MetadataStore , kind : u16 )",
       "outputs": "Vec < u8 >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/test_dispatch.rs::get_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/test_dispatch.rs::get_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/test_dispatch.rs::get_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/test_dispatch.rs::get_default enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/tests.rs::i06_nominal_package_version_source_and_binder_anchors_do_not_alias::literal-comparison::1",
+      "site": "crates/sifr_metadata/src/metadata/tests.rs::i06_nominal_package_version_source_and_binder_anchors_do_not_alias::literal-comparison::1",
       "fingerprint": "c8a63d87150ae8102d5d96a84a6778ff34d63ca3875f548061ecfaf99f898ed3",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83481,11 +83481,11 @@
       "inputs": "fn i06_nominal_package_version_source_and_binder_anchors_do_not_alias ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/tests.rs::i06_nominal_package_version_source_and_binder_anchors_do_not_alias enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_sysroot/src/metadata/tests.rs::i06_nominal_package_version_source_and_binder_anchors_do_not_alias enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/tests.rs::i06_nominal_package_version_source_and_binder_anchors_do_not_alias enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_metadata/src/metadata/tests.rs::i06_nominal_package_version_source_and_binder_anchors_do_not_alias enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/tests.rs::default_record::literal-comparison::1",
+      "site": "crates/sifr_metadata/src/metadata/tests.rs::default_record::literal-comparison::1",
       "fingerprint": "b9523ee51ea6a5f19422dbace09c6955c214d2eed547a2a987ef26ba53205437",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83493,11 +83493,11 @@
       "inputs": "fn default_record < T : Record > ( )",
       "outputs": "T",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/tests.rs::default_record enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_sysroot/src/metadata/tests.rs::default_record enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/tests.rs::default_record enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_metadata/src/metadata/tests.rs::default_record enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/validation.rs::validate_fields::literal-comparison::1",
+      "site": "crates/sifr_metadata/src/metadata/validation.rs::validate_fields::literal-comparison::1",
       "fingerprint": "dfd5819f700bba06bb467776a8452efad75909aadf8d5e7d48f29b81a65941bf",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83505,11 +83505,11 @@
       "inputs": "fn validate_fields < T : Record > ( & self , value : & T )",
       "outputs": "Result < ( ) >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/validation.rs::validate_fields::literal-comparison::2",
+      "site": "crates/sifr_metadata/src/metadata/validation.rs::validate_fields::literal-comparison::2",
       "fingerprint": "e916642819081f4ebc4e1c4063542b1601d0d6d57c4170a2aab2e64fe0623d9f",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -83517,11 +83517,11 @@
       "inputs": "fn validate_fields < T : Record > ( & self , value : & T )",
       "outputs": "Result < ( ) >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sysroot/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_metadata/src/metadata/validation.rs::validate_fields enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction::literal-comparison::1",
+      "site": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction::literal-comparison::1",
       "fingerprint": "331c5dab74fd7b3061dac2d2ebb5777510adc854aad056025bec756fb9bbfe3c",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83529,8 +83529,8 @@
       "inputs": "fn exact_failure_diagnostics_survive_hits_misses_and_eviction ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_sysroot/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_metadata/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_sysroot/src/native_context.rs::flags::literal-comparison::1",

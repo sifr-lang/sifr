@@ -1,6 +1,6 @@
 //! Canonical projection of checked source values into indexed metadata.
 use encode::Encode;
-use sifr_sysroot::metadata as wire;
+use sifr_metadata as wire;
 use wire::{MetadataEncoder, Result};
 mod encode;
 mod hir_nodes;

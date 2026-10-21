@@ -27,6 +27,7 @@ sifr_package = { workspace = true }
 sifr_compiler_component = { workspace = true }
 sifr_sql_contract = { workspace = true }
 sifr_sysroot = { workspace = true }
+sifr_metadata = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
 serde = { workspace = true }
