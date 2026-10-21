@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3f native bundle processing; V1 feasibility and integrated acceptance remain open
+current_stage: V3g complete native-role diagnosis; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -6326,3 +6326,97 @@ independent exact-candidate review. Use repeated alternating diagnostic cases
 where needed to separate the hash benefit from page-cache/preparation state.
 No full-gate claim follows from a microbenchmark; complete final gates, cold
 invalidation feasibility, broader fixture work and V5 remain mandatory.
+
+
+### V3f closure — one complete native bundle identity / #4415
+
+[PR #4415](https://github.com/sifr-lang/sifr/pull/4415) merged the reviewed candidate
+`9e76e34b5efd66b3566901ae42fe14271a05fd9d` as
+`14df6a918a7cbf8ab245437c241d1495f6d03144`. Every application/test-runner
+caller now gathers the complete ordered executable/sidecar/runtime inventory
+before hashing once. The identity domain, ordered fields, final digest, leases,
+fresh content verification/capture and rejection controls are preserved.
+
+Before implementation, six alternating fresh processes compared verbatim baseline
+source with the complete-inventory prototype using the actual resolved opt-level-1
+identity library and retained 894150648-byte native executable. Median construction
+was **9.306315s → 4.659510s**; all six final identities were identical. Median
+fresh verification was **0.975585s → 0.977047s**. The initial colder baseline
+verification remains recorded. All 14 paired equivalence/rejection controls pass.
+This is a stage diagnostic, not a complete gate measurement.
+
+| Candidate check | Result | Observed seconds |
+| --- | --- | ---: |
+| New native bundle controls | 6 passed | 83.757664 including driver compilation |
+| Advanced-data preparation | Exact original role passed; 22 Cargo, 0 rustc | 64.745797 outer |
+| Advanced-data runtime | Exact original assertions passed; 22 Cargo, 0 rustc | 49.717955 outer |
+| Complete ordinary driver | 765 passed, 82 ignored; 841 prior IDs retained plus 6 | 350.387076 outer; 2.313073 preparation; 340.991334 execution |
+| Format / size / source ownership | Passed | 8.729483 / 7.221962 / 6.727934 |
+| Profiles / plan comparison | Passed; both correctness plans and all 8 configurations unchanged | 0.723825 / 1.229412 |
+
+The driver suite includes actual native-reuse/dylib, child-lease, Cargo-resolution
+and all 48 project-cache controls. The 82 ignored roles are not counted as
+ordinary passes. All 13 retained native fixture files preserve bytes, mtimes and
+inodes. No validation source mutation or surviving diagnostic descendants was
+observed. Light guards overlapped compilation; their timings are not additive.
+The 49.72s runtime versus V3e's 74.25s is a single instrumented observation with
+different cache/capture state, not a paired whole-workload claim.
+
+One diagnostic mistake is retained: the initial native preparation used direct
+Python rather than the preceding pinned `uv` launcher. Its changed PATH produced
+a different native-toolchain family and unnecessary compilation. It was cancelled
+at **139.283143s**, all descendants stopped, and repeated with the matching
+launcher. This initial attempt remains **incomplete**, not a pass and not evidence
+of a product regression. The original V3d cold preparation cap also remains open.
+
+Evidence: `v3f-evidence.tar.gz`, all 4617 manifest-listed files verified, SHA-256
+`9048d6aa37a1de4270c30765fecf06fcfe5615d190fb1d745fb1ada65667886f`.
+Independent exact-candidate review: **SATISFIED**, no blockers; response SHA-256
+`212f0ce0cfaeed319b87b84d96c16306036a1f3c551f7aeeb3cd4b3b4ea19823`.
+The native-storage owner retains separate follow-ups for clearer sidecar-variable
+naming and unnecessary intermediate publication. Foreign-platform golden-digest
+qualification remains outside this current-host phase. No content memoization
+or reduced freshness assertion was introduced.
+
+[CI create-PR](https://github.com/sifr-lang/sifr/actions/runs/39651139339/job/119399451696)
+stopped before correctness setup because `SIFR_PERFORMANCE_REFERENCE` is unset.
+This existing qualification-configuration failure retains its separate owner;
+there is no CI-green or complete-gate claim. Complete native/Python/matrix coverage,
+cold build feasibility, integrated resource scheduling and V5 remain open.
+
+### V3g bounded investigation — complete native role execution and attribution
+
+V3e/V3f qualified the advanced-data preparation/runtime pair and preserved all
+ordinary driver assertions. They do not establish execution or timing of the
+complete selected native inventory. Before another native optimization, refresh
+that complete inventory and execute every selected role from the canonical merge
+configuration, retaining preparation and each role's result separately. V4e
+observed six CLI and 82 driver roles; reconcile exact names, not just counts.
+
+Use the pinned verification launcher and existing owned compiler/native targets.
+Prepare the selected Python environment, exact CLI/driver test configurations and
+required metadata/native prerequisites. Record preparation once as preparation;
+do not hide it in bootstrap or count it as all downstream assertions passing.
+Keep source/argument/output/diagnostic semantics and each isolated test process.
+Record observed candidate, configuration, selected binary identity and exact argv.
+
+Each preparation category and native role has its own 30-minute diagnostic cap.
+Collect independent exit failures and continue to the next role after proving all
+owned descendants have stopped. A deadline is incomplete evidence, never a pass.
+Stop further launches for an unresolved resource reserve, surviving child or
+unexpected source change. Preserve failures and partial logs. Check effective
+CPU/memory/free disk and target size before heavy preparation; keep the existing
+20-GiB disk and 2-GiB memory reserves and bounded nested worker allocation.
+
+Report every role, its assertion status, outer elapsed time and any incomplete
+preparation. Retain compiler/Cargo invocation evidence and actual dirty reasons
+for slow or surprising cases, distinguishing trace overhead and concurrent
+process intervals from wall time. Do not infer an optimization benefit from
+counts alone. Check that unchanged fixture inputs retain bytes and metadata.
+The known alternate-launcher cancellation is not a product-cache regression.
+
+This item authorizes diagnostics and evidence records only. Register an explicit
+bounded repair after identifying a root cause; do not silently change native
+selection, result reuse, Cargo authority, trust, features, durability or public
+diagnostics. The remaining Python examples, command matrices, cold SQL
+feasibility, integrated execution and V5 acceptance remain separately required.
