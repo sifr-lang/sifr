@@ -23,7 +23,7 @@ from sifr_binary import resolve_sifr_binary  # noqa: E402
 def run(command: list[str], *, expect: int = 0) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(command, cwd=REPO_ROOT, text=True, capture_output=True)
     if completed.returncode != expect:
-        print(f"rule/suppression rules command failed: {' '.join(command)}", file=sys.stderr)
+        print(f"rule/suppression rules command failed (expected exit {expect}, observed {completed.returncode}): {' '.join(command)}", file=sys.stderr)
         print(completed.stdout, file=sys.stderr)
         print(completed.stderr, file=sys.stderr)
         raise SystemExit(1)
