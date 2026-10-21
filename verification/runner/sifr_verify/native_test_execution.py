@@ -52,7 +52,10 @@ def run_native_configuration(configuration, *, env, no_fail_fast):
         except (CommandFailed, VerificationError) as error:
             status = "fail"
             first_failure = first_failure or error
-            if not no_fail_fast:
+            if not no_fail_fast or (
+                isinstance(error, CommandFailed)
+                and (error.cause not in (None, "exit") or error.returncode < 0)
+            ):
                 raise
         finally:
             print(f"[sifr-native-case] suite={configuration.ids[0]} case={name} status={status}")

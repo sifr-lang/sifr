@@ -5365,3 +5365,30 @@ profile contracts, compare emitted canonical plans, and check file-size guardrai
 Require exact-candidate independent review. This improves diagnostic completeness;
 it does not bypass failed preparation, reduce coverage or claim a gate speedup.
 Final integrated create-PR/merge gates and V5 remain required.
+
+
+### V4f implementation and focused evidence
+
+Explicit collection now passes Cargo's `--no-fail-fast` before harness arguments
+and executes all independent crate configurations, retaining the first ordinary
+failure as the aggregate result. Negative signal returns and non-exit termination
+causes immediately propagate from both configuration and native-case loops, even
+after earlier ordinary failures. Default stopping, native inventory/count checks,
+all command selections and environments remain intact.
+
+Eight new regression tests pass (3.376s). The unchanged implementation fails six
+of these tests and errors in one (1.648s); that negative result is retained. The
+first edit helper had a Python quoting error before any source mutation, so a
+subsequent attempted focused run still tested the baseline and failed (0.657s).
+The corrected helper and successful run remain separately identified.
+
+Related tests execute 39 cases (2.725s): 38 pass and the existing frozen-scope
+assertion fails because it expects 17 configurations while the plan contains 18.
+An independent unchanged-baseline run reproduces that exact mismatch. This belongs
+to V4 scope-contract reconciliation, not this scheduler repair; preserve and fix it
+separately after tracing the added selection, without reducing test membership.
+Configuration/native/collection, preparation and qualification policy checks pass;
+both emitted correctness plans and all eight profile/mode compiler plans compare
+identically against the unchanged baseline (15.266s total). Canonical `profiles
+check` passes (2.190s), as do file-size guardrails (8.173s). No full integrated pass
+or ten-minute timing acceptance is claimed. Exact-candidate review is next.
