@@ -5321,3 +5321,47 @@ silently continue consumers whose actual preparation failed. Preserve the exact
 candidate, resource allocation, identities and observed test counts. Assign each
 failure to its existing phase owner or a newly bounded repair before modifying it.
 Complete final create-PR/merge gates and V5 remain mandatory.
+
+
+### V4e initial diagnostic result — incomplete, not acceptance
+
+The first integrated diagnostic stopped after 759.556s at the existing disk reserve;
+crate-test preparation was still compiling the distinct optimized/debug test graph.
+The five initial source guards passed, but main assertion categories did not run.
+Generated preparation also failed because this session had not published the exact
+candidate revision before its first Cargo fetch. That setup failure is retained;
+it is not a compiler defect. No blocked or unexecuted category counts as passing.
+Process cleanup completed without a tracked source change. Twenty-four obsolete,
+inactive, session-owned executables were copied and hash-verified before removing
+the original copies, recovering 14.614 GiB; their recoverable bytes and manifests
+remain outside Git. The interrupted ten-crate configuration is being resumed on
+the unchanged candidate with explicit Cargo failure collection and a four-job
+diagnostic allocation, not as final profile timing evidence.
+
+Clarification to V4c: merge GCQ assertion selection is twelve representatives, but
+current online generated preparation materializes and fetches all 93 entries.
+Consequently the 93-entry cost remains part of the actual profile prelude. No
+preparation selection is waived or narrowed by the earlier diagnostic wording.
+
+### V4f contract — collect independent crate failures
+
+Repair `--no-fail-fast` inside the canonical crate-test configuration loop. Currently
+the first failed configuration aborts the loop even in explicit collection mode;
+ordinary grouped Cargo commands also omit Cargo's failure-collection flag. Preserve
+all selected packages, targets, features, filters, order, environments and assertions.
+In collection mode, continue after ordinary command/assertion failures, print each
+configuration's timing/status, then fail the aggregate using the first ordinary
+failure. Default fail-fast behavior remains unchanged. Propagate cancellation,
+negative signal status and non-exit termination causes immediately, even after an
+earlier ordinary failure. Apply the same terminal-stop rule to the existing native
+per-case scheduler so the outer loop cannot conceal a safety stop.
+
+Acceptance: controls for default stopping, ordinary multi-configuration collection,
+Cargo-versus-harness flag placement, preserved selection/environment/native dispatch,
+nonzero aggregate result, and terminal failure precedence at both loop levels.
+The old implementation must fail new collection/terminal regression controls. Run
+affected configuration-plan, native scheduling, preparation, execution-scope and
+profile contracts, compare emitted canonical plans, and check file-size guardrails.
+Require exact-candidate independent review. This improves diagnostic completeness;
+it does not bypass failed preparation, reduce coverage or claim a gate speedup.
+Final integrated create-PR/merge gates and V5 remain required.
