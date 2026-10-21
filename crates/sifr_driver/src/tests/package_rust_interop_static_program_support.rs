@@ -11,29 +11,23 @@ const STATIC_PROGRAM_NEGATIVE: &str = include_str!(
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_static_program_constructs_and_projects_arena() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "static_program_arena_bridge",
         "static_program_runtime",
         "rust_interop_static_program_positive",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    let pristine_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "static_program_runtime");
-    let pristine_errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_runtime();
+    let package_root = inputs.finish();
+    let pristine_entrypoint = package_root.entrypoint("static_program_runtime");
+    let pristine_errors =
+        package_root.check(&crate::CompilerContext::for_test(), &pristine_entrypoint);
     assert!(
         pristine_errors.is_empty(),
         "source-layout static program scenario must pass checking: {pristine_errors:#?}"
     );
-    let pristine_artifact = build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("source-layout static program scenario should build");
+    let pristine_artifact = package_root
+        .try_build(&crate::CompilerContext::for_test(), &pristine_entrypoint)
+        .expect("source-layout static program scenario should build");
     let pristine_source = generated_main_source(&pristine_artifact);
     let pristine_identity = static_program_identity(&pristine_source);
 
@@ -43,25 +37,19 @@ fn test_static_program_constructs_and_projects_arena() {
             "{STATIC_PROGRAM_POSITIVE}\n\ndef main() -> Result[None, StaticProgramError | RustPanicError]:\n    try:\n        print(verify_static_program_constructs_and_projects_arena())\n    except StaticProgramError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "static_program_runtime");
-    let evidence_artifact = build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("installed evidence should build");
+    let entrypoint = package_root.entrypoint("static_program_runtime");
+    let evidence_artifact = package_root
+        .try_build(&crate::CompilerContext::for_test(), &entrypoint)
+        .expect("installed evidence should build");
     let evidence_source = generated_main_source(&evidence_artifact);
     assert_eq!(
         static_program_identity(&evidence_source),
         pristine_identity,
         "source-layout and installed evidence must retain one static-program identity"
     );
-    let repeated_artifact = build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("repeated evidence build should hit cache");
+    let repeated_artifact = package_root
+        .try_build(&crate::CompilerContext::for_test(), &entrypoint)
+        .expect("repeated evidence build should hit cache");
     assert_eq!(
         repeated_artifact.binary_path(),
         evidence_artifact.binary_path(),
@@ -86,7 +74,7 @@ fn test_static_program_constructs_and_projects_arena() {
         String::from_utf8_lossy(&output.stdout).trim(),
         "Ok(\"program=sealed;integer=123;fixed=42;bytes=11;tags=alpha,beta;lookup=left:-7,right:9007199254740991;active=0\")"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 fn generated_main_source(artifact: &crate::CachedBinaryArtifact) -> String {
@@ -143,22 +131,21 @@ fn static_program_identity(source: &str) -> [u8; 32] {
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_corrupt_static_program_envelope_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "static_program_arena_bridge",
         "static_program_runtime",
         "rust_interop_static_program_negative",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(&format!(
             "{STATIC_PROGRAM_NEGATIVE}\n\ndef main() -> Result[None, RustPanicError]:\n    try:\n        print(verify_corrupt_static_program_envelope_rejected())\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "static_program_runtime");
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("static_program_runtime");
     assert_eq!(
-        run_built_package(&entrypoint),
+        package_root.stdout(&entrypoint),
         "Ok(\"static program format version mismatch;active=0\")"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }

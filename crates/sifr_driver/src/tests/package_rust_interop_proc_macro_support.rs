@@ -12,18 +12,17 @@ const GENERATED_FILES: [&str; 2] = ["sifr.probe.rs", "sifr-prost-build-evidence.
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_build_trusted_proc_macro_and_deterministic_codegen() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "proc_macro_trust",
         "proc_macro_trust_package",
         "rust_interop_proc_macro_trusted",
     );
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_source(&format!(
             "{PROC_MACRO_EVIDENCE}\n\ndef main() -> Result[None, DecodeError | RustPanicError]:\n    try:\n        print(verify_trusted_proc_macro())\n    except DecodeError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
 
+    let package_root = inputs.finish();
     let first_target = mktemp_dir("rust_interop_proc_macro_codegen_first");
     let second_target = mktemp_dir("rust_interop_proc_macro_codegen_second");
     let first_artifacts = cargo_codegen_artifacts(&package_root, &first_target);
@@ -51,18 +50,13 @@ fn test_build_trusted_proc_macro_and_deterministic_codegen() {
         );
     }
 
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "proc-macro-trust-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let entrypoint = package_root.entrypoint("proc-macro-trust-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         errors.is_empty(),
         "trusted proc-macro package must pass compiler checking: {errors:#?}"
     );
-    let output = built_package_output(&entrypoint);
+    let output = package_root.output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "Ok(\"id=1404|payload=sifr-rust-interop|serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed|prost-build=0.14.4;message=sifr.probe.Probe\")"
@@ -75,7 +69,7 @@ fn test_build_trusted_proc_macro_and_deterministic_codegen() {
 
     let _ = std::fs::remove_dir_all(first_target);
     let _ = std::fs::remove_dir_all(second_target);
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
@@ -120,12 +114,16 @@ fn test_check_untrusted_proc_macro_rejected_pre_execution() {
 }
 
 fn assert_armed_build_time_dependencies_write_sentinels() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "proc_macro_trust",
         "proc_macro_trust_package",
         "rust_interop_proc_macro_sentinel_control",
     );
-    let (proc_macro_sentinel, build_script_sentinel) = arm_build_time_sentinels(&package_root);
+    arm_build_time_sentinels(&mut inputs);
+    let package_root = inputs.finish();
+    let proc_macro_sentinel = package_root.join("rust/serde_derive/PROC_MACRO_EXECUTED");
+    let build_script_sentinel = package_root.join("rust/prost_build/BUILD_SCRIPT_EXECUTED");
+    assert!(!proc_macro_sentinel.exists() && !build_script_sentinel.exists());
     let target_dir = mktemp_dir("rust_interop_proc_macro_sentinel_control_target");
     let output = cargo_build(&package_root, &target_dir);
     assert!(
@@ -142,19 +140,14 @@ fn assert_armed_build_time_dependencies_write_sentinels() {
         "armed prost build script must create its sentinel when Cargo executes it"
     );
     install_evidence_source(&package_root, PROC_MACRO_NEGATIVE);
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "proc-macro-trust-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let entrypoint = package_root.entrypoint("proc-macro-trust-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         errors.is_empty(),
         "negative evidence must be valid while build-time trust is present: {errors:#?}"
     );
     let _ = std::fs::remove_dir_all(target_dir);
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 fn assert_untrusted_build_time_dependency_rejected(
@@ -165,29 +158,25 @@ fn assert_untrusted_build_time_dependency_rejected(
     required_allowlist: &str,
     required_evidence: &str,
 ) {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "proc_macro_trust",
         "proc_macro_trust_package",
         &format!("rust_interop_proc_macro_untrusted_{case}"),
     );
-    install_evidence_source(&package_root, PROC_MACRO_NEGATIVE);
-    let (proc_macro_sentinel, build_script_sentinel) = arm_build_time_sentinels(&package_root);
-    let manifest_path = package_root.join("sifr.toml");
-    let manifest =
-        std::fs::read_to_string(&manifest_path).expect("scenario manifest should be readable");
+    inputs = inputs.with_source(PROC_MACRO_NEGATIVE);
+    arm_build_time_sentinels(&mut inputs);
+    let manifest = inputs.text("sifr.toml");
     let untrusted = manifest.replace(manifest_line, untrusted_line);
     assert_ne!(
         untrusted, manifest,
         "negative scenario must remove {case} trust"
     );
-    std::fs::write(&manifest_path, untrusted).expect("negative trust manifest should be installed");
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "proc-macro-trust-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs.write("sifr.toml", untrusted);
+    let package_root = inputs.finish();
+    let proc_macro_sentinel = package_root.join("rust/serde_derive/PROC_MACRO_EXECUTED");
+    let build_script_sentinel = package_root.join("rust/prost_build/BUILD_SCRIPT_EXECUTED");
+    let entrypoint = package_root.entrypoint("proc-macro-trust-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     let rendered = format!("{errors:#?}");
 
     assert_eq!(
@@ -207,24 +196,16 @@ fn assert_untrusted_build_time_dependency_rejected(
         !proc_macro_sentinel.exists() && !build_script_sentinel.exists(),
         "untrusted build-time code must be rejected before either sentinel"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
-fn arm_build_time_sentinels(package_root: &Path) -> (PathBuf, PathBuf) {
-    let proc_macro_root = package_root.join("rust/serde_derive");
-    let build_script_root = package_root.join("rust/prost_build");
-    std::fs::write(proc_macro_root.join("ARM_PROC_MACRO_SENTINEL"), "armed")
-        .expect("proc-macro sentinel should be armed");
-    std::fs::write(build_script_root.join("ARM_BUILD_SCRIPT_SENTINEL"), "armed")
-        .expect("build-script sentinel should be armed");
-    (
-        proc_macro_root.join("PROC_MACRO_EXECUTED"),
-        build_script_root.join("BUILD_SCRIPT_EXECUTED"),
-    )
+fn arm_build_time_sentinels(inputs: &mut ScenarioInputs) {
+    inputs.write("rust/serde_derive/ARM_PROC_MACRO_SENTINEL", "armed");
+    inputs.write("rust/prost_build/ARM_BUILD_SCRIPT_SENTINEL", "armed");
 }
 
 fn cargo_codegen_artifacts(
-    package_root: &Path,
+    package_root: &ReusableScenario,
     target_dir: &Path,
 ) -> std::collections::BTreeMap<String, Vec<u8>> {
     let output = cargo_build(package_root, target_dir);
@@ -243,8 +224,9 @@ fn cargo_codegen_artifacts(
     artifacts
 }
 
-fn cargo_build(package_root: &Path, target_dir: &Path) -> std::process::Output {
-    std::process::Command::new("cargo")
+fn cargo_build(package_root: &ReusableScenario, target_dir: &Path) -> std::process::Output {
+    package_root
+        .cargo()
         .args([
             "build",
             "--workspace",
@@ -255,7 +237,6 @@ fn cargo_build(package_root: &Path, target_dir: &Path) -> std::process::Output {
             "--target-dir",
         ])
         .arg(target_dir)
-        .current_dir(package_root)
         .output()
         .expect("locked proc-macro evidence build should execute")
 }

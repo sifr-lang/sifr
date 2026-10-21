@@ -134,12 +134,25 @@ pub fn check_package_project(
     }
 }
 
+#[cfg(test)]
+pub(crate) fn check_package_project_with_leases(
+    compiler: &crate::CompilerContext,
+    entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
+    leases: super::native_child_leases::NativeChildLeases,
+) -> Vec<RenderedDiagnostic> {
+    match check_package_python_interop_completion(compiler, entrypoint, provider, leases) {
+        Ok(_) => Vec::new(),
+        Err(errors) => errors,
+    }
+}
+
 pub fn check_package_python_interop(
     compiler: &crate::CompilerContext,
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
 ) -> Result<PythonInteropCheckReport, Vec<RenderedDiagnostic>> {
-    check_package_python_interop_completion(compiler, entrypoint, provider)
+    check_package_python_interop_completion(compiler, entrypoint, provider, Default::default())
         .map(|(report, _)| report)
 }
 
@@ -151,7 +164,12 @@ pub fn check_package_project_completion(
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
 ) -> crate::project_cache::CheckComputation {
-    match check_package_python_interop_completion(compiler, entrypoint, provider) {
+    match check_package_python_interop_completion(
+        compiler,
+        entrypoint,
+        provider,
+        Default::default(),
+    ) {
         Ok((_, reusable)) => crate::project_cache::CheckComputation {
             diagnostics: Vec::new(),
             reusable,
@@ -164,8 +182,10 @@ fn check_package_python_interop_completion(
     compiler: &crate::CompilerContext,
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
+    leases: super::native_child_leases::NativeChildLeases,
 ) -> Result<(PythonInteropCheckReport, bool), Vec<RenderedDiagnostic>> {
-    let project_plan = resolve_package_project_entrypoint_plan(compiler, entrypoint, provider)?;
+    let project_plan =
+        resolve_package_project_entrypoint_plan(compiler, entrypoint, provider, leases)?;
     let diagnostics = project_plan.frontend_diagnostics();
     if !diagnostics.is_empty() {
         return Err(diagnostics);

@@ -101,18 +101,15 @@ const CALLBACK_SUBSCRIPTION_NEGATIVE: &str = include_str!(
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_local_bridge_blake3_positive_cargo_probe() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "local_bridge_blake3",
         "local_blake3_bridge",
         "rust_interop_local_bridge_positive",
     );
-    let pristine_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
-    let pristine_errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let package_root = inputs.finish();
+    let pristine_entrypoint = package_root.entrypoint("local-blake3-bridge");
+    let pristine_errors =
+        package_root.check(&crate::CompilerContext::for_test(), &pristine_entrypoint);
     assert!(
         pristine_errors.is_empty(),
         "checked-in local bridge scenario should pass package checking: {pristine_errors:#?}"
@@ -123,27 +120,25 @@ fn test_build_local_bridge_blake3_positive_cargo_probe() {
             "{LOCAL_BRIDGE_EVIDENCE}\n\ndef main() -> None:\n    result: bytes = verify_local_bridge_hash_bytes()\n    print(result.to_ints())\n"
         ),
     );
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
+    let entrypoint = package_root.entrypoint("local-blake3-bridge");
 
     assert_eq!(
-        run_built_package(&entrypoint),
+        package_root.stdout(&entrypoint),
         "[20, 38, 50, 184, 100, 68, 224, 154]"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "local_bridge_blake3",
         "local_blake3_bridge",
         "rust_interop_local_bridge_negative",
     );
-    install_evidence_source(&package_root, LOCAL_BRIDGE_NEGATIVE);
-    let manifest_path = package_root.join("sifr.toml");
-    let manifest = std::fs::read_to_string(&manifest_path)
-        .expect("local bridge Sifr manifest should be readable");
+    inputs = inputs.with_source(LOCAL_BRIDGE_NEGATIVE);
+    let manifest = inputs.text("sifr.toml");
     let expanded_manifest = manifest.replace(
         "rust-no-panic = [\"bridge.blake3.hash_bytes\", \"bridge.blake3.hash_hex\"]",
         "rust-no-panic = [\"bridge.blake3.hash_bytes\", \"bridge.blake3.hash_hex\", \"bridge.blake3.missing_export\"]",
@@ -152,15 +147,11 @@ fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
         expanded_manifest, manifest,
         "negative local bridge trust mutation must match the checked-in manifest"
     );
-    std::fs::write(&manifest_path, expanded_manifest)
-        .expect("negative local bridge trust should be installed");
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
+    inputs.write("sifr.toml", expanded_manifest);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("local-blake3-bridge");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert!(
         errors.iter().any(|error| {
@@ -169,56 +160,50 @@ fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
         }),
         "missing local bridge export must be a stable resolution diagnostic: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_build_bridge_type_matrix_positive_cargo_probe() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "bridge_type_matrix",
         "bridge_type_roundtrip",
         "rust_interop_bridge_type_roundtrip",
     );
-    let pristine_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");
-    let pristine_errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let package_root = inputs.finish();
+    let pristine_entrypoint = package_root.entrypoint("bridge-type-roundtrip");
+    let pristine_errors =
+        package_root.check(&crate::CompilerContext::for_test(), &pristine_entrypoint);
     assert!(
         pristine_errors.is_empty(),
         "checked-in bridge type scenario should pass package checking: {pristine_errors:#?}"
     );
     install_evidence_source(&package_root, BRIDGE_TYPE_ROUNDTRIP_EVIDENCE);
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");
+    let entrypoint = package_root.entrypoint("bridge-type-roundtrip");
 
     assert_eq!(
-        run_built_package(&entrypoint),
+        package_root.stdout(&entrypoint),
         "serde:nested|bytes:6|invalid nested payload"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_panic_boundary_wrapper_runtime() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "panic_boundary_wrapper_emission",
         "panic_wrapper_runtime",
         "rust_interop_panic_wrapper_runtime",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    let pristine_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
-    let pristine_errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_runtime();
+    let package_root = inputs.finish();
+    let pristine_entrypoint = package_root.entrypoint("panic-wrapper-runtime");
+    let pristine_errors =
+        package_root.check(&crate::CompilerContext::for_test(), &pristine_entrypoint);
     assert!(
         pristine_errors.is_empty(),
         "checked-in panic wrapper scenario should pass package checking: {pristine_errors:#?}"
@@ -229,9 +214,9 @@ fn test_build_panic_boundary_wrapper_runtime() {
             "{PANIC_WRAPPER_EVIDENCE}\n\ndef main() -> None:\n    print(verify_generated_wrapper_maps_panic_to_declared_error())\n"
         ),
     );
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
+    let entrypoint = package_root.entrypoint("panic-wrapper-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "ok:safe|ordinary bridge error|mapped: Rust bridge panicked|Rust bridge panicked|Rust bridge panicked|mapped: Rust bridge panicked"
@@ -241,26 +226,23 @@ fn test_build_panic_boundary_wrapper_runtime() {
         "caught target and mapper panic payloads must not reach stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_check_panic_boundary_invalid_mapper_signature() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "panic_boundary_wrapper_emission",
         "panic_wrapper_runtime",
         "rust_interop_panic_wrapper_invalid_mapper",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(&package_root, PANIC_WRAPPER_INVALID_MAPPER);
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(PANIC_WRAPPER_INVALID_MAPPER);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("panic-wrapper-runtime");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert!(
         errors.iter().any(|error| {
@@ -269,26 +251,23 @@ fn test_check_panic_boundary_invalid_mapper_signature() {
         }),
         "invalid panic mapper signature must fail with the panic contract diagnostic: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_call_scoped_callback_runtime() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "callbacks_call_scoped",
         "call_scoped_callback_runtime",
         "rust_interop_call_scoped_callback_runtime",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    let pristine_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
-    let pristine_errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_runtime();
+    let package_root = inputs.finish();
+    let pristine_entrypoint = package_root.entrypoint("call-scoped-callback-runtime");
+    let pristine_errors =
+        package_root.check(&crate::CompilerContext::for_test(), &pristine_entrypoint);
     assert!(
         pristine_errors.is_empty(),
         "checked-in call-scoped callback scenario should pass package checking: {pristine_errors:#?}"
@@ -299,10 +278,9 @@ fn test_build_call_scoped_callback_runtime() {
             "{CALL_SCOPED_CALLBACK_EVIDENCE}\n\ndef main() -> None:\n    print(verify_callback_valid_during_call())\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
+    let entrypoint = package_root.entrypoint("call-scoped-callback-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "first,second|callback rejected|Rust bridge panicked|8"
@@ -312,7 +290,7 @@ fn test_build_call_scoped_callback_runtime() {
         "contained callback panics must not reach stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
@@ -336,23 +314,18 @@ fn test_check_call_scoped_callback_storage_rejected() {
             "lifetime may not live long enough",
         ),
     ] {
-        let package_root = copied_scenario(
+        let mut inputs = ScenarioInputs::new(
             "callbacks_call_scoped",
             "call_scoped_callback_runtime",
             &format!("rust_interop_call_scoped_callback_{case}"),
         );
-        rebase_sifr_runtime_dependency(&package_root);
-        install_evidence_source(&package_root, CALL_SCOPED_CALLBACK_NEGATIVE);
-        std::fs::write(package_root.join("src/bridges/callbacks.rs"), bridge)
-            .expect("negative callback bridge should be installed");
-        let entrypoint =
-            package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
+        inputs = inputs.with_runtime();
+        inputs = inputs.with_source(CALL_SCOPED_CALLBACK_NEGATIVE);
+        inputs.write("src/bridges/callbacks.rs", bridge);
+        let package_root = inputs.finish();
+        let entrypoint = package_root.entrypoint("call-scoped-callback-runtime");
 
-        let errors = check_package_project(
-            &crate::CompilerContext::for_test(),
-            &entrypoint,
-            &mut sifr_frontend::DiskSourceProvider::new(),
-        );
+        let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
         assert!(
             errors.iter().any(|error| {
@@ -365,29 +338,24 @@ fn test_check_call_scoped_callback_storage_rejected() {
             }),
             "{case} escape must fail for the concrete rustc lifetime/thread reason: {errors:#?}"
         );
-        let _ = std::fs::remove_dir_all(package_root);
+        drop(package_root);
     }
 
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "callbacks_call_scoped",
         "call_scoped_callback_runtime",
         "rust_interop_call_scoped_callback_signature_mismatch",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(&package_root, CALL_SCOPED_CALLBACK_NEGATIVE);
-    std::fs::write(
-        package_root.join("src/bridges/callbacks.rs"),
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(CALL_SCOPED_CALLBACK_NEGATIVE);
+    inputs.write(
+        "src/bridges/callbacks.rs",
         CALL_SCOPED_CALLBACK_SIGNATURE_MISMATCH_BRIDGE,
-    )
-    .expect("signature mismatch bridge should be installed");
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
-
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
     );
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("call-scoped-callback-runtime");
+
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert!(
         errors
@@ -401,26 +369,23 @@ fn test_check_call_scoped_callback_storage_rejected() {
             .all(|error| error.code != DiagnosticCode::RUST_CALLBACK_CONTRACT.code()),
         "ordinary signature mismatches must not be mislabeled callback escape: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_async_reqwest_loopback_runtime() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "async_runtime_reqwest",
         "reqwest_loopback_runtime",
         "rust_interop_async_reqwest_loopback_runtime",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    let pristine_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
-    let pristine_errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &pristine_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_runtime();
+    let package_root = inputs.finish();
+    let pristine_entrypoint = package_root.entrypoint("reqwest-loopback-runtime");
+    let pristine_errors =
+        package_root.check(&crate::CompilerContext::for_test(), &pristine_entrypoint);
     assert!(
         pristine_errors.is_empty(),
         "checked-in reqwest loopback scenario should pass package checking: {pristine_errors:#?}"
@@ -431,10 +396,9 @@ fn test_build_async_reqwest_loopback_runtime() {
             "{ASYNC_REQWEST_EVIDENCE}\n\nasync def main() -> Result[None, TimeoutError]:\n    try:\n        verified: str = await verify_async_reqwest_loopback()\n        print(verified)\n    except TimeoutError:\n        print(\"unexpected outer timeout\")\n    return None\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+    let entrypoint = package_root.entrypoint("reqwest-loopback-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
@@ -445,29 +409,27 @@ fn test_build_async_reqwest_loopback_runtime() {
         "loopback runtime scenario must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_opaque_resource_lifecycle_runtime() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "opaque_resource_matrix",
         "resource_lifecycle_runtime",
         "rust_interop_opaque_resource_lifecycle",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(&format!(
             "{OPAQUE_RESOURCE_EVIDENCE}\n\nasync def main() -> Result[None, ResourceError]:\n    try:\n        verified: str = await verify_resource_close_aclose_matrix()\n        print(verified)\n    except ResourceError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "resource-lifecycle-runtime");
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("resource-lifecycle-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
@@ -478,35 +440,33 @@ fn test_build_opaque_resource_lifecycle_runtime() {
         "resource lifecycle scenario must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_opaque_resource_alias_rejection_runtime() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "opaque_resource_matrix",
         "resource_lifecycle_runtime",
         "rust_interop_opaque_resource_alias_rejection",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(&format!(
             "{OPAQUE_RESOURCE_NEGATIVE}\n\nasync def main() -> Result[None, ResourceError]:\n    try:\n        verified: str = await verify_invalid_resource_aliasing()\n        print(verified)\n    except ResourceError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "resource-lifecycle-runtime");
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("resource-lifecycle-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.output(&entrypoint);
 
     assert_eq!(
         observed_resource_state(&output),
         ObservedRuntimeState::Closed
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
@@ -520,20 +480,16 @@ fn test_build_callback_subscription_lifecycle_runtime() {
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_callback_subscription_invalid_thread_capture_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "callback_subscription_ecosystem",
         "subscription_lifecycle_runtime",
         "rust_interop_callback_subscription_invalid_capture",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(&package_root, CALLBACK_SUBSCRIPTION_NEGATIVE);
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "subscription-lifecycle-runtime");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(CALLBACK_SUBSCRIPTION_NEGATIVE);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("subscription-lifecycle-runtime");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert_eq!(
         errors.len(),
@@ -608,27 +564,23 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
             .all(|error| !error.message.contains("Rust bridge probe failed")),
         "invalid retained capture must reject before Cargo probing: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_async_reqwest_rejects_undeclared_native_link() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "async_runtime_reqwest",
         "reqwest_loopback_runtime",
         "rust_interop_async_reqwest_untrusted_native_link",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(&format!(
             "{ASYNC_REQWEST_EVIDENCE}\n\nasync def main() -> Result[None, TimeoutError]:\n    try:\n        verified: str = await verify_async_reqwest_loopback()\n        print(verified)\n    except TimeoutError:\n        print(\"unexpected outer timeout\")\n    return None\n"
         ),
     );
-    let manifest_path = package_root.join("sifr.toml");
-    let manifest =
-        std::fs::read_to_string(&manifest_path).expect("scenario manifest should be readable");
+    let manifest = inputs.text("sifr.toml");
     let untrusted = manifest.replace(
         "native-links = [\"aws_lc_0_44_0_crypto\"]",
         "native-links = []",
@@ -637,16 +589,11 @@ fn test_build_async_reqwest_rejects_undeclared_native_link() {
         untrusted, manifest,
         "scenario must declare exact transitive native-link trust"
     );
-    std::fs::write(&manifest_path, untrusted)
-        .expect("untrusted scenario manifest should be written");
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+    inputs.write("sifr.toml", untrusted);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("reqwest-loopback-runtime");
 
-    let errors = match build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    ) {
+    let errors = match package_root.try_build(&crate::CompilerContext::for_test(), &entrypoint) {
         Ok(_) => panic!("undeclared transitive native link must fail the generated package build"),
         Err(errors) => errors,
     };
@@ -659,33 +606,25 @@ fn test_build_async_reqwest_rejects_undeclared_native_link() {
         }),
         "undeclared transitive native link must be rejected: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_async_reqwest_hidden_blocking_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "async_runtime_reqwest",
         "reqwest_loopback_runtime",
         "rust_interop_async_reqwest_hidden_blocking",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(&package_root, ASYNC_REQWEST_NEGATIVE);
-    std::fs::write(
-        package_root.join("src/bridges/http.rs"),
-        ASYNC_REQWEST_NEGATIVE_BRIDGE,
-    )
-    .expect("negative async bridge should be installed");
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(ASYNC_REQWEST_NEGATIVE);
+    inputs.write("src/bridges/http.rs", ASYNC_REQWEST_NEGATIVE_BRIDGE);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("reqwest-loopback-runtime");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert_eq!(
         errors.len(),
@@ -708,129 +647,113 @@ fn test_check_async_reqwest_hidden_blocking_rejected() {
         !errors[0].message.contains("Rust bridge probe failed"),
         "hidden runtime policy must reject before Cargo probing: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_same_workspace_crate_positive_cargo_probe() {
-    let evidence_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "same_workspace_crate",
         "workspace_hash_crate",
         "rust_interop_same_workspace_evidence",
     );
-    install_evidence_source(&evidence_root, SAME_WORKSPACE_EVIDENCE);
-    let evidence_entrypoint =
-        package_entrypoint_from_cargo_layout(&evidence_root, "workspace-hash-consumer");
+    inputs = inputs.with_source(SAME_WORKSPACE_EVIDENCE);
+    let evidence_root = inputs.finish();
+    let evidence_entrypoint = evidence_root.entrypoint("workspace-hash-consumer");
     assert_eq!(
-        run_built_package(&evidence_entrypoint),
+        evidence_root.stdout(&evidence_entrypoint),
         "1451903697411170458"
     );
 
-    let scenario_root = copied_scenario(
+    let inputs = ScenarioInputs::new(
         "same_workspace_crate",
         "workspace_hash_crate",
         "rust_interop_same_workspace_scenario",
     );
-    let scenario_entrypoint =
-        package_entrypoint_from_cargo_layout(&scenario_root, "workspace-hash-consumer");
+    let scenario_root = inputs.finish();
+    let scenario_entrypoint = scenario_root.entrypoint("workspace-hash-consumer");
     assert_eq!(
-        run_built_package(&scenario_entrypoint),
+        scenario_root.stdout(&scenario_entrypoint),
         "5625995497597281285"
     );
-    let _ = std::fs::remove_dir_all(evidence_root);
-    let _ = std::fs::remove_dir_all(scenario_root);
+    drop(evidence_root);
+    drop(scenario_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_check_same_workspace_crate_negative_cargo_probe() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "same_workspace_crate",
         "workspace_hash_crate",
         "rust_interop_same_workspace_negative",
     );
-    install_evidence_source(&package_root, SAME_WORKSPACE_NEGATIVE);
-    std::fs::write(
-        package_root.join("Cargo.toml"),
-        SAME_WORKSPACE_NEGATIVE_CARGO,
-    )
-    .expect("checked-in negative Cargo layout should be installed");
-    std::fs::write(
-        package_root.join("Cargo.lock"),
-        SAME_WORKSPACE_NEGATIVE_LOCK,
-    )
-    .expect("checked-in negative Cargo lock should be installed");
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "workspace-hash-consumer");
+    inputs = inputs.with_source(SAME_WORKSPACE_NEGATIVE);
+    inputs.write("Cargo.toml", SAME_WORKSPACE_NEGATIVE_CARGO);
+    inputs.write("Cargo.lock", SAME_WORKSPACE_NEGATIVE_LOCK);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("workspace-hash-consumer");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::RUST_RESOLVE_TARGET_ROOT.code()
             && error.message.contains("workspace_hash")
     }));
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_shared_bridge_crate_positive_cargo_probe() {
-    let evidence_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "shared_bridge_crate",
         "shared_hash_bridge",
         "rust_interop_shared_bridge_evidence",
     );
-    install_evidence_source(&evidence_root, SHARED_BRIDGE_EVIDENCE);
-    let evidence_entrypoint =
-        package_entrypoint_from_cargo_layout(&evidence_root, "shared-hash-consumer");
-    assert_eq!(run_built_package(&evidence_entrypoint), "8");
+    inputs = inputs.with_source(SHARED_BRIDGE_EVIDENCE);
+    let evidence_root = inputs.finish();
+    let evidence_entrypoint = evidence_root.entrypoint("shared-hash-consumer");
+    assert_eq!(evidence_root.stdout(&evidence_entrypoint), "8");
 
-    let scenario_root = copied_scenario(
+    let inputs = ScenarioInputs::new(
         "shared_bridge_crate",
         "shared_hash_bridge",
         "rust_interop_shared_bridge_scenario",
     );
-    let scenario_entrypoint =
-        package_entrypoint_from_cargo_layout(&scenario_root, "shared-hash-consumer");
-    assert_eq!(run_built_package(&scenario_entrypoint), "4e138d18e63ba405");
-    let _ = std::fs::remove_dir_all(evidence_root);
-    let _ = std::fs::remove_dir_all(scenario_root);
+    let scenario_root = inputs.finish();
+    let scenario_entrypoint = scenario_root.entrypoint("shared-hash-consumer");
+    assert_eq!(
+        scenario_root.stdout(&scenario_entrypoint),
+        "4e138d18e63ba405"
+    );
+    drop(evidence_root);
+    drop(scenario_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_check_shared_bridge_crate_negative_cargo_probe() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "shared_bridge_crate",
         "shared_hash_bridge",
         "rust_interop_shared_bridge_negative",
     );
-    install_evidence_source(&package_root, SHARED_BRIDGE_NEGATIVE);
-    std::fs::write(
-        package_root.join("sifr.toml"),
-        SHARED_BRIDGE_NEGATIVE_MANIFEST,
-    )
-    .expect("checked-in negative Sifr manifest should be installed");
-    std::fs::write(
-        package_root.join("rust/sifr_shared_hash_bridge/src/lib.rs"),
+    inputs = inputs.with_source(SHARED_BRIDGE_NEGATIVE);
+    inputs.write("sifr.toml", SHARED_BRIDGE_NEGATIVE_MANIFEST);
+    inputs.write(
+        "rust/sifr_shared_hash_bridge/src/lib.rs",
         SHARED_BRIDGE_NEGATIVE_RUST,
-    )
-    .expect("checked-in rejected shared bridge source should be installed");
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "shared-hash-consumer");
-
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
     );
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("shared-hash-consumer");
+
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::RUST_RESOLVE_TARGET_ROOT.code()
             && error.message.contains("package-specific")
     }));
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }

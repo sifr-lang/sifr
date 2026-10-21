@@ -57,20 +57,17 @@ fn test_build_advanced_data_crate_backed_arrow_tensor_roundtrips() {
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_advanced_data_schema_shape_device_mismatch_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "advanced_data_runtime_matrix",
         "advanced_data_runtime",
         "rust_interop_advanced_data_mismatch",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(&package_root, ADVANCED_DATA_NEGATIVE);
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "advanced-data-runtime");
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(ADVANCED_DATA_NEGATIVE);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("advanced-data-runtime");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert_eq!(
         errors.len(),
@@ -90,5 +87,5 @@ fn test_check_advanced_data_schema_shape_device_mismatch_rejected() {
             "missing advanced-data rejection for {reason}: {errors:#?}"
         );
     }
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }

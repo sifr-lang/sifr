@@ -12,47 +12,45 @@ const COMPILER_REJECTION_PREFIX: &str = "# compiler-rejection: ";
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_package_resource_construct_use_close() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "opaque_resource_package_core",
         "package_resource_runtime",
         "rust_interop_package_resource_positive",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(
         &format!(
             "{PACKAGE_RESOURCE_POSITIVE}\n\ndef main() -> Result[None, PackageResourceError | RustPanicError]:\n    try:\n        result: str = verify_package_resource_construct_use_close()\n        print(result)\n    except PackageResourceError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "package-resource-runtime");
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("package-resource-runtime");
 
     assert_eq!(
-        run_built_package(&entrypoint),
+        package_root.stdout(&entrypoint),
         "number=7;label=sealed;state=open;close=closed"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_package_resource_alias_use_after_close_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "opaque_resource_package_core",
         "package_resource_runtime",
         "rust_interop_package_resource_negative_runtime",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(
         &format!(
             "{PACKAGE_RESOURCE_NEGATIVE}\n\ndef main() -> Result[None, PackageResourceError | RustPanicError]:\n    try:\n        result: str = verify_package_resource_alias_use_after_close_rejected()\n        print(result)\n    except PackageResourceError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "package-resource-runtime");
-    let output = built_package_output(&entrypoint);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("package-resource-runtime");
+    let output = package_root.output(&entrypoint);
     assert_eq!(
         observed_resource_state(&output),
         ObservedRuntimeState::Closed
@@ -62,27 +60,23 @@ fn test_package_resource_alias_use_after_close_rejected() {
         "negative package resource evidence must redact the panic hook: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "opaque_resource_package_core",
         "package_resource_runtime",
         "rust_interop_package_resource_compile_rejections",
     );
-    rebase_sifr_runtime_dependency(&package_root);
+    inputs = inputs.with_runtime();
     let compile_rejections = PACKAGE_RESOURCE_NEGATIVE.replace(COMPILER_REJECTION_PREFIX, "");
     assert_ne!(
         compile_rejections, PACKAGE_RESOURCE_NEGATIVE,
         "registered negative evidence must carry compiler-rejection mutations"
     );
-    install_evidence_source(&package_root, &compile_rejections);
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "package-resource-runtime");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_source(&compile_rejections);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("package-resource-runtime");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert_eq!(
         errors.len(),
         2,
@@ -108,5 +102,5 @@ fn test_package_resource_alias_use_after_close_rejected() {
         1,
         "direct package resource construction must have one stable diagnostic: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }

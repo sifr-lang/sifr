@@ -41,7 +41,7 @@ fn intended_fixture_child_survives_parent_death_without_unrelated_inheritance() 
     const ENV: &str = "SIFR_ADVANCED_FIXTURE_CHILD_CONTROL";
     if let Some(path) = std::env::var_os(ENV) {
         let path = PathBuf::from(path);
-        let fixture = ReusableScenario::acquire(&path.join("cache"), &path, inputs()).unwrap();
+        let fixture = acquire(&path.join("cache"), &path, inputs()).unwrap();
         fs::write(
             path.join("fixture-root"),
             fixture.root.as_os_str().as_encoded_bytes(),
