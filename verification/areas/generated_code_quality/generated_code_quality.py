@@ -280,12 +280,11 @@ def run_command(
     check: bool = True,
     cargo_target_dir: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    # Process callers own their Cargo context. Only generated-project Cargo
+    # operations select a separate target; compiler and helper calls inherit it.
     env = command_env()
-    shared_root = shared_artifact_root()
     if cargo_target_dir is not None:
         env["CARGO_TARGET_DIR"] = str(cargo_target_dir)
-    elif shared_root is not None:
-        env["CARGO_TARGET_DIR"] = str(shared_root / "cargo-target")
     from sifr_verify.fixture_execution import run_process
     result = run_process(args, cwd=cwd, env=env)
     if result.cause != "exit" or result.truncated:
@@ -395,12 +394,16 @@ def gate_freshness(_entries: list[Entry], _args: argparse.Namespace) -> None:
 def gate_corpus(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("corpus")
     run_root = TARGET_ROOT / run
+    cargo_target_dir = cargo_target_for_run(run_root, shared_artifact_root())
     records = []
     try:
         for entry in selected_positive_entries(entries, args.group):
             def check_entry() -> Path:
                 crate_root_inner = materialize_entry(entry, run_root)
-                run_command(["cargo", "check", "--locked", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
+                run_command(
+                    ["cargo", "check", "--locked", "--manifest-path", str(crate_root_inner / "Cargo.toml")],
+                    cargo_target_dir=cargo_target_dir,
+                )
                 return crate_root_inner
 
             crate_root = timed_case("generated_code_quality", f"corpus/{entry.id}", check_entry)
@@ -477,6 +480,7 @@ def gate_panic_scan(entries: list[Entry], args: argparse.Namespace) -> None:
 def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("rustfmt")
     run_root = TARGET_ROOT / run
+    cargo_target_dir = cargo_target_for_run(run_root, shared_artifact_root())
     records = []
     try:
         timed_case(
@@ -505,6 +509,7 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
                         "--check",
                     ],
                     check=False,
+                    cargo_target_dir=cargo_target_dir,
                 )
                 actual = (
                     None

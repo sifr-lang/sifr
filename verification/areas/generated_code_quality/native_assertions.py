@@ -6,6 +6,7 @@ from pathlib import Path
 def run_native_gate(api, entries, args):
     run = api.run_id("native")
     root = api.TARGET_ROOT / run
+    cargo_target_dir = api.cargo_target_for_run(root, api.shared_artifact_root())
     records = []
     failed = False
     for entry in api.selected_positive_entries(entries, args.group):
@@ -22,7 +23,8 @@ def run_native_gate(api, entries, args):
             record["stages"].append({"stage": stage, "status": "pass"})
             stage = "native-compile-link"
             proc = api.run_command(["cargo", "build", "--locked", "--release",
-                "--message-format=json", "--manifest-path", str(crate / "Cargo.toml")])
+                "--message-format=json", "--manifest-path", str(crate / "Cargo.toml")],
+                cargo_target_dir=cargo_target_dir)
             executables = []
             for line in proc.stdout.splitlines():
                 message = json.loads(line)

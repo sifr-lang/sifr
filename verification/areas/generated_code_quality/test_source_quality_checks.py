@@ -231,5 +231,107 @@ class MaterializationTests(unittest.TestCase):
         self.assertEqual(self.gcq.cargo_target_for_run(self.run, None), self.run / "cargo-target")
 
 
+class CommandContextTests(unittest.TestCase):
+    def test_generic_processes_inherit_the_complete_caller_environment(self):
+        import generated_code_quality as gcq
+        from sifr_verify.fixture_execution import ProcessResult
+        for shared in (None, Path('/owned/gcq')):
+            for target in (None, '/owned/compiler'):
+                with self.subTest(shared=shared, target=target):
+                    environment = {'PATH': '/selected/tools', 'RUSTFLAGS': '--cfg selected',
+                                   'RUSTC_WRAPPER': '/selected/wrapper'}
+                    if target is not None:
+                        environment['CARGO_TARGET_DIR'] = target
+                    if shared is not None:
+                        environment['SIFR_GCQ_SHARED_ROOT'] = str(shared)
+                    with patch.dict(os.environ, environment, clear=True), patch(
+                        'sifr_verify.fixture_execution.run_process',
+                        return_value=ProcessResult(0, 'output', '', 'exit', False),
+                    ) as execute:
+                        for command in (['selected-sifr', 'build'], ['selected-sifr', 'emit'],
+                                        ['python', 'freshness.py'], ['rustfmt', '--check'],
+                                        ['native-output']):
+                            gcq.run_command(command, cwd=Path('/owned/source'))
+                            execute.assert_called_with(command, cwd=Path('/owned/source'), env=environment)
+                        self.assertEqual(dict(os.environ), environment)
+
+    def test_explicit_generated_target_changes_only_the_child_target(self):
+        import generated_code_quality as gcq
+        from sifr_verify.fixture_execution import ProcessResult
+        environment = {'CARGO_TARGET_DIR': '/owned/compiler', 'SIFR_GCQ_SHARED_ROOT': '/owned/gcq',
+                       'PATH': '/selected/tools', 'RUSTFLAGS': '--cfg selected',
+                       'RUSTC_WRAPPER': '/selected/wrapper'}
+        with patch.dict(os.environ, environment, clear=True), patch(
+            'sifr_verify.fixture_execution.run_process',
+            return_value=ProcessResult(0, '', '', 'exit', False),
+        ) as execute:
+            gcq.run_command(['cargo', 'check', '--locked'], cargo_target_dir=Path('/owned/generated'))
+            self.assertEqual(execute.call_args.kwargs['env'],
+                             environment | {'CARGO_TARGET_DIR': '/owned/generated'})
+            self.assertEqual(dict(os.environ), environment)
+
+    def test_process_failures_and_incomplete_output_remain_failures(self):
+        import generated_code_quality as gcq
+        from sifr_verify.fixture_execution import ProcessResult
+        for result in (ProcessResult(1, '', 'failed', 'exit', False),
+                       ProcessResult(0, '', '', 'timeout', False),
+                       ProcessResult(0, '', '', 'exit', True)):
+            with self.subTest(result=result), patch(
+                'sifr_verify.fixture_execution.run_process', return_value=result,
+            ):
+                with self.assertRaises(RuntimeError):
+                    gcq.run_command(['selected-sifr', 'build'])
+                if result.cause == 'exit' and not result.truncated:
+                    self.assertEqual(gcq.run_command(['cargo', 'clippy'], check=False), result)
+                else:
+                    with self.assertRaises(RuntimeError):
+                        gcq.run_command(['cargo', 'clippy'], check=False)
+
+    def test_generated_gates_explicitly_select_their_owned_target(self):
+        from contextlib import ExitStack
+        import generated_code_quality as gcq
+        from native_assertions import run_native_gate
+        for shared in (None, Path('/owned/shared')):
+            for gate in ('corpus', 'rustfmt', 'native'):
+                with self.subTest(shared=shared, gate=gate), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    crate = root / 'generated'
+                    (crate / 'src').mkdir(parents=True)
+                    (crate / 'src/main.rs').write_text('fn main() {}\n', encoding='utf-8')
+                    entry = gcq.Entry('probe', 'demos-required', 'main.sifr', 'build', 'test', 'ok\n')
+                    calls = []
+                    def run(command, **kwargs):
+                        calls.append((command, kwargs))
+                        stdout = (json.dumps({'reason': 'compiler-artifact', 'executable': '/owned/program'})
+                                  if command[:2] == ['cargo', 'build'] else
+                                  'ok\n' if command == ['/owned/program'] else '')
+                        return SimpleNamespace(returncode=0, stdout=stdout, stderr='')
+                    with ExitStack() as stack:
+                        for name, value in [('REPO_ROOT', root), ('TARGET_ROOT', root / 'target')]:
+                            stack.enter_context(patch.object(gcq, name, value))
+                        for name, value in [('run_id', 'case'), ('shared_artifact_root', shared),
+                                            ('materialize_entry', crate), ('load_debt', {}),
+                                            ('record_evidence', root / 'evidence.json')]:
+                            stack.enter_context(patch.object(gcq, name, return_value=value))
+                        for name in ('validate_debt_owners', 'compare_exact_debt', 'assert_negative_rustfmt'):
+                            stack.enter_context(patch.object(gcq, name))
+                        stack.enter_context(patch.dict(os.environ, {}, clear=True))
+                        stack.enter_context(patch.object(gcq, 'run_command', side_effect=run))
+                        args = SimpleNamespace(group=[], keep_success=True)
+                        if gate == 'native':
+                            run_native_gate(gcq, [entry], args)
+                        else:
+                            getattr(gcq, 'gate_' + gate)([entry], args)
+                    cargo = [(command, kwargs) for command, kwargs in calls if command[0] == 'cargo']
+                    self.assertEqual(len(cargo), 1)
+                    self.assertEqual(cargo[0][1].get('cargo_target_dir'),
+                                     (shared or root / 'target/case') / 'cargo-target')
+                    if gate != 'rustfmt':
+                        self.assertIn('--locked', cargo[0][0])
+                    if gate == 'native':
+                        self.assertIn('--release', cargo[0][0])
+                        self.assertEqual(calls[-1], (['/owned/program'], {'cwd': root}))
+
+
 if __name__ == "__main__":
     unittest.main()
