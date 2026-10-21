@@ -36,6 +36,7 @@ ALL_SIFR_CRATES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_metadata",
+    "sifr_semantic_services",
     "sifr_package",
     "sifr_runtime",
     "sifr_source",
@@ -114,6 +115,7 @@ GENERATED_DEPENDENCY_SPEC_DEFINITION_PATTERNS = (
 )
 
 PROVIDER_CONSTRUCTION_SCAN_CRATES = (
+    "sifr_semantic_services",
     "sifr_compiler_services",
     "sifr_analysis",
     "sifr_driver",
@@ -128,7 +130,7 @@ INLINE_TEST_MODULE_PATTERN = re.compile(
 )
 PROVIDER_COMPOSITION_ROOTS = {
     # These entry points assemble providers, then pass them into lower services.
-    Path("crates/sifr_compiler_services/src/sql_editor.rs"),
+    Path("crates/sifr_semantic_services/src/sql_editor.rs"),
     Path("crates/sifr_driver/src/guided_project_graph.rs"),
     Path("crates/sifr_frontend/src/workspace_session.rs"),
 }
@@ -246,6 +248,12 @@ RULES = (
         crate="sifr_lsp",
         forbidden_all_dependencies=frozenset({"sifr_driver"}),
         forbidden_source_references=frozenset({"sifr_driver"}),
+        scan_manifest_targets=True,
+    ),
+    CrateRule(
+        crate="sifr_semantic_services",
+        forbidden_all_dependencies=frozenset({"sifr", "sifr_driver", "sifr_analysis", "sifr_lsp", "sifr_compiler_services", "sifr_codegen", "sifr_stdlib_artifact"}),
+        forbidden_source_references=frozenset({"sifr_driver", "sifr_analysis", "sifr_lsp", "sifr_compiler_services", "sifr_codegen", "sifr_stdlib_artifact"}),
         scan_manifest_targets=True,
     ),
     CrateRule(

@@ -16,7 +16,7 @@ tempfile = "3.27.0"
 
 [dev-dependencies]
 semver = { workspace = true }
-sifr_driver = { workspace = true }
+sifr_semantic_services = { workspace = true }
 
 [lints]
 workspace = true

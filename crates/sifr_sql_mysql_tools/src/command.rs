@@ -1,6 +1,6 @@
 use crate::pull_live_catalog;
 use serde::Serialize;
-use sifr_driver::{QUERY_SIGNATURE_ARTIFACT_NAME, load_sql_editor_profiles};
+use sifr_semantic_services::{QUERY_SIGNATURE_ARTIFACT_NAME, load_sql_editor_profiles};
 use sifr_sql_contract::{
     ProfileAuthority, QuerySignatureArtifact, SchemaEvidence, SchemaIr, build_profile_authority,
     schema_source_fingerprint,

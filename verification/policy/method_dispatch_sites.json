@@ -52225,7 +52225,7 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_compiler_services/src/compiler_context.rs::dx_identity_bare_test_uses_compiled_dependency_configuration enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::profile_name::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::profile_name::literal-comparison::1",
       "fingerprint": "f05ac46637de965863bb338ed80693a7b1d0e5648b7a7ff12c40bfa6a97bcbe2",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52233,11 +52233,11 @@
       "inputs": "fn profile_name < ' a > ( & ' a self , ty : & Type )",
       "outputs": "Option < & ' a str >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::profile_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::profile_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::profile_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::profile_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::query::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::query::literal-comparison::1",
       "fingerprint": "c63e4f8467e63924a66a77df0f0c5124710a715ef380da0903655cdec49f50f5",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52245,11 +52245,11 @@
       "inputs": "fn query ( & self , module : & str , owner : & str , profile : & str , args : & [ HirExpr ] , )",
       "outputs": "Result < TypedMethodOutput , TypedMethodFailure >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::query enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::query enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::query enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::query enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-match::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-match::1",
       "fingerprint": "ccfc2cf2ae534c28fd578a29cfc728103692a44f605ffafba5bb66b89e09b037",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52257,11 +52257,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::1",
       "fingerprint": "888e47e474e742f479b5dfbc15bf64ae45ba3528ccc70a0c66cc542631355639",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52269,11 +52269,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::2",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::2",
       "fingerprint": "a4f357b791fa4ccbf45fca85ecc7e863bd42d03826cfda34c66a4749b3662cde",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52281,11 +52281,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-match::2",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-match::2",
       "fingerprint": "9b54f74341e972f040b8557d02751af96f3987fd4bf3e93f46f76b69d10442b0",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52293,11 +52293,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::3",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::3",
       "fingerprint": "f6a453e49d546c90980d85f13363e47b59413c28435d23a457a4ddb4ec5d73bd",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52305,11 +52305,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::4",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::4",
       "fingerprint": "fd8532dcf9d2e3f935c51efd0632493dcd2a91e5995bc2c53fbc7a29d420246e",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52317,11 +52317,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-match::3",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-match::3",
       "fingerprint": "49fe987d6d480f9ce1adf24becc85d6d6834d8cb15361254b1e4b6de29302495",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52329,11 +52329,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::5",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute::literal-comparison::5",
       "fingerprint": "424f587c19c17cdfa98df12c95c0034479f731e9bc99bd3f351779845c66de3e",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52341,11 +52341,11 @@
       "inputs": "fn execute ( object : HirExpr , method : & str , mut args : Vec < HirExpr > )",
       "outputs": "Result < HirExpr , String >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::1",
       "fingerprint": "caed4065e15d42eeefe525e1f926aaba00d5a310fc2549ace03e859db9c2e63a",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52353,11 +52353,11 @@
       "inputs": "fn handles ( & self , receiver : & Type , method : & str )",
       "outputs": "bool",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::2",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::2",
       "fingerprint": "51fb3e4b71ca4c37767f21aa5cae05a0443582db64a9f8b2dd233bd8c63ae6a4",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52365,11 +52365,11 @@
       "inputs": "fn handles ( & self , receiver : & Type , method : & str )",
       "outputs": "bool",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::3",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::3",
       "fingerprint": "98781fb6a0b7960cb231de48bc086f8d609f8f3177c323d03188332f5dffc7b0",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52377,11 +52377,11 @@
       "inputs": "fn handles ( & self , receiver : & Type , method : & str )",
       "outputs": "bool",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles::literal-match::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles::literal-match::1",
       "fingerprint": "809e7170b169058128d30df68e7de3b97791d7a79fd9acf259e547880510fa97",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52389,11 +52389,11 @@
       "inputs": "fn handles ( & self , receiver : & Type , method : & str )",
       "outputs": "bool",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::4",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles::literal-comparison::4",
       "fingerprint": "bddd9babe125247de22677e21093754cd5d7caca4df073a4f18bc196817b1d1d",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52401,11 +52401,11 @@
       "inputs": "fn handles ( & self , receiver : & Type , method : & str )",
       "outputs": "bool",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::handles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::1",
       "fingerprint": "19069a77ecf40be1572e012c0e737e3cb1a22cdd389d885dd9993e77a47e1927",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52413,11 +52413,11 @@
       "inputs": "fn prepare_method ( & self , request : OwnedMethodRequest , )",
       "outputs": "Result < TypedMethodOutput , TypedMethodFailure >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::2",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::2",
       "fingerprint": "92c44755ab6bd4a5b6141eaa68ec17ab4e0d29014abab831ba51cccb0a654560",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52425,11 +52425,11 @@
       "inputs": "fn prepare_method ( & self , request : OwnedMethodRequest , )",
       "outputs": "Result < TypedMethodOutput , TypedMethodFailure >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::3",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::3",
       "fingerprint": "d92525ce9668da95eb69b2b4b6339cdd437d5465ce191f27f4935df019e3a182",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52437,11 +52437,11 @@
       "inputs": "fn prepare_method ( & self , request : OwnedMethodRequest , )",
       "outputs": "Result < TypedMethodOutput , TypedMethodFailure >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::4",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method::literal-comparison::4",
       "fingerprint": "70d1348b21ba956d9d40179ba44608337858c83c0061ac8d58571d10054fd83b",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52449,11 +52449,11 @@
       "inputs": "fn prepare_method ( & self , request : OwnedMethodRequest , )",
       "outputs": "Result < TypedMethodOutput , TypedMethodFailure >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method::literal-match::1",
+      "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method::literal-match::1",
       "fingerprint": "8fa4a9ee6cca296e14b581ac3dfe8a8c150c523739719b8409b1b4ffda0d9d5b",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52461,8 +52461,8 @@
       "inputs": "fn prepare_method ( & self , request : OwnedMethodRequest , )",
       "outputs": "Result < TypedMethodOutput , TypedMethodFailure >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::prepare_method enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_compiler_services/src/metadata/ensure.rs::publish_output::literal-comparison::1",
@@ -52549,7 +52549,7 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/metadata/production.rs::capture enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#6::typed-authority-match::1",
+      "site": "crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#6::typed-authority-match::1",
       "fingerprint": "a25710f68c2e2aace0eef4b69e4ba7f7537b564ae43c68c3aa560c838635d638",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52557,11 +52557,11 @@
       "inputs": "fn decode ( reference : & wire :: Ref < wire :: MethodAuthority > , cx : & mut Decoder )",
       "outputs": "Result < Self >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#6 enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#6 enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#6 enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#6 enclosing context owns this typed-authority-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#26::method-call-carrier::1",
+      "site": "crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#26::method-call-carrier::1",
       "fingerprint": "7608cb6cd82fe755b504cb469adc9e47f372def22336441d0450dcf50dd79d1e",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52569,11 +52569,11 @@
       "inputs": "fn decode ( reference : & wire :: Ref < wire :: HirExpr > , cx : & mut Decoder )",
       "outputs": "Result < Self >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#26::method-call-carrier::2",
+      "site": "crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#26::method-call-carrier::2",
       "fingerprint": "1f1ca7c9ab111841bf9da70d72b98cba7f95e5019050a57ee1382250f5eac815",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52581,11 +52581,11 @@
       "inputs": "fn decode ( reference : & wire :: Ref < wire :: HirExpr > , cx : & mut Decoder )",
       "outputs": "Result < Self >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/metadata/reader/hir_nodes.rs::decode#26 enclosing context owns this method-call-carrier; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/metadata/reader/mod.rs::decode_project_results::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/metadata/reader/mod.rs::decode_project_results::literal-comparison::1",
       "fingerprint": "120a742def15826ecc9ebcf1993fd356559b9a5812109ac9bf1a44b4772a7c9a",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52593,8 +52593,8 @@
       "inputs": "fn decode_project_results ( artifact : & super :: ProjectTypedArtifact , compatibility : wire :: Compatibility , )",
       "outputs": "Result < std :: collections :: BTreeMap < String , ( sifr_ir :: HirModule , sifr_lowering :: ExternalDefs ) > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/metadata/reader/mod.rs::decode_project_results enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/metadata/reader/mod.rs::decode_project_results enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/metadata/reader/mod.rs::decode_project_results enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/metadata/reader/mod.rs::decode_project_results enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_compiler_services/src/metadata/reader/support_projection.rs::project_signatures::literal-comparison::1",
@@ -52729,7 +52729,7 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/python/mod.rs::policy_help enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering::literal-comparison::1",
       "fingerprint": "1b7be95dfa2c28504e2113f28f4952fe1627f4b1195c18174d774ecf63c54a8f",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -52737,11 +52737,11 @@
       "inputs": "fn provider_severity_identity_and_related_spans_survive_shared_rendering ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_compiler_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_semantic_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::1",
       "fingerprint": "b0405b1f99a131ac462d0145580f6cc2b26f6d872786a6aabcac6f6a38e2d193",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52749,11 +52749,11 @@
       "inputs": "fn prepare_sql_profiles ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , )",
       "outputs": "Result < PreparedSqlProfiles , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::2",
+      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::2",
       "fingerprint": "e84bdeb4a803c87f3b873ca6925af43493e5be5be95aea72493d06fccce7384a",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52761,11 +52761,11 @@
       "inputs": "fn prepare_sql_profiles ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , )",
       "outputs": "Result < PreparedSqlProfiles , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::3",
+      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::3",
       "fingerprint": "b0405b1f99a131ac462d0145580f6cc2b26f6d872786a6aabcac6f6a38e2d193",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52773,8 +52773,8 @@
       "inputs": "fn prepare_sql_profiles ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , )",
       "outputs": "Result < PreparedSqlProfiles , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_compiler_services/src/sql_editor_tests.rs::invalid_component_preserves_source_diagnostic::literal-match::1",
@@ -52801,7 +52801,7 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_compiler_services/src/sql_editor_tests.rs::invalid_component_preserves_source_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources::literal-comparison::1",
+      "site": "crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources::literal-comparison::1",
       "fingerprint": "e64121914bf4eecdacfc7ed5b1386bae426a358f55f03074533390c8989a6206",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52809,11 +52809,11 @@
       "inputs": "fn check_stdlib_sources < ' a > ( sources : & ' a [ LoadedStdlibSource ] , observer : & mut dyn CheckedModuleObserver < ' a > , )",
       "outputs": "Result < CheckedStdlib , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources::literal-comparison::2",
+      "site": "crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources::literal-comparison::2",
       "fingerprint": "c3170a47ec6153f790f8d9c265d75ea560b050ee2b03ad30ed347076e3c91028",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52821,11 +52821,11 @@
       "inputs": "fn check_stdlib_sources < ' a > ( sources : & ' a [ LoadedStdlibSource ] , observer : & mut dyn CheckedModuleObserver < ' a > , )",
       "outputs": "Result < CheckedStdlib , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources::literal-comparison::3",
+      "site": "crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources::literal-comparison::3",
       "fingerprint": "c38baebccace78fd3984057042c761bb2d587ba8ecd661eefbf28fa060427267",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
@@ -52833,8 +52833,8 @@
       "inputs": "fn check_stdlib_sources < ' a > ( sources : & ' a [ LoadedStdlibSource ] , observer : & mut dyn CheckedModuleObserver < ' a > , )",
       "outputs": "Result < CheckedStdlib , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/stdlib/bootstrap.rs::check_stdlib_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_compiler_services/src/stdlib/native.rs::materialize::literal-comparison::1",

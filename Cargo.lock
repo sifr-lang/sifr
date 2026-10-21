@@ -7555,6 +7555,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_metadata",
  "sifr_package",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
  "sifr_stdlib_imports",
@@ -7602,6 +7603,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_metadata",
  "sifr_package",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
  "sifr_stdlib_imports",
@@ -7856,6 +7858,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_semantic_services"
+version = "0.0.0"
+dependencies = [
+ "num-bigint 0.5.1",
+ "ruff_python_ast",
+ "ruff_text_size",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_cache_storage",
+ "sifr_compiler_component",
+ "sifr_diagnostics",
+ "sifr_frontend",
+ "sifr_identity",
+ "sifr_ir",
+ "sifr_lowering",
+ "sifr_metadata",
+ "sifr_package",
+ "sifr_sql_contract",
+ "sifr_stdlib_imports",
+ "sifr_stdlib_manifest",
+ "sifr_syntax",
+ "sifr_sysroot",
+ "sifr_type_system",
+ "tempfile",
+]
+
+[[package]]
 name = "sifr_source"
 version = "0.0.0"
 dependencies = [
@@ -7942,8 +7972,8 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
- "sifr_driver",
  "sifr_identity",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_mysql",
  "sifr_sql_runtime",
@@ -7996,8 +8026,8 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
- "sifr_driver",
  "sifr_identity",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_postgresql",
  "sifr_sql_runtime",
@@ -8059,8 +8089,8 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
- "sifr_driver",
  "sifr_identity",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_runtime",
  "sifr_sql_sqlite",
@@ -8078,7 +8108,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
- "sifr_driver",
+ "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_runtime",
  "tempfile",

@@ -1,5 +1,5 @@
 use crate::diagnostics::diagnostic_with_code;
-use crate::python::render_package_diagnostic;
+use crate::package_diagnostics::render_package_diagnostic;
 use sifr_compiler_component::{
     COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost, ComponentHostLimits,
     ComponentRequirement, ResolvedComponent,

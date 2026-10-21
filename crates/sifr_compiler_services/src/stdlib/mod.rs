@@ -1,7 +1,6 @@
 mod bootstrap;
 mod interop;
 mod native;
-mod re_exports;
 pub use bootstrap::{
     collect_public_constant_integer_value_exports, function_type_from_hir,
     function_type_from_params, signature_params,

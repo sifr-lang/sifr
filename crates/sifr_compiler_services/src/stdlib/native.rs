@@ -26,6 +26,10 @@ pub fn compile_stdlib_sources_with_sysroot(
         syntax_session: sifr_codegen::StdlibSyntaxSession::default(),
     };
     let checked = check_stdlib_sources(sources, &mut native)?;
+    debug_assert_eq!(
+        native.code.transitive_deps, checked.transitive_deps,
+        "native observer must retain the canonical checked dependency map"
+    );
     native.code.hir_modules = Arc::new(checked.hir_modules);
     native.code.transitive_deps = checked.transitive_deps;
     Ok(SourceStdlibCompiled {

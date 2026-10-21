@@ -49,16 +49,14 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
     diagnostic_style: FrontendDiagnosticStyle,
     lowering_options: &LoweringOptions,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
-    let inputs = HashMap::from([(
-        module_name.to_string(),
-        FrontendProductInput {
-            suite: stmts,
-            source: source_context.source,
-            display_path: source_context.display_path,
-            source_backed: true,
-        },
-    )]);
-    compile_frontend_product(&inputs, external_defs, diagnostic_style, lowering_options)
+    sifr_semantic_services::single_file::compile_product(
+        module_name,
+        stmts,
+        source_context,
+        external_defs,
+        diagnostic_style,
+        lowering_options,
+    )
 }
 
 #[cfg(test)]
