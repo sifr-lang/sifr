@@ -404,6 +404,7 @@ class ProfileRunner:
             raise ProfileRunnerError(f"unsupported toolchain step: {toolchain_step}")
 
     def run_crate_tests(self, mode: str) -> None:
+        first_failure = None
         for configuration in configuration_plan(self.profile, mode):
             suite_id = ",".join(configuration.ids)
             command = configuration.execution()
@@ -413,16 +414,26 @@ class ProfileRunner:
                 if any(suite in NATIVE_SUITES for suite in configuration.ids):
                     run_native_configuration(configuration, env=self.env, no_fail_fast=self.no_fail_fast)
                 else:
+                    if self.no_fail_fast:
+                        command.insert(2, "--no-fail-fast")
                     run_command(command, env=self.env)
-            except (CommandFailed, VerificationError):
+            except (CommandFailed, VerificationError) as error:
                 case_status = "fail"
-                raise
+                if not self.no_fail_fast or (
+                    isinstance(error, CommandFailed)
+                    and (error.cause not in (None, "exit") or error.returncode < 0)
+                ):
+                    raise
+                first_failure = first_failure or error
             finally:
                 elapsed_ms = now_ms() - start_ms
                 print(
                     f"[sifr-case-timing] bucket=crate_tests case={suite_id} "
                     f"elapsed_ms={elapsed_ms} status={case_status}"
                 )
+
+        if first_failure is not None:
+            raise first_failure
 
     def run_e2e_pass_suite(self) -> None:
         e2e = self.profile["e2e"]

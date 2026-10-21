@@ -5283,3 +5283,112 @@ failed execution (0.649s) and source remain preserved. A shell quoting failure w
 preparing that correction did not mutate sources or execute tests. No false failure
 is reclassified as a passing test. Exact-candidate review and merge remain pending
 at this record. Complete final phase gates and V5 are still required.
+
+### V4d closure — literal test include ownership / #4401
+
+PR [#4401](https://github.com/sifr-lang/sifr/pull/4401) merged as
+`98d53e68fd` after focused validation and independent **SATISFIED** review, with no
+blockers, on candidate `fc9f8e90d47d1910ed7ac2d3da80b198198fb9aa` against
+`0904d38ef15ec750d313338f23cf38c8d7e26804`. Evidence `v4d-evidence.tar.gz`, SHA-256
+`b521203cbeccd8170d6fc86baac28e8a942123df13f81e390d39fb74b53577c0`, contains 34
+independently verified files. Raw review lives outside Git at
+`reviews/fc9f8e90d47d1910ed7ac2d3da80b198198fb9aa/response.md`, SHA-256
+`25c3ba66f1e47ff858fd21fc416293a31c75f34ab741b372083e0a56c6f3fff2`.
+The reviewer independently identifies nine newly classified test-only files, with
+no current production owner and exactly the three expected findings removed.
+
+Follow-ups remain separate: source ownership should eventually seed Cargo target
+roots as production owners even if they also have gated incoming edges; the old
+`#[path] mod` route already had that limitation, and no current source is affected.
+Compound cfg expressions and inner cfg attributes remain conservatively checked.
+No full-phase timing or final acceptance is claimed.
+
+### V4e bounded investigation — refreshed integrated failure inventory
+
+Run the actual current correctness-only profile with `--no-fail-fast`, after a
+fresh resource/ownership/tool/plan preflight. The purpose is to discover independent
+failures across the integrated changes before choosing the next repair; this is
+not the final acceptance candidate. Preserve canonical selection, prerequisites,
+commands and assertions. Use the existing owned compiler target and bounded worker
+allocation. Do not count a missing, failed, capped or prerequisite-blocked category
+as passing, and do not replace a failed assertion with a successful filter.
+
+Apply the existing 30-minute cap to the diagnostic invocation and retain canonical
+step timings/output and process cleanup. If the aggregate cap stops the profile,
+record which categories ran and which remain unexecuted; subsequent diagnostics
+may execute remaining canonical categories separately under their own caps. Do not
+silently continue consumers whose actual preparation failed. Preserve the exact
+candidate, resource allocation, identities and observed test counts. Assign each
+failure to its existing phase owner or a newly bounded repair before modifying it.
+Complete final create-PR/merge gates and V5 remain mandatory.
+
+
+### V4e initial diagnostic result — incomplete, not acceptance
+
+The first integrated diagnostic stopped after 759.556s at the existing disk reserve;
+crate-test preparation was still compiling the distinct optimized/debug test graph.
+The five initial source guards passed, but main assertion categories did not run.
+Generated preparation also failed because this session had not published the exact
+candidate revision before its first Cargo fetch. That setup failure is retained;
+it is not a compiler defect. No blocked or unexecuted category counts as passing.
+Process cleanup completed without a tracked source change. Twenty-four obsolete,
+inactive, session-owned executables were copied and hash-verified before removing
+the original copies, recovering 14.614 GiB; their recoverable bytes and manifests
+remain outside Git. The interrupted ten-crate configuration is being resumed on
+the unchanged candidate with explicit Cargo failure collection and a four-job
+diagnostic allocation, not as final profile timing evidence.
+
+Clarification to V4c: merge GCQ assertion selection is twelve representatives, but
+current online generated preparation materializes and fetches all 93 entries.
+Consequently the 93-entry cost remains part of the actual profile prelude. No
+preparation selection is waived or narrowed by the earlier diagnostic wording.
+
+### V4f contract — collect independent crate failures
+
+Repair `--no-fail-fast` inside the canonical crate-test configuration loop. Currently
+the first failed configuration aborts the loop even in explicit collection mode;
+ordinary grouped Cargo commands also omit Cargo's failure-collection flag. Preserve
+all selected packages, targets, features, filters, order, environments and assertions.
+In collection mode, continue after ordinary command/assertion failures, print each
+configuration's timing/status, then fail the aggregate using the first ordinary
+failure. Default fail-fast behavior remains unchanged. Propagate cancellation,
+negative signal status and non-exit termination causes immediately, even after an
+earlier ordinary failure. Apply the same terminal-stop rule to the existing native
+per-case scheduler so the outer loop cannot conceal a safety stop.
+
+Acceptance: controls for default stopping, ordinary multi-configuration collection,
+Cargo-versus-harness flag placement, preserved selection/environment/native dispatch,
+nonzero aggregate result, and terminal failure precedence at both loop levels.
+The old implementation must fail new collection/terminal regression controls. Run
+affected configuration-plan, native scheduling, preparation, execution-scope and
+profile contracts, compare emitted canonical plans, and check file-size guardrails.
+Require exact-candidate independent review. This improves diagnostic completeness;
+it does not bypass failed preparation, reduce coverage or claim a gate speedup.
+Final integrated create-PR/merge gates and V5 remain required.
+
+
+### V4f implementation and focused evidence
+
+Explicit collection now passes Cargo's `--no-fail-fast` before harness arguments
+and executes all independent crate configurations, retaining the first ordinary
+failure as the aggregate result. Negative signal returns and non-exit termination
+causes immediately propagate from both configuration and native-case loops, even
+after earlier ordinary failures. Default stopping, native inventory/count checks,
+all command selections and environments remain intact.
+
+Eight new regression tests pass (3.376s). The unchanged implementation fails six
+of these tests and errors in one (1.648s); that negative result is retained. The
+first edit helper had a Python quoting error before any source mutation, so a
+subsequent attempted focused run still tested the baseline and failed (0.657s).
+The corrected helper and successful run remain separately identified.
+
+Related tests execute 39 cases (2.725s): 38 pass and the existing frozen-scope
+assertion fails because it expects 17 configurations while the plan contains 18.
+An independent unchanged-baseline run reproduces that exact mismatch. This belongs
+to V4 scope-contract reconciliation, not this scheduler repair; preserve and fix it
+separately after tracing the added selection, without reducing test membership.
+Configuration/native/collection, preparation and qualification policy checks pass;
+both emitted correctness plans and all eight profile/mode compiler plans compare
+identically against the unchanged baseline (15.266s total). Canonical `profiles
+check` passes (2.190s), as do file-size guardrails (8.173s). No full integrated pass
+or ten-minute timing acceptance is claimed. Exact-candidate review is next.
