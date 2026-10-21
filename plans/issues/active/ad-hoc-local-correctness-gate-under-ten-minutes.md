@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3h retained Rust-interop fixture ownership; V1 feasibility and integrated acceptance remain open
+current_stage: V3k complete compiled-Python reuse diagnosis; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -774,8 +774,9 @@ or mocked durability. Compilation-only timings do not establish runtime semantic
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: V3b's fresh GCQ materialization and V3c's explicit Cargo contexts
-are accepted below. Reusable native/Python fixture lifecycle work remains open.
+Current evidence: V3b/V3c, retained Rust-interop fixtures (V3e/V3h) and bounded
+native bundle processing (V3f/V3j) are accepted below. Compiled-Python lifecycle,
+complete command/version reuse proof and integrated acceptance remain open.
 
 Decision: Use stable leased ownership and complete identities, without caching a successful
 test result in place of rerunning it.
@@ -1142,8 +1143,8 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
 | V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.20 / #4389; final completeness pending |
 | V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 through V1b4 / #4392 accepted; V1c scheduling and full feasibility pending |
-| V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
-| V3 compatible build reuse | In progress | V3b/V3c/V3e merged; broader fixture and native bundle work open |
+| V2 repeated metadata/component work | In progress | V2a / #4386, V2b / #4394 and V2c / #4397 accepted; integrated acceptance pending |
+| V3 compatible build reuse | In progress | V3b/V3c/V3e/V3f/V3h/V3j merged; compiled Python, command/version proof and integration open |
 | V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
 | V5 integrated qualification | Pending | No complete green sub-ten-minute result |
 
@@ -6713,3 +6714,122 @@ Use existing owned targets, safe resource reserves and per-category 30-minute ca
 record preparation separately. Run formatting, size and source-ownership checks
 and one exact-candidate independent review. Final integrated create-PR/merge gates,
 complete current-host selection, cold feasibility and all V5 scenarios stay open.
+
+
+### V3j closure — bounded native byte processing / #4421
+
+Merged [#4421](https://github.com/sifr-lang/sifr/pull/4421), candidate
+`325f011c1b71c785c693d4d9cf69211ce40487d0`, merge
+`8e8d49895aa6362e4d594e0096eaa069d01f8684`. The existing identity authority now
+supports transactional, exactly length-delimited reader fields. Native basename,
+verification and capture comparisons use bounded buffers, read current bytes and
+retain their explicit destination-error policies. All source errors remain fatal.
+Inventory, aliases, sidecars, diagnostics, copy behavior and leases are unchanged.
+No identity schema, profile, dependency, selection or assertion-result cache changed.
+
+Four identity and ten native byte/snapshot controls pass. Guarded focused validation
+is 148.029s, including a 138s driver rebuild. Whitespace, formatting, size and
+source ownership pass. The complete ordinary driver passes **772 tests**, with
+82 explicitly ignored native roles and 854 total names, exactly the prior inventory
+plus four new regressions. Execution is 371.070s, inventory 2.618s and guarded time
+380.400s; the prior guarded observation was 363.396s. No ordinary-suite speedup is
+claimed. All 48 project-cache cases and affected native/cache/lease checks execute.
+
+The canonical 82-role native inventory and Python/metadata preparation pass.
+Seven selected advanced preparation/runtime, backend SQLx, HTTP runtime/rejection
+and resource alias/lifecycle roles all pass with the same selected binary as the
+ordinary suite. Their execution sums are 202.727s before and 193.667s after, single
+instrumented observations. Cargo counts match per role (86 total); both sides have
+zero rustc invocations, no unparsed exec events and no missing compiler completions.
+Advanced preparation maximum reported RSS falls from 1,846,076 KiB to 262,416 KiB.
+Every owned diagnostic process session ends empty and source remains frozen.
+
+The production bundle experiment preserves the exact legacy identity and all
+payloads on the same independently owned 894,150,648-byte copies. All bundle and
+unchanged-size/mtime corruption controls pass. Six balanced production observations
+have these medians:
+
+| Actual bundle stage | Whole-file baseline | Bounded production |
+| --- | ---: | ---: |
+| Inventory plus identity | 10.685s | 6.359s |
+| Fresh verification | 12.855s | 14.479s |
+| Unchanged capture comparison | 13.006s | 15.160s |
+| Complete measured process | 36.609s | 35.964s |
+| Maximum reported RSS | 1,748,696 KiB | 2,644 KiB |
+
+Unlike V3i's low-I/O prototype observations, **every production run reports
+8,731,960 filesystem input blocks**. Preliminary hashes did not guarantee retained
+pages. Historical raw descriptions that call these warm-file measurements are
+explicitly corrected in `v3j-io-observations.json`; neither individual stage
+slowdowns nor the differing regimes are hidden. The source of the cache/I/O
+variation is not established. Memory bounds are proven and measured; uniform
+elapsed-time improvement is not. Cold and full-gate qualification retain this cost.
+
+A separate balanced 64-KiB/1-MiB/4-MiB buffer probe passes all variant bundle controls
+and identity comparisons but returns to low-I/O conditions. Larger buffers make
+comparison stages slower there, and unchanged-construction variation obscures
+small total differences. It does not establish their storage-heavy behavior, so
+no larger-buffer change is adopted. No OS cache flushing or profile change was used.
+
+Frozen evidence: `v3j-evidence.tar.gz`, 3,647 files, 4,216,991 bytes, SHA-256
+`04ead928d8f428753ab13ca13429100343a27c5a421b914acb2e9f085831f6e0`.
+Every extracted manifest hash/size and 21 carried V3h baseline files match the
+previous frozen extraction. Evidence is retained under
+`local-gate-implementation-20261020/v3j-reviewed-diagnostic`.
+Independent exact-candidate review: **SATISFIED**, no blockers; response SHA-256
+`e4d9bd256d83f2d86259d1240169262d86a1869401fb6291f032076310627403`, outside the
+reviewed tree under `reviews/325f011c1b71c785c693d4d9cf69211ce40487d0`.
+The identity/native-storage owners retain optional helper deduplication and
+smaller-thread-stack follow-ups; current buffers are 64 KiB for identity and
+128 KiB per comparison. The full-gate owner retains the observed I/O regimes.
+These suggestions do not introduce new acceptance requirements or justify a
+public utility API solely to remove a small local helper duplication.
+
+V3h's record/next contract merged through
+[#4419](https://github.com/sifr-lang/sifr/pull/4419); V3i's result/V3j contract
+through [#4420](https://github.com/sifr-lang/sifr/pull/4420).
+Complete current-host gates, cold feasibility and every V5 scenario remain open.
+No CI-green, full-gate timing or phase-completion claim follows from this item.
+
+### V3k bounded investigation — complete compiled-Python lifecycle and execution
+
+Refresh the canonical compiled-Python inventory before another lifecycle repair.
+The historical inventory has 29 examples across nine suites; reconcile the current
+manifest, declaration/fixture inventories and actual configured cases by name.
+Explain additions/removals rather than silently selecting a historical subset.
+Distinguish compiled examples from static/self-tests, live external integration
+and the nine separately measured driver-native Python roles. Preserve the approved
+current-host scope; this item does not launch release or external-live contracts.
+
+Prepare the exact selected CLI, pinned Python environment and required metadata
+once through the canonical context/ownership helpers, retaining actual binary,
+interpreter, configuration and candidate identities. Run every current compiled
+example and its declared assertions, diagnostics, exit and output markers. Record
+preparation, each example/suite and cleanup separately. Use the production
+launcher/runner when available; any isolated diagnostic invocation must preserve
+its exact arguments and environment and must not be labeled a canonical gate pass.
+If a suite stops before later examples, retain that failure and execute independently
+runnable remaining examples under their own recorded boundaries.
+
+Each category/example has the existing 30-minute diagnostic cap; preserve any
+stricter canonical timeout as a separate outcome. Continue independent cases after
+proving owned descendants stopped; stop launches for surviving children, source
+drift or insufficient safe reserve. Inspect current CPU/memory/disk/target capacity
+and declare realistic per-category work allocation plus the existing 20-GiB disk
+and 2-GiB memory reserves. Retain prepared targets and failure evidence; no shared
+cleanup. Do not invent results for an unavailable environment or external service.
+
+For costly or surprising repeated preparation, repeat a representative unchanged
+example with the same selected products and capture actual nested Cargo context,
+compiler invocations, dirty reasons and fixture bytes/metadata. Keep observations
+separate when instrumentation differs. Trace Python probe/venv identity without
+collapsing it to the base interpreter or dropping ABI/trust/environment inputs.
+Identify the responsible owner and register a bounded repair before changing
+fixtures, reuse policy or compiler behavior. No test-result caching, dependency
+pin changes, assertion omissions or global resource-policy change is authorized
+by this diagnostic item.
+
+Report complete selected names, statuses, observed timings and incomplete work.
+The remaining complete command matrices, PostgreSQL default/explicit 18 and
+13→18→13 reuse proof, V1 cold feasibility, V4 integration and V5 stay required;
+this diagnostic does not close V3 or the phase.
