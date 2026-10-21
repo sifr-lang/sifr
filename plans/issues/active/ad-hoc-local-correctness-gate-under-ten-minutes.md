@@ -6641,3 +6641,75 @@ only after evidence supports a separately recorded bounded implementation contra
 with affected tests and exact-candidate review. Full native coverage, remaining
 Python examples and command matrices, cold SQL feasibility, integrated resource
 scheduling, final create-PR/merge gates and all V5 scenarios remain required.
+
+### V3i outcome — bounded bytes prototype qualifies for implementation
+
+The isolated prototype uses frozen candidate
+`f9f033797d6c79d1b0207b2ce1e81459c933bbef` and the current Cargo-selected opt-1
+identity/SHA libraries. It runs against independently owned copies of the actual
+894,150,648-byte advanced-data bundle. Original family/artifact leases cover the
+copy; all timed captures target only owned copies. Both copies have SHA-256
+`4ac1d7351faafff9bd30dddcd1d1d8bab02cbfddc7a7e16f8468b97752184a76` before and
+after the experiment. Preparation passes in 3.187s; the guarded experiment takes
+62.230s, including 22.705s of copying/hashing. Both process sessions end empty.
+
+Six fresh processes alternate baseline/prototype/prototype/baseline/baseline/
+prototype. All identities and required payloads match. Median observations:
+
+| Actual bundle stage | Whole-file baseline | Bounded prototype |
+| --- | ---: | ---: |
+| Inventory plus identity | 4.642s | 4.220s |
+| Fresh verification | 0.953s | 0.183s |
+| Unchanged capture comparison | 0.948s | 0.184s |
+| Complete measured process | 6.547s | 4.598s |
+| Peak RSS | 1,748,848 KiB | 2,600 KiB |
+
+Thirty-nine stream controls pass: empty/boundary/multibuffer payloads, independent
+field encoding, arbitrary short reads, interruptions, unequal lengths/content,
+truncation, extra bytes, injected read errors including after mismatches, and no
+partial encoder update after failure. Fourteen existing bundle cases also pass,
+plus explicit unchanged-size/mtime corruption and repair. Current-source and
+captured corruption, sidecar order/aliases, runtime basename conflicts, missing
+sources and destination binding remain covered.
+
+Copying and preflight hashes intentionally warm the page cache. This is neither
+cold-I/O evidence nor a complete gate speedup. The implementation still reads all
+current bytes, including after detecting a mismatch so that later I/O failures
+remain visible. Source read errors always propagate; destination read errors can
+trigger capture under the existing capture policy, but verification rejects them.
+There is no source/profile/dependency/selection change in this investigation.
+
+Frozen prototype evidence: `v3i-evidence.tar.gz`, 81 files, SHA-256
+`8a48bfb86ca34e0a10b4f99b0b6c56f03592e67b3c146eacc420ac1b7ec3a432`.
+All extracted manifest hashes and sizes match. The two large owned copies remain
+remotely with exact hashes recorded; all source/control/raw measurement evidence
+is archived in `local-gate-implementation-20261020/v3i-reviewed-prototype`.
+
+### V3j bounded implementation — streaming identity and native comparisons
+
+Implement the qualified bounded streaming operations in the existing authorities.
+Add a transactional reader field to `sifr_identity::IdentityEncoder`: retain the
+exact name/length/payload framing and commit only after exactly the declared bytes
+and EOF are read. Retry interruptions, accept partial reads, reject short/extra
+payloads and propagate errors. Keep the existing byte-slice API and identity
+schema unchanged. File identity uses the length from the same open file handle;
+no metadata or digest memoization.
+
+Move native fresh byte comparisons into a focused internal helper with an
+explicit destination-error policy. Bound working memory, drain the streams so
+late errors are visible, and preserve strict source errors. Use it for basename
+conflict checking, verification and capture. Preserve required inventory/order,
+sidecar/debug payloads, copy behavior, family/publication/artifact leases and
+current diagnostics. No dependency, profile, trust, durability, selection or
+result-reuse changes. Keep generated and public behavior unchanged.
+
+Acceptance: run focused identity stream controls and native snapshot/comparison
+controls, including unchanged-size/mtime corruption and missing/unreadable inputs;
+all ordinary driver regressions; canonical retained advanced preparation/runtime
+and representative HTTP/resource/backend native roles with exact selected binary
+identity. Compare the large-bundle diagnostic against the production candidate,
+recording CPU, elapsed, I/O and peak RSS, and retain every required byte check.
+Use existing owned targets, safe resource reserves and per-category 30-minute cap;
+record preparation separately. Run formatting, size and source-ownership checks
+and one exact-candidate independent review. Final integrated create-PR/merge gates,
+complete current-host selection, cold feasibility and all V5 scenarios stay open.
