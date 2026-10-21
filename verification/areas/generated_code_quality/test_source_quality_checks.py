@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from source_quality_checks import run_strict_clippy
 
@@ -96,36 +97,129 @@ class ClippyIsolationTests(unittest.TestCase):
                 self.assertEqual((root / name / "src/main.rs").read_text(encoding="utf-8"), source)
 
 
-class ProducerFingerprintTests(unittest.TestCase):
-    def test_moved_stdlib_owner_invalidates_materialization_even_with_same_mtime(self):
-        from unittest.mock import patch
+class MaterializationTests(unittest.TestCase):
+    def setUp(self):
         import generated_code_quality as gcq
-        with tempfile.TemporaryDirectory(prefix="sifr-gcq-identity-") as directory:
-            root = Path(directory)
-            files = [root / "crates/sifr_stdlib_artifact/Cargo.toml",
-                     root / "crates/sifr_stdlib_artifact/build.rs",
-                     root / "crates/sifr_stdlib_artifact/src/metadata.rs",
-                     root / "crates/sifr_metadata/Cargo.toml",
-                     root / "crates/sifr_metadata/build.rs",
-                     root / "crates/sifr_metadata/src/metadata/store.rs"]
-            for path in files:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text("original owner input\n", encoding="utf-8")
-            with patch.object(gcq, "REPO_ROOT", root):
-                self.assertEqual(set(gcq.producer_fingerprint_files()), set(files))
-                for path in files:
-                    gcq.producer_fingerprint.cache_clear()
-                    before = gcq.producer_fingerprint()
-                    original = path.read_bytes()
-                    times = path.stat()
-                    path.write_bytes(original.replace(b"original", b"modified"))
-                    os.utime(path, ns=(times.st_atime_ns, times.st_mtime_ns))
-                    gcq.producer_fingerprint.cache_clear()
-                    self.assertNotEqual(before, gcq.producer_fingerprint(), str(path))
-                    path.write_bytes(original)
-                    gcq.producer_fingerprint.cache_clear()
-                    self.assertEqual(before, gcq.producer_fingerprint())
-            gcq.producer_fingerprint.cache_clear()
+        self.gcq = gcq
+        self.temp = tempfile.TemporaryDirectory(prefix="sifr-gcq-materialization-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.source = self.root / "main.sifr"
+        self.source.write_text("entry source\n", encoding="utf-8")
+        self.shared = self.root / "shared"
+        self.run = self.root / "run"
+        self.entry = gcq.Entry("probe", "test", "main.sifr", "build", "test")
+        self.addCleanup(patch.stopall)
+        patch.object(gcq, "REPO_ROOT", self.root).start()
+        patch.object(gcq, "shared_artifact_root", return_value=self.shared).start()
+        self.compiler = patch.object(gcq, "sifr_binary", return_value="selected-sifr").start()
+        self.commands = []
+        self.dependency = self.root / "provider.sifr"
+        self.dependency.write_bytes(b"provider=41\n")
+        self.runner = patch.object(gcq, "run_command", side_effect=self.generate).start()
+
+    def generate(self, command):
+        self.commands.append(command)
+        self.assertEqual(command[:3], ["selected-sifr", "build", "main.sifr"])
+        self.assertEqual(command[-1], "--materialize-only")
+        output = Path(command[command.index("-o") + 1]) / "sifr_output"
+        (output / "src").mkdir(parents=True)
+        (output / "Cargo.toml").write_text('[package]\nname="probe"\n', encoding="utf-8")
+        (output / "src/main.rs").write_bytes(self.dependency.read_bytes())
+
+    def materialize(self):
+        return self.gcq.materialize_entry(self.entry, self.run)
+
+    def test_every_request_uses_current_compiler_and_private_output(self):
+        first, second = self.materialize(), self.materialize()
+        self.assertNotEqual(first, second)
+        self.assertEqual(self.compiler.call_count, 2)
+        self.assertEqual(len(self.commands), 2)
+        self.assertEqual((first / "src/main.rs").read_bytes(), (second / "src/main.rs").read_bytes())
+        self.assertTrue(first.is_relative_to(self.run))
+        self.assertTrue(second.is_relative_to(self.run))
+        self.assertFalse(self.shared.exists())
+
+    def test_same_mtime_inputs_cannot_reuse_previous_output(self):
+        # The former inventory missed imports, new compiler owners and arbitrary
+        # data extensions. Moved stdlib owners retain their original regression
+        # coverage here without requiring a second semantic dependency graph.
+        paths = ["provider.sifr", "crates/sifr_ir/src/lib.rs",
+                 "crates/sifr_type_system/src/lib.rs", "crates/sifr_compiler_services/src/lib.rs",
+                 "crates/sifr_semantic_services/src/lib.rs", "schema.bin",
+                 "crates/sifr_stdlib_artifact/Cargo.toml", "crates/sifr_stdlib_artifact/build.rs",
+                 "crates/sifr_stdlib_artifact/src/metadata.rs", "crates/sifr_metadata/Cargo.toml",
+                 "crates/sifr_metadata/build.rs", "crates/sifr_metadata/src/metadata/store.rs"]
+        for relative in paths:
+            with self.subTest(input=relative):
+                self.dependency = self.root / relative
+                self.dependency.parent.mkdir(parents=True, exist_ok=True)
+                self.dependency.write_bytes(b"original\n")
+                first = self.materialize()
+                times = self.dependency.stat()
+                self.dependency.write_bytes(b"modified\n")
+                os.utime(self.dependency, ns=(times.st_atime_ns, times.st_mtime_ns))
+                second = self.materialize()
+                self.assertEqual((first / "src/main.rs").read_bytes(), b"original\n")
+                self.assertEqual((second / "src/main.rs").read_bytes(), b"modified\n")
+                self.assertEqual(self.dependency.stat().st_mtime_ns, times.st_mtime_ns)
+
+    def test_manifest_only_previous_output_cannot_skip_materialization(self):
+        first = self.materialize()
+        (first / "src/main.rs").unlink()
+        (first / "src").rmdir()
+        self.runner.reset_mock()
+        second = self.materialize()
+        self.runner.assert_called_once()
+        self.assertTrue((second / "src/main.rs").is_file())
+        self.assertFalse((first / "src").exists())
+
+    def test_compiler_admission_failure_propagates_after_previous_success(self):
+        first = self.materialize()
+        self.compiler.side_effect = RuntimeError("current compiler preparation failed")
+        with self.assertRaisesRegex(RuntimeError, "current compiler preparation failed"):
+            self.materialize()
+        self.assertEqual(len(self.commands), 1)
+        self.assertTrue((first / "src/main.rs").is_file())
+
+    def test_partial_failure_is_preserved_and_retry_uses_new_output(self):
+        def fail(command):
+            self.generate(command)
+            raise RuntimeError("materialization failed")
+        self.runner.side_effect = fail
+        with self.assertRaisesRegex(RuntimeError, "materialization failed"):
+            self.materialize()
+        failed = next(self.run.iterdir())
+        self.runner.side_effect = self.generate
+        result = self.materialize()
+        self.assertNotEqual(failed, result.parent)
+        self.assertTrue((failed / "sifr_output/src/main.rs").is_file())
+        self.assertTrue((result / "src/main.rs").is_file())
+
+    def test_success_without_manifest_is_rejected(self):
+        self.runner.side_effect = lambda command: None
+        with self.assertRaisesRegex(RuntimeError, "generated crate missing Cargo.toml"):
+            self.materialize()
+
+    def test_concurrent_requests_have_independent_consumer_outputs(self):
+        from concurrent.futures import ThreadPoolExecutor
+        import threading
+        barrier = threading.Barrier(2)
+        def generate(command):
+            self.generate(command)
+            barrier.wait(timeout=10)
+        self.runner.side_effect = generate
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(self.materialize) for _ in range(2)]
+            outputs = [future.result() for future in futures]
+        self.assertNotEqual(outputs[0], outputs[1])
+        (outputs[1] / "src/main.rs").write_bytes(b"consumer mutation\n")
+        self.assertEqual((outputs[0] / "src/main.rs").read_bytes(), self.dependency.read_bytes())
+
+    def test_dependency_target_routing_is_unchanged(self):
+        self.assertEqual(self.gcq.cargo_target_for_run(self.run, self.shared),
+                         self.shared / "cargo-target")
+        self.assertEqual(self.gcq.cargo_target_for_run(self.run, None), self.run / "cargo-target")
 
 
 if __name__ == "__main__":

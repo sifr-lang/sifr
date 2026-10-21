@@ -95,8 +95,9 @@ def main(argv: list[str] | None = None) -> int:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     validate_smoke_profile(CORPUS_MANIFEST)
     selected = select_suites(manifest, set(args.suite))
-    # One owned materialization/dependency root serves every gate in this run.
-    # Profile invocations already supply their prepared shared root.
+    # Retain dependency artifacts across the gates in this run. Generated source
+    # directories remain private to each request and are always materialized.
+    # Profile invocations already supply their prepared dependency root.
     if not os.environ.get("SIFR_GCQ_SHARED_ROOT"):
         shared_parent = REPO_ROOT / "target/sifr_generated_code_quality"
         shared_parent.mkdir(parents=True, exist_ok=True)
