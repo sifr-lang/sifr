@@ -5433,3 +5433,23 @@ all original frozen configuration bytes and compare emitted plans before/after.
 Run execution-scope, configuration-plan/native/collection, preparation and profile
 contracts and file-size checks; require independent exact-candidate review. Final
 phase gates and V5 remain open.
+
+
+### V4g implementation and validation
+
+The frozen-scope check now compares every original configuration's IDs, command
+flags/filter order, preparation and isolation. Only plain new `test -p <package>`
+entries in an additive group are projected away for the historical comparison;
+new isolated groups remain selected. The original frozen evidence is byte-identical.
+The checker uses explicit exceptions and remains effective under Python `-O`.
+
+All 54 related execution-scope/configuration/native/collection/preparation tests
+pass (2.945s), including seven new positive/negative coverage controls. All 16
+scope and coverage tests also pass with optimized Python (1.667s). Canonical scope,
+configuration, preparation and qualification policies and the independent emitted
+plan comparison pass (2.886s); both correctness plans and eight compiler profile/mode
+plans are unchanged. The unchanged baseline still fails its old `18 != 17` count
+assertion. Profile validation (0.641s) and file-size guardrails (6.650s) pass.
+The initial scope-only run passed before replacing Python assertions with explicit
+checks (2.202s); final evidence above covers the hardened implementation. Review
+and merge remain next; no complete gate or ten-minute acceptance is claimed.

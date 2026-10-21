@@ -14,6 +14,7 @@ from unittest.mock import patch
 from . import profile_reporting, reports
 from .compiler_configuration_plan import configuration_plan
 from .errors import VerificationError
+from .frozen_crate_scope_checks import FrozenCrateCoverageTests, assert_frozen_crate_coverage
 from .execution_scope import select_execution_scope
 from .paths import REPO_ROOT
 from .profile_runner import ProfileRunner, run_profile
@@ -42,7 +43,10 @@ class ExecutionScopeTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         self.assertEqual(len(actual), 105)
         self.assertEqual(len(plan["guardrail_steps"]), 15)
-        self.assertEqual(len(configuration_plan(select_execution_scope(load_profile("merge"), True), "full")), 17)
+        assert_frozen_crate_coverage(
+            frozen["crate_configurations"],
+            configuration_plan(select_execution_scope(load_profile("merge"), True), "full"),
+        )
         self.assertEqual(plan["e2e"]["fixture_selection"], "full-corpus")
         self.assertEqual(plan["excluded_area_suites"], [
             {"area": "performance", "suite": "representative", "reason": "benchmark capture"}])
@@ -146,7 +150,8 @@ class ExecutionScopeTests(unittest.TestCase):
 
 def policy_checks() -> None:
     result = unittest.TestResult()
-    unittest.defaultTestLoader.loadTestsFromTestCase(ExecutionScopeTests).run(result)
+    for case in (ExecutionScopeTests, FrozenCrateCoverageTests):
+        unittest.defaultTestLoader.loadTestsFromTestCase(case).run(result)
     if not result.wasSuccessful():
         raise AssertionError(result.errors + result.failures)
 
