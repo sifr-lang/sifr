@@ -15,6 +15,7 @@ impl AnalysisHost {
         let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
             root.root.as_path(),
             root.entrypoint.as_path(),
+            None,
         )
         .unwrap_or_else(
             sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,
@@ -96,6 +97,7 @@ impl AnalysisHost {
         let profiles = sifr_compiler_services::sql_editor::load_sql_editor_profiles(
             root.root.as_path(),
             root.entrypoint.as_path(),
+            self.sql_editor_runtime.compilation(),
         )
         .unwrap_or_else(
             sifr_compiler_services::sql_editor::PreparedSqlProfiles::from_initialization_failure,

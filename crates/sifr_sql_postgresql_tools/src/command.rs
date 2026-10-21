@@ -192,7 +192,7 @@ pub(crate) fn load_authority(
     profile_name: &str,
 ) -> Result<ProfileAuthority, CommandError> {
     let prepared =
-        load_sql_editor_profiles(workspace_root, workspace_root).map_err(|failures| {
+        load_sql_editor_profiles(workspace_root, workspace_root, None).map_err(|failures| {
             command_error(
                 failures
                     .into_iter()

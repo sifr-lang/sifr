@@ -16,7 +16,7 @@ fn missing_lock_defers_profiles() {
     std::fs::write(root.path().join("sifr.toml"), "[source]\nroot = \"src\"\n")
         .expect("Sifr manifest");
     let entrypoint = root.path().join("src/main.sifr");
-    let prepared = load_sql_editor_profiles(root.path(), &entrypoint)
+    let prepared = load_sql_editor_profiles(root.path(), &entrypoint, None)
         .expect("unlocked editor project must defer SQL profiles");
     assert!(prepared.registry().is_empty());
     assert!(prepared.requirements().is_empty());
@@ -166,4 +166,32 @@ fn package(name: &str, root: &Path, manifest_source: &str) -> SifrPackageMetadat
         manifest,
         aliases: BTreeMap::new(),
     }
+}
+
+#[test]
+fn profile_clones_share_the_prepared_engine_policy_and_empty_profiles_stay_lazy() {
+    let empty = PreparedSqlProfiles::default();
+    assert!(empty.compilation().is_none());
+    assert!(
+        empty
+            .component_host(ComponentHostLimits::default())
+            .is_err()
+    );
+    assert!(empty.compilation().is_none());
+    let limits = ComponentHostLimits {
+        max_wasm_stack_bytes: 1024 * 1024,
+        ..ComponentHostLimits::default()
+    };
+    let profiles = PreparedSqlProfiles {
+        compilation: Some(ComponentCompilation::new(&limits).expect("prepared owner")),
+        ..PreparedSqlProfiles::default()
+    };
+    let cloned = profiles.clone();
+    drop(profiles);
+    assert!(
+        cloned
+            .component_host(ComponentHostLimits::default())
+            .is_err()
+    );
+    assert!(cloned.component_host(limits).is_ok());
 }

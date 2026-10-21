@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1c measured and rejected; V2b bounded compiled-component reuse next; integrated acceptance remains open
+current_stage: V2b component reuse accepted; V4b nested CLI preparation attribution next; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -688,8 +688,8 @@ or count an unexecuted installed check as a fast pass.
 
 Current evidence: V1b1–V1b4 ownership separation and native/installed/SQL qualification
 are accepted. The same-source six-worker SQL protocol passes in 788.350s, still
-above the budget. V1c investigates overlap of independent builds; complete build-path
-feasibility remains open. Earlier profile and sanitizer observations are retained.
+above the budget. V1c measured and rejected concurrent build overlap; complete
+build-path feasibility remains open. Earlier profile and sanitizer observations are retained.
 
 Decision: Treat SQL as the first hard feasibility gate. Keep the measured whole critical
 path, not individual unit-duration subtraction. The larger architecture work is conditional
@@ -736,8 +736,8 @@ change the production profile.
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: V2a bounded metadata validation facts are accepted below.
-Component Engine/component reuse and durable-history optimization remain open.
+Current evidence: V2a metadata validation facts and V2b bounded compiled-component
+ownership are accepted below. Durable-history optimization remains open.
 
 Decision: Prefer bounded lifetime-local reuse. Start with Wasmtime parallel compilation only
 if the full semantic checks pass and it fits the shared CPU budget; add compiled-component
@@ -4391,3 +4391,165 @@ Compare exact responses in controls and retain existing fixture assertions. Reco
 complete category timing against prior observations without treating sums as a
 full-gate result. Independent exact-candidate review precedes the intermediate
 merge. Complete final create-PR/merge gates and V5 remain mandatory.
+
+
+V2b qualification refinement, registered before generation: the canonical SQL
+component producer inventory includes the host crate's source, even for changes
+excluded by the guest target. Preserve that current inventory and regenerate all
+ten SQL artifacts and producer receipts with the canonical pinned producers and
+the retained owned guest target. Only each producer's declared output paths may
+change during its run. Do not patch source fingerprints to bless prior binaries.
+Compare all regenerated guest hashes with the prior artifacts, then execute the
+complete provider and real SQL application assertions against the resulting
+candidate. The independent words component has no dependency on the host crate;
+verify its existing provenance rather than rebuilding unrelated inputs. Keep all
+source-guard/provenance failures and the invalid larger-stack test setup as failed
+evidence. Precise target-specific producer inventories remain V3 work, not an
+exception introduced here. Extend the real application regression with configured
+reload, changed schema, same-path/same-mtime corruption, recovery and disable/enable
+checks; a configured reload passes its resident owner into profile preparation.
+
+The complete producer-input comparison also finds three already stale inputs on
+the V2b base: root Cargo.toml, root Cargo.lock and sifr_sql_contract/src/lib.rs.
+They belong to earlier work in this same phase. Five additional host/test source
+inputs change in V2b. All three SQL families have these eight differences; the
+independent words producer has none. Preserve this attribution in
+`v2b-provenance-drift-attribution.json`; do not attribute all producer drift to the
+new cache or imply the earlier focused SQL checks included this qualification.
+Canonical regeneration reconciles the current full phase-owned source state.
+
+
+### V2b acceptance — bounded compiled-component ownership
+
+Implementation candidate `dd65d042ae3414f0120b61cbbe297240df7b36a4`, based on
+`fb76f78fbe87c3d197f279363b9f80b4ecda31d0`, is accepted through
+[PR #4394](https://github.com/sifr-lang/sifr/pull/4394). Only phase records follow
+that reviewed implementation. The compilation owner retains at most eight entries
+and 128 MiB of mapped compiled images. These bounds exclude transient compilation
+and active execution references. Engine configuration statements are unchanged.
+Authenticated bytes, registration/protocol/request validation and fresh
+Store/instance/fuel/memory execution remain authoritative; compiled reuse never
+reports a response-cache hit. Prepared profiles, CLI query processors and editor
+reloads share the owner. Requirement-only profiles retain their owner even when
+there is no query host; empty profiles remain lazy and disabling releases ownership.
+
+All **32 named categories pass on the exact candidate**, including **473 Rust test
+cases** across their selected targets, the five coverage-area cases and the
+component qualification's 39 mutation controls. Filtered driver/package checks
+retain their declared scope; zero-test doc targets are not counted as executed
+Rust cases. All 11 real application tests, 28 component-host tests, 14 semantic
+service tests, all six PostgreSQL artifacts, 158 frontend unit tests, 71 analysis
+unit tests and 114 LSP unit tests pass. Original component-host and application
+test source is preserved with insertions only. Every receipt has no time/resource
+stop, leftover process group or tracked-source mutation. The 30-minute cap,
+20 GiB disk reserve and 2 GiB memory reserve remain enforced. Native categories
+use two Cargo workers, two Rayon threads and one Rust test thread.
+
+The following are individual category elapsed times including preparation. Their
+**1,735.810-second sum is affected-item validation, not an integrated gate runtime**.
+
+| Final-candidate category | Seconds | Result |
+|---|---:|---|
+| `component-qualification` | 1.742 | Pass |
+| `guard-filesystem` | 16.248 | Pass |
+| `method-policy` | 33.257 | Pass |
+| `method-policy-selftest` | 1.240 | Pass |
+| `sql-component-host` | 5.243 | Pass |
+| `sifr_semantic_services` | 17.313 | Pass |
+| `sql-native-application` | 479.715 | Pass |
+| `sql-sifr_sql_postgresql-integration` | 81.800 | Pass |
+| `format` | 8.245 | Pass |
+| `resolved-direction` | 6.744 | Pass |
+| `coverage-matrix` | 54.269 | Pass |
+| `sql-sifr_sql_tool` | 37.299 | Pass |
+| `sql-sifr_sql_sqlite_tools` | 38.276 | Pass |
+| `sql-sifr_sql_mysql_tools` | 73.493 | Pass |
+| `sql-sifr_sql_postgresql_tools` | 112.952 | Pass |
+| `sql-sifr_frontend-integration` | 38.783 | Pass |
+| `sql-sifr_sql_mysql-integration` | 25.846 | Pass |
+| `sql-sifr_sql_sqlite-integration` | 14.393 | Pass |
+| `sql-driver-sql` | 74.397 | Pass |
+| `sql-pinned-python-preparation` | 0.750 | Pass |
+| `sql-sifr_frontend-lib` | 45.336 | Pass |
+| `sql-sifr_analysis-lib` | 75.304 | Pass |
+| `sql-sifr_lsp-lib` | 252.474 | Pass |
+| `sql-host-tool-package` | 77.291 | Pass |
+| `sql-host-tool-cli` | 151.229 | Pass |
+| `sql-guard-schema_profiles` | 0.740 | Pass |
+| `sql-guard-query_substrate` | 0.742 | Pass |
+| `sql-guard-schema_polymorphism` | 0.740 | Pass |
+| `sql-guard-incremental_editor` | 0.738 | Pass |
+| `sql-guard-host_tools` | 0.738 | Pass |
+| `guard-file-size` | 7.738 | Pass |
+| `filesystem-selftest` | 0.737 | Pass |
+
+Real application execution is 400.66 seconds within its 479.715-second category;
+Cargo reports 1m11s preparation. One-second stdout sampling attributes approximately
+223 seconds to CLI/editor provider diagnostics, 74 seconds to valid-template
+provider checks, 34 seconds to native execution and 25 seconds to the new
+reload/schema/corruption/recovery control. These are approximate observations,
+not instrumentation or a repeated performance qualification. The earlier
+513d902ef candidate's application run passed in 609.877 seconds (406.83-second
+body); the changed preparation cost must not be attributed to cache speedup.
+
+The six-artifact PostgreSQL test body takes 38.16 seconds versus the earlier
+189.57-second observation, approximately 80% lower in this comparison. Existing
+provider assertions and exact-response/fresh-state controls remain. This is not
+an additive full-gate saving or statistical guarantee. Preparation remains
+material: PostgreSQL tooling reports 1m42s of preparation in 112.952 seconds;
+the final host-tool CLI category reports 2m20s in 151.229 seconds.
+
+Canonical regeneration passes for MySQL (38.506s), SQLite (62.668s) and PostgreSQL
+(297.284s), with all ten current artifacts and all four producer provenance
+records validated. The three inherited and five current changed producer inputs
+remain separately attributed. Recursive section comparison locates guest byte
+differences in nested module name custom sections; execution against the exact
+regenerated bytes is still required and passed. No product dependency, tool
+version or Wasmtime Engine setting changed. Historical invalid-stack fixture,
+source-guard, provenance and inventory failures, plus intentionally incomplete
+intermediate batches, remain preserved as failures/incomplete evidence.
+
+Evidence packet: `v2b-evidence.tar.gz`, SHA-256
+`a3888418af22212e9c67aac1f02b0e2a9e761d047b6d6dfaf8592b0a16ed97d7`.
+The packet's 320 manifest entries were independently hash-verified after transfer;
+`v2b-final2-summary.json` binds commands, results, preparation and test summaries
+to the candidate. Exact-candidate independent review is **SATISFIED**, no blockers:
+`reviews/dd65d042ae3414f0120b61cbbe297240df7b36a4/response.md`, SHA-256
+`73c2cdec5755d4d982e1c5fc943d8acc5c17f036b86f3cd5795aeb728fc69094`.
+The review's pending-validation note is resolved by the complete final2 batch;
+no code changed after review.
+
+Follow-ups remain explicitly owned: V4 guard/lifecycle coverage adds an ordering
+mutation for hash-before-lookup and an actual requirement-only editor reload
+regression. The clone/policy test and source inspection do not substitute for
+that latter caller regression. Per-hash compilation slots are only a future
+suggestion if parallel profile preparation is introduced; no additional cache
+coordination is justified now. V3 retains target-specific producer inventories.
+V2 durable history, V3/V4 preparation and build reuse, complete final
+create-PR/merge correctness gates and V5 remain open.
+
+### V4b bounded investigation — CLI preparation ownership in LSP parity
+
+Bring this attribution work forward before another implementation. The current
+LSP unit helper `cli_sysroot_status` invokes `cargo run --locked -q -p sifr`
+internally. The subsequent host-tool CLI category rebuilt compiler crates despite
+unchanged source. This is evidence of hidden preparation, but the exact reason for
+the return rebuild must be established before claiming a cache defect or savings.
+
+Record a retained A/B/A experiment: unchanged CLI test preparation, the exact
+existing LSP sysroot parity test with nested Cargo fingerprint logging, then the
+same CLI preparation again. Use owned retained targets, exact candidate/binary
+identities, selected tool versions, capacity preflight and the 30-minute cap.
+Capture actual dirty reasons, resolved feature/build-unit differences, binary
+identities, compilation and execution times. Do not run two builds on the same
+target concurrently or use a source edit to manufacture invalidation.
+
+If the ownership transition is confirmed, prefer placing the real CLI/LSP parity
+assertions in the CLI-owned integration boundary, which already receives Cargo's
+exact built binary. Preserve every existing equality assertion and add transport
+coverage without exposing production internals solely for tests. A moved test
+must have an explicit old/new coverage mapping and remain selected in canonical
+profiles. Do not add ambient-binary discovery, hidden Cargo preparation, stale
+artifact fallback or a new service. Register the concrete implementation and
+named checks after attribution, before editing source. This investigation is not
+a waiver of full final gates or a sub-ten-minute result.

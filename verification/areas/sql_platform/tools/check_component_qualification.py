@@ -54,7 +54,12 @@ class QualificationError(ValueError):
     """The compiler component qualification record is invalid."""
 
 
-def validate(payload: object, *, host_source_override: str | None = None) -> None:
+def validate(
+    payload: object,
+    *,
+    host_source_override: str | None = None,
+    compilation_source_override: str | None = None,
+) -> None:
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise QualificationError("qualification schema_version must be 1")
     if payload.get("protocol_major") != 1:
@@ -102,27 +107,45 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
         target not in workflow for target in EXPECTED_TARGETS
     ):
         raise QualificationError("native component qualification matrix is incomplete")
-    host_source = host_source_override or (
-        REPO_ROOT / "crates/sifr_compiler_component/src/host.rs"
-    ).read_text(encoding="utf-8")
+    host_path = REPO_ROOT / "crates/sifr_compiler_component/src/host.rs"
+    compilation_path = REPO_ROOT / "crates/sifr_compiler_component/src/compilation.rs"
+    host_source = host_path.read_text(encoding="utf-8") if host_source_override is None else host_source_override
+    compilation_source = compilation_path.read_text(encoding="utf-8") if compilation_source_override is None else compilation_source_override
     required_host_controls = {
+        "ComponentCompilation::new(&limits)?",
+        "compilation.validate_policy(&limits)?",
+        "self.compilation.component(&request.component.sha256, component_bytes)?",
+        "let engine = self.compilation.engine();",
+        "StoreLimitsBuilder::new()",
+        ".instances(self.limits.max_instances)",
+        ".memories(self.limits.max_memories)",
+        ".tables(self.limits.max_tables)",
+        "Linker::<HostState>::new(engine)",
+        "verify_component_hash(&registration.identity.sha256, component_bytes)?",
+    }
+    required_compilation_controls = {
         "config.consume_fuel(true)",
+        "config.wasm_component_model(true)",
         "config.cranelift_nan_canonicalization(true)",
         "config.wasm_exceptions(true)",
         "config.wasm_relaxed_simd(false)",
         "config.wasm_memory64(false)",
         "config.wasm_multi_memory(true)",
-        "StoreLimitsBuilder::new()",
-        ".instances(self.limits.max_instances)",
-        ".memories(self.limits.max_memories)",
-        ".tables(self.limits.max_tables)",
-        "Linker::<HostState>::new(&self.engine)",
+        "config.max_wasm_stack(limits.max_wasm_stack_bytes)",
+        "Component::new(self.engine(), bytes)",
+        "if !imports.is_empty()",
+        "limits.max_wasm_stack_bytes != self.0.max_wasm_stack_bytes",
     }
-    if any(control not in host_source for control in required_host_controls):
-        raise QualificationError("component host sandbox controls are incomplete")
+    for source, controls in (
+        (host_source, required_host_controls),
+        (compilation_source, required_compilation_controls),
+    ):
+        compact = "".join(source.split())
+        if any("".join(control.split()) not in compact for control in controls):
+            raise QualificationError("component host sandbox controls or owner delegation are incomplete")
     if set(payload.get("determinism_controls", [])) != EXPECTED_DETERMINISM_CONTROLS:
         raise QualificationError("component determinism controls are incomplete")
-    if "wasmtime_wasi" in host_source:
+    if "wasmtime_wasi" in host_source or "wasmtime_wasi" in compilation_source:
         raise QualificationError("component host must not link WASI")
     if set(payload.get("denied_capabilities", [])) != EXPECTED_DENIALS:
         raise QualificationError("component capability denial list is incomplete")
@@ -283,17 +306,33 @@ def run_self_test(payload: dict[str, object]) -> None:
     host_source = (
         REPO_ROOT / "crates/sifr_compiler_component/src/host.rs"
     ).read_text(encoding="utf-8")
-    relaxed_simd = host_source.replace(
-        "config.wasm_relaxed_simd(false);",
-        "config.wasm_relaxed_simd(true);",
-    )
-    try:
-        validate(payload, host_source_override=relaxed_simd)
-    except QualificationError:
-        pass
-    else:
-        raise QualificationError("mutation did not fail: relaxed-simd")
-    mutations.append(("relaxed-simd", payload))
+    compilation_source = (
+        REPO_ROOT / "crates/sifr_compiler_component/src/compilation.rs"
+    ).read_text(encoding="utf-8")
+    source_mutations = [
+        ("relaxed-simd", "compilation", "config.wasm_relaxed_simd(false)", "config.wasm_relaxed_simd(true)"),
+        ("fuel", "compilation", "config.consume_fuel(true)", "config.consume_fuel(false)"),
+        ("imports", "compilation", "if !imports.is_empty()", "if false"),
+        ("policy", "compilation", "limits.max_wasm_stack_bytes != self.0.max_wasm_stack_bytes", "false"),
+        ("owner", "host", "ComponentCompilation::new(&limits)?", "unowned_engine()?"),
+        ("policy-delegation", "host", "compilation.validate_policy(&limits)?", "()"),
+        ("compile-delegation", "host", ".component(&request.component.sha256, component_bytes)?", ".unchecked_component()?"),
+        ("hash", "host", "verify_component_hash(&registration.identity.sha256, component_bytes)?", "()"),
+        ("linker", "host", "Linker::<HostState>::new(engine)", "ambient_linker(engine)"),
+    ]
+    for name, owner, original, replacement in source_mutations:
+        source = host_source if owner == "host" else compilation_source
+        if original not in source:
+            raise QualificationError(f"mutation target is absent: {name}")
+        changed = source.replace(original, replacement)
+        overrides = {f"{owner}_source_override": changed}
+        try:
+            validate(payload, **overrides)
+        except QualificationError:
+            pass
+        else:
+            raise QualificationError(f"mutation did not fail: {name}")
+        mutations.append((name, payload))
     count = artifact_self_test()
     print(f"compiler component qualification self-test ok: mutations={len(mutations) + count}")
 

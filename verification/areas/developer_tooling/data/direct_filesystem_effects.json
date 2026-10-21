@@ -3999,6 +3999,97 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&schema, good_schema).expect(\"original schema\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&schema, \"CREATE TABLE users (renamed INTEGER NOT NULL);\")",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&schema, good_schema).expect(\"restore schema\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "read",
+      "site": "let bytes = std::fs::read(&artifact).expect(\"component bytes\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "metadata",
+      "site": "let modified = std::fs::metadata(&artifact)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&artifact, contents).expect(\"replace component\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "open-write",
+      "site": ".open(&artifact)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "set_times",
+      "site": ".set_times(std::fs::FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "set_modified",
+      "site": ".set_times(std::fs::FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "metadata",
+      "site": "std::fs::metadata(&artifact)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "read_to_string",
+      "site": "let enabled = std::fs::read_to_string(&manifest).expect(\"enabled profiles\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&manifest, disabled).expect(\"disable profiles\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&manifest, enabled).expect(\"enable profiles\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr/tests/standalone_workspace_check.rs",
       "symbol": "standalone_file_does_not_resolve_unrelated_members_but_package_and_flags_do",
       "operation": "write",

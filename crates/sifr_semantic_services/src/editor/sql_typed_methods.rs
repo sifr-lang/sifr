@@ -1,6 +1,6 @@
 //! Typed SQL expressions at the outer compiler-service boundary.
 use crate::sql_editor::PreparedSqlProfiles;
-use sifr_compiler_component::{ComponentHost, ComponentHostLimits};
+use sifr_compiler_component::ComponentHostLimits;
 use sifr_frontend::{
     QueryCompilationInput, SqlEditorDocumentView, SqlQueryCompiler, SqlQueryDeclaration,
 };
@@ -82,14 +82,13 @@ impl SqlTypedMethods {
             context.clone(),
         )
         .map_err(|diagnostics| format!("{diagnostics:?}"))?;
-        let mut host = ComponentHost::new(
-            ComponentHostLimits {
+        let mut host = self
+            .profiles
+            .component_host(ComponentHostLimits {
                 fuel: 100_000_000,
                 ..ComponentHostLimits::default()
-            },
-            None,
-        )
-        .map_err(|e| e.to_string())?;
+            })
+            .map_err(|e| e.to_string())?;
         let mut response = host
             .analyze(&component.registration, &component.bytes, &request)
             .map_err(|e| e.to_string())?

@@ -10,6 +10,10 @@
 )]
 
 mod cache;
+#[cfg(not(target_family = "wasm"))]
+mod compilation;
+#[cfg(not(target_family = "wasm"))]
+pub use compilation::ComponentCompilation;
 mod diagnostic_sources;
 mod diagnostics;
 mod error;

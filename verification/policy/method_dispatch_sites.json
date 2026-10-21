@@ -7803,6 +7803,18 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr/tests/sql_native_application.rs::actual_component_diagnostics_match_cli_and_editor_across_edits enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
+      "site": "crates/sifr/tests/sql_native_application.rs::editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes::literal-comparison::1",
+      "fingerprint": "fea069a0d591b0f719ab7d3a9014f947fb882c3f79be59cce183898ec8f918c0",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "assert ! ( changed . iter ( ) . any ( | d | d . code == \"SIFR-SQLITE-0005\" )",
+      "inputs": "fn editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr/tests/sql_native_application.rs::editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/sql_native_application.rs::editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
       "site": "crates/sifr_analysis/src/editor.rs::semantic_token_modifiers::literal-comparison::1",
       "fingerprint": "6205781135d2c1813db0e4da02409c6deb526dbe5c38ede3d804485171aa0d6e",
       "classification": "compiler-policy",
@@ -79323,7 +79335,7 @@
     },
     {
       "site": "crates/sifr_semantic_services/src/editor/sql_typed_methods.rs::query::literal-comparison::1",
-      "fingerprint": "c63e4f8467e63924a66a77df0f0c5124710a715ef380da0903655cdec49f50f5",
+      "fingerprint": "e74072efaae83973de0771013716fe3b52cf254dab1cc91f7b836590e5e6caaf",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if registered . authority ( ) . profile . schema . dialect . family != \"sqlite\"",
@@ -79634,40 +79646,40 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_semantic_services/src/sql_diagnostics.rs::provider_severity_identity_and_related_spans_survive_shared_rendering enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::1",
-      "fingerprint": "b0405b1f99a131ac462d0145580f6cc2b26f6d872786a6aabcac6f6a38e2d193",
+      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation::literal-comparison::1",
+      "fingerprint": "5df7efd7d193bda333244af0ba77c6e3396981378c477b272247bc9b97bf3ba9",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "processor_kind ( & component . registration . identity . processor ) == Some ( \"schema\" )",
-      "inputs": "fn prepare_sql_profiles ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , )",
+      "inputs": "fn prepare_sql_profiles_in_compilation ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , compilation : Option < ComponentCompilation > , )",
       "outputs": "Result < PreparedSqlProfiles , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::2",
-      "fingerprint": "e84bdeb4a803c87f3b873ca6925af43493e5be5be95aea72493d06fccce7384a",
+      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation::literal-comparison::2",
+      "fingerprint": "612a4cc1a63b3b9f83c96540d77f1123ef5478371b6542c3b9497c56599cd2f6",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "processor_kind ( & candidate . registration . identity . processor ) == Some ( \"sql\" )",
-      "inputs": "fn prepare_sql_profiles ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , )",
+      "inputs": "fn prepare_sql_profiles_in_compilation ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , compilation : Option < ComponentCompilation > , )",
       "outputs": "Result < PreparedSqlProfiles , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles::literal-comparison::3",
-      "fingerprint": "b0405b1f99a131ac462d0145580f6cc2b26f6d872786a6aabcac6f6a38e2d193",
+      "site": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation::literal-comparison::3",
+      "fingerprint": "5df7efd7d193bda333244af0ba77c6e3396981378c477b272247bc9b97bf3ba9",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "processor_kind ( & component . registration . identity . processor ) == Some ( \"schema\" )",
-      "inputs": "fn prepare_sql_profiles ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , )",
+      "inputs": "fn prepare_sql_profiles_in_compilation ( graph : & SifrPackageGraph , owner_package_id : & SifrPackageId , compilation : Option < ComponentCompilation > , )",
       "outputs": "Result < PreparedSqlProfiles , Vec < RenderedDiagnostic > >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_semantic_services/src/sql_editor.rs::prepare_sql_profiles_in_compilation enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_semantic_services/src/sql_editor_tests.rs::invalid_component_preserves_source_diagnostic::literal-match::1",

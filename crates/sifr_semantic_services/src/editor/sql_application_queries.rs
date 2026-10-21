@@ -1,8 +1,8 @@
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use ruff_text_size::TextRange;
 use sifr_compiler_component::{
-    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentHost, ComponentHostLimits,
-    EmbeddedAnalysisRequest, HoleDescriptor, PlanKind, SourceSpan, TemplatePart,
+    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentHostLimits, EmbeddedAnalysisRequest,
+    HoleDescriptor, PlanKind, SourceSpan, TemplatePart,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::FrontendProduct as ProjectLowering;
@@ -162,7 +162,8 @@ pub fn compile_application_queries(
         fuel: 100_000_000,
         ..ComponentHostLimits::default()
     };
-    let mut host = ComponentHost::new(limits, None)
+    let mut host = profiles
+        .component_host(limits)
         .map_err(|failure| error(format!("cannot initialize SQL query compiler: {failure}")))?;
     let compiler = SqlQueryCompiler::new(profiles.registry());
     let mut signatures = QuerySignatureRegistry::default();
