@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.18 filesystem ledger reconciliation; V1 semantic/native separation remains open
+current_stage: V0.19 lint verification authority; V1 semantic/native separation remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -3520,3 +3520,96 @@ That edge propagates metadata changes into imports, lowering and codegen. Record
 this as real dependency coupling, not a broken Cargo cache. The semantic/native
 separation and the actual SQL clean/reused/independent-clean feasibility protocol
 remain required; no gain from a future crate split is assumed here.
+
+
+### V0.18 acceptance — current filesystem ownership ledger
+
+PR [#4387](https://github.com/sifr-lang/sifr/pull/4387) accepts implementation
+`4d7d485e9326abbf3dc42b34a96146e05f8cc47b`, based on V2a merge
+`ca51b29c9fe57f9a80d8c54895be3103d328b7d8` (#4386). The unchanged source scanner
+now accepts **3,316 sites**: retain all **2,999** live rows and their existing
+classifications/order, add **317** current rows, and remove **49** absent rows.
+The original 344 diagnostics count distinct site keys with multiplicities;
+they are not a count of individual JSON rows. Repeated identical keys are
+compared as multisets. No scanner, Rust source, dependency, schema or profile
+selection changed.
+
+New ownership is explicitly adjudicated: 204 mutations are output effects,
+86 test/support/harness reads are tooling inputs, 16 native-cache reads are build
+identity, and 11 LSP external snapshot reads are semantic inputs. The native-cache
+reads qualify owner, artifact bytes/receipt, generated inputs or retirement
+context even though they live in test support. Relocated effects retain their
+old ownership. The proposal, source-derived additions/removals, rationale and
+live-row/order preservation proof remain outside Git in
+`local-gate-implementation-20261020` under `v018-*`.
+
+The full filesystem audit passes in **16.146s**, its complete negative controls
+pass in **0.639s**, and preservation/profile/file-size/whitespace/link checks
+pass in **3.668s**. Independent review is **SATISFIED**, no blockers, at
+`reviews/4d7d485e9326abbf3dc42b34a96146e05f8cc47b/review.md`. Review ran while broader discovery was pending;
+all final discovery results below are recorded before merge. The only later
+repository change is this phase record.
+
+All **18** canonical developer-tooling static variants now have completed
+execution: **17 pass**, and the existing linter-diagnostic-class guard fails
+because it names the former implementation file. That failure belongs to V0.19;
+it is not removed or reported as passing. Complete completion-quality execution
+passes in **635.736s**, including its non-incremental compiler/test
+preparation. Recovered suppression rules pass in **27.276s** and their
+negative self-test in **4.692s**; both final PASS markers are explicitly
+verified in addition to successful exits. Their current execution did not take
+the false-success path identified below. Sum of final per-category diagnostic
+times is **711.935s**, not whole-gate elapsed
+or an isolated performance measurement. Raw original attempts are retained in
+`v018-static-validation.json`; completed coverage reconciliation is
+`v018-static-reconciled.json`.
+
+Preserved failures/incomplete attempts: the first broad discovery was stopped at
+70.478s when the nominal static suite launched Cargo in the review checkout.
+Its runtime variants were moved to the retained compiler checkout. The first
+external preservation diagnostic incorrectly used sets for duplicate site keys;
+the corrected Counter-based proof passes without a repository change. Two
+suppression attempts stopped on disk reserve (550.330s and 7.698s), not the
+30-minute cap. An initial recovery admission refused insufficient allocation
+headroom before launching tests. These remain interrupted/failed attempts.
+Capacity recovery archived and checksum-verified inactive investigation scratch
+and four superseded incremental generations; latest generations, leases,
+current artifacts, reusable caches and failure evidence were retained. Archive
+receipts include restoration instructions. No reserve was weakened.
+
+Follow-ups: V3/V4 own the hidden Cargo preparation inside the static suite and
+its different incremental configurations; V1 owns the codegen dependency still
+pulled into editor completion checks. The 635.736s completion category is a real
+preparation bottleneck, not a full-gate result. A reusable multiset preservation
+check for future ledger updates is a tooling suggestion, not a prerequisite for
+this bounded repair. Full final create-PR/merge gates and V5 remain open.
+
+### V0.19 bounded repair — lint verification authority and failure propagation
+
+Repair two source-confirmed verification defects together, without changing
+lint/compiler behavior or reducing test selection:
+
+- The diagnostic-class guard still requires the typed gate in
+  `host/implementation.rs`, although `d7ecb71f1` moved action authority into
+  `host/code_actions.rs`. Bind the guard to that owner and fail closed when the
+  owner or required gate is missing. Retain the whole analysis/LSP prefix-gating
+  prohibition and the diagnostic-class wire payload checks. Add controls for a
+  valid current layout, missing/misplaced owner/gate, forbidden prefix gating,
+  and missing conversion payload/owner.
+- The suppression adapter exits with the unexpected child status. If it expected
+  one but observed zero, `SystemExit(0)` falsely marks the incomplete verification
+  successful. `v019-exit-probe.json` reproduces this through the real adapter
+  function with a controlled child result at the V0.18 candidate. Make every
+  expected/observed mismatch fail, retaining diagnostic output. Enroll controls
+  for matching success and matching expected failure, unexpected success,
+  unexpected failure, and a wrong nonzero failure code.
+
+Named acceptance: real diagnostic-class guard and full self-tests; suppression
+adapter mismatch regressions and real suppression positive/negative assertions;
+the existing analysis policy-versus-hard-diagnostic code-action regression using
+the retained completion-test configuration; affected profile/size/whitespace
+checks and scoped independent review. Preserve V0.18 broad results with their
+observed candidate identity; reuse only input-equivalent evidence. Update the
+static-suite coverage reconciliation explicitly, without claiming a complete
+phase gate. No compiler source change or clean build is required for this policy
+repair. Then return to V1 dependency separation. Final phase gates remain required.

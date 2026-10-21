@@ -2124,34 +2124,6 @@
     },
     {
       "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_batch_group",
-      "operation": "create_dir_all",
-      "site": "if let Err(err) = std::fs::create_dir_all(group_root.join(\"src\")) {",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_batch_group",
-      "operation": "write",
-      "site": "if let Err(err) = std::fs::write(&cargo_toml_path, cargo_toml) {",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_batch_group",
-      "operation": "write",
-      "site": "} else if let Err(err) = std::fs::write(&source_path, &group.generated_main) {",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_batch_group",
-      "operation": "write",
-      "site": "if let Err(err) = std::fs::write(&log_path, diagnostic) {",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
       "symbol": "build_and_run_capture_with_deps",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&src_dir).map_err(|err| format!(\"failed to create dir: {err}\"))?;",
@@ -2173,10 +2145,24 @@
     },
     {
       "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "run_pass_suite",
-      "operation": "create_dir_all",
-      "site": "if let Err(err) = std::fs::create_dir_all(&config.cache.root) {",
+      "symbol": "build_batch_group_bounded",
+      "operation": "write",
+      "site": "if let Err(err) = std::fs::write(&log_path, diagnostic) {",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
+      "symbol": "initial_cache_manifest",
+      "operation": "write",
+      "site": "let _ = std::fs::write(&log, format!(\"{}\\n{}\", capture.stdout, capture.stderr));",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/batch_isolation_tests.rs",
+      "symbol": "test_isolation_preserves_failure_and_recovers_healthy_sibling",
+      "operation": "is_file",
+      "site": "assert!(preserved.join(\"preserve\").is_file());",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/tests/e2e_support/dependency_plan_authority_tests.rs",
@@ -2390,9 +2376,163 @@
     },
     {
       "path": "crates/sifr/tests/e2e_support/fixture_compilation.rs",
-      "symbol": "cache_entry_valid",
+      "symbol": "prune_cache_manifest",
+      "operation": "is_file",
+      "site": "|| !path.join(\"completed\").is_file()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_compilation.rs",
+      "symbol": "prune_cache_manifest",
       "operation": "exists",
-      "site": "Path::new(&entry.artifact_path).exists()",
+      "site": "|| path.join(\"pending\").exists()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_compilation.rs",
+      "symbol": "prune_cache_manifest",
+      "operation": "exists",
+      "site": "|| path.join(\"preserve\").exists()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution.rs",
+      "symbol": "execute_fixture_inner",
+      "operation": "write",
+      "site": "std::fs::write(attempt.join(\"fixture.txt\"), fixture)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution.rs",
+      "symbol": "execute_fixture_inner",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(&attempt).map_err(|error| {",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution.rs",
+      "symbol": "execute_fixture_inner",
+      "operation": "write",
+      "site": "let record_error = std::fs::write(&log, &diagnostic)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "new",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "new",
+      "operation": "write",
+      "site": "std::fs::write(&source, r#\"",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "attempts",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(self.root.join(\"runs\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "parallel_fixtures_isolate_identical_output_names_and_retain_failures",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(attempt.join(\"fixture.txt\")).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "parallel_fixtures_isolate_identical_output_names_and_retain_failures",
+      "operation": "read_to_string",
+      "site": "let name = std::fs::read_to_string(attempt.join(\"work/same-name\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "parallel_fixtures_isolate_identical_output_names_and_retain_failures",
+      "operation": "read_to_string",
+      "site": "let log = std::fs::read_to_string(attempt.join(\"execution.log\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "parallel_fixtures_isolate_identical_output_names_and_retain_failures",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(attempt.join(\"work\").join(file)).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "parallel_fixtures_isolate_identical_output_names_and_retain_failures",
+      "operation": "exists",
+      "site": "assert!(!probe.root.join(\"same-name\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "parallel_fixtures_isolate_identical_output_names_and_retain_failures",
+      "operation": "exists",
+      "site": "assert!(!probe.root.join(\"same-temp-name\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "successful_fixture_cleans_only_its_own_completed_attempt",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(failed[0].join(\"work/same-name\")).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "deadline_reaps_descendants_and_retains_partial_output",
+      "operation": "exists",
+      "site": "assert!(attempts[0].join(\"work/child-ready\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "deadline_reaps_descendants_and_retains_partial_output",
+      "operation": "read_to_string",
+      "site": "let log = std::fs::read_to_string(attempts[0].join(\"execution.log\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "deadline_reaps_descendants_and_retains_partial_output",
+      "operation": "exists",
+      "site": "assert!(!attempts[0].join(\"work/escaped-child\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "launch_failure_retains_attempt_and_fixture_names_cannot_escape_scratch",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "launch_failure_retains_attempt_and_fixture_names_cannot_escape_scratch",
+      "operation": "read_dir",
+      "site": "let entries = std::fs::read_dir(root.join(\"runs\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "launch_failure_retains_attempt_and_fixture_names_cannot_escape_scratch",
+      "operation": "is_file",
+      "site": "assert!(attempt.join(\"execution.log\").is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/fixture_execution_tests.rs",
+      "symbol": "launch_failure_retains_attempt_and_fixture_names_cannot_escape_scratch",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(attempt.join(\"fixture.txt\")).unwrap(),",
       "classification": "tooling-input"
     },
     {
@@ -2428,20 +2568,6 @@
       "symbol": "test_fixture_discovery_is_deterministic",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(root);",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
-      "symbol": "sample_cache_entry",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&artifact_path).expect(\"cache sample dir\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
-      "symbol": "sample_cache_entry",
-      "operation": "write",
-      "site": "std::fs::write(&binary_path, b\"cache-test\").expect(\"cache sample binary\");",
       "classification": "output-effect"
     },
     {
@@ -2506,6 +2632,601 @@
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(root);",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_prune_cache_manifest_removes_expired_entries_and_orphan_groups",
+      "operation": "write",
+      "site": "std::fs::write(group_root.join(\"completed\"), b\"completed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&group).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "write",
+      "site": "std::fs::write(group.join(\"completed\"), b\"done\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "write",
+      "site": "std::fs::write(group.join(\"preserve\"), b\"failure\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "write",
+      "site": "std::fs::write(group.join(\"pending\"), b\"pending\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(dependency.parent().unwrap()).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "write",
+      "site": "std::fs::write(&dependency, b\"native dependency\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "is_dir",
+      "site": "assert!(cache_group_path(&root, name).is_dir());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "exists",
+      "site": "assert!(!cache_group_path(&root, \"completed\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "is_file",
+      "site": "assert!(dependency.is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(root).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity",
+      "operation": "write",
+      "site": "std::fs::write(old_group.join(\"completed\"), b\"old evidence\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity",
+      "operation": "read",
+      "site": "assert_eq!(std::fs::read(manifest_path).unwrap(), sentinel);",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity",
+      "operation": "is_file",
+      "site": "assert!(old_group.join(\"completed\").is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrity",
+      "operation": "is_dir",
+      "site": ".is_dir()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_failed_native_retirement_keeps_completed_group_evidence",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&group).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_failed_native_retirement_keeps_completed_group_evidence",
+      "operation": "write",
+      "site": "std::fs::write(group.join(\"completed\"), b\"done\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_failed_native_retirement_keeps_completed_group_evidence",
+      "operation": "is_dir",
+      "site": "assert!(group.is_dir());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs",
+      "symbol": "test_failed_native_retirement_keeps_completed_group_evidence",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(root).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "acquire",
+      "operation": "exists",
+      "site": "if owner_path.exists() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "acquire",
+      "operation": "read",
+      "site": "if std::fs::read(&owner_path)? != owner_bytes {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "acquire",
+      "operation": "read_dir",
+      "site": "if std::fs::read_dir(&root)?",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "write_changed",
+      "operation": "symlink_metadata",
+      "site": "match std::fs::symlink_metadata(path) {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "write_changed",
+      "operation": "read",
+      "site": "if std::fs::read(path)? == bytes {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "write_changed",
+      "operation": "sync_all",
+      "site": "temporary.as_file().sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "select_artifact",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "select_artifact",
+      "operation": "canonicalize",
+      "site": "let target = target.canonicalize().map_err(|e| e.to_string())?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "select_artifact",
+      "operation": "canonicalize",
+      "site": ".and_then(|p| p.canonicalize().ok());",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "select_artifact",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "select_artifact",
+      "operation": "is_file",
+      "site": "if !path.starts_with(&target) || !path.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "select_artifact",
+      "operation": "read",
+      "site": "if artifact.fresh && std::fs::read(&receipt).ok().as_deref() != Some(digest.as_bytes()) {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "artifact_digest",
+      "operation": "open",
+      "site": "let mut file = File::open(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "record_retirement",
+      "operation": "canonicalize",
+      "site": "let target = target.canonicalize()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "record_retirement",
+      "operation": "read",
+      "site": "let mut contexts: Vec<RetirementContext> = match std::fs::read(&path) {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "retirement_commands",
+      "operation": "read",
+      "site": "serde_json::from_slice(&std::fs::read(project.join(\"retirement.json\"))?)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache.rs",
+      "symbol": "retirement_commands",
+      "operation": "canonicalize",
+      "site": "let target = target.canonicalize()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "new",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "metadata",
+      "site": "let old = std::fs::metadata(&source).unwrap().modified().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "read",
+      "site": "let bytes = std::fs::read(&source).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "metadata",
+      "site": "assert_eq!(old, std::fs::metadata(&source).unwrap().modified().unwrap());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "write",
+      "site": "std::fs::write(&source, b\"different content\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "open-write",
+      "site": ".open(&source)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "set_times",
+      "site": ".set_times(std::fs::FileTimes::new().set_modified(old))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "set_modified",
+      "site": ".set_times(std::fs::FileTimes::new().set_modified(old))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "generated_writes_compare_content_and_preserve_unchanged_timestamps",
+      "operation": "read",
+      "site": "assert_eq!(std::fs::read(source).unwrap(), bytes);",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(runtime.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "write",
+      "site": "std::fs::write(runtime.join(\"src/lib.rs\"), \"pub fn value() -> u8 { 1 }\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "read_to_string",
+      "site": "let mut content = std::fs::read_to_string(&manifest).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(second_project.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "exists",
+      "site": "assert!(first.path.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "is_dir",
+      "site": "assert!(p.target.join(\"debug/deps\").is_dir());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "write",
+      "site": "std::fs::write(runtime.join(\"src/lib.rs\"), \"pub fn value() -> u8 { 2 }\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "exists",
+      "site": "assert!(!first.path.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "is_file",
+      "site": "assert!(dependency_files.iter().all(|path| path.is_file()));",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "failed_runtime_edit_never_uses_previous_executable_and_dependencies_are_shared",
+      "operation": "is_file",
+      "site": "assert!(Path::new(second_output[\"executable\"].as_str().unwrap()).is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&artifact.path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+      "operation": "metadata",
+      "site": "let modified = std::fs::metadata(&rebuilt.path)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+      "operation": "write",
+      "site": "std::fs::write(&rebuilt.path, b\"corrupt executable\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+      "operation": "open-write",
+      "site": ".open(&rebuilt.path)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+      "operation": "set_times",
+      "site": ".set_times(std::fs::FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "missing_and_corrupt_artifacts_cannot_run_as_a_cached_pass",
+      "operation": "set_modified",
+      "site": ".set_times(std::fs::FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "suite_lease_excludes_another_run_and_checks_checkout_ownership",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "interrupted_owner_cannot_release_a_live_native_child_lease",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "write",
+      "site": "std::fs::write(&dependency, b\"shared dependency control\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "write",
+      "site": "std::fs::write(&other, b\"another active group control\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "exists",
+      "site": "assert!(!first.path.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "exists",
+      "site": "assert!(!release.path.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "read",
+      "site": "std::fs::read(&dependency).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "is_file",
+      "site": "assert!(other.is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "exists",
+      "site": "if area.exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "retirement_removes_only_the_selected_packages_outputs_in_all_observed_profiles",
+      "operation": "read_dir",
+      "site": "assert!(!std::fs::read_dir(area).unwrap().any(|e| {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "invalid_retirement_records_cannot_select_other_packages_or_targets",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&p.target).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "unrelated_live_children_do_not_keep_the_suite_busy",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/pass_suite.rs",
+      "symbol": "run_pass_suite",
+      "operation": "remove_file",
+      "site": "let _ = std::fs::remove_file(root.join(\"pending\"));",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/session_tests.rs",
+      "symbol": "test_session_full_corpus_equivalence",
+      "operation": "read_to_string",
+      "site": ".map(|path| std::fs::read_to_string(path).unwrap())",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/session_tests.rs",
+      "symbol": "test_session_native_selection_is_once_per_invocation_and_check_is_frontend_only",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/session_tests.rs",
+      "symbol": "test_session_native_selection_is_once_per_invocation_and_check_is_frontend_only",
+      "operation": "set_permissions",
+      "site": "std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/session_tests.rs",
+      "symbol": "test_session_native_selection_is_once_per_invocation_and_check_is_frontend_only",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(temp).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/session_tests.rs",
+      "symbol": "test_session_native_probe_child",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(&log)",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/tests/formatter_discovery.rs",
@@ -3142,6 +3863,139 @@
       "symbol": "drop",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&self.root);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(directory).expect(\"fixture directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "read",
+      "site": "let bytes = std::fs::read(repository.join(format!(",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(provider.join(\"components/sqlite.wasm\"), bytes).expect(\"component fixture\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(provider.join(\"Cargo.toml\"), \"[package]\\nname=\\\"sql-provider\\\"\\nversion=\\\"0.1.0\\\"\\nedition=\\\"2024\\\"\\n[package.metadata.sifr]\\nmanifest=\\\"sifr.toml\\\"\\n\").expect(\"provider Cargo owner\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(provider.join(\"src/lib.rs\"), \"\").expect(\"provider Rust marker\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(provider.join(\"src/__init__.sifr\"), \"\").expect(\"provider source marker\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"Cargo.toml\"), \"[package]\\nname=\\\"sql-app\\\"\\nversion=\\\"0.1.0\\\"\\nedition=\\\"2024\\\"\\n[package.metadata.sifr]\\nmanifest=\\\"sifr.toml\\\"\\n[dependencies]\\nprovider={package=\\\"sql-provider\\\",path=\\\"provider\\\"}\\n[workspace]\\n\").expect(\"real Cargo package\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"src/main.rs\"), \"fn main() {}\")",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"sifr.toml\"), format!(\"[package]\\nname=\\\"sql_app\\\"\\nedition=\\\"2026\\\"\\nsifr-version=\\\">=0.3,<0.4\\\"\\n[source]\\nroot=\\\"src\\\"\\n{}\", profile(\"app\").replace(\"family=\\\"sqlite\\\"\", &format!(\"family=\\\"{family}\\\"\")).replace(\"3.53.4\", version).replace(\"search-path=[\\\"main\\\"]\", if family == \"postgresql\" { \"search-path=[\\\"public\\\"]\" } else if family == \"mysql\" { \"search-path=[\\\"app\\\"]\" } else { \"search-path=[\\\"main\\\"]\" }))).expect(\"application profile\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "open-write",
+      "site": ".open(root.path().join(\"sifr.toml\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "open-write",
+      "site": ".open(root.path().join(\"sifr.toml\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "with_provider",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"db/schema.sql\"), \"\").expect(\"empty declared catalog\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "source",
+      "operation": "write",
+      "site": "std::fs::write(self.root.path().join(\"src\").join(name), source)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "ordinary_source_imports_and_executes_decorated_and_standalone_typed_queries",
+      "operation": "read",
+      "site": "std::fs::read(&project.database)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "exact_pool_profile_is_required_for_imported_bound_queries",
+      "operation": "read_to_string",
+      "site": "let mut source = std::fs::read_to_string(&manifest).expect(\"manifest\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "exact_pool_profile_is_required_for_imported_bound_queries",
+      "operation": "write",
+      "site": "std::fs::write(manifest, source).expect(\"second nominal profile\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "native_connection_reports_the_populated_profile_boundary",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application.rs",
+      "symbol": "actual_component_diagnostics_match_cli_and_editor_across_edits",
+      "operation": "write",
+      "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
@@ -3929,6 +4783,62 @@
       "classification": "semantic-input"
     },
     {
+      "path": "crates/sifr_analysis/src/host/type_hierarchy.rs",
+      "symbol": "imported_base_resolves_to_its_declaration",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&dir).expect(\"project directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_analysis/src/host/type_hierarchy.rs",
+      "symbol": "imported_base_resolves_to_its_declaration",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"base.sifr\"), \"class lower:\\n pass\\n\").expect(\"base source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_analysis/src/host/type_hierarchy.rs",
+      "symbol": "imported_base_resolves_to_its_declaration",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_analysis/src/host/type_hierarchy.rs",
+      "symbol": "imported_base_resolves_to_its_declaration",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(dir).expect(\"project cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/child_lease_tests.rs",
+      "symbol": "root",
+      "operation": "canonicalize",
+      "site": "let path = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/child_lease_tests.rs",
+      "symbol": "killed_owner_helper",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"child.pid.stage\"), child.0.id().to_string()).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/child_lease_tests.rs",
+      "symbol": "killed_owner_helper",
+      "operation": "rename",
+      "site": "std::fs::rename(root.join(\"child.pid.stage\"), root.join(\"child.pid\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/child_lease_tests.rs",
+      "symbol": "killing_the_owner_does_not_release_a_live_childs_lease",
+      "operation": "read_to_string",
+      "site": "if let Ok(pid) = std::fs::read_to_string(&ready) {",
+      "classification": "tooling-input"
+    },
+    {
       "path": "crates/sifr_cache_storage/src/unix.rs",
       "symbol": "owner_scope",
       "operation": "canonicalize",
@@ -4314,6 +5224,20 @@
       "classification": "build-identity"
     },
     {
+      "path": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs",
+      "symbol": "compile_native",
+      "operation": "write",
+      "site": "std::fs::write(&input, source).expect(\"native source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_codegen/src/generated_rust_canonicalizer/api_cleanup/visibility_cleanup.rs",
+      "symbol": "compile_native",
+      "operation": "write",
+      "site": "std::fs::write(directory.path().join(\"stderr\"), &result.stderr)",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_codegen/src/generated_rust_canonicalizer/field_name_cleanup/tests.rs",
       "symbol": "compile_modules",
       "operation": "create_dir",
@@ -4353,6 +5277,20 @@
       "symbol": "run",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(directory).expect(\"remove owned completed native evidence\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs",
+      "symbol": "compile_pair",
+      "operation": "write",
+      "site": "std::fs::write(&input, text).expect(\"write native input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs",
+      "symbol": "compile_pair",
+      "operation": "write",
+      "site": "std::fs::write(directory.join(format!(\"{name}.stderr\")), &output.stderr)",
       "classification": "output-effect"
     },
     {
@@ -4676,6 +5614,13 @@
       "operation": "open",
       "site": "let lease = File::open(path).map_err(fail)?;",
       "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/metadata/ensure_child_lease_tests.rs",
+      "symbol": "metadata_owner_is_not_inherited_by_unrelated_native_commands",
+      "operation": "is_dir",
+      "site": "assert!(std::path::Path::new(\"/dev/fd\").is_dir());",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_compiler_services/src/metadata/production.rs",
@@ -5364,6 +6309,13 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "create",
+      "site": "let lease = std::fs::File::create(root.path().join(\"owned-lease\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "new",
       "operation": "create_dir_all",
@@ -5966,6 +6918,76 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "lock_files",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "lock_files",
+      "operation": "open-write",
+      "site": ".open(entry.unwrap().path())",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(project.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "write",
+      "site": "std::fs::write(project.join(\"src/main.rs\"), \"fn main() {}\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "write",
+      "site": "std::fs::write(&authority, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&bin).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "set_permissions",
+      "site": "std::fs::set_permissions(&extension, std::fs::Permissions::from_mode(0o700)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_child_lease_tests.rs",
+      "symbol": "production_policy_retains_only_its_cargo_child",
+      "operation": "exists",
+      "site": "while !marker.exists() {",
+      "classification": "tooling-input"
+    },
+    {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
       "symbol": "root",
       "operation": "create_dir_all",
@@ -6166,13 +7188,6 @@
       "symbol": "dx9_runtime_library_bundle_survives_mutable_cargo_output_removal",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(root).expect(\"cleanup\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/native_storage.rs",
-      "symbol": "publication_lock",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&path)?;",
       "classification": "output-effect"
     },
     {
@@ -6386,6 +7401,13 @@
       "classification": "build-identity"
     },
     {
+      "path": "crates/sifr_driver/src/build/native_storage.rs",
+      "symbol": "publication_lock",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(path)?;",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/portable_project.rs",
       "symbol": "publish_portable_project",
       "operation": "create_dir_all",
@@ -6573,6 +7595,20 @@
       "operation": "metadata",
       "site": "std::fs::metadata(binary_path)",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/runtime_method_codegen_tests.rs",
+      "symbol": "runtime_method_fixtures_emit_without_lowering_errors",
+      "operation": "read_to_string",
+      "site": "let source = match std::fs::read_to_string(&path) {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop/contract_planning_tests.rs",
+      "symbol": "planned_contract_does_not_qualify_an_absent_cargo_manifest",
+      "operation": "exists",
+      "site": "assert!(!backend_root.exists());",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop/panic_validation.rs",
@@ -7438,22 +8474,29 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs",
       "symbol": "package_rust_interop_abort_policy_accepts_trust_and_abort_strategy",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs",
+      "symbol": "package_rust_interop_abort_policy_accepts_trust_and_abort_strategy",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs",
+      "symbol": "package_rust_interop_abort_policy_accepts_trust_and_abort_strategy",
       "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(package_root.join(\"src\")).expect(\"create package source root\");",
+      "site": "std::fs::create_dir_all(package_root.join(\"src/bridges\")).expect(\"create bridge source root\");",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs",
       "symbol": "package_rust_interop_abort_policy_accepts_trust_and_abort_strategy",
       "operation": "write",
-      "site": "std::fs::write(",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs",
-      "symbol": "package_rust_interop_abort_policy_accepts_trust_and_abort_strategy",
-      "operation": "write",
-      "site": "std::fs::write(",
+      "site": "std::fs::write(package_root.join(\"src/lib.rs\"), \"pub mod bridges;\\n\")",
       "classification": "output-effect"
     },
     {
@@ -7926,6 +8969,20 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/rust_interop_test_support.rs",
+      "symbol": "write",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(path.parent().expect(\"fixture parent\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_test_support.rs",
+      "symbol": "write",
+      "operation": "write",
+      "site": "std::fs::write(path, content).expect(\"write fixture input\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
       "symbol": "package_rust_interop_rejects_shared_bridge_crate_importing_generated_bridge_types",
       "operation": "create_dir_all",
@@ -8007,27 +9064,6 @@
       "symbol": "package_rust_interop_maps_rustc_probe_resolution_failure",
       "operation": "write",
       "site": "std::fs::write(backend_root.join(\"src/lib.rs\"), \"pub fn hash() {}\\n\")",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
-      "symbol": "package_rust_interop_records_lock_and_profile_cache_inputs",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).expect(\"create package root\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
-      "symbol": "package_rust_interop_records_lock_and_profile_cache_inputs",
-      "operation": "write",
-      "site": "std::fs::write(root.join(\"Cargo.lock\"), \"version = 4\\n\").expect(\"write lock\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
-      "symbol": "package_rust_interop_records_lock_and_profile_cache_inputs",
-      "operation": "write",
-      "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
@@ -8043,6 +9079,13 @@
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(&root).expect(\"remove stale temp root\");",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
+      "symbol": "package_rust_interop_records_lock_and_profile_cache_inputs",
+      "operation": "read_to_string",
+      "site": "let manifest = std::fs::read_to_string(fixture.path().join(\"Cargo.toml\")).expect(\"manifest\");",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_trust_tests.rs",
@@ -8199,115 +9242,150 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.join(\"stdlib/_sifr\")).expect(\"private sources\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.join(\"stdlib/sifr\")).expect(\"public sources\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.join(\"crates/sifr_stdlib/src\")).expect(\"stdlib crate\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.join(\"crates/sifr_runtime/src\")).expect(\"runtime crate\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.join(\".cargo\")).expect(\"cargo config dir\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.join(\"vendor\")).expect(\"vendor dir\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(path.join(\"Cargo.lock\"), \"# test lock\\n\").expect(\"lockfile\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "new",
       "operation": "write",
       "site": "fs::write(path.join(\"sysroot.toml\"), \"# test sysroot\\n\").expect(\"sysroot manifest\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "write_private",
       "operation": "write",
       "site": "fs::write(self.private_path(module), source).expect(\"private source\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "write_stdlib_crate",
       "operation": "write",
       "site": "fs::write(self.path.join(\"crates/sifr_stdlib/src/lib.rs\"), source).expect(\"stdlib lib\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/sysroot_interop.rs",
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
       "symbol": "drop",
       "operation": "remove_dir_all",
       "site": "let _ = fs::remove_dir_all(&self.path);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
+      "symbol": "copy_fixture_tree",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(destination).expect(\"create fixture patch directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
+      "symbol": "copy_fixture_tree",
+      "operation": "read_dir",
+      "site": "for entry in fs::read_dir(source).expect(\"read actual runtime patch\") {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
+      "symbol": "copy_fixture_tree",
+      "operation": "is_dir",
+      "site": "if kind.is_dir() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
+      "symbol": "copy_fixture_tree",
+      "operation": "is_file",
+      "site": "kind.is_file(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/sysroot_interop_test_support.rs",
+      "symbol": "copy_fixture_tree",
+      "operation": "copy",
+      "site": "fs::copy(entry.path(), target).expect(\"copy actual runtime patch input\");",
       "classification": "output-effect"
     },
     {
@@ -8704,20 +9782,6 @@
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "n06_family_prune_preserves_inherited_live_child_then_reclaims_owner",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "n06_family_prune_preserves_inherited_live_child_then_reclaims_owner",
-      "operation": "remove_dir_all",
-      "site": "std::fs::remove_dir_all(root).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "family_case",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&root).unwrap();",
@@ -8750,34 +9814,6 @@
       "operation": "exists",
       "site": "assert!(!family.exists(), \"inactive owned family was not reclaimed\");",
       "classification": "tooling-input"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "n06_abandoned_stage_prunes_only_matching_owner_scope",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "n06_abandoned_stage_prunes_only_matching_owner_scope",
-      "operation": "remove_dir_all",
-      "site": "std::fs::remove_dir_all(root).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "stage_case",
-      "operation": "write",
-      "site": "std::fs::write(",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "stage_case",
-      "operation": "write",
-      "site": "std::fs::write(",
-      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
@@ -8816,41 +9852,6 @@
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "n06_orphan_auxiliary_roots_require_owner_and_lease",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "n06_orphan_auxiliary_roots_require_owner_and_lease",
-      "operation": "remove_dir_all",
-      "site": "std::fs::remove_dir_all(root).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "auxiliary_case",
-      "operation": "write",
-      "site": "std::fs::write(",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "auxiliary_case",
-      "operation": "write",
-      "site": "std::fs::write(owned.join(\"Cargo.lock\"), b\"orphan\").unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
-      "symbol": "auxiliary_case",
-      "operation": "write",
-      "site": "std::fs::write(",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "auxiliary_case",
       "operation": "exists",
       "site": "assert!(owned.exists(), \"live auxiliary root was removed\");",
@@ -8882,6 +9883,55 @@
       "symbol": "auxiliary_case",
       "operation": "exists",
       "site": "root.join(\".locks\").join(key).exists(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "storage_child",
+      "operation": "write",
+      "site": "std::fs::write(pending.workspace_root().join(\"payload\"), b\"complete\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "storage_child",
+      "operation": "write",
+      "site": "std::fs::write(ready.with_extension(\"pid\"), intended.id().to_string()).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "storage_child",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "storage_child",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "committed_artifact_survives_killed_owner_without_unrelated_retention",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(ready.with_extension(\"pid\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "committed_artifact_survives_killed_owner_without_unrelated_retention",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(ready.with_extension(\"unrelated\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "committed_artifact_survives_killed_owner_without_unrelated_retention",
+      "operation": "read_to_string",
+      "site": "let entry = PathBuf::from(std::fs::read_to_string(&ready).unwrap());",
       "classification": "tooling-input"
     },
     {
@@ -9373,6 +10423,20 @@
       "operation": "exists",
       "site": "assert!(!active.exists());",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/guided_project_graph.rs",
+      "symbol": "write_to",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(parent)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/guided_project_graph.rs",
+      "symbol": "write_to",
+      "operation": "write",
+      "site": "std::fs::write(path, source)?;",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/metadata_producer/project_results/tests.rs",
@@ -10517,13 +11581,6 @@
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
-      "symbol": "stage",
-      "operation": "write",
-      "site": "fs::write(parent.join(&name).join(\"payload\"), \"abandoned\").unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "metadata",
       "site": "let writer_inode = fs::metadata(&writer_lock).unwrap().ino();",
@@ -10535,13 +11592,6 @@
       "operation": "metadata",
       "site": "let live_inode = fs::metadata(&live_lock).unwrap().ino();",
       "classification": "tooling-input"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
-      "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
-      "operation": "write",
-      "site": "fs::write(&scratch, \"partial\").unwrap();",
-      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -10913,6 +11963,20 @@
       "operation": "exists",
       "site": "assert!(unsafe_path.exists());",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "pressure_prune_counts_are_truthful",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
@@ -12257,6 +13321,34 @@
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "symbol": "diagnostic_renderer",
+      "operation": "read",
+      "site": "let bytes = std::fs::read(corpus.join(seed)).expect(\"pinned diagnostic seed exists\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "symbol": "project_graph",
+      "operation": "read",
+      "site": "let input = std::fs::read(corpus.join(seed)).expect(\"pinned project seed exists\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "symbol": "project_graph",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(exported.path().join(relative)).expect(\"exported file\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "symbol": "project_graph",
+      "operation": "read",
+      "site": "let minimized = std::fs::read(corpus.join(\"cycle\")).expect(\"cycle seed exists\");",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
@@ -15759,6 +16851,97 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"helper.sifr\"), &source).expect(\"edit helper\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"main.sifr\"), &source).expect(\"edit main\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"main.sifr\"), source).expect(\"repair main\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"extra.sifr\"), &sources[\"extra.sifr\"]).expect(\"add\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"main.sifr\"), main).expect(\"import added module\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "exists",
+      "site": "if dir.join(name).exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(dir.join(name)).expect(\"delete\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"main.sifr\"), main).expect(\"retain missing import\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "exists",
+      "site": "if dir.join(name).exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(dir.join(name)).expect(\"remove prior auxiliary\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"extra.sifr\"), renamed).expect(\"create rename source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "rename",
+      "site": "std::fs::rename(dir.join(\"extra.sifr\"), dir.join(\"renamed.sifr\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "symbol": "incremental_full_property",
+      "operation": "write",
+      "site": "std::fs::write(dir.join(\"main.sifr\"), main).expect(\"import renamed module\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_frontend/src/query_diagnostics_tests.rs",
       "symbol": "single_file_queries_are_cached_and_deterministic",
       "operation": "metadata",
@@ -16256,6 +17439,174 @@
       "classification": "semantic-input"
     },
     {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "package_input_snapshot",
+      "operation": "metadata",
+      "site": "match std::fs::metadata(&interpreter) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "symlink_metadata",
+      "site": "match std::fs::symlink_metadata(path) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "is_file",
+      "site": "metadata.file_type().is_file().hash(hasher);",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "is_dir",
+      "site": "metadata.file_type().is_dir().hash(hasher);",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "is_symlink",
+      "site": "metadata.file_type().is_symlink().hash(hasher);",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "read_link",
+      "site": "let target = std::fs::read_link(path).map_err(|error| error.kind());",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "is_dir",
+      "site": "if metadata.is_dir() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_path",
+      "operation": "read",
+      "site": "match std::fs::read(path) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_python_bridge_inputs",
+      "operation": "read_dir",
+      "site": "let entries = match std::fs::read_dir(&directory) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/external_inputs.rs",
+      "symbol": "hash_python_bridge_inputs",
+      "operation": "is_dir",
+      "site": "if kind.is_dir() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "request_publication",
+      "operation": "write",
+      "site": "std::fs::write(&path, &source).expect(\"initial source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "request_publication",
+      "operation": "write",
+      "site": "std::fs::write(&path, &source).expect(\"write exact disk snapshot\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&src).expect(\"source directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(src.join(\"lib.rs\"), \"\").expect(\"Cargo library marker\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(&main_path, &main_source).expect(\"main source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "0 => std::fs::write(&helper_path, helper_source).expect(\"add imported module\"),",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "remove_file",
+      "site": "1 => std::fs::remove_file(&helper_path).expect(\"delete imported module\"),",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(&helper_path, helper_source).expect(\"source to rename\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "rename",
+      "site": "std::fs::rename(&helper_path, &renamed_path).expect(\"rename imported module\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/incremental_full_property_tests.rs",
+      "symbol": "project_structural_publication_equivalence",
+      "operation": "write",
+      "site": "std::fs::write(&main_path, &main_source).expect(\"update import\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_lsp/src/notifications/tests/python_declaration_tests.rs",
       "symbol": "open_excluded_document",
       "operation": "create_dir",
@@ -16362,55 +17713,6 @@
     },
     {
       "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "package_input_fingerprint",
-      "operation": "read",
-      "site": "match std::fs::read(&path) {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "package_input_fingerprint",
-      "operation": "metadata",
-      "site": "match std::fs::metadata(&interpreter) {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "hash_python_bridge_inputs",
-      "operation": "read_dir",
-      "site": "let entries = match std::fs::read_dir(&directory) {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "hash_python_bridge_inputs",
-      "operation": "is_dir",
-      "site": "Ok(kind) if kind.is_dir() => pending.push(path),",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "hash_python_bridge_inputs",
-      "operation": "is_file",
-      "site": "Ok(kind) if kind.is_file() => match std::fs::read(&path) {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "hash_python_bridge_inputs",
-      "operation": "read",
-      "site": "Ok(kind) if kind.is_file() => match std::fs::read(&path) {",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
-      "symbol": "hash_python_bridge_inputs",
-      "operation": "is_symlink",
-      "site": "kind.is_symlink().hash(hasher);",
-      "classification": "semantic-input"
-    },
-    {
-      "path": "crates/sifr_lsp/src/python_declarations.rs",
       "symbol": "package_fingerprint_tracks_manifest_selected_metadata_paths",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&metadata).expect(\"metadata directory\");",
@@ -16480,6 +17782,27 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_lsp/src/python_declarations.rs",
+      "symbol": "verify_python_request_input",
+      "operation": "write",
+      "site": "Some(contents) => std::fs::write(path, contents),",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/python_declarations.rs",
+      "symbol": "verify_python_request_input",
+      "operation": "remove_file",
+      "site": "None => std::fs::remove_file(path),",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/python_declarations.rs",
+      "symbol": "package_fingerprint_tracks_manifest_selected_metadata_paths",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"src/lib.rs\"), \"\").expect(\"Cargo target\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_lsp/src/python_retention_tests.rs",
       "symbol": "dx11_closing_one_project_releases_its_environment_and_target_caches",
       "operation": "create_dir",
@@ -16491,6 +17814,118 @@
       "symbol": "dx11_closing_one_project_releases_its_environment_and_target_caches",
       "operation": "write",
       "site": "std::fs::write(root.join(\"sifr.toml\"), \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/requests/type_hierarchy.rs",
+      "symbol": "relation_requests_return_items_and_follow_edits",
+      "operation": "write",
+      "site": "std::fs::write(&path, source).expect(\"source file\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server/tests/e01c_publication_tests.rs",
+      "symbol": "request_time_multi_root_external_change_publishes_only_current_root_status",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_fixture",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.join(\"src\")).expect(\"source directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"src/lib.rs\"), \"\").expect(\"Cargo library marker\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"Cargo.toml\"), format!(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_fixture",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"sifr.toml\"), \"[package]\\nname = \\\"watcher\\\"\\nedition = \\\"2026\\\"\\nsifr-version = \\\">=0.3,<0.4\\\"\\n\\n[source]\\nroot = \\\"src\\\"\\n\").expect(\"Sifr manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_fixture",
+      "operation": "write",
+      "site": "std::fs::write(&path, \"def main() -> int:\\n return 1\\n\").expect(\"Sifr source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "watcher_registration_acknowledgement_enables_root_scoped_events",
+      "operation": "write",
+      "site": "std::fs::write(first.join(\"Cargo.lock\"), \"version = 4\\n# changed\\n\")",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "request_time_external_change_publishes_current_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "request_time_probe_drift_keeps_server_flow_and_publishes_latest_diagnostics",
+      "operation": "read_to_string",
+      "site": "let mut lock_contents = std::fs::read_to_string(&lock).expect(\"read lock\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "request_time_probe_drift_keeps_server_flow_and_publishes_latest_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(lock, lock_contents).expect(\"change external input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "unconfirmed_rejected_and_unsupported_watchers_revalidate_per_request",
+      "operation": "write",
+      "site": "std::fs::write(temp.path().join(\"Cargo.lock\"), \"version = 4\\n# pending\\n\")",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "unconfirmed_rejected_and_unsupported_watchers_revalidate_per_request",
+      "operation": "write",
+      "site": "std::fs::write(temp.path().join(\"Cargo.lock\"), \"version = 4\\n# rejected\\n\")",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "unconfirmed_rejected_and_unsupported_watchers_revalidate_per_request",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/server.rs",
+      "symbol": "unconfirmed_rejected_and_unsupported_watchers_revalidate_per_request",
+      "operation": "write",
+      "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
@@ -16512,6 +17947,384 @@
       "symbol": "dx11_nonexistent_overlay_alias_has_one_physical_owner",
       "operation": "symlink",
       "site": "std::os::unix::fs::symlink(&real, &alias).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "fixture",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.join(\"src\")).expect(\"create source directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"src/lib.rs\"), \"\").expect(\"write Cargo library marker\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"sifr.toml\"), \"[package]\\nname = \\\"lsp-external\\\"\\nedition = \\\"2026\\\"\\nsifr-version = \\\">=0.3,<0.4\\\"\\n\\n[source]\\nroot = \\\"src\\\"\\n\").expect(\"write Sifr manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(&path, source).expect(\"write Sifr source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "changed_and_renamed_inputs_advance_only_the_owning_root",
+      "operation": "write",
+      "site": "std::fs::write(first.join(\"Cargo.lock\"), \"version = 4\\n# changed\\n\").expect(\"change lock\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "changed_and_renamed_inputs_advance_only_the_owning_root",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(first.join(\"src/python_bridges\")).expect(\"create bridge directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "changed_and_renamed_inputs_advance_only_the_owning_root",
+      "operation": "write",
+      "site": "std::fs::write(&old, \"value = 1\\n\").expect(\"write bridge\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "changed_and_renamed_inputs_advance_only_the_owning_root",
+      "operation": "rename",
+      "site": "std::fs::rename(old, first.join(\"src/python_bridges/new.py\")).expect(\"rename bridge\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "write",
+      "site": "std::fs::write(&artifact, \"\").expect(\"create empty artifact\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&artifact).expect(\"delete artifact\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&artifact).expect(\"make artifact unreadable as a file\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "remove_dir",
+      "site": "std::fs::remove_dir(&artifact).expect(\"remove unreadable artifact\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "read",
+      "site": "let manifest_bytes = std::fs::read(&manifest).expect(\"read manifest\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&manifest).expect(\"delete manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "write",
+      "site": "std::fs::write(&manifest, &manifest_bytes).expect(\"restore manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "write",
+      "site": "std::fs::write(&manifest, \"[package]\\nname = [\\n\").expect(\"break manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "absent_empty_deleted_and_unreadable_inputs_invalidate_negative_and_positive_cache_entries",
+      "operation": "write",
+      "site": "std::fs::write(&manifest, manifest_bytes).expect(\"repair manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "environment_bridge_and_certification_drift_revalidate_without_source_edits",
+      "operation": "read",
+      "site": "let source = std::fs::read(&path).expect(\"source bytes\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "environment_bridge_and_certification_drift_revalidate_without_source_edits",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(parent).expect(\"create input directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "environment_bridge_and_certification_drift_revalidate_without_source_edits",
+      "operation": "write",
+      "site": "std::fs::write(&target, content).expect(\"write external input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "environment_bridge_and_certification_drift_revalidate_without_source_edits",
+      "operation": "read",
+      "site": "assert_eq!(std::fs::read(path).expect(\"source unchanged\"), source);",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "select_explicit_environment",
+      "operation": "read_to_string",
+      "site": "let mut manifest = std::fs::read_to_string(&path).expect(\"read manifest\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "select_explicit_environment",
+      "operation": "write",
+      "site": "std::fs::write(path, manifest).expect(\"select Python metadata\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "unselected_python_projects_preserve_explicit_environment_cache",
+      "operation": "write",
+      "site": "std::fs::write(directory.join(name), \"unselected\").expect(\"unselected input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "unselected_python_projects_preserve_explicit_environment_cache",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(root.join(\"selected\")).expect(\"selected directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "unselected_python_projects_preserve_explicit_environment_cache",
+      "operation": "write",
+      "site": "std::fs::write(&selected, content).expect(\"selected input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "unselected_python_projects_preserve_explicit_environment_cache",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&selected).expect(\"delete selected input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "discovered_python_environment_reselects_after_project_creation_and_deletion",
+      "operation": "write",
+      "site": "std::fs::write(temp.path().join(name), \"parent\").expect(\"ancestor project\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "discovered_python_environment_reselects_after_project_creation_and_deletion",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"pyproject.toml\"), \"nearer\").expect(\"incomplete nearer project\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "discovered_python_environment_reselects_after_project_creation_and_deletion",
+      "operation": "write",
+      "site": "std::fs::write(lock, \"selected\").expect(\"create lock\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_external_input_tests.rs",
+      "symbol": "discovered_python_environment_reselects_after_project_creation_and_deletion",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(lock).expect(\"delete lock\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "source_config_and_external_changes_recompute_requests_and_publish_current_diagnostics",
+      "operation": "read_to_string",
+      "site": "let mut contents = std::fs::read_to_string(&manifest).expect(\"read config\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "source_config_and_external_changes_recompute_requests_and_publish_current_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(&manifest, contents).expect(\"change config\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "source_config_and_external_changes_recompute_requests_and_publish_current_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "multi_root_requests_keep_generation_and_publication_isolated",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "nested_manifest_removal_reassigns_to_ancestor_and_publishes_current_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "nested_manifest_removal_reassigns_to_ancestor_and_publishes_current_diagnostics",
+      "operation": "read_to_string",
+      "site": "let mut manifest = std::fs::read_to_string(&nested_manifest).expect(\"read nested manifest\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "nested_manifest_removal_reassigns_to_ancestor_and_publishes_current_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(&nested_manifest, manifest).expect(\"change nested manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_fast_hit_tests.rs",
+      "symbol": "unstable_external_input_returns_status_and_publishes_diagnostics",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&artifact).expect(\"make binding artifact unreadable as a file\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "fixture",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.join(\"src/python_bridges\")).expect(\"source directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"src/lib.rs\"), \"\").expect(\"Cargo library marker\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"Cargo.toml\"), format!(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"sifr.toml\"), \"[package]\\nname = \\\"watcher\\\"\\nedition = \\\"2026\\\"\\nsifr-version = \\\">=0.3,<0.4\\\"\\n\\n[source]\\nroot = \\\"src\\\"\\n\").expect(\"Sifr manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(&path, \"def main() -> int:\\n return 1\\n\").expect(\"Sifr source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "create_delete_rename_and_storm_events_preserve_multi_root_isolation",
+      "operation": "write",
+      "site": "std::fs::write(&original, \"value = 1\\n\").expect(\"create bridge\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "create_delete_rename_and_storm_events_preserve_multi_root_isolation",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&original).expect(\"delete bridge\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "create_delete_rename_and_storm_events_preserve_multi_root_isolation",
+      "operation": "write",
+      "site": "std::fs::write(&original, \"value = 2\\n\").expect(\"recreate bridge\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "create_delete_rename_and_storm_events_preserve_multi_root_isolation",
+      "operation": "rename",
+      "site": "std::fs::rename(&original, &renamed).expect(\"rename bridge\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "create_delete_rename_and_storm_events_preserve_multi_root_isolation",
+      "operation": "write",
+      "site": "std::fs::write(&lock, \"version = 4\\n# storm change\\n\").expect(\"change lock\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/e01_watcher_tests.rs",
+      "symbol": "create_delete_rename_and_storm_events_preserve_multi_root_isolation",
+      "operation": "rename",
+      "site": "std::fs::rename(&renamed, &moved).expect(\"move bridge between roots\");",
       "classification": "output-effect"
     },
     {
@@ -19280,6 +21093,34 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs",
+      "symbol": "borrowed_callback_forget_and_escape_is_rejected_or_drained",
+      "operation": "is_file",
+      "site": "assert!(library.is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs",
+      "symbol": "borrowed_callback_forget_and_escape_is_rejected_or_drained",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&directory).expect(\"own fixture directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs",
+      "symbol": "borrowed_callback_forget_and_escape_is_rejected_or_drained",
+      "operation": "write",
+      "site": "std::fs::write(&source, include_str!(\"h02_borrowed_escape_fixture.rs.txt\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_runtime/src/python/callbacks/h02_contract_tests.rs",
+      "symbol": "borrowed_callback_forget_and_escape_is_rejected_or_drained",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(directory).expect(\"remove owned fixture directory\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_runtime/src/python/config_verify.rs",
       "symbol": "canonical_path",
       "operation": "canonicalize",
@@ -20463,6 +22304,27 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs",
+      "symbol": "inputs",
+      "operation": "symlink_metadata",
+      "site": "std::fs::symlink_metadata(&absolute)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs",
+      "symbol": "inputs",
+      "operation": "is_file",
+      "site": ".is_ok_and(|metadata| metadata.file_type().is_file()),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs",
+      "symbol": "inputs",
+      "operation": "read",
+      "site": "let source = std::fs::read(absolute).unwrap_or_else(|error| panic!(\"{path}: {error}\"));",
+      "classification": "tooling-input"
+    },
+    {
       "path": "crates/sifr_syntax/src/syntax_matrix_tests.rs",
       "symbol": "syntax_matrix",
       "operation": "read_to_string",
@@ -20978,6 +22840,20 @@
       "symbol": "dx10_b05_generated_manifest_owns_profile_authority",
       "operation": "write",
       "site": "fs::write(&manifest, \"[package]\\nname = \\\"member\\\"\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/native_context_tests.rs",
+      "symbol": "native_launcher_identity_covers_launcher_bytes",
+      "operation": "read",
+      "site": "let mut bytes = fs::read(&launcher).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/native_context_tests.rs",
+      "symbol": "native_launcher_identity_covers_launcher_bytes",
+      "operation": "write",
+      "site": "fs::write(launcher, bytes).unwrap();",
       "classification": "output-effect"
     },
     {
