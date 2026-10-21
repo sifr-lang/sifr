@@ -4170,3 +4170,5 @@ proof. Reconcile the one new manifest, its existing-version tempfile declaration
 and two num-bigint lock-owner edges without altering registry releases/checksums.
 Follow both existing native and driver delegation links to the semantic owner;
 mutation controls must reject removal of either link and the original mechanisms.
+The same inventory sweep registers the semantic library and build script in the
+coverage matrix with the existing first-party compiler/merge classification.
