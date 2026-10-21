@@ -311,7 +311,7 @@ def materialize_entry(entry: Entry, run_root: Path) -> Path:
     # inputs and compiler changes. Never infer it from a Python source inventory
     # or the presence of a previous manifest. Private outputs also prevent a
     # later request from replacing files while an earlier consumer reads them.
-    entry_root = Path(tempfile.mkdtemp(prefix=f"{entry.id}-", dir=run_root))
+    entry_root = Path(tempfile.mkdtemp(prefix="entry-", dir=run_root))
     crate_root = entry_root / "sifr_output"
     print(f"[sifr-materialization] entry={entry.id} workspace={crate_root} reuse=false", flush=True)
     run_command(

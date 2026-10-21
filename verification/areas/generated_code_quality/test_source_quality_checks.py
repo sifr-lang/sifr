@@ -1,6 +1,7 @@
 """Generated Clippy root isolation must preserve complete diagnostics and dependencies."""
 from __future__ import annotations
 
+from dataclasses import replace
 import hashlib
 import json
 import os
@@ -139,6 +140,14 @@ class MaterializationTests(unittest.TestCase):
         self.assertTrue(first.is_relative_to(self.run))
         self.assertTrue(second.is_relative_to(self.run))
         self.assertFalse(self.shared.exists())
+
+    def test_entry_labels_cannot_select_a_path_outside_the_run_root(self):
+        for label in ("../escaped", str(self.root / "absolute"), "x" * 512):
+            with self.subTest(label=label):
+                self.entry = replace(self.entry, id=label)
+                output = self.materialize()
+                self.assertTrue(output.resolve().is_relative_to(self.run.resolve()))
+                self.assertTrue((output / "src/main.rs").is_file())
 
     def test_same_mtime_inputs_cannot_reuse_previous_output(self):
         # The former inventory missed imports, new compiler owners and arbitrary
