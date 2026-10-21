@@ -5806,9 +5806,11 @@ V1e's clean-A observation spends 170.120s there, including 158.360s of codegen
 in the baseline. Its opt1 candidate in V1a did not solve the whole build path.
 
 Measure one narrower diagnostic override:
-`profile.dev.package.sifr_lowering.opt-level=0`. Keep the JIT/compiler-component
+`profile.dev.package.sifr_lowering.opt-level=0`. Cargo's actual artifact metadata
+confirms that this package override changes both the native library and its host
+build script from opt2 to opt0; record both units. Keep the JIT/compiler-component
 dependencies, type-system optimization, debug assertions, overflow checks and
-all other effective profile fields unchanged. Do not edit production profiles.
+every other unit/profile field unchanged. Do not edit production profiles.
 Use the unchanged canonical three-build SQL protocol, all seven rejection
 controls, exact resolved units and features, and within-profile equality of all
 three linked tools. Run one protocol at a time with six Cargo workers, the same
