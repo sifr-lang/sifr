@@ -424,6 +424,9 @@ pub(super) fn prune_workspace(
                 workspace: id.clone(),
                 context: context.into(),
                 namespace_lease: Arc::new(lease.try_clone()?),
+                validation: Arc::new(super::record_validation::RecordValidation::new(
+                    context.into(),
+                )),
             };
             match store.prune(true, dry_run) {
                 Ok(part) => report.add(&part),

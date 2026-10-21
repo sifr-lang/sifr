@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1d build-helper diagnostic complete without profile adoption; V2c durable-history attribution next; integrated acceptance remains open
+current_stage: V2c durable-history validation reuse implementation; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4741,3 +4741,63 @@ failure. Preserve every original assertion and all 4,097 publications. Add focus
 controls for any new reuse path and compare measured complete baseline/candidate
 work. Formatting, affected policy inventories, file-size checks and independent
 exact-candidate review remain required. Full phase gates and V5 remain open.
+
+
+### V2c measured baseline and concrete implementation contract
+
+The exact 4,097-publication test passes on `dd65d042` in 449.354s overall;
+Cargo reports 49.75s preparation and libtest reports 394.73s execution. The remaining
+wrapper/Cargo overhead is included in the overall measurement. All original history,
+pruning, ABA and eviction assertions execute. Retained records reach and remain at
+128; final retained payload size is 216,320 bytes. Four observed lookup checkpoints
+are 0.723ms, 31.394ms, 61.130ms and 23.435ms; these are individual observations.
+Cargo records stale dependency timestamps during preparation; this is not proof of
+repeated invalidation or a broken cache. The immediately repeated artifact preparation
+is fresh and takes 4.183s. The current binary contains 37 project-cache tests across
+five modules; retain that complete named inventory in candidate validation.
+
+Read-only observation shows substantial logical reads and relatively little physical
+reading. A partial 379-sample worker trace includes 157 samples waiting in
+`jbd2_log_wait_commit` and 217 runnable samples; these proportions are not exact full-run
+CPU/I/O accounting. Preserve the durability cost in all candidate measurements.
+
+An authenticated 1,690-byte record is copied read-only into an external probe.
+Across alternating probe rounds, reserving its validated length changes eight actual
+read calls to two per read and reduces approximately 7.4us to 4.5us. The candidate
+probe additionally pays for another metadata query. It returns identical bytes;
+this small primitive improvement is not a large whole-test saving. A second probe
+links the actual fresh frontend/identity libraries: median per 10,000 operations is
+0.592289s for the existing stored digest, 0.112661s for decode/schema/context/diagnostic
+validation, 0.706739s for their combined admission, and 0.093293s for a raw byte digest.
+The raw digest alone is not a measured cache-hit implementation or whole-gate result.
+
+Implement one bounded record-admission improvement in driver project storage:
+
+- Allocate bounded read buffers from the already checked file length, while retaining
+  the limit-plus-one read and post-read growth rejection. Reuse the single metadata
+  observation for file type and length; keep ownership/path checks before opening.
+- Add a Store-owned, generation-shared successful-fact LRU with at most 128 entries.
+  Each entry contains only the 64-character stored identity and 64-character observed
+  byte digest; do not retain decoded records or payload buffers. Bind the owner to one
+  immutable semantic context and release it with the last Store/Generation owner.
+- On every admission, read current bytes with existing file checks and hash them with
+  domain separation. Reuse a fact only when both byte digest and expected stored
+  identity match. On a miss, run the original stored-digest, decode, schema, context
+  and diagnostics checks before insertion. Never retain a failed validation.
+- Consumers still deserialize current authenticated bytes. Preserve original mismatch
+  messages where the generation and consumer paths distinguish them. Keep every
+  generation, size, record count, aggregate-history and lease check outside reuse.
+
+Keep the exact stored digest and disk schema, hardlinks/copy behavior, all fsyncs,
+pointer/hint publication, namespace/generation leases, pruning and cancellation.
+No crate/dependency/profile change or new persistent artifact is in scope.
+
+Named acceptance: all 37 original project-cache tests (the long history case has
+its own 30-minute category); added hit/miss/eviction/zero-capacity/lifetime controls;
+validly hashed invalid schema/context/diagnostic/JSON rejection; mismatched expected
+identity; changed same-length bytes with restored mtime; permissions and symlink
+substitution after a warm hit; bounded-read empty/limit/oversize/growth/error controls.
+Run affected frontend persistence tests, formatting/file-size checks, method and
+filesystem inventory contracts, and scoped independent exact-candidate review.
+Compare complete history baseline/candidate times and observed assertion IDs without
+claiming additive savings. Full phase gates and all V5 scenarios remain mandatory.

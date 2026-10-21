@@ -12168,24 +12168,143 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "read",
+      "site": "let original = fs::read(&path).unwrap();",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "metadata",
+      "site": "let modified = fs::metadata(&path).unwrap().modified().unwrap();",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "write",
+      "site": "fs::write(&path, &changed).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "open-write",
+      "site": ".open(&path)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "set_times",
+      "site": ".set_times(FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "set_modified",
+      "site": ".set_times(FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "metadata",
+      "site": "assert_eq!(fs::metadata(&path).unwrap().len(), original.len() as u64);",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "metadata",
+      "site": "assert_eq!(fs::metadata(&path).unwrap().modified().unwrap(), modified);",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "write",
+      "site": "fs::write(&path, original).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "open-write",
+      "site": ".open(&path)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "set_times",
+      "site": ".set_times(FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_reject_same_length_same_mtime_corruption_and_recover",
+      "operation": "set_modified",
+      "site": ".set_times(FileTimes::new().set_modified(modified))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_still_check_permissions_and_symlink_substitution",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&path, fs::Permissions::from_mode(0o666)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_still_check_permissions_and_symlink_substitution",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_still_check_permissions_and_symlink_substitution",
+      "operation": "rename",
+      "site": "fs::rename(&path, &preserved).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_still_check_permissions_and_symlink_substitution",
+      "operation": "symlink",
+      "site": "symlink(&preserved, &path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_still_check_permissions_and_symlink_substitution",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/record_validation/tests.rs",
+      "symbol": "warm_facts_still_check_permissions_and_symlink_substitution",
+      "operation": "rename",
+      "site": "fs::rename(&preserved, &path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
       "symbol": "read",
       "operation": "metadata",
-      "site": "if !file.metadata()?.is_file() || file.metadata()?.len() > limit {",
+      "site": "let metadata = file.metadata()?;",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
       "symbol": "read",
       "operation": "is_file",
-      "site": "if !file.metadata()?.is_file() || file.metadata()?.len() > limit {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/storage.rs",
-      "symbol": "read",
-      "operation": "metadata",
-      "site": "if !file.metadata()?.is_file() || file.metadata()?.len() > limit {",
+      "site": "if !metadata.is_file() {",
       "classification": "build-identity"
     },
     {
