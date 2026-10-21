@@ -2,6 +2,7 @@
 //! Readers take only a shared generation lease; GC takes writer then exclusive
 //! generation leases. Namespace leases outlive stores through their readers.
 //! Generation and namespace lock inodes remain stable while reachable.
+use super::record_validation::RecordValidation;
 use crate::cache_storage as storage;
 use serde::{Deserialize, Serialize};
 use sifr_frontend::persistence::{CompletedCheck, identity};
@@ -41,12 +42,14 @@ pub(super) struct Store {
     pub(super) workspace: String,
     pub(super) context: String,
     pub(super) namespace_lease: std::sync::Arc<File>,
+    pub(super) validation: std::sync::Arc<RecordValidation>,
 }
 pub(super) struct Generation {
     pub(super) path: PathBuf,
     pub(super) manifest: Manifest,
     _lease: File,
     _namespace_lease: std::sync::Arc<File>,
+    validation: std::sync::Arc<RecordValidation>,
 }
 pub(super) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -60,11 +63,23 @@ pub(super) fn key(value: &str) -> bool {
 pub(super) fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
     storage::payload(root, Path::new(name))?;
     let file = storage::read_private_file(&root.join(name))?;
-    if !file.metadata()?.is_file() || file.metadata()?.len() > limit {
+    let metadata = file.metadata()?;
+    if !metadata.is_file() {
         return Err(invalid("project record limit"));
     }
-    let mut bytes = Vec::new();
-    file.take(limit + 1).read_to_end(&mut bytes)?;
+    read_bounded(file, metadata.len(), limit)
+}
+fn read_bounded(reader: impl Read, expected: u64, limit: u64) -> io::Result<Vec<u8>> {
+    if expected > limit {
+        return Err(invalid("project record limit"));
+    }
+    let bounded = limit
+        .checked_add(1)
+        .ok_or_else(|| invalid("project record limit"))?;
+    let size =
+        usize::try_from(expected).map_err(|_| invalid("project record exceeds address space"))?;
+    let mut bytes = Vec::with_capacity(size);
+    reader.take(bounded).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > limit {
         return Err(invalid("project record grew past limit"));
     }
@@ -125,6 +140,7 @@ impl Store {
             workspace,
             context: context.into(),
             namespace_lease,
+            validation: std::sync::Arc::new(RecordValidation::new(context.into())),
         })
     }
     pub(super) fn latest(&self) -> Option<Generation> {
@@ -175,33 +191,19 @@ impl Store {
                 return Err(invalid("invalid record reference"));
             }
             let bytes = read(&path, record, RECORD_LIMIT)?;
-            if stamp("project-record-v1", &bytes)? != *record {
-                return Err(invalid("corrupt project record"));
-            }
             total_bytes += bytes.len() as u64;
             if total_bytes > HISTORY_BYTES {
                 return Err(invalid("project history byte limit"));
             }
-            let record: CompletedCheck = serde_json::from_slice(&bytes)?;
-            if record.schema != 1
-                || record
-                    .result
-                    .inputs
-                    .semantic_inputs
-                    .identity()
-                    .ok()
-                    .as_deref()
-                    != Some(&self.context)
-                || record.diagnostics().is_err()
-            {
-                return Err(invalid("incomplete project record"));
-            }
+            self.validation
+                .validate(record, &bytes, "corrupt project record")?;
         }
         Ok(Generation {
             path,
             manifest,
             _lease: lease,
             _namespace_lease: self.namespace_lease.clone(),
+            validation: self.validation.clone(),
         })
     }
     pub(super) fn publish(&self, bytes: &[u8], cancel: &AtomicBool) -> io::Result<String> {
@@ -332,10 +334,50 @@ impl Generation {
     pub(super) fn records(&self) -> impl Iterator<Item = io::Result<CompletedCheck>> + '_ {
         self.manifest.records.iter().rev().map(|record| {
             let bytes = read(&self.path, record, RECORD_LIMIT)?;
-            if stamp("project-record-v1", &bytes)? != *record {
-                return Err(invalid("changed immutable record"));
-            }
+            self.validation
+                .validate(record, &bytes, "changed immutable record")?;
             serde_json::from_slice(&bytes).map_err(io::Error::other)
         })
+    }
+}
+
+#[cfg(test)]
+mod bounded_read_tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn bounded_reads_preserve_empty_exact_and_changed_lengths() {
+        for (bytes, expected) in [
+            (b"".as_slice(), 0),
+            (b"0123456789abcdef".as_slice(), 16),
+            (b"short".as_slice(), 16),
+            (b"grew".as_slice(), 0),
+        ] {
+            assert_eq!(
+                read_bounded(Cursor::new(bytes), expected, 16).unwrap(),
+                bytes
+            );
+        }
+        assert!(read_bounded(Cursor::new(b"0123456789abcdefg"), 0, 16).is_err());
+        assert!(read_bounded(Cursor::new(b"short"), 17, 16).is_err());
+        assert!(read_bounded(Cursor::new(b""), 0, u64::MAX).is_err());
+    }
+
+    #[test]
+    fn bounded_reads_preserve_io_failure() {
+        struct Broken;
+        impl Read for Broken {
+            fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
+                Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "injected read failure",
+                ))
+            }
+        }
+        assert_eq!(
+            read_bounded(Broken, 1, 16).unwrap_err().kind(),
+            io::ErrorKind::PermissionDenied
+        );
     }
 }
