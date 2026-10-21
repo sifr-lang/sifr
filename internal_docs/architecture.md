@@ -2219,6 +2219,11 @@ The CLI opt-in `--trace-dir` sink projects existing build, project cache, metada
 ### Project storage housekeeping
 
 Project cache stores and detached readers lease their exact workspace namespace.
+Driver project storage and editor saved-check readers use the shared
+`sifr_cache_storage::ProcessLease` owner for process-local locks. Its final
+owner explicitly unlocks, so an unrelated child between fork and exec cannot
+extend the reader or writer lifetime. Intentionally inherited native-child
+leases retain their separate ownership contract.
 Explicit pressure cleanup uses immutable workspace ownership records and exclusive
 orphan leases to reclaim abandoned or deleted-workspace payloads. The original
 absolute canonical path selects a deleted workspace; uncertain ownership remains

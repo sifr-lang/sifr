@@ -1,9 +1,9 @@
 //! Explicit owner-scoped cleanup. The stable namespace lock is outside the
 //! namespace; stores and detached readers hold it shared, orphan GC exclusively.
-use super::process_lease::ProcessLease;
 use super::storage::{Hint, Store, invalid, key, read, stamp, write_new};
 use crate::cache_storage;
 use serde::{Deserialize, Serialize};
+use sifr_cache_storage::ProcessLease;
 use std::{
     fs::{self, File},
     io,
