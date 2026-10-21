@@ -18,6 +18,7 @@
     "crates/sifr_lint/Cargo.toml",
     "crates/sifr_lowering/Cargo.toml",
     "crates/sifr_lsp/Cargo.toml",
+    "crates/sifr_metadata/Cargo.toml",
     "crates/sifr_package/Cargo.toml",
     "crates/sifr_runtime/Cargo.toml",
     "crates/sifr_rust_interop_catalog/Cargo.toml",

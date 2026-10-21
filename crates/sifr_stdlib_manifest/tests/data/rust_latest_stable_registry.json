@@ -2,7 +2,7 @@
   "schema_version": 2,
   "audited_at": "2026-09-09",
   "source": "https://index.crates.io/{prefix}/{crate}",
-  "maintained_manifests": 154,
+  "maintained_manifests": 155,
   "direct_declarations": 211,
   "packages": [
     {
@@ -3826,7 +3826,7 @@
           "requirement": "=0.14.0"
         },
         {
-          "path": "crates/sifr_sysroot/Cargo.toml",
+          "path": "crates/sifr_metadata/Cargo.toml",
           "table": "dependencies",
           "alias": "zstd",
           "package": "zstd",

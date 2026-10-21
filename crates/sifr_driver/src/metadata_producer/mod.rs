@@ -6,7 +6,7 @@ pub use sifr_compiler_services::metadata::{
 };
 use sifr_identity::CompilerIdentity;
 #[cfg(test)]
-use sifr_sysroot::metadata as wire;
+use sifr_metadata as wire;
 use std::path::Path;
 use std::sync::{
     Arc,
@@ -18,7 +18,7 @@ pub fn ensure_development_metadata(
     target: &str,
     cache: &Path,
     cancel: &AtomicBool,
-) -> sifr_sysroot::metadata::Result<Arc<PreparedMetadata>> {
+) -> sifr_metadata::Result<Arc<PreparedMetadata>> {
     let cancelled = || cancel.load(Ordering::Relaxed);
     sifr_compiler_services::metadata::ensure_development_metadata(
         identity,
@@ -37,8 +37,8 @@ pub(crate) mod ensure {
         target: &str,
         cache: &std::path::Path,
         cancel: &std::sync::atomic::AtomicBool,
-        hook: impl Fn(Stage) -> sifr_sysroot::metadata::Result<()>,
-    ) -> sifr_sysroot::metadata::Result<std::sync::Arc<super::PreparedMetadata>> {
+        hook: impl Fn(Stage) -> sifr_metadata::Result<()>,
+    ) -> sifr_metadata::Result<std::sync::Arc<super::PreparedMetadata>> {
         let cancelled = || cancel.load(std::sync::atomic::Ordering::Relaxed);
         sifr_compiler_services::metadata::ensure::ensure_with_hook(
             identity,

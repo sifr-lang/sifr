@@ -40,7 +40,7 @@ class MetadataArtifactTests(unittest.TestCase):
 
     def test_packaging_accepts_only_the_current_producer_format(self):
         repo = Path(__file__).resolve().parents[2]
-        source = (repo / "crates/sifr_sysroot/src/metadata/container.rs").read_text()
+        source = (repo / "crates/sifr_metadata/src/metadata/container.rs").read_text()
         version = re.search(r"pub\(crate\) const VERSION: u32 = (\d+);", source)
         self.assertIsNotNone(version, "canonical producer version declaration missing")
         current = int(version.group(1))

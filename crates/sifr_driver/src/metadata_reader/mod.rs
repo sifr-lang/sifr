@@ -8,7 +8,7 @@ pub use sifr_compiler_services::metadata::reader::{
     StdlibNavigation, StdlibNavigationSymbol, decode_project_results, qualify_development_metadata,
 };
 #[cfg(test)]
-use sifr_sysroot::metadata as wire;
+use sifr_metadata as wire;
 #[cfg(test)]
 mod corpus_tests;
 #[cfg(all(test, unix))]

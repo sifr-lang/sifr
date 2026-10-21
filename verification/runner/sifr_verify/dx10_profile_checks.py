@@ -38,6 +38,27 @@ class ProfilePlanTests(unittest.TestCase):
                 suites[:] = [s for s in suites if s["id"] != "sifr_stdlib_artifact"]
                 self.assertEqual(len(plan), len(configuration_plan(without_owner, mode)))
 
+    def test_metadata_owner_preserves_sysroot_modes_and_configuration(self):
+        for name in ("create-pr", "merge", "nightly", "release"):
+            profile = load_profile(name)
+            suites = profile["crate_test_membership"]["suites"]
+            sysroot = next(s for s in suites if s["id"] == "sifr_sysroot")
+            metadata = next(s for s in suites if s["id"] == "sifr_metadata")
+            self.assertEqual(metadata["modes"], sysroot["modes"])
+            self.assertEqual(metadata["command"], ["test", "-p", "sifr_metadata"])
+            self.assertEqual(metadata["status"], "blocking")
+            self.assertTrue(metadata["executed_in_merge"])
+            for mode in ("smoke", "full"):
+                plan = configuration_plan(profile, mode)
+                matches = [g for g in plan if "sifr_metadata" in g.ids]
+                self.assertEqual(len(matches), int(mode in metadata["modes"]))
+                if matches:
+                    self.assertEqual(matches[0].classification, "integration")
+                    self.assertIn("sifr_sysroot", matches[0].ids)
+                without = copy.deepcopy(profile)
+                without["crate_test_membership"]["suites"] = [s for s in suites if s["id"] != "sifr_metadata"]
+                self.assertEqual(len(plan), len(configuration_plan(without, mode)))
+
     def test_r06_duplicate_compiler_preparation_is_memoized(self):
         from .cargo_crate_setup import prepare_crate_test_binaries
         profile = load_profile("merge")

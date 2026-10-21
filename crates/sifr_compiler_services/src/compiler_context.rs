@@ -167,7 +167,7 @@ impl CompilerContext {
             })
     }
     pub fn metadata_stats(&self) -> Option<serde_json::Value> {
-        use sifr_sysroot::metadata as wire;
+        use sifr_metadata as wire;
         let cache = self.stdlib_cache.lock().ok()?;
         let provider = cache.as_ref()?;
         let store = &provider.metadata.store;
@@ -290,6 +290,7 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
     tokens.extend(sifr_compiler_component::compiled_input_tokens());
     tokens.extend(sifr_sql_contract::compiled_input_tokens());
     tokens.extend(sifr_sysroot::compiled_input_tokens());
+    tokens.extend(sifr_metadata::compiled_input_tokens());
     tokens.extend(sifr_type_system::compiled_input_tokens());
     tokens.sort_unstable();
     tokens.dedup();

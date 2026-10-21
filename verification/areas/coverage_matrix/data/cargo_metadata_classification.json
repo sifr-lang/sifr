@@ -445,6 +445,15 @@
       "features": []
     },
     {
+      "name": "sifr_metadata",
+      "classification": "first_party_compiler",
+      "targets": [
+        {"name": "sifr_metadata", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
+      ],
+      "features": []
+    },
+    {
       "name": "sifr_sysroot",
       "classification": "first_party_compiler",
       "targets": [

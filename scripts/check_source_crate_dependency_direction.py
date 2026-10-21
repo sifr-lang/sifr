@@ -35,6 +35,7 @@ ALL_SIFR_CRATES = {
     "sifr_lint",
     "sifr_lowering",
     "sifr_lsp",
+    "sifr_metadata",
     "sifr_package",
     "sifr_runtime",
     "sifr_source",
@@ -145,6 +146,19 @@ class CrateRule:
 
 
 RULES = (
+    CrateRule(
+        crate="sifr_metadata",
+        forbidden_all_dependencies=frozenset(
+            (ALL_SIFR_CRATES | {"sifr_compiler_services"}) - {"sifr_metadata", "sifr_identity"}),
+        scan_manifest_targets=True,
+        allowed_normal_dependencies=frozenset({"serde", "serde_json", "sha2", "zstd", "sifr_identity"}),
+        forbidden_source_references=frozenset(
+            (ALL_SIFR_CRATES | {"sifr_compiler_services"}) - {"sifr_metadata", "sifr_identity"}
+        ),
+    ),
+    *(CrateRule(crate=crate, forbidden_all_dependencies=frozenset({"sifr_metadata"}),
+                forbidden_source_references=frozenset({"sifr_metadata"}), scan_manifest_targets=True)
+      for crate in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_frontend")),
     # The stateless identity/encoding leaf may be shared by compiler layers,
     # but must never acquire a reverse compiler dependency.
     CrateRule(
@@ -546,6 +560,7 @@ edition = "2024"
 def seed_valid_repo(root: Path) -> None:
     allowed_deps = {
         "sifr_identity": ["sha2"],
+        "sifr_metadata": ["serde", "serde_json", "sha2", "zstd", "sifr_identity"],
         "sifr_source": ["ruff_text_size", "sifr_identity"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
         "sifr_ipc": ["postcard", "serde", "sifr_identity"],
@@ -585,10 +600,11 @@ def assert_self_test_case(
 
 
 def run_self_test() -> int:
-    from source_direction_checks import check_split_sources_and_composition_roots
+    from source_direction_checks import check_split_sources_and_composition_roots, check_data_owner_boundaries
 
     failures: list[str] = []
     check_split_sources_and_composition_roots(sys.modules[__name__], failures)
+    check_data_owner_boundaries(sys.modules[__name__], failures)
     SELF_TEST_TMP_ROOT.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(dir=SELF_TEST_TMP_ROOT) as tmp:
         root = Path(tmp)
@@ -651,20 +667,6 @@ def run_self_test() -> int:
             root / "crates" / "sifr_ipc" / "src" / "lib.rs"
         ).write_text("pub fn leak() { sifr_stdlib_manifest::STDLIB_FEATURE_SPECS; }\n", encoding="utf-8"),
         "sifr_ipc: crates/sifr_ipc/src/lib.rs references sifr_stdlib_manifest",
-        failures,
-    )
-    assert_self_test_case(
-        "shared stdlib data upward dependency",
-        lambda root: write_manifest(root / "crates/sifr_stdlib_artifact",
-                                    "sifr_stdlib_artifact", ["sifr_codegen"]),
-        "sifr_stdlib_artifact: unexpected normal dependency",
-        failures,
-    )
-    assert_self_test_case(
-        "shared stdlib data upward source reference",
-        lambda root: (root / "crates/sifr_stdlib_artifact/src/lib.rs").write_text(
-            "use sifr_compiler_services::CompilerContext;\n", encoding="utf-8"),
-        "sifr_stdlib_artifact: crates/sifr_stdlib_artifact/src/lib.rs references sifr_compiler_services",
         failures,
     )
     assert_self_test_case(

@@ -10,7 +10,7 @@ import subprocess
 import tomllib
 from pathlib import Path
 
-# Physical format owned by sifr_sysroot::metadata::container.
+# Physical format owned by sifr_metadata container.
 # metadata_artifact_checks verifies producer/packager/fixture parity.
 METADATA_FORMAT_VERSION = 5
 METADATA_PATH = "lib/sifr/stdlib.sifrmeta"

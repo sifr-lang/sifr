@@ -103,7 +103,10 @@ class ProducerFingerprintTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="sifr-gcq-identity-") as directory:
             root = Path(directory)
             files = [root / "crates/sifr_stdlib_artifact/Cargo.toml",
-                     root / "crates/sifr_stdlib_artifact/src/metadata.rs"]
+                     root / "crates/sifr_stdlib_artifact/src/metadata.rs",
+                     root / "crates/sifr_metadata/Cargo.toml",
+                     root / "crates/sifr_metadata/build.rs",
+                     root / "crates/sifr_metadata/src/metadata/store.rs"]
             for path in files:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("original owner input\n", encoding="utf-8")

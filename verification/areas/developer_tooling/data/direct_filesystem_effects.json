@@ -22486,84 +22486,84 @@
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/tests.rs",
       "symbol": "i05_indexed_file_relocation_and_separate_store_owners_preserve_identity",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&root).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/tests.rs",
       "symbol": "i05_indexed_file_relocation_and_separate_store_owners_preserve_identity",
       "operation": "write",
       "site": "std::fs::write(&first, &bytes).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/tests.rs",
       "symbol": "i05_indexed_file_relocation_and_separate_store_owners_preserve_identity",
       "operation": "rename",
       "site": "std::fs::rename(&first, &second).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/tests.rs",
       "symbol": "i05_indexed_file_relocation_and_separate_store_owners_preserve_identity",
       "operation": "open",
       "site": "MetadataStore::open(std::fs::File::open(&second).unwrap(), identity(), limits()).unwrap();",
       "classification": "semantic-input"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/tests.rs",
       "symbol": "i05_indexed_file_relocation_and_separate_store_owners_preserve_identity",
       "operation": "remove_file",
       "site": "std::fs::remove_file(second).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/tests.rs",
       "symbol": "i05_indexed_file_relocation_and_separate_store_owners_preserve_identity",
       "operation": "remove_dir",
       "site": "std::fs::remove_dir(root).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs",
       "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
       "operation": "open-write",
       "site": ".open(&path)",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs",
       "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
       "operation": "metadata",
       "site": "let original_time = file.metadata().unwrap().modified().unwrap();",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs",
       "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
       "operation": "set_times",
       "site": "file.set_times(std::fs::FileTimes::new().set_modified(original_time))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs",
       "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
       "operation": "set_modified",
       "site": "file.set_times(std::fs::FileTimes::new().set_modified(original_time))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs",
       "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
       "operation": "metadata",
       "site": "assert_eq!(file.metadata().unwrap().modified().unwrap(), original_time);",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_sysroot/src/metadata/validation_facts_tests.rs",
+      "path": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs",
       "symbol": "captured_input_survives_file_mutation_but_new_store_rejects_it",
       "operation": "remove_file",
       "site": "std::fs::remove_file(path).unwrap();",
