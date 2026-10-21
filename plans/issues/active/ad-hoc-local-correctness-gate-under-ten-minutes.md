@@ -4391,3 +4391,20 @@ Compare exact responses in controls and retain existing fixture assertions. Reco
 complete category timing against prior observations without treating sums as a
 full-gate result. Independent exact-candidate review precedes the intermediate
 merge. Complete final create-PR/merge gates and V5 remain mandatory.
+
+
+V2b qualification refinement, registered before generation: the canonical SQL
+component producer inventory includes the host crate's source, even for changes
+excluded by the guest target. Preserve that current inventory and regenerate all
+ten SQL artifacts and producer receipts with the canonical pinned producers and
+the retained owned guest target. Only each producer's declared output paths may
+change during its run. Do not patch source fingerprints to bless prior binaries.
+Compare all regenerated guest hashes with the prior artifacts, then execute the
+complete provider and real SQL application assertions against the resulting
+candidate. The independent words component has no dependency on the host crate;
+verify its existing provenance rather than rebuilding unrelated inputs. Keep all
+source-guard/provenance failures and the invalid larger-stack test setup as failed
+evidence. Precise target-specific producer inventories remain V3 work, not an
+exception introduced here. Extend the real application regression with configured
+reload, changed schema, same-path/same-mtime corruption, recovery and disable/enable
+checks; a configured reload passes its resident owner into profile preparation.
