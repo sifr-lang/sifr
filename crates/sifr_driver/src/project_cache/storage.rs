@@ -2,13 +2,14 @@
 //! Readers take only a shared generation lease; GC takes writer then exclusive
 //! generation leases. Namespace leases outlive stores through their readers.
 //! Generation and namespace lock inodes remain stable while reachable.
+use super::process_lease::ProcessLease;
 use super::record_validation::RecordValidation;
 use crate::cache_storage as storage;
 use serde::{Deserialize, Serialize};
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
     collections::BTreeSet,
-    fs::{self, File},
+    fs,
     io::{self, Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
@@ -41,14 +42,14 @@ pub(super) struct Store {
     pub(super) workspace_root: PathBuf,
     pub(super) workspace: String,
     pub(super) context: String,
-    pub(super) namespace_lease: std::sync::Arc<File>,
+    pub(super) namespace_lease: std::sync::Arc<ProcessLease>,
     pub(super) validation: std::sync::Arc<RecordValidation>,
 }
 pub(super) struct Generation {
     pub(super) path: PathBuf,
     pub(super) manifest: Manifest,
-    _lease: File,
-    _namespace_lease: std::sync::Arc<File>,
+    _lease: ProcessLease,
+    _namespace_lease: std::sync::Arc<ProcessLease>,
     validation: std::sync::Arc<RecordValidation>,
 }
 pub(super) fn invalid(message: &str) -> io::Error {
@@ -171,8 +172,7 @@ impl Store {
             return Err(invalid("invalid generation identity"));
         }
         let parent = self.root.join("generations");
-        let lease = super::housekeeping::existing_lease(&parent, id)?;
-        lease.try_lock_shared().map_err(io::Error::from)?;
+        let lease = ProcessLease::shared(super::housekeeping::existing_lease(&parent, id)?)?;
         let path = parent.join(id);
         let bytes = read(&path, "manifest.json", MANIFEST_LIMIT)?;
         let manifest: Manifest = serde_json::from_slice(&bytes)?;
@@ -208,8 +208,7 @@ impl Store {
     }
     pub(super) fn publish(&self, bytes: &[u8], cancel: &AtomicBool) -> io::Result<String> {
         cancelled(cancel)?;
-        let writer = storage::process_entry_lock(&self.root, "writer")?;
-        writer.try_lock().map_err(io::Error::from)?;
+        let _writer = ProcessLease::exclusive(storage::process_entry_lock(&self.root, "writer")?)?;
         let previous = self.latest();
         if bytes.len() as u64 > RECORD_LIMIT {
             return Err(invalid("project result exceeds limit"));
@@ -254,8 +253,8 @@ impl Store {
         // Establish the permanent reader lock before the generation is visible.
         let _generation_lock = storage::process_entry_lock(&parent, &generation_id)?;
         let stage_name = format!("{}.stage-{}", generation_id, token());
-        let stage_lease = storage::process_entry_lock(&parent, &stage_name)?;
-        stage_lease.try_lock().map_err(io::Error::from)?;
+        let _stage_lease =
+            ProcessLease::exclusive(storage::process_entry_lock(&parent, &stage_name)?)?;
         let stage = parent.join(&stage_name);
         storage::directory(&stage)?;
         let result = (|| {

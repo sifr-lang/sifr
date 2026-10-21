@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4c complete-corpus compiler-context investigation; integrated acceptance remains open
+current_stage: V4i process-local project lease lifetime; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -5669,3 +5669,84 @@ failure. Do not use unstable Rust test flags, replace the canonical assertion
 inventory with parsed child text, or adopt a production concurrency change from
 an unqualified diagnostic. This item is measurement only. Complete native
 selection, other suites, final gates and V5 remain mandatory.
+
+### V1e/V4e record closure — #4404
+
+Documentation-only PR [#4404](https://github.com/sifr-lang/sifr/pull/4404) merged
+candidate `b40a0bfca16dccb31f6cef5946ae241ffb2bc8c9` as
+`0969826f528a11be99da393cce56d24eb3c29a58`. It records the rejected JIT profile,
+complete crate diagnostics, current native inventory, V4g closure and prospective
+V4h investigation. Documentation checks and independently verified evidence
+support the record; it changes no implementation and claims no final gate pass.
+
+### V4h outcome — serial attribution and a failed parallel comparison
+
+The unchanged driver executable
+`9d67373b896871be0b024670ba83dca5bf23a296f0c2189bf9a8518c851a6f10`
+executes all 752 active tests successfully with one libtest thread; 82 ignored
+cases remain separately required. The harness takes 803.540s; Cargo execution
+including tracing takes 805.946s, and the outer diagnostic including discovery
+takes 814.757s. Serial write-boundary attribution accounts for 803.475s:
+
+| Family | Active cases | Observed serial seconds |
+| --- | ---: | ---: |
+| Project cache | 45 | 247.650 |
+| General driver tests | 224 | 174.834 |
+| Build | 363 | 153.948 |
+| Metadata producer | 15 | 120.949 |
+| Test runner | 6 | 39.593 |
+| Standard library | 56 | 39.338 |
+| Metadata reader | 12 | 25.776 |
+| Process execution | 5 | 1.370 |
+| Remaining four families | 26 | 0.017 |
+
+The 4,097-publication history case takes 223.700s. This preserves its complete
+publication, retention, ABA and durability assertions. Partial process I/O
+observations do not identify a dominant function or prove that fsync dominates.
+The separate kernel wait samples were not bounded to that case; their explicit
+qualification excludes history-specific attribution.
+
+The same executable, inventory and nested worker environment with two libtest
+threads finishes **failed** in 300.610s: 751 pass, one fails, 82 are ignored.
+`history_over_4096_keeps_publishing_and_recent_aba` receives `WouldBlock` from
+publication at `history_tests.rs:23`. The outer diagnostic takes 306.896s.
+This failure-shortened result is not a speedup or concurrency acceptance.
+Both wrappers preserve source identity and leave no descendants. Parallel
+completion timestamps are not individual case durations.
+
+A separate pinned-Rust control reproduces a relevant lock-lifetime mechanism:
+an unrelated child paused before exec retains a parent's open file description
+despite close-on-exec. Closing the parent's locked file leaves a new contender
+blocked until the child executes; explicitly unlocking before close lets the
+contender acquire immediately. This establishes the mechanism, not the identity
+of a particular child in the original uninstrumented failure. V4i owns the
+deterministic production regression and repair.
+
+The independently verified 85-file archive `v4h-evidence.tar.gz`, SHA-256
+`3fc83033e1c9cf3b0e83788663d3a9feb9db579f2667553cf0b5ec8165e278e0`,
+preserves both complete inventories, raw traces, timing/resource receipts,
+failed and repaired parser controls, partial-observation qualifications and
+the Rust lock control. No production scheduling change is accepted.
+
+### V4i bounded repair — process-local project lease lifetime
+
+Scope: give project-cache writer, stage, generation-reader and namespace/GC
+locks an explicit RAII owner that unlocks on its final parent-side release.
+Retain close-on-exec, nonblocking admission, stable lock inodes and the existing
+writer-before-generation ordering. Share the namespace owner through `Arc`;
+do not create independently unlocking owners by cloning its file descriptor.
+Keep native child-owned leases and their intentional inheritance unchanged.
+Do not add retry sleeps, serialize the entire test suite, remove fsync, reduce
+the 4,097 publications, or change the stored format and validation authority.
+
+Register this contract before implementation. First add a deterministic control
+using the production process-local guard and a real child paused before exec,
+including exclusive/shared ownership, final shared-owner release, live-owner
+exclusion and independent-reader exclusion. A control with close-only release
+must demonstrate the original failure. Then run the complete project-cache
+tests, native child-lease controls and the complete default driver suite with
+two threads under the existing 30-minute cap and capacity reserves. Preserve
+all failures. The full driver pass is correctness evidence, not a whole-gate
+speed claim or a new production scheduling policy. Run formatting, size and
+affected ownership guardrails, then exact-candidate independent review.
+Final native selection, integrated gates and V5 remain open.
