@@ -5453,3 +5453,12 @@ assertion. Profile validation (0.641s) and file-size guardrails (6.650s) pass.
 The initial scope-only run passed before replacing Python assertions with explicit
 checks (2.202s); final evidence above covers the hardened implementation. Review
 and merge remain next; no complete gate or ten-minute acceptance is claimed.
+
+
+Before review, the same coverage comparison was strengthened to retain original
+configuration order as well as ownership/order within each configuration. The
+negative control swaps two original configurations and must fail. All 54 related
+checks pass again (2.399s), all 16 optimized-Python scope checks pass (0.638s), and
+file-size checks pass (5.660s). This affects only the coverage self-check; emitted
+selection and frozen evidence remain unchanged. The earlier candidate and its
+archive remain diagnostic history, not review of this final candidate.

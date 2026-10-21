@@ -19,6 +19,9 @@ def assert_frozen_crate_coverage(frozen, current):
     retained = {name for group in frozen for name in group["ids"]}
     require(retained, "frozen crate selection must not be empty")
     require(sum(len(group["ids"]) for group in frozen) == len(retained), "duplicate frozen ownership")
+    projected_order = [[name for name in group.ids if name in retained] for group in current]
+    require([ids for ids in projected_order if ids] == [group["ids"] for group in frozen],
+            "original configuration order or grouping changed")
     for before in frozen:
         owners = [group for group in current if set(group.ids) & set(before["ids"])]
         require(len(owners) == 1, f"missing, duplicate or split original configuration: {before['ids']}")
@@ -79,6 +82,7 @@ class FrozenCrateCoverageTests(unittest.TestCase):
         self.reject([self.current[0], self.current[0], *self.current[2:]])
 
     def test_order_changes_fail(self):
+        self.reject([self.current[1], self.current[0], *self.current[2:]])
         first = self.current[0]
         self.reject([replace(first, ids=tuple(reversed(first.ids))), *self.current[1:]])
         command = list(first.command)
