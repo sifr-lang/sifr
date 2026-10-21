@@ -17,27 +17,24 @@ const SHARED_CONTEXT_MUTATION: &str = include_str!(
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_method_slot_runtime() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "method_slot_table",
         "method_slot_runtime",
         "rust_interop_method_slot_runtime",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "method_slot_runtime");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_runtime();
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("method_slot_runtime");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         errors.is_empty(),
         "method-slot package must pass checking: {errors:#?}"
     );
     assert_eq!(
-        run_built_package(&entrypoint),
+        package_root.stdout(&entrypoint),
         "value-normalized\ninput-receiver\ninput-serialized\nvalue-no-context\nvalue-shared-3"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
@@ -63,24 +60,17 @@ fn test_method_slot_lifetime_thread_and_shared_context_rejections() {
             "cannot borrow",
         ),
     ] {
-        let package_root = copied_scenario(
+        let mut inputs = ScenarioInputs::new(
             "method_slot_table",
             "method_slot_runtime",
             &format!("rust_interop_method_slot_{case}"),
         );
-        rebase_sifr_runtime_dependency(&package_root);
-        std::fs::write(
-            package_root.join("src/bridges/slots.rs"),
-            format!("{VALID_BRIDGE}\n{source}"),
-        )
-        .expect("negative method-slot bridge should be installed");
-        let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "method_slot_runtime");
+        inputs = inputs.with_runtime();
+        inputs.write("src/bridges/slots.rs", format!("{VALID_BRIDGE}\n{source}"));
+        let package_root = inputs.finish();
+        let entrypoint = package_root.entrypoint("method_slot_runtime");
 
-        let errors = check_package_project(
-            &crate::CompilerContext::for_test(),
-            &entrypoint,
-            &mut sifr_frontend::DiskSourceProvider::new(),
-        );
+        let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
         assert!(
             errors.iter().any(|error| {
@@ -92,6 +82,6 @@ fn test_method_slot_lifetime_thread_and_shared_context_rejections() {
             }),
             "{case} must fail for the exact method-slot lifetime/context reason: {errors:#?}"
         );
-        let _ = std::fs::remove_dir_all(package_root);
+        drop(package_root);
     }
 }

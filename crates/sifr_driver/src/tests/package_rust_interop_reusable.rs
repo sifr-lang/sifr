@@ -1,4 +1,4 @@
-//! One retained advanced-data input tree per checkout, always reconciled from source.
+//! Retained native fixture trees, reconciled from final inputs under explicit ownership.
 use super::*;
 use crate::build::native_child_leases::NativeChildLeases;
 use std::collections::{BTreeMap, BTreeSet};
@@ -11,6 +11,10 @@ const FIXTURE: &str = "advanced_data_runtime_matrix";
 const SCENARIO: &str = "advanced_data_runtime";
 const TEST: &str = "rust_interop_advanced_data_roundtrips";
 type Inputs = BTreeMap<PathBuf, Vec<u8>>;
+
+#[path = "package_rust_interop_scenario_inputs.rs"]
+mod input_builder;
+pub(crate) use input_builder::ScenarioInputs;
 
 pub(crate) struct ReusableScenario {
     root: PathBuf,
@@ -28,33 +32,27 @@ impl std::ops::Deref for ReusableScenario {
 
 impl ReusableScenario {
     pub(crate) fn advanced_data(source: &str) -> Self {
-        let canonical = fixture_scenario_root(FIXTURE, SCENARIO);
-        let mut inputs = read_inputs(&canonical).expect("current canonical fixture");
-        let manifest =
-            std::str::from_utf8(&inputs[Path::new("Cargo.toml")]).expect("UTF-8 fixture manifest");
-        let manifest = rebased_runtime_manifest(manifest);
-        inputs.insert("Cargo.toml".into(), manifest.into_bytes());
-        inputs.insert("src/main.sifr".into(), source.as_bytes().to_vec());
-        let owner = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../..")
-            .canonicalize()
-            .expect("owned compiler checkout");
-        Self::acquire(
-            &crate::cache_storage::root().join("test-fixtures"),
-            &owner,
-            inputs,
-        )
-        .expect("bounded advanced-data fixture ownership")
+        ScenarioInputs::new(FIXTURE, SCENARIO, TEST)
+            .with_runtime()
+            .with_source(source)
+            .finish()
     }
 
-    fn acquire(base: &Path, owner: &Path, inputs: Inputs) -> io::Result<Self> {
+    fn acquire(
+        base: &Path,
+        owner: &Path,
+        fixture: &str,
+        scenario: &str,
+        test: &str,
+        inputs: Inputs,
+    ) -> io::Result<Self> {
         validate_inputs(&inputs)?;
         // Keep the pre-existing authority path; revisions never allocate a new tree.
         let mut identity = sifr_identity::IdentityEncoder::new("native-test-fixture-v1");
         for (name, value) in [
-            ("fixture", FIXTURE.as_bytes()),
-            ("scenario", SCENARIO.as_bytes()),
-            ("test", TEST.as_bytes()),
+            ("fixture", fixture.as_bytes()),
+            ("scenario", scenario.as_bytes()),
+            ("test", test.as_bytes()),
             ("owner", owner.as_os_str().as_encoded_bytes()),
         ] {
             identity.field(name, value);
@@ -93,14 +91,81 @@ impl ReusableScenario {
             .expect("clone fixture ownership")
     }
 
-    pub(crate) fn build(&self, entrypoint: &PackageEntrypoint) -> crate::CachedBinaryArtifact {
-        crate::build::build_cached_package_project_binary(
-            &crate::CompilerContext::for_test(),
+    pub(crate) fn check(
+        &self,
+        compiler: &crate::CompilerContext,
+        entrypoint: &PackageEntrypoint,
+    ) -> Vec<crate::diagnostics::RenderedDiagnostic> {
+        crate::build::check_package_project_with_leases(
+            compiler,
             entrypoint,
             &mut sifr_frontend::DiskSourceProvider::new(),
             self.leases(),
         )
-        .expect("owned Rust interop fixture should build")
+    }
+
+    pub(crate) fn try_build(
+        &self,
+        compiler: &crate::CompilerContext,
+        entrypoint: &PackageEntrypoint,
+    ) -> Result<crate::CachedBinaryArtifact, Vec<crate::diagnostics::RenderedDiagnostic>> {
+        crate::build::build_cached_package_project_binary(
+            compiler,
+            entrypoint,
+            &mut sifr_frontend::DiskSourceProvider::new(),
+            self.leases(),
+        )
+    }
+
+    pub(crate) fn build(&self, entrypoint: &PackageEntrypoint) -> crate::CachedBinaryArtifact {
+        self.try_build(&crate::CompilerContext::for_test(), entrypoint)
+            .expect("owned Rust interop fixture should build")
+    }
+
+    pub(crate) fn built_package_output(
+        &self,
+        entrypoint: &PackageEntrypoint,
+    ) -> std::process::Output {
+        let artifact = self.build(entrypoint);
+        let output = artifact
+            .command()
+            .expect("owned runtime command")
+            .output()
+            .expect("Rust interop package binary should run");
+        assert!(
+            output.status.success(),
+            "package binary should pass: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        output
+    }
+
+    pub(crate) fn stdout(&self, entrypoint: &PackageEntrypoint) -> String {
+        String::from_utf8_lossy(&self.built_package_output(entrypoint).stdout)
+            .trim()
+            .to_string()
+    }
+
+    pub(crate) fn cargo(&self) -> std::process::Command {
+        let mut command = std::process::Command::new("cargo");
+        command.current_dir(&self.root);
+        self.leases()
+            .bind(&mut command)
+            .expect("bind fixture Cargo ownership");
+        #[cfg(unix)]
+        {
+            use std::os::unix::process::CommandExt;
+            #[allow(unsafe_code)]
+            // SAFETY: umask is allocation-free and runs only in this owned child
+            // after fork. The concurrent test parent's creation policy is unchanged.
+            unsafe {
+                command.pre_exec(|| {
+                    libc::umask(0o077);
+                    Ok(())
+                });
+            }
+        }
+        command
     }
 }
 

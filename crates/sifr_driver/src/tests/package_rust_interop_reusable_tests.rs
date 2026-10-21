@@ -1,6 +1,10 @@
 use super::*;
 use std::time::{Duration, SystemTime};
 
+fn acquire(base: &Path, owner: &Path, inputs: Inputs) -> io::Result<ReusableScenario> {
+    ReusableScenario::acquire(base, owner, FIXTURE, SCENARIO, TEST, inputs)
+}
+
 pub(super) fn private_root() -> tempfile::TempDir {
     let root = tempfile::tempdir().unwrap();
     #[cfg(unix)]
@@ -24,7 +28,7 @@ pub(super) fn assert_reconciliation() {
     let temp = private_root();
     let base = temp.path().join("fixtures");
     let original = inputs();
-    let first = ReusableScenario::acquire(&base, temp.path(), original.clone()).unwrap();
+    let first = acquire(&base, temp.path(), original.clone()).unwrap();
     let root = first.root.clone();
     let key = root.file_name().unwrap().to_str().unwrap();
     let lock = crate::build::native_child_leases::open(&base, key).unwrap();
@@ -43,7 +47,7 @@ pub(super) fn assert_reconciliation() {
         root.is_dir(),
         "input lifetime is independent of assertion completion"
     );
-    let second = ReusableScenario::acquire(&base, temp.path(), original.clone()).unwrap();
+    let second = acquire(&base, temp.path(), original.clone()).unwrap();
     assert_eq!(second.root, root);
     for (path, bytes) in &original {
         assert_eq!(fs::read(root.join(path)).unwrap(), *bytes);
@@ -62,7 +66,7 @@ pub(super) fn assert_reconciliation() {
     current.remove(Path::new("replace-dir/nested"));
     current.insert("replace-file/nested".into(), b"new nested".to_vec());
     current.insert("replace-dir".into(), b"new file".to_vec());
-    let third = ReusableScenario::acquire(&base, temp.path(), current.clone()).unwrap();
+    let third = acquire(&base, temp.path(), current.clone()).unwrap();
     assert_eq!(read_inputs(&third.root).unwrap(), current);
     assert!(!root.join("stale").exists());
     assert!(matches!(lock.try_lock(), Err(fs::TryLockError::WouldBlock)));
@@ -86,7 +90,7 @@ fn final_overlay_is_reconciled_once_and_canonical_source_stays_unchanged() {
         rebased_runtime_manifest(std::str::from_utf8(&before[Path::new("Cargo.toml")]).unwrap());
     final_inputs.insert("Cargo.toml".into(), rebased.into_bytes());
     final_inputs.insert("src/main.sifr".into(), b"final assertion source".to_vec());
-    let first = ReusableScenario::acquire(
+    let first = acquire(
         &temp.path().join("cache"),
         temp.path(),
         final_inputs.clone(),
@@ -101,7 +105,7 @@ fn final_overlay_is_reconciled_once_and_canonical_source_stays_unchanged() {
         .set_times(fs::FileTimes::new().set_modified(stamp))
         .unwrap();
     drop(first);
-    let second = ReusableScenario::acquire(
+    let second = acquire(
         &temp.path().join("cache"),
         temp.path(),
         final_inputs.clone(),
@@ -117,7 +121,7 @@ fn input_limits_and_invalid_layout_fail_before_retained_input_mutation() {
     let temp = private_root();
     let base = temp.path().join("cache");
     let initial = inputs();
-    let first = ReusableScenario::acquire(&base, temp.path(), initial.clone()).unwrap();
+    let first = acquire(&base, temp.path(), initial.clone()).unwrap();
     let root = first.root.clone();
     drop(first);
     for invalid_inputs in [
@@ -128,7 +132,7 @@ fn input_limits_and_invalid_layout_fail_before_retained_input_mutation() {
         BTreeMap::from([("a".into(), vec![]), ("a/b".into(), vec![])]),
         BTreeMap::from([("../escape".into(), vec![])]),
     ] {
-        assert!(ReusableScenario::acquire(&base, temp.path(), invalid_inputs).is_err());
+        assert!(acquire(&base, temp.path(), invalid_inputs).is_err());
         assert_eq!(read_inputs(&root).unwrap(), initial);
     }
     let sparse = temp.path().join("huge-source");
@@ -153,8 +157,7 @@ fn source_and_retained_aliases_are_rejected_without_touching_their_targets() {
     fs::create_dir(&source).unwrap();
     symlink(&outside, source.join("alias")).unwrap();
     assert!(read_inputs(&source).is_err());
-    let fixture =
-        ReusableScenario::acquire(&temp.path().join("cache"), temp.path(), inputs()).unwrap();
+    let fixture = acquire(&temp.path().join("cache"), temp.path(), inputs()).unwrap();
     let root = fixture.root.clone();
     drop(fixture);
     let manifest = root.join("Cargo.toml");
@@ -175,3 +178,60 @@ fn source_and_retained_aliases_are_rejected_without_touching_their_targets() {
 #[cfg(unix)]
 #[path = "package_rust_interop_reusable_child_tests.rs"]
 mod child;
+
+#[test]
+fn variants_are_isolated_and_current_inputs_replace_each_authority_kind() {
+    let temp = private_root();
+    let base = temp.path().join("cache");
+    let original: Inputs = [
+        "src/main.sifr",
+        "Cargo.toml",
+        "Cargo.lock",
+        "src/bridge.rs",
+        "sifr.toml",
+    ]
+    .into_iter()
+    .map(|name| (name.into(), b"original".to_vec()))
+    .collect();
+    let first = acquire(&base, temp.path(), original.clone()).unwrap();
+    let first_root = first.root.clone();
+    // Every ownership coordinate is significant; contents are deliberately identical.
+    for (fixture, scenario, test, owner) in [
+        ("other-fixture", SCENARIO, TEST, temp.path().to_owned()),
+        (FIXTURE, "other-scenario", TEST, temp.path().to_owned()),
+        (FIXTURE, SCENARIO, "other-variant", temp.path().to_owned()),
+        (FIXTURE, SCENARIO, TEST, temp.path().join("other-checkout")),
+    ] {
+        let other =
+            ReusableScenario::acquire(&base, &owner, fixture, scenario, test, original.clone())
+                .unwrap();
+        assert_ne!(first_root, other.root);
+        fs::write(other.root.join("src/main.sifr"), "other variant mutation").unwrap();
+        assert_eq!(read_inputs(&first_root).unwrap(), original);
+    }
+    drop(first);
+    let mut current = original;
+    for name in [
+        "src/main.sifr",
+        "Cargo.toml",
+        "Cargo.lock",
+        "src/bridge.rs",
+        "sifr.toml",
+    ] {
+        current.insert(name.into(), format!("current {name}").into_bytes());
+        let updated = acquire(&base, temp.path(), current.clone()).unwrap();
+        assert_eq!(
+            updated.root, first_root,
+            "input changes keep the same owned directory"
+        );
+        assert_eq!(
+            read_inputs(&updated.root).unwrap(),
+            current,
+            "current bytes, never a cached pass"
+        );
+    }
+}
+
+#[cfg(unix)]
+#[path = "package_rust_interop_reusable_permissions_tests.rs"]
+mod permissions;

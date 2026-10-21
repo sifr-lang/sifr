@@ -14,42 +14,9 @@ fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
         .join(scenario_id)
 }
 
-fn copy_fixture_tree(source: &Path, destination: &Path) {
-    std::fs::create_dir_all(destination).expect("fixture destination should be created");
-    for entry in std::fs::read_dir(source).expect("fixture directory should be readable") {
-        let entry = entry.expect("fixture entry should be readable");
-        let source_path = entry.path();
-        let destination_path = destination.join(entry.file_name());
-        if entry.file_name() == "target" {
-            continue;
-        }
-        if source_path.is_dir() {
-            copy_fixture_tree(&source_path, &destination_path);
-        } else {
-            std::fs::copy(&source_path, &destination_path).expect("fixture file should be copied");
-        }
-    }
-}
-
-pub(super) fn copied_scenario(fixture_id: &str, scenario_id: &str, test_name: &str) -> PathBuf {
-    let destination = mktemp_dir(test_name);
-    copy_fixture_tree(
-        &fixture_scenario_root(fixture_id, scenario_id),
-        &destination,
-    );
-    destination
-}
-
 #[path = "package_rust_interop_reusable.rs"]
 mod reusable;
-pub(super) use reusable::ReusableScenario;
-
-pub(super) fn package_entrypoint_from_cargo_layout(
-    package_root: &Path,
-    sifr_package_name: &str,
-) -> PackageEntrypoint {
-    package_entrypoint_with_leases(package_root, sifr_package_name, &Default::default())
-}
+pub(super) use reusable::{ReusableScenario, ScenarioInputs};
 
 fn package_entrypoint_with_leases(
     package_root: &Path,
@@ -99,17 +66,9 @@ fn package_entrypoint_with_leases(
     }
 }
 
-pub(super) fn install_evidence_source(package_root: &Path, source: &str) {
+pub(super) fn install_evidence_source(package_root: &ReusableScenario, source: &str) {
     std::fs::write(package_root.join("src/main.sifr"), source)
         .expect("checked-in evidence source should be installed");
-}
-
-pub(super) fn rebase_sifr_runtime_dependency(package_root: &Path) {
-    let manifest_path = package_root.join("Cargo.toml");
-    let manifest = std::fs::read_to_string(&manifest_path)
-        .expect("scenario Cargo manifest should be readable");
-    std::fs::write(manifest_path, rebased_runtime_manifest(&manifest))
-        .expect("copied scenario runtime dependency should be rebased");
 }
 
 fn rebased_runtime_manifest(manifest: &str) -> String {
@@ -126,31 +85,6 @@ fn rebased_runtime_manifest(manifest: &str) -> String {
         "runtime scenario must declare the checked-in runtime path dependency"
     );
     rebased
-}
-
-pub(super) fn built_package_output(entrypoint: &PackageEntrypoint) -> std::process::Output {
-    let artifact = build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("Rust interop package should build");
-    let output = artifact
-        .command()
-        .expect("cached artifact command")
-        .output()
-        .expect("Rust interop package binary should run");
-    assert!(
-        output.status.success(),
-        "package binary should pass: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    output
-}
-
-pub(super) fn run_built_package(entrypoint: &PackageEntrypoint) -> String {
-    let output = built_package_output(entrypoint);
-    String::from_utf8_lossy(&output.stdout).trim().to_string()
 }
 
 pub(super) fn observed_resource_state(output: &std::process::Output) -> ObservedRuntimeState {

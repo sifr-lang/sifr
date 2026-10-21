@@ -18,17 +18,16 @@ const EVIDENCE_FILES: [&str; 5] = [
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_build_native_build_script_trusted_artifacts() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "native_build_script",
         "native_trust_package",
         "rust_interop_native_build_trusted",
     );
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_source(&format!(
             "{NATIVE_BUILD_EVIDENCE}\n\ndef main() -> Result[None, NativeError | RustPanicError]:\n    try:\n        print(verify_trusted_build_script_native_evidence())\n    except NativeError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
+    let package_root = inputs.finish();
     let first_target = mktemp_dir("rust_interop_native_build_artifacts_first");
     let second_target = mktemp_dir("rust_interop_native_build_artifacts_second");
     let first_artifacts = cargo_build_artifacts(&package_root, &first_target);
@@ -68,17 +67,13 @@ fn test_build_native_build_script_trusted_artifacts() {
         "bindgen must generate the allowlisted function"
     );
 
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let entrypoint = package_root.entrypoint("native-trust-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         errors.is_empty(),
         "trusted native package must pass compiler checking: {errors:#?}"
     );
-    let output = built_package_output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
         "Ok(\"cc=1.4.5;compiled=sifr_cc_probe|bindgen=0.73.2;function=sifr_bindgen_probe|cxx=1.0.200;bridge=sifr_cxx_probe;value=1000198|zstd=0.14.0;level=3|compressed=zstd-roundtrip\")"
@@ -91,7 +86,7 @@ fn test_build_native_build_script_trusted_artifacts() {
 
     let _ = std::fs::remove_dir_all(first_target);
     let _ = std::fs::remove_dir_all(second_target);
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
@@ -133,31 +128,27 @@ fn assert_untrusted_native_build_rejected(
     required_trust: &str,
     required_evidence: &str,
 ) {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "native_build_script",
         "native_trust_package",
         &format!("rust_interop_native_build_untrusted_{case}"),
     );
-    install_evidence_source(&package_root, NATIVE_BUILD_NEGATIVE);
-    let manifest_path = package_root.join("sifr.toml");
-    let manifest =
-        std::fs::read_to_string(&manifest_path).expect("scenario manifest should be readable");
+    inputs = inputs.with_source(NATIVE_BUILD_NEGATIVE);
+    let manifest = inputs.text("sifr.toml");
     let untrusted = manifest.replace(manifest_line, untrusted_line);
     assert_ne!(
         untrusted, manifest,
         "negative scenario must remove the {case} trust entry"
     );
-    std::fs::write(&manifest_path, untrusted).expect("negative trust manifest should be installed");
+    inputs.write("sifr.toml", untrusted);
 
-    let sentinel = arm_zstd_build_script_sentinel(&package_root);
+    arm_zstd_build_script_sentinel(&mut inputs);
+    let package_root = inputs.finish();
+    let sentinel = package_root.join("rust/zstd/UNTRUSTED_BUILD_SCRIPT_EXECUTED");
     assert!(!sentinel.exists(), "sentinel must start absent");
 
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let entrypoint = package_root.entrypoint("native-trust-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     let rendered = format!("{errors:#?}");
 
     assert_eq!(
@@ -176,18 +167,22 @@ fn assert_untrusted_native_build_rejected(
         !sentinel.exists(),
         "untrusted build script must be rejected before sentinel creation"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 fn assert_armed_build_script_writes_sentinel() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "native_build_script",
         "native_trust_package",
         "rust_interop_native_build_sentinel_control",
     );
-    let sentinel = arm_zstd_build_script_sentinel(&package_root);
+    arm_zstd_build_script_sentinel(&mut inputs);
+    let package_root = inputs.finish();
+    let sentinel = package_root.join("rust/zstd/UNTRUSTED_BUILD_SCRIPT_EXECUTED");
+    assert!(!sentinel.exists(), "sentinel must start absent");
     let target_dir = mktemp_dir("rust_interop_native_build_sentinel_control_target");
-    let output = std::process::Command::new("cargo")
+    let output = package_root
+        .cargo()
         .args([
             "build",
             "--workspace",
@@ -197,7 +192,6 @@ fn assert_armed_build_script_writes_sentinel() {
             "--target-dir",
         ])
         .arg(&target_dir)
-        .current_dir(&package_root)
         .output()
         .expect("sentinel control build should execute");
     assert!(
@@ -210,13 +204,11 @@ fn assert_armed_build_script_writes_sentinel() {
         "armed build-script control must create its sentinel when Cargo executes it"
     );
     let _ = std::fs::remove_dir_all(target_dir);
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
-fn arm_zstd_build_script_sentinel(package_root: &Path) -> PathBuf {
-    let build_script_path = package_root.join("rust/zstd/build.rs");
-    let build_script = std::fs::read_to_string(&build_script_path)
-        .expect("zstd wrapper build script should be readable");
+fn arm_zstd_build_script_sentinel(inputs: &mut ScenarioInputs) {
+    let build_script = inputs.text("rust/zstd/build.rs");
     let armed_build_script = build_script.replace(
         "fn main() -> Result<(), Box<dyn Error>> {\n",
         "fn main() -> Result<(), Box<dyn Error>> {\n    std::fs::write(PathBuf::from(std::env::var(\"CARGO_MANIFEST_DIR\")?).join(\"UNTRUSTED_BUILD_SCRIPT_EXECUTED\"), \"executed\")?;\n",
@@ -225,21 +217,17 @@ fn arm_zstd_build_script_sentinel(package_root: &Path) -> PathBuf {
         armed_build_script, build_script,
         "negative sentinel mutation must arm the checked-in build script"
     );
-    std::fs::write(build_script_path, armed_build_script)
-        .expect("armed build script should be installed");
-    package_root.join("rust/zstd/UNTRUSTED_BUILD_SCRIPT_EXECUTED")
+    inputs.write("rust/zstd/build.rs", armed_build_script);
 }
 
 fn assert_untrusted_transitive_native_link_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "native_build_script",
         "native_trust_package",
         "rust_interop_native_build_untrusted_transitive_link",
     );
-    install_evidence_source(&package_root, NATIVE_BUILD_NEGATIVE);
-    let manifest_path = package_root.join("sifr.toml");
-    let manifest =
-        std::fs::read_to_string(&manifest_path).expect("scenario manifest should be readable");
+    inputs = inputs.with_source(NATIVE_BUILD_NEGATIVE);
+    let manifest = inputs.text("sifr.toml");
     let untrusted = manifest.replace(
         "native-links = [\"c++\", \"cxxbridge1\", \"link-cplusplus\", \"sifr_cc_probe\", \"sifr_zstd_probe\", \"stdc++\", \"zstd\"]",
         "native-links = [\"c++\", \"cxxbridge1\", \"link-cplusplus\", \"sifr_cc_probe\", \"sifr_zstd_probe\", \"stdc++\"]",
@@ -248,14 +236,10 @@ fn assert_untrusted_transitive_native_link_rejected() {
         untrusted, manifest,
         "negative scenario must remove transitive zstd link trust"
     );
-    std::fs::write(&manifest_path, untrusted)
-        .expect("negative transitive-link manifest should be installed");
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let errors = match build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    ) {
+    inputs.write("sifr.toml", untrusted);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("native-trust-package");
+    let errors = match package_root.try_build(&crate::CompilerContext::for_test(), &entrypoint) {
         Ok(_) => panic!("undeclared transitive native link must fail the generated package build"),
         Err(errors) => errors,
     };
@@ -267,14 +251,15 @@ fn assert_untrusted_transitive_native_link_rejected() {
         }),
         "undeclared transitive native link must be rejected after Cargo evidence: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 fn cargo_build_artifacts(
-    package_root: &Path,
+    package_root: &ReusableScenario,
     target_dir: &Path,
 ) -> std::collections::BTreeMap<String, Vec<u8>> {
-    let output = std::process::Command::new("cargo")
+    let output = package_root
+        .cargo()
         .args([
             "build",
             "--workspace",
@@ -285,7 +270,6 @@ fn cargo_build_artifacts(
             "--target-dir",
         ])
         .arg(target_dir)
-        .current_dir(package_root)
         .output()
         .expect("locked native evidence build should execute");
     assert!(
@@ -329,31 +313,24 @@ fn collect_evidence_files(
 #[test]
 #[ignore = "DX.9 native trust acceptance runs explicitly"]
 fn dx9_trust_revocation_after_real_native_cache_hit() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "native_build_script",
         "native_trust_package",
         "dx9_trust_revoke",
     );
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_source(&format!(
             "{NATIVE_BUILD_EVIDENCE}\n\ndef main() -> Result[None, NativeError | RustPanicError]:\n    try:\n        print(verify_trusted_build_script_native_evidence())\n    except NativeError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
         ),
     );
+    let package_root = inputs.finish();
     let compiler = crate::CompilerContext::for_test();
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let first = build_cached_package_project(
-        &compiler,
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("trusted local unpushed native build");
-    let second = build_cached_package_project(
-        &compiler,
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("Cargo freshness on repeat");
+    let entrypoint = package_root.entrypoint("native-trust-package");
+    let first = package_root
+        .try_build(&compiler, &entrypoint)
+        .expect("trusted local unpushed native build");
+    let second = package_root
+        .try_build(&compiler, &entrypoint)
+        .expect("Cargo freshness on repeat");
     assert!(second.build_report().cache_hit());
     assert_eq!(first.binary_path(), second.binary_path());
     let manifest_path = package_root.join("sifr.toml");
@@ -364,12 +341,8 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
     );
     assert_ne!(manifest, revoked);
     std::fs::write(&manifest_path, revoked).expect("revoke trust");
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let result = build_cached_package_project(
-        &compiler,
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let entrypoint = package_root.entrypoint("native-trust-package");
+    let result = package_root.try_build(&compiler, &entrypoint);
     let Err(errors) = result else {
         panic!("old native success cannot authorize revoked trust")
     };
@@ -379,5 +352,5 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
             .any(|error| error.code == DiagnosticCode::RUST_TRUST_MISSING.code()),
         "{errors:?}"
     );
-    std::fs::remove_dir_all(package_root).expect("cleanup");
+    drop(package_root);
 }

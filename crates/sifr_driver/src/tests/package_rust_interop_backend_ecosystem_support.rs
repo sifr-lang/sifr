@@ -18,26 +18,20 @@ const INLINE_PATH_DEFAULT_SOURCE: &str = "src/bridges/inline_redirected/child.rs
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_build_backend_loopback_and_sqlx_offline_metadata() {
-    let package_root = copied_backend_scenario("rust_interop_backend_positive");
+    let mut inputs = backend_inputs("rust_interop_backend_positive");
+    inputs = inputs.with_source(&format!(
+        "{BACKEND_EVIDENCE}\n\ndef main() -> None:\n    print(verify_backend_probe_coverage())\n"
+    ));
+    let package_root = inputs.finish();
     assert_exact_backend_dependency_graph(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
-            "{BACKEND_EVIDENCE}\n\ndef main() -> None:\n    print(verify_backend_probe_coverage())\n"
-        ),
-    );
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "backend-feature-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let entrypoint = package_root.entrypoint("backend-feature-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         errors.is_empty(),
         "bridge-safe backend package must pass compiler checking: {errors:#?}"
     );
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains(
@@ -50,27 +44,24 @@ fn test_build_backend_loopback_and_sqlx_offline_metadata() {
         "backend evidence must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network() {
-    let package_root = copied_backend_scenario("rust_interop_backend_sqlx_negative");
-    install_cfg_gated_query_regression(&package_root);
-    let listener = configure_dotenv_database_sentinel(&package_root);
-    install_evidence_source(&package_root, BACKEND_NEGATIVE);
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "backend-feature-package");
+    let mut inputs = backend_inputs("rust_interop_backend_sqlx_negative");
+    install_cfg_gated_query_regression(&mut inputs);
+    let listener = configure_dotenv_database_sentinel(&mut inputs);
+    inputs = inputs.with_source(BACKEND_NEGATIVE);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("backend-feature-package");
     let query_path = package_root.join(SQLX_QUERY_FILE);
     let metadata =
         std::fs::read_to_string(&query_path).expect("SQLx query cache should be readable");
 
-    let control = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let control = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         control.is_empty(),
         "checked-in SQLx offline metadata must be accepted before mutations: {control:#?}"
@@ -78,15 +69,24 @@ fn test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network() 
     assert_database_sentinel_unused(&listener);
 
     std::fs::remove_file(&query_path).expect("SQLx query cache should be removed");
-    assert_sqlx_metadata_mutation_is_rejected(&entrypoint, SqlxMetadataMutation::Missing);
+    assert_sqlx_metadata_mutation_is_rejected(
+        &package_root,
+        &entrypoint,
+        SqlxMetadataMutation::Missing,
+    );
     assert_database_sentinel_unused(&listener);
 
     let stale = metadata.replacen("SELECT 13::INT4 AS value", "SELECT 12::INT4 AS value", 1);
     assert_ne!(stale, metadata, "SQLx query mutation must change metadata");
-    std::fs::write(&query_path, stale).expect("stale SQLx query cache should be written");
-    assert_sqlx_metadata_mutation_is_rejected(&entrypoint, SqlxMetadataMutation::Stale);
+    crate::build::native_storage::write_changed(&query_path, stale.as_bytes())
+        .expect("stale SQLx query cache should be privately recreated");
+    assert_sqlx_metadata_mutation_is_rejected(
+        &package_root,
+        &entrypoint,
+        SqlxMetadataMutation::Stale,
+    );
     assert_database_sentinel_unused(&listener);
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[derive(Clone, Copy)]
@@ -96,6 +96,7 @@ enum SqlxMetadataMutation {
 }
 
 fn assert_sqlx_metadata_mutation_is_rejected(
+    package_root: &ReusableScenario,
     entrypoint: &PackageEntrypoint,
     mutation: SqlxMetadataMutation,
 ) {
@@ -103,11 +104,7 @@ fn assert_sqlx_metadata_mutation_is_rejected(
         SqlxMetadataMutation::Missing => "missing",
         SqlxMetadataMutation::Stale => "stale",
     };
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), entrypoint);
     let rendered = format!("{errors:#?}");
     assert!(
         errors.iter().any(|error| {
@@ -137,17 +134,16 @@ fn assert_sqlx_metadata_mutation_is_rejected(
     }
 }
 
-fn copied_backend_scenario(test_name: &str) -> PathBuf {
-    let package_root = copied_scenario(
+fn backend_inputs(test_name: &str) -> ScenarioInputs {
+    ScenarioInputs::new(
         "ecosystem_backend_certification",
         "backend_feature_package",
         test_name,
-    );
-    rebase_sifr_runtime_dependency(&package_root);
-    package_root
+    )
+    .with_runtime()
 }
 
-fn configure_dotenv_database_sentinel(package_root: &Path) -> std::net::TcpListener {
+fn configure_dotenv_database_sentinel(inputs: &mut ScenarioInputs) -> std::net::TcpListener {
     let listener =
         std::net::TcpListener::bind("127.0.0.1:0").expect("database sentinel should bind");
     listener
@@ -156,18 +152,15 @@ fn configure_dotenv_database_sentinel(package_root: &Path) -> std::net::TcpListe
     let address = listener
         .local_addr()
         .expect("database sentinel address should resolve");
-    std::fs::write(
-        package_root.join(".env"),
+    inputs.write(
+        ".env",
         format!("DATABASE_URL=postgres://sifr:sifr@{address}/sifr\n"),
-    )
-    .expect("database sentinel dotenv should be installed");
+    );
     listener
 }
 
-fn install_cfg_gated_query_regression(package_root: &Path) {
-    let source_path = package_root.join(BACKEND_MODULE_SOURCE);
-    let mut source =
-        std::fs::read_to_string(&source_path).expect("backend module source should be readable");
+fn install_cfg_gated_query_regression(inputs: &mut ScenarioInputs) {
+    let mut source = inputs.text(BACKEND_MODULE_SOURCE).to_owned();
     source.push_str(
         r#"
 
@@ -180,40 +173,23 @@ mod inline_redirected {
 }
 "#,
     );
-    std::fs::write(source_path, source).expect("cfg-gated SQLx module should be declared");
-    std::fs::write(
-        package_root.join(CFG_GATED_QUERY_SOURCE),
+    inputs.write(BACKEND_MODULE_SOURCE, source);
+    inputs.write(
+        CFG_GATED_QUERY_SOURCE,
         r#"
 #[test]
 fn query_without_offline_metadata() {
     let _ = sqlx::query!("SELECT 99::INT4 AS value");
 }
 "#,
-    )
-    .expect("cfg-gated SQLx regression source should be installed");
-    for relative_path in [INLINE_PATH_COMPILED_SOURCE, INLINE_PATH_DEFAULT_SOURCE] {
-        std::fs::create_dir_all(
-            package_root
-                .join(relative_path)
-                .parent()
-                .expect("inline module source should have a parent"),
-        )
-        .expect("inline module source directory should be installed");
-    }
-    std::fs::write(
-        package_root.join(INLINE_PATH_COMPILED_SOURCE),
-        "pub fn compiled_child() {}\n",
-    )
-    .expect("redirected inline module child should be installed");
-    std::fs::write(
-        package_root.join(INLINE_PATH_DEFAULT_SOURCE),
+    );
+    inputs.write(INLINE_PATH_COMPILED_SOURCE, "pub fn compiled_child() {}\n");
+    inputs.write(
+        INLINE_PATH_DEFAULT_SOURCE,
         "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 98::INT4 AS value\"); }\n",
-    )
-    .expect("never-compiled inline module sibling should be installed");
+    );
 
-    let backend_path = package_root.join(BACKEND_IMPLEMENTATION_SOURCE);
-    let mut backend =
-        std::fs::read_to_string(&backend_path).expect("backend source should be readable");
+    let mut backend = inputs.text(BACKEND_IMPLEMENTATION_SOURCE).to_owned();
     backend.push_str(
         r#"
 
@@ -229,7 +205,7 @@ mod file_inline_redirected {
 mod loaded_path_regression;
 "#,
     );
-    std::fs::write(backend_path, backend).expect("file-module path regressions should be declared");
+    inputs.write(BACKEND_IMPLEMENTATION_SOURCE, backend);
     for (relative_path, source) in [
         (
             "src/bridges/direct_path_regression.rs",
@@ -260,14 +236,7 @@ mod loaded_path_regression;
             "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 95::INT4 AS value\"); }\n",
         ),
     ] {
-        let source_path = package_root.join(relative_path);
-        std::fs::create_dir_all(
-            source_path
-                .parent()
-                .expect("path regression source should have a parent"),
-        )
-        .expect("path regression source directory should be installed");
-        std::fs::write(source_path, source).expect("path regression source should be installed");
+        inputs.write(relative_path, source);
     }
 }
 
@@ -281,8 +250,9 @@ fn assert_database_sentinel_unused(listener: &std::net::TcpListener) {
     }
 }
 
-fn assert_exact_backend_dependency_graph(package_root: &Path) {
-    let output = std::process::Command::new("cargo")
+fn assert_exact_backend_dependency_graph(package_root: &ReusableScenario) {
+    let output = package_root
+        .cargo()
         .args([
             "tree",
             "--workspace",
@@ -291,7 +261,6 @@ fn assert_exact_backend_dependency_graph(package_root: &Path) {
             "--locked",
             "--offline",
         ])
-        .current_dir(package_root)
         .output()
         .expect("locked backend Cargo tree should execute");
     assert!(

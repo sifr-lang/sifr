@@ -91,6 +91,9 @@ mod sysroot_interop_tests;
 mod test_runner_interop;
 mod workspace;
 
+#[cfg(test)]
+pub(crate) use api::check_package_project_with_leases;
+
 pub use api::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project, build_project_report, build_single_file_report,

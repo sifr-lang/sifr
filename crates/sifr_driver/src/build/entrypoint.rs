@@ -225,13 +225,14 @@ pub(crate) fn resolve_package_project_entrypoint_plan(
     compiler: &crate::CompilerContext,
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
+    leases: super::native_child_leases::NativeChildLeases,
 ) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
     RootedEntrypointPlan::from_entrypoint(
         compiler,
         RootedEntrypoint::PackageProject {
             entrypoint,
             provider,
-            leases: Default::default(),
+            leases,
         },
     )
 }

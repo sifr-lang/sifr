@@ -11,31 +11,26 @@ const CLI_NEGATIVE: &str = include_str!(
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_build_cli_tooling_probe_and_anyhow_adapter() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "ecosystem_cli_certification",
         "cli_feature_package",
         "rust_interop_cli_tooling_positive",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    assert_exact_cli_dependency_graph(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(&format!(
             "{CLI_EVIDENCE}\n\ndef main() -> None:\n    print(verify_cli_tooling_probe_coverage())\n    print(verify_cli_tooling_anyhow_adapter())\n"
         ),
     );
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let package_root = inputs.finish();
+    assert_exact_cli_dependency_graph(&package_root);
+    let entrypoint = package_root.entrypoint("cli-feature-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
     assert!(
         errors.is_empty(),
         "bridge-safe CLI/tooling package must pass compiler checking: {errors:#?}"
     );
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains(
@@ -52,41 +47,32 @@ fn test_build_cli_tooling_probe_and_anyhow_adapter() {
         "CLI/tooling evidence must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_direct_anyhow_surface_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "ecosystem_cli_certification",
         "cli_feature_package",
         "rust_interop_cli_tooling_anyhow_negative",
     );
-    rebase_sifr_runtime_dependency(&package_root);
+    inputs = inputs.with_runtime();
 
-    install_evidence_source(&package_root, CLI_EVIDENCE);
-    let accepted_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let accepted = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &accepted_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    inputs = inputs.with_source(CLI_EVIDENCE);
+    let package_root = inputs.finish();
+    let accepted_entrypoint = package_root.entrypoint("cli-feature-package");
+    let accepted = package_root.check(&crate::CompilerContext::for_test(), &accepted_entrypoint);
     assert!(
         accepted.is_empty(),
         "explicit CliError adapter must remain accepted before the negative mutation: {accepted:#?}"
     );
 
     install_evidence_source(&package_root, CLI_NEGATIVE);
-    let rejected_entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &rejected_entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let rejected_entrypoint = package_root.entrypoint("cli-feature-package");
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &rejected_entrypoint);
     let rendered = format!("{errors:#?}");
     assert!(
         errors.iter().any(|error| {
@@ -106,11 +92,12 @@ fn test_check_direct_anyhow_surface_rejected() {
             .all(|error| error.code != DiagnosticCode::RUST_TRUST_MISSING.code()),
         "negative evidence must isolate the unsupported type rather than trust policy: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
-fn assert_exact_cli_dependency_graph(package_root: &Path) {
-    let output = std::process::Command::new("cargo")
+fn assert_exact_cli_dependency_graph(package_root: &ReusableScenario) {
+    let output = package_root
+        .cargo()
         .args([
             "tree",
             "--workspace",
@@ -119,7 +106,6 @@ fn assert_exact_cli_dependency_graph(package_root: &Path) {
             "--locked",
             "--offline",
         ])
-        .current_dir(package_root)
         .output()
         .expect("locked CLI/tooling Cargo tree should execute");
     assert!(

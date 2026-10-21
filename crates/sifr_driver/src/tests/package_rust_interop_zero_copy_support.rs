@@ -11,22 +11,21 @@ const ZERO_COPY_NEGATIVE: &str = include_str!(
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_zero_copy_crate_backed_view_lifecycle() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "zero_copy_runtime_matrix",
         "crate_backed_view_runtime",
         "rust_interop_zero_copy_crate_backed_view_lifecycle",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(
         &format!(
             "{ZERO_COPY_EVIDENCE}\n\ndef main() -> Result[None, ViewError]:\n    try:\n        verified: str = verify_crate_backed_view_lifecycle()\n        print(verified)\n    except ViewError as error:\n        raise error\n    return None\n"
         ),
     );
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "crate-backed-view-runtime");
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("crate-backed-view-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let output = package_root.built_package_output(&entrypoint);
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
@@ -37,28 +36,24 @@ fn test_build_zero_copy_crate_backed_view_lifecycle() {
         "zero-copy runtime scenario must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_zero_copy_borrow_escape_and_invalid_mutability_rejected() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "zero_copy_runtime_matrix",
         "crate_backed_view_runtime",
         "rust_interop_zero_copy_invalid_contracts",
     );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(&package_root, ZERO_COPY_NEGATIVE);
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "crate-backed-view-runtime");
+    inputs = inputs.with_runtime();
+    inputs = inputs.with_source(ZERO_COPY_NEGATIVE);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("crate-backed-view-runtime");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     assert_eq!(
         errors.len(),
@@ -78,26 +73,24 @@ fn test_check_zero_copy_borrow_escape_and_invalid_mutability_rejected() {
             "missing zero-copy rejection for {reason}: {errors:#?}"
         );
     }
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_check_zero_copy_view_send_sync_obligations() {
-    let package_root = copied_scenario(
+    let mut inputs = ScenarioInputs::new(
         "zero_copy_runtime_matrix",
         "crate_backed_view_runtime",
         "rust_interop_zero_copy_send_sync",
     );
-    rebase_sifr_runtime_dependency(&package_root);
+    inputs = inputs.with_runtime();
     let source = ZERO_COPY_EVIDENCE.replace(
         "send=True, sync=True, clone=none",
         "send=False, sync=False, clone=none",
     );
-    install_evidence_source(&package_root, &source);
-    let bridge_path = package_root.join("src/bridges/zero_copy.rs");
-    let bridge =
-        std::fs::read_to_string(&bridge_path).expect("zero-copy bridge should be readable");
+    inputs = inputs.with_source(&source);
+    let bridge = inputs.text("src/bridges/zero_copy.rs");
     let non_send_bridge = bridge
         .replace("use std::fmt;", "use std::fmt;\nuse std::rc::Rc;")
         .replace(
@@ -108,16 +101,11 @@ fn test_check_zero_copy_view_send_sync_obligations() {
             "Ok(Handle::new(CrateBackedView {\n",
             "Ok(Handle::new(CrateBackedView {\n        _not_send_or_sync: Rc::new(()),\n",
         );
-    std::fs::write(&bridge_path, non_send_bridge)
-        .expect("non-Send zero-copy bridge should be installed");
-    let entrypoint =
-        package_entrypoint_from_cargo_layout(&package_root, "crate-backed-view-runtime");
+    inputs.write("src/bridges/zero_copy.rs", non_send_bridge);
+    let package_root = inputs.finish();
+    let entrypoint = package_root.entrypoint("crate-backed-view-runtime");
 
-    let errors = check_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    );
+    let errors = package_root.check(&crate::CompilerContext::for_test(), &entrypoint);
 
     let obligation_error = errors.iter().find(|error| {
         error.code == DiagnosticCode::RUST_ZERO_COPY_CONTRACT.code()
@@ -131,5 +119,5 @@ fn test_check_zero_copy_view_send_sync_obligations() {
         obligation_error.is_some_and(|error| error.children.is_empty()),
         "recognized view obligation failures must not leak raw rustc output: {errors:#?}"
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
