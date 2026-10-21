@@ -6833,3 +6833,142 @@ Report complete selected names, statuses, observed timings and incomplete work.
 The remaining complete command matrices, PostgreSQL default/explicit 18 and
 13→18→13 reuse proof, V1 cold feasibility, V4 integration and V5 stay required;
 this diagnostic does not close V3 or the phase.
+
+### V3k closure — complete compiled-Python lifecycle diagnosis
+
+Frozen source candidate `84d5c4ed3769bacec7b98e6060a37af9fbcba11b` selects
+**29 compiled examples in nine suites**, within a merge Python area containing
+30 suites. Every compiled example, source-policy check, required output marker,
+certification and immutable certification recheck passed. This is a complete
+standalone compiled-example diagnosis, not a full Python-area or profile pass.
+The separately owned driver-native Python roles are not double-counted here.
+
+| Compiled suite | Examples | Preparation | Execution |
+| --- | ---: | ---: | ---: |
+| Arrow | 1 | 134.763s | 79.239s |
+| Async context | 1 | 67.223s | 35.707s |
+| Async declaration | 1 | 54.716s | 22.700s |
+| Buffer | 5 | 309.863s | 58.723s |
+| Callbacks | 7 | 316.366s | 82.739s |
+| Dataframes | 3 | 190.292s | 43.216s |
+| DLPack | 1 | 99.746s | 46.711s |
+| Libraries | 8 | 467.450s | 107.255s |
+| ML | 2 | 135.766s | 42.716s |
+| **Total** | **29** | **1,776.184s** | **519.007s** |
+
+Shared bootstrap is 263.897s and required metadata preparation 9.694s. The sum of
+these guarded categories is **2,568.782s (42m49s)**. Bootstrap includes the actual
+candidate CLI rebuild; its preparation/hash portion is 260.624s. Python environment
+preparation itself is 0.080s. These are instrumented observations on retained
+owned targets, not quiet-host timing acceptance or a clean-build benchmark.
+Each category preserves the 30-minute outer cap and the runner's stricter
+600-second command timeout. No testcase reached either timeout.
+
+An original buffer-preparation attempt stopped at preflight before any case ran:
+free space was below the declared working allocation plus reserve. That failed
+attempt remains failed. Lossless compression of 24 previously archived obsolete
+executables reclaimed 12,881,174,528 bytes; verified archival of one obsolete CLI
+test executable reclaimed 1,315,295,232 allocated bytes on the build volume.
+All original executable bytes remain recoverable, with hashes, modes and restore
+instructions. Current products, dependency/incremental targets, leases and failure
+reports were retained. Capacity recovery is administrative work, separately
+reported rather than hidden inside or counted as a passing test. The retry has a
+new label. Every completed diagnostic session ends empty and source stays clean.
+
+Both preparation and execution invoke Cargo 168 times. Preparation records 2,896
+rustc invocations, including target queries, across separate native families.
+Execution records 58: one generated application and its build script per example.
+The build and run applications have distinct generated identities; their dependency
+families are reused. This does not support describing the entire cache as broken.
+All compiler completions were observed, with no nonzero compiler statuses or
+unparsed exec events. Equivalent normalized dependency argv across families is
+only a diagnostic lead, not proof that environment or trust identities can merge.
+
+Execution contains 37 fresh Python environment probes totaling 132.454s of observed
+process intervals, 25 signature-inspection processes totaling 11.000s and 16
+individual distribution-version queries totaling 1.454s. The 29 actual example
+program processes total 21.332s, including startup/imports. Parent intervals
+include children and must not be added together as independent wall time.
+Preparation likewise has 37 environment probes totaling 137.434s. Lock checks
+are below one second in each aggregate; lock validation is not the demonstrated
+bottleneck. The runner recreates fixture packages, repeats certifications and
+compiles an exported preparation product which execution does not consume.
+Removing preparation would still leave the first required native compilation;
+its complete 29m36s is not a defensible saving estimate.
+
+An isolated replay of the exact Arrow environment probe takes 3.611s. Under
+cProfile it takes 7.806s and produces the identical complete JSON payload.
+`packages_distributions()` is called seven times, accounting for 6.601s of
+profiled cumulative time and repeatedly walking distribution file metadata.
+Profiling overhead prevents treating that cumulative time as an unprofiled saving.
+The current code scans after each import, including overlapping declared/native
+roots. A naive first-scan cache would change observation semantics when imports
+alter Python paths or metadata, so it is not accepted as the repair.
+
+The unchanged Arrow preparation replay passes in 75.727s; a distinct runtime
+replay using the profile's binary/probe-cache selections passes in 86.234s.
+These replays additionally trace writes and retain fixture bytes/metadata and
+Cargo fingerprint output. Preparation invokes Cargo 19 times and rustc once;
+Cargo explicitly reports a newer build-script dependency for the generated
+application. Runtime invokes Cargo 19 times with zero rustc invocations. Fixture
+recreation preserves the eight common input payloads but changes metadata and
+removes the generated lock/certification records before regenerating them. The
+full cause of the build-script timestamp change remains with the native lifecycle
+owner. These replays do not reproduce full-profile scheduling and must not be
+used as an uninstrumented A/B speedup claim. Exact replay compiler counts,
+input changes, raw diagnostics and limitations are retained in `v3k-findings.json`.
+
+Frozen evidence: `v3k-evidence.tar.gz`, 64,332 files, 8,554,101 bytes, SHA-256
+`021c58abf246f3237d8344500e83a8086e0cd75e5f9ded29cf7f2f7f6603a968`.
+The extracted manifest is checked against every retained file under
+`local-gate-implementation-20261020/v3k-reviewed-diagnostic`. Recovery payloads
+remain separately retained with included hashes and restore records.
+
+The full profile, cold feasibility, remaining command matrices and PostgreSQL
+qualification remain open. There is no sub-ten-minute or phase-completion claim.
+
+### V3l bounded repair — one fresh Python metadata observation per probe
+
+Qualify and implement a coherent per-invocation environment observation in the
+existing `sifr_package` Python probe authority. Preserve selected interpreter and
+venv identity, declared/native root order and multiplicity, actual imports,
+origin/error records, distribution names/versions, ABI/platform/library fields,
+trust inputs and project/lock digest checks. Do not resolve a venv interpreter to
+its base interpreter. Do not cache across processes or skip any required import,
+certification, assertion or lock check.
+
+The proposed observation contract is explicit: perform declared and native import
+attempts in their existing order, then discover distribution ownership once from
+the resulting environment and attach fresh metadata to each successful import.
+Capture environment paths consistently with that final observation. Preserve
+per-root import failures and fail closed for unavailable distribution metadata;
+never convert an observation error into an empty successful record. Each command
+still makes a fresh observation. This intentionally replaces interleaved partial
+metadata snapshots with one post-import observation; do not claim adversarial
+import-time mutations have byte-identical old behavior. Define and test their
+expected final-state behavior before implementation is accepted.
+
+First qualify an external prototype against all distinct recorded example probe
+requests and the selected pinned interpreter. Compare complete ordinary-environment
+payloads, including all names, versions, origins, errors, paths and digests. Add
+isolated controls for duplicate/overlapping roots, missing/failing imports,
+namespace/distribution ownership, changed paths or metadata during import,
+missing/failing metadata, and a second invocation after an environment change.
+Retain failure attribution and ordering; do not swallow interrupts as successful
+observations. If those controls cannot support a clear safe contract, record the
+rejected approach rather than adding heuristic invalidation or compatibility paths.
+
+For a qualified implementation, run focused probe/package tests and affected
+Python environment/certification contracts, followed by all 29 compiled example
+assertions with the actual selected candidate. Measure paired unchanged probe
+observations without profiling, separately recording compiler/environment setup
+and unchanged native preparation. Compare full emitted payloads in ordinary cases
+and explicit expected final-state results in mutation controls. Retain every
+failed/incomplete observation and the existing resource reserves/time caps.
+Run formatting, file-size/source-ownership checks and exact-candidate independent
+review. Full integrated create-PR/merge gates and V5 stay required at phase end.
+
+Other measured costs stay assigned to the gate/native-build owners: duplicated
+example lifecycle work, separate dependency families, repeated compiler selection,
+and full-profile scheduling. This item does not remove coverage, merge native
+trust contexts, alter dependency pins/profiles, or claim it alone meets 600 seconds.
