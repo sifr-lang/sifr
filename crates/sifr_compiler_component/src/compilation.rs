@@ -170,3 +170,28 @@ impl ComponentCompilation {
         c.max_image_bytes = image_bytes;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ComponentHost;
+
+    #[test]
+    fn last_owner_releases_engine_and_retained_components() {
+        let limits = ComponentHostLimits::default();
+        let owner = ComponentCompilation::new(&limits).unwrap();
+        let weak = Arc::downgrade(&owner.0);
+        let bytes = wat::parse_str("(component)").unwrap();
+        drop(
+            owner
+                .component("authenticated-test-fixture", &bytes)
+                .unwrap(),
+        );
+        assert_eq!(owner.stats().2, 1);
+        let host = ComponentHost::with_compilation(owner.clone(), limits, None).unwrap();
+        drop(owner);
+        assert!(weak.upgrade().is_some());
+        drop(host);
+        assert!(weak.upgrade().is_none());
+    }
+}

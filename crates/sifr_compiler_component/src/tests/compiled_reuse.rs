@@ -241,3 +241,52 @@ fn compiled_reuse_never_retains_mutated_guest_memory() {
         (1, 2)
     );
 }
+
+#[test]
+fn simultaneous_hosts_compile_once_and_execute_independently() {
+    let bytes = fixture_component(&serde_json::to_vec(&response()).unwrap(), false);
+    let (registration, request) = fixture(&bytes);
+    let owner = ComponentCompilation::new(&ComponentHostLimits::default()).unwrap();
+    let barrier = std::sync::Barrier::new(2);
+    std::thread::scope(|scope| {
+        let mut handles = Vec::new();
+        for _ in 0..2 {
+            handles.push(scope.spawn(|| {
+                let mut host = owner_host(&owner, ComponentHostLimits::default());
+                barrier.wait();
+                let run = host.analyze(&registration, &bytes, &request).unwrap();
+                assert_eq!(run.response, response());
+                assert!(!run.cache_hit);
+            }));
+        }
+        for handle in handles {
+            handle.join().unwrap();
+        }
+    });
+    assert_eq!((owner.stats().0, owner.stats().1), (1, 1));
+}
+
+#[test]
+fn image_budget_evicts_even_when_entry_slots_are_available() {
+    let a = fixture_component(&serde_json::to_vec(&response()).unwrap(), false);
+    let b = fixture_component(b"malformed guest output", false);
+    let limits = ComponentHostLimits::default();
+    let mut budget = 0;
+    for bytes in [&a, &b] {
+        let sample = ComponentCompilation::new(&limits).unwrap();
+        let (reg, req) = fixture(bytes);
+        let _ = owner_host(&sample, limits.clone()).analyze(&reg, bytes, &req);
+        assert!(sample.stats().3 > 0);
+        budget = budget.max(sample.stats().3);
+    }
+    let owner = ComponentCompilation::new(&limits).unwrap();
+    owner.set_test_capacity(8, budget);
+    let mut host = owner_host(&owner, limits);
+    for bytes in [&a, &b, &a] {
+        let (reg, req) = fixture(bytes);
+        let _ = host.analyze(&reg, bytes, &req);
+        assert_eq!(owner.stats().2, 1);
+        assert!(owner.stats().3 <= budget);
+    }
+    assert_eq!((owner.stats().0, owner.stats().1), (3, 0));
+}

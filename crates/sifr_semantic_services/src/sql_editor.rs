@@ -361,6 +361,7 @@ fn profile_registry_invariant_diagnostics() -> Vec<RenderedDiagnostic> {
 pub fn load_sql_editor_profiles(
     workspace_root: &Path,
     entrypoint: &Path,
+    compilation: Option<ComponentCompilation>,
 ) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
     if !workspace_root.join("sifr.toml").is_file() || !workspace_root.join("Cargo.toml").is_file() {
         return Ok(PreparedSqlProfiles::default());
@@ -408,12 +409,20 @@ pub fn load_sql_editor_profiles(
     let Some(owner) = owner else {
         return Ok(PreparedSqlProfiles::default());
     };
-    prepare_sql_profiles(&snapshot.graph, &owner)
+    prepare_sql_profiles_in_compilation(&snapshot.graph, &owner, compilation)
 }
 
 pub fn prepare_sql_profiles(
     graph: &SifrPackageGraph,
     owner_package_id: &SifrPackageId,
+) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
+    prepare_sql_profiles_in_compilation(graph, owner_package_id, None)
+}
+
+fn prepare_sql_profiles_in_compilation(
+    graph: &SifrPackageGraph,
+    owner_package_id: &SifrPackageId,
+    compilation: Option<ComponentCompilation>,
 ) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
     let resolved = resolve_sql_profiles(graph, owner_package_id).map_err(|diagnostics| {
         diagnostics
@@ -432,8 +441,12 @@ pub fn prepare_sql_profiles(
         return Ok(PreparedSqlProfiles::default());
     }
     let registrations = compiler_component_registrations(graph).map_err(component_diagnostics)?;
-    let mut host =
-        ComponentHost::new(ComponentHostLimits::default(), None).map_err(component_diagnostics)?;
+    let limits = ComponentHostLimits::default();
+    let mut host = match compilation {
+        Some(owner) => ComponentHost::with_compilation(owner, limits, None),
+        None => ComponentHost::new(limits, None),
+    }
+    .map_err(component_diagnostics)?;
     let mut profiles = BTreeMap::new();
     let mut registry = ProfileModuleRegistry::default();
     let mut requirements = SchemaRequirementRegistry::default();

@@ -1,6 +1,6 @@
 use crate::{SqlAnalysisDependency, SqlIncrementalAnalysisCache};
 use sifr_compiler_component::{
-    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost,
+    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentCompilation, ComponentError, ComponentHost,
     EmbeddedAnalysisRequest, HoleDescriptor, PlanKind, SourceSpan, TemplatePart,
 };
 use sifr_compiler_services::sql_diagnostics::render_provider_diagnostic;
@@ -68,6 +68,10 @@ impl SqlEditorRuntime {
             slice_keys: BTreeMap::new(),
             initialization_diagnostics,
         })
+    }
+
+    pub(super) fn compilation(&self) -> Option<ComponentCompilation> {
+        self.host.as_ref().map(ComponentHost::compilation)
     }
 
     pub(super) fn set_cancellation(&mut self, cancellation: Option<Arc<AtomicBool>>) {
