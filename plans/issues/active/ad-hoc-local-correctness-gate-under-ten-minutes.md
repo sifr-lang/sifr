@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3a generated-code materialization input authority investigation; integrated acceptance remains open
+current_stage: V3c compiler and generated-Cargo context ownership investigation; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4927,3 +4927,94 @@ checks, file-size guardrails, and real canonical CLI materialization for all 93
 positive entries in bounded categories, preserving every failure. Compare generated
 bytes for representative entries and exercise same-mtime provider edits. Require
 independent exact-candidate review. Full final phase gates and V5 remain open.
+
+
+### V3b acceptance — fresh, private GCQ materialization
+
+PR [#4398](https://github.com/sifr-lang/sifr/pull/4398) merged as
+`367e379f1adfeffa158bda7968f5797fc679f5a4`; final implementation candidate
+`07165950b3333ff7808413de1705aa96f4a0c470`. The incomplete producer fingerprint
+and manifest-only shortcut are removed. Every materialization request invokes the
+canonically selected compiler into a private directory. A fixed `entry-` prefix
+keeps entry labels out of directory selection, including relative traversal,
+absolute paths and oversized labels. Existing caller cleanup/failure retention,
+compiler selection and Cargo dependency-target routing remain unchanged.
+
+All 14 GCQ self-tests and 45 preparation-policy tests pass. Existing Clippy tests
+are unchanged; nine materialization controls include the original moved-stdlib
+owner inputs, omitted compiler owners/extensions, same-mtime changes, incomplete
+output, compiler admission failure, failed partial output/retry, concurrent
+consumers and path-label isolation. The controls reject the previous implementation.
+An intermediate candidate's label escape was reproduced in owned temporary space
+and corrected before review. Final inventory (20.696s), file-size checks (5.641s),
+all seven real smoke gates (93.734s) and focused Clippy checks (16.689s) pass.
+
+All 93 positive entries materialize through the real compiler. Category durations:
+concurrency 73.229s; demos 245.332s; E2E representatives 445.939s; multi-module
+projects 35.704s; stdlib flows 120.754s. Their sequential aggregate is 920.959s.
+These runs use a new GCQ target context, which also affects native probe identity;
+this is functional qualification and context-preparation cost, not steady-state
+performance acceptance. All 93 portable graphs fetch locked without manifest/lock
+drift (36.202s). Comparison with the earlier candidate covers every one of 452
+output files: 270 are byte-identical; 182 Cargo manifest/lock files differ only in
+the expected exact Git revision. Four real representative cases each pass three
+fresh requests and an intentionally damaged previous-output control. A same-mtime
+provider edit changes the new generated provider while preserving the earlier
+consumer. Those real controls take 151.269s. The inventories remain 93 positive
+entries, five negative seeds and 264 companion sources; companion execution is
+not implied by this inventory proof. All other 27 production functions and the
+complete area runner AST are unchanged.
+
+Evidence `v3b-final-evidence.tar.gz`, SHA-256
+`e68ac7561568ee4ba693c9f7291cc97c0605760fef1d05ce0bcf2e33eac5ad2e`, has 1,460
+independently hash-verified files. Final acceptance is recorded in
+`v3b-final-acceptance-summary.json`. Exact-candidate independent review is
+**SATISFIED**, no blockers: `reviews/07165950b3333ff7808413de1705aa96f4a0c470/response.md`,
+SHA-256 `7cee3b618fc7b7ae4818e7ced4a629c8ba31be2f1a0deab1faa69abd03068a73`.
+Earlier failures remain preserved: incomplete review-checkout corpus; an external
+capacity-inventory mistake before tests started; V3a's wrong-mode and offline
+command probes; and the pre-fix label escape. None is relabeled as a passing run.
+
+GitHub job 119176414793 fails full-scope admission without
+SIFR_PERFORMANCE_REFERENCE. Job 119176415265 reports a missing first E2E run
+signature after its unchanged direct Cargo entrypoint; the underlying temporary
+run log was not uploaded, so its underlying cause is unknown. Preserve both logs;
+CI/runner diagnostics and final integrated qualification own these failures. No
+CI or full-phase pass is claimed. The scoped local checks and review meet the
+approved intermediate policy.
+
+Review follow-ups: repeated preparation creates new small source directories
+under the revision-owned preparation root; bounded retention needs an explicit
+consumer/lease lifetime before pruning. Compiler-versus-generated-Cargo target
+routing remains a separate defect. V1 build feasibility, remaining V3/V4 work,
+complete final correctness gates and V5 remain open.
+
+### V3c bounded investigation — preserve the compiler's Cargo context
+
+The generic GCQ `run_command` currently overwrites CARGO_TARGET_DIR for every
+command when SIFR_GCQ_SHARED_ROOT is set, including Sifr compiler and emit calls.
+`NativeToolchain` explicitly binds CARGO_TARGET_DIR into its environment identity;
+that identity also participates in native-family and normal Cargo seed identities.
+The profile's revision-owned GCQ root therefore changes the compiler's native probe
+context even when its actual compiler, source inputs and caller target are unchanged.
+This is a code-verified ownership problem; its isolated runtime benefit is unmeasured.
+
+First compare the unchanged wrapper with a diagnostic adapter that explicitly
+preserves the outer target for compiler calls. Use the canonical selected compiler,
+frozen sources, the same flags/working directory and private materialization in both
+cases. Exercise simple, multi-module, runtime and networking cases under different
+fresh GCQ roots, including repeated requests. Record actual target context, selected
+compiler identity, native-family observations, output bytes and category timing.
+Distinguish new-context preparation from compatible reuse; do not present either as
+a complete gate or an additive saving. Retain capacity/allocation/reserve checks,
+owned targets, failure evidence and the 30-minute category cap.
+
+If validated, register the concrete implementation and acceptance before editing:
+make generic process execution inherit the caller environment, and pass the existing
+generated Cargo target explicitly at the generated-Cargo call sites. Audit corpus,
+native, rustfmt, demos and Clippy helpers rather than guessing ownership from an
+executable's filename. Preserve every argv/flag/wrapper and all actual assertions.
+Do not remove CARGO_TARGET_DIR from NativeToolchain identity, change portable source
+qualification, add an output-success cache, or broaden generated Cargo target sharing
+without a separate lifetime/lease contract. Preparation-source retention remains an
+owned follow-up. Complete final phase gates and V5 remain mandatory.
