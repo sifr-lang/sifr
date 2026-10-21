@@ -14,3 +14,6 @@ pub use windows::*;
 mod child_lease;
 #[cfg(unix)]
 pub use child_lease::inherit_lease_for_command;
+
+mod process_lease;
+pub use process_lease::ProcessLease;

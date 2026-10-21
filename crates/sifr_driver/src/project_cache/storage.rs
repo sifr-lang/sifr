@@ -2,10 +2,10 @@
 //! Readers take only a shared generation lease; GC takes writer then exclusive
 //! generation leases. Namespace leases outlive stores through their readers.
 //! Generation and namespace lock inodes remain stable while reachable.
-use super::process_lease::ProcessLease;
 use super::record_validation::RecordValidation;
 use crate::cache_storage as storage;
 use serde::{Deserialize, Serialize};
+use sifr_cache_storage::ProcessLease;
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
     collections::BTreeSet,

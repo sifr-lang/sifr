@@ -1,6 +1,7 @@
 //! Read-only access to complete driver-published check generations.
 use crate::CompilerContext;
 use serde::Deserialize;
+use sifr_cache_storage::ProcessLease;
 use sifr_frontend::{
     ModuleCheckDecision, WorkspaceSession,
     persistence::{CompletedCheck, SemanticInputs, identity},
@@ -45,8 +46,8 @@ struct Manifest {
 
 pub(super) struct Generation {
     records: Vec<CompletedCheck>,
-    _namespace_lease: File,
-    _generation_lease: File,
+    _namespace_lease: ProcessLease,
+    _generation_lease: ProcessLease,
 }
 
 fn key(value: &str) -> bool {
@@ -93,10 +94,9 @@ fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
 fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
     sifr_cache_storage::windows_storage_security::path_identity(path)
 }
-fn check_owner(cache: &Path, workspace: &Path, id: &str) -> io::Result<File> {
+fn check_owner(cache: &Path, workspace: &Path, id: &str) -> io::Result<ProcessLease> {
     let projects = cache.join("projects");
-    let lease = existing_lease(&projects, id)?;
-    lease.try_lock_shared()?;
+    let lease = ProcessLease::shared(existing_lease(&projects, id)?)?;
     let namespace = projects.join(id);
     let owner: Owner = serde_json::from_slice(&read(&namespace, "owner.json", 16 * 1024)?)?;
     let (device, inode) = file_identity(workspace)?;
@@ -145,9 +145,9 @@ pub(super) fn load_generation(
         let Ok(generation_lease) = existing_lease(&parent, &candidate.generation) else {
             continue;
         };
-        if generation_lease.try_lock_shared().is_err() {
+        let Ok(generation_lease) = ProcessLease::shared(generation_lease) else {
             continue;
-        }
+        };
         let path = parent.join(&candidate.generation);
         let Ok(records) =
             read_complete_generation(&path, &workspace_id, context, &candidate.generation)
