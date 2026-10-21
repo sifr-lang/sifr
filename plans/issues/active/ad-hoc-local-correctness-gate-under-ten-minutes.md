@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.20 formatter verification failure propagation; V1 semantic/native separation remains open
+current_stage: V1b2 raw metadata ownership; semantic/native separation and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -654,8 +654,8 @@ runner, fallback compiler or elaborate scheduler is justified by current evidenc
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Bounded repairs and their acceptance are recorded below. V0.20
-formatter failure propagation and final integrated completeness remain open.
+Current evidence: Bounded repairs through V0.20 are accepted below. Final
+integrated completeness remains open.
 
 Decision: No final timing promise until the failed setup paths execute their downstream
 assertions. Independent measured optimizations may proceed with matched outcomes; they
@@ -1129,7 +1129,7 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | Item | Status | Merged PR / candidate / validation / review |
 | --- | --- | --- |
 | Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
-| V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.19 / #4388; V0.20 and final completeness pending |
+| V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.20 / #4389; final completeness pending |
 | V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 accepted; semantic/native split and feasibility pending |
 | V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
@@ -3685,3 +3685,103 @@ compatibility scan and self-test, profiles/file-size/whitespace checks and scope
 independent review. Require final assertion markers as well as exit status.
 Reuse retained compiler targets and keep the 30-minute category cap. Return to
 V1 dependency separation afterward; full final gates remain required.
+
+
+### V0.20 acceptance — formatter verification failure propagation
+
+PR [#4389](https://github.com/sifr-lang/sifr/pull/4389) accepts implementation
+`d39f00e0c6dd147883b96fbde48259b05e1003a1`, based on V0.19 merge
+`ac4d64d1145e2cfd7fd9e335e0c4c972a0cc6ebe`. Only the formatter adapter changes.
+Every expected/observed child-status mismatch now exits one and reports both
+statuses, preserving child output. Its canonical self-test adds six controlled
+matching/mismatching pairs, including unexpected success, wrong nonzero status
+and signal termination. Existing real formatting, string-content, idempotence
+and invalid-syntax assertions remain.
+
+All six formatter variants and both affected compatibility variants pass on
+that exact candidate. Formatter rules take **146.912s**, including preparation;
+the complete formatter self-test takes **4.689s**. The other four formatter
+variants take **0.685s, 0.685s, 4.687s and 0.683s**, respectively. Compatibility
+checks take **19.180s** and **0.637s**. Final real-check and new-control PASS
+markers are verified. Profile/file-size/whitespace/link/input checks pass in
+**6.184s**. No source changed during validation, no category hit the cap, and no
+worker remained. These are per-category diagnostics, not full-gate elapsed.
+
+The source-bound failure-family audit parses all **546** tracked first-party
+Python files under scripts and verification, with no parse skips, recording
+per-file hashes and expected-status comparisons (including compound conditions)
+and direct child-status exits. Remaining direct propagation is guarded by
+nonzero status; other expected-status adapters record explicit failures. This is
+a scoped pattern audit, not a proof about every possible Python bug or embedded
+source string. The original formatter false success and the correctly behaving
+frontend-cache counterexample remain in `v020-before-probe.json`; the latter
+adapter is unchanged. Audit evidence is `v020-exit-family-audit.json`.
+
+Independent review is **SATISFIED**, no blockers, stored externally at
+`local-gate-implementation-20261020/reviews/d39f00e0c6dd147883b96fbde48259b05e1003a1/review.md`.
+The reviewer inspected source and relied on the recorded execution evidence;
+it did not independently rerun remote tests. Additional suggestions—verification
+assertions under optimized Python and adding output sentinels to status
+controls—are follow-up hardening, not omitted acceptance criteria. Canonical
+validation used optimization level zero. Evidence includes
+`v020-formatter-validation.json`, `v020-input-proof.json` and per-category logs.
+Only phase records follow the reviewed implementation. Final gates and V5 remain
+open.
+
+### V1b2 bounded implementation — separate raw metadata ownership
+
+Move the raw schema/container/store from `sifr_sysroot` into an explicit lower
+`sifr_metadata` crate. Keep lightweight sysroot resolution/digests independent of
+that crate. The observed metadata-store-only edit previously rebuilt stdlib
+manifest, imports, lowering, frontend and codegen through the sysroot edge;
+retained driver preparation took **355.911s**. Remove that edge without a sysroot
+re-export or compatibility dependency. This prerequisite does not itself deliver
+the mandatory semantic/native compiler separation or prove a gate runtime.
+
+Move existing metadata source unchanged, retaining internal declaration order,
+format version 5, field order, diagnostics, lazy/full semantics, resource limits
+and all tests. Bind direct services/driver consumers and compiled identities to
+the new owner. Move only its necessary dependencies; retain sysroot dependencies
+used by its remaining layout/integrity/digest responsibilities. Enroll the new
+owner in workspace and verification inventories, all applicable profile package
+lists, configuration checks, GCQ input ownership and first-party graph policies.
+Add dependency-direction regressions to reject raw metadata edges/re-exports in
+sysroot and frontend-only consumers. Update genuine current schema-generator and
+format-admission paths, method and filesystem ledger paths without changing
+classifications, and the architecture owner description. Preserve all external
+lockfile versions/checksums; explicitly reconcile approved verification graph
+hashes only for intentional first-party graph changes.
+
+Named acceptance:
+
+- All 28 metadata and 27 remaining sysroot tests; compiler-services tests; all
+  metadata producer/reader tests including the ignored complete 732-fixture
+  producer/reader corpus. Prove moved source byte equivalence and format/schema
+  parity, including installed/source admission contracts.
+- All 732 positive, 569 negative and six runtime-failure E2E inputs, retaining
+  canonical selection and outcomes. Compare complete metadata corpus results
+  with the accepted portable baseline; only the already proven unordered
+  `stdlib_modules` report array may be normalized in external comparison.
+- Actual resolved Cargo graph and compiled-input identity proof, with a
+  controlled metadata-only mutation/restoration and observed build freshness:
+  lightweight sysroot/manifest/lowering/codegen must not depend on the raw
+  metadata owner; genuine services/driver consumers must invalidate. Record
+  mutation and restored candidate identities separately; no timing subtraction.
+- Affected dependency/inventory/profile/configuration/GCQ/direction, method
+  dispatch, filesystem and distribution checks with their controls; formatting,
+  file-size, whitespace and changed-link checks; exact-candidate independent
+  review. Retain 17 configurations and existing test selection, adding new owner
+  membership where needed. No blanket profile or incremental-mode change.
+
+The legacy metadata inventory CLI still points at historical documentation;
+that pre-existing historical-site check is not in the canonical runner. Keep
+historical evidence unchanged. Validate its live schema/field check at the new
+owner, record the historical CLI issue for V4 tooling ownership, and do not
+revive obsolete site requirements as part of this extraction.
+
+Before rebuilding, verify resource headroom. Archive only inactive,
+session-owned obsolete artifacts with checksum/lease/consumer checks and
+restoration receipts; preserve current compatible build targets and failure
+records. Keep the 30-minute category cap. V1 semantic/native separation, full
+SQL clean/reused/independent-clean qualification, final integrated gates and V5
+remain mandatory after this bounded prerequisite.
