@@ -8,19 +8,9 @@ const ADVANCED_DATA_NEGATIVE: &str = include_str!(
 );
 
 fn prepared_runtime_scenario() -> ReusableScenario {
-    let package_root = reusable_scenario(
-        "advanced_data_runtime_matrix",
-        "advanced_data_runtime",
-        "rust_interop_advanced_data_roundtrips",
-    );
-    rebase_sifr_runtime_dependency(&package_root);
-    install_evidence_source(
-        &package_root,
-        &format!(
-            "{ADVANCED_DATA_EVIDENCE}\n\ndef main() -> Result[None, DataExchangeError]:\n    try:\n        print(verify_crate_backed_arrow_tensor_roundtrips())\n    except DataExchangeError as error:\n        raise error\n    return None\n"
-        ),
-    );
-    package_root
+    ReusableScenario::advanced_data(&format!(
+        "{ADVANCED_DATA_EVIDENCE}\n\ndef main() -> Result[None, DataExchangeError]:\n    try:\n        print(verify_crate_backed_arrow_tensor_roundtrips())\n    except DataExchangeError as error:\n        raise error\n    return None\n"
+    ))
 }
 
 #[test]
@@ -28,13 +18,8 @@ fn prepared_runtime_scenario() -> ReusableScenario {
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn prepare_advanced_data_native_graph() {
     let package_root = prepared_runtime_scenario();
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "advanced-data-runtime");
-    let _artifact = build_cached_package_project(
-        &crate::CompilerContext::for_test(),
-        &entrypoint,
-        &mut sifr_frontend::DiskSourceProvider::new(),
-    )
-    .expect("prepare exact native graph without claiming runtime assertions");
+    let entrypoint = package_root.entrypoint("advanced-data-runtime");
+    let _artifact = package_root.build(&entrypoint);
 }
 
 #[test]
@@ -42,9 +27,19 @@ fn prepare_advanced_data_native_graph() {
 #[doc = "sifr-evidence: executes-runtime-observed"]
 fn test_build_advanced_data_crate_backed_arrow_tensor_roundtrips() {
     let package_root = prepared_runtime_scenario();
-    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "advanced-data-runtime");
+    let entrypoint = package_root.entrypoint("advanced-data-runtime");
 
-    let output = built_package_output(&entrypoint);
+    let artifact = package_root.build(&entrypoint);
+    let output = artifact
+        .command()
+        .expect("owned runtime command")
+        .output()
+        .expect("run roundtrip");
+    assert!(
+        output.status.success(),
+        "package binary should pass: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),

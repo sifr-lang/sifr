@@ -2087,6 +2087,15 @@ staging pruneable. Final test entries contain their runnable executables and are
 not mutated by a subsequent Cargo test invocation. Cache inspection/pruning
 restricts reclamation to inactive entries owned by the current worktree, protects
 the newest candidate, and uses explicit free-space reserve pressure.
+The advanced-data preparation and runtime tests share one retained fixture tree
+per compiler checkout, bounded to 64 MiB and 4096 files. Each acquisition reads
+canonical inputs and composes final manifest/source overlays before reconciling
+bytes; unchanged file timestamps survive, stale inputs are removed and aliases
+are rejected. Its input lease is explicitly bound to metadata, probe/build and
+runtime children through the canonical package planner and cached artifact
+command. On Unix, unrelated exec children do not receive that lease; Windows retains
+its existing inheritable-handle policy. Input retention
+never stores a successful assertion or bypasses current authority checks.
 Driver process execution owns bounded streams, safety deadlines and descendant
 groups; verification wraps its command boundary separately from runner events.
 User programs stream their full output and retain their normal runtime duration;

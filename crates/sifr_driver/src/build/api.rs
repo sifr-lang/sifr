@@ -49,6 +49,7 @@ pub fn build_package_project_report(
         RootedEntrypoint::PackageProject {
             entrypoint,
             provider,
+            leases: Default::default(),
         },
         output_dir,
     )
@@ -66,6 +67,7 @@ pub fn materialize_package_project(
         RootedEntrypoint::PackageProject {
             entrypoint,
             provider,
+            leases: Default::default(),
         },
         output_dir,
     )
@@ -234,7 +236,7 @@ pub fn build_cached_package_project(
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
-    build_cached_package_project_binary(compiler, entrypoint, provider)
+    build_cached_package_project_binary(compiler, entrypoint, provider, Default::default())
 }
 
 pub fn build_cached_single_file(
