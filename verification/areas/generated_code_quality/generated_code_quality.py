@@ -71,7 +71,7 @@ PRODUCER_FINGERPRINT_INPUTS = [
     *[
         f"crates/{crate}/{path}"
         for crate in PRODUCER_FINGERPRINT_CRATES
-        for path in ("Cargo.toml", "src")
+        for path in ("Cargo.toml", "build.rs", "src")
     ],
 ]
 PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}
