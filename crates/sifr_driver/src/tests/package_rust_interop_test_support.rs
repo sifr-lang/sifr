@@ -40,91 +40,31 @@ pub(super) fn copied_scenario(fixture_id: &str, scenario_id: &str, test_name: &s
     destination
 }
 
-/// A copied authority used by explicit native preparation and its assertion.
-/// The lease serializes reset, all Cargo work, and output capture at one owned
-/// path. Current fixture bytes are recopied on every acquisition; no semantic
-/// result or authorization is restored from the previous invocation.
-pub(super) struct ReusableScenario {
-    root: PathBuf,
-    #[cfg(unix)]
-    _activity: crate::cache_storage::LeaseActivity,
-    _lease: std::fs::File,
-}
-
-impl std::ops::Deref for ReusableScenario {
-    type Target = Path;
-    fn deref(&self) -> &Path {
-        &self.root
-    }
-}
-
-impl Drop for ReusableScenario {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.root);
-    }
-}
-
-pub(super) fn reusable_scenario(
-    fixture_id: &str,
-    scenario_id: &str,
-    test_name: &str,
-) -> ReusableScenario {
-    let owner = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .expect("owned compiler checkout");
-    let mut identity = sifr_identity::IdentityEncoder::new("native-test-fixture-v1");
-    for (name, value) in [
-        ("fixture", fixture_id.as_bytes()),
-        ("scenario", scenario_id.as_bytes()),
-        ("test", test_name.as_bytes()),
-        ("owner", owner.as_os_str().as_encoded_bytes()),
-    ] {
-        identity.field(name, value);
-    }
-    let base = crate::cache_storage::root().join("test-fixtures");
-    crate::cache_storage::directory(&base).expect("private fixture directory");
-    let key = identity.finish();
-    let lease = crate::cache_storage::entry_lock(&base, &key).expect("fixture lease");
-    #[cfg(unix)]
-    crate::cache_storage::lock_bounded(
-        &lease,
-        &base.join(".locks").join(&key),
-        false,
-        crate::cache_storage::LEASE_WAIT,
-    )
-    .expect("own fixture mutation and native capture");
-    #[cfg(windows)]
-    lease
-        .lock()
-        .expect("own fixture mutation and native capture");
-    #[cfg(unix)]
-    let activity =
-        crate::cache_storage::LeaseActivity::start(&lease).expect("renew active fixture lease");
-    let root = base.join(key);
-    if root.exists() {
-        // Validate private ownership and reject symlinks before resetting.
-        crate::cache_storage::directory(&root).expect("owned prior fixture");
-        std::fs::remove_dir_all(&root).expect("reset inactive fixture");
-    }
-    crate::cache_storage::directory(&root).expect("owned fixture root");
-    copy_fixture_tree(&fixture_scenario_root(fixture_id, scenario_id), &root);
-    ReusableScenario {
-        root,
-        #[cfg(unix)]
-        _activity: activity,
-        _lease: lease,
-    }
-}
+#[path = "package_rust_interop_reusable.rs"]
+mod reusable;
+pub(super) use reusable::ReusableScenario;
 
 pub(super) fn package_entrypoint_from_cargo_layout(
     package_root: &Path,
     sifr_package_name: &str,
 ) -> PackageEntrypoint {
-    let output = std::process::Command::new("cargo")
+    package_entrypoint_with_leases(package_root, sifr_package_name, &Default::default())
+}
+
+fn package_entrypoint_with_leases(
+    package_root: &Path,
+    sifr_package_name: &str,
+    leases: &crate::build::native_child_leases::NativeChildLeases,
+) -> PackageEntrypoint {
+    let mut command = std::process::Command::new("cargo");
+    command
         .args(["metadata", "--format-version=1", "--locked", "--offline"])
         .arg("--manifest-path")
-        .arg(package_root.join("Cargo.toml"))
+        .arg(package_root.join("Cargo.toml"));
+    leases
+        .bind(&mut command)
+        .expect("bind fixture metadata ownership");
+    let output = command
         .output()
         .expect("fixture Cargo metadata should execute");
     assert!(
@@ -168,6 +108,11 @@ pub(super) fn rebase_sifr_runtime_dependency(package_root: &Path) {
     let manifest_path = package_root.join("Cargo.toml");
     let manifest = std::fs::read_to_string(&manifest_path)
         .expect("scenario Cargo manifest should be readable");
+    std::fs::write(manifest_path, rebased_runtime_manifest(&manifest))
+        .expect("copied scenario runtime dependency should be rebased");
+}
+
+fn rebased_runtime_manifest(manifest: &str) -> String {
     let runtime_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .expect("driver crate should have a crates parent")
@@ -180,8 +125,7 @@ pub(super) fn rebase_sifr_runtime_dependency(package_root: &Path) {
         rebased, manifest,
         "runtime scenario must declare the checked-in runtime path dependency"
     );
-    std::fs::write(manifest_path, rebased)
-        .expect("copied scenario runtime dependency should be rebased");
+    rebased
 }
 
 pub(super) fn built_package_output(entrypoint: &PackageEntrypoint) -> std::process::Output {
@@ -224,37 +168,5 @@ pub(super) fn observed_resource_state(output: &std::process::Output) -> Observed
 
 #[test]
 fn reusable_scenario_preserves_identity_and_resets_authority() {
-    let first = reusable_scenario(
-        "advanced_data_runtime_matrix",
-        "advanced_data_runtime",
-        "reuse-ownership-regression",
-    );
-    let path = first.root.clone();
-    let original = std::fs::read(path.join("Cargo.toml")).expect("canonical fixture authority");
-    let contender = crate::cache_storage::entry_lock(
-        path.parent().expect("private parent"),
-        path.file_name()
-            .expect("fixture key")
-            .to_str()
-            .expect("encoded key"),
-    )
-    .expect("independent contender");
-    assert!(matches!(
-        contender.try_lock(),
-        Err(std::fs::TryLockError::WouldBlock)
-    ));
-    std::fs::write(path.join("Cargo.toml"), "invalid prior authority")
-        .expect("mutate test fixture");
-    drop(first);
-    assert!(!path.exists());
-    let second = reusable_scenario(
-        "advanced_data_runtime_matrix",
-        "advanced_data_runtime",
-        "reuse-ownership-regression",
-    );
-    assert_eq!(second.root, path);
-    assert_eq!(
-        std::fs::read(second.join("Cargo.toml")).expect("current authority"),
-        original
-    );
+    reusable::assert_reconciliation();
 }

@@ -5,6 +5,7 @@ pub struct CachedBinaryArtifact {
     #[cfg(test)]
     pub(super) generated_project_root: Option<PathBuf>,
     pub(super) _cache_lease: super::workspace::CachedArtifactEntry,
+    pub(super) input_leases: super::native_child_leases::NativeChildLeases,
     pub(super) binary_path: PathBuf,
     pub(super) build_report: BuildReport,
 }
@@ -15,6 +16,7 @@ impl CachedBinaryArtifact {
     pub fn command(&self) -> std::io::Result<std::process::Command> {
         let mut command = std::process::Command::new(&self.binary_path);
         self._cache_lease.bind_command(&mut command)?;
+        self.input_leases.bind(&mut command)?;
         Ok(command)
     }
 

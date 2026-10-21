@@ -176,7 +176,7 @@ pub fn inspect() -> io::Result<CacheInspection> {
         (
             "test-fixtures",
             "native fixture tests",
-            "test owner resets scoped fixtures; protected",
+            "one bounded advanced-data tree per checkout; test-owned and protected",
         ),
     ] {
         owners.push(CacheOwnerInspection {
