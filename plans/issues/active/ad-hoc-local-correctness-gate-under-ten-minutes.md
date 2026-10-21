@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3c compiler and generated-Cargo context ownership investigation; integrated acceptance remains open
+current_stage: V3c explicit compiler/generated-Cargo context ownership repair; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -5018,3 +5018,40 @@ Do not remove CARGO_TARGET_DIR from NativeToolchain identity, change portable so
 qualification, add an output-success cache, or broaden generated Cargo target sharing
 without a separate lifetime/lease contract. Preparation-source retention remains an
 owned follow-up. Complete final phase gates and V5 remain mandatory.
+
+
+### V3c implementation contract — explicit process context ownership
+
+The first three frozen-candidate comparisons completed: current wrapper/new GCQ
+root 179.788s, preserved compiler context/initial root 174.284s, preserved context/
+second new GCQ root 101.743s. Materialization alone was 169.215s, 166.023s and
+93.487s respectively. All 24 outputs match byte for byte under the same selected
+compiler; the third run creates no new native family. The reverse-order current
+wrapper control is still running against its unchanged checkout. This demonstrates
+avoidable repeated context setup, not a full-gate timing forecast. Evidence belongs
+to `v3c-context-probe`; preserve all four categories before final acceptance.
+
+Implement only explicit process-context ownership: generic `run_command` inherits
+the caller environment unless given an explicit target. Corpus Cargo check,
+Cargo fmt and native Cargo build select `cargo_target_for_run` themselves. Existing
+Clippy calls already select that target. With a profile-owned shared root, generated
+Cargo retains that exact target; standalone gates without it use their run-owned
+target instead of the ambient compiler target. Compiler build/emit, freshness and
+control scripts, rustfmt and produced executables inherit the caller environment.
+Do not infer ownership from executable names or change compiler cache identities,
+Cargo flags, wrapper selection, fixtures, assertions, profile membership or leases.
+
+Acceptance: new behavioral controls must reject the old implicit routing, preserve
+all caller variables (including unset target), isolate explicit child target changes,
+and retain failure/truncation handling. Exercise corpus/fmt/native ownership with
+and without shared roots, including native execution after Cargo returns its artifact.
+Retain the previous materialization and Clippy controls. Run GCQ self-tests,
+generated preparation-policy tests, file-size guardrails and selection/inventory
+contracts. Materialize every one of the 93 positive entries through the final
+compiler, compare every output to the qualified predecessor with only the expected
+literal revision difference allowed in Cargo manifests/locks, and fetch all graphs
+locked. Run all seven smoke gates plus focused Clippy. Exercise the complete demo
+freshness protocol with an explicitly bounded two-worker allocation and preserve
+its exact outcome; unrelated baseline drift retains its owner. Record all diagnostics,
+capacity, input identities and the 30-minute per-category cap. Require exact-candidate
+independent review; final integrated gates and the V5 timing matrix remain open.
