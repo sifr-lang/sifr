@@ -690,6 +690,9 @@ Current evidence: V1b1–V1b4 ownership separation and native/installed/SQL qual
 are accepted. The same-source six-worker SQL protocol passes in 788.350s, still
 above the budget. V1c measured and rejected concurrent build overlap; complete
 build-path feasibility remains open. Earlier profile and sanitizer observations are retained.
+V1e's later matched baseline takes 793.732s excluding external probe preparation.
+Its Cranelift opt0 candidate takes 734.057s but makes the complete PostgreSQL
+component runtime probe 8.6 times slower; that override is rejected.
 
 Decision: Treat SQL as the first hard feasibility gate. Keep the measured whole critical
 path, not individual unit-duration subtraction. The larger architecture work is conditional
@@ -737,7 +740,8 @@ change the production profile.
 - [ ] Implementation and acceptance complete.
 
 Current evidence: V2a metadata validation facts and V2b bounded compiled-component
-ownership are accepted below. Durable-history optimization remains open.
+ownership and V2c's durable-record validation facts are accepted below. Further
+whole-suite attribution and integrated acceptance remain open.
 
 Decision: Prefer bounded lifetime-local reuse. Start with Wasmtime parallel compilation only
 if the full semantic checks pass and it fits the shared CPU budget; add compiled-component
@@ -770,7 +774,8 @@ or mocked durability. Compilation-only timings do not establish runtime semantic
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Input instability reproduced; lifecycle changes not implemented
+Current evidence: V3b's fresh GCQ materialization and V3c's explicit Cargo contexts
+are accepted below. Reusable native/Python fixture lifecycle work remains open.
 
 Decision: Use stable leased ownership and complete identities, without caching a successful
 test result in place of rerunning it.
@@ -784,7 +789,8 @@ trust/toolchain/version/instrumentation contexts. Make PostgreSQL major selectio
 coexisting build identity. Isolate self-update versions unless both can coexist without
 invalidation.
 
-Required proof: Run complete 44-command matrices, all 87 native roles and all 29 compiled
+Required proof: Run complete 44-command matrices, every currently selected native role
+(the historical inventory counted 87; the V4e refresh discovers 88), and all 29 compiled
 Python examples. Compare exact argv semantics, stdout/stderr, exits, diagnostics and
 markers. Exercise source/build-script/lock/compiler/feature/environment/trust changes,
 default-explicit PostgreSQL18 and 13→18→13, same bytes rewritten, symlink swaps, killed
@@ -5570,3 +5576,96 @@ ignored native cases, area/toolchain verifications and final gates remain open.
 Stable libtest rejects both JSON output and report-time flags; the read-only
 capability checks are retained separately. Do not enable unstable toolchain
 workarounds or infer exact case timings from unlabelled nested output.
+
+The follow-up exact-binary `--ignored --list` discovery finds **6 CLI and 82 driver
+cases, 88 total**. The original 87-role count is historical evidence, not a ceiling
+on current execution. Both binaries are the ones used by the completed V4e default
+crate runs, and the native runner already enumerates its selection dynamically.
+`v4e-current-native-discovery.json` retains their paths, file identities, complete
+names, commands and successful discovery outputs. These ignored assertions still
+require execution; listing them is not coverage acceptance.
+
+### V1e outcome — reject the JIT optimization override
+
+Both complete canonical SQL build protocols pass on frozen diagnostic source
+`bd154f70ba8a3f813463bb6bb37bade0ec6c2613`, with the source-equivalence proof to the
+prospective phase record retained. Each protocol preserves all seven rejection
+controls, zero-fresh clean builds, all-fresh unchanged builds, equal bytes for all
+three linked tools across its three builds, and target cleanup. All 490 resolved
+units have identical package/target/features. The sole effective profile change
+is native `cranelift-codegen 0.135.1` opt1 to opt0; debug assertions, overflow
+checks and all other emitted profile fields remain unchanged.
+
+| Observation | Baseline | Cranelift opt0 |
+| --- | ---: | ---: |
+| Clean A | 388.125s | 359.546s |
+| Unchanged A | 6.535s | 6.598s |
+| Independent clean B | 398.059s | 366.900s |
+| Protocol including cleanup, excluding external probe preparation | 793.732s | 734.057s |
+| Unchanged PostgreSQL component assertions, fresh process | 38.314 / 38.399 / 38.478s | 330.599s, one complete run |
+
+The completed candidate runtime executes both original tests, all supported
+PostgreSQL components and their query/schema/diagnostic/span/sequence/view
+assertions. It passes, but takes **8.6 times the baseline median**. Under the user's
+pragmatic-testing authority, reject the profile and stop its second repetition
+rather than spending another eleven minutes confirming an already unacceptable
+tradeoff. The third repetition was not started. The original candidate wrapper
+therefore remains **interrupted**, return `-15`, with the explicit owned-process
+stop record, partial output, no remaining descendants and no source changes.
+Repeated candidate runtime qualification is incomplete; this is a rejection
+decision, never an accepted performance result.
+
+The original baseline wrapper also remains failed: its external probe initially
+omitted the host dependency search directory. The independent build protocol
+still completed successfully. Retaining 805 completed clean-B artifacts through
+read-only hard links allowed the probe to be repaired without rebuilding. Every
+retained file has a recorded hash; the repaired probe uses identical test sources
+and compiler flags, passes in three fresh processes, and removes all extra
+retention links. Baseline clean-B includes that retention observation overhead;
+one build pair does not establish a precise statistical speedup.
+
+Cranelift's clean-A compile unit falls from 202.43s to 46.72s, while the complete
+clean build saves only 28.58s. Lowering still takes 158.83s in the candidate, with
+146.63s in codegen, and the remaining PostgreSQL build/link chain finishes later.
+These overlapping unit durations are not additive savings.
+
+The independently verified 109-file archive `v1e-evidence.tar.gz` has SHA-256
+`0fcb81e687679b0f4d20ad6ec1fdae81c3e46f5b26c35c5913e8010cf5e77a3a`.
+It preserves the original failure, recovery, completed and interrupted runtime
+runs, build timings, exact inventories, six guest hashes, profile comparison and
+cleanup evidence. Diagnostic executables remain separately retained by hash.
+No production profile is changed. V1 feasibility, all remaining phase work and
+complete final gates/V5 remain open.
+
+### V4h bounded investigation — complete driver attribution and scheduling
+
+V4e's 764.33s driver body used an explicitly serial diagnostic environment.
+Ordinary non-ignored profile selections do not currently set libtest concurrency,
+so this observation is not an inherent floor for the existing gate. Establish the
+individual costs and a bounded parallel comparison before reworking storage or
+changing the runner's allocation policy.
+
+Use the unchanged retained driver configuration and its complete discovered
+834-case inventory: 752 active assertions and 82 ignored native cases, whose
+separate execution remains required. Keep source, target, Cargo selection,
+features, nested Cargo/Rayon allocation and E2E settings identical. Compare one
+libtest thread with two, running only one suite at a time and retaining the
+existing 30-minute cap, 20 GiB disk reserve and 2 GiB memory reserve. Include actual
+Cargo admission/preparation and cleanup; do not infer a whole-gate speedup from
+these separate observations.
+
+For serial attribution, observe only the main harness thread's stdout writes
+using the available stable tooling; preserve the unchanged test executable and
+all assertions. Qualify the diagnostic parser first with real delayed tests,
+ignored cases and child/thread output that deliberately imitates harness results.
+Reject missing/truncated/duplicate inventory or a missing summary. Compare the
+actual Cargo-runner discovery with the exact executable's inventory before
+starting the long run. Attribute serial write-boundary latency only, including
+dispatch/tracing overhead. Parallel completion output does not establish each
+test's start time and must not be reported as individual parallel durations.
+
+Keep raw traces, outcomes, binary/source identities, resource receipts and every
+failure. Do not use unstable Rust test flags, replace the canonical assertion
+inventory with parsed child text, or adopt a production concurrency change from
+an unqualified diagnostic. This item is measurement only. Complete native
+selection, other suites, final gates and V5 remain mandatory.
