@@ -253,4 +253,6 @@ fn reconcile(root: &Path, inputs: &Inputs) -> io::Result<()> {
 
 #[path = "package_rust_interop_reusable_tests.rs"]
 mod tests;
-pub(super) use tests::assert_reconciliation;
+pub(super) fn assert_reconciliation() {
+    tests::assert_reconciliation();
+}

@@ -2093,7 +2093,8 @@ canonical inputs and composes final manifest/source overlays before reconciling
 bytes; unchanged file timestamps survive, stale inputs are removed and aliases
 are rejected. Its input lease is explicitly bound to metadata, probe/build and
 runtime children through the canonical package planner and cached artifact
-command. Unrelated exec children do not receive that lease. Input retention
+command. On Unix, unrelated exec children do not receive that lease; Windows retains
+its existing inheritable-handle policy. Input retention
 never stores a successful assertion or bypasses current authority checks.
 Driver process execution owns bounded streams, safety deadlines and descendant
 groups; verification wraps its command boundary separately from runner events.

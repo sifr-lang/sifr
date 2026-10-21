@@ -73,7 +73,8 @@ fn build_cached_rooted_entrypoint_binary(
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
         plan.into_generated_binary_project()
     })?;
-    let requested_vendor_mode = super::entrypoint_resolution::requested_vendor_mode_for_build(mode);
+    let requested_vendor_mode =
+        super::super::entrypoint_resolution::requested_vendor_mode_for_build(mode);
     let (cache_entry, native_report, sysroot) = materialize_cached_binary_project_with_report(
         cache_namespace,
         cache_scope,
