@@ -4570,6 +4570,8 @@ rebuild savings without evidence supporting the relevant preparation boundary.
 
 ### V4b attribution closure — no repeated CLI rebuild reproduced
 
+Recorded through [PR #4395](https://github.com/sifr-lang/sifr/pull/4395).
+
 No implementation, test selection or coverage change is made. On unchanged
 implementation candidate `dd65d042ae3414f0120b61cbbe297240df7b36a4`, all nine
 bounded diagnostic categories pass. The merged phase plan differs from that
