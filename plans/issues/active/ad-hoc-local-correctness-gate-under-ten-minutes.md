@@ -4879,3 +4879,51 @@ relevant environment/toolchain/trust distinctions, and exact current outputs.
 Full final correctness gates and all V5 scenarios remain mandatory. V4's previously
 recorded hash-ordering mutation and real requirement-only editor reload regression
 also remain owned follow-ups, not implied completed coverage.
+
+
+### V3a findings and V3b implementation boundary — fresh GCQ inputs
+
+The V3a probes on `2425ba2455cf69f0e64c6e7a4a13c622d8915f4c` reproduce two
+correctness defects: changing copied compiler-owner inputs or an imported source
+(with its mtime restored) leaves the GCQ entry key unchanged; a matching directory
+containing only Cargo.toml bypasses compiler preparation and materialization.
+The real CLI confirms that the imported-source edit changes generated Rust.
+Correct canonical CLI materialization takes 3.184s / 3.684s / 7.192s on the second
+simple / project / runtime request, and rewrites every output mtime despite
+identical bytes. Process traces observe eight / twenty formatter processes in the
+simple / runtime cases. Descendant process lifetimes overlap and are not additive.
+
+A corrected external shared-CompilerContext probe uses canonical workspace
+selection and the actual CLI product identity. All output bytes match the CLI for
+all three sampled entries; its second materializations take 0.946s / 1.383s /
+4.610s, with 1.122s one-time metadata preparation. These are diagnostic samples,
+not complete-corpus or gate qualification. The earlier probe chose the wrong
+workspace mode and is retained as invalid equivalence evidence. Likewise, the
+initial CLI probe's unsupported offline invocation is retained as a probe failure.
+
+V3b removes the duplicate persistent semantic cache from GCQ. Every materialization
+request must call the canonically selected compiler using current inputs, into a
+new private directory inside the caller's run root. Remove the incomplete producer
+fingerprint rather than extending its list. Existing shared Cargo dependency
+artifacts remain under their current owner. Existing run diagnostics and failed
+outputs remain retained; this step creates no reusable cross-run output store and
+adds no pruning of other owners. Private output names isolate consumers, including
+concurrent requests. Preparation still covers every positive corpus entry and all
+required companions; all profile selections and assertions remain unchanged.
+
+This correctness prerequisite may increase intermediate runtime. It does not
+claim a speedup or ten-minute acceptance. A subsequent registered item must address
+canonical batch preparation, duplicate formatting/publication, dependency-target
+identity and bounded persistent-owner retention using measured complete inventories.
+Do not restore an approximate Python input fingerprint to recover speed.
+
+Named V3b acceptance: focused controls for repeated fresh materialization, changed
+same-mtime imported/compiler inputs (including moved stdlib owners and non-listed
+extensions), incomplete old output, compiler admission failure, failed partial
+output followed by successful retry, concurrent consumer isolation, and unchanged
+Cargo dependency-target routing. Reconcile unchanged entry/profile inventories.
+Run existing GCQ source-quality/selection tests, generated Cargo preparation policy
+checks, file-size guardrails, and real canonical CLI materialization for all 93
+positive entries in bounded categories, preserving every failure. Compare generated
+bytes for representative entries and exercise same-mtime provider edits. Require
+independent exact-candidate review. Full final phase gates and V5 remain open.
