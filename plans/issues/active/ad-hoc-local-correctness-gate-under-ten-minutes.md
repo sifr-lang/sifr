@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b4 reviewed and qualified; V1c independent-build scheduling investigation next; integrated acceptance remains open
+current_stage: V1c measured and rejected; V2b bounded compiled-component reuse next; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4325,3 +4325,69 @@ resolved unit/feature/profile parity, source ownership and cleanup proofs, and
 independent exact-candidate review. Compiler/runtime implementations are unchanged
 by this scheduling item; retain their already observed evidence without relabeling
 it as execution on a new candidate. Complete final gates and V5 remain mandatory.
+
+### V1c outcome — concurrent clean builds not adopted
+
+The diagnostic on `f2392670efd4840ce5294c81a03a56e4549e6fc4` preserves all
+490 actual Cargo unit signatures, clean/reused freshness, all three linked
+executable comparisons, seven rejection controls and owned-target cleanup.
+The two independent builds overlap for 766.919s. Clean A / unchanged A / clean B
+execute in 769.631 / 6.941 / 767.498s; complete protocol time is **780.353s**.
+Functional qualification passes; the 600-second timing objective fails.
+Compared with 788.350s for sequential builds at the same total six-worker budget,
+this one observation is too small a gain to establish a benefit. Do not adopt
+production concurrent scheduling or add process-supervision complexity for it.
+
+The host exposes eight logical CPUs on four physical cores with SMT2. This
+explains why logical-worker counts must not be treated as independent physical
+capacity; it does not establish the exact cause of the observed timing. Sampled
+aggregate process RSS reaches about 4.88 GiB (shared pages may be double counted),
+and sampled available memory remains above 6.18 GiB. Sampling started after early
+preparation and is not an exact peak. Source and reserves remain intact; 986
+noncomment dependency files and artifact/build-output records show no cross-target
+build dependency. No implementation source changed.
+
+The 38-file packet `v1c-evidence.tar.gz` has SHA-256
+`9ce22fe69bd212d6a6bb7f333c87204082e8eb2a4c51ea8c17af4391b7467d11`;
+all manifest hashes and sizes were checked after collection. It retains complete
+commands, receipts, ordering, resource samples and ownership evidence. This
+record-only outcome needs documentation checks, not another implementation review.
+V1 feasibility and complete final gates remain open.
+
+### V2b bounded implementation — compilation-scoped component reuse
+
+Prioritize eliminating repeated compilation before changing Wasmtime optimization
+or thread policy. Keep the current Engine configuration, dependency graph and
+fresh guest execution semantics. Add an explicit cloneable compilation owner
+containing one Engine and a bounded in-memory compiled-component LRU. Key entries
+by the artifact hash only after verifying actual bytes and all request/registration
+contracts. Bind reuse to the exact owner/Engine policy, rejecting incompatible
+stack policy. Bound retained entry count and mapped compiled-image bytes; document
+that active executions and compilation working memory are not cache residency.
+Do not serialize native code, add a global owner, cache failures or reuse Stores.
+Release the owner lock before guest instantiation/execution.
+
+Every execution retains a fresh Store, instance, fuel and resource limits. Response
+cache semantics remain separate: compiled reuse alone never reports a response
+cache hit or skips request execution. Publication follows successful compilation
+and forbidden-import validation. Revalidate hash, protocol and registration on
+hits. A changed valid artifact compiles independently; altered bytes with an old
+hash reject even when path/mtime is unchanged.
+
+Share the owner through prepared SQL profiles and their clones, including schema
+preparation, typed methods and application queries. The editor must retain its
+existing configured-reload host lifetime, release on disable, and publish nothing
+on failed initialization. Empty profiles must not initialize an Engine. Verify
+actual caller wiring, not only an isolated per-host cache. Preserve existing
+compiler diagnostics, provider responses and emitted/runtime assertions.
+
+Named checks: host tests with compile counts, hit/miss/eviction/image bounds,
+incompatible policy, invalid hash/import/protocol, fuel/memory/output limits and
+fresh-state controls; semantic-services profile/typed-method tests; complete SQL
+providers including all six PostgreSQL artifacts; analysis/editor and LSP tests;
+SQL frontend/driver/real CLI and affected source/dependency/coverage contracts.
+Use the retained target with explicit preparation and a 30-minute category cap.
+Compare exact responses in controls and retain existing fixture assertions. Record
+complete category timing against prior observations without treating sums as a
+full-gate result. Independent exact-candidate review precedes the intermediate
+merge. Complete final create-PR/merge gates and V5 remain mandatory.
