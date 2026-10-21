@@ -3815,3 +3815,16 @@ alongside these results under the approved intermediate policy. The new crate's
 initial compile also exposed an omitted `ring` declaration; add the same existing
 pin to the new owner and reconcile its audited direct declaration. Keep that
 failed 8.782-second preparation attempt; no test executed successfully in it.
+
+
+#### V1b2 policy ownership preservation
+
+The final owner audit found one path-scoped rule that also needs the new owner:
+the no-compatibility check's flat-install-layout prohibition currently covers
+CLI and sysroot sources. Retain its coverage of the moved metadata source by
+adding the new crate prefix, with a negative control for every covered owner.
+This is part of V1b2's ownership/inventory preservation; it does not add a fallback
+or change compiler behavior. Validate the real guard and its canonical self-test.
+The compiler/runtime candidate is frozen in its separate validation checkout;
+prove unchanged compiler and runtime inputs before reusing its evidence for
+this Python-policy-only follow-up.
