@@ -4160,3 +4160,13 @@ relocation, preserving logical paths and current entries on their original
 volume. Retain both operation receipts and per-file hash evidence. Final source,
 installed/native corpus, linked SQL clean-A/reused-A/clean-B qualification,
 independent review and final phase gates are not yet accepted.
+
+
+V1b4 pre-final cross-check found two in-scope inventory omissions before starting
+final runtime qualification: the new crate was absent from the maintained Cargo
+manifest/owner audit, and four SQL source guards still selected the old physical
+service file. Preserve the four failed guard receipts and the missing-inventory
+proof. Reconcile the one new manifest, its existing-version tempfile declaration
+and two num-bigint lock-owner edges without altering registry releases/checksums.
+Follow both existing native and driver delegation links to the semantic owner;
+mutation controls must reject removal of either link and the original mechanisms.
