@@ -803,3 +803,5 @@ fn hash_verification_is_exact() {
 }
 #[path = "tests/diagnostic_sources.rs"]
 mod diagnostic_source_tests;
+
+mod compiled_reuse;

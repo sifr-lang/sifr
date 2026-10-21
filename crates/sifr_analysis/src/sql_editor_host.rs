@@ -6,21 +6,21 @@ pub(super) fn update_host(
     host: &mut Option<ComponentHost>,
     profiles: &PreparedSqlProfiles,
 ) -> Result<(), ComponentError> {
-    reconcile_host(
-        host,
-        profiles.registry().entries().next().is_some(),
-        create_host,
-    )
+    reconcile_host(host, profiles.registry().entries().next().is_some(), || {
+        profiles.component_host(query_limits())
+    })
 }
 
+fn query_limits() -> ComponentHostLimits {
+    ComponentHostLimits {
+        fuel: 100_000_000,
+        ..ComponentHostLimits::default()
+    }
+}
+
+#[cfg(test)]
 fn create_host() -> Result<ComponentHost, ComponentError> {
-    ComponentHost::new(
-        ComponentHostLimits {
-            fuel: 100_000_000,
-            ..ComponentHostLimits::default()
-        },
-        None,
-    )
+    ComponentHost::new(query_limits(), None)
 }
 
 // Construction must finish before either the host or the new profiles become

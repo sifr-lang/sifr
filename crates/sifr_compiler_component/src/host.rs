@@ -1,11 +1,11 @@
 use crate::registration::verify_component_hash;
 use crate::{
-    AnalysisCache, CacheKey, ComponentError, ComponentErrorKind, ComponentRegistration,
-    DiagnosticRegistry, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse, validate_request,
-    validate_response,
+    AnalysisCache, CacheKey, ComponentCompilation, ComponentError, ComponentErrorKind,
+    ComponentRegistration, DiagnosticRegistry, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse,
+    validate_request, validate_response,
 };
-use wasmtime::component::{Component, Linker};
-use wasmtime::{Config, Engine, Store, StoreLimits, StoreLimitsBuilder, Trap};
+use wasmtime::component::Linker;
+use wasmtime::{Store, StoreLimits, StoreLimitsBuilder, Trap};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ComponentHostLimits {
@@ -74,7 +74,7 @@ struct HostState {
 }
 
 pub struct ComponentHost {
-    engine: Engine,
+    compilation: ComponentCompilation,
     limits: ComponentHostLimits,
     cache: Option<AnalysisCache>,
 }
@@ -84,21 +84,26 @@ impl ComponentHost {
         limits: ComponentHostLimits,
         cache: Option<AnalysisCache>,
     ) -> Result<Self, ComponentError> {
-        let mut config = Config::new();
-        config.consume_fuel(true);
-        config.wasm_component_model(true);
-        config.wasm_exceptions(true);
-        config.wasm_memory64(false);
-        config.wasm_multi_memory(true);
-        config.wasm_relaxed_simd(false);
-        config.max_wasm_stack(limits.max_wasm_stack_bytes);
-        config.cranelift_nan_canonicalization(true);
-        let engine = Engine::new(&config).map_err(engine_error)?;
+        let compilation = ComponentCompilation::new(&limits)?;
+        Self::with_compilation(compilation, limits, cache)
+    }
+
+    pub fn with_compilation(
+        compilation: ComponentCompilation,
+        limits: ComponentHostLimits,
+        cache: Option<AnalysisCache>,
+    ) -> Result<Self, ComponentError> {
+        compilation.validate_policy(&limits)?;
         Ok(Self {
-            engine,
+            compilation,
             limits,
             cache,
         })
+    }
+
+    #[must_use]
+    pub fn compilation(&self) -> ComponentCompilation {
+        self.compilation.clone()
     }
 
     pub fn analyze(
@@ -195,22 +200,11 @@ impl ComponentHost {
         input: Vec<u8>,
         diagnostics: &DiagnosticRegistry,
     ) -> Result<EmbeddedAnalysisResponse, ComponentError> {
-        let component = Component::new(&self.engine, component_bytes).map_err(component_error)?;
-        let imports = component
-            .component_type()
-            .imports(&self.engine)
-            .map(|(name, _)| name.to_string())
-            .collect::<Vec<_>>();
-        if !imports.is_empty() {
-            return Err(ComponentError::new(
-                ComponentErrorKind::Capability,
-                format!(
-                    "component imports are forbidden; requested {}",
-                    imports.join(", ")
-                ),
-            ));
-        }
-        let linker = Linker::<HostState>::new(&self.engine);
+        let component = self
+            .compilation
+            .component(&request.component.sha256, component_bytes)?;
+        let engine = self.compilation.engine();
+        let linker = Linker::<HostState>::new(engine);
         let store_limits = StoreLimitsBuilder::new()
             .memory_size(self.limits.max_memory_bytes)
             .instances(self.limits.max_instances)
@@ -218,7 +212,7 @@ impl ComponentHost {
             .tables(self.limits.max_tables)
             .build();
         let mut store = Store::new(
-            &self.engine,
+            engine,
             HostState {
                 limits: store_limits,
             },
@@ -247,12 +241,12 @@ impl ComponentHost {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn engine_error(error: wasmtime::Error) -> ComponentError {
+pub(crate) fn engine_error(error: wasmtime::Error) -> ComponentError {
     ComponentError::new(ComponentErrorKind::Execution, format!("{error:#}"))
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn component_error(error: wasmtime::Error) -> ComponentError {
+pub(crate) fn component_error(error: wasmtime::Error) -> ComponentError {
     let message = format!("{error:#}");
     let kind = if message.contains("shared memor")
         || message.contains("threads support")

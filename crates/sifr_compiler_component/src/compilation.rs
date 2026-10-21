@@ -1,0 +1,172 @@
+//! Bounded compiled code owned by one compiler/editor lifetime.
+//!
+//! Entries share exactly one Engine. Neither guest Stores nor response values
+//! live here. Limits bound retained entries and mapped compiled images, not
+//! compilation working memory or references held by active executions.
+use crate::{ComponentError, ComponentErrorKind, ComponentHostLimits};
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
+use wasmtime::component::Component;
+use wasmtime::{Config, Engine};
+
+const MAX_ENTRIES: usize = 8;
+const MAX_IMAGE_BYTES: usize = 128 * 1024 * 1024;
+
+#[derive(Clone)]
+pub struct ComponentCompilation(Arc<CompilationInner>);
+
+struct CompilationInner {
+    engine: Engine,
+    max_wasm_stack_bytes: usize,
+    entries: Mutex<CompiledEntries>,
+}
+
+struct Entry {
+    hash: String,
+    component: Component,
+    image_bytes: usize,
+}
+
+struct CompiledEntries {
+    entries: VecDeque<Entry>,
+    image_bytes: usize,
+    max_entries: usize,
+    max_image_bytes: usize,
+    #[cfg(test)]
+    compilations: usize,
+    #[cfg(test)]
+    hits: usize,
+}
+
+impl std::fmt::Debug for ComponentCompilation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ComponentCompilation")
+            .field("max_wasm_stack_bytes", &self.0.max_wasm_stack_bytes)
+            .finish_non_exhaustive()
+    }
+}
+
+impl ComponentCompilation {
+    pub fn new(limits: &ComponentHostLimits) -> Result<Self, ComponentError> {
+        let mut config = Config::new();
+        config.consume_fuel(true);
+        config.wasm_component_model(true);
+        config.wasm_exceptions(true);
+        config.wasm_memory64(false);
+        config.wasm_multi_memory(true);
+        config.wasm_relaxed_simd(false);
+        config.max_wasm_stack(limits.max_wasm_stack_bytes);
+        config.cranelift_nan_canonicalization(true);
+        let engine = Engine::new(&config).map_err(crate::host::engine_error)?;
+        Ok(Self(Arc::new(CompilationInner {
+            engine,
+            max_wasm_stack_bytes: limits.max_wasm_stack_bytes,
+            entries: Mutex::new(CompiledEntries {
+                entries: VecDeque::new(),
+                image_bytes: 0,
+                max_entries: MAX_ENTRIES,
+                max_image_bytes: MAX_IMAGE_BYTES,
+                #[cfg(test)]
+                compilations: 0,
+                #[cfg(test)]
+                hits: 0,
+            }),
+        })))
+    }
+
+    pub(crate) fn validate_policy(
+        &self,
+        limits: &ComponentHostLimits,
+    ) -> Result<(), ComponentError> {
+        if limits.max_wasm_stack_bytes != self.0.max_wasm_stack_bytes {
+            return Err(ComponentError::new(
+                ComponentErrorKind::Execution,
+                "compiled-component owner has an incompatible Engine stack policy",
+            ));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn engine(&self) -> &Engine {
+        &self.0.engine
+    }
+
+    // Only ComponentHost calls this, after authenticating bytes and validating
+    // the current request/registration. Hold the lock through compilation to
+    // avoid duplicate publication; release it before any guest execution.
+    pub(crate) fn component(&self, hash: &str, bytes: &[u8]) -> Result<Component, ComponentError> {
+        let mut cache = self.0.entries.lock().map_err(|_| {
+            ComponentError::new(
+                ComponentErrorKind::Execution,
+                "compiled-component owner is poisoned",
+            )
+        })?;
+        if let Some(index) = cache.entries.iter().position(|entry| entry.hash == hash) {
+            if let Some(entry) = cache.entries.remove(index) {
+                let component = entry.component.clone();
+                cache.entries.push_back(entry);
+                #[cfg(test)]
+                {
+                    cache.hits += 1;
+                }
+                return Ok(component);
+            }
+        }
+        #[cfg(test)]
+        {
+            cache.compilations += 1;
+        }
+        let component =
+            Component::new(self.engine(), bytes).map_err(crate::host::component_error)?;
+        let imports = component
+            .component_type()
+            .imports(self.engine())
+            .map(|(name, _)| name.to_string())
+            .collect::<Vec<_>>();
+        if !imports.is_empty() {
+            return Err(ComponentError::new(
+                ComponentErrorKind::Capability,
+                format!(
+                    "component imports are forbidden; requested {}",
+                    imports.join(", ")
+                ),
+            ));
+        }
+        let image = component.image_range();
+        let image_bytes = (image.end as usize).saturating_sub(image.start as usize);
+        // Oversized code executes once under ordinary request limits but is not
+        // retained. A failed compile/import check never changes retained entries.
+        if cache.max_entries != 0 && image_bytes <= cache.max_image_bytes {
+            while cache.entries.len() >= cache.max_entries
+                || cache.image_bytes > cache.max_image_bytes - image_bytes
+            {
+                if let Some(entry) = cache.entries.pop_front() {
+                    cache.image_bytes -= entry.image_bytes;
+                } else {
+                    break;
+                }
+            }
+            cache.image_bytes += image_bytes;
+            cache.entries.push_back(Entry {
+                hash: hash.to_string(),
+                component: component.clone(),
+                image_bytes,
+            });
+        }
+        Ok(component)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn stats(&self) -> (usize, usize, usize, usize) {
+        let c = self.0.entries.lock().expect("test owner lock");
+        (c.compilations, c.hits, c.entries.len(), c.image_bytes)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_test_capacity(&self, entries: usize, image_bytes: usize) {
+        let mut c = self.0.entries.lock().expect("test owner lock");
+        assert!(c.entries.is_empty());
+        c.max_entries = entries;
+        c.max_image_bytes = image_bytes;
+    }
+}

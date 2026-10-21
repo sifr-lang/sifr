@@ -1,8 +1,8 @@
 use crate::diagnostics::diagnostic_with_code;
 use crate::package_diagnostics::render_package_diagnostic;
 use sifr_compiler_component::{
-    COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost, ComponentHostLimits,
-    ComponentRequirement, ResolvedComponent,
+    COMPONENT_PROTOCOL_MAJOR, ComponentCompilation, ComponentError, ComponentErrorKind,
+    ComponentHost, ComponentHostLimits, ComponentRequirement, ResolvedComponent,
 };
 use sifr_diagnostics::{
     DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RenderedDiagnostic, Severity,
@@ -29,6 +29,7 @@ struct PreparedSqlProfile {
 #[derive(Clone, Debug, Default)]
 pub struct PreparedSqlProfiles {
     profiles: BTreeMap<String, PreparedSqlProfile>,
+    compilation: Option<ComponentCompilation>,
     registry: ProfileModuleRegistry,
     requirements: SchemaRequirementRegistry,
     initialization_diagnostics: Vec<RenderedDiagnostic>,
@@ -137,6 +138,21 @@ fn profile_import_diagnostic(
 }
 
 impl PreparedSqlProfiles {
+    /// Requests share compiled code with schema preparation and profile clones;
+    /// each returned host still owns separate response-cache/execution state.
+    pub fn component_host(
+        &self,
+        limits: ComponentHostLimits,
+    ) -> Result<ComponentHost, ComponentError> {
+        let compilation = self.compilation.clone().ok_or_else(|| {
+            ComponentError::new(
+                ComponentErrorKind::Execution,
+                "SQL profiles have no initialized component owner",
+            )
+        })?;
+        ComponentHost::with_compilation(compilation, limits, None)
+    }
+
     #[must_use]
     pub fn from_initialization_failure(diagnostics: Vec<RenderedDiagnostic>) -> Self {
         Self {
@@ -591,6 +607,7 @@ pub fn prepare_sql_profiles(
         })?;
     }
     Ok(PreparedSqlProfiles {
+        compilation: Some(host.compilation()),
         profiles,
         registry,
         requirements,

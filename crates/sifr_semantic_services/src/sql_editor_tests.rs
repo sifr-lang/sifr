@@ -167,3 +167,31 @@ fn package(name: &str, root: &Path, manifest_source: &str) -> SifrPackageMetadat
         aliases: BTreeMap::new(),
     }
 }
+
+#[test]
+fn profile_clones_share_the_prepared_engine_policy_and_empty_profiles_stay_lazy() {
+    let empty = PreparedSqlProfiles::default();
+    assert!(empty.compilation.is_none());
+    assert!(
+        empty
+            .component_host(ComponentHostLimits::default())
+            .is_err()
+    );
+    assert!(empty.compilation.is_none());
+    let limits = ComponentHostLimits {
+        max_wasm_stack_bytes: 4 * 1024 * 1024,
+        ..ComponentHostLimits::default()
+    };
+    let profiles = PreparedSqlProfiles {
+        compilation: Some(ComponentCompilation::new(&limits).expect("prepared owner")),
+        ..PreparedSqlProfiles::default()
+    };
+    let cloned = profiles.clone();
+    drop(profiles);
+    assert!(
+        cloned
+            .component_host(ComponentHostLimits::default())
+            .is_err()
+    );
+    assert!(cloned.component_host(limits).is_ok());
+}
