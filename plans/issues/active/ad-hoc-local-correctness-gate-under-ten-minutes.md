@@ -3785,3 +3785,33 @@ restoration receipts; preserve current compatible build targets and failure
 records. Keep the 30-minute category cap. V1 semantic/native separation, full
 SQL clean/reused/independent-clean qualification, final integrated gates and V5
 remain mandatory after this bounded prerequisite.
+
+
+#### V1b2 discovered legacy field-check failure
+
+The first extraction candidate `0959472a31342b2aba4dc0ff0dd23bfba1a27f2b`
+passes 14 of 15 focused policy/verification categories; the legacy payload-field
+check fails. A source archive of the exact pre-extraction base
+`c569420aea1779486d381defdc198ea096c5e2b2` reproduces that failure before any
+relocation: `ExternalDefs field inventory changed`. The baseline probe had
+expected to reach the stale site list, but execution stops at the earlier field
+comparison; retain that diagnostic and its original failed expectation.
+
+`ExternalDefs` contains two process-local capabilities, `provider` and
+`typed_method_processor`, both optional `Arc<dyn ...>` authorities. All other
+field names match `SemanticExports`; the old checker only classifies `provider`
+as host-only. This is checker drift, not a field dropped by the extraction.
+The historical inventory still exists at its original documentation path; it was
+not moved into a history directory. V4 owns correcting the live field
+classification and its regression controls, separately from preserving the
+historical site catalogue. Do not mark this failed check as passing or silently
+remove its final reconciliation obligation.
+
+V1b2 retains its stronger relocation-specific proofs: every raw metadata source
+and fixture is byte-identical, format and payload field order are unchanged,
+producer/reader and full-corpus parity must execute, and installed/source
+admission must pass. Preserve the legacy failure and its unchanged-input hashes
+alongside these results under the approved intermediate policy. The new crate's
+initial compile also exposed an omitted `ring` declaration; add the same existing
+pin to the new owner and reconcile its audited direct declaration. Keep that
+failed 8.782-second preparation attempt; no test executed successfully in it.
