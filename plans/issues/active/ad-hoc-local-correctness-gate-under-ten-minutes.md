@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3e bounded reusable native fixture ownership; V1 feasibility and integrated acceptance remain open
+current_stage: V3f native bundle processing; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -1143,7 +1143,7 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.20 / #4389; final completeness pending |
 | V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 through V1b4 / #4392 accepted; V1c scheduling and full feasibility pending |
 | V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
-| V3 compatible build reuse | Pending | Diagnostic evidence only |
+| V3 compatible build reuse | In progress | V3b/V3c/V3e merged; broader fixture and native bundle work open |
 | V4 runner/compilation/policy integration | In progress | V4a correctness-only selection accepted; scheduler, budgeting and catalog work pending |
 | V5 integrated qualification | Pending | No complete green sub-ten-minute result |
 
@@ -6219,3 +6219,110 @@ ordinary driver suite, format/file-size/source-ownership checks, profile checks
 and unchanged emitted-plan comparison. Use exact-candidate scoped independent
 review before merging. Broader native/Python/matrix work, full final correctness
 gates and every V5 scenario remain required; no sub-ten-minute claim is made.
+
+
+### V3e closure — retained final inputs and explicit child ownership
+
+Merged [#4413](https://github.com/sifr-lang/sifr/pull/4413), reviewed candidate
+`29417909829d1b81cc65ae36a655346229b95ed5`, merge
+`53d0a8ead1dc8395867b2761eee66f09ce1918e9`. One fixed advanced-data fixture owner
+now reads canonical files and composes both overlays before reconciling its
+retained tree. It preserves unchanged mtimes, restores current content, removes
+stale paths/type conflicts, rejects aliases and keeps permanent lock inodes.
+Its lease reaches metadata, package planning before probes, native build/capture
+and runtime commands. Unix parent descriptors remain close-on-exec; intended
+children explicitly retain them. Existing Windows behavior is unchanged.
+
+The implementation retains at most one tree per checkout with 64 MiB/4096 final
+files; canonical traversal additionally counts directories toward a stricter
+4096-entry limit. Private controls use temporary storage. No revision allocation,
+previous assertion result, resolution identity omission or eviction service was
+introduced. Cached entrypoint orchestration moved into its own module to remain
+under the source-size guardrail.
+
+Validation on the reviewed candidate:
+
+| Check | Result | Observed seconds |
+| --- | --- | ---: |
+| Focused fixture ownership/reconciliation | 5 passed; original regression ID preserved | 72.747412 including compilation; 1.13 test body |
+| Advanced-data native preparation | Exact role passed | 118.865451 outer |
+| Advanced-data runtime roundtrip | Exact original status/stdout/stderr assertions passed | 74.252214 outer |
+| Ordinary driver suite | 759 passed, 82 ignored; all 837 prior IDs retained and 4 added | 353.886846 outer; 342.823507 execution; 2.662712 preparation |
+| Formatting | Passed | 12.392669 |
+| File-size guardrail | Passed | 9.883333 |
+| Source ownership | Passed | 9.431571 |
+| Profiles check | Passed | 1.430621 |
+| Plans/configuration comparison | Both correctness plans and all 8 configurations unchanged | 1.187438 |
+
+The ordinary suite includes all 48 project-cache tests plus native child-lease
+and Cargo-resolution identity controls. Light guards overlapped the focused
+compilation, so their times are correctness observations, not additive gate
+performance. The initial extracted-module/visibility compilation failure was
+repaired and preserved separately. Final reviewed checks passed without source
+mutation; native and ordinary diagnostic sessions had no surviving descendants.
+
+The follow-up native role still invokes Cargo 22 times but executes **zero**
+rustc processes, compared with 24 before. All 13 final fixture files are identical
+to baseline; bytes, mtimes and inodes survive both candidate roles and remain
+unchanged after runtime completion and lease release. Actual descriptor evidence
+shows the Cargo/rustc children retaining the fixture lock while parent handles
+remain close-on-exec. The killed-parent control independently proves intended
+child retention and unrelated-exec exclusion.
+
+The 111.272127s to 74.252214s runtime comparison is one instrumented observation
+with different preparation/capture initial states, not paired V5 qualification.
+It proves avoided fixture invalidation, not a cold-build speedup or a complete
+sub-ten-minute gate. The earlier capped cold preparation stays incomplete.
+
+Evidence: `v3e-evidence.tar.gz`, all 1388 manifest-listed files verified, SHA-256
+`125d58e66838024d4ebb4973be923a5ed8bf6bbf2c3f188b8636fc57427d2353`.
+Exact-candidate independent review: **SATISFIED**, no blockers; response SHA-256
+`925a2beeda96c732b9ffe9bb8d0ca0d1f61db44612453a7497e28a65ad4dac69`.
+The fixture owner retains nonblocking follow-ups to align entry/file count
+wording, document that `target` directories are skipped at every depth and empty
+canonical directories are not retained, and keep/remove the redundant private
+validation guard deliberately. These do not affect the current 13-file fixture.
+
+CI's [create-PR job](https://github.com/sifr-lang/sifr/actions/runs/39646337313/job/119382785062)
+again stopped before correctness setup because `SIFR_PERFORMANCE_REFERENCE` is
+unset. This existing qualification configuration failure is preserved separately;
+no CI-green or final-gate pass is claimed. Broader native/Python/command-matrix
+work and every final correctness/V5 scenario remain open.
+
+### V3f bounded item — native bundle inventory and content processing
+
+The successful V3e runtime executes an 894150648-byte native executable despite
+requiring no Rust compilation. Current `NativeSnapshot::inspect` hashes the
+initial bundle, and every call site immediately calls `with_runtime`, which
+hashes the complete inventory again. Finalized output verification separately
+compares current bytes. Source inspection proves the duplicate pass; its share
+of runtime is not yet measured. Do not conflate this with fixture invalidation,
+change application features/debug information, or weaken content validation.
+
+First measure the current inspection, runtime-inventory and verification stages
+using the actual selected compiler/dependency configuration and retained bundle,
+with explicit ownership, resource preflight, a 30-minute category cap and fresh
+processes. Preserve any abbreviated or failed evidence. An isolated diagnostic
+may compile verbatim current source fragments against the actual resolved
+identity library; record source/library hashes, Cargo artifact selection and all
+commands, and distinguish it from complete gate timing. Compare an owned
+prototype that gathers the complete inventory before hashing once. Preserve
+exact field ordering, domain, final digest and existing failure outcomes; do not
+use a metadata-only shortcut, memoized digest or cached successful assertion.
+
+Adopt the single-final-inventory approach only after equality/negative controls
+and a measured benefit. Keep every caller under its existing native-family and
+artifact leases, keep fresh finalized-content verification and runtime capture,
+and preserve same-name library conflict rejection and existing sidecar checks.
+Cover missing/changed payloads, captured corruption, runtime-library conflicts
+and destination/order binding. Update all actual native application/test runner
+callers together; no fallback or alternate pipeline is authorized.
+
+Named candidate checks: affected native reuse and new bundle controls, the
+original advanced-data preparation/runtime roles (with retained-input freshness
+verified), ordinary driver suite and its preserved inventory, formatting,
+file-size/source-ownership guards, unchanged profile/configuration selection and
+independent exact-candidate review. Use repeated alternating diagnostic cases
+where needed to separate the hash benefit from page-cache/preparation state.
+No full-gate claim follows from a microbenchmark; complete final gates, cold
+invalidation feasibility, broader fixture work and V5 remain mandatory.
