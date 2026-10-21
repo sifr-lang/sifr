@@ -15,3 +15,9 @@ mod corpus_tests;
 mod generation_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod semantic_boundary_tests;
+
+#[cfg(test)]
+mod semantic_installed_tests;

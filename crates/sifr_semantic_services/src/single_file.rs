@@ -36,6 +36,19 @@ pub fn compile_sql_migration_source(
     compiler: &crate::SemanticContext,
     source: &str,
 ) -> Result<Vec<sifr_frontend::MigrationSourceDeclaration>, Vec<RenderedDiagnostic>> {
+    let lowered = lower_source(compiler, source)?;
+    sifr_frontend::sql_migration_declarations(&lowered.module).map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            error.message,
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT,
+        )]
+    })
+}
+
+pub fn lower_source(
+    compiler: &crate::SemanticContext,
+    source: &str,
+) -> Result<sifr_ir::LoweringResult, Vec<RenderedDiagnostic>> {
     let defs = compiler.external_defs()?;
     let suite = sifr_frontend::parse_source(source, None)?;
     let mut product = compile_product(
@@ -53,13 +66,7 @@ pub fn compile_sql_migration_source(
         &mut product,
         &crate::sql_editor::PreparedSqlProfiles::default(),
     )?;
-    let lowered = into_lowering(product)?;
-    sifr_frontend::sql_migration_declarations(&lowered.module).map_err(|error| {
-        vec![crate::diagnostics::diagnostic_with_code(
-            error.message,
-            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT,
-        )]
-    })
+    into_lowering(product)
 }
 
 /// Preserve the native single-file projection, including required flow graphs.

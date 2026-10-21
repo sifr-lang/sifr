@@ -129,3 +129,7 @@ fn failure(error: impl std::fmt::Display) -> Vec<RenderedDiagnostic> {
         DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
     )]
 }
+
+#[cfg(test)]
+#[path = "context_tests.rs"]
+mod tests;

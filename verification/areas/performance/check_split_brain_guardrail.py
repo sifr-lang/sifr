@@ -56,7 +56,7 @@ ALLOWED_SITES: dict[Path, dict[str, str]] = {
     Path("crates/sifr_compiler_services/src/metadata/locations.rs"): {
         "let parsed = sifr_syntax::parse_module_raw(source, None).map_err(|_| {": "checked declaration source ranges",
     },
-    Path("crates/sifr_compiler_services/src/stdlib/bootstrap.rs"): {
+    Path("crates/sifr_semantic_services/src/stdlib/bootstrap.rs"): {
         "let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {": "canonical stdlib compile input",
         "lower_module_sysroot_public_stdlib_with_externals(suite, stdlib_defs)": "canonical public stdlib lowering",
         "lower_module_sysroot_private_declaration_with_externals(suite, stdlib_defs)": "canonical private stdlib declaration lowering",
@@ -332,7 +332,7 @@ def run_self_test() -> None:
         assert violations_text(cli, extra), "same-file duplicate escaped"
     for rel in (
         Path("crates/sifr_compiler_services/src/metadata/locations.rs"),
-        Path("crates/sifr_compiler_services/src/stdlib/bootstrap.rs"),
+        Path("crates/sifr_semantic_services/src/stdlib/bootstrap.rs"),
     ):
         current = (REPO_ROOT / rel).read_text(encoding="utf-8")
         assert not violations_text(REPO_ROOT / rel, current), f"{rel} rejected"

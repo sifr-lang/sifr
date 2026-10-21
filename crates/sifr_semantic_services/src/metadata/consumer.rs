@@ -1,6 +1,6 @@
 use super::{Result, wire};
 use std::{
-    fs::File,
+    fs::{self, File},
     io::{Read, Write},
     path::{Path, PathBuf},
     sync::{Arc, atomic::Ordering},
