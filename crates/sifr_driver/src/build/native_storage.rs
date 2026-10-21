@@ -247,7 +247,11 @@ pub(crate) struct NativeSnapshot {
 }
 
 impl NativeSnapshot {
-    pub(crate) fn inspect(executable: &Path, destination: &Path) -> std::io::Result<Self> {
+    pub(crate) fn inspect(
+        executable: &Path,
+        destination: &Path,
+        libraries: &[PathBuf],
+    ) -> std::io::Result<Self> {
         let mut files = vec![(executable.to_path_buf(), destination.to_path_buf())];
         for (source, destination) in [
             (
@@ -263,27 +267,6 @@ impl NativeSnapshot {
                 collect_bundle(&source, &destination, &mut files)?;
             }
         }
-        Self::from_files(files)
-    }
-
-    fn from_files(files: Vec<(PathBuf, PathBuf)>) -> std::io::Result<Self> {
-        let mut identity = sifr_identity::IdentityEncoder::new("final-native-bundle-v1");
-        for (source, destination) in &files {
-            identity.field("path", destination.as_os_str().as_encoded_bytes());
-            identity.field("bytes", &std::fs::read(source)?);
-        }
-        Ok(Self {
-            identity: identity.finish(),
-            files,
-        })
-    }
-
-    pub(crate) fn with_runtime(
-        self,
-        libraries: &[PathBuf],
-        destination: &Path,
-    ) -> std::io::Result<Self> {
-        let mut files = self.files;
         for source in libraries {
             let name = source
                 .file_name()
@@ -300,6 +283,18 @@ impl NativeSnapshot {
             }
         }
         Self::from_files(files)
+    }
+
+    fn from_files(files: Vec<(PathBuf, PathBuf)>) -> std::io::Result<Self> {
+        let mut identity = sifr_identity::IdentityEncoder::new("final-native-bundle-v1");
+        for (source, destination) in &files {
+            identity.field("path", destination.as_os_str().as_encoded_bytes());
+            identity.field("bytes", &std::fs::read(source)?);
+        }
+        Ok(Self {
+            identity: identity.finish(),
+            files,
+        })
     }
 
     pub(crate) fn required(&self) -> Vec<&Path> {
@@ -446,3 +441,7 @@ pub(crate) fn loader_build_script(python: Option<String>) -> String {
         1,
     )
 }
+
+#[cfg(test)]
+#[path = "native_snapshot_tests.rs"]
+mod tests;

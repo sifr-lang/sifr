@@ -292,9 +292,12 @@ pub(crate) fn execute_test_runner_project(
     let mut snapshots = Vec::new();
     for (index, path) in cargo_executables.iter().enumerate() {
         let relative = PathBuf::from(format!("executables/test-{index}"));
-        let snapshot = crate::build::native_storage::NativeSnapshot::inspect(path, &relative)
-            .and_then(|snapshot| snapshot.with_runtime(&runtime_libraries, &relative))
-            .map_err(test_io_error)?;
+        let snapshot = crate::build::native_storage::NativeSnapshot::inspect(
+            path,
+            &relative,
+            &runtime_libraries,
+        )
+        .map_err(test_io_error)?;
         cache_key.push_str(&snapshot.identity);
         snapshots.push(snapshot);
         executables.push(relative);

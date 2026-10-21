@@ -401,8 +401,8 @@ pub fn value() -> i32 { unsafe { dx9_value() } }"#,
     let snapshot = super::native_storage::NativeSnapshot::inspect(
         &report.native_executable,
         Path::new("program"),
+        &report.native_libraries,
     )
-    .and_then(|snapshot| snapshot.with_runtime(&report.native_libraries, Path::new("program")))
     .expect("bundle inventory");
     let final_root = root.join("final");
     snapshot.capture(&final_root).expect("independent capture");
