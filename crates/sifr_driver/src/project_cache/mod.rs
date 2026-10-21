@@ -11,6 +11,7 @@ mod interface_reuse;
 mod package_context;
 #[cfg(test)]
 mod package_reuse_tests;
+mod process_lease;
 mod record_validation;
 mod storage;
 #[cfg(test)]

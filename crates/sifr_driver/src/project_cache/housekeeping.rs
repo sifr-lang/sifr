@@ -1,5 +1,6 @@
 //! Explicit owner-scoped cleanup. The stable namespace lock is outside the
 //! namespace; stores and detached readers hold it shared, orphan GC exclusively.
+use super::process_lease::ProcessLease;
 use super::storage::{Hint, Store, invalid, key, read, stamp, write_new};
 use crate::cache_storage;
 use serde::{Deserialize, Serialize};
@@ -65,10 +66,13 @@ fn created_ns(metadata: &fs::Metadata) -> io::Result<u128> {
         .as_nanos())
 }
 
-pub(super) fn open_namespace(cache: &Path, workspace: &Path, id: &str) -> io::Result<Arc<File>> {
+pub(super) fn open_namespace(
+    cache: &Path,
+    workspace: &Path,
+    id: &str,
+) -> io::Result<Arc<ProcessLease>> {
     let projects = cache.join("projects");
-    let lease = cache_storage::process_entry_lock(&projects, id)?;
-    lease.try_lock_shared().map_err(io::Error::from)?;
+    let lease = ProcessLease::shared(cache_storage::process_entry_lock(&projects, id)?)?;
     let namespace = projects.join(id);
     cache_storage::directory(&namespace)?;
     // Never retroactively claim unknown pre-existing payloads for this owner.
@@ -150,7 +154,7 @@ pub(super) fn existing_lease(parent: &Path, name: &str) -> io::Result<File> {
     }
     Ok(lease)
 }
-fn lock_tree(path: &Path, leases: &mut Vec<File>) -> io::Result<()> {
+fn lock_tree(path: &Path, leases: &mut Vec<ProcessLease>) -> io::Result<()> {
     for entry in fs::read_dir(path)? {
         let entry = entry?;
         if cache_storage::real_directory(&entry.path()) {
@@ -159,8 +163,7 @@ fn lock_tree(path: &Path, leases: &mut Vec<File>) -> io::Result<()> {
                     let lock = lock?;
                     let name = lock.file_name();
                     let name = name.to_str().ok_or_else(|| invalid("invalid lock name"))?;
-                    let lease = existing_lease(path, name)?;
-                    lease.try_lock().map_err(io::Error::from)?;
+                    let lease = ProcessLease::exclusive(existing_lease(path, name)?)?;
                     leases.push(lease);
                 }
             } else {
@@ -197,7 +200,7 @@ pub(super) fn prune_store(
     let Ok(writer) = existing_lease(&store.root, "writer") else {
         return Ok(report); // No established writer authority: preserve the context.
     };
-    writer.try_lock().map_err(io::Error::from)?;
+    let _writer = ProcessLease::exclusive(writer)?;
     let latest = store.latest();
     let parent = store.root.join("generations");
     if !safe_path(&parent) {
@@ -228,9 +231,9 @@ pub(super) fn prune_store(
         let Ok(lease) = existing_lease(&parent, name) else {
             continue;
         };
-        if lease.try_lock().is_err() {
+        let Ok(_lease) = ProcessLease::exclusive(lease) else {
             continue;
-        }
+        };
         report.reclaim(&entry.path(), key(name), dry_run)?;
     }
     // Only writer-serialized staging locks are ephemeral. Generation locks
@@ -257,9 +260,9 @@ pub(super) fn prune_store(
             let Ok(lease) = existing_lease(&parent, name) else {
                 continue;
             };
-            if lease.try_lock().is_err() {
+            let Ok(_lease) = ProcessLease::exclusive(lease) else {
                 continue;
-            }
+            };
             report.reclaim(&entry.path(), false, dry_run)?;
         }
     }
@@ -371,13 +374,15 @@ pub(super) fn prune_workspace(
     let Ok(lease) = existing_lease(&projects, &id) else {
         return Ok(report);
     };
-    if orphan {
-        if lease.try_lock().is_err() {
-            return Ok(report);
-        }
-    } else if lease.try_lock_shared().is_err() {
+    let lease = if orphan {
+        ProcessLease::exclusive(lease)
+    } else {
+        ProcessLease::shared(lease)
+    };
+    let Ok(lease) = lease else {
         return Ok(report);
-    }
+    };
+    let lease = Arc::new(lease);
     let owner = read(&namespace, "owner.json", 16 * 1024)
         .ok()
         .and_then(|bytes| serde_json::from_slice::<Owner>(&bytes).ok());
@@ -423,7 +428,7 @@ pub(super) fn prune_workspace(
                 workspace_root: workspace.clone(),
                 workspace: id.clone(),
                 context: context.into(),
-                namespace_lease: Arc::new(lease.try_clone()?),
+                namespace_lease: Arc::clone(&lease),
                 validation: Arc::new(super::record_validation::RecordValidation::new(
                     context.into(),
                 )),
