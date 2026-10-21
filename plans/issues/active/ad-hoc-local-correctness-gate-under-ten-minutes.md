@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V2c durable-history validation reuse implementation; integrated acceptance remains open
+current_stage: V3a generated-code materialization input authority investigation; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -4801,3 +4801,81 @@ Run affected frontend persistence tests, formatting/file-size checks, method and
 filesystem inventory contracts, and scoped independent exact-candidate review.
 Compare complete history baseline/candidate times and observed assertion IDs without
 claiming additive savings. Full phase gates and all V5 scenarios remain mandatory.
+
+
+### V2c acceptance — bounded durable-record validation facts
+
+PR [#4397](https://github.com/sifr-lang/sifr/pull/4397) merged as
+`c9ebfb725ca1218c3aeaf73065353bf683f6b6e9`; final implementation candidate
+`b58f45f6ea0ff04234081b4ea57c4fea98c8077d`. Every admission rereads the owned
+current file and authenticates its raw bytes before reusing a successful fact
+bound to the expected stored identity and immutable context. The LRU retains at
+most 128 identity pairs, with no decoded payloads or failed validations. Bounded
+reads reserve the checked file length and retain growth/error rejection.
+
+All 37 original project-cache tests and eight new controls pass. The 44 shorter
+cases take 25.710s overall / 22.69s execution. The full 4,097-publication history
+case takes 196.401s overall / 193.58s execution, versus baseline 449.354s overall /
+394.73s execution. This single before/after observation shows about 51% lower test
+execution time. Baseline preparation rebuilt stale dependencies and included
+lightweight process sampling; do not attribute the outer-time difference solely
+to this implementation or claim a repeated full-gate result. All non-timing
+fields at four history checkpoints match, including retention and byte counts.
+
+All nine frontend persistence tests pass (2.194s overall / 0.11s execution).
+Filesystem inventory passes on the final candidate (15.696s). Method policy,
+filesystem/method self-tests, formatting and file-size checks passed on identical
+Rust inputs before inventory-only commits. The canonical inventory generator's
+unrelated manual-classification resets were rejected; outside-item row content
+and ordering are unchanged. The final inventory adds 20 and removes three sites
+owned by the two affected Rust files. Source comparison proves all five original
+test files and the exact write_new, publish, point and prune_store bodies remain
+unchanged. Durability, disk schema/digest, leases, hardlinks and pruning remain.
+
+Evidence packet `v2c-evidence.tar.gz`, SHA-256
+`16e67c100f4740ea6a0ef9e47a4c44c6caf5501997ce303d30bbd351c74e9570`, has 137
+independently hash-verified entries. `v2c-acceptance-summary.json` reconciles every
+original/new test against final enclosing all-pass counts, retaining nested child
+output. Exact-candidate independent review is **SATISFIED**, no blockers:
+`reviews/b58f45f6ea0ff04234081b4ea57c4fea98c8077d/response.md`, SHA-256
+`12f1c49a4898bca240704762face7c1bf52f520cac6809d9c860d4f6f004d2af`.
+The first review request failed authentication; its incomplete evidence is retained
+and is not a pass. Initial missing-constructor-field and inventory failures remain
+preserved. GitHub full-scope create-PR job 119152636146 failed admission because
+SIFR_PERFORMANCE_REFERENCE was unset; its downstream tests did not run. CI policy
+migration remains a later-stage owner, not evidence of local correctness.
+
+Review suggestions: measure owner-mutex contention before changing miss locking;
+retain awareness that aggregate-size rejection now precedes digest rejection on
+multiply-invalid data; consumers still decode current authenticated bytes and a
+miss performs full validation first. No speculative concurrency change is needed.
+V1 build feasibility, V3/V4, complete final correctness gates and V5 remain open.
+
+### V3a bounded investigation — generated materialization input authority
+
+Before expanding shared build reuse, resolve the incomplete GCQ materialization
+identity. Its hand-maintained producer list omits IR/type-system and newly split
+compiler owners, filters source extensions, and caches a generated directory when
+Cargo.toml merely exists. Inspect actual selected-compiler preparation, source /
+project imports, external component/configuration inputs, output completion and
+consumer lifecycle before choosing a replacement. Adding two crate names alone
+cannot establish a complete input boundary.
+
+Investigate whether canonical materialization on every invocation, followed by
+content-preserving reconciliation of generated inputs into a leased stable owner,
+can remove this duplicate semantic cache while retaining compatible Cargo
+artifacts. This is a hypothesis, not an approved implementation or measured gain.
+Compare actual representative simple, multi-file and runtime-bearing entries,
+including compiler preparation, repeated unchanged materialization, source edits,
+output bytes and mtimes. Inspect the existing materializer before duplicating its
+identity or publication machinery. No source/profile/coverage changes during the
+diagnostic. Retain the 30-minute category cap, owned paths, resource reserves,
+failed evidence and clean source identity.
+
+Register the concrete implementation and acceptance controls after these results.
+Any subsequent implementation must preserve full assertions, input/permission /
+symlink checks, failure recovery, active-owner and child leases, bounded retention,
+relevant environment/toolchain/trust distinctions, and exact current outputs.
+Full final correctness gates and all V5 scenarios remain mandatory. V4's previously
+recorded hash-ordering mutation and real requirement-only editor reload regression
+also remain owned follow-ups, not implied completed coverage.
