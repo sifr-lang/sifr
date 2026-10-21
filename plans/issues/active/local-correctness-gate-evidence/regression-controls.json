@@ -3,8 +3,8 @@
   "rows": [
     {
       "work": "V2 metadata",
-      "focused_command": "cargo test --locked --offline -p sifr_sysroot metadata::",
-      "source": "crates/sifr_sysroot/src/metadata/tests.rs",
+      "focused_command": "cargo test --locked --offline -p sifr_metadata --lib metadata::",
+      "source": "crates/sifr_metadata/src/metadata/tests.rs",
       "existing_controls": [
         {
           "name": "nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject",
