@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V0.19 lint verification authority; V1 semantic/native separation remains open
+current_stage: V0.20 formatter verification failure propagation; V1 semantic/native separation remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -654,8 +654,8 @@ runner, fallback compiler or elaborate scheduler is justified by current evidenc
 
 - [ ] Implementation and acceptance complete.
 
-Current evidence: Bounded repairs and their acceptance are recorded below. V0.18
-filesystem ledger reconciliation and final integrated completeness remain open.
+Current evidence: Bounded repairs and their acceptance are recorded below. V0.20
+formatter failure propagation and final integrated completeness remain open.
 
 Decision: No final timing promise until the failed setup paths execute their downstream
 assertions. Independent measured optimizations may proceed with matched outcomes; they
@@ -1129,7 +1129,7 @@ reviewed candidate, documentation validation and review evidence in the handoff.
 | Item | Status | Merged PR / candidate / validation / review |
 | --- | --- | --- |
 | Phase registration | Merged in [#4356](https://github.com/sifr-lang/sifr/pull/4356) | Reviewed plan candidate `c7e80fb6cb310fb1d4ff64c2e0179a2d148fb467`; documentation checks pass; independent review SATISFIED; subsequent edits only clarify documentation and record this handoff |
-| V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.17 / #4385; V0.18 and final completeness pending |
+| V0 executable coverage | In progress | Bounded repairs accepted below, most recently V0.19 / #4388; V0.20 and final completeness pending |
 | V1 mandatory build path | In progress | V1a experiment / #4383 recorded; V1b1 / #4384 accepted; semantic/native split and feasibility pending |
 | V2 repeated metadata/component work | In progress | V2a / #4386 accepted below; component/history work pending |
 | V3 compatible build reuse | Pending | Diagnostic evidence only |
@@ -3613,3 +3613,75 @@ observed candidate identity; reuse only input-equivalent evidence. Update the
 static-suite coverage reconciliation explicitly, without claiming a complete
 phase gate. No compiler source change or clean build is required for this policy
 repair. Then return to V1 dependency separation. Final phase gates remain required.
+
+
+### V0.19 acceptance — lint verification authority and failure propagation
+
+PR [#4388](https://github.com/sifr-lang/sifr/pull/4388) accepts implementation
+`bb9de83ca671254090ae721c20c11be9b65ed33a`, based on V0.18 merge
+`a75fdfc7840da8284198825b4638ba4b76684764` (#4387). Only the two scoped Python
+verification adapters change. The diagnostic-class guard now binds to the actual
+code-action owner and rejects missing owners/gates and missing wire payloads;
+its complete analysis/LSP prefix prohibition is preserved. The suppression
+adapter exits nonzero for every expected/observed status mismatch and reports
+both values, closing the reproduced expected-one/observed-zero false success.
+Real lint assertions remain unchanged.
+
+All **18 developer-tooling static variants pass** on that exact candidate;
+the sum of their individual timed categories is **54.132s**. This is a prepared,
+local diagnostic run, not the complete gate. Completion-quality is **3.688s**
+with retained preparation versus V0.18's **635.736s** preparation run. That
+contrast confirms preparation dominance; it is not a performance gain caused
+by this policy repair. Suppression rules and full self-tests pass in **6.684s**
+and **4.689s**; the new exit-status and real negative-control PASS markers are
+verified. Controls cover matching zero/nonzero expectations, unexpected success,
+unexpected failure, wrong nonzero status and signal termination. Diagnostic-class
+controls cover the valid/restored layout, prefix seeds in both roots, misplaced
+former gate, missing current owner, missing gate, each missing wire snippet and
+missing conversion owner.
+
+The existing qualified policy-versus-hard-diagnostic code-action regression
+passes: exactly **1 passed / 0 failed / 70 filtered**, **9.190s** including
+preparation (6.18s test runtime), using the retained non-incremental analysis
+configuration. Profile, file-size, whitespace, local-link and only-two-changed-
+paths checks pass in **3.645s**. Rust/compiler inputs and profile selection are
+unchanged. Python is pinned to 3.14.7 and the observed interpreter optimization
+level is zero. Full final gates and V5 are not claimed.
+
+Independent review is **SATISFIED**, no blockers, retained externally at
+`local-gate-implementation-20261020/reviews/bb9de83ca671254090ae721c20c11be9b65ed33a/review.md`.
+Other evidence: `v019-static-validation.json`, `v019-input-proof.json`, per-check
+`v019-*` receipts/logs and the preserved pre-repair `v019-exit-probe.json`.
+Subsequent repository changes update this phase record only.
+
+Review follow-up adjudication: the formatter adapter has the same expected-
+nonzero false-success defect; V0.20 owns it. The suggested frontend-cache
+adapter is **not** affected: it accepts only zero and raises a child status only
+when nonzero. `v020-before-probe.json` confirms formatter expected-one/actual-zero
+exits zero, frontend-cache actual-zero returns normally, and actual-two exits
+two. Preserve the raw review; do not change the safe adapter. Assertions under
+an intentionally optimized Python invocation remain a separate verification
+execution-policy suggestion for V4; canonical validation here used optimization
+level zero.
+
+### V0.20 bounded repair — formatter verification failure propagation
+
+Apply the demonstrated expected-exit repair to
+`verification/areas/developer_tooling/check_formatter_rules.py`. Every mismatch
+must fail, including unexpected success in formatting-drift and invalid-syntax
+negative checks. Retain command output and report the expected/observed status.
+Enroll the same matching/mismatching status controls in its canonical self-test;
+preserve the actual formatting, string-content, idempotence and invalid-syntax
+assertions. Do not change compiler behavior or build selection in this repair.
+
+Audit maintained first-party Python expected-exit adapters for this exact failure
+family and preserve the source/condition findings externally. Do not rewrite
+correct zero-only status propagation or unrelated test adapters. The frontend-
+cache counterexample above is explicitly out of the repair scope.
+
+Named acceptance: the complete six-variant developer-tooling formatter suite,
+new exit-status controls, real positive and negative formatter checks, affected
+compatibility scan and self-test, profiles/file-size/whitespace checks and scoped
+independent review. Require final assertion markers as well as exit status.
+Reuse retained compiler targets and keep the 30-minute category cap. Return to
+V1 dependency separation afterward; full final gates remain required.

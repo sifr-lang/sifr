@@ -4,10 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -20,10 +23,10 @@ from sifr_binary import resolve_sifr_binary  # noqa: E402
 def run(command: list[str], *, expect: int = 0) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(command, cwd=REPO_ROOT, text=True, capture_output=True)
     if completed.returncode != expect:
-        print(f"rule/suppression rules command failed: {' '.join(command)}", file=sys.stderr)
+        print(f"rule/suppression rules command failed (expected exit {expect}, observed {completed.returncode}): {' '.join(command)}", file=sys.stderr)
         print(completed.stdout, file=sys.stderr)
         print(completed.stderr, file=sys.stderr)
-        raise SystemExit(completed.returncode)
+        raise SystemExit(1)
     return completed
 
 
@@ -64,7 +67,26 @@ def run_positive() -> None:
     print("rule/suppression rules: PASS")
 
 
+def run_exit_status_self_test() -> None:
+    for actual, expected in ((0, 0), (1, 1), (0, 1), (1, 0), (2, 1), (-9, 0)):
+        completed = subprocess.CompletedProcess(["exit-status-probe"], actual, "", "")
+        diagnostic = io.StringIO()
+        with patch.object(subprocess, "run", return_value=completed), contextlib.redirect_stderr(diagnostic):
+            if actual == expected:
+                assert run(["exit-status-probe"], expect=expected) is completed
+            else:
+                try:
+                    run(["exit-status-probe"], expect=expected)
+                except SystemExit as error:
+                    assert error.code == 1, (actual, expected, error.code)
+                else:
+                    raise AssertionError(("unexpected child status accepted", actual, expected))
+                assert f"expected exit {expected}, observed {actual}" in diagnostic.getvalue()
+    print("rule/suppression exit-status self-test: PASS")
+
+
 def run_self_test() -> None:
+    run_exit_status_self_test()
     with tempfile.TemporaryDirectory() as tmp:
         source = Path(tmp) / "blanket.sifr"
         source.write_text("def main(): # sifr: ignore\n    pass\n", encoding="utf-8")
