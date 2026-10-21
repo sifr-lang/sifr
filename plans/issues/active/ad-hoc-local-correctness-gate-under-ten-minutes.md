@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3d reusable native fixture diagnosis; V1 feasibility and integrated acceptance remain open
+current_stage: V3e bounded reusable native fixture ownership; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -6149,3 +6149,73 @@ current public package-build calls take no input lease. No global descriptor
 inheritance, missing identity input, copied successful assertion or unbounded
 retention may be introduced. Broader native/Python/command-matrix and V5 coverage
 remains required after the bounded item, and complete final gates remain open.
+
+
+### V3d diagnostic closure — cold compilation and avoidable fixture churn
+
+Frozen candidate `183e5b603ab985d6b6c4b67a7e44d20d0fe70b60` ran both exact
+advanced-data roles separately with two native workers and retained owned targets.
+Preparation reached the 30-minute cap (1801.459509s outer, terminated, incomplete).
+The session guard verified all owned descendant groups stopped. Its subsequent
+runtime role passed the complete original roundtrip/output/stderr assertions:
+111.272127s outer, 3.093267s inventory/preparation, 104.358159s execution including
+Cargo/tracing, 101.81s libtest body. The preparation failure remains a failure;
+this is a fresh-process runtime observation using its retained build artifacts.
+
+All 13 fixture files (163640 bytes) were byte-identical across acquisitions, but
+all 13 mtimes changed. Cargo explicitly marked the Arrow/tensor bridge source
+files stale, then their dependent probes and final binary dirty. The traced
+runtime role executed 24 rustc processes: 21 check units (including bridge
+libraries and dependent probes), two release bridge libraries and one final
+binary. The initial preparation observed 927 rustc invocations across distinct
+probe/final target families, mostly cold dependency work. These are invocations,
+not unique crates; exec-to-parent-SIGCHLD durations are diagnostic observations,
+not exact compiler phase timings and cannot be added as elapsed wall time.
+
+The frozen raw traces, fixture snapshots, commands, resource records, capped and
+passing receipts, descendant cleanup records, helpers and reconciled summaries
+are preserved in `v3d-evidence.tar.gz` (12656 manifest-listed files), SHA-256
+`5c8b96dc0d53add2474f30284abdcfc4b05b41e85e2c5d42c32cc81ae0fb7a7c`.
+No V5 timing or cold-build feasibility claim follows from these instrumented
+observations. The fixture fix cannot eliminate the demonstrated initial native
+compilation. Mutable native target partitioning by complete lock authority is a
+separate hypothesis requiring its own contract and negative controls.
+
+### V3e bounded implementation — one retained advanced-data input owner
+
+Preserve the current advanced-data fixture path and both role/test identities.
+Replace the generic reusable-fixture allocator with one explicitly named logical
+advanced-data owner per compiler checkout. This bounds production retention to
+one tree per owner; there is no revision-based allocation or general eviction
+registry. Cap the freshly composed final input inventory at 64 MiB and 4096 files,
+reject over-budget input before mutation, and retain permanent lock inodes.
+Tests of the helper use isolated temporary storage rather than adding retained
+production fixture identities. Existing unknown owners remain protected.
+
+Freshly read the canonical fixture and compose the rebased runtime manifest and
+evidence entrypoint before reconciliation. Preserve bytes/mtimes of unchanged
+files, restore altered/missing inputs, remove stale files/directories, handle
+file/directory replacement, and reject source/destination symlinks and nonregular
+inputs. Reuse the existing private file writer. Retain the owned tree on drop;
+no marker or previous success authorizes skipping fresh source validation.
+
+Use the existing explicit native-child lease primitives. Carry input ownership
+through Cargo metadata, canonical package planning before any probe, generated
+build/capture and runtime command construction. Unrelated exec children must not
+inherit the fixture lease; intended children must keep it after parent death.
+Do not use process-local unlock-on-drop ownership for these child-held leases.
+Public callers without fixture ownership retain their existing behavior and all
+resolution/trust/profile identities remain unchanged. Split cached entrypoint
+responsibilities if needed to preserve the source-size guardrail.
+
+Named acceptance: unchanged-byte/mtime and final-overlay tests, mutation/missing/
+stale/file-directory restoration, source/destination alias rejection, size/count
+bounds, concurrent owner exclusion, and actual intended-child versus unrelated-
+child lifetime controls. Retain the original fixture regression identity. Run
+both advanced-data native roles on the candidate (separate 30-minute caps) and
+inspect Cargo freshness on the retained-input follow-up while preserving every
+runtime assertion. Run the affected native child/resolution identity controls,
+ordinary driver suite, format/file-size/source-ownership checks, profile checks
+and unchanged emitted-plan comparison. Use exact-candidate scoped independent
+review before merging. Broader native/Python/matrix work, full final correctness
+gates and every V5 scenario remain required; no sub-ten-minute claim is made.
