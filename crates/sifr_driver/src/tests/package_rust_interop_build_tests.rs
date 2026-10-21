@@ -101,7 +101,7 @@ const CALLBACK_SUBSCRIPTION_NEGATIVE: &str = include_str!(
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_local_bridge_blake3_positive_cargo_probe() {
-    let mut inputs = ScenarioInputs::new(
+    let inputs = ScenarioInputs::new(
         "local_bridge_blake3",
         "local_blake3_bridge",
         "rust_interop_local_bridge_positive",
@@ -167,7 +167,7 @@ fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_build_bridge_type_matrix_positive_cargo_probe() {
-    let mut inputs = ScenarioInputs::new(
+    let inputs = ScenarioInputs::new(
         "bridge_type_matrix",
         "bridge_type_roundtrip",
         "rust_interop_bridge_type_roundtrip",
