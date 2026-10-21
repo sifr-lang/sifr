@@ -78,7 +78,14 @@ fn checked_observer_preserves_source_order_imports_and_canonical_hir() {
     for (source, retained) in sources.iter().zip(&observer.retained) {
         assert!(Arc::ptr_eq(retained, &checked.hir_modules[&source.module]));
     }
-    assert!(checked.defs.functions["sifr.beta"].contains_key("result"));
+    assert!(
+        checked
+            .defs
+            .functions
+            .get("sifr.beta")
+            .unwrap()
+            .contains_key("result")
+    );
     assert_eq!(
         checked.transitive_deps["sifr.beta"],
         HashSet::from(["_sifr.zeta".to_owned(), "sifr.alpha".to_owned(),])
