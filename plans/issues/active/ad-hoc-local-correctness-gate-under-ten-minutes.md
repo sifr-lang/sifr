@@ -3828,3 +3828,19 @@ or change compiler behavior. Validate the real guard and its canonical self-test
 The compiler/runtime candidate is frozen in its separate validation checkout;
 prove unchanged compiler and runtime inputs before reusing its evidence for
 this Python-policy-only follow-up.
+
+
+#### V1b2 discovered producer fingerprint omission
+
+The complete native corpus passes all 732 positive, 569 negative and six
+runtime-failure inputs. The new GCQ same-mtime ownership control then fails:
+the producer fingerprint enumerates each registered crate's manifest and source
+but omits its `build.rs`, including the new metadata owner's identity emitter.
+Retain this failed execution. Correct the registered producer-root inventory to
+include existing build scripts, and prove equal-mtime content edits and restoration
+for both moved owners' build scripts as well as their manifests/source. Preserve
+all three real Clippy-isolation controls. This is the V1b2 producer-identity
+acceptance boundary, not a cache bypass. V3 still owns complete producer/input
+inventory and materialization reuse across all toolchain/environment contexts.
+The Rust candidate and completed native evidence remain frozen; execute changed
+GCQ controls on the corrected candidate and prove unaffected inputs before reuse.
