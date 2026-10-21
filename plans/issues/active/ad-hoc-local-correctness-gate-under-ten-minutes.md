@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4k deterministic lease deadline controls; V1 feasibility and integrated acceptance remain open
+current_stage: V3d reusable native fixture diagnosis; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -6083,3 +6083,69 @@ driver live-holder, wedged-owner and metadata wait controls; formatting, size,
 affected source ownership and unchanged emitted correctness selections.
 Use the approved intermediate review policy with exact candidate/evidence.
 Final integrated gates and all V5 timing scenarios remain required.
+
+
+### V4k closure — deterministic deadline and real renewal controls / #4410
+
+PR [#4410](https://github.com/sifr-lang/sifr/pull/4410) merged as
+`7a4fd1dce3ce2556126d7d22689ce095673df776` after **SATISFIED** review with no
+blockers on candidate `1ba41b0238cd7a1161053a6a38bd0fe58b015106`, base
+`9020ec5f6aee1f4ae444e5219fc6fbbf695f1606`. The private deadline calculation is
+now tested with controlled timestamps; production still observes real monotonic
+time and modification identities. Public APIs, production deadline/renewal
+constants, worker implementation, durability and child ownership are unchanged.
+
+Both complete storage runs passed all 14 tests, retaining the ten original IDs
+and adding three deadline controls and one real-renewal control. Wrapper times
+were 2.187s and 0.688s on the two owned temporary-storage locations. The actual
+production deadline code passes while its no-idle-reset mutant fails; the actual
+renewal test passes while its disabled-worker mutant fails at the 10s failure
+bound. All 24 compiler-service tests passed (50.217s including preparation).
+All five driver live/wedged/retention controls, three process-local lease controls
+and three intentional child-lease controls passed (29.721s combined including
+preparation). Formatting, size, source ownership and unchanged emitted plans
+passed. Some light checks overlapped; these are correctness diagnostics, not
+whole-gate timing evidence. Original failures remain failed in their archives.
+
+Manifest-verified 136-file archive `v4k-evidence.tar.gz`, SHA-256
+`a038bc0eff884eb8501c595b3d8f1c136869e8a3326ceb195c2b3ed8021baa10`.
+Raw review outside Git:
+`reviews/1ba41b0238cd7a1161053a6a38bd0fe58b015106/request.fsdpu9/response.md`,
+SHA-256 `dbb512dc38a7ffac7e0e0b6b3b1ef14784da2ce366571a343de1bc02e0c26de5`.
+Nonblocking suggestions: explicit saturating-duration spelling and a direct
+error-message projection assertion; the real driver live-holder integration
+remains required in V5. No full-gate, CI-green or sub-ten-minute result is claimed.
+
+### V3d bounded investigation — reusable native fixture lifecycle
+
+Measure the two actual callers of `ReusableScenario`: explicit advanced-data
+native preparation and its runtime roundtrip assertion. The helper currently
+deletes and recopies the fixture on acquisition and deletes it again on drop;
+its callers then rewrite the runtime dependency and evidence entrypoint. A stable
+path alone therefore does not prove reusable Cargo inputs. This evidence applies
+to those two roles, not all 88 current native roles or the 29 Python examples.
+
+Run each exact selected role in a fresh process against the published frozen
+candidate, with retained owned targets, explicit native worker/resource budgets
+and a separate 30-minute diagnostic cap. Preserve stdout/stderr, exits and exact
+selection. Observe actual nested Cargo commands and fingerprint dirty/fresh
+reasons, distinguishing diagnostic instrumentation from acceptance timing. Record
+preparation, assertions and any failures independently. Check current fixture,
+overlay, lock, toolchain and Cargo-context identities. Do not clean shared targets
+or assume an unchanged-path cache hit. A failed or capped preparation does not
+turn its dependent assertion into a pass; run independently executable roles
+when safe, and preserve the preparation failure.
+
+Use the result to register the implementation boundary before editing production.
+The intended direction is final-content reconciliation under a stable owned
+lease: preserve unchanged bytes/mtimes, restore mutations, remove stale entries,
+reject symlink substitution and bound retained inactive inputs. Compose the final
+manifest/entrypoint overlay before reconciliation, avoiding restore-then-rewrite
+invalidation. Existing fixture locks broadly inherit; replacement must bind the
+lease only to actual metadata, probe, build and runtime children and retain those
+consumers after parent death. A process-local unlock-on-drop owner is not suitable.
+Trace all consumers through canonical build planning before selecting an API;
+current public package-build calls take no input lease. No global descriptor
+inheritance, missing identity input, copied successful assertion or unbounded
+retention may be introduced. Broader native/Python/command-matrix and V5 coverage
+remains required after the bounded item, and complete final gates remain open.
