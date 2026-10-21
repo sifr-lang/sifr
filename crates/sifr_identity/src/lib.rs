@@ -2,6 +2,10 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use sha2::{Digest, Sha256};
 
+mod stream;
+#[cfg(test)]
+mod stream_tests;
+
 #[cfg(feature = "build")]
 pub mod build;
 

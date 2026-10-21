@@ -4,6 +4,10 @@ use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
+#[path = "native_bytes.rs"]
+mod bytes;
+use bytes::DestinationErrors;
+
 pub(crate) struct NativeFamily {
     _lease: File,
     #[cfg(unix)]
@@ -273,7 +277,7 @@ impl NativeSnapshot {
                 .ok_or_else(|| std::io::Error::other("runtime library has no filename"))?;
             let target = destination.parent().unwrap_or(Path::new("")).join(name);
             if let Some((previous, _)) = files.iter().find(|(_, path)| path == &target) {
-                if std::fs::read(previous)? != std::fs::read(source)? {
+                if !bytes::matches(previous, source, DestinationErrors::Reject)? {
                     return Err(std::io::Error::other(
                         "conflicting native runtime library basenames",
                     ));
@@ -289,7 +293,9 @@ impl NativeSnapshot {
         let mut identity = sifr_identity::IdentityEncoder::new("final-native-bundle-v1");
         for (source, destination) in &files {
             identity.field("path", destination.as_os_str().as_encoded_bytes());
-            identity.field("bytes", &std::fs::read(source)?);
+            let mut file = File::open(source)?;
+            let len = file.metadata()?.len();
+            identity.field_reader("bytes", len, &mut file)?;
         }
         Ok(Self {
             identity: identity.finish(),
@@ -306,7 +312,7 @@ impl NativeSnapshot {
 
     pub(crate) fn verify(&self, root: &Path) -> std::io::Result<()> {
         for (source, relative) in &self.files {
-            if std::fs::read(source)? != std::fs::read(root.join(relative))? {
+            if !bytes::matches(source, &root.join(relative), DestinationErrors::Reject)? {
                 return Err(std::io::Error::other(
                     "finalized native bundle failed content validation",
                 ));
@@ -321,9 +327,7 @@ impl NativeSnapshot {
             if let Some(parent) = destination.parent() {
                 std::fs::create_dir_all(parent)?;
             }
-            if std::fs::read(&destination).ok().as_deref()
-                != Some(std::fs::read(source)?.as_slice())
-            {
+            if !bytes::matches(source, &destination, DestinationErrors::TreatAsMismatch)? {
                 std::fs::copy(source, destination)?;
             }
         }

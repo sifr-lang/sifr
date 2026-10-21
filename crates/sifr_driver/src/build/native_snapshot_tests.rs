@@ -155,3 +155,37 @@ fn sidecar_aliases_and_special_files_are_rejected() {
     std::os::unix::fs::symlink(&libraries[0], root.path().join("program.dSYM/link")).unwrap();
     assert!(NativeSnapshot::inspect(&executable, destination, &libraries).is_err());
 }
+
+#[test]
+fn capture_preserves_equal_files_and_repairs_same_metadata_corruption() {
+    let (root, executable, libraries) = fixture();
+    let destination = Path::new("bundle/program");
+    let snapshot = NativeSnapshot::inspect(&executable, destination, &libraries).unwrap();
+    let captured = root.path().join("captured");
+    snapshot.capture(&captured).unwrap();
+    let path = captured.join(destination);
+    let before = fs::metadata(&path).unwrap();
+    snapshot.capture(&captured).unwrap();
+    assert_eq!(
+        fs::metadata(&path).unwrap().modified().unwrap(),
+        before.modified().unwrap()
+    );
+    fs::write(&path, b"alteration").unwrap();
+    fs::File::options()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(fs::FileTimes::new().set_modified(before.modified().unwrap()))
+        .unwrap();
+    assert_eq!(fs::metadata(&path).unwrap().len(), before.len());
+    assert_eq!(
+        fs::metadata(&path).unwrap().modified().unwrap(),
+        before.modified().unwrap()
+    );
+    assert!(snapshot.verify(&captured).is_err());
+    snapshot.capture(&captured).unwrap();
+    snapshot.verify(&captured).unwrap();
+    assert_eq!(fs::read(&path).unwrap(), b"executable");
+    fs::remove_file(&executable).unwrap();
+    assert!(snapshot.capture(&captured).is_err());
+}
