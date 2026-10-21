@@ -41,7 +41,7 @@ pub(super) trait CheckedModuleObserver<'a> {
 
 pub(super) fn check_stdlib_sources<'a>(
     sources: &'a [LoadedStdlibSource],
-    observer: &mut impl CheckedModuleObserver<'a>,
+    observer: &mut dyn CheckedModuleObserver<'a>,
 ) -> Result<CheckedStdlib, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut hir_modules = BTreeMap::new();

@@ -170,3 +170,33 @@ fn checked_parse_and_lower_failures_never_reach_observer() {
         assert!(observer.events.is_empty());
     }
 }
+
+#[test]
+fn native_observer_preserves_error_precedence_and_empty_private_behavior() {
+    let sysroot = sifr_sysroot::resolve_sysroot(None).expect("development sysroot");
+    // Relative fixture paths are outside the resolved root. For nonempty HIR,
+    // native source identity validation must fail before parsing a later module.
+    let sources = [
+        source("sifr.first", "def first() -> int:\n    return 1\n"),
+        source("sifr.broken", "def broken(:\n"),
+    ];
+    let errors = match crate::stdlib::compile_stdlib_sources_with_sysroot(&sources, sysroot.clone())
+    {
+        Ok(_) => panic!("outside-root native source must fail"),
+        Err(errors) => errors,
+    };
+    assert_eq!(errors.len(), 1);
+    assert!(
+        errors[0]
+            .message
+            .contains("is outside resolved stdlib root")
+    );
+    assert!(!errors[0].message.contains("broken"));
+    // Empty private HIR is retained without attempting native source emission.
+    let empty = [source("_sifr.empty", "# no native declarations\n")];
+    let compiled = crate::stdlib::compile_stdlib_sources_with_sysroot(&empty, sysroot)
+        .expect("empty private module bypasses native materialization");
+    assert!(compiled.code.hir_modules.contains_key("_sifr.empty"));
+    assert!(compiled.code.module_rust_code.is_empty());
+    assert!(compiled.metadata_features.is_empty());
+}

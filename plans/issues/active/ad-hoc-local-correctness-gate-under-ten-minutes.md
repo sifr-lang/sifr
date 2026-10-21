@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1b2 reviewed; V1b3 checked bootstrap registered next; integrated acceptance remains open
+current_stage: V1b2 merged; V1b3 checked bootstrap implementation and validation; integrated acceptance remains open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -3959,3 +3959,21 @@ This item prepares the mandatory semantic/native boundary; it does not claim a
 Cargo dependency reduction or gate timing. Explicit role/versioned metadata,
 construction/consumer ownership and the complete three-SQL-tool clean/reused/
 independent-clean qualification remain required before accepting V1.
+
+
+V1b3 implementation started from V1b2 merge `9c4ef618228944aa821c69382979124df136d453`.
+The first focused compile (`v1b3-initial-observer-controls`, 4.687s) caught a
+new test indexing `ModuleMap` rather than using its lookup API; no tests ran.
+The corrected four observer controls pass (`v1b3-observer-controls`, 46.288s
+including preparation). Both observations remain preserved. The final candidate
+also uses a borrowed dynamic observer to avoid instantiating the large checked
+loop per observer, and adds a real native-path error/empty-private control before
+full named validation. No external dependency, profile or test selection changes.
+
+The full split-brain guard reports three pre-existing codegen test references.
+An exact baseline archive reproduces identical failures (`v1b3-split-brain-baseline-proof.json`):
+the test-ownership walk follows `mod` edges but not `include!` descendants of
+`method_authority_tests`. V4 owns this guard reachability repair and negative
+controls; do not exempt production includes or count this guard as passing.
+The existing bootstrap parser/lowerer site controls pass. The complete coverage
+area, dependency direction, method/filesystem ledgers, format and size checks pass.
