@@ -7747,3 +7747,71 @@ manifest/profile contracts and file-size/diff checks. Use frozen source and
 canonical retained compiler preparation for the full area; preserve prior failed
 evidence. Independent exact-candidate review and the approved intermediate policy
 apply. No full-gate timing claim follows; V5 remains required.
+
+
+### V4q delivered — diagnostic artifact ownership
+
+Merged PR #4434, merge `9cc79890a42591278bb73705873ad2ede6f7bcf8`, candidate
+`3b959077ab1d016fc84e8f0f3083b1c7faad63a3`. The hygiene scan retains 4,002 paths,
+including all 32 Python fixture files; 446 verifier implementation files are no
+longer misclassified as diagnostic artifacts. All former non-Python scopes and
+all fixtures/baselines/docs/schemas remain covered. The original mocked Rust
+E0308 negative control is byte-identical. Eight real-index tests now run in the
+normal diagnostics rules suite.
+
+Complete diagnostics: 186 variants, zero failures/skips, 271.346s guarded elapsed.
+Canonical workspace/compiler-identity preparation: 65.410s separately. All eight
+new regressions, all sixteen existing fuzz-coverage tests, live guard, area/profile
+contracts, file-size and diff checks pass. Source remained frozen; sessions ended
+empty without cleanup signals. An initial diagnostic driver requested nonexistent
+preparation node `compiler`, stopping before compilation/tests; preserve it as
+failed orchestration, not a test pass. Corrected actual dependency nodes passed.
+The baseline reproduction runs the old guard on current inputs, so it also flags
+the new self-test strings; the original full-area failure remains separately
+preserved. No obsolete diagnostic artifact was discovered behind the exclusion.
+
+Independent review SATISFIED, no blockers; SHA-256
+`89716243d8509e55949566060f1599435a24f86556806b0062b502abcf963e38`.
+Pending complete area execution passed unchanged. Follow-ups: Python artifact data
+must live in fixtures/baselines to be scanned; if temporary Git-index tests are
+later invoked from hooks, isolate inherited GIT_DIR/GIT_INDEX_FILE/GIT_WORK_TREE.
+The current runner exports none. These are recorded scope/infrastructure follow-ups,
+not missing present-run coverage.
+
+`v4q-qualified-evidence.tar.gz`: 90 payloads, 11,618,367 payload bytes,
+2,668,147 archive bytes; SHA-256
+`4aacbcc5765d7a5af0cf1eaf1f91ca08be75276e1fdbb6d2b8aa71a2438da1ea`.
+Archive and every payload verified locally. Exact-head completed CI job confirms
+unselected SIFR_PERFORMANCE_REFERENCE admission failure; CI is not green. Final
+phase acceptance and other owners remain open.
+
+### V4r bounded repair — package identity test organization and guard drift
+
+Owner: LOCAL-GATE V4 package-management guardrails. Register before implementation.
+Current prepared-checkout diagnosis reproduces two failures: the Cargo backend
+integration test file is 696 lines against the package-specific 420-line cap;
+the static metadata guard still requires retired CanonicalMetadata although the
+production authority is NormalizedCargoMetadata serialized through framed digest
+helpers. Preserve complete field binding, domains, errors and all native tests.
+
+Split package identity/invalidation tests from Cargo command/trust integration
+by responsibility, keeping every test body and helper semantics unchanged. Keep
+each package source file below 420 lines; do not raise/waive caps or split crates.
+Update only the stale static metadata authority assertion to the current actual
+normalized projection. No production compiler/package/identity/cache change.
+Reconcile only source-bound inventory locations/contexts affected by the move,
+retaining classifications and safety meanings; audit the exact before/after delta.
+
+Named acceptance: every affected actual Cargo backend/identity test and existing
+framing regression; compare complete test discovery before/after and preserve the
+renamed test mapping with zero lost tests. Full package-management area including
+its declared offline checks, guard negative line-limit control, applicable policy
+self-tests/live guards, complete architecture/coverage checks if inventories move,
+formatting and file-size/diff checks. Use the prepared checkout for corpus consumers
+and canonical retained targets for native tests. W lacks initialized demo subrepos;
+its pre-diagnostic guard attempt is an infrastructure failure, not product evidence.
+The prepared-checkout diagnostic reproduces both intended failures; its fast-command
+session observer raced process exit, so retain that wrapper failure as diagnostic
+only. Final native validation requires complete session-empty proof.
+Independent exact-candidate review and approved intermediate policy apply. Full
+phase correctness/timing and all other failure owners stay open.

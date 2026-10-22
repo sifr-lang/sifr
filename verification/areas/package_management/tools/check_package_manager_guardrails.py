@@ -506,7 +506,7 @@ def main() -> int:
             encoding="utf-8"
         )
         digest_support = digest_rs + metadata_digest_rs
-        if "CanonicalMetadata" not in digest_support or "digest_graph_inputs" not in digest_support:
+        if "NormalizedCargoMetadata" not in digest_support or "digest_graph_inputs" not in digest_support:
             failures.append("metadata normalization digest support is missing")
 
     check_fixture_matrix(root, failures)
