@@ -8,7 +8,8 @@ import importlib.util
 import io
 import os
 import sys
-import time
+import socket
+import threading
 import tempfile
 import unittest
 from pathlib import Path
@@ -288,31 +289,70 @@ class SanitizerTargetTests(unittest.TestCase):
 
     @unittest.skipUnless(hasattr(os, "fork"), "requires POSIX child process groups")
     def test_actual_sanitizer_timeout_terminates_its_descendant(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            ready, escaped = root / "ready", root / "escaped"
+        with tempfile.TemporaryDirectory() as temporary, socket.socket(socket.AF_UNIX) as listener:
+            path = str(Path(temporary) / "lifetime.sock")
+            listener.bind(path)
+            listener.listen(1)
+            listener.settimeout(3)
+            ready, closed = threading.Event(), threading.Event()
+            connections, errors = [], []
+            ownership = threading.Lock()
+            cleaning = threading.Event()
+
+            def observe():
+                try:
+                    connection, _ = listener.accept()
+                    with ownership:
+                        connections.append(connection)
+                        if cleaning.is_set():
+                            connection.shutdown(socket.SHUT_WR)
+                        ready.set()
+                    # The child never exits on a timer. EOF proves its actual
+                    # lifetime ended, before test cleanup can release it.
+                    if connection.recv(1) == b"":
+                        closed.set()
+                except OSError as error:
+                    errors.append(error)
+
+            observer = threading.Thread(target=observe, daemon=True)
+            observer.start()
             program = (
-                "import os,time\nfrom pathlib import Path\n"
+                "import os,socket,time\n"
                 "if os.fork() == 0:\n"
-                f"    Path({str(ready)!r}).write_text('ready')\n"
-                "    time.sleep(2)\n"
-                f"    Path({str(escaped)!r}).write_text('escaped')\n"
+                "    with socket.socket(socket.AF_UNIX) as peer:\n"
+                f"        peer.connect({path!r})\n"
+                "        peer.recv(1)\n"
                 "else:\n    time.sleep(10)\n"
             )
             case = copy.deepcopy(self.cases["runtime-asan-smoke"])
             case.update(tool="process-control", command=[sys.executable, "-c", program],
                         env={}, timeout_seconds=1)
-            with patch.object(self.adapter, "sanitizer_skip_reasons", return_value=[]), \
-                    contextlib.redirect_stdout(io.StringIO()), \
-                    contextlib.redirect_stderr(io.StringIO()):
-                result = self.adapter.run_sanitizer_case("sanitizer-smoke", case,
-                                                        "x86_64-unknown-linux-gnu")
-            self.assertTrue(ready.exists(), "descendant must actually execute")
-            self.assertEqual(result["status"], "fail")
-            self.assertEqual(result["process_cause"], "safety_deadline")
-            self.assertEqual(result["mismatches"], ["timeout after 1s"])
-            time.sleep(1.2)
-            self.assertFalse(escaped.exists(), "descendant survived the owned timeout")
+            try:
+                with patch.object(self.adapter, "sanitizer_skip_reasons", return_value=[]), \
+                        contextlib.redirect_stdout(io.StringIO()), \
+                        contextlib.redirect_stderr(io.StringIO()):
+                    result = self.adapter.run_sanitizer_case("sanitizer-smoke", case,
+                                                            "x86_64-unknown-linux-gnu")
+                self.assertTrue(ready.is_set(), "descendant must actually execute")
+                self.assertEqual(result["status"], "fail")
+                self.assertEqual(result["process_cause"], "safety_deadline")
+                self.assertEqual(result["mismatches"], ["timeout after 1s"])
+                self.assertTrue(closed.wait(0.5), "descendant retained its live socket")
+                self.assertFalse(errors)
+            finally:
+                # If the executor regresses, release this exact child through
+                # its owned connection, never by signalling a guessed PID.
+                cleaning.set()
+                with ownership:
+                    for connection in connections:
+                        try:
+                            connection.shutdown(socket.SHUT_WR)
+                        except OSError:
+                            pass
+                observer.join(timeout=3.5)
+                for connection in connections:
+                    connection.close()
+                self.assertFalse(observer.is_alive(), "lifetime observer did not stop")
 
 
 class SanitizerPreparationTests(unittest.TestCase):
