@@ -183,3 +183,40 @@ fn project_slice_abi_preserves_consuming_and_mutating_vector_parameters() {
         ),
     ]));
 }
+
+#[test]
+fn project_slice_abi_long_transitive_chain_has_no_fixed_depth_limit() {
+    // Alternate physical modules so a module-count bound cannot hide a
+    // remaining limit on the number of caller/callee transitions.
+    for modules in [["a", "z"], ["z", "a"]] {
+        let mut sources = BTreeMap::from([
+            (
+                String::new(),
+                format!(
+                    "mod a; mod z; fn main() {{ assert_eq!({}::step23(vec![1_i32, 2]), 2); }}",
+                    modules[1],
+                ),
+            ),
+            ("a".to_owned(), String::new()),
+            ("z".to_owned(), String::new()),
+        ]);
+        for index in 0..24 {
+            let body = if index == 0 {
+                "values.len()".to_owned()
+            } else {
+                format!(
+                    "crate::{}::step{}(values)",
+                    modules[(index - 1) % 2],
+                    index - 1
+                )
+            };
+            sources
+                .get_mut(modules[index % 2])
+                .expect("physical module")
+                .push_str(&format!(
+                    "pub fn step{index}(values: Vec<i32>) -> usize {{ {body} }}\n"
+                ));
+        }
+        qualify(sources);
+    }
+}

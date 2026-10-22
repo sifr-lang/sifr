@@ -118,7 +118,10 @@ fn close_canonical_project_borrows(
                 .join(".")
         })
         .collect::<Vec<_>>();
-    for _ in 0..16 {
+    // Propagation depth follows the call graph. Keep exact prior states to
+    // reject cycles without imposing a limit on a valid project's depth.
+    let mut previous_states = HashSet::new();
+    loop {
         let before = sources.clone();
         let mut named = modules
             .iter()
@@ -138,8 +141,12 @@ fn close_canonical_project_borrows(
         if sources == before {
             return Ok(sources);
         }
+        if !previous_states.insert(before) {
+            return Err(
+                "generated Rust project borrow cleanup revisited an earlier state".to_string(),
+            );
+        }
     }
-    Err("generated Rust project borrow cleanup did not reach a stable final form".to_string())
 }
 
 fn canonicalize_source_with_names(
