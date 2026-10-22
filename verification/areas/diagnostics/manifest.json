@@ -42,6 +42,13 @@
           "diagnostic_formats": []
         },
         {
+          "id": "baseline_hygiene_self_tests",
+          "entry": "verification/areas/diagnostics/checks/test_baseline_hygiene.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
           "id": "code_baseline_coverage",
           "entry": "verification/areas/diagnostics/checks/code_baseline_coverage.py",
           "command": "area-check",
