@@ -84994,6 +84994,30 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role::literal-comparison::1",
+      "fingerprint": "1ab6b510f26d300259f798b25fb346d04615787aba6a1ac30290903b19c261ba",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "if role == \"bound\"",
+      "inputs": "fn child_role ( path : & Path )",
+      "outputs": "!",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role::literal-comparison::2",
+      "fingerprint": "4026b9dc9259f9a0ff021a5a61eb744fabb4984b7f8c8aa60c02f3e4f7cf8d6a",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "role == \"unrelated\"",
+      "inputs": "fn child_role ( path : & Path )",
+      "outputs": "!",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }

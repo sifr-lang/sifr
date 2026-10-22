@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4e selected-category diagnostic recorded; V4l context-coherence repair registered; V1 feasibility and integrated acceptance remain open
+current_stage: V4n inventories reconciled; V4o native lifecycle repair in progress; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -7498,3 +7498,117 @@ area (advisory and readiness, including negatives), file-size/diff checks and
 independent review on the revised candidate. This narrow input-bound reuse is
 not a full-profile or V5 acceptance result and cannot be extended to changed
 Rust, guards, architecture tests or their inventories.
+
+### V4n delivered — source-bound inventory reconciliation
+
+Merged implementation PR #4431 (`8063553de7d6f3a50b87c489a8ec8a6f2bf79321`),
+final candidate `4bdf7ac818586dc52658bed3d689c00169da60e2`. All four originally
+failing guards now pass: method authority (6,402 sites / 235 reviewed nodes), unsafe
+ABI (398 sites / all three partitions), direct filesystem effects (3,383 sites),
+and TypeScript/Go transfer. Complete method/unsafe self-tests ran 17/12 tests;
+filesystem/transfer self-tests pass. All 54 architecture-policy tests passed without
+fail-fast, including complete union, schema and negative controls.
+
+The exact delta audit preserves 3,256 unchanged filesystem records/classes,
+6,385 unchanged method records, all 111 old external unsafe records and 19 old
+shared contracts. Added effects retain their actual owners. No Rust, test assertion,
+guard, schema or profile-selection changes. The first coverage check failed on the
+previously delivered `project_slice_abi` target; its failure remains preserved.
+The final candidate adds its `test_fixture` / `merge` classification. Complete
+coverage advisory/readiness now passes both suites, all five cases and 58 negative
+controls. The other changed-registry reader (intrinsic allowlist) and its self-test
+also pass freshly on the final candidate. File-size and diff checks pass.
+
+Observed guard times: method 33.153s, unsafe 202.746s, filesystem 15.641s,
+transfer 6.137s. All architecture tests took 309.796s; complete final coverage
+72.685s. These are scoped diagnostic costs, not a whole-gate timing claim. Nine
+unchanged checks retain candidate `b9d212e641cd70cd63a011c36810083429af3fc0`
+and satisfy the preceding explicit source-input binding (2,204 discovered Rust
+files, all other tracked inputs, pinned interpreter and unchanged locks).
+No capped, missing, skipped or failed execution is counted pass.
+
+Exact-candidate final independent review: SATISFIED, no blockers, SHA-256
+`7cfb38444e388d7e7998c1765d5c6e155d891ef0a93521a2b1bcd8d96d837373`.
+Its pending unchanged-candidate execution prerequisites subsequently passed;
+no recursive review was required. Earlier complete inventory review is retained,
+SHA-256 `53e5c33e4e85d3a813a39d34b2faa75e8cdb81a1ead7a9dc7429f5403d8cd8f3`.
+Review records remain outside their approved Git trees.
+
+Evidence `v4n-qualified-evidence.tar.gz`: 144 payloads, 10,058,509 payload bytes,
+4,603,361 archive bytes, SHA-256
+`53f23c6c4f0afe0c180c6e61c870b0cb4118df836cf26ee9df51c6853dec122e`;
+archive and every payload hash independently verified locally. The two later
+intrinsic receipts are separately retained and bind the final candidate.
+CI is not claimed green: exact-head full-profile admission again requires unset
+SIFR_PERFORMANCE_REFERENCE. Full phase gates, remaining failure owners and V5
+remain open.
+
+Follow-ups: the original retained-child test misses early-readiness cleanup and
+uses expiring sleep children; the process-lease test destructor can double-panic.
+V4o below owns these related lifecycle defects. Signal-zero classification is
+conservative; its source contract accurately states observation. Unsafe policy
+pair normalization costs are a future performance item; do not weaken equality
+or skip negative controls to accelerate it.
+
+### V4o bounded repair — test-child lifecycle and non-panicking cleanup
+
+Owner: LOCAL-GATE V4 native lease-control lifecycle. Registered after V4n merge,
+before implementation. Scope is the retained-fixture child control and the
+project-cache process-lease test guard, plus their focused native regressions and
+source-bound inventories. These are test-harness defects; do not change production
+lease, cache admission, publication, reclamation or child-inheritance semantics.
+
+First retain bounded evidence of the existing failure paths. Establish cleanup
+ownership as soon as each owned process is created, before readiness can fail.
+A simple dedicated owner process group can contain all descendants; preserve
+its identity until cleanup so reused PIDs/groups cannot receive cleanup signals.
+Observe the original owner death without prematurely losing that ownership.
+Remove finite sleep lifetimes from the live child assertions. Preserve the actual
+parent-death invariant: the intended child retains the fixture lease while the
+unrelated child remains alive and does not inherit it. Early failure after zero,
+one or two child starts must terminate all owned children, not merely release a
+marker. Scope every signal to owned processes; no broad process scanning/killing,
+new production fallback or weakened assertion.
+
+Make the process-lease guard's destructor best-effort and non-panicking, including
+failed spawn/join and unsuccessful exit while another assertion unwinds. Explicit
+success paths must still report child errors. Preserve bounded readiness/deadlines
+and all current final-Arc/shared-reader lease assertions.
+
+Named acceptance: real native before/after failure controls; all affected
+project-cache process-lease and retained-fixture lifecycle tests using retained
+canonical targets; applicable existing retained-fixture ownership controls;
+formatting, file-size, coverage/inventory checks and all affected guard self-tests.
+Run the complete architecture policy suite after source-bound safety updates.
+Check source identity, resource reserve and descendant cleanup. Use small standalone
+probes for initial diagnosis if the driver preparation is slow, but require actual
+integrated driver tests on the final candidate. Obtain independent exact-candidate
+review. The approved intermediate policy applies; full phase gates and V5 stay open.
+
+
+#### V4o initial native diagnosis and candidate design
+
+The bounded standalone probe copies the actual original OwnedChildren/PausedChild
+helper bodies from `8063553de7d6f3a50b87c489a8ec8a6f2bf79321`. It confirms a ready
+but unregistered grandchild survives original Drop, then explicitly cleans that
+owned group. Injected spawn failure during an existing unwind terminates the
+original helper process with SIGABRT (signal 6); core output is disabled. These
+are expected-failure diagnostic controls, not product acceptance. Total guarded
+probe time 1.686s; session-empty proof required no external cleanup signals.
+Source hashes, helper copies, output and exact failure status are retained.
+
+The candidate creates one dedicated process group at owner spawn. It keeps the
+owner unreaped until group cleanup; a private stdin socket, replaced in descendants,
+observes owner death by bounded EOF without releasing its PID identity. Descendants
+are exact-test subprocesses that remain parked until explicitly killed, replacing
+expiring sleep processes. Group stdout provides a separate lifetime channel for
+native cleanup controls after zero, one or two children have started. Those
+controls unwind before owner readiness, require all inherited endpoints to close,
+and require the actual fixture lease to become available. The original intended
+versus unrelated child lease assertions remain intact.
+
+PausedChild release now returns errors for spawn/join/exit failures; Drop ignores
+cleanup errors while explicit successful test completion checks release. Native
+regressions cover each failure during unwind and explicit error reporting with
+idempotent cleanup. Initial driver build/testing uses a frozen source candidate;
+final actual integrated driver checks and source-bound guards remain required.
