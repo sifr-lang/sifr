@@ -77,12 +77,12 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "<module>",
-          "context_fingerprint": "8d9188a3938312e29a390e18f916c7bcbdd8548ee876314ee81460e8f06af50f"
+          "context_fingerprint": "ec5b4626f570a6ecd06707683a2b0f029442edefcf37b2c426f7fdacb5956652"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -424,7 +424,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "lower_hex",
-          "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b"
+          "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1"
         }
       ]
     },
@@ -440,12 +440,12 @@
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "bind_receiver_once",
-          "context_fingerprint": "9d84fbac4eab46b867e2c8d6401e3cbe9671d823bbcbc078d28ba9b743a6b3ba"
+          "context_fingerprint": "3f4382a705fb378e8c38cda4584d4e6d9177a14ac1228c6bb90d6e954673872c"
         },
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "lower_hex",
-          "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b"
+          "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1"
         }
       ]
     },
@@ -503,7 +503,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn bind_receiver_once ( object : & RustExpr , expr : RustExpr )",
       "outputs": "RustExpr",
-      "context_fingerprint": "9d84fbac4eab46b867e2c8d6401e3cbe9671d823bbcbc078d28ba9b743a6b3ba",
+      "context_fingerprint": "3f4382a705fb378e8c38cda4584d4e6d9177a14ac1228c6bb90d6e954673872c",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
@@ -549,7 +549,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "lower_hex",
-          "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b"
+          "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1"
         }
       ]
     },
@@ -608,7 +608,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_prefix_method ( object : & RustExpr , args : & [ RustExpr ] , method : & str )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "757eb243f6f43cf94f0838c9cc0eb3a4f0afa81bd1d1007a149f08d3afbafd20",
+      "context_fingerprint": "54ac03ccd279031c91f48a6f80aff8b5958f1ee43d59b0a6c7faca18ab0d9dca",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
@@ -661,7 +661,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_hex ( object : & RustExpr , args : & [ RustExpr ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b",
+      "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
@@ -1596,6 +1596,11 @@
         },
         {
           "path": "crates/sifr_codegen/src/methods/tests.rs",
+          "scope": "bytes_slice_arguments_do_not_allocate_literal_vectors",
+          "context_fingerprint": "3f5893e4443a6371e99dbfff4fd5b0b7423fad3e4d16e7cfec9e0db58a385c1a"
+        },
+        {
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method",
           "context_fingerprint": "1c7bd38c37c2c2850767a7895e42782b06e1e8de01a7cbc0cac316d2532cacca"
         },
@@ -2348,7 +2353,7 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         },
         {
           "path": "crates/sifr_codegen/src/methods/list.rs",
@@ -2468,6 +2473,11 @@
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
           "context_fingerprint": "c5a80c8232c4006e2b63bba67f25e1641c01a80472f4459979838305c3699f23"
+        },
+        {
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
+          "scope": "bytes_slice_arguments_do_not_allocate_literal_vectors",
+          "context_fingerprint": "3f5893e4443a6371e99dbfff4fd5b0b7423fad3e4d16e7cfec9e0db58a385c1a"
         },
         {
           "path": "crates/sifr_codegen/src/methods/tests.rs",
@@ -4943,12 +4953,12 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "<module>",
-          "context_fingerprint": "8d9188a3938312e29a390e18f916c7bcbdd8548ee876314ee81460e8f06af50f"
+          "context_fingerprint": "ec5b4626f570a6ecd06707683a2b0f029442edefcf37b2c426f7fdacb5956652"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         }
       ]
     },
@@ -5012,7 +5022,7 @@
       "relationship": "HIR expression leaf lowering; source method carriers delegate to try_lower_simple_method_call_expr typed admission; constructor/plain-function branches retain their own lowering",
       "inputs": "fn try_lower_leaf_expr ( expr : & HirExpr )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716",
+      "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c",
       "references": [
         {
           "path": "crates/sifr_codegen/src/lower_expr/collections_and_comprehensions.rs",
@@ -5387,7 +5397,7 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
@@ -5582,7 +5592,7 @@
         {
           "path": "crates/sifr_codegen/src/lower_item/module_constants.rs",
           "scope": "<module>",
-          "context_fingerprint": "1b1311a6e9a65eb0ed682dd06f547c3fd2dc87c41cc3142efcdd37889b697ea7"
+          "context_fingerprint": "1458e3179edca0474cd13cb0cf1ab05f8158f63a0f7a366c289f724a3ebafaa2"
         },
         {
           "path": "crates/sifr_codegen/src/lower_item/module_constants.rs",
