@@ -744,7 +744,7 @@ mod sifr_generated_generated_support {
         sifr_generated_sync_module_random(&generator);
         Ok(result)
     }
-    pub fn shuffle<T: Clone + 'static>(items: &mut [T]) {
+    pub fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let n: SifrInt = SifrInt::from(items.len());

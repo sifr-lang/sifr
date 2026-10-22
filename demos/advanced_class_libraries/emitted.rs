@@ -2068,7 +2068,7 @@ mod sifr_generated_project_nominals {
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
         pub fn new(
-            fieldnames: &[String],
+            fieldnames: Vec<String>,
             restval: String,
             extrasaction: &str,
             dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
@@ -3115,7 +3115,7 @@ fn main() {
     });
     let mut dw: SifrGeneratedStdlibSifrX2ecsvX2eDictWriter =
         SifrGeneratedStdlibSifrX2ecsvX2eDictWriter::new(
-            &["name".to_string(), "score".to_string()],
+            vec!["name".to_string(), "score".to_string()],
             String::new(),
             "raise",
             &None,
