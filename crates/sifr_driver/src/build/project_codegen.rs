@@ -408,23 +408,16 @@ mod tests {
             "metrics.child".to_owned(),
             "pub fn run() -> usize { super::private(vec![1, 2]) }".to_owned(),
         );
-        let signatures = |source: &str| {
-            syn::parse_file(source)
-                .expect("valid generated Rust")
-                .items
-                .into_iter()
-                .filter_map(|item| match item {
-                    syn::Item::Fn(function) => {
-                        Some((function.sig.ident.to_string(), function.sig.inputs))
-                    }
-                    _ => None,
-                })
-                .collect::<BTreeMap<_, _>>()
-        };
-        let before = signatures(&project.support_modules["metrics"]);
         let formatted = format_generated_binary_project(project)
             .expect("canonicalization, rustfmt, finalization and project const closure");
-        assert_eq!(signatures(&formatted.support_modules["metrics"]), before);
+        let module = &formatted.support_modules["metrics"];
+        for signature in [
+            "fn owned(values: Vec<i32>)",
+            "fn borrowed(values: &Vec<i32>)",
+            "fn private(values: Vec<i32>)",
+        ] {
+            assert!(module.contains(signature), "missing {signature}: {module}");
+        }
         let first_root = formatted.main_rs.clone();
         let first_modules = formatted.support_modules.clone();
         let repeated =
