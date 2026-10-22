@@ -55,7 +55,7 @@ struct PausedChild {
 impl PausedChild {
     #[allow(unsafe_code)]
     fn start() -> Self {
-        let (mut parent, mut child) = UnixStream::pair().unwrap();
+        let (parent, mut child) = UnixStream::pair().unwrap();
         parent
             .set_read_timeout(Some(Duration::from_secs(10)))
             .unwrap();
@@ -74,27 +74,35 @@ impl PausedChild {
         }
         let spawn = thread::spawn(move || command.spawn()?.wait());
         let mut guard = Self {
-            socket: parent.try_clone().unwrap(),
+            socket: parent,
             spawn: Some(spawn),
         };
         let mut ready = [0];
-        if let Err(error) = parent.read_exact(&mut ready) {
-            guard.release();
+        if let Err(error) = guard.socket.read_exact(&mut ready) {
+            let _ = guard.release();
             panic!("child did not reach pre-exec: {error}");
         }
         assert_eq!(ready, *b"R");
         guard
     }
-    fn release(&mut self) {
+    fn release(&mut self) -> io::Result<()> {
+        let Some(spawn) = self.spawn.take() else {
+            return Ok(());
+        };
         let _ = self.socket.write_all(b"G");
-        if let Some(spawn) = self.spawn.take() {
-            assert!(spawn.join().unwrap().unwrap().success());
+        let status = spawn
+            .join()
+            .map_err(|_| io::Error::other("child owner thread panicked"))??;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(io::Error::other(format!("owned child failed: {status}")))
         }
     }
 }
 impl Drop for PausedChild {
     fn drop(&mut self) {
-        self.release();
+        let _ = self.release();
     }
 }
 
@@ -110,7 +118,7 @@ fn final_owner_releases_before_unrelated_child_exec() {
         .unwrap();
         let first = Arc::new(lease);
         let last = Arc::clone(&first);
-        let _child = PausedChild::start();
+        let mut child = PausedChild::start();
         drop(first);
         let contender = scratch.open();
         assert!(matches!(
@@ -122,6 +130,7 @@ fn final_owner_releases_before_unrelated_child_exec() {
             .try_lock()
             .expect("final parent owner must release before unrelated child exec");
         contender.unlock().unwrap();
+        child.release().unwrap();
     }
 }
 
@@ -164,4 +173,42 @@ fn failed_admission_preserves_live_owner_exclusion() {
     drop(owner);
     contender.try_lock().unwrap();
     contender.unlock().unwrap();
+}
+
+fn failed_child(mode: u8) -> PausedChild {
+    let (socket, peer) = UnixStream::pair().unwrap();
+    drop(peer);
+    PausedChild {
+        socket,
+        spawn: Some(thread::spawn(move || match mode {
+            0 => Err(io::Error::other("injected spawn failure")),
+            1 => panic!("injected owner-thread panic"),
+            2 => Command::new("/bin/false").status(),
+            _ => unreachable!("test control mode"),
+        })),
+    }
+}
+
+#[test]
+fn explicit_child_release_reports_failures_without_repeating_cleanup() {
+    for mode in 0..3 {
+        let mut child = failed_child(mode);
+        assert!(child.release().is_err());
+        assert!(child.release().is_ok());
+    }
+}
+
+#[test]
+fn child_cleanup_preserves_the_original_unwind() {
+    for mode in 0..3 {
+        let result = std::panic::catch_unwind(move || {
+            let _child = failed_child(mode);
+            panic!("original assertion failure");
+        });
+        let payload = result.unwrap_err();
+        assert_eq!(
+            payload.downcast_ref::<&str>(),
+            Some(&"original assertion failure")
+        );
+    }
 }
