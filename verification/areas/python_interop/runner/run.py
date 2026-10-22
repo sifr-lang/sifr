@@ -46,6 +46,7 @@ from dlpack_evidence import validate_dlpack_declaration_evidence
 from dlpack_examples import build_dlpack_examples_report, run_dlpack_examples_self_tests
 from env import discover_paths
 from env_probe import run_env_probe
+from probe_observation_checks import run_probe_observation_self_tests
 from example_packages import run_sifr_launcher_self_test
 from prepare_examples_checks import run_preparation_self_tests
 from fixture_inventory import (
@@ -84,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
         run_callback_examples_self_tests(paths)
         run_sifr_launcher_self_test(paths.repo_root)
         run_preparation_self_tests()
+        run_probe_observation_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:

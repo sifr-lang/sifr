@@ -179,8 +179,8 @@ def real(path):
     except OSError:
         return str(path)
 
-def distributions(root):
-    names = importlib.metadata.packages_distributions().get(root, [])
+def distributions(root, ownership):
+    names = ownership.get(root, [])
     return [
         {"name": name, "version": importlib.metadata.version(name)}
         for name in sorted(set(names), key=str.casefold)
@@ -195,7 +195,7 @@ def import_probe(root, do_import):
                 "root": root,
                 "ok": True,
                 "origin": real(origin) if origin else None,
-                "distributions": distributions(root),
+                "distributions": [],
                 "error": None,
             }
         spec = importlib.util.find_spec(root)
@@ -205,11 +205,32 @@ def import_probe(root, do_import):
             "root": root,
             "ok": True,
             "origin": real(spec.origin) if spec.origin else None,
-            "distributions": distributions(root),
+            "distributions": [],
             "error": None,
         }
     except BaseException as exc:
         return {"root": root, "ok": False, "origin": None, "distributions": [], "error": f"{type(exc).__name__}: {exc}"}
+
+# Import attempts retain declaration order, including repeated native roots.
+# Metadata describes the environment after all attempts, freshly in this process.
+imports = [import_probe(root, True) for root in declared_roots]
+native_imports = [import_probe(root, True) for root in native_roots]
+successful = [record for record in imports + native_imports if record["ok"]]
+if successful:
+    try:
+        ownership = importlib.metadata.packages_distributions()
+        ownership_error = None
+    except BaseException as exc:
+        ownership = None
+        ownership_error = f"{type(exc).__name__}: {exc}"
+    for record in successful:
+        try:
+            if ownership_error is not None:
+                record.update(ok=False, origin=None, distributions=[], error=ownership_error)
+            else:
+                record["distributions"] = distributions(record["root"], ownership)
+        except BaseException as exc:
+            record.update(ok=False, origin=None, distributions=[], error=f"{type(exc).__name__}: {exc}")
 
 libdir = sysconfig.get_config_var("LIBDIR")
 ldlibrary = sysconfig.get_config_var("LDLIBRARY")
@@ -231,8 +252,8 @@ payload = {
     "machine": platform.machine(),
     "libpython": real(libpython) if libpython else None,
     "free_threaded": bool(sysconfig.get_config_var("Py_GIL_DISABLED")),
-    "imports": [import_probe(root, True) for root in declared_roots],
-    "native_imports": [import_probe(root, True) for root in native_roots],
+    "imports": imports,
+    "native_imports": native_imports,
     "pyproject_digest": digest(pyproject),
     "uv_lock_digest": digest(lock),
 }
