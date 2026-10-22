@@ -7976,3 +7976,70 @@ Formatting, file-size/diff checks and exact-candidate independent review require
 Use retained prepared products with actual freshness checks; no broad compiler
 rebuild merely to prototype this runner/fixture repair. The approved intermediate
 policy applies; final phase gates and all V5 requirements remain open.
+
+
+### V4t delivered — required execution and restored HTTP/text coverage
+
+Merged PR #4437, merge `d1fb676cb1be19bbdbe183adf681a5d6b5210040`, candidate
+`1e11ed3a7e4a2bd6ce490a43befd9a6a76546b05`. Blocking suites now require actual
+passing case rows, honest counts and consistent execution outcomes. Metadata-only,
+negative expected-exit and explicitly nonblocking semantics remain intact.
+The restored HTTP/text golden executes existing public APIs and typed error paths.
+
+All 19 adversarial controls, segmentation/foundation/profile/area checks and
+format/size/diff checks pass. Both emitted correctness plans are unchanged.
+Full selected runtime area: 30 variants pass, zero skips/failures, 88.737s guarded;
+both ASan cases execute. Related HTTP and encoding fixtures pass in 323.885s and
+44.212s including native preparation. Compiler freshness takes 17.699s and selected
+sanitizer preparation 5.689s. These are scoped observations, not whole-gate timing.
+All governed sessions finish empty without cleanup signals or unexpected changes.
+Historical replay checks 116 reports: the only new rejection is the formerly
+accepted required skip. Replay is compatibility evidence, not new execution.
+
+Independent exact-candidate review SATISFIED, no blockers, SHA-256
+`e8f81c3d0ab16d1b685dcd611df7ab55e79a6e1098959b588d237f0aa9663735`.
+All checks pending at review time subsequently passed unchanged. Follow-ups:
+explicit host sanitizer readiness, top-level nonblocking failure-count reporting,
+and clearer blocked-variant wording. No extra review is needed for this record.
+`v4t-qualified-evidence.tar.gz`: 262 payloads, 1,136,237 payload bytes,
+132,079 archive bytes; SHA-256
+`303015a3cee3ec86b4e3672910e9efa01f56169de50596c04453b47a2fd0410e`.
+Archive and all payloads verified locally. Exact-head CI admission fails the unset
+performance reference; no green-CI claim. Full gates and all V5 scenarios remain open.
+
+### V4u bounded repair — rebuild SQL components with current source provenance
+
+Owner: LOCAL-GATE V4 SQL artifact provenance. Register before implementation.
+The current three producer receipts predate the identity streaming change: each
+has changed identity lib.rs plus newly added stream.rs and stream_tests.rs. Their
+source validator correctly rejects this drift before four qualification entrypoints
+reach their mutation controls. Preserve that rejection and the historical failures.
+
+Rebuild all ten owned components using the canonical builder: PostgreSQL 13–18,
+MySQL 8.4/9.7/26.7 and SQLite 3.53.4. Initialize only exact pinned parser and
+virtualizer submodules. Retain pinned Rust/SDK/virtualizer identities, official
+checksums, flags, all versions, source validation and artifact validation. No hash
+relabeling, dependency update, skipped variants, result cache or validator relaxation.
+Use a separately owned retained component target. Record actual preparation and
+per-family elapsed time under the 30-minute diagnostic cap, diagnose any cap before
+resuming unchanged work, and keep publication atomic at each existing family boundary.
+
+Named acceptance: all three current artifact manifests and byte digests validate;
+all affected SQL qualification entrypoints and their negative mutation controls
+execute; complete selected SQL area runs on the frozen candidate with explicit
+accounting for any independent failures. Run affected dependency ownership checks,
+format/size/diff checks and independent exact-candidate review. Preserve all builds,
+source/tool/environment identities and failures in external evidence. The approved
+intermediate policy applies. Rebuild costs remain visible; this repair alone makes
+no speed claim and does not close final integrated gates or V5 qualification.
+
+V4u producer execution: all ten components rebuilt through the existing canonical
+builders; current source identities and artifact bytes validate. The old retained
+SDK extraction lacked llvm-dwp, so the first build correctly failed before Cargo.
+A new isolated extraction from the existing official archive passed full file/link
+verification; the original extraction and failure remain preserved. The next build
+correctly failed offline because a pinned virtualizer crate was absent. Locked
+fetch restored exact dependencies without changing manifests or locks. The third
+build completed all families; no validation relaxation or source edits were made.
+See external v4u-build-r3 receipts for per-family preparation time. Native execution,
+negative controls and independent review remain pending at this candidate freeze.
