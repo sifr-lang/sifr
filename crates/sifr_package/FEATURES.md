@@ -24,7 +24,7 @@ package-management requirements record Sifr feature metadata and carries Cargo f
 | Feature concern | Coverage |
 | --- | --- |
 | Stable Cargo feature argument ordering | `cargo_backend_integration_tests::cargo_command_plans_preserve_lock_mode_and_feature_semantics` |
-| Feature selectors in cache inputs | `cargo_backend_integration_tests::package_build_cache_digest_changes_with_lock_source_and_target_inputs` |
+| Feature selectors in cache inputs | `cargo_backend_integration_tests::identity::package_build_cache_digest_changes_with_lock_source_and_target_inputs` |
 | Backend trust selected by Cargo graph | `cargo_backend_integration_tests::backend_trust_reports_untrusted_direct_backend_crate` |
 | Package filter feature-mode placeholder | `package_workspace_query_tests::filters_select_dependency_and_dependent_closures_with_negation` |
 

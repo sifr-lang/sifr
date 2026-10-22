@@ -49,3 +49,12 @@ def prepare_area_graphs(profile, env, run):
                 active.pop("VIRTUAL_ENV", None)
                 for suite in selected:
                     run([*command, "--suite", suite], env=active)
+
+        if name == "runtime_platform":
+            from .runtime_sanitizer_preparation import SANITIZER_SUITES
+            selected = sorted(set(suites).intersection(SANITIZER_SUITES))
+            if selected:
+                command = [sys.executable, "-m", "sifr_verify.runtime_sanitizer_preparation"]
+                for suite in selected:
+                    command.extend(["--suite", suite])
+                run(command, env=env)
