@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4e resumed integrated failure discovery; V3l closed, V1 feasibility and integrated acceptance remain open
+current_stage: V4e selected-category diagnostic recorded; V4l context-coherence repair registered; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -7067,3 +7067,156 @@ reuse; broaden testing when integration changes justify it. Reserve repeated fin
 timing qualification for a credible integrated candidate. Final create-PR/merge
 correctness gates and every V5 scenario remain mandatory. This sequencing change
 neither weakens acceptance nor establishes that the full gate can meet 600 seconds.
+
+
+### V4e resumed diagnostic outcome — selected categories reconciled
+
+The frozen candidate is `f2f841679a4f61b8c4252791d30fd2cfbc44ecb7`.
+The diagnostic inventory is complete at the selected-category level: all 105
+selected area suites have reports, all 18 Cargo configurations pass, and all 732
+E2E fixtures pass. This is **not** a complete passing integrated invocation or V5
+acceptance. Known failures and blocked nested controls remain below.
+
+The original integrated attempt reached its 30-minute diagnostic cap during
+preparation (1,802.337s). Independent follow-ups continued the canonical selection
+under their own caps. Recorded follow-up invocations sum to 26,506.035s; initial
+follow-up guards/prerequisites add 497.941s. These are diagnostic effort totals,
+including failed/capped attempts, repetitions and resource refusals. They are not
+a steady-state gate duration. The separately executed architecture tail adds
+127.755s; archive administration and targeted failure replay are separate.
+
+External cleanup removed build artifacts during a connectivity interruption. The
+user confirmed cleanup was finished and authorized rebuilding. Matching source
+remained unchanged. Old preparation readiness was invalidated; the continuation
+rebuilt required artifacts. Those post-cleanup costs are cold diagnostics, not
+normal iteration performance. No obsolete compressed recovery archive was deleted
+by this work.
+
+| Completed category | Observed duration and coverage |
+| --- | --- |
+| E2E | 553.995s guarded; 732 source/runtime cases, 186 native groups pass. No native cache manifest entries at start; not a warm-hit timing. |
+| Cargo configurations | 2,710.960s summed execution; 245 target summaries, 5,557 passing test executions, no failures. Repeated feature/role configurations are included. 94 ignored and 74,283 filtered observations are not passes; separate selected configurations execute many filtered/ignored roles. |
+| 19-package additive compiler configuration | 1,287.980s preparation; 236.351s execution; 2,781 tests pass. Its codegen target runs 1,780 tests in 8.25s; LSP takes 162.96s, including nested Cargo work. |
+| Cache/compiler/semantic services | Preparation 6.190s / 157.798s / 216.811s; execution 1.681s / 24.694s / 4.689s; 14 / 24 / 14 tests pass. |
+| SQL | All 66 selected cases recorded: 62 pass, four provenance failures. Case-body sum 2,736.160s; 30 preparation commands total 1,201.303s. Nested bodies must not be added to their invocation totals. |
+| Python | All 30 suites pass, summed invocation time 1,866.200s; all 29 examples prepare in 1,530.072s. Combination passes in 1.229s, certifying seven capabilities, nine compiled evidence entries and three resource-zero evidence entries. Compiler/authoring preparation is additional. |
+| Sysroot release | All four selected suites pass: installed smoke 138.759s, boundary equivalence 239.821s, metadata structural 95.297s, metadata corpus 884.180s. Source preparation 1,245.962s; package preparation 1,098.832s. Separate diagnostic suite processes repeat packaging that the combined adapter shares. |
+| Installed metadata details | 732 public emission commands take 471.614s; four native programs 89.264s; nine other recorded commands 33.084s. Live generation, relocation and rejection/recovery controls pass. These are nested subprocess times; copying, LSP controls, source corpus, packaging and orchestration also belong to the enclosing suite. |
+| Guards / architecture policy | 15 selected guards accounted for, 13 pass and two fail. All 54 architecture-policy tests accounted for: 53 pass, one unsafe-inventory failure; the 21 tests after its original fail-fast stop were explicitly executed. |
+
+Among complete individual assertion invocations, the SQL clean A / unchanged A /
+independent clean B protocol takes 1,416.898s, generated driver roles 1,311.998s,
+and generated-code-quality 1,035.881s. The clean SQL protocol already disables
+debug information; repeating a SQL debug-disable experiment is not justified.
+No category sum or failed-path duration establishes full-gate feasibility.
+
+All manifest case identities reconcile. Two sysroot report IDs use suite names
+where the manifest uses explicit aliases; the ledger preserves both identities
+and records the mapping. Two diagnostic-helper mistakes are retained as failures:
+V7 used a report path outside the repository, and V8 initially combined Python
+reports in profile order rather than canonical manifest order. All Python suites
+were rerun with valid paths; canonical-order combination then passed. Production
+assertions and the production combination contract were not changed.
+
+Open owners remain: method-dispatch/unsafe/filesystem/transfer inventory
+reconciliation; diagnostics hygiene incorrectly matching a deliberate Rust error
+fixture; generated-program ASan's 180-second timeout; package-area file size and
+stale digest-type guard; imported-call generated Rust ABI failure; and stale SQL
+component provenance after V3j. The architecture failure is the same missing
+unsafe inventory, not a separate implementation defect. Both SQL mutation
+entrypoints reject their stale baseline before executing controls: those controls
+remain **blocked**, not measured passes. Rebuild actual components before their
+qualification; never relabel stale artifacts. The declared missing future
+HTTP/text-i18n fixture remains a skip under its capability owners.
+
+Confirmed avoidable work:
+
+- Sysroot source preparation uses a private Cargo target despite matching all
+  534 completed library/build-script/binary fingerprint JSON inputs in the main
+  compiler target. Final binaries differ by 1,344 bytes; fingerprint equality
+  does not claim binary equality. Both independent source and installed behavior
+  still require qualification after sharing the canonical preparation authority.
+- Python preparation and execution differ only in PATH among native toolchain
+  identity inputs: execution adds another verification-venv activation. A
+  reconstructed preparation identity matches the real header; adding that entry
+  predicts the observed runtime header exactly. The real runtime process confirms
+  the PATH, and a representative prepared/runtime main source and lockfile match.
+  Generated binary names differ. No fix or speedup has been measured yet.
+- The prior attribution that package recreation deleted prepared native output
+  was too strong: that output is a sibling of the recreated package, and survives.
+  Fix the proven launcher mismatch before redesigning fixture lifetime.
+- Versioned corpus preparation changes `SIFR_RELEASE_VERSION` on the ordinary
+  target. Structural qualification rebuilds compiler crates in 47.56s, then corpus
+  qualification rebuilds them in 45.92s. Preserve version-specific behavior;
+  naive target sharing across incompatible identities is not a solution.
+- Three codegen library fingerprints have the same direct features/profile but
+  different transitive fingerprints. They are not interchangeable cache entries.
+- Package hashing starts separate hashing/formatting processes for roughly
+  23,000 files. A streaming equivalent is a candidate, not a measured saving.
+
+Main development compiler preparation and packaged release preparation consume
+4,583.740 CPU seconds combined, before the broader checks. The extra private
+source build consumes another 2,453.480 CPU seconds. Even idealized use of eight
+logical CPUs needs 572.968s for the first two preparation invocations alone at
+that observed CPU work. This is a lower bound, not a parallel-runtime prediction.
+Cold/invalidation acceptance needs less compilation work, not scheduling alone.
+GNU time's reported swap field does not establish zero Linux swap I/O; this
+diagnostic did not collect per-invocation VM-counter deltas. Maximum reported RSS
+is a single-process maximum, not simultaneous process-tree memory.
+
+Evidence remains outside the Git tree under
+`local-gate-implementation-20261020`. The sortable
+`integrated-diagnostic-report.html` includes every selected suite, all recorded
+invocations, SQL/Python details, 245 Rust target summaries and 745 installed
+qualification commands. Frozen diagnostic archive:
+`v4e-resumed-complete-diagnostic-evidence.tar.gz`, 2,135 files, 15,499,878 bytes,
+SHA-256 `b701b0e7b9108e867cd0d28961f33c9d04fe7263634aa6c48004faac063a4be4`.
+All payload hashes/sizes were independently verified locally. Detailed Python
+archive SHA-256 `7bcd9c315caa5b507c7013b02eeee66232918cf40b3b9581789b5e6ed638aab7`
+and sysroot archive SHA-256
+`db10e09d424539650f76eb2140f0594c4d148d665e633583831645d2e1fcb1f5`
+are bound by included manifests and separately verified. Completed owned sessions
+are empty; the candidate remains clean. V4e's diagnostic inventory is recorded;
+correctness repairs, V1 feasibility, remaining V3 matrices and V5 remain open.
+
+### V4l bounded repair — matching preparation and execution contexts
+
+Register this item before implementation. The root contract is that a prepared
+development compiler or Python native graph is consumed under the same intended
+build context. The diagnostic proves two runner-created mismatches: a duplicate
+source-compiler target and redundant verification-environment activation.
+
+Use the already selected verification interpreter for verification-owned child
+processes. Keep locked activation of the separately owned Python-interop project.
+Do not normalize arbitrary PATH entries, discard environment inputs, weaken
+native identities, reuse test pass results, or change selected assertions.
+
+Use the canonical Cargo-selected development compiler authority for sysroot
+source qualification, respecting the caller's target and flags. Cargo must still
+establish freshness and select the actual executable; an existing pathname is
+insufficient. Preserve locked/offline behavior, inherited deadlines, the existing
+900-second source-consumer limit, failure propagation and child cleanup. The
+versioned packaged release compiler remains a distinct required producer.
+
+Named acceptance:
+
+- Focused launcher/segmentation and Cargo/sysroot preparation self-tests, including
+  exact inherited environment preservation, selected interpreter identity,
+  canonical suite order, failed/missing preparation, executable selection and
+  deadline behavior. Preserve existing failure/zero/missing-evidence controls.
+- Compare emitted create-PR and merge correctness plans and run profiles check;
+  selected suites, crate configurations and exclusions must remain unchanged.
+- Exercise real preparation-to-consumer identity: matching Python native headers
+  and Cargo freshness, and the canonical source compiler in the retained target.
+  Preserve distinct flags/targets and reject a mismatched compiler override.
+- Run all 30 Python suites and complete compiled certification, all four selected
+  sysroot suites, and representative ordinary area launches (rust_interop and
+  regression). Record preparation, assertions and ordinary elapsed time separately;
+  do not infer a full-gate saving from avoided cold work.
+- Run file-size and diff checks. Obtain a SATISFIED independent review for the
+  exact implementation candidate under the approved intermediate policy.
+
+This item does not solve release-version invalidation, compile-profile costs,
+package-hash process overhead or the recorded correctness failures. Those remain
+bounded follow-up owners. Final create-PR/merge correctness gates and every V5
+scenario remain required; no sub-600-second result is claimed by this repair.
