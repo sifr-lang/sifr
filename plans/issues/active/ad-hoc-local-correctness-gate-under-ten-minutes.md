@@ -7895,3 +7895,84 @@ Run affected complete runtime-platform selection; report any independent pre-exi
 required gaps under their owners. Formatting/size/diff and independent exact-candidate
 review required. The approved intermediate policy applies; full integrated gates,
 remaining SQL/provenance work, compiler invalidation costs and V5 remain open.
+
+
+### V4s delivered — explicit instrumented preparation and governed assertions
+
+Merged PR #4436, merge `27bef8785cd0be6fc51190b6e649d850275a5da8`, candidate
+`b5af18c8fa04243cde392135af4a242380550328`. Selected sanitizer preparation uses
+actual declared Cargo commands, flags, target, installed toolchain and retained
+allocation. No assertions run during preparation; every existing case and deadline
+remains. Assertion execution now uses the governed process lifetime boundary.
+
+All 32 sanitizer controls, foundation checks, profile/area contracts, formatting,
+file-size and diff checks pass on the final candidate. Both emitted correctness
+plans equal the original selections. Real runtime ASan passes in 0.578s and generated
+binary ASan in 50.782s, zero sanitizer skips/failures. The complete selected runtime
+area takes 278.342s guarded: 30 variants, 29 pass and one pre-existing HTTP/text
+fixture skipped. That skipped obligation is not qualified; V4t below owns it.
+Supplementary ELF checks verify ASan definitions in the compiler, generated program
+and runtime libtest binary. The generated program executes its assertion, and
+recorded libtest output proves one selected runtime assertion actually executes.
+
+Initial preparation on d7c075caa70a8be74aefcc21e3a879cd4c2b0b34 hit the 30-minute
+cap at 1,801.217s while compiling semantic services. Cleanup left no descendants;
+542 newly completed fingerprint records were retained, not 542 unique crates or
+assertions. Only a Python self-test changed before the final candidate; all Rust
+build inputs remained identical. Actual Cargo preparation resumed in 814.648s;
+ordinary compiler identity preparation took 100.879s. These costs remain visible,
+and are neither a passing cold run nor full-phase performance acceptance. The
+supplementary collector initially read the human build report from stdout instead
+of stderr; its successful build and failed collector are retained. Correcting only
+the evidence reader completed proof without repeating the build or changing code.
+
+Independent exact-candidate review SATISFIED, no blockers, SHA-256
+`72fbe6ee885bd72633fbb599b788731ab391077ab6f19b05241a80ce609a2bd3`.
+Its pending native checks now pass. Follow-up: an inherited shorter safety deadline
+can make the timeout wording name the case limit rather than the effective limit;
+the outcome remains a failure. The 1 MiB governed output limit fails on truncation.
+
+`v4s-qualified-evidence.tar.gz`: 186 payloads, 49,526,111 payload bytes,
+1,610,418 archive bytes; SHA-256
+`cc5f67b476aabbd69c43fa26ae99a2ebd8c4544f4e3e77c5fe3bc6255170230b`.
+Archive and every payload independently verified locally. Exact-head CI create-PR
+admission again fails unset performance reference; no green-CI claim. Full gates,
+SQL/provenance, compilation costs and every V5 scenario remain open.
+
+### V4t bounded repair — required execution evidence and HTTP/text golden
+
+Owner: LOCAL-GATE V4 required case execution. Register before implementation.
+The runtime area emits success with a selected skipped HTTP/text fixture whose
+source file does not exist. Both named capability owners are already recorded as
+production-public in the canonical text/i18n and network inventories. The shared
+profile result validator checks suite names/totals but does not check actual case
+rows, allowing a blocking skipped or absent variant to appear qualified.
+
+Restore the selected golden fixture using existing public HTTP BodyStream and
+explicit encoding APIs. Cover byte-preserving body collection, non-ASCII decoding
+across chunk boundaries, explicit encoding, typed invalid-byte errors and body
+limits. Remove only this stale capability block; retain its selection, command,
+expected success marker and ownership. No new product feature, network service,
+benchmark or cross-platform dependency. Existing negative tests remain intact.
+
+Make blocking selected suites require nonempty actual case/variant evidence with
+passing statuses and matching totals. Reject missing/skipped/failed blocking
+variants even if aggregate counters claim success. Reject contradictory passing
+outcomes where exit/truncation/process evidence is supplied. Metadata-only checks
+remain valid; do not invent a subprocess requirement for pure checks. Preserve the
+existing policy permitting explicitly nonblocking failures. Do not accept forged
+aggregate counts or relabel historical skips. Add focused adversarial controls and
+update existing mocks to include honest case rows.
+
+Named acceptance: new result controls, existing foundation/profile/area contracts,
+segmented Python/result consumer controls, exact emitted selection comparison,
+actual restored golden and related existing HTTP/encoding fixtures, and complete
+current-host runtime selection with zero skips/failures. Replay retained report
+shapes as compatibility diagnostics only, never new correctness execution. Historical
+read-only audit found matching declared/actual counts in 115 retained reports from
+13 areas and only this explicit skipped variant; current retained eight reports
+also have consistent counts. Preserve intentional nonblocking and metadata variants.
+Formatting, file-size/diff checks and exact-candidate independent review required.
+Use retained prepared products with actual freshness checks; no broad compiler
+rebuild merely to prototype this runner/fixture repair. The approved intermediate
+policy applies; final phase gates and all V5 requirements remain open.
