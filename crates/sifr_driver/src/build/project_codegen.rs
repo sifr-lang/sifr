@@ -399,6 +399,41 @@ mod tests {
     }
 
     #[test]
+    fn project_vector_abis_survive_the_complete_formatting_pipeline() {
+        let mut project = base_project();
+        project.main_rs = "mod metrics; fn main() { let owned: fn(Vec<i32>) -> usize = metrics::owned; let borrowed: fn(&Vec<i32>) -> usize = metrics::borrowed; assert_eq!(owned(vec![1, 2]), 2); assert_eq!(borrowed(&vec![1, 2]), 2); assert_eq!(metrics::child::run(), 2); }".to_owned();
+        project.support_modules.insert("metrics".to_owned(),
+            "pub mod child; pub fn owned(values: Vec<i32>) -> usize { values.len() } pub fn borrowed(values: &Vec<i32>) -> usize { values.len() } fn private(values: Vec<i32>) -> usize { values.len() }".to_owned());
+        project.support_modules.insert(
+            "metrics.child".to_owned(),
+            "pub fn run() -> usize { super::private(vec![1, 2]) }".to_owned(),
+        );
+        let signatures = |source: &str| {
+            syn::parse_file(source)
+                .expect("valid generated Rust")
+                .items
+                .into_iter()
+                .filter_map(|item| match item {
+                    syn::Item::Fn(function) => {
+                        Some((function.sig.ident.to_string(), function.sig.inputs))
+                    }
+                    _ => None,
+                })
+                .collect::<BTreeMap<_, _>>()
+        };
+        let before = signatures(&project.support_modules["metrics"]);
+        let formatted = format_generated_binary_project(project)
+            .expect("canonicalization, rustfmt, finalization and project const closure");
+        assert_eq!(signatures(&formatted.support_modules["metrics"]), before);
+        let first_root = formatted.main_rs.clone();
+        let first_modules = formatted.support_modules.clone();
+        let repeated =
+            format_generated_binary_project(formatted).expect("stable project formatting");
+        assert_eq!(repeated.main_rs, first_root);
+        assert_eq!(repeated.support_modules, first_modules);
+    }
+
+    #[test]
     fn package_python_runtime_metadata_enables_feature_and_bootstrap() {
         let metadata = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
 

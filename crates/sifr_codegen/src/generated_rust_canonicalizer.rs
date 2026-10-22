@@ -93,60 +93,10 @@ pub fn canonicalize_generated_rust_project_with_names(
                 .map(|source| (module, source))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
-    let canonical = if preserve_exported {
-        close_canonical_project_borrows(canonical, &names)?
-    } else {
-        support_import_cleanup::refresh_support_imports(canonical, false)?
-    };
-    Ok((canonical, names))
-}
-
-fn close_canonical_project_borrows(
-    mut sources: BTreeMap<String, String>,
-    names: &BTreeMap<String, String>,
-) -> Result<BTreeMap<String, String>, String> {
-    // Local API cleanup can change an exported signature. Close its calls in
-    // the complete physical project, then keep signatures and calls stable
-    // together before the driver formats individual files.
-    let modules = sources
-        .keys()
-        .map(|module| {
-            module
-                .split("::")
-                .map(|part| names.get(part).map_or(part, String::as_str))
-                .collect::<Vec<_>>()
-                .join(".")
-        })
-        .collect::<Vec<_>>();
-    // Propagation depth follows the call graph. Keep exact prior states to
-    // reject cycles without imposing a limit on a valid project's depth.
-    let mut previous_states = HashSet::new();
-    loop {
-        let before = sources.clone();
-        let mut named = modules
-            .iter()
-            .zip(sources.values_mut())
-            .map(|(module, source)| (module.as_str(), source))
-            .collect::<Vec<_>>();
-        rewrite_named_project_borrows(&mut named)?;
-        sources = sources
-            .into_iter()
-            .map(|(module, source)| {
-                // Identifiers already use the project map. Reapplying its
-                // original names could rename a canonical collision twice.
-                canonicalize_named_source(source, true).map(|source| (module, source))
-            })
-            .collect::<Result<BTreeMap<_, _>, _>>()?;
-        sources = support_import_cleanup::refresh_support_imports(sources, true)?;
-        if sources == before {
-            return Ok(sources);
-        }
-        if !previous_states.insert(before) {
-            return Err(
-                "generated Rust project borrow cleanup revisited an earlier state".to_string(),
-            );
-        }
-    }
+    Ok((
+        support_import_cleanup::refresh_support_imports(canonical, preserve_exported)?,
+        names,
+    ))
 }
 
 fn canonicalize_source_with_names(

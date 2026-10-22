@@ -29,17 +29,6 @@ pub(crate) fn collect_project_shared_slice_params(
         }
     }
     plans.retain(|key, indices| !indices.is_empty() && !ambiguous.contains(key));
-    // Re-export chains can cross physical files in either lexical order.
-    // Expand their qualified identities before rewriting any caller.
-    for _ in 0..files.len() {
-        let before = plans.len();
-        for file in files {
-            super::super::syntax_cleanup::scoped_imports::expand(file, &mut plans);
-        }
-        if plans.len() == before {
-            break;
-        }
-    }
     plans
 }
 

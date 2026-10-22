@@ -46,7 +46,11 @@ pub(super) fn canonicalize_syntax(file: &mut syn::File, preserve_exported: bool)
     borrowed_scalar_parameters::rewrite_borrow_only_scalar_parameters(file);
     borrowed_value_parameters::rewrite_borrow_only_value_parameters(file, preserve_exported);
     redundant_borrow_cleanup::remove_redundant_local_call_borrows(file);
-    super::api_cleanup::rewrite_slice_parameter_apis(file);
+    // A physical project file is not a closed call graph. Even private functions
+    // can be called from child files, and function values retain their exact ABI.
+    if !preserve_exported {
+        super::api_cleanup::rewrite_slice_parameter_apis(file);
+    }
     identity_conversion_cleanup::remove_known_sifr_int_identity_conversions(file);
     let mutating_methods = collect_mutating_method_names(file);
     let local_method_facts = collect_local_method_facts(file);

@@ -220,3 +220,113 @@ fn project_slice_abi_long_transitive_chain_has_no_fixed_depth_limit() {
         qualify(sources);
     }
 }
+
+#[test]
+fn project_slice_abi_local_shadow() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; use crate::metrics::score; fn main() { let score = |v: Vec<i32>| v; assert_eq!(score(vec![1_i32,2]), vec![1_i32,2]); assert_eq!(metrics::score(vec![1_i32]), 1); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: Vec<i32>) -> usize { values.len() }",
+        ),
+    ]));
+}
+#[test]
+fn project_slice_abi_parameter_shadow() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; use crate::metrics::score; fn identity(v: Vec<i32>) -> Vec<i32> { v } fn relay(score: fn(Vec<i32>)->Vec<i32>) -> Vec<i32> { score(vec![1_i32,2]) } fn main() { assert_eq!(relay(identity), vec![1_i32,2]); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: Vec<i32>) -> usize { values.len() }",
+        ),
+    ]));
+}
+#[test]
+fn project_slice_abi_block_item_shadow() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; use crate::metrics::score; fn main() { fn score(v: Vec<i32>) -> Vec<i32> { v } assert_eq!(score(vec![1_i32,2]), vec![1_i32,2]); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: Vec<i32>) -> usize { values.len() }",
+        ),
+    ]));
+}
+#[test]
+fn project_slice_abi_module_alias() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; use crate::metrics as alias; fn main() { assert_eq!(alias::score(vec![1_i32,2]), 2); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: Vec<i32>) -> usize { values.len() }",
+        ),
+    ]));
+}
+
+#[test]
+fn project_slice_abi_slice_binding_shadow() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; use crate::metrics::score; fn forward(values: &[i32]) -> usize { let values = values.to_vec(); score(&values) } fn main() { assert_eq!(forward(&[1_i32,2]), 2); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: &[i32]) -> usize { values.len() }",
+        ),
+    ]));
+}
+#[test]
+fn project_slice_abi_owned_function_value() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; fn main() { let callback: fn(Vec<i32>)->usize = metrics::score; assert_eq!(callback(vec![1_i32,2]), 2); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: Vec<i32>) -> usize { values.len() }",
+        ),
+    ]));
+}
+#[test]
+fn project_slice_abi_borrowed_function_value() {
+    qualify(project(&[
+        (
+            "",
+            "mod metrics; fn main() { let callback: fn(&Vec<i32>)->usize = metrics::score; assert_eq!(callback(&vec![1_i32,2]), 2); }",
+        ),
+        (
+            "metrics",
+            "pub fn score(values: &Vec<i32>) -> usize { values.len() }",
+        ),
+    ]));
+}
+#[test]
+fn project_slice_abi_private_parent_consumer() {
+    qualify(project(&[
+        (
+            "",
+            "mod parent; fn main() { assert_eq!(parent::child::run(), 2); }",
+        ),
+        (
+            "parent",
+            "pub mod child; fn score(values: Vec<i32>) -> usize { values.len() }",
+        ),
+        (
+            "parent::child",
+            "pub fn run() -> usize { super::score(vec![1_i32,2]) }",
+        ),
+    ]));
+}
