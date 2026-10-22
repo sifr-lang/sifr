@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4n inventories reconciled; V4o native lifecycle repair in progress; V1 feasibility and integrated acceptance remain open
+current_stage: V4o lifecycle repair merged; V4p unsafe comparison cost investigation in progress; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -7612,3 +7612,79 @@ cleanup errors while explicit successful test completion checks release. Native
 regressions cover each failure during unwind and explicit error reporting with
 idempotent cleanup. Initial driver build/testing uses a frozen source candidate;
 final actual integrated driver checks and source-bound guards remain required.
+
+### V4o delivered — owned test-child lifecycle and unwind cleanup
+
+Merged PR #4432, merge `5bdf3b9fc329e7f25d0d41f678a6ade25cf57898`, candidate
+`66b8c2cff01e25e6e41006fd9966822c4beebdd3`. Production lease/cache behavior and
+guard rules remain unchanged. Cleanup owns a reserved group identity from spawn;
+owner death is observed without reaping; child roles no longer expire. The early
+unwind controls cover zero, one and two children with actual inherited-endpoint
+EOF and fixture-lock availability. Explicit release still reports child failures,
+while destructor cleanup preserves the original unwind.
+
+Final actual driver runs passed all five process-lease and seven retained-fixture
+tests, zero ignored, in 3.764s and 6.765s. All twelve also passed together with two
+test threads in 5.764s (2.77s test body). All three sessions ended empty without
+supervisor cleanup signals or resource/source violations. The initial 154.590s
+run used an incorrect filter and executed zero tests: retain it only as build
+preparation, never a test pass. The actual test names were discovered from the
+binary before the corrected final runs.
+
+All four affected live guards and self-tests pass: method 6,404 sites / 235 nodes,
+unsafe 398 sites / three partitions, filesystem 3,387 sites, and transfer guard.
+All 54 architecture tests pass without fail-fast; complete coverage has two suites,
+five cases and 58 negative controls. Formatting, file-size and diff checks pass.
+The thirteen policy/format/coverage checks totaled 659.705s; this scoped cost is
+already over ten minutes and is not whole-gate acceptance. Unsafe guard 202.745s
+and architecture suite 309.800s are the next common-cost investigation.
+
+Independent exact-candidate review is SATISFIED with no blockers, SHA-256
+`018c43947404ca8eeb554689b4ea38449779a4d5a147305cfbcb5d8c3ae85655`.
+Pending unchanged-candidate checks passed afterward; no new source review was
+needed. Reviewer-suggested parallel-thread evidence was then obtained as above.
+An early owner crash now reports the bounded ten-second readiness timeout rather
+than reaping early to diagnose it; inherited stderr retains its panic. A future
+non-reaping EOF poll could improve that diagnostic, but it is not required for
+cleanup correctness. Full integrated concurrency qualification remains V5 work.
+
+`v4o-qualified-evidence.tar.gz` contains 119 payloads, 9,653,605 payload bytes,
+2,252,570 archive bytes; SHA-256
+`b3a2f19337d3ab0796da891c078318cd19114d3d8b5682eb7272753c648785d3`.
+Archive and every payload were independently verified locally. Original failing
+native controls, their explicit diagnostic cleanup and the zero-test run remain
+preserved. Exact-head CI still rejects unselected SIFR_PERFORMANCE_REFERENCE;
+CI is not claimed green. All remaining phase owners and final gates stay open.
+
+### V4p bounded performance item — reuse immutable unsafe binding patterns
+
+Owner: LOCAL-GATE V4 policy-validation cost. Register after V4o closure and before
+implementation. The unchanged ordinary guard takes about 202.7s and the complete
+architecture suite about 309.8s. Both repeatedly rebuild and compile the same
+source-derived binding patterns while comparing contract pairs. This is a large
+shared validation cost, not a reason to remove the guard or its negative controls.
+
+Scope: process-local construction/compilation of unsafe obligation binding patterns
+and a focused cache-admission regression. Keep complete source discovery, every
+pair comparison, symmetric two-site normalization, overlap resolution, exact
+shared-group bindings, proof validation and all negative controls unchanged.
+No result cache, persisted evidence cache, waived comparison, altered registry,
+new policy meaning or external dependency. Prefer one small bounded memoization
+of immutable derived patterns, keyed by the complete immutable source Site, with
+immutable output. A same-key/fingerprint source whose adjacent SAFETY evidence
+changes must not receive stale patterns. Keep cold self-tests standard-library-only.
+
+Measure the existing comparison on fixed current source inputs and compare the
+optimized implementation on those same inputs. Check exact complete group/results,
+not merely exit status or group count. Record source discovery separately from
+comparison when explaining costs; use ordinary guard/test runs for elapsed times.
+Retain the optimization only for a material measured improvement with identical
+semantics. No full-gate runtime or V5 success can be inferred from this component.
+
+Named acceptance: targeted adversarial normalization/cache-boundary regression;
+all unsafe and method self-tests; all architecture policy tests without fail-fast;
+full live unsafe guard and exact old/new whole-tree comparison results; coverage,
+file-size/diff checks. Source Rust and inventories must remain byte-identical.
+Independent exact-candidate review and the approved intermediate policy apply.
+Continue remaining diagnostic, package, sanitizer, SQL/provenance and preparation
+owners afterward. Full correctness and V5 acceptance remain required.

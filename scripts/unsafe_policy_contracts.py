@@ -6,6 +6,7 @@ SAFETY explanation. Scoped review verifies the meaning of those assertions.
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from itertools import combinations
 import re
 
@@ -173,7 +174,11 @@ def valid_proof(proof, site, sources) -> bool:
                     for i in range(len(actual) - len(quoted) + 1)) == 1)
 
 
-def _binding_patterns(site) -> list[str]:
+@lru_cache(maxsize=512)
+def _binding_patterns(site) -> tuple[re.Pattern[str], ...]:
+    # Site is frozen: include every binding, including SAFETY evidence that is
+    # deliberately absent from the code fingerprint. Cache only immutable
+    # derived patterns, never authored contracts or comparison results.
     boundary = r'[\w/.:#-]'
     # Sentence punctuation is a boundary; a path extension/component or an
     # identifier suffix is not. Keep the punctuation in the remaining prose.
@@ -200,7 +205,7 @@ def _binding_patterns(site) -> list[str]:
                   .removesuffix('*/').strip() for line in site.source_evidence.splitlines()]
         patterns += [r'(?<!\w)' + r'\s*'.join(re.escape(word) for word in body.split())
                      + r'(?!\w)' for body in bodies if body]
-    return patterns
+    return tuple(re.compile(pattern) for pattern in patterns)
 
 
 def normalized_obligations(contract, site, record, *, comparison_sites=None) -> tuple:
@@ -219,7 +224,7 @@ def normalized_obligations(contract, site, record, *, comparison_sites=None) -> 
     values = []
     for field in FIELDS:
         text = contract[field]
-        spans = [match.span() for pattern in patterns for match in re.finditer(pattern, text)]
+        spans = [match.span() for pattern in patterns for match in pattern.finditer(text)]
         # A maximal hex token must itself be a prefix; matching part of a
         # different hash or digits inside an identifier is not metadata.
         spans += [match.span() for match in re.finditer(r'(?<![\w/])[0-9a-fA-F]+(?![\w/])', text)
