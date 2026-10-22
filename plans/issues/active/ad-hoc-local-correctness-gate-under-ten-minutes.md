@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V3k complete compiled-Python reuse diagnosis; V1 feasibility and integrated acceptance remain open
+current_stage: V4e resumed integrated failure discovery; V3l closed, V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -6972,3 +6972,98 @@ Other measured costs stay assigned to the gate/native-build owners: duplicated
 example lifecycle work, separate dependency families, repeated compiler selection,
 and full-profile scheduling. This item does not remove coverage, merge native
 trust contexts, alter dependency pins/profiles, or claim it alone meets 600 seconds.
+
+
+### V3l closure — fresh post-import Python metadata / #4424
+
+PR [#4424](https://github.com/sifr-lang/sifr/pull/4424) merged as
+`0cc269031b8d68ca63caf4bd4526d0c7d5e02c02`. The independently reviewed candidate is
+`958be37c1281f40ef3fe92ccb332986edebb4b5a`, against base
+`39390166a60946cdac66aa82059db92123d706cd`.
+
+The probe preserves declared/native import order and multiplicity, then discovers
+distribution ownership once from the post-import environment. Every invocation
+still imports and observes freshly. Ownership failures fail otherwise successful
+roots while retaining actual import failures; version lookup errors remain
+root-specific. Interpreter/venv, ABI/platform/library, project/lock digests and
+native trust checks remain intact. There is no cross-process memoization or
+removed certification/assertion. Import-time mutations intentionally follow the
+registered final-state contract rather than interleaved old metadata snapshots.
+
+All 36 focused qualification categories passed on the frozen candidate. The
+package suite passes 170 tests with zero failures/ignores. All 29 compiled examples
+in nine suites pass preparation, execution, source-policy checks, output markers,
+certification and immutable rechecks. All nine driver-native Python roles pass;
+the complete native inventory remains the same 82 roles. Affected Python self-test,
+environment, readonly and binding contracts pass, as do formatting, file-size and
+source-ownership checks. Ten new observation controls exercise the authoritative
+embedded script, including errors, interrupts, overlapping roots, mutation during
+successful/failed imports, real namespace ownership and a new process after
+metadata/lock changes. Both ordinary and optimized-Python control runs pass.
+The preliminary static run used system Python 3.14.4; authoritative qualification
+repeats the checks with the exact pinned Python 3.14.7.
+
+| Focused observation | Guarded elapsed |
+| --- | ---: |
+| Compiled-example preparation, all nine suites | 387.427s |
+| Compiled-example execution, all nine suites | 310.346s |
+| Nine driver-native Python roles | 304.361s |
+| All 36 focused categories, including setup and other checks | 1,388.125s |
+
+These are isolated category sums on retained targets, not an integrated invocation
+or final timing acceptance. V3k was traced while V3l is untraced; their suite totals
+are not a controlled before/after speedup. The separate untraced ABBA experiment
+replays all 29 distinct requests, 116 complete observations, preserving every
+ordinary-environment JSON payload. The sum of per-case medians is 50.205s baseline
+versus 23.358s candidate (approximately 53.5% lower). That supports the probe-only
+benefit, not a predicted full-gate saving. All completed sessions end empty and
+tracked source remains unchanged.
+
+Frozen evidence `v3l-evidence.tar.gz`: 928 files, 551,398 bytes, SHA-256
+`bdffef85f23f5fa1d4e18aff4721d0c0e35821975419c38309fc4599142f4432`.
+All 927 manifest payload files were independently hash/size verified locally under
+`local-gate-implementation-20261020/v3l-reviewed-diagnostic`.
+Independent review is **SATISFIED**, with no blockers; external response
+`reviews/958be37c1281f40ef3fe92ccb332986edebb4b5a/request.ZMuNau/response.md`, SHA-256
+`49a14f317b864e937ca5f4752ef903186b08d7b5f798a8888f4ff0f849ecde7b`.
+
+Follow-ups remain separate with the Python verification owner: improve control
+failure messages/style, and compare selected-venv identity against the parent's
+expected venv rather than a redundant same-process prefix assertion. The full
+29-request equality matrix supplies the actual selected-venv identity evidence.
+The unused `do_import=False` branch is pre-existing. CI create-PR again fails before
+setup because `SIFR_PERFORMANCE_REFERENCE` is absent; preserve that existing
+infrastructure failure, not a CI-green claim. Full gates, cold feasibility, remaining
+command/PostgreSQL matrices and V5 remain open.
+
+
+### V4e resumed diagnostic — integrated failure discovery before further optimization
+
+The user directed on 2026-10-22 that, after V3l closes, the next milestone is a
+complete integrated correctness result, not another isolated optimization. Resume
+V4e's existing bounded diagnostic contract on the combined published candidate.
+Inspect the emitted `merge --correctness-only` plan and compare selection with the
+canonical manifests. Verify exact tools, prepared targets/interpreters, CPU/memory,
+working allocation, disk reserves and source ownership before launching. Verify
+that the exact revision used by generated portable Cargo graphs is published and
+fetchable; retain the old unpublished-revision and disk-reserve failures separately.
+
+Run `scripts/run_all_tests.sh --profile merge --correctness-only --no-fail-fast`
+with the established diagnostic safety bounds, recording ordinary elapsed time
+without strace or profiling. Continue independent failures, but never execute a
+consumer whose prerequisite failed. Preserve required checks, variants, assertions,
+clean/invalidation work and every failed/incomplete receipt. Do not disguise cold
+preparation as bootstrap. If the aggregate diagnostic cap stops the invocation,
+list every unexecuted category and explicitly schedule remaining independent
+canonical categories under their own 30-minute caps with their real prerequisites.
+A cap, blocked prerequisite or missing run is not a pass.
+
+Reconcile all selected coverage and report executed coverage, remaining failures,
+total observed invocation time (separately from follow-up category sums), and the
+three largest measured costs. Use those results to select the largest root cause.
+Batch related repairs under one bounded acceptance contract and exact-candidate
+independent review. Keep focused intermediate validation and input-bound evidence
+reuse; broaden testing when integration changes justify it. Reserve repeated final
+timing qualification for a credible integrated candidate. Final create-PR/merge
+correctness gates and every V5 scenario remain mandatory. This sequencing change
+neither weakens acceptance nor establishes that the full gate can meet 600 seconds.
