@@ -29,6 +29,7 @@ from .dx3_process_checks import policy_checks as dx3_process_checks
 from .profile_area_steps import run_selected_area
 from .python_interop_segmentation_checks import policy_checks as python_interop_segmentation_checks
 from .profile_results import AreaResultError, validate_area_result
+from .area_result_checks import passing_case, policy_checks as area_result_checks
 from .profile_runner import timed_step
 from .reference_admission_checks import policy_checks as reference_admission_policy_checks
 from .profiles import (
@@ -75,6 +76,7 @@ def run_all() -> list[str]:
         ("performance reference admission ordering", reference_admission_policy_checks),
         ("local correctness selection and evidence", execution_scope_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
+        ("required area case execution", area_result_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
         ("cache-aware step budget self-test", step_budget_self_test),
@@ -553,6 +555,7 @@ def _rust_interop_profile_self_test() -> None:
             "suites": [
                 {
                     "name": suite,
+                    "cases": [passing_case(suite)],
                     "blocking": True,
                     "total_variants": 1,
                     "total_failures": 0,
@@ -570,6 +573,7 @@ def _rust_interop_profile_self_test() -> None:
         nonblocking_payload = copy.deepcopy(valid_payload)
         nonblocking_payload["suites"][0]["blocking"] = False
         nonblocking_payload["suites"][0]["total_failures"] = 1
+        nonblocking_payload["suites"][0]["cases"][0]["variants"][0]["status"] = "fail"
         nonblocking_payload["summary"]["total_failures"] = 1
         nonblocking_payload["summary"]["non_blocking_failures"] = 1
         result_path.write_text(json.dumps(nonblocking_payload), encoding="utf-8")
@@ -677,12 +681,14 @@ def _documentation_profile_self_test() -> None:
                     "suites": [
                         {
                             "name": "structure",
+                            "cases": [passing_case("structure")],
                             "blocking": True,
                             "total_variants": 1,
                             "total_failures": 0,
                         },
                         {
                             "name": "ga-release",
+                            "cases": [passing_case("ga-release")],
                             "blocking": True,
                             "total_variants": 1,
                             "total_failures": 0,

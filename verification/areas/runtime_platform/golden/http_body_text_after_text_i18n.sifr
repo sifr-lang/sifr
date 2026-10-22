@@ -1,0 +1,51 @@
+from sifr.encoding import DecodeError, Encoding, decode
+from sifr.http import BodyError, BodyStream
+
+
+def main() -> Result[None, Error]:
+    # HTTP chunks need not end on a character boundary. Collect bytes first.
+    utf8_body: BodyStream = BodyStream([b"caf\xc3", b"\xa9"])
+    latin1_body: BodyStream = BodyStream([b"caf", b"\xe9"])
+    try:
+        utf8_bytes: bytes = utf8_body.collect_with_limit(5)
+        assert utf8_bytes == b"caf\xc3\xa9"
+        utf8_text: str = decode(utf8_bytes, Encoding("utf-8"))
+        assert utf8_text == "café"
+        latin1_bytes: bytes = latin1_body.collect_with_limit(4)
+        assert latin1_bytes == b"caf\xe9"
+        latin1_text: str = decode(latin1_bytes, Encoding("latin-1"))
+        assert latin1_text == "café"
+    except BodyError as e:
+        raise Error(e.message)
+    except DecodeError as e:
+        raise Error(e.message)
+
+    invalid_body: BodyStream = BodyStream([b"\xff"])
+    invalid_bytes_rejected: bool = False
+    try:
+        invalid_bytes: bytes = invalid_body.collect_with_limit(1)
+        _invalid_text: str = decode(invalid_bytes, Encoding("utf-8"))
+        assert False
+    except DecodeError as e:
+        invalid_bytes_rejected = len(e.message) > 0
+    except BodyError as e:
+        raise Error(e.message)
+    assert invalid_bytes_rejected
+
+    body_limit_rejected: bool = False
+    try:
+        _too_large: bytes = utf8_body.collect_with_limit(4)
+        assert False
+    except BodyError as e:
+        body_limit_rejected = e.message == "HTTP body exceeds configured limit"
+    assert body_limit_rejected
+
+    zero_limit_rejected: bool = False
+    try:
+        _zero_limit: bytes = utf8_body.collect_with_limit(0)
+        assert False
+    except BodyError as e:
+        zero_limit_rejected = e.message == "HTTP body limit must be positive"
+    assert zero_limit_rejected
+    print("platform-golden: pass")
+    return None
