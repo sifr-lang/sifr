@@ -7220,3 +7220,115 @@ This item does not solve release-version invalidation, compile-profile costs,
 package-hash process overhead or the recorded correctness failures. Those remain
 bounded follow-up owners. Final create-PR/merge correctness gates and every V5
 scenario remain required; no sub-600-second result is claimed by this repair.
+
+
+### V4l closure — preparation/execution context coherence / #4427
+
+Implementation candidate `982e9119d0e45882aafba0e5c1d99415aca11c09` is qualified
+against base `c1c2c33d3098fed4f7b37244303b80fae78c8c38`. PR #4427 merged as `dcc3d033861269212ce9ebbeb315ce35dce81343`.
+Verification-owned children now use the selected interpreter directly; the
+separately owned Python project still uses locked activation. Sysroot source
+qualification uses the canonical Cargo-selected compiler in the caller target,
+with offline/locked preparation, inherited deadlines and fail-closed errors.
+Structural-only selection now enrolls source preparation as well.
+
+The 19 focused controls pass (3.652s), full runner foundation checks pass
+(93.221s), and plan/profile/lock/size/diff checks pass (5.224s). Emitted correctness
+plans remain exactly equal: 71 create-PR and 105 merge suites. The original
+foundation invocation omitted the required `--` before `self-test` and did not
+execute tests; retain that failed invocation beside the corrected passing run.
+The validated working diff matches the committed candidate; Git's default index
+abbreviation differs between checkouts, so the binding uses explicit nine-digit
+abbreviations when reproducing its SHA-256.
+
+Real affected qualification passes all 41 suites / 53 top-level variants, with
+nested assertion evidence preserved:
+
+| Category | Ordinary observed duration / coverage |
+| --- | --- |
+| Python | 572.544s; all 30 suites; complete certification: 7 capabilities, 9 compiled entries, 3 resource-zero entries. All 29 examples prepare in 295.356s. |
+| Sysroot | 1,354.583s combined; all four suites. Boundary 312.928s; installed smoke 23.462s; complete metadata corpus 770.922s; structural 242.848s. All 732 installed public emissions and native/integrity/recovery controls pass. |
+| Rust interop | 32.202s; all five suites, 13 variants. |
+| Regression | 38.199s; both suites, six variants. |
+| Other preparation | Workspace 2.185s; compiler identity 93.298s; canonical sysroot source 6.687s; Python environment 1.185s; authoring 74.244s; sysroot package 53.719s; maintained demos 47.710s. |
+
+Independent live-process observations prove preparation and Python execution have
+identical native inputs. Reconstructing both tool identities agrees with the
+actual runtime Cargo family's header. No environment key or PATH entry is
+normalized away. An initial unfiltered observation sampled an unrelated Sifr
+command; the role-filtered observation and actual Cargo family corroboration are
+the accepted evidence, with the investigation limitation explicitly recorded.
+All 534 fingerprint JSON files in the old private source target preserve bytes
+and mtimes. Thirteen actual Cargo controls pass (2.682s), covering edits, flags,
+explicit host/target, lock drift, mismatched/matching overrides, invalid source
+despite an existing binary, and recovery. Every owned process session ends empty;
+source remains clean at the candidate.
+
+These are retained diagnostic observations, not a controlled cold A/B speedup or
+a full-gate duration. Sharing source preparation does not remove version-context
+rebuilds; the combined corpus/structural sequence still rebuilds compiler crates.
+Python preparation plus execution alone exceeds the whole-gate budget. V1
+feasibility, other correctness repairs, final gates and every V5 scenario remain
+open; do not mark the phase complete.
+
+Evidence: `v4l-evidence.tar.gz`, 252 files, 2,774,057 bytes, SHA-256
+`f05a073cc4ce608b55f59bec312a43620171711d94329d48f411c157b1326a0c`, outside
+the Git tree in `local-gate-implementation-20261020`. Archive and every payload
+hash/size were independently verified locally. Exact-candidate review:
+`reviews/982e9119d0e45882aafba0e5c1d99415aca11c09/review.md`, SATISFIED
+with no blockers, SHA-256
+`731066266c82d05a880d59d6d6d034aeddc5c4aac0d10b80ef13df0fc1e29d84`. Review evidence remains outside the commit it approves.
+
+CI is not claimed green: full create-PR admission rejects missing
+`SIFR_PERFORMANCE_REFERENCE` before setup, as previously recorded. Deterministic
+report CI reports a missing signature; its job log does not establish the
+underlying cause. Preserve both with their existing CI owners. Intermediate
+acceptance follows the approved phase policy, not a waiver of final qualification.
+
+Non-blocking review follow-ups belong to the common compiler resolver: render
+its failure message with a real newline; consider separating deadline data from
+memoization identity only if that remains safe; and convert non-object Cargo
+JSON into an explicit preparation failure. None changes this item's passing
+contract or permits weaker freshness. They are recorded, not silently included
+in the reviewed implementation.
+
+### V4m bounded correctness repair — project slice-call ABI closure
+
+Register this item before implementation under LOCAL-GATE's integrated
+correctness dependency work, with emitted-Rust/codegen as technical owner. The
+completed diagnostic reproduces OSS-CURATED-0002: source checking succeeds but
+generated Rust passes an owned vector to an imported slice parameter. The fixture
+and its checksum must remain unchanged. This is a compiler failure, not a timing
+win or a fixture problem.
+
+Source history places the slice cleanup in d16595d17b (2026-09-22), with later
+project borrow work in e20efbe981 and LOCAL-GATE's eec85331b. This is not attributed
+to V4l. Current source suggests slice signatures can change during per-file
+canonicalization after project-wide call plans were collected. Prove the stage
+boundary with a failing focused regression and an owned fresh-cache reproduction
+before implementing the correction; source inspection alone is not final proof.
+
+Make final caller/callee conventions coherent across the complete generated
+project. Preserve lexical/module/owner identity, import aliases and reexports,
+macro-contained calls, ownership-sensitive vector behavior and native error
+reporting. Do not change a source fixture, insert untyped blanket borrows, suppress
+a compiler error or add a fallback emission path. Keep per-file cleanup from
+silently changing an exported ABI after project closure. Prefer one canonical
+project transformation and explicit invariants over duplicate repair passes.
+
+Named acceptance: focused before/after stage-boundary regressions, direct,
+qualified and aliased/reexported calls, same-named functions in different modules,
+macro calls, transitive chains, input-order independence/idempotence, and owned
+uses that must not become slices. Run affected canonicalizer/project codegen
+unit tests, native regressions that execute the original assertions, the full
+codegen library suite, the complete ecosystem selection, and affected project
+and interop regressions. Resolve named filters to actual tests and reject zero
+execution. Run the full positive E2E inventory because this changes shared
+code generation. Run Rust formatting, file-size and applicable codegen policy
+checks; retain pre-existing guard failures separately and reject new drift.
+Obtain exact-candidate independent review under the approved intermediate policy.
+
+Retain preparation and each failed attempt, with the 30-minute diagnostic cap
+and stricter inner limits. Final full correctness and V5 timing acceptance remain
+open. This bounded repair restores valuable coverage; it is not itself a claim
+that the full gate meets ten minutes.
