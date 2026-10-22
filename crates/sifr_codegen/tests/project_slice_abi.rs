@@ -390,7 +390,8 @@ fn slice_literals_preserve_runtime_repeat_and_clone_semantics() {
         fn joined(values: &[String]) -> String { values.join("") }
         fn main() {
             let count = std::env::args().count() + 1;
-            assert_eq!(joined(&vec![String::from("x"); count]), "xx");
+            let callback: fn(&[String]) -> String = joined;
+            assert_eq!(callback(&vec![String::from("x"); count]), "xx");
         }
     "#,
     )]));
