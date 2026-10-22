@@ -25,8 +25,10 @@ RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "runtime-platfor
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 
 sys.path.insert(0, str(COMMON_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "verification/runner"))
 
 from sifr_binary import resolve_sifr_binary  # noqa: E402
+from sifr_verify.process_execution import execute  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -540,34 +542,24 @@ def run_sanitizer_case(suite_name: str, case: dict[str, Any], host_triple: str) 
     command = sanitizer_command(case, host_triple)
     timeout_seconds = int(case["timeout_seconds"])
     env = sanitizer_environment(case, host_triple)
-    try:
-        result = subprocess.run(
-            command,
-            cwd=REPO_ROOT,
-            env=env,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout_seconds,
-            check=False,
-        )
-        elapsed_ms = (time.perf_counter() - started) * 1000.0
-        failures = [] if result.returncode == 0 else [f"exit={result.returncode} expected=0"]
-        status = "fail" if failures else "pass"
-        if failures:
-            print(f"[{suite_name}] fail {case_id} {'; '.join(failures)}", file=sys.stderr, flush=True)
-            print(result.stdout + result.stderr, file=sys.stderr, flush=True)
-        else:
-            print(f"[{suite_name}] pass {case_id}", flush=True)
-    except subprocess.TimeoutExpired as exc:
-        elapsed_ms = (time.perf_counter() - started) * 1000.0
-        failures = [f"timeout after {timeout_seconds}s"]
-        status = "fail"
-        print(f"[{suite_name}] fail {case_id} timeout after {timeout_seconds}s", file=sys.stderr, flush=True)
-        if exc.stdout:
-            print(exc.stdout, file=sys.stderr, flush=True)
-        if exc.stderr:
-            print(exc.stderr, file=sys.stderr, flush=True)
+    result = execute(command, cwd=REPO_ROOT, env=env, deadline_seconds=timeout_seconds)
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    failures = []
+    if result.cause == "safety_deadline":
+        failures.append(f"timeout after {timeout_seconds}s")
+    elif result.cause != "exit":
+        failures.append(f"process={result.cause}")
+    elif result.returncode != 0:
+        failures.append(f"exit={result.returncode} expected=0")
+    if result.truncated:
+        failures.append("output-truncated")
+    status = "fail" if failures else "pass"
+    if failures:
+        print(f"[{suite_name}] fail {case_id} {'; '.join(failures)}", file=sys.stderr, flush=True)
+        print((result.stdout + result.stderr).decode("utf-8", errors="replace"),
+              file=sys.stderr, flush=True)
+    else:
+        print(f"[{suite_name}] pass {case_id}", flush=True)
     print_case_timing(suite_name, case_id, elapsed_ms, status)
     return {
         "label": case_id,
@@ -575,7 +567,9 @@ def run_sanitizer_case(suite_name: str, case: dict[str, Any], host_triple: str) 
         "status": status,
         "mismatches": failures,
         "expected_exit_code": 0,
-        "actual_exit_code": 0 if status == "pass" else 1,
+        "actual_exit_code": result.returncode,
+        "process_cause": result.cause,
+        "truncated": result.truncated,
         "duration_ms": round(elapsed_ms, 3),
         "host_triple": host_triple,
         "tool": str(case["tool"]),

@@ -7815,3 +7815,83 @@ session observer raced process exit, so retain that wrapper failure as diagnosti
 only. Final native validation requires complete session-empty proof.
 Independent exact-candidate review and approved intermediate policy apply. Full
 phase correctness/timing and all other failure owners stay open.
+
+
+### V4r delivered — package guardrails and test organization
+
+Merged PR #4435, merge `50ca2ea4fd060ec649a20359e5d8686dcdcc7679`, candidate
+`550f7b0719c42493dac3f99c93fdcbcb9d46abd1`. Six identity/invalidation tests moved
+into a dedicated module; parent/child are 340/358 lines against the unchanged 420
+limit. All sixteen original function bodies are token-identical; independent
+review also checked the moved source bytes and Unix cfg. Four filesystem records
+change only location, retaining every classification and operation. The stale
+metadata type-name assertion now names the actual normalized projection.
+
+Actual discovery contains the same 170 package library tests with exactly six
+qualified-name changes. All 170 execute and pass, zero ignored/filtered/failures.
+All three package suites/four variants pass, including offline checks/self-test;
+negative line-limit control rejects both moved modules. Filesystem guard covers
+3,387 sites and self-tests pass; all 55 architecture tests, complete coverage
+(five variants, 58 negative controls), formatting, size and diff checks pass.
+Final sessions end empty without cleanup signals or source/resource violations.
+
+Baseline preparation/listing rebuilt missing standalone-package dependencies in
+447.950s. Retaining those, candidate harness preparation/listing took 9.695s;
+all 170 tests took 3.186s (0.57s body). Canonical compiler-identity preparation
+still took 68.727s; package area 0.689s. Policy checks totaled 205.061s and overlapped
+baseline compilation; these are diagnostic costs, not controlled timing acceptance.
+Standalone package selection differs from the grouped compiler configuration;
+retained fingerprint data and the active lowering command are recorded. Do not
+call this cache corruption or infer exclusive compilation cost from overlaps.
+
+Independent exact-candidate review SATISFIED, no blockers, SHA-256
+`e15a7d947b25cc7327c1b886529cf662ed187fcbe6253281fde1d013e567535c`.
+All pending named checks passed unchanged. Its FEATURES.md qualified-test-path
+follow-up is corrected in this record-only closure update. Original missing-corpus
+and fast observer-race diagnostic failures remain preserved and unqualified.
+
+`v4r-qualified-evidence.tar.gz`: 120 payloads, 9,138,734 payload bytes,
+2,243,985 archive bytes; SHA-256
+`865647aa5c73eb9d171f5ecd8042e71b3251e5cef167d1b0e81c62585e1702d2`.
+Archive and every payload independently verified locally. Exact-head CI again
+fails unselected performance-reference admission; no green CI claim. Remaining
+owners, complete final gates and every V5 scenario remain open.
+
+### V4s bounded repair — explicit instrumented preparation and sanitizer lifetime
+
+Owner: LOCAL-GATE V4 runtime sanitizer preparation. Register before implementation.
+The preserved complete V4e runtime report has runtime ASan passing in 0.903s and
+generated-binary ASan failing at 180.149s while preparing its instrumented compiler.
+The case currently mixes Cargo preparation with its assertion execution timeout;
+canonical preparation has no selected sanitizer graph. Its subprocess timeout also
+uses direct-child cleanup rather than the runner's governed process boundary.
+
+Add explicit selected instrumented preparation using the actual declared command,
+flags, host target, toolchain, feature selection, inherited allocation and retained
+target. Prepare only selected applicable sanitizer graphs, without executing or
+claiming assertions. Keep every current case, required source, instrumentation,
+selector, target propagation, skip classification, and 120/180-second assertion
+timeout. Compilation remains visible and included in whole-invocation time; do not
+label mandatory rebuilds bootstrap or make under-ten-minute claims from warm runs.
+No result cache, artifact-existence freshness shortcut, uninstrumented substitute,
+external dependency update, increased test deadline or removed negative control.
+
+Use the existing governed execution primitive for sanitizer assertions so timeout,
+truncation, abnormal exit and surviving descendants cannot count as pass. Preserve
+failure details and actual outcome. Preparation failures block dependent execution
+and remain explicit; independent failure-discovery work continues according to the
+existing preparation policy. Standalone area invocation must remain truthful about
+what it executes and does not obtain a fake preparation pass.
+
+Named acceptance: focused selection/environment/preparation dependency and failure
+controls; all existing sanitizer argument/flags/source/deadline tests; native child
+cleanup/timeout regression through the governed executor; foundation self-tests,
+area/profile contracts and before/after emitted selections (all assertions intact).
+Run real selected preparation, then both ASan smoke cases with zero skips/failures
+on the frozen candidate, using exact existing tool identities. Verify actual
+instrumented compiler and generated program execution, not merely Cargo success.
+Retain failed/time-capped preparation evidence and diagnose before repeating.
+Run affected complete runtime-platform selection; report any independent pre-existing
+required gaps under their owners. Formatting/size/diff and independent exact-candidate
+review required. The approved intermediate policy applies; full integrated gates,
+remaining SQL/provenance work, compiler invalidation costs and V5 remain open.
