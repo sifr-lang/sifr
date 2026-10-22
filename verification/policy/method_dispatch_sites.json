@@ -18337,7 +18337,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::expected::literal-match::1",
-      "fingerprint": "a10c790df7110b83f34b99f2e26ed22ee90bc9a8515f29fc02e3bcaa03175d8e",
+      "fingerprint": "78d4ad56e54d56270202e84c985f984456ad4717e516fc9f08eabb28d6e60101",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( call . func . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . is_ident ( \"Some\" ) )",
@@ -18349,7 +18349,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::expected::literal-match::2",
-      "fingerprint": "41f0936ec5fc6a31bb898025a3151265367a985625234bb88ebc35fb4d10fec4",
+      "fingerprint": "05cba1e2f5974ab422570a0a17de6fab124e0d6167883d1ab82ada7896cc1862",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( conversion . method . to_string ( ) . as_str ( ) , \"to_string\" | \"to_owned\" | \"clone\" )",
@@ -18361,7 +18361,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::expected::literal-match::3",
-      "fingerprint": "41f0936ec5fc6a31bb898025a3151265367a985625234bb88ebc35fb4d10fec4",
+      "fingerprint": "05cba1e2f5974ab422570a0a17de6fab124e0d6167883d1ab82ada7896cc1862",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( conversion . method . to_string ( ) . as_str ( ) , \"to_string\" | \"to_owned\" | \"clone\" )",
