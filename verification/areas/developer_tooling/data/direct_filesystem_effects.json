@@ -5420,6 +5420,34 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr_codegen/tests/project_slice_abi.rs",
+      "symbol": "native_project",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(&root).expect(\"owned native regression directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_codegen/tests/project_slice_abi.rs",
+      "symbol": "native_project",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(path.parent().expect(\"source parent\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_codegen/tests/project_slice_abi.rs",
+      "symbol": "native_project",
+      "operation": "write",
+      "site": "std::fs::write(path, source).expect(\"native regression source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_codegen/tests/project_slice_abi.rs",
+      "symbol": "native_project",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(root).expect(\"remove successful owned regression output\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_compiler_component/fixtures/words_component/src/bin/componentize.rs",
       "symbol": "main",
       "operation": "read",
