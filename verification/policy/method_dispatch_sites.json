@@ -15193,7 +15193,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/expression_cleanup.rs::rewrite_clippy_expression::literal-match::1",
-      "fingerprint": "383568824348d903774f15e74b8793517eed0fb3a79071698eade882889c7c27",
+      "fingerprint": "8f6ad5836dac3a50151aaa17771ce677ae7c381adbd2e2186e198592667f121b",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( binary . left . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . is_ident ( \"self\" ) )",
@@ -15205,7 +15205,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/expression_cleanup.rs::rewrite_clippy_expression::literal-match::2",
-      "fingerprint": "b0667581ef47722bed6836cfaac87a6c9afb35d62462bf335f2041977d5156e8",
+      "fingerprint": "35bac3ebf5cd8b88834a528fdb2480d025cd9e24193d0fd07b233d4b98c8a155",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( binary . right . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . is_ident ( \"rhs\" ) )",
