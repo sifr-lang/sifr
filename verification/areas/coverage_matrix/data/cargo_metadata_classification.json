@@ -79,7 +79,7 @@
     {
       "name": "sifr_codegen",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "project_slice_abi", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}],
       "features": []
     },
     {

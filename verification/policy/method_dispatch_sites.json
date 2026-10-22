@@ -53293,7 +53293,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/entrypoint.rs::from_entrypoint_with_stages::literal-comparison::1",
-      "fingerprint": "b2914b7d2282169bb241426327a20ad9aea3c8dee9b46d0b2a88ccd37bccf2de",
+      "fingerprint": "8b164272f32cb159ec7b294a44d0994a23716ab5055e8d89bc7419784ad440c9",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if main_module_name != \"main\"",
@@ -53305,7 +53305,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/entrypoint.rs::from_entrypoint_with_stages::literal-comparison::2",
-      "fingerprint": "11d5c1ff60977d05861237228d6413ebd4b8c91153360b963af7b0c2f529dcea",
+      "fingerprint": "8384bc17517796e2b2db907fcb1aee75e8986d33d56db5178a1589cd93c13282",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if entry_module_name != \"main\"",
@@ -56353,7 +56353,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-match::1",
-      "fingerprint": "42f4a3b90aa8f2d3053f5c3ccea8068b7af4d14bab6d4ef44c2af66fa91ff3b2",
+      "fingerprint": "08e859d66321fc40ebc28481153eee0dfd2e50755b5b72199f7805d21c46e6fc",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "matches ! ( child . file_name ( ) . and_then ( | v | v . to_str ( ) ) , Some ( \"native\" | \"metadata\" | \"projects\" | \"test-fixtures\" ) )",
@@ -56365,7 +56365,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-match::2",
-      "fingerprint": "094f0606358579547d41b6c256e81ca6703b591a4f808f66d2cfe4a65af1a876",
+      "fingerprint": "d3e398d5f4ec9295746b4ea1874dd83d32c2964739ad0cde82d8762500ff8862",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "matches ! ( child . file_name ( ) . and_then ( | v | v . to_str ( ) ) , Some ( \"artifacts\" | \"families\" | \"publications\" ) )",
@@ -56377,7 +56377,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-comparison::1",
-      "fingerprint": "2b05429d1b08cb5834f102264b7b1c97f14f5d332e548c9d41875c929902ce85",
+      "fingerprint": "f46242e0b7f5a5ccf4deb458094507dafcf086233a28139ecb832f096bb200d5",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if family . file_name ( ) . is_some_and ( | name | name == \"cargo_resolution\" )",
@@ -56389,7 +56389,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-comparison::2",
-      "fingerprint": "c3130304e6252bfb6317db146bb143260addfb4af4ae93e34668ad592f72748f",
+      "fingerprint": "dc5b5c856a928585a1c25f7c13f61a269c356b2c6ec8b08d16ddd6a19df8755b",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if key == \".locks\"",
@@ -56401,7 +56401,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-comparison::3",
-      "fingerprint": "c3130304e6252bfb6317db146bb143260addfb4af4ae93e34668ad592f72748f",
+      "fingerprint": "dc5b5c856a928585a1c25f7c13f61a269c356b2c6ec8b08d16ddd6a19df8755b",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if key == \".locks\"",
@@ -57001,11 +57001,11 @@
     },
     {
       "site": "crates/sifr_driver/src/project_cache/housekeeping.rs::lock_tree::literal-comparison::1",
-      "fingerprint": "15789a0e5be62c9dc387a2d07340043ca6746ab47516cb98c388ba80233cf71f",
+      "fingerprint": "28b3d077c4d13857380fc8abc1183be3cde77f481941d53639f6afa2af3b9351",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if entry . file_name ( ) == \".locks\"",
-      "inputs": "fn lock_tree ( path : & Path , leases : & mut Vec < File > )",
+      "inputs": "fn lock_tree ( path : & Path , leases : & mut Vec < ProcessLease > )",
       "outputs": "io :: Result < ( ) >",
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_driver/src/project_cache/housekeeping.rs::lock_tree enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
@@ -57553,7 +57553,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::1",
-      "fingerprint": "d0bb82747ed4efbc074ae4ea229a052115e7e8a6196b3befe8539aaa44b8ea2f",
+      "fingerprint": "dd9575144828018537a155b952676a3e5c2231a983d47f56bc12f2921f22a031",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if event [ \"reason\" ] == \"compiler-artifact\"",
@@ -57565,7 +57565,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::2",
-      "fingerprint": "a695c6cb7e8ca0c23931b3706508327517a47b7941093048c4754c828a1d97fc",
+      "fingerprint": "666b5cfb85fe052711e0975231fa5baebdac84e20b3f52e686042fa394bcad17",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"test\" ] == true",
@@ -57577,7 +57577,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::3",
-      "fingerprint": "3ee975fa2e3bf186bbc7409fce6e3cd6914e233cc87bd38f680e44983a416fb8",
+      "fingerprint": "b0ee368600e0291e0aed53a746a812ff6e5eccf1c41e2f39517fb611dc594d9b",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"overflow_checks\" ] != true",
@@ -57589,7 +57589,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::4",
-      "fingerprint": "16c88657c56cbc4d83304008283a21328a1a6f1454702f253cac70c0272f2562",
+      "fingerprint": "1e69c9acd3740ba75e21ca964f390fda39753bf402b73349a436a01ecf8825c4",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "let cargo_executables = String :: from_utf8_lossy ( & output . stdout ) . lines ( ) . filter_map ( | line | serde_json :: from_str :: < serde_json :: Value > ( line ) . ok ( ) ) . filter ( | event | event [ \"reason\" ] == \"compiler-artifact\"",
@@ -57601,7 +57601,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::5",
-      "fingerprint": "fedd06e3de5ed5b7ae034972caa89ba4d8d0570f86db9c76f466d66f7309373d",
+      "fingerprint": "128ec5ccdfb6c889e5b0dbf0dfa27fb75a80e4a1cbaf0813b85de802d846f4a1",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"test\" ] == true ) . filter_map ( | event | event [ \"executable\" ] . as_str ( ) . map ( PathBuf :: from ) ) . collect :: < Vec < _ > > ( )",
@@ -58009,7 +58009,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts::literal-comparison::1",
-      "fingerprint": "850fc5812d84b94d38a3f6488280ae82f0d55952dc25e9a0c6410e6741019e42",
+      "fingerprint": "d4c656060f9daae6d6b2bdc38fd9bf95513818f339bcccb768e40c9bc683443e",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( first_artifacts [ \"sifr-bindgen-bindings.rs\" ] . windows ( b\"sifr_bindgen_probe\" . len ( ) ) . any ( | window | window == b\"sifr_bindgen_probe\" )",
@@ -58021,7 +58021,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected::literal-comparison::1",
-      "fingerprint": "2843b5f7786a2d00e08230bccd2f34985d7e1723d7926f08f208f680dfaaa337",
+      "fingerprint": "a50e65996b6c6e91f1b2a819da7c2cd029e45d197d2956fa780b03d0c3db9541",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "error . message == \"[main] sealed Rust opaque resource `PackageResource` cannot be constructed in Sifr; use its declared package factory\"",
@@ -58042,30 +58042,6 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs::static_program_identity enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs::static_program_identity enclosing context owns this literal-match; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::copy_fixture_tree::literal-comparison::1",
-      "fingerprint": "e309efd91c826eaa4f699209f7f30836d4189a725a91ca077c2c85f80d6af6ed",
-      "classification": "test-assertion",
-      "owner": "test-owner",
-      "operation": "if entry . file_name ( ) == \"target\"",
-      "inputs": "fn copy_fixture_tree ( source : & Path , destination : & Path )",
-      "outputs": "implicit unit / macro expansion",
-      "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::copy_fixture_tree enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::copy_fixture_tree enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_from_cargo_layout::literal-comparison::1",
-      "fingerprint": "634bf0a985423bbf566d3ac251a1f2a1844e7e53955440667b8266ba9eccc4c3",
-      "classification": "test-assertion",
-      "owner": "test-owner",
-      "operation": "let package_id = graph . packages . values ( ) . find ( | metadata | metadata . sifr_name . 0 == sifr_package_name ) . expect ( \"fixture Sifr package should exist\" ) . package_id . clone ( )",
-      "inputs": "fn package_entrypoint_from_cargo_layout ( package_root : & Path , sifr_package_name : & str , )",
-      "outputs": "PackageEntrypoint",
-      "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_from_cargo_layout enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_from_cargo_layout enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::observed_resource_state::literal-match::1",
@@ -84994,6 +84970,30 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_type_system/src/types/type_rendering.rs::contains_element_type enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_type_system/src/types/type_rendering.rs::contains_element_type enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs::visit::literal-comparison::1",
+      "fingerprint": "d525d8270f190e0463c4abbfddcdfde8e2fd3cc763dfb7623cdd9543574b34f4",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "path . file_name ( ) . is_some_and ( | name | name == \"target\" )",
+      "inputs": "fn visit ( root : & Path , path : & Path , inputs : & mut Inputs , size : & mut usize , entries : & mut usize , )",
+      "outputs": "io :: Result < ( ) >",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs::visit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable.rs::visit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases::literal-comparison::1",
+      "fingerprint": "7938484b59ac6ea680120fe5261db69337fa0b38435f057b31c365495816ffc9",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "let package_id = graph . packages . values ( ) . find ( | metadata | metadata . sifr_name . 0 == sifr_package_name ) . expect ( \"fixture Sifr package should exist\" ) . package_id . clone ( )",
+      "inputs": "fn package_entrypoint_with_leases ( package_root : & Path , sifr_package_name : & str , leases : & crate :: build :: native_child_leases :: NativeChildLeases , )",
+      "outputs": "PackageEntrypoint",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }

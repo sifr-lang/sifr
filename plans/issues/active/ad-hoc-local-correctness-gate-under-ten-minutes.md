@@ -7473,3 +7473,28 @@ if source changes prove necessary, run their affected regression contract and
 repeat exact-candidate source review. Obtain independent exact-candidate review
 under the approved intermediate policy. Other diagnostics/package/ASan/SQL owners,
 full phase correctness gates and V5 timing acceptance remain open.
+
+
+#### V4n discovered coverage inventory correction and evidence binding
+
+The first candidate `b9d212e641cd70cd63a011c36810083429af3fc0` passed all four
+live guards, their self-tests and all 54 architecture-policy tests. The named
+coverage check then rejected the newly delivered `sifr_codegen` integration target
+`project_slice_abi` as unclassified. Its 18 native tests were already executed by
+V4m; this is another missing ownership record, not missing test execution. Extend
+V4n to add exactly that target as `test_fixture`, assigned to `merge`, consistent
+with existing first-party integration targets. No test selection changes.
+
+Before this coverage-only correction, preserve the failed receipt and record the
+complete discovered Rust-source hash set. The unchanged four guards/self-tests
+and architecture result may be admitted on the revised candidate only if all
+tracked input bytes outside this phase record and the one Cargo classification
+registry remain identical, the discovered source path/hash set is identical,
+the pinned interpreter and dependency/toolchain inputs remain identical, and the
+worktree is clean. Those checks do not read the changed classification registry;
+the architecture profile/schema controls read their unchanged named registries.
+Keep their original observed candidate identities. Rerun the complete coverage
+area (advisory and readiness, including negatives), file-size/diff checks and
+independent review on the revised candidate. This narrow input-bound reuse is
+not a full-profile or V5 acceptance result and cannot be extended to changed
+Rust, guards, architecture tests or their inventories.
