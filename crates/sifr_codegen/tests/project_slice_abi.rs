@@ -330,3 +330,104 @@ fn project_slice_abi_private_parent_consumer() {
         ),
     ]));
 }
+
+#[test]
+fn project_slice_literals_require_the_receiving_signature() {
+    let output = qualify(project(&[
+        (
+            "",
+            r#"
+            mod api;
+            use api::Writer;
+            fn main() {
+                let writer: Writer = Writer;
+                assert_eq!(writer.write_all(&vec![3_u8, 5_u8]), 8);
+                assert_eq!(api::sum(&vec![2_u8, 7_u8]), 9);
+                let callback: fn(&[u8]) -> u8 = api::sum;
+                assert_eq!(callback(&vec![1_u8, 4_u8]), 5);
+            }
+        "#,
+        ),
+        (
+            "api",
+            r#"
+            pub struct Writer;
+            impl Writer {
+                pub fn write_all(&self, values: &[u8]) -> u8 { values.iter().sum() }
+            }
+            pub fn sum(values: &[u8]) -> u8 { values.iter().sum() }
+        "#,
+        ),
+    ]));
+    let compact = output[""].split_whitespace().collect::<String>();
+    assert!(!compact.contains("vec!"), "{compact}");
+}
+
+#[test]
+fn project_slice_literals_preserve_owned_elements_and_evaluation_order() {
+    let output = qualify(project(&[
+        (
+            "",
+            r#"
+            mod api;
+            fn main() {
+                let mut next = 0;
+                let command: api::Command = api::Command;
+                assert_eq!(command.args(&vec![
+                    { next += 1; next.to_string() },
+                    { next += 1; next.to_string() },
+                ]), "12");
+                assert_eq!(next, 2);
+            }
+        "#,
+        ),
+        (
+            "api",
+            r#"
+            pub struct Command;
+            impl Command {
+                pub fn args(&self, values: &[String]) -> String { values.join("") }
+            }
+        "#,
+        ),
+    ]));
+    assert!(!output[""].contains("vec!"), "{}", output[""]);
+}
+
+#[test]
+fn project_slice_literals_preserve_runtime_repeat_and_clone_semantics() {
+    qualify(project(&[
+        (
+            "",
+            r#"
+            mod api;
+            fn main() {
+                let count = std::env::args().count() + 1;
+                assert_eq!(api::joined(&vec![String::from("x"); count]), "xx");
+            }
+        "#,
+        ),
+        (
+            "api",
+            r#"pub fn joined(values: &[String]) -> String { values.join("") }"#,
+        ),
+    ]));
+}
+
+#[test]
+fn project_slice_literals_preserve_shadowed_macro_behavior() {
+    qualify(project(&[
+        (
+            "",
+            r#"
+            mod api;
+            macro_rules! vec { ($value:expr) => { std::vec![$value + 1] }; }
+            fn main() { assert_eq!(api::sum(&vec![3_u8]), 4); }
+        "#,
+        ),
+        (
+            "api",
+            "pub fn sum(values: &[u8]) -> u8 { values.iter().sum() }",
+        ),
+    ]));
+}
