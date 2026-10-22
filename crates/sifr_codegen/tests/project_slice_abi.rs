@@ -1,4 +1,4 @@
-use crate::{canonicalize_generated_rust_project, finalize_formatted_generated_rust_source};
+use sifr_codegen::{canonicalize_generated_rust_project, finalize_formatted_generated_rust_source};
 use std::collections::BTreeMap;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};

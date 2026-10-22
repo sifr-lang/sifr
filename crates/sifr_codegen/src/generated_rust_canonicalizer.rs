@@ -21,8 +21,6 @@ mod member_demand;
 mod method_demand;
 mod module_demand;
 mod project_borrow_cleanup;
-#[cfg(test)]
-mod project_slice_abi_tests;
 pub(crate) use project_borrow_cleanup::rewrite_named_project_borrows;
 #[cfg(test)]
 pub(crate) use project_borrow_cleanup::rewrite_project_borrowed_string_literals;
