@@ -317,6 +317,20 @@ impl Rewriter<'_> {
         if reference.mutability.is_some() {
             return;
         }
+        // Only the receiving signature authorizes replacing the Vec allocation.
+        // List-form elements retain evaluation order; repeat-form Vec cloning is
+        // deliberately excluded because array repetition has different rules.
+        if matches!(target.elem.as_ref(), syn::Type::Slice(_))
+            && !self.scalar_shadowed("vec")
+            && let syn::Expr::Macro(vector) = reference.expr.as_ref()
+            && vector.mac.path.is_ident("vec")
+            && let Ok(elements) = vector.mac.parse_body_with(
+                syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+            )
+        {
+            reference.expr = Box::new(syn::parse_quote!([#elements]));
+            return;
+        }
         if self.ty(&reference.expr).is_some_and(|ty| {
             same_type(&ty, expected) || self.standard_vector_slice_coercion(&ty, expected)
         }) {

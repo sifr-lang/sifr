@@ -26,6 +26,18 @@ fn bytes_slice_ref_type() -> RustType {
     }
 }
 
+// These lowerers own a typed &[u8] argument, so a list literal can be an
+// array directly. Other expressions retain their value and evaluation count.
+fn borrow_bytes_slice(value: &RustExpr) -> RustExpr {
+    RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(match value {
+            RustExpr::Vec(elements) => RustExpr::Array(elements.clone()),
+            _ => value.clone(),
+        }),
+    }
+}
+
 fn list_bound_expr(arg: Option<&RustExpr>, default: i64) -> RustExpr {
     let Some(arg) = arg else {
         return usize_literal(default);
@@ -84,10 +96,7 @@ fn bind_receiver_once(object: &RustExpr, expr: RustExpr) -> RustExpr {
             mutable: false,
             name: "__bytes_receiver".to_string(),
             ty: Some(bytes_slice_ref_type()),
-            value: RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(object.clone()),
-            },
+            value: borrow_bytes_slice(object),
         }],
         expr: Some(Box::new(expr)),
     }
@@ -264,10 +273,7 @@ fn lower_prefix_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Op
     Some(RustExpr::MethodCall {
         receiver: Box::new(object.clone()),
         method: method.to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(args[0].clone()),
-        }],
+        args: vec![borrow_bytes_slice(&args[0])],
     })
 }
 
@@ -289,10 +295,7 @@ pub(super) fn lower_hex(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
                 mutable: false,
                 name: "__bytes_receiver".to_string(),
                 ty: Some(bytes_slice_ref_type()),
-                value: RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(object.clone()),
-                },
+                value: borrow_bytes_slice(object),
             },
             RustStmt::Let {
                 mutable: true,

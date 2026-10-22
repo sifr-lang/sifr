@@ -50,9 +50,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     if rewrite_collected_query(expression) {
         return;
     }
-    if rewrite_borrowed_vec_literal(expression) {
-        return;
-    }
     if rewrite_generated_sifr_int_assign(expression) {
         return;
     }
@@ -565,24 +562,6 @@ fn rewrite_redundant_method_receiver_borrow(expression: &mut syn::Expr) -> bool 
         return false;
     }
     call.receiver = reference.expr.clone();
-    true
-}
-
-fn rewrite_borrowed_vec_literal(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::Reference(reference) = expression else {
-        return false;
-    };
-    if reference.mutability.is_some() {
-        return false;
-    }
-    let syn::Expr::Macro(vector) = reference.expr.as_ref() else {
-        return false;
-    };
-    if !vector.mac.path.is_ident("vec") {
-        return false;
-    }
-    let tokens = vector.mac.tokens.clone();
-    *expression = syn::parse_quote!(&[#tokens]);
     true
 }
 

@@ -77,12 +77,12 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "<module>",
-          "context_fingerprint": "8d9188a3938312e29a390e18f916c7bcbdd8548ee876314ee81460e8f06af50f"
+          "context_fingerprint": "ec5b4626f570a6ecd06707683a2b0f029442edefcf37b2c426f7fdacb5956652"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         },
         {
           "path": "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs",
@@ -424,7 +424,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "lower_hex",
-          "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b"
+          "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1"
         }
       ]
     },
@@ -440,12 +440,12 @@
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "bind_receiver_once",
-          "context_fingerprint": "9d84fbac4eab46b867e2c8d6401e3cbe9671d823bbcbc078d28ba9b743a6b3ba"
+          "context_fingerprint": "3f4382a705fb378e8c38cda4584d4e6d9177a14ac1228c6bb90d6e954673872c"
         },
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "lower_hex",
-          "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b"
+          "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1"
         }
       ]
     },
@@ -503,7 +503,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn bind_receiver_once ( object : & RustExpr , expr : RustExpr )",
       "outputs": "RustExpr",
-      "context_fingerprint": "9d84fbac4eab46b867e2c8d6401e3cbe9671d823bbcbc078d28ba9b743a6b3ba",
+      "context_fingerprint": "3f4382a705fb378e8c38cda4584d4e6d9177a14ac1228c6bb90d6e954673872c",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
@@ -549,7 +549,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
           "scope": "lower_hex",
-          "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b"
+          "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1"
         }
       ]
     },
@@ -608,7 +608,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_prefix_method ( object : & RustExpr , args : & [ RustExpr ] , method : & str )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "757eb243f6f43cf94f0838c9cc0eb3a4f0afa81bd1d1007a149f08d3afbafd20",
+      "context_fingerprint": "54ac03ccd279031c91f48a6f80aff8b5958f1ee43d59b0a6c7faca18ab0d9dca",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/bytes.rs",
@@ -661,7 +661,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_hex ( object : & RustExpr , args : & [ RustExpr ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "402045e3e7341ab7b45b0297f30578d26c5edc0ce5c04f43a1efcc95cfe2cf8b",
+      "context_fingerprint": "9a884f8de117f5e500f9a8276b4ed801cd889e146e110a604f0417edcb62f6d1",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
@@ -1596,6 +1596,11 @@
         },
         {
           "path": "crates/sifr_codegen/src/methods/tests.rs",
+          "scope": "bytes_slice_arguments_do_not_allocate_literal_vectors",
+          "context_fingerprint": "3f5893e4443a6371e99dbfff4fd5b0b7423fad3e4d16e7cfec9e0db58a385c1a"
+        },
+        {
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
           "scope": "lower_method",
           "context_fingerprint": "1c7bd38c37c2c2850767a7895e42782b06e1e8de01a7cbc0cac316d2532cacca"
         },
@@ -2348,7 +2353,7 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         },
         {
           "path": "crates/sifr_codegen/src/methods/list.rs",
@@ -2468,6 +2473,11 @@
           "path": "crates/sifr_codegen/src/methods/mod.rs",
           "scope": "<module>",
           "context_fingerprint": "c5a80c8232c4006e2b63bba67f25e1641c01a80472f4459979838305c3699f23"
+        },
+        {
+          "path": "crates/sifr_codegen/src/methods/tests.rs",
+          "scope": "bytes_slice_arguments_do_not_allocate_literal_vectors",
+          "context_fingerprint": "3f5893e4443a6371e99dbfff4fd5b0b7423fad3e4d16e7cfec9e0db58a385c1a"
         },
         {
           "path": "crates/sifr_codegen/src/methods/tests.rs",
@@ -4943,12 +4953,12 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "<module>",
-          "context_fingerprint": "8d9188a3938312e29a390e18f916c7bcbdd8548ee876314ee81460e8f06af50f"
+          "context_fingerprint": "ec5b4626f570a6ecd06707683a2b0f029442edefcf37b2c426f7fdacb5956652"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         }
       ]
     },
@@ -5012,7 +5022,7 @@
       "relationship": "HIR expression leaf lowering; source method carriers delegate to try_lower_simple_method_call_expr typed admission; constructor/plain-function branches retain their own lowering",
       "inputs": "fn try_lower_leaf_expr ( expr : & HirExpr )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716",
+      "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c",
       "references": [
         {
           "path": "crates/sifr_codegen/src/lower_expr/collections_and_comprehensions.rs",
@@ -5387,7 +5397,7 @@
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
           "scope": "try_lower_leaf_expr",
-          "context_fingerprint": "63d431d53cce6b3d49322b349a13b928645fc90674c0468456262d70e59ce716"
+          "context_fingerprint": "c23e56535665c415ae1e366454fb64d4e8f79bf8df3432adc299c275b882aa7c"
         },
         {
           "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs",
@@ -5582,7 +5592,7 @@
         {
           "path": "crates/sifr_codegen/src/lower_item/module_constants.rs",
           "scope": "<module>",
-          "context_fingerprint": "1b1311a6e9a65eb0ed682dd06f547c3fd2dc87c41cc3142efcdd37889b697ea7"
+          "context_fingerprint": "1458e3179edca0474cd13cb0cf1ab05f8158f63a0f7a366c289f724a3ebafaa2"
         },
         {
           "path": "crates/sifr_codegen/src/lower_item/module_constants.rs",
@@ -15193,7 +15203,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/expression_cleanup.rs::rewrite_clippy_expression::literal-match::1",
-      "fingerprint": "383568824348d903774f15e74b8793517eed0fb3a79071698eade882889c7c27",
+      "fingerprint": "8f6ad5836dac3a50151aaa17771ce677ae7c381adbd2e2186e198592667f121b",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( binary . left . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . is_ident ( \"self\" ) )",
@@ -15205,7 +15215,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/expression_cleanup.rs::rewrite_clippy_expression::literal-match::2",
-      "fingerprint": "b0667581ef47722bed6836cfaac87a6c9afb35d62462bf335f2041977d5156e8",
+      "fingerprint": "35bac3ebf5cd8b88834a528fdb2480d025cd9e24193d0fd07b233d4b98c8a155",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( binary . right . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . is_ident ( \"rhs\" ) )",
@@ -18337,7 +18347,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::expected::literal-match::1",
-      "fingerprint": "a10c790df7110b83f34b99f2e26ed22ee90bc9a8515f29fc02e3bcaa03175d8e",
+      "fingerprint": "78d4ad56e54d56270202e84c985f984456ad4717e516fc9f08eabb28d6e60101",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( call . func . as_ref ( ) , syn :: Expr :: Path ( path ) if path . path . is_ident ( \"Some\" ) )",
@@ -18349,7 +18359,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::expected::literal-match::2",
-      "fingerprint": "41f0936ec5fc6a31bb898025a3151265367a985625234bb88ebc35fb4d10fec4",
+      "fingerprint": "05cba1e2f5974ab422570a0a17de6fab124e0d6167883d1ab82ada7896cc1862",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( conversion . method . to_string ( ) . as_str ( ) , \"to_string\" | \"to_owned\" | \"clone\" )",
@@ -18361,7 +18371,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_cleanup.rs::expected::literal-match::3",
-      "fingerprint": "41f0936ec5fc6a31bb898025a3151265367a985625234bb88ebc35fb4d10fec4",
+      "fingerprint": "05cba1e2f5974ab422570a0a17de6fab124e0d6167883d1ab82ada7896cc1862",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( conversion . method . to_string ( ) . as_str ( ) , \"to_string\" | \"to_owned\" | \"clone\" )",
@@ -27185,7 +27195,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lib_codegen_tests/reusable_value_codegen_tests.rs::corpus_repair_repeat_count_reuse_exact_counts_and_general_sequences::literal-comparison::1",
-      "fingerprint": "f5667e2fa9661ec908feaa5281769510c00a2fe5791a730696031f3991695457",
+      "fingerprint": "a932dd201a6d78cabef8f36605740eebb3f4464b9779607f3d7788fbfe517a2e",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "let zero_comparison = if ty == \"str\"",
@@ -31051,7 +31061,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-match::1",
-      "fingerprint": "0851a4018a77088c195719d80a5b64d4b1170df67cba42ad5c1255fd529bb38c",
+      "fingerprint": "c3f6dae5b466134227d2fafa78c29ae2f3a3e78893f01125cf9701567a86b3ba",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "match op . as_str ( ) { \"-\" => { let lowered = try_lower_leaf_expr ( operand ) ? ; let lowered = if is_int_like_simple ( operand . ty ( ) ) { RustExpr :: Ref { mutable : false , expr : Box :: new ( lowered ) , } } else { lowered } ; Some ( RustExpr :: UnaryOp { op : \"-\" . to_string ( ) , operand : Box :: new ( lowered ) , } ) } \"+\" => Some ( try_lower_leaf_expr ( operand ) ? ) , \"~\" if is_int_like_simple ( operand . ty ( ) ) => { let lowered_operand = try_lower_leaf_expr ( operand ) . or_else ( || { if let HirExpr :: Name { name , .. } = operand . as_ref ( ) { return Some ( RustExpr :: Ident ( name . clone ( ) ) ) ; } None } ) ? ; Some ( RustExpr :: UnaryOp { op : \"!\" . to_string ( ) , operand : Box :: new ( RustExpr :: Ref { mutable : false , expr : Box :: new ( lowered_operand ) , } ) , } ) } \"not\" if is_bool_like_simple ( operand . ty ( ) ) => { let lowered_operand = try_lower_leaf_expr ( operand ) . or_else ( || { if let HirExpr :: Name { name , .. } = operand . as_ref ( ) { return Some ( RustExpr :: Ident ( name . clone ( ) ) ) ; } None } ) ? ; Some ( RustExpr :: UnaryOp { op : \"!\" . to_string ( ) , operand : Box :: new ( lowered_operand ) , } ) } \"not\" if is_option_like_simple ( operand . ty ( ) ) => { if let HirExpr :: Name { name , .. } = operand . as_ref ( ) { return Some ( RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: Ident ( name . clone ( ) ) ) , method : \"is_none\" . to_string ( ) , args : vec ! [ ] , } ) ; } None } _ => None , }",
@@ -31063,7 +31073,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::method-call-carrier::1",
-      "fingerprint": "569370613b76cf08ee4da307c3d118b08684b47f54b0a7154125f0fbaea39c59",
+      "fingerprint": "e2561174639d5f9fce4a45d0d8f0c74fa3f5b4744b904dd4106693da12d13723",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: Ident ( name . clone ( ) ) ) , method : \"is_none\" . to_string ( ) , args : vec ! [ ] , }",
@@ -31075,7 +31085,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-match::2",
-      "fingerprint": "d3cff7fb1984cfd5e0d901005a479daab40abb6917a598bda88c1ea18262c4f9",
+      "fingerprint": "c60ae4ab13b5b901bc8539d907a17c1cd395dd8051f288d22d266b347996f5ef",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "matches ! ( op . as_str ( ) , \"/\" | \"//\" | \"%\" )",
@@ -31087,7 +31097,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-match::3",
-      "fingerprint": "7429446a337e1f53cf886b8c82e766d4c7ce8bdfa2b0a0c7f5806359bdbf888e",
+      "fingerprint": "2d561ef0721c118a61cc34f854be7c82d4d9495e640d6fb5faf05b6cac615377",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "matches ! ( op . as_str ( ) , \"**\" | \"<<\" | \">>\" )",
@@ -31099,7 +31109,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-match::4",
-      "fingerprint": "4d1dbca639c272c9746feaecd7fa06916c09aacebac0fe2437a8f742b8b55aea",
+      "fingerprint": "8e566758f426810ba0f58919a77afe8d8445a9bd6ce2ef0c45cf5acabe0c3fcc",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "match op . as_str ( ) { \"and\" => \"&&\" , \"or\" => \"||\" , _ => return None , }",
@@ -31111,7 +31121,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-comparison::1",
-      "fingerprint": "f40790df5bf2eb6e8f4f408eb40c02d4ab68e333658c641bde31569b6cce5b9e",
+      "fingerprint": "e9f29ea79679e5db25becbc3845677abea36000070909d13e38f2894d73657ea",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "if op == \"and\"",
@@ -31123,7 +31133,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::method-call-carrier::2",
-      "fingerprint": "d1c5fbd6aca72b4e2dbb5c3c8782a77880b602b9a47e98838983f816d3a061f6",
+      "fingerprint": "2421fcba4c1162982383924c3758cc101765fabf4316c40f53fd0e11677d0454",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( try_lower_leaf_or_name_expr ( collection ) ? ) , method : method . to_string ( ) , args : vec ! [ arg ] , }",
@@ -31135,7 +31145,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-comparison::2",
-      "fingerprint": "2c74539fe340361427ca076955d0423117303c876347428f5feb78c5b2224bd1",
+      "fingerprint": "62a3b9ea80ea6d47f81ecc7bf9c3b67ab62e0a01edc74bf07f0e1c6e2b85f071",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "if func == \"__sifr_task_sleep\"",
@@ -31147,7 +31157,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::method-call-carrier::3",
-      "fingerprint": "095db13137109b9cbba0cae89d8e2b1af14649f0d2486ecbfc4a9867e5ccd9d6",
+      "fingerprint": "e5d9b7c36dd7ee4d40c6382433bf56289321de581f2e50f6a61981b5d6bbb65c",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "HirExpr :: MethodCall { .. }",
@@ -31159,7 +31169,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::method-call-carrier::4",
-      "fingerprint": "9ce92cec098cee115c7eb39a6037e9b56bb4c9f53915b7c9ad2babb162c99060",
+      "fingerprint": "56e3f4a502e5864b73ca00f848db35c43c3f78173bd91c052499fee6f3c2a8ef",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( try_lower_leaf_or_name_expr ( value ) ? ) , method : \"join\" . to_string ( ) , args : vec ! [ ] , }",
@@ -31171,7 +31181,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::literal-comparison::3",
-      "fingerprint": "72b2e54795f98da45b1194c70f92e640300d3fe9e654f2aaa81ba14eec2bc8e1",
+      "fingerprint": "6fd7cbb15c8ccb1fd27e0e2bb67b80a10d160d13426c29f18a3074771adce971",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "if method != \"new\"",
@@ -31183,7 +31193,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs::try_lower_leaf_expr::method-call-carrier::5",
-      "fingerprint": "095db13137109b9cbba0cae89d8e2b1af14649f0d2486ecbfc4a9867e5ccd9d6",
+      "fingerprint": "e5d9b7c36dd7ee4d40c6382433bf56289321de581f2e50f6a61981b5d6bbb65c",
       "classification": "source-method-routing",
       "owner": "sifr_codegen",
       "operation": "HirExpr :: MethodCall { .. }",
@@ -32335,7 +32345,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_item/tests.rs::dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper::literal-match::1",
-      "fingerprint": "df29a21ef842749400344a41654689fa0f7c1d69ffb08d83da2dece374d0a2a8",
+      "fingerprint": "778c99bbaf3b9d1336e8585516caf64bfbf9f9f5de6d7e7953df512e1801eb8f",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( item , RustItem :: Fn { ref name , visibility : Visibility :: Private , ret : Some ( RustType :: Named ( ref ret ) ) , .. } if name == \"__sifr_const_6c696d6974\" && ret == \"SifrInt\" )",
@@ -32347,7 +32357,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_item/tests.rs::dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper::literal-comparison::1",
-      "fingerprint": "a1ce068bdeae0466ec4c3ae0c2bc2c10edb91e6683eeaeeaccb1d8355cb71b91",
+      "fingerprint": "6047e3fb8126084d9fca6b11deea01c26d30025535722650df520536615d285f",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if name == \"__sifr_const_6c696d6974\"",
@@ -32359,7 +32369,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/lower_item/tests.rs::dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper::literal-comparison::2",
-      "fingerprint": "b0d672d3e6a0b9839df41ebdbe79f84dcff5d2fc6f0d4d1c05ab88a30b0589a4",
+      "fingerprint": "bd8c76d4482880082ab5fc8991f1d0ad18a0de58821c30284ea834ffbf730a4f",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "ret == \"SifrInt\" ) )",
@@ -38456,10 +38466,10 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/bytes.rs::lower_prefix_method::method-call-carrier::1",
-      "fingerprint": "41dd8a2548f38f36c5b91613dbbc8d4a4d91ba593c6c3702cf49998329da3637",
+      "fingerprint": "db6f6c16c9d32e1b1efed81b622ac2ca0f4aaa0748c7323f20eb6e49160677bf",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
-      "operation": "RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : method . to_string ( ) , args : vec ! [ RustExpr :: Ref { mutable : false , expr : Box :: new ( args [ 0 ] . clone ( ) ) , } ] , }",
+      "operation": "RustExpr :: MethodCall { receiver : Box :: new ( object . clone ( ) ) , method : method . to_string ( ) , args : vec ! [ borrow_bytes_slice ( & args [ 0 ] ) ] , }",
       "inputs": "fn lower_prefix_method ( object : & RustExpr , args : & [ RustExpr ] , method : & str )",
       "outputs": "Option < RustExpr >",
       "role": "implement the canonical builtin method registry",
@@ -38473,7 +38483,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/bytes.rs::lower_hex::method-call-carrier::1",
-      "fingerprint": "3360361b73c4ab4b0eceffaa49c3ead006496aa402f45e7134589a275709eb02",
+      "fingerprint": "074b12b84d7e5f68a036bbfdd0d5f14846a87272d300e175067364cc30c604dd",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: MethodCall { receiver : Box :: new ( bound_receiver ( ) ) , method : \"len\" . to_string ( ) , args : vec ! [ ] , } ) , method : \"saturating_mul\" . to_string ( ) , args : vec ! [ usize_literal ( 2 ) ] , }",
@@ -38490,7 +38500,7 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/bytes.rs::lower_hex::method-call-carrier::2",
-      "fingerprint": "048f9146bae008e6d7a1ed2f89ad9aff6429619d3915925fcc57ad6557cd8a7e",
+      "fingerprint": "f0e012f93996271083bacbeec705768a18b1188acb6bffff0f86f3240166f83b",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
       "operation": "RustExpr :: MethodCall { receiver : Box :: new ( bound_receiver ( ) ) , method : \"len\" . to_string ( ) , args : vec ! [ ] , }",

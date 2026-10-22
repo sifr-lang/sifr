@@ -282,7 +282,7 @@ pub(super) fn lower_large_module_int_const_item(
                 ])),
                 args: vec![RustExpr::Ref {
                     mutable: false,
-                    expr: Box::new(RustExpr::Vec(bytes)),
+                    expr: Box::new(RustExpr::Array(bytes)),
                 }],
             }))],
             is_async: false,

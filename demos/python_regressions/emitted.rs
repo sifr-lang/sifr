@@ -249,7 +249,7 @@ mod sifr_generated_generated_support {
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
     fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
-        data: &mut [T],
+        data: &mut Vec<T>,
         mut pos: SifrInt,
         n: &SifrInt,
     ) {
@@ -375,7 +375,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub fn heapify<T: Clone + 'static + PartialOrd>(data: &mut [T]) {
+    pub fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt = ::std::ops::Sub::sub(

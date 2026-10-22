@@ -21,7 +21,7 @@ mod slice_parameter_cleanup;
 mod visibility_cleanup;
 pub(super) use slice_parameter_cleanup::{
     collect_project_shared_slice_params, rewrite_project_shared_slice_calls,
-    rewrite_slice_only_vec_parameters, rewrite_slice_parameter_apis,
+    rewrite_slice_parameter_apis,
 };
 use visibility_cleanup::publicize_public_enum_field_owners;
 
@@ -309,7 +309,8 @@ fn improve_function_api(
     context: ApiContext<'_>,
 ) {
     replace_unused_parameters(signature, body);
-    rewrite_slice_only_vec_parameters(signature, body);
+    // Vector calling conventions are settled during closed-unit syntax cleanup.
+    // Finalization also serves individual project files, whose callers are absent.
     let rendered_body_lines = rendered_function_body_lines(body, context.source);
     add_source_shape_expectations(attrs, signature, rendered_body_lines);
     refresh_function_expectations(
