@@ -52,20 +52,13 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Out
     return outcome
 
 
-def uv_area_command(*args: str) -> list[str]:
-    return [
-        "uv",
-        "run",
-        "--project",
-        "verification",
-        "--locked",
-        "python",
-        "-m",
-        "sifr_verify",
-        "areas",
-        "run",
-        *args,
-    ]
+def verification_python_command(*args: str) -> list[str]:
+    """Keep the selected verification interpreter and inherited environment."""
+    return [sys.executable, *args]
+
+
+def area_command(*args: str) -> list[str]:
+    return verification_python_command("-m", "sifr_verify", "areas", "run", *args)
 
 
 def cargo_command(*args: str) -> list[str]:

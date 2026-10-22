@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .areas import area_by_name
 from .paths import REPO_ROOT
+from .profile_commands import verification_python_command
 from .profile_results import AreaResultError, validate_area_result
 
 
@@ -60,10 +61,7 @@ def run_segmented_python_interop(
     part_paths = [part_root / f"{index:02d}.json" for index in range(len(canonical_suites))]
     for part in part_paths:
         part.unlink(missing_ok=True)
-    base = [
-        "uv", "run", "--project", "verification", "--locked", "python",
-        "verification/areas/python_interop/runner.py",
-    ]
+    base = verification_python_command("verification/areas/python_interop/runner.py")
     for suite, part in zip(canonical_suites, part_paths, strict=True):
         command_runner([*base, "--suite", suite, "--defer-certification",
                         "--result-json", str(part.relative_to(REPO_ROOT))])
