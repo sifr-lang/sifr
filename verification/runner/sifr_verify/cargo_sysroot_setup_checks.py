@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import json
 import os
 import time
 import sys
@@ -11,12 +12,13 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from .cargo_setup import prepare_sysroot_source_binary, prepare_sysroot_package_binary
 from .paths import REPO_ROOT
 from .profile_commands import CommandFailed
-from .process_execution import Outcome
+from .process_execution import Outcome, SAFETY_DEADLINE_ENV
 
 
 def sysroot_module():
@@ -30,7 +32,7 @@ def sysroot_module():
 
 
 class SysrootSetupPolicyTests(unittest.TestCase):
-    def test_only_boundary_equivalence_prepares_the_source_graph_once(self):
+    def test_boundary_and_structural_qualification_prepare_the_source_graph_once(self):
         calls = []
         run = lambda args, **kw: calls.append((args, kw["env"]))
         env = {"CARGO_BUILD_JOBS": "2", "CARGO_TARGET_DIR": "/outer/target"}
@@ -46,6 +48,10 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         self.assertEqual(calls, [([sys.executable, str(REPO_ROOT /
             "verification/areas/sysroot_release/source_build.py")], env)])
         self.assertEqual(env["CARGO_TARGET_DIR"], "/outer/target")
+        calls.clear()
+        prepare_sysroot_source_binary({"selected_areas": [
+            {"area": "sysroot_release", "suites": ["metadata-structural"]}]}, env, run)
+        self.assertEqual(len(calls), 1)
 
     def test_installed_suites_prepare_one_matching_release_graph(self):
         calls = []
@@ -121,39 +127,102 @@ class SysrootSetupPolicyTests(unittest.TestCase):
                 {"area": "sysroot_release", "suites": ["boundary-equivalence"]}
             ]}, {}, fail)
 
-    def test_preparation_and_execution_share_locked_offline_private_graph(self):
-        runner = sysroot_module()
-        root = Path("/owned/worktree")
-        original = {"CARGO_TARGET_DIR": "/outer/target", "CARGO_NET_OFFLINE": "false",
-                    "CARGO_BUILD_JOBS": "2"}
-        command, env, binary = runner.source_build_configuration(root, original)
-        self.assertEqual(command, ["cargo", "build", "--locked", "--offline", "-p", "sifr"])
-        self.assertEqual(binary, root / "target/sysroot_release/source-cargo-target/debug/sifr")
-        self.assertEqual(env, {**original, "CARGO_TARGET_DIR": str(binary.parents[1]),
-                               "CARGO_NET_OFFLINE": "true"})
-        self.assertEqual(original["CARGO_NET_OFFLINE"], "false")
-        with patch.object(runner, "REPO_ROOT", root), \
-             patch.object(runner, "base_env", return_value=original), \
-             patch.object(runner, "run_checked") as run, \
-             patch.object(Path, "is_file", return_value=True):
-            self.assertEqual(runner.build_source_sifr(), binary)
-        run.assert_called_once_with(command, cwd=root, env=env,
-            label="build source-tree compiler", timeout=900)
-
-    def test_successful_preparation_requires_the_actual_binary(self):
-        runner = sysroot_module()
+    def test_source_preparation_uses_the_cargo_selected_executable_and_caller_graph(self):
+        sysroot_module()
         import source_build
+        import sifr_binary
+        from . import fixture_execution
+        sifr_binary._prepare.cache_clear()
+        self.addCleanup(sifr_binary._prepare.cache_clear)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with self.assertRaisesRegex(RuntimeError, "compiler was not produced"):
-                source_build.prepare_source_sifr(root, {}, lambda *args, **kw: None)
-            def build(command, **kwargs):
-                self.assertTrue(kwargs["check"])
-                binary = runner.source_build_configuration(root, {})[2]
-                binary.parent.mkdir(parents=True)
-                binary.write_text("prepared fixture")
-            self.assertEqual(source_build.prepare_source_sifr(root, {}, build),
-                             runner.source_build_configuration(root, {})[2])
+            binary = root / "selected-target/host/debug/sifr"
+            binary.parent.mkdir(parents=True)
+            binary.write_text("prepared candidate")
+            event = {"reason": "compiler-artifact", "target": {"name": "sifr"},
+                     "executable": str(binary)}
+            outcome = SimpleNamespace(returncode=0, cause="exit", truncated=False,
+                                      stdout=json.dumps(event), stderr="")
+            original = {"CARGO_TARGET_DIR": "selected-target", "CARGO_BUILD_TARGET": "host",
+                        "CARGO_NET_OFFLINE": "false", "CARGO_BUILD_JOBS": "2",
+                        "RUSTFLAGS": "--cfg caller", "PATH": "/caller/bin:/caller/bin"}
+            with patch.object(fixture_execution, "run_process", return_value=outcome) as run:
+                self.assertEqual(source_build.prepare_source_sifr(root, original), binary)
+            run.assert_called_once_with(
+                ["cargo", "build", "--locked", "-q", "-p", "sifr", "--bin", "sifr",
+                 "--message-format=json"], cwd=root.resolve(),
+                env=dict(original, CARGO_NET_OFFLINE="true"))
+            self.assertEqual(original["CARGO_NET_OFFLINE"], "false")
+
+    def test_source_preparation_rejects_failed_missing_or_ambiguous_cargo_evidence(self):
+        sysroot_module()
+        import source_build
+        import sifr_binary
+        from . import fixture_execution
+        self.addCleanup(sifr_binary._prepare.cache_clear)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "existing-sifr"
+            binary.write_text("an existing path is not preparation evidence")
+            event = {"reason": "compiler-artifact", "target": {"name": "sifr"},
+                     "executable": str(binary)}
+            missing = dict(event, executable=str(root / "missing"))
+            for code, cause, truncated, stdout in (
+                    (101, "exit", False, json.dumps(event)),
+                    (124, "safety_deadline", False, json.dumps(event)),
+                    (0, "exit", True, json.dumps(event)), (0, "exit", False, ""),
+                    (0, "exit", False, json.dumps(missing)),
+                    (0, "exit", False, json.dumps(event) + "\n" + json.dumps(event))):
+                with self.subTest(code=code, cause=cause, truncated=truncated, stdout=stdout):
+                    sifr_binary._prepare.cache_clear()
+                    outcome = SimpleNamespace(returncode=code, cause=cause, truncated=truncated,
+                                              stdout=stdout, stderr="control")
+                    with patch.object(fixture_execution, "run_process", return_value=outcome), \
+                         self.assertRaises(RuntimeError):
+                        source_build.prepare_source_sifr(root, {})
+
+    def test_canonical_compiler_override_must_match_prepared_bytes(self):
+        sysroot_module()
+        import sifr_binary
+        from . import fixture_execution
+        sifr_binary._prepare.cache_clear()
+        self.addCleanup(sifr_binary._prepare.cache_clear)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary, override = root / "candidate", root / "override"
+            binary.write_text("current")
+            override.write_text("stale")
+            event = {"reason": "compiler-artifact", "target": {"name": "sifr"},
+                     "executable": str(binary)}
+            outcome = SimpleNamespace(returncode=0, cause="exit", truncated=False,
+                                      stdout=json.dumps(event), stderr="")
+            env = {"SIFR_GCQ_BIN": str(override)}
+            with patch.object(fixture_execution, "run_process", return_value=outcome):
+                with self.assertRaisesRegex(RuntimeError, "does not match prepared candidate"):
+                    sifr_binary.resolve_sifr_binary(root, explicit_env_var="SIFR_GCQ_BIN", env=env)
+                override.write_text("current")
+                self.assertEqual(sifr_binary.resolve_sifr_binary(
+                    root, explicit_env_var="SIFR_GCQ_BIN", env=env), override)
+
+    def test_source_consumer_retains_900_second_and_shorter_parent_deadlines(self):
+        runner = sysroot_module()
+        for parent, expected in ((None, 1000.0), ("150.0", 150.0)):
+            env = {"CARGO_TARGET_DIR": "/owned/target"}
+            if parent is not None:
+                env[SAFETY_DEADLINE_ENV] = parent
+            with self.subTest(parent=parent), \
+                 patch("sifr_verify.process_execution.time.monotonic", return_value=100.0), \
+                 patch.object(runner, "base_env", return_value=env), \
+                 patch.object(runner, "prepare_source_sifr", return_value=Path("/selected/sifr")) as prepare:
+                self.assertEqual(runner.build_source_sifr(), Path("/selected/sifr"))
+            prepare.assert_called_once_with(REPO_ROOT, env | {SAFETY_DEADLINE_ENV: str(expected)})
+            self.assertEqual(env.get(SAFETY_DEADLINE_ENV), parent)
+
+    def test_source_consumer_reports_preparation_failure_as_certification_failure(self):
+        runner = sysroot_module()
+        with patch.object(runner, "prepare_source_sifr", side_effect=RuntimeError("Cargo failed")), \
+             self.assertRaisesRegex(runner.CertificationError, "build source-tree compiler failed: Cargo failed"):
+            runner.build_source_sifr()
 
     def test_timeout_bytes_remain_text_with_an_explicit_timeout_reason(self):
         runner = sysroot_module()

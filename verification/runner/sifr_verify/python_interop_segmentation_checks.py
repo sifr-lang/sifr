@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -13,6 +16,7 @@ from unittest.mock import patch
 from verification.areas.python_interop import runner as interop
 
 from . import profile_area_steps
+from .profile_commands import area_command, verification_python_command
 
 
 class PythonInteropSegmentationTests(unittest.TestCase):
@@ -113,10 +117,40 @@ class PythonInteropSegmentationTests(unittest.TestCase):
                 )
             self.assertTrue(result.is_file())
             self.assertEqual(len(calls), len(self.suites) + 1)
+            for command in calls:
+                self.assertEqual(command[:2], [sys.executable,
+                                 "verification/areas/python_interop/runner.py"])
             self.assertEqual(
                 [command[command.index("--suite") + 1] for command in calls[:-1]],
                 [suite["name"] for suite in self.suites],
             )
+
+    def test_verification_child_keeps_interpreter_and_exact_inherited_context(self) -> None:
+        env = dict(os.environ, VIRTUAL_ENV="/different/active-venv",
+                   UV_PROJECT_ENVIRONMENT="/different/uv-project",
+                   CARGO_TARGET_DIR="relative/owned-target", CARGO_BUILD_TARGET="declared-target",
+                   RUSTFLAGS="--cfg caller", CARGO_ENCODED_RUSTFLAGS="--cfg\x1fencoded",
+                   PYO3_PYTHON="/selected/python", SIFR_VERIFY_CONTEXT_CONTROL="present")
+        # Repeated PATH entries can be meaningful input. Preserve their exact bytes.
+        env["PATH"] = os.pathsep.join(("/caller/bin", env["PATH"], "/caller/bin"))
+        keys = ("PATH", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT", "CARGO_TARGET_DIR",
+                "CARGO_BUILD_TARGET", "RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS",
+                "PYO3_PYTHON", "SIFR_VERIFY_CONTEXT_CONTROL")
+        code = ("import json,os,sys; print(json.dumps({'executable':sys.executable,"
+                "'prefix':sys.prefix,'environment':{k:os.environ[k] for k in "
+                + repr(keys) + "}}))")
+        completed = subprocess.run(verification_python_command("-c", code), env=env,
+                                   check=True, capture_output=True, text=True)
+        observed = json.loads(completed.stdout)
+        self.assertEqual(observed["executable"], sys.executable)
+        self.assertEqual(observed["prefix"], sys.prefix)
+        self.assertEqual(observed["environment"], {key: env[key] for key in keys})
+
+    def test_ordinary_area_entrypoint_uses_the_selected_verification_interpreter(self) -> None:
+        command = area_command("--help")
+        self.assertEqual(command, [sys.executable, "-m", "sifr_verify", "areas", "run", "--help"])
+        completed = subprocess.run(command, check=True, capture_output=True, text=True)
+        self.assertIn("--area", completed.stdout)
 
     def test_invalid_manifest_is_a_step_failure_before_child_spawn(self) -> None:
         with TemporaryDirectory(prefix="sifr-python-interop-invalid-") as directory:

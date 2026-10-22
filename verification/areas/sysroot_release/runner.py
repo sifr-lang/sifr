@@ -25,12 +25,12 @@ from self_update_certification import (  # noqa: E402
     write_self_update_metadata_fixture,
 )
 from attached_api_certification import run_attached_api_certification  # noqa: E402
-from source_build import source_build_configuration  # noqa: E402
+from source_build import prepare_source_sifr  # noqa: E402
 from package_build import RELEASE_VERSION, package_build_configuration, corpus_configuration  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
-from sifr_verify.process_execution import execute  # noqa: E402
+from sifr_verify.process_execution import deadline_environment, execute  # noqa: E402
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 HEAVY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_heavy_release_smoke.sifr"
@@ -313,17 +313,11 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
 
 
 def build_source_sifr() -> Path:
-    command, env, binary = source_build_configuration(REPO_ROOT, base_env())
-    run_checked(
-        command,
-        cwd=REPO_ROOT,
-        env=env,
-        label="build source-tree compiler",
-        timeout=900,
-    )
-    if not binary.is_file():
-        raise CertificationError(f"source-tree compiler was not produced: {binary}")
-    return binary
+    env, _ = deadline_environment(base_env(), 900)
+    try:
+        return prepare_source_sifr(REPO_ROOT, env)
+    except (RuntimeError, OSError, ValueError) as error:
+        raise CertificationError(f"build source-tree compiler failed: {error}") from error
 
 
 def cargo_dependency_shape(manifest_path: Path) -> dict[str, Any]:

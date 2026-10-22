@@ -20,7 +20,7 @@ from .preparation import PreparationRun
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
 from .process_execution import SAFETY_DEADLINE_ENV, deadline_environment
-from .profile_commands import CommandFailed, cargo_command, run_command, uv_area_command
+from .profile_commands import CommandFailed, cargo_command, run_command, area_command
 from .profile_reporting import run_profile_with_report
 from .compiler_configuration_plan import configuration_plan
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
@@ -358,7 +358,7 @@ class ProfileRunner:
             suites=suites,
             profile_name=self.evidence_name,
             result_slug=result_slug,
-            command_builder=lambda *args: uv_area_command(
+            command_builder=lambda *args: area_command(
                 *args, *(["--no-fail-fast"] if self.no_fail_fast else [])),
             command_runner=lambda command: run_command(command, env=self.env),
         )

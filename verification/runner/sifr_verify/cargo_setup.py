@@ -151,8 +151,9 @@ def prepare_generated_oracle_binary(profile, env, command_runner) -> None:
 
 
 def prepare_sysroot_source_binary(profile, env, command_runner) -> None:
-    """Prepare the boundary check's private source graph before timed execution."""
-    if not any(area["area"] == "sysroot_release" and "boundary-equivalence" in area["suites"]
+    """Prepare the source compiler used by boundary and structural qualification."""
+    if not any(area["area"] == "sysroot_release" and
+               {"boundary-equivalence", "metadata-structural"}.intersection(area["suites"])
                for area in profile.get("selected_areas", [])):
         return
     command_runner([sys.executable, str(REPO_ROOT /

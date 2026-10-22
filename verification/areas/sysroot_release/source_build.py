@@ -1,29 +1,22 @@
-"""The exact source compiler graph used by sysroot boundary certification."""
+"""Canonical development compiler preparation for sysroot certification."""
 
 from __future__ import annotations
 
 import os
-import subprocess
+import sys
 from pathlib import Path
 
-
-def source_build_configuration(root: Path, environment: dict[str, str]):
-    target = root.resolve() / "target" / "sysroot_release" / "source-cargo-target"
-    env = environment.copy()
-    env["CARGO_TARGET_DIR"] = str(target)
-    env["CARGO_NET_OFFLINE"] = "true"
-    command = ["cargo", "build", "--locked", "--offline", "-p", "sifr"]
-    return command, env, target / "debug" / "sifr"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
-def prepare_source_sifr(root: Path, environment: dict[str, str], command_runner=subprocess.run):
-    command, env, binary = source_build_configuration(root, environment)
-    print(f"[sifr-profile-setup] sysroot-source-build={' '.join(command)} "
-          f"target={env['CARGO_TARGET_DIR']}", flush=True)
-    command_runner(command, cwd=root, env=env, check=True)
-    if not binary.is_file():
-        raise RuntimeError(f"source-tree compiler was not produced: {binary}")
-    return binary
+def prepare_source_sifr(root: Path, environment: dict[str, str]) -> Path:
+    # Cargo remains the freshness authority and selects the actual executable,
+    # including caller target/flags. Do not invent a second source build graph.
+    env = dict(environment, CARGO_NET_OFFLINE="true")
+    print("[sifr-profile-setup] sysroot-source-compiler=canonical-cargo-selection "
+          f"target={env.get('CARGO_TARGET_DIR', 'Cargo configuration')}", flush=True)
+    return resolve_sifr_binary(root, env=env)
 
 
 if __name__ == "__main__":
