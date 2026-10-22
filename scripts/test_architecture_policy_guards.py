@@ -25,6 +25,29 @@ from architecture_policy_test_fixtures import (
 
 
 class PolicyFoundationTests(unittest.TestCase):
+    def test_binding_patterns_follow_changed_safety_evidence_with_same_fingerprint(self):
+        from unsafe_policy_contracts import normalized_obligations
+
+        def site(note):
+            return unsafe.discover(Source('crates/cache_boundary/src/lib.rs',
+                'fn hold() {\n// SAFETY: ' + note + '\nunsafe { observe(pointer); }\n}'))[0]
+
+        first = site('first admission proof')
+        changed = site('different lifetime authority')
+        self.assertEqual(first.key, changed.key)
+        self.assertEqual(first.fingerprint, changed.fingerprint)
+        self.assertNotEqual(first.source_evidence, changed.source_evidence)
+        expected = ('Owner keeps the allocation pinned.',) * len(unsafe.CONTRACT_FIELDS)
+        for current in (first, changed, first):
+            contract = dict.fromkeys(unsafe.CONTRACT_FIELDS,
+                'Owner keeps the allocation pinned. ' + current.source_evidence)
+            self.assertEqual(normalized_obligations(contract, current, {}), expected)
+        # A neighboring source's proof remains authored meaning, even after
+        # both sites have been encountered. It cannot be stripped as local data.
+        foreign = dict.fromkeys(unsafe.CONTRACT_FIELDS,
+            'Owner keeps the allocation pinned. ' + changed.source_evidence)
+        self.assertNotEqual(normalized_obligations(foreign, first, {}), expected)
+
     @staticmethod
     def pair_segments(sites, records):
         from unsafe_policy_segments import SEGMENTS, segment_for
