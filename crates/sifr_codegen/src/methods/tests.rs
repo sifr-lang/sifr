@@ -708,3 +708,26 @@ fn lowers_bytes_methods_with_u8_backend_boundaries() {
     assert!(to_ints_rendered.contains("collect::<Vec<SifrInt>>()"));
     assert!(to_ints_rendered.contains("SifrInt::from(*__byte)"));
 }
+
+#[test]
+fn bytes_slice_arguments_do_not_allocate_literal_vectors() {
+    let literal = RustExpr::Vec(vec![RustExpr::Literal(crate::RustLiteral::Int(97))]);
+    let object = RustExpr::Ident("payload".to_owned());
+    for method in ["startswith", "endswith"] {
+        let lowered = super::lower_method(&Type::Bytes, method, &object, &[literal.clone()])
+            .expect("typed bytes prefix operation");
+        let rendered = render_expr(&lowered.expr);
+        assert!(rendered.contains("(&[97])"), "{rendered}");
+        assert!(!rendered.contains("vec!"), "{rendered}");
+    }
+    for (method, arguments) in [
+        ("hex", Vec::new()),
+        ("count", vec![RustExpr::Ident("needle".to_owned())]),
+    ] {
+        let lowered = super::lower_method(&Type::Bytes, method, &literal, &arguments)
+            .expect("typed borrowed bytes receiver");
+        let rendered = render_expr(&lowered.expr);
+        assert!(rendered.contains("&[97]"), "{rendered}");
+        assert!(!rendered.contains("vec!"), "{rendered}");
+    }
+}

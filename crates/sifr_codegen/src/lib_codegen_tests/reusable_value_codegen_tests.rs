@@ -183,9 +183,7 @@ fn corpus_repair_repeat_count_reuse_exact_counts_and_general_sequences() {
             assert!(!body.contains("__sifr_repeat_out.extend"), "{body}");
             if count.contains("18446744073709551616") {
                 assert!(
-                    body.contains(
-                        "SifrInt::from_signed_bytes_be(&vec![1, 0, 0, 0, 0, 0, 0, 0, 0])"
-                    ),
+                    body.contains("SifrInt::from_signed_bytes_be(&[1, 0, 0, 0, 0, 0, 0, 0, 0])"),
                     "{body}"
                 );
                 assert_eq!(

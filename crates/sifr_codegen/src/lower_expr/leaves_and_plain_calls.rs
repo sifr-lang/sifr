@@ -165,7 +165,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 ])),
                 args: vec![RustExpr::Ref {
                     mutable: false,
-                    expr: Box::new(RustExpr::Vec(bytes)),
+                    expr: Box::new(RustExpr::Array(bytes)),
                 }],
             })
         }
