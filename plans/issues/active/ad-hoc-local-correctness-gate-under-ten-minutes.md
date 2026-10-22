@@ -8032,3 +8032,14 @@ format/size/diff checks and independent exact-candidate review. Preserve all bui
 source/tool/environment identities and failures in external evidence. The approved
 intermediate policy applies. Rebuild costs remain visible; this repair alone makes
 no speed claim and does not close final integrated gates or V5 qualification.
+
+V4u producer execution: all ten components rebuilt through the existing canonical
+builders; current source identities and artifact bytes validate. The old retained
+SDK extraction lacked llvm-dwp, so the first build correctly failed before Cargo.
+A new isolated extraction from the existing official archive passed full file/link
+verification; the original extraction and failure remain preserved. The next build
+correctly failed offline because a pinned virtualizer crate was absent. Locked
+fetch restored exact dependencies without changing manifests or locks. The third
+build completed all families; no validation relaxation or source edits were made.
+See external v4u-build-r3 receipts for per-family preparation time. Native execution,
+negative controls and independent review remain pending at this candidate freeze.
