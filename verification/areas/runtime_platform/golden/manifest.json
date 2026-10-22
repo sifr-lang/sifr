@@ -202,10 +202,7 @@
         "network_http_async_network"
       ],
       "must_not_depend_on": [],
-      "blocked_until_capabilities": [
-        "text_i18n_core_unicode",
-        "network_http_async_network"
-      ],
+      "blocked_until_capabilities": [],
       "checks": [
         "HTTP body text decoding consumes text/i18n substrate"
       ]
