@@ -14577,21 +14577,35 @@
     },
     {
       "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
-      "symbol": "intended_fixture_child_survives_parent_death_without_unrelated_inheritance",
+      "symbol": "child_role",
+      "operation": "write",
+      "site": "fs::write(path.join(format!(\"{role}-ready\")), \"ready\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
-      "symbol": "intended_fixture_child_survives_parent_death_without_unrelated_inheritance",
+      "symbol": "child_role",
+      "operation": "write",
+      "site": "fs::write(path.join(\"owner-started\"), \"ready\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(path.join(format!(\"{label}-pid\")), child.id().to_string()).unwrap();",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
-      "symbol": "intended_fixture_child_survives_parent_death_without_unrelated_inheritance",
+      "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(path.join(\"owner-ready\"), \"ready\").unwrap();",
       "classification": "output-effect"
@@ -14606,6 +14620,20 @@
     {
       "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
       "symbol": "intended_fixture_child_survives_parent_death_without_unrelated_inheritance",
+      "operation": "read_to_string",
+      "site": "let root = PathBuf::from(fs::read_to_string(temp.path().join(\"fixture-root\")).unwrap());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "symbol": "owned_children_are_cleaned_up_when_readiness_unwinds",
+      "operation": "exists",
+      "site": "assert!(!temp.path().join(\"owner-ready\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "symbol": "owned_children_are_cleaned_up_when_readiness_unwinds",
       "operation": "read_to_string",
       "site": "let root = PathBuf::from(fs::read_to_string(temp.path().join(\"fixture-root\")).unwrap());",
       "classification": "tooling-input"

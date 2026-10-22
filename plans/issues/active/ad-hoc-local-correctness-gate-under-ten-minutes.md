@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4e selected-category diagnostic recorded; V4l context-coherence repair registered; V1 feasibility and integrated acceptance remain open
+current_stage: V4n inventories reconciled; V4o native lifecycle repair in progress; V1 feasibility and integrated acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -7584,3 +7584,31 @@ Check source identity, resource reserve and descendant cleanup. Use small standa
 probes for initial diagnosis if the driver preparation is slow, but require actual
 integrated driver tests on the final candidate. Obtain independent exact-candidate
 review. The approved intermediate policy applies; full phase gates and V5 stay open.
+
+
+#### V4o initial native diagnosis and candidate design
+
+The bounded standalone probe copies the actual original OwnedChildren/PausedChild
+helper bodies from `8063553de7d6f3a50b87c489a8ec8a6f2bf79321`. It confirms a ready
+but unregistered grandchild survives original Drop, then explicitly cleans that
+owned group. Injected spawn failure during an existing unwind terminates the
+original helper process with SIGABRT (signal 6); core output is disabled. These
+are expected-failure diagnostic controls, not product acceptance. Total guarded
+probe time 1.686s; session-empty proof required no external cleanup signals.
+Source hashes, helper copies, output and exact failure status are retained.
+
+The candidate creates one dedicated process group at owner spawn. It keeps the
+owner unreaped until group cleanup; a private stdin socket, replaced in descendants,
+observes owner death by bounded EOF without releasing its PID identity. Descendants
+are exact-test subprocesses that remain parked until explicitly killed, replacing
+expiring sleep processes. Group stdout provides a separate lifetime channel for
+native cleanup controls after zero, one or two children have started. Those
+controls unwind before owner readiness, require all inherited endpoints to close,
+and require the actual fixture lease to become available. The original intended
+versus unrelated child lease assertions remain intact.
+
+PausedChild release now returns errors for spawn/join/exit failures; Drop ignores
+cleanup errors while explicit successful test completion checks release. Native
+regressions cover each failure during unwind and explicit error reporting with
+idempotent cleanup. Initial driver build/testing uses a frozen source candidate;
+final actual integrated driver checks and source-bound guards remain required.
