@@ -27,6 +27,19 @@ def git_ls_files(*patterns: str) -> list[pathlib.Path]:
     return [ROOT / line for line in result.stdout.splitlines() if line]
 
 
+def is_hygiene_artifact(relative_path: pathlib.Path) -> bool:
+    """Verifier Python is implementation; fixture/baseline text remains evidence.
+
+    Keep all other existing scopes, including docs and schemas, independent of
+    extension. In particular, Python fixture data must not bypass this check.
+    """
+    return not (
+        relative_path.parts[0] == "verification"
+        and relative_path.suffix == ".py"
+        and not {"fixtures", "baselines"}.intersection(relative_path.parts[:-1])
+    )
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -51,6 +64,8 @@ def main() -> int:
         if not path.is_file():
             continue
         rel = path.relative_to(ROOT)
+        if not is_hygiene_artifact(rel):
+            continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         if LEGACY_PSEUDO_CODE_RE.search(text):
             errors.append(f"{rel}: contains legacy [Edddd] pseudo-code text")

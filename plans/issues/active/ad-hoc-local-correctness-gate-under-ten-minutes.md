@@ -7688,3 +7688,62 @@ file-size/diff checks. Source Rust and inventories must remain byte-identical.
 Independent exact-candidate review and the approved intermediate policy apply.
 Continue remaining diagnostic, package, sanitizer, SQL/provenance and preparation
 owners afterward. Full correctness and V5 acceptance remain required.
+
+
+### V4p delivered — immutable unsafe binding-pattern reuse
+
+Merged PR #4433, merge `2e053dead87885d7568a21bababbbd5c8bc809d8`, candidate
+`45b304ccb95800cac2a211e78e80b321254da2ad`. Complete frozen Site values key a
+bounded 512-entry process-local compiled-pattern cache; every comparison and
+source/proof check still runs. No Rust, inventory, profile or lockfile changes.
+
+Fixed identical inputs contain 398 sites and 79,003 pairs. Both implementations
+produce byte-identical complete output (80 groups). Comparison falls from
+173.952s to 31.287s; source discovery was separately 23.479s. Ordinary live guard
+falls from 202.745s to 56.666s; the complete architecture suite falls from
+309.800s (54 tests) to 87.679s (55 tests). These two checks save 368.200s observed.
+All 12 unsafe and 17 method self-tests pass; complete coverage passes two suites,
+five variants and 58 negative controls. Size/diff pass. Seven named checks total
+194.345s; this is not the earlier thirteen-check selection or full-gate timing.
+
+Independent exact-candidate review SATISFIED, no blockers; SHA-256
+`d5f42c4fa770376f457e08e632b7faefb381df62c5545b2cc8e9f1abf629f5f6`.
+Pending checks passed on the unchanged candidate. Review CLI unexpectedly wrote
+an external plan file despite its read-only prompt; its ownership was verified
+and the file preserved with the review evidence. Reviewed source stayed unchanged.
+Subsequent review launches explicitly disable write/edit/plan-exit/agent tools.
+Cache capacity is performance-only: monitor inventory growth beyond 512; eviction
+cannot change correctness. No new test-order-coupled cache-statistics assertions.
+
+`v4p-qualified-evidence.tar.gz`: 63 payloads, 19,001,491 payload bytes,
+2,771,453 archive bytes; SHA-256
+`f5c85abb8ecda197f5392f5f64e93f1f212ef61e1c46815f827d9c93ca479c10`.
+Archive and all payloads verified locally. CI still rejects the unset performance
+reference; it is not green. Full correctness, remaining owners and V5 stay open.
+
+### V4q bounded repair — diagnostic artifact ownership
+
+Owner: LOCAL-GATE V4 diagnostic baseline hygiene. Register before implementation.
+The full diagnostic area has one real guard failure: its raw scan of all
+verification files mistakes a verifier unit test's intentional Rust E0308 stderr
+for an obsolete Sifr diagnostic baseline. Preserve this negative control exactly.
+
+The guard owns Sifr fixtures, baseline/data artifacts and diagnostic documentation
+and schemas, not Python implementation of the verifier. Make this ownership
+boundary explicit: verification Python implementation outside fixture/baseline
+subtrees is not diagnostic artifact text. Keep every previous non-Python path,
+all fixture/baseline paths regardless of extension, and all documentation/schema
+paths covered. Keep canonical expect-error assertions and forbidden catch-all
+checks unchanged. No specific error-code/file allowlist, altered mock, skipped
+case, compiler change, baseline blessing or tool dependency.
+
+Audit selected and excluded tracked paths. Add independent positive/negative
+controls for legacy/catch-all text, canonical and malformed expectations,
+extension-independent fixture/baseline coverage, docs/schema coverage, and Python
+implementation stderr. Enroll the controls in the diagnostic rules suite so the
+normal gate executes them. Require all existing fuzz-coverage unit tests, all
+new guard tests, every diagnostic area case with zero failures/skips, affected
+manifest/profile contracts and file-size/diff checks. Use frozen source and
+canonical retained compiler preparation for the full area; preserve prior failed
+evidence. Independent exact-candidate review and the approved intermediate policy
+apply. No full-gate timing claim follows; V5 remains required.
