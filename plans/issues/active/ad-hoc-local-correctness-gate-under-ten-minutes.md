@@ -7332,3 +7332,144 @@ Retain preparation and each failed attempt, with the 30-minute diagnostic cap
 and stricter inner limits. Final full correctness and V5 timing acceptance remain
 open. This bounded repair restores valuable coverage; it is not itself a claim
 that the full gate meets ten minutes.
+
+
+### V4m closure — project vector calling conventions / #4429
+
+Implementation candidate `ac7c15c39de2ce825af9fd4098f9896330ffa15a` is qualified
+against base `454302290fb3176b73702cb1e34cb91c7c20ea65`. PR #4429 merged as
+`663f15fd914f881ba9c29eeef63ce8c8269336ff`.
+
+Per-file project cleanup now preserves vector signatures, including borrowed
+vectors, function values and private functions consumed by child modules.
+Finalization no longer changes signatures without their callers. The original
+project borrow authority remains unchanged. The rejected late global repair was
+removed after independent review exposed lexical identity and consumer gaps.
+
+The untyped borrowed-vector literal rewrite was removed. Safe allocation
+elimination now requires an explicit receiving shared-slice type, an unshadowed
+builtin vec macro and list form. Numeric byte constructors and typed byte-method
+boundaries emit arrays directly. Repeated forms, unresolved vector consumers and
+non-literal expressions retain their semantics. All 264 demo companions were
+regenerated and compared; only six ABI-related files changed, 11 insertions and
+11 deletions. An earlier refresh that introduced unrelated byte/decimal vector
+allocations was rejected and preserved before correcting those typed emitters.
+No source fixture, dependency lock, lint debt, selection or assertion was weakened.
+
+The original fresh-cache OSS-CURATED-0002 reproduction and native stage-boundary
+probes establish the baseline E0308. The unchanged original fixture passes on the
+final candidate. Eighteen native regressions compile and execute original,
+canonicalized and finalized Rust, with idempotence and coverage of aliases,
+reexports, distinct owners, shadowing, macros, owned/mutating uses, function values,
+private parent/child consumers and 24-function chains in both module orders.
+Typed literal controls cover evaluation order, non-Copy elements, runtime
+repetition, shadowed macros and unresolved receivers. One driver regression
+exercises the real formatting/finalization/project-const pipeline.
+
+All 13 named qualification categories passed on the exact candidate:
+
+| Category | Guarded seconds | Coverage |
+| --- | ---: | --- |
+| package (focused) | 15.832 | 1,782 unit tests and 18 native integration tests; zero ignored/filtered failures |
+| driver (focused) | 260.065 | One actual driver pipeline regression |
+| workspace (prep) | 2.907 | Workspace preparation |
+| compiler_identity (prep) | 20.335 | Canonical compiler preparation |
+| OSS-CURATED-0002 (oss-replay) | 27.368 | Original fresh-cache fixture and runtime assertions |
+| ecosystem_compatibility (area) | 68.864 | One suite, 20 variants |
+| full (e2e) | 154.438 | All 732 unique positive fixtures, 186 native groups |
+| project_workspace (area) | 603.872 | Four suites, 17 variants |
+| maintained_demos (prep) | 8.538 | Required maintained-demo preparation |
+| rust_interop (area) | 31.406 | Five suites, 13 variants |
+| regression (area) | 25.268 | Two suites, six variants |
+| generated (prep) | 699.683 | All 93 positive generated entries |
+| generated_code_quality (area) | 908.547 | One selected suite, all ten modes |
+
+The sequential guarded sum is 2,827.121s (47.1 minutes). This is bounded diagnostic
+qualification, not a full-profile run or V5 performance acceptance. E2E body time
+was 129.532s; all original source/runtime assertions executed. Generated quality
+passed inventory, corpus, native, panic scan, intrinsic panic lint, rustfmt,
+strict Clippy, determinism, demos and freshness. Demo validation uses Cargo check;
+native execution is reported separately. Freshness checks the maintained emitted
+companions. The independent reconciler verifies exact nonzero suite/variant and
+fixture counts, all 186 generated manifest/lockfile hashes, all 98 declared corpus
+source inputs, candidate identity, no tracked source changes and empty owned
+process sessions. No failed, capped, missing or skipped category was counted pass.
+
+Scoped policy comparisons preserve exactly 20 identical baseline method-guard
+failures and 218 prior filesystem findings. Four native-regression output
+operations were inventoried; edited method sites/relationships were source-audited
+without changing classifications or owners. Rust formatting, 900-line file-size
+and diff checks pass. The full codegen rebuild earlier took 1,029.402s and compiler
+preparation 293.939s; those recovery/diagnostic costs are retained, not presented as
+unchanged-run timings. The driver qualification needed a distinct dependency
+configuration; artifact existence alone is not Cargo freshness.
+
+Exact-candidate independent source review is SATISFIED with no blocking findings:
+`reviews/ac7c15c39de2ce825af9fd4098f9896330ffa15a/review.md`, SHA-256
+`2592981f884597a1a9455044b0a886fcffedc1469e65877e1c096296e2140d4f`.
+Review overlapped the last two test categories with their pending status explicit.
+Its merge prerequisites were then satisfied on the unchanged candidate; the
+reviewer explicitly required no recursive source review after that completion.
+Review evidence remains outside the approved Git tree.
+
+Final evidence: `v4m-final-qualified-evidence.tar.gz`, 171 payloads,
+22,451,603 payload bytes, 5,094,158 archive bytes, SHA-256
+`9f08f40af858a17b88451f3135138d5391b376b15d07ba90337890caa240aace`.
+Archive and every payload hash/size were independently verified locally. Retained
+R7 failed broad qualification is separate, SHA-256
+`61f3edfd1022154a45a22398302a151ee88e92019900ce83d1b343ad27c8c605`.
+R8–R10 repair evidence has 149 payloads, SHA-256
+`afdaaa9584738072645ccb0f8ded0416b2bd45ed76f09f4164cec302049e4d81`.
+Original failures, interrupted builds, helper/test-setup failures and rejected
+refreshes remain failures; successful follow-ups do not relabel them.
+
+CI is not claimed green. Exact-head logs show full-profile admission requiring
+unset SIFR_PERFORMANCE_REFERENCE and a determinism job reporting a missing
+signature without exposing the underlying failure. These match previously
+recorded symptoms, not proof of identical causes. Keep their CI owners; the
+approved intermediate policy does not waive final phase qualification.
+
+Separate canonicalizer follow-ups: existing direct-name slice cleanup retains
+lexical-shadow/repeated-form risks and method/trait/function-value consumer gaps
+in single-file mode. The scalar-shadow authority needs analysis of textually
+inherited macros across child inline modules. The diff narrows the old untyped
+rewrite risk; typed-callback controls do not qualify all legacy cleanup paths.
+No broad proof of compiler soundness is claimed. Other integrated failure owners,
+V1 feasibility, final create-PR/merge correctness and all V5 scenarios remain open.
+
+
+### V4n bounded repair — reconcile source-bound guard inventories
+
+Owner: LOCAL-GATE V4 integrated guardrail reconciliation. Registered after V4m
+closure before implementation. Completed broad discovery identifies the same root
+cause across four registries: previously delivered lease, native snapshot and
+retained fixture changes were not fully reconciled with their source-bound
+ownership records. This item repairs those records after auditing the actual
+current operation; it does not disable a guard or treat a failing check as passing.
+
+Scope: method dispatch sites and relationships (20 preserved findings), unsafe
+ABI external segment (16 missing operations/allowances), direct filesystem effects
+(218 preserved unclassified/stale rows, including multiplicities), and the
+TypeScript/Go transfer direct-read inventory (three sysroot helper operations).
+Reproduce the current exact delta first. These counts identify the known baseline;
+verify current source rather than assuming the counts cannot change.
+
+Audit each added/changed operation against its source owner and contract. Preserve
+semantic/build/tooling/output boundaries and source-bound fingerprints. Remove
+stale records only when the old operation really moved or disappeared. For unsafe
+entries, bind thread, lifetime, aliasing and ownership obligations to the actual
+operation and its surrounding controls; guard admission alone is not proof of
+safety. Inspect failed-readiness cleanup for owned child groups before documenting
+blanket lifecycle guarantees. A discovered behavioral defect needs its own bounded
+repair with native regression; do not conceal it in an inventory refresh.
+
+Named acceptance: each affected guard and its complete self-tests, all architecture
+policy tests without fail-fast hiding the tail, schema/coverage inventory and
+file-size/diff checks. Compare the complete before/after site sets, classifications,
+source partitions and exact operation bindings. No new guard bypass, waiver,
+classification enum or broad unsafe allowance. Preserve previous failed receipts.
+Rust sources and test assertions should remain unchanged for the inventory repair;
+if source changes prove necessary, run their affected regression contract and
+repeat exact-candidate source review. Obtain independent exact-candidate review
+under the approved intermediate policy. Other diagnostics/package/ASan/SQL owners,
+full phase correctness gates and V5 timing acceptance remain open.
