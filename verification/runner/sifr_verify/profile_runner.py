@@ -413,7 +413,12 @@ class ProfileRunner:
             case_status = "pass"
             try:
                 if any(suite in NATIVE_SUITES for suite in configuration.ids):
-                    run_native_configuration(configuration, env=self.env, no_fail_fast=self.no_fail_fast)
+                    run_native_configuration(
+                        configuration, env=self.env, no_fail_fast=self.no_fail_fast,
+                        preparation_complete=(self.preparation is not None
+                            and not self.preparation.fatal_reason
+                            and not self.preparation.missing(("crate_tests",))),
+                    )
                 else:
                     if self.no_fail_fast:
                         command.insert(2, "--no-fail-fast")

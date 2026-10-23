@@ -2,6 +2,7 @@
 
 from .profiles import crate_test_mode
 from .compiler_configuration_plan import configuration_plan
+from .native_test_roles import preparation_cases, require_one_executed_case
 
 
 def prepare_crate_test_binaries(profile, env, command_runner) -> None:
@@ -28,12 +29,10 @@ def prepare_crate_test_binaries(profile, env, command_runner) -> None:
                                 "--", "--exact", "--nocapture"], env=env)
                 prepared.add(graph)
 
-        if "sifr_driver_generated_builds" in configuration.ids:
-            # The copied fixture authority has one leased worktree-owned path,
-            # so preparation and runtime assertions use the same native family.
-            # Preparation costs are charged separately; every runtime assertion
-            # still executes under its existing deadline.
-            test = ("tests::package_project_build_check::rust_interop_build_tests::"
-                    "advanced_data_support::prepare_advanced_data_native_graph")
-            command_runner(["cargo", "test", "--locked", "--offline", *arguments,
-                            test, "--", "--exact", "--ignored", "--nocapture"], env=env)
+        for test in preparation_cases(configuration):
+            # Preparation owns this helper; native scheduling retains every actual
+            # assertion and requires this invocation's successful preparation.
+            outcome = command_runner(
+                ["cargo", "test", "--locked", "--offline", *arguments,
+                 test, "--", "--exact", "--ignored", "--nocapture"], env=env)
+            require_one_executed_case(outcome, test)

@@ -9,6 +9,8 @@ from .compiler_configuration_plan import configuration_plan
 from .errors import VerificationError
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
 from .native_test_execution_checks import outcome, PASSED
+from .native_test_roles import ADVANCED_DATA_PREPARATION
+from .preparation import PreparationRun
 from .profile_commands import CommandFailed
 from .profile_runner import ProfileRunner
 from .profiles import load_profile
@@ -20,6 +22,7 @@ class CrateExecutionTests(unittest.TestCase):
         runner.profile = load_profile("merge")
         runner.env = {"CARGO_TARGET_DIR": "/owned/target", "RUST_TEST_THREADS": "1"}
         runner.no_fail_fast = collect
+        runner.preparation = None
         return runner
 
     def groups(self):
@@ -99,7 +102,7 @@ class CrateExecutionTests(unittest.TestCase):
                     self.assertEqual(len(selected), native.call_count)
                     for group, call in zip(selected, native.call_args_list, strict=True):
                         self.assertEqual(call.args, (group,))
-                        self.assertEqual(call.kwargs, {"env": runner.env, "no_fail_fast": collect})
+                        self.assertEqual(call.kwargs, {"env": runner.env, "no_fail_fast": collect, "preparation_complete": False})
 
     def test_terminal_failure_takes_precedence_and_stops_collection(self):
         for terminal in (CommandFailed(-15), CommandFailed(124, "deadline"),
@@ -116,13 +119,13 @@ class CrateExecutionTests(unittest.TestCase):
     def test_native_failure_collection_preserves_terminal_precedence(self):
         configuration = next(g for g in configuration_plan(load_profile("merge"), "full")
                              if g.ids == ("sifr_driver_generated_builds",))
-        inventory = "alpha: test\nbeta: test\ngamma: test\n\n3 tests, 0 benchmarks\n"
+        inventory = f"alpha: test\nbeta: test\ngamma: test\n{ADVANCED_DATA_PREPARATION}: test\n\n4 tests, 0 benchmarks\n"
         for terminal in (CommandFailed(-15), CommandFailed(124, "deadline"), CommandFailed(130, "cancelled")):
             with self.subTest(terminal=terminal), patch(
                 "sifr_verify.native_test_execution.run_command",
                 side_effect=[outcome(inventory), CommandFailed(101), terminal, outcome(PASSED)],
             ) as run, contextlib.redirect_stdout(io.StringIO()), self.assertRaises(CommandFailed) as caught:
-                run_native_configuration(configuration, env={}, no_fail_fast=True)
+                run_native_configuration(configuration, env={}, no_fail_fast=True, preparation_complete=True)
             self.assertIs(caught.exception, terminal)
             self.assertEqual(run.call_count, 3)
 
@@ -147,6 +150,22 @@ class CrateExecutionTests(unittest.TestCase):
             runner.run_crate_tests("full")
         self.assertIs(caught.exception, failure)
         self.assertEqual(run.call_count, 2)
+
+    def test_native_preparation_uses_current_run_success_only(self):
+        for status, fatal, expected in (("pass", None, True), ("fail", None, False),
+                                        ("blocked", None, False), (None, None, False),
+                                        ("pass", "workspace", False)):
+            runner = self.runner(True)
+            runner.preparation = PreparationRun([], {})
+            runner.preparation.results = {"crate_tests": {"status": status}}
+            runner.preparation.fatal_reason = fatal
+            native = next(g for g in configuration_plan(runner.profile, "full")
+                          if g.ids == ("sifr_driver_generated_builds",))
+            with self.subTest(status=status, fatal=fatal), patch(
+                "sifr_verify.profile_runner.configuration_plan", return_value=[native]
+            ), patch("sifr_verify.profile_runner.run_native_configuration") as run:
+                runner.run_crate_tests("full")
+            self.assertIs(run.call_args.kwargs["preparation_complete"], expected)
 
 
 if __name__ == "__main__":
