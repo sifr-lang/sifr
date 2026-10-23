@@ -8,7 +8,7 @@ license = { workspace = true }
 build = "build.rs"
 
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]
 
 [package.metadata.sifr_sql]
 artifact-role = "postgresql-compiler-component"

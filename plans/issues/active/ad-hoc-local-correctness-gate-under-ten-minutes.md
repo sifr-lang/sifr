@@ -8209,3 +8209,15 @@ retained native targets, 30-minute diagnostic caps and capacity/source/session
 guards. Preserve failed/capped attempts and account for every unexecuted category.
 Measure ordinary runs separately from tracing. Do not claim a ten-minute full gate
 from this bounded repair; final gates and all V5 scenarios remain open.
+
+
+V4w mechanism proof passes on the pinned Cargo: mixed-role dependency alternation
+builds the adapter five times; rlib-only alternation builds each variant once then
+reports three fresh returns. Every real fixture executable returns its expected
+dependency behavior (11 or 23). Explicit cdylib production exports the expected
+function and leaves the native rlib fresh. The tiny fixture is not production
+coverage or a speed estimate. Inspection finds SQL exports only in wasm-gated guest
+modules and no maintained native SQL shared-library consumer. The implementation
+therefore changes only three manifest roles and the canonical guest build command;
+existing assertions and qualification/mutation tests remain. Actual component
+rebuild and native SQL qualification are pending at this source freeze.

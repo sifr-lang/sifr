@@ -55,8 +55,10 @@ def build(family: str) -> int:
             if family == "postgresql":
                 environment["SIFR_POSTGRESQL_MAJOR"] = str(series)
             if family == "postgresql" or index == 0:
+                # Native dependencies remain hashed rlibs; only this producer links a guest.
                 subprocess.run([
-                    "cargo", "build", "--locked", "--offline", "--release", "--target",
+                    "cargo", "rustc", "--lib", "--crate-type", "cdylib",
+                    "--locked", "--offline", "--release", "--target",
                     "wasm32-wasip2", "--package", f"sifr_sql_{family}",
                 ], cwd=ROOT, env=environment, check=True)
             filename = f"{family}-{series}.wasm"
