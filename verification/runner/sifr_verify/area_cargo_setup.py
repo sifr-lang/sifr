@@ -48,7 +48,10 @@ def prepare_area_graphs(profile, env, run):
                 active = env.copy()
                 active.pop("VIRTUAL_ENV", None)
                 for suite in selected:
-                    run([*command, "--suite", suite], env=active)
+                    command.extend(["--suite", suite])
+                # One process retains the canonical compiler resolver while each
+                # selected fixture still certifies and builds independently.
+                run(command, env=active)
 
         if name == "runtime_platform":
             from .runtime_sanitizer_preparation import SANITIZER_SUITES
