@@ -8809,3 +8809,81 @@ then preserve escaped newlines with a raw outer string. The production batch is
 unchanged. All17 focused tests subsequently pass in7.659s including wrapper,
 with no cap/signals/source mutation and an empty session. Preserve the original
 failed attempt and `v4ab-focused-failure.json`; no full candidate qualification yet.
+
+### V4ab delivered — bounded installed public-emission execution
+
+Merged [PR #4445](https://github.com/sifr-lang/sifr/pull/4445), merge
+`1da7d1bfda10d923cb2438ba89d774266b97f56c`, reviewed candidate
+`929edb1bd33942f155a7fa3e79a52f9c4b38d17f`. All 17 focused subprocess/emission
+checks pass, followed by complete committed-candidate foundation/policy checks,
+four unchanged emitted plans, formatting and source-size/ownership guards. The
+original nested cancellation-test script error remains recorded as a failed
+attempt; its correction changed test construction only.
+
+The complete installed metadata category passes in 593.582s. All 745 commands
+reconcile: 732 public emissions with exact bytes/newline/preamble/source-map and
+source-hash assertions, four native examples and nine generation/integrity
+commands. Expected negative exits, live LSP generation replacement and rollback
+pass. The four-worker emission batch takes 143.971s. No cap, missing outcome,
+source mutation or surviving owned process is observed.
+
+The matched full 732-case pair uses the same qualified product, corpus, metadata
+and one inner Cargo/Rayon worker. Fresh serial execution takes 474.268s; four-worker
+execution 144.669s, a 3.278x substage ratio and 329.599s saving. Including wrappers,
+the observations are 478.448s and 147.279s. Each trial executes every assertion;
+this is one diagnostic pair, not repeated V5 or whole-gate timing acceptance.
+
+Preparation remains material: workspace 2.192s, release compiler 606.530s, source
+compiler 90.371s, versioned corpus harness 73.276s, compiler identity 120.792s.
+Preparation sum 893.162s; preparation plus the installed category 1486.744s across
+separate invocations. Nested child times overlap and must not be added again.
+Preserve the release rebuild and the still-observed version-switching rebuilds
+rather than substituting retained-target observations.
+
+Independent exact-candidate source review is SATISFIED, no blockers; SHA-256
+`3093504de6836c55b67996b7d9b23f1fa650fe4e9497799fc4725e7df7b9e5c7`.
+Archive `v4ab-qualified-evidence.tar.gz`, SHA-256
+`ec3a90b6dfbc69ec384c39d379a095d534752fea94a59d0cca95043ddb63354f`, contains
+6568 payloads / 56,812,108 payload bytes, all verified locally. Review's shared-cache
+runtime prerequisite is satisfied by full concurrent installed qualification.
+Direct-invocation invalid-budget error formatting remains an optional runner
+follow-up; the inherited post-reap PID-reuse concern belongs to common process
+lifecycle hardening. Neither is a scoped blocker.
+
+CI run 39987647003 reports the existing missing performance reference (#4347),
+a missing run1 E2E report signature with underlying cause unestablished, and
+an unchanged PostgreSQL/libpg_query Windows compile failure (`dirent.h` missing).
+The latter belongs to SQL foreign-platform portability, outside this local-host
+phase. Completed logs and hashes are retained in a supplemental record. No green
+CI, full-profile, final phase or V1/V5 acceptance claim.
+
+### V4ac — integrated current-candidate failure discovery
+
+Status: registered; readiness and capacity first. Follow the user-approved
+sequence after the completed Python repair: one broad current-candidate sweep,
+then batch repairs by measured root cause. This item adds no acceptance waiver.
+
+Freeze one identified candidate and preserve its owned preparation targets,
+interpreter environment and dependency artifacts. Inspect canonical emitted
+merge-correctness selection, resource allocation, exact tool versions, graph
+prerequisites and actual disk/memory capacity before starting. Reclaim or relocate
+only inactive obsolete session-owned artifacts with recorded identity and verified
+preservation of reports/failures; retain active consumers and leases. Do not repeat
+the prior reserve failure unchanged or clean retained targets indiscriminately.
+
+Execute every selected guard, area suite, actual Cargo configuration and complete
+E2E corpus. Continue independent failures, block consumers of failed preparation,
+and retain the 30-minute diagnostic cap separately per category. Account explicitly
+for every selected but unexecuted suite/configuration; a capped parent cannot hide
+later work. Use fresh correctness execution on this candidate; retain compiled
+artifacts without treating old assertions as current evidence. Use ordinary runs
+for elapsed measurements and only targeted instrumentation to explain specific
+costs. Keep actual graph/provider preparation and SQL independent clean builds.
+
+Deliver the complete execution/coverage inventory, original failures/caps,
+category and subcategory timings, preparation sums and three largest remaining
+costs. Distinguish the sum of separately capped invocations from a single full
+gate. Reconcile original corpus/test IDs, ignored/required selections, negative
+controls and actual output receipts. Use those results to choose the next bounded
+root-cause repair. Full final create-PR/merge correctness gates and all repeated
+under-600s V5 scenarios remain required; this sweep is diagnostic evidence.
