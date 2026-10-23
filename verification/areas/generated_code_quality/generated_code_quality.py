@@ -304,7 +304,7 @@ def sifr_binary() -> str:
     return str(resolve_sifr_binary(REPO_ROOT, explicit_env_var="SIFR_GCQ_BIN", default_binary=default))
 
 
-def materialize_entry(entry: Entry, run_root: Path) -> Path:
+def materialization_request(entry: Entry, run_root: Path) -> tuple[Path, list[str]]:
     run_root.mkdir(parents=True, exist_ok=True)
     # Canonical compilation owns semantic freshness, including imports, external
     # inputs and compiler changes. Never infer it from a Python source inventory
@@ -313,12 +313,20 @@ def materialize_entry(entry: Entry, run_root: Path) -> Path:
     entry_root = Path(tempfile.mkdtemp(prefix="entry-", dir=run_root))
     crate_root = entry_root / "sifr_output"
     print(f"[sifr-materialization] entry={entry.id} workspace={crate_root} reuse=false", flush=True)
-    run_command(
-        [sifr_binary(), "build", entry.source_path, "-o", str(entry_root), "--materialize-only"]
-    )
+    return crate_root, [sifr_binary(), "build", entry.source_path, "-o", str(entry_root),
+                        "--materialize-only"]
+
+
+def require_materialized_graph(entry: Entry, crate_root: Path) -> None:
     cargo_toml = crate_root / "Cargo.toml"
     if not cargo_toml.is_file():
         raise RuntimeError(f"{entry.id}: generated crate missing Cargo.toml at {cargo_toml}")
+
+
+def materialize_entry(entry: Entry, run_root: Path) -> Path:
+    crate_root, command = materialization_request(entry, run_root)
+    run_command(command)
+    require_materialized_graph(entry, crate_root)
     return crate_root
 
 

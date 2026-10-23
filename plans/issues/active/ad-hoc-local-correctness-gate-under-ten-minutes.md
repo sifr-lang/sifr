@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4x Cargo watch-inventory repair merged; broad correctness discovery and remaining rebuild costs in progress; final gates and V1/V5 timing acceptance remain open
+current_stage: V4ac complete diagnostic discovery reconciled; V4ad bounded generated-graph preparation investigation; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -8809,3 +8809,185 @@ then preserve escaped newlines with a raw outer string. The production batch is
 unchanged. All17 focused tests subsequently pass in7.659s including wrapper,
 with no cap/signals/source mutation and an empty session. Preserve the original
 failed attempt and `v4ab-focused-failure.json`; no full candidate qualification yet.
+
+### V4ab delivered — bounded installed public-emission execution
+
+Merged [PR #4445](https://github.com/sifr-lang/sifr/pull/4445), merge
+`1da7d1bfda10d923cb2438ba89d774266b97f56c`, reviewed candidate
+`929edb1bd33942f155a7fa3e79a52f9c4b38d17f`. All 17 focused subprocess/emission
+checks pass, followed by complete committed-candidate foundation/policy checks,
+four unchanged emitted plans, formatting and source-size/ownership guards. The
+original nested cancellation-test script error remains recorded as a failed
+attempt; its correction changed test construction only.
+
+The complete installed metadata category passes in 593.582s. All 745 commands
+reconcile: 732 public emissions with exact bytes/newline/preamble/source-map and
+source-hash assertions, four native examples and nine generation/integrity
+commands. Expected negative exits, live LSP generation replacement and rollback
+pass. The four-worker emission batch takes 143.971s. No cap, missing outcome,
+source mutation or surviving owned process is observed.
+
+The matched full 732-case pair uses the same qualified product, corpus, metadata
+and one inner Cargo/Rayon worker. Fresh serial execution takes 474.268s; four-worker
+execution 144.669s, a 3.278x substage ratio and 329.599s saving. Including wrappers,
+the observations are 478.448s and 147.279s. Each trial executes every assertion;
+this is one diagnostic pair, not repeated V5 or whole-gate timing acceptance.
+
+Preparation remains material: workspace 2.192s, release compiler 606.530s, source
+compiler 90.371s, versioned corpus harness 73.276s, compiler identity 120.792s.
+Preparation sum 893.162s; preparation plus the installed category 1486.744s across
+separate invocations. Nested child times overlap and must not be added again.
+Preserve the release rebuild and the still-observed version-switching rebuilds
+rather than substituting retained-target observations.
+
+Independent exact-candidate source review is SATISFIED, no blockers; SHA-256
+`3093504de6836c55b67996b7d9b23f1fa650fe4e9497799fc4725e7df7b9e5c7`.
+Archive `v4ab-qualified-evidence.tar.gz`, SHA-256
+`ec3a90b6dfbc69ec384c39d379a095d534752fea94a59d0cca95043ddb63354f`, contains
+6568 payloads / 56,812,108 payload bytes, all verified locally. Review's shared-cache
+runtime prerequisite is satisfied by full concurrent installed qualification.
+Direct-invocation invalid-budget error formatting remains an optional runner
+follow-up; the inherited post-reap PID-reuse concern belongs to common process
+lifecycle hardening. Neither is a scoped blocker.
+
+CI run 39987647003 reports the existing missing performance reference (#4347),
+a missing run1 E2E report signature with underlying cause unestablished, and
+an unchanged PostgreSQL/libpg_query Windows compile failure (`dirent.h` missing).
+The latter belongs to SQL foreign-platform portability, outside this local-host
+phase. Completed logs and hashes are retained in a supplemental record. No green
+CI, full-profile, final phase or V1/V5 acceptance claim.
+
+### V4ac — integrated current-candidate failure discovery
+
+Status: registered; readiness and capacity first. Follow the user-approved
+sequence after the completed Python repair: one broad current-candidate sweep,
+then batch repairs by measured root cause. This item adds no acceptance waiver.
+
+Freeze one identified candidate and preserve its owned preparation targets,
+interpreter environment and dependency artifacts. Inspect canonical emitted
+merge-correctness selection, resource allocation, exact tool versions, graph
+prerequisites and actual disk/memory capacity before starting. Reclaim or relocate
+only inactive obsolete session-owned artifacts with recorded identity and verified
+preservation of reports/failures; retain active consumers and leases. Do not repeat
+the prior reserve failure unchanged or clean retained targets indiscriminately.
+
+Execute every selected guard, area suite, actual Cargo configuration and complete
+E2E corpus. Continue independent failures, block consumers of failed preparation,
+and retain the 30-minute diagnostic cap separately per category. Account explicitly
+for every selected but unexecuted suite/configuration; a capped parent cannot hide
+later work. Use fresh correctness execution on this candidate; retain compiled
+artifacts without treating old assertions as current evidence. Use ordinary runs
+for elapsed measurements and only targeted instrumentation to explain specific
+costs. Keep actual graph/provider preparation and SQL independent clean builds.
+
+Deliver the complete execution/coverage inventory, original failures/caps,
+category and subcategory timings, preparation sums and three largest remaining
+costs. Distinguish the sum of separately capped invocations from a single full
+gate. Reconcile original corpus/test IDs, ignored/required selections, negative
+controls and actual output receipts. Use those results to choose the next bounded
+root-cause repair. Full final create-PR/merge correctness gates and all repeated
+under-600s V5 scenarios remain required; this sweep is diagnostic evidence.
+
+
+### V4ac delivered — complete current-candidate diagnostic inventory
+
+Frozen candidate `afd7661de7c518995f64b75bdab86880f561556d` executes all157
+primary categories plus17 preparation nodes. All15 guards,18 actual Cargo
+configurations (and their18 preparation invocations),105 area suites and the
+complete positive E2E corpus are observed. No category is capped, blocked or
+unexecuted. The raw primary results remain152 pass/5 fail: five Python subset
+finalizers reject partial certification. Canonical combined certification over
+the same attested inputs passes all30 suites/30 variants,7 capabilities,9 compiled
+evidence records and3 zero-resource checks; all29 runtime examples pass. Preserve
+those original failures and the source-bound combination attestation.
+
+Full positive E2E takes295.843s guarded /292.619s in the suite: all732 original
+fixture IDs have passing source compilation and fresh runtime outcomes, with186
+successful native groups, zero original batch failures and exact once-only group
+membership. This is one diagnostic observation, not repeated V5 qualification.
+All82 selected ignored driver entries execute in1463.046s. Their roles are80
+selected checks, one subprocess helper and one graph-preparation function; helper
+success is not an extra semantic assertion. All four ordinary parent process
+protocol tests pass. The graph-preparation function is also executed in its
+preparation category; preserve that measured duplication for a scoped follow-up.
+
+The sum of174 separately capped outer invocations is14648.548s (4h04m09s).
+It includes preparation once and is not a single integrated gate measurement.
+The three largest exactly attributed groups are compiler configurations2962.277s,
+SQL2950.897s and Python2015.816s; shared preparation is accounted separately.
+The largest individual costs include driver generated builds1463.046s, SQL
+independent clean qualification1440.033s, Python examples preparation1301.440s
+and SQL preparation1061.270s. Generated-code preparation830.154s plus its
+representative execution867.266s totals1697.420s. Tooling preparation606.043s
+includes566.839s for its nonincremental analysis graph. These are observations,
+not forecasts or matched before/after improvements.
+
+All105 area inventories reconcile, including index expansion for regression,
+ecosystem and fuzz targets. Fuzz permits its declared valid/invalid exits and
+retains determinism, uniqueness and panic checks. The initial external accounting
+helper incorrectly assumed flat case IDs and mandatory single expected exits;
+its failed reconciliation is preserved and corrected against canonical source.
+No product test or result was changed. SQL reconciliation covers30 preparation
+commands and19 suites/66 cases, including real component paths and cleanA,
+unchangedA and independent cleanB binary-hash equality. Installed metadata
+reconciles745 commands, including732 public emissions,4 native examples and9
+integrity/generation commands, in539.099s (146.150s public-emission wall time).
+
+Archive `v4ac-discovery-evidence-r2.tar.gz`, SHA-256
+`34d13fda02b4e909984e9044cac15eb4d20217a1a999c11774fe9e41b2f0749d`, preserves
+4953 payloads /231033510 payload bytes, all independently verified locally, including original launcher failures,
+capacity recovery, all category receipts, source-bound reconciliations and
+investigation findings. The sortable report includes all categories, native cases,
+E2E fixtures and native groups. Structural HTML checks pass; no visual QA claim.
+The initial archive is retained as rejected: six derived accounting reports were
+refreshed between manifest hashing and packaging. All raw evidence hashes matched.
+The corrected archive preserves the exact immutable payload bytes; each changed
+JSON report also matches the separately transferred completed report. Its manifest
+was built from those same immutable bytes and every payload was reverified.
+This is diagnostic delivery only. Final create-PR/merge correctness gates and
+complete repeated under600s invalidation scenarios remain open.
+
+### V4ad — bounded complete generated-graph preparation
+
+Status: registered; matched feasibility first. Address the measured serial
+materialization of93 independent positive generated Cargo graphs. Preserve the
+complete canonical selection, actual public `build --materialize-only` commands,
+private outputs, exact revision/source portability, locked fetch and unchanged
+manifest/lock checks. Do not reuse stale success or replace CLI coverage with an
+in-process frontend API. Keep generated execution/freshness controls unchanged.
+
+First compare fresh serial and four-worker materialization for all93 entries on
+the same frozen compiler/source candidate. Use the existing qualified bounded
+subprocess owner, one inner Cargo/Rayon worker and the same declared four-slot
+budget; no competing builds. Check every emitted file and exact manifest/lock
+identity across trials. Preserve per-command stdout/stderr, outcome, deadlines,
+source hashes and process/capacity receipts. Each trial retains the30minute cap.
+One pair establishes feasibility only, not final V5 or whole-gate timing.
+
+If useful, implement only this preparation boundary using the existing
+`execute_batch` owner. Centralize public materialization command construction so
+scalar execution and preparation cannot diverge. Results remain ordered and
+single-writer; reject empty/duplicate selection, missing/duplicate outcomes,
+failed/truncated/cancelled commands and missing generated graphs. Continue
+independent outcomes while preserving failures. Keep locked fetch serialized;
+no network/source-policy weakening. Bound nested pools to the allocated budget.
+
+Named acceptance: focused materialization selection, command/environment and
+private-output tests; missing/duplicate/nonzero/truncated/cancelled outcomes;
+all existing bounded-process cancellation/cleanup regressions; generated-setup
+policy and affected foundation self-tests; unchanged emitted profile selection;
+complete93-graph candidate preparation with exact portability/locked identities
+and generated-code representative qualification including freshness and negative
+controls. Compare full93 serial/bounded outputs and timings. Run formatting,
+source-size/ownership guards and exact-candidate independent source review.
+No final gate waiver; this item cannot close the complete LOCAL-GATE phase.
+
+
+V4ad feasibility passes on frozen `afd7661`: all93 fresh public materializations
+and locked portable graph checks pass in678.736s serial /295.632s with four
+workers (2.296x,383.104s saved). Materialization alone is649.717s/268.145s;
+guarded elapsed692.073s/306.855s includes preflight and source/binary identity
+checks. Every generated file, manifest and lock agrees across trials, with
+identical binary/source/environment identities, private output roots, no cap or
+surviving session process. This is one diagnostic pair, not V5. Proceed with the
+registered bounded preparation implementation and exact-candidate acceptance.
