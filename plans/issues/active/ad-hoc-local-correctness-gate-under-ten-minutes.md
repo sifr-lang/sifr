@@ -8981,3 +8981,13 @@ and generated-code representative qualification including freshness and negative
 controls. Compare full93 serial/bounded outputs and timings. Run formatting,
 source-size/ownership guards and exact-candidate independent source review.
 No final gate waiver; this item cannot close the complete LOCAL-GATE phase.
+
+
+V4ad feasibility passes on frozen `afd7661`: all93 fresh public materializations
+and locked portable graph checks pass in678.736s serial /295.632s with four
+workers (2.296x,383.104s saved). Materialization alone is649.717s/268.145s;
+guarded elapsed692.073s/306.855s includes preflight and source/binary identity
+checks. Every generated file, manifest and lock agrees across trials, with
+identical binary/source/environment identities, private output roots, no cap or
+surviving session process. This is one diagnostic pair, not V5. Proceed with the
+registered bounded preparation implementation and exact-candidate acceptance.

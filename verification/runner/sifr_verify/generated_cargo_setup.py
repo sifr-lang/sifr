@@ -11,6 +11,7 @@ import sys
 import tomllib
 from pathlib import Path
 
+from .generated_materialization import materialize_entries
 from .paths import REPO_ROOT
 from .profile_commands import run_command
 from .profiles import load_profile
@@ -89,14 +90,16 @@ def prepare_generated_graphs(profile: dict, revision: str) -> dict:
     shared_root = quality.shared_artifact_root()
     if shared_root is None:
         raise ValueError("generated Cargo preparation requires its profile-owned artifact root")
+    entries = preparation_entries(quality, suites)
+    crate_roots, materialization_report = materialize_entries(quality, entries, shared_root / "preparation")
     records = []
-    for entry in preparation_entries(quality, suites):
-        crate_root = quality.materialize_entry(entry, shared_root / "preparation")
+    for entry, crate_root in zip(entries, crate_roots, strict=True):
         hashes = fetch_generated_graph(crate_root, revision)
         records.append({"id": entry.id, "group": entry.group,
                         "crate_root": str(crate_root.relative_to(REPO_ROOT)), **hashes})
         print(f"[sifr-profile-setup] generated={entry.id} revision={revision} status=pass", flush=True)
-    report = {"revision": revision, "profile": profile["name"], "entries": records}
+    report = {"revision": revision, "profile": profile["name"], "entries": records,
+              "materialization_report": str(materialization_report.relative_to(REPO_ROOT))}
     path = REPO_ROOT / "target" / "verification" / "areas" / f"generated-cargo-setup-{profile['name']}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2) + "\n")
