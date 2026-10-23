@@ -60396,28 +60396,28 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_frontend/src/typed_descriptors.rs::static_value_expected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_identity/src/build.rs::visit::literal-match::1",
-      "fingerprint": "89ac8ff489dc8e13bee88be85c3b8669d06b444fc201930b91786c62e0dfefab",
+      "site": "crates/sifr_identity/src/build.rs::hash_tree::literal-match::1",
+      "fingerprint": "fa5e8a5c94f2bf9004a5bd0788a50e268b2b33f364e6491dac9486e969e730b9",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "matches ! ( name , \".git\" | \"target\" | \"__pycache__\" )",
-      "inputs": "fn visit ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
+      "inputs": "fn hash_tree ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
       "outputs": "io :: Result < ( ) >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_identity/src/build.rs::visit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/build.rs::visit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_identity/src/build.rs::visit::literal-match::2",
-      "fingerprint": "804b0fc110196d013561b4aea5960463badfb8d7aac27f4fa516e5cb4c3ffc8c",
+      "site": "crates/sifr_identity/src/build.rs::hash_tree::literal-match::2",
+      "fingerprint": "7454a24da5ced3507f38e0bd8a9d4c23a9dc76c931a59b59e941086f05e755ec",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "matches ! ( extension , \"md\" | \"mdx\" )",
-      "inputs": "fn visit ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
+      "inputs": "fn hash_tree ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
       "outputs": "io :: Result < ( ) >",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_identity/src/build.rs::visit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/build.rs::visit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_identity/src/build.rs::configuration::literal-match::1",
@@ -85018,6 +85018,42 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_identity/src/build_tests.rs::run::literal-match::1",
+      "fingerprint": "8c3278cc5fca72eca801fc98c1aab29819737c824c9a032f5226859405301458",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( text . as_ref ( ) , \"CARGO_MANIFEST_DIR\" | \"CARGO_MANIFEST_PATH\" | \"OUT_DIR\" )",
+      "inputs": "fn run ( & self , label : & str , fresh : bool )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_identity/src/build_tests.rs::run::literal-comparison::1",
+      "fingerprint": "bb56ccdacf710992bc731e7e8065085f642042c456267cd8f214c095603443a3",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "assert ! ( stdout . lines ( ) . any ( | line | line == \"input-verified\" )",
+      "inputs": "fn run ( & self , label : & str , fresh : bool )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_lsp/src/session/tests/sysroot_request_tests.rs::remove_parent_package_context::literal-match::1",
+      "fingerprint": "41809f5ecb2f8d70031889ff2f6f91e44d0805d50a550bce838696f34e7049a8",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( name , \"CARGO_MANIFEST_DIR\" | \"CARGO_MANIFEST_PATH\" | \"OUT_DIR\" )",
+      "inputs": "fn remove_parent_package_context ( command : & mut Command , keys : impl IntoIterator < Item = OsString > )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_lsp/src/session/tests/sysroot_request_tests.rs::remove_parent_package_context enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_lsp/src/session/tests/sysroot_request_tests.rs::remove_parent_package_context enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     }
   ]
 }

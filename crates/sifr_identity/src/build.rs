@@ -8,10 +8,14 @@ use std::{
 };
 
 fn visit(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()> {
+    // Cargo recursively watches directory roots, including additions/removals and symlinks.
+    // Emitting every descendant repeats the same scan for each ancestor and bloats Cargo metadata.
     println!("cargo:rerun-if-changed={}", path.display());
+    hash_tree(root, path, hash)
+}
+
+fn hash_tree(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()> {
     if path.is_dir() {
-        // Watching directories detects inventory additions/removals, including source archives.
-        println!("cargo:rerun-if-changed={}", path.display());
         let mut children = fs::read_dir(path)?
             .map(|e| e.map(|e| e.path()))
             .collect::<io::Result<Vec<_>>>()?;
@@ -21,7 +25,7 @@ fn visit(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()>
             if matches!(name, ".git" | "target" | "__pycache__") {
                 continue;
             }
-            visit(root, &child, hash)?;
+            hash_tree(root, &child, hash)?;
         }
     } else if path.is_file() {
         let extension = path.extension().and_then(|s| s.to_str()).unwrap_or("");
@@ -32,7 +36,6 @@ fn visit(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()>
         let name = relative
             .to_str()
             .ok_or_else(|| io::Error::other("non-UTF8 compiler input"))?;
-        println!("cargo:rerun-if-changed={}", path.display());
         hash.field(name, &fs::read(path)?);
     }
     Ok(())
@@ -148,3 +151,7 @@ fn dependency_tokens(hash: &mut IdentityEncoder) {
         hash.field(&name, token.as_encoded_bytes());
     }
 }
+
+#[cfg(test)]
+#[path = "build_tests.rs"]
+mod tests;

@@ -6,7 +6,7 @@ mod stream;
 #[cfg(test)]
 mod stream_tests;
 
-#[cfg(feature = "build")]
+#[cfg(any(feature = "build", test))]
 pub mod build;
 
 #[derive(Clone)]

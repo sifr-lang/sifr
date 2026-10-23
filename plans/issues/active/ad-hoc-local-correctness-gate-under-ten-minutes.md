@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4v nested Cargo context repair merged; V4w native/component build-role investigation in progress; final gates and V1/V5 timing acceptance remain open
+current_stage: V4w native/component build-role repair merged; V4x Cargo watch-inventory investigation in progress; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -8227,3 +8227,170 @@ guest build role. Source/artifact validation and native acceptance follow on the
 frozen candidate. The producer source candidate is `33054b6ca37b71d3888db3451104edca791a2bed`;
 per-family orchestration seconds are postgresql=360.437, mysql=34.854, sqlite=45.760.
 No dependency pins or tracked locks were changed.
+
+
+### V4w delivered — native dependency variants coexist
+
+Merged PR #4440, merge `8d3ed978ccbf809d8c55ce8a46cc90d712867e47`, candidate
+`c49b3f686e5e149287838a6af1db3001913e5679`. Native PostgreSQL, MySQL and SQLite
+providers are rlib-only; the canonical Wasm producer explicitly requests cdylib.
+All ten artifacts were rebuilt with unchanged pins and the verified SDK.
+
+All 30 canonical preparation commands pass (830.532s summed guard time, including
+changed-candidate compilation). All 19 selected SQL suites / 66 cases pass, with
+actual host execution of all six PostgreSQL, three MySQL and one SQLite artifacts.
+The complete suite union sums to 1980.413s across separate guarded invocations;
+this is not one integrated-gate duration. The required independent clean A,
+unchanged A and independent clean B protocol alone takes 1436.196s, with all three
+linked executable hashes equal. It remains a major unsolved cost.
+
+Real standalone/combined alternation preserves two distinct hashed SQLite rlibs.
+All four returning JSON Cargo observations report every artifact fresh. Ordinary
+return commands take 1.525s, 24.570s and 1.520s without compilation; initial calls
+are recorded separately. The retained mechanism fixture also demonstrates the old
+mixed-role replacement and actual distinct dependency behavior. No test selection,
+assertion, dependency pin or lockfile was removed or changed.
+
+Component validators and mutations, six producer controls, fourteen preparation
+policy tests, seven clean-build mutation controls, dependency checks, formatting,
+size and diff checks pass. All guarded sessions end empty without cleanup signals
+or unexpected source changes. Independent exact-candidate review is SATISFIED;
+all pending native checks subsequently passed unchanged. Review SHA-256:
+`2e646bc63e52e5e319742888d1c586e0df59e902efc0941e6ecd8e51f9169b5b`.
+`v4w-qualified-evidence.tar.gz`: 806 payloads, 32,704,561 payload bytes,
+6,995,255 archive bytes; SHA-256
+`f1b2ab7c746c3edf7d1f601a84d17e5db4c496a4b15bc17f22ba8a9d50b35661`.
+The archive and every payload are independently verified locally.
+
+Follow-ups remain separately owned: a durable build-role regression control;
+producer output selection from actual Cargo evidence instead of trusting a fixed
+core path; pre-existing byte-identical MySQL series artifacts; PostgreSQL major
+coexistence. Full-profile CI admission still lacks a performance reference, and
+the separate determinism job lacks a run1 signature with its child cause unknown.
+No green-CI, complete final gate or under-600-second claim is made.
+
+### V4x bounded investigation — Cargo watch inventory inflation
+
+Owner: LOCAL-GATE V3/V4 input tracking and repeated preparation. Register before
+implementation. After V4w qualifies, ordinary combined SQL preparation remains
+about 24.6s despite every Cargo artifact being fresh. A separate instrumented run
+executes only rustup/Cargo, no rustc/linker/test process. It reads roughly 168 MB;
+three SQL-tool build outputs are about 7.2 MB each. One output contains 42,525
+rerun-if-changed directives. The first-party identity visitor emits duplicate
+file/directory paths and both ancestor and descendant directory watches. This is
+a concrete candidate cost, not yet proof of the exact user-space hot path or a
+measured optimization saving. Keep tracing outside ordinary acceptance timings.
+
+First use a separately owned, tiny real Cargo fixture to compare the observed
+watch inventory with its exact deduplicated set and, conditionally, covering root
+boundaries. Use retained targets and alternate warm observations. Execute actual
+fixture binaries and verify Cargo freshness. Prove that any proposed boundary
+still detects nested edits, additions, removals, renames, directory changes and
+supported symlink inputs, including source archives without Git. If root coverage
+cannot be proved, retain the necessary explicit watches. Do not rely on Git's
+tracked-file list, directory existence alone, or a timestamp-only pass cache.
+
+If evidence supports a repair, change only redundant watch emission. Preserve the
+exact content-hash input sequence, exclusions, source/configuration/dependency
+identities, environment/toolchain tracking and failure behavior. Do not reduce
+hash coverage, bypass a genuine edit, hide a producer rebuild or alter test
+selection. Prefer the smallest clear implementation over a new watcher service,
+scheduler, compiler fallback or external Cargo patch.
+
+Named acceptance for implementation: focused identity/source-inventory controls;
+real Cargo positive and negative invalidation controls; actual retained compiler
+and standalone/combined preparation with fresh/dirty evidence; affected preparation
+contracts; any canonically required component regeneration/provenance controls and
+real execution of all ten guests; format/size/diff checks; independent exact-head
+review. Keep all failures and 30-minute category caps, source/session guards and
+capacity reserves. Use focused intermediate checks under the approved policy;
+complete final gates and all V5 coverage/timing scenarios remain mandatory.
+
+After this prerequisite investigation/repair, execute the broad current-candidate
+correctness failure-discovery inventory. Derive every suite/configuration/guardrail
+from the canonical plan, continue independent failures and explicitly account for
+blocked or capped consumers. Do not relabel V4w's old-source assertions as a pass
+for a changed implementation. Reserve repeated full timing qualification for a
+credible candidate; mandatory clean builds remain inside the final budget.
+
+V4x mechanism evidence: the isolated real-Cargo fixture completed in 65.718s,
+with all 30 mutation/freshness controls passing. Warm full-list observations are
+about 7.4s versus about 0.11s for covering roots; these are fixture measurements,
+not an integrated-gate saving. Actual source/archive additions, removals, renames,
+configuration changes and file/directory symlink targets remain detected. The
+production repair separates root watch emission from the unchanged lexical hash
+walk. It retains the existing root boundaries, configuration and dependency
+tracking. Hash framing/order/exclusions have a focused control, and a real Cargo
+control compiles and executes after each inventory mutation using the actual
+production visitor. Both tests run in the ordinary identity crate unit suite,
+without needing its build feature to be selected explicitly.
+
+The initial six identity tests passed; final source/artifact candidate validation
+and ordinary retained preparation comparisons remain required. Component sources
+have changed through their shared identity dependency, so canonically regenerate
+all ten components and check their provenance and real host execution. No old
+assertion result is promoted to the new candidate. The phase remains open.
+
+V4x canonical component regeneration completed from source candidate `1c288f32f874500d7e9566fae0af89f930304cd7`.
+Per-family orchestration seconds: postgresql=365.435, mysql=31.294, sqlite=45.011.
+Native acceptance and independent review follow on the frozen source/artifact
+candidate; no dependency pin or lockfile change was needed.
+
+V4x candidate `ba708cc926db3a1f9405b2c56fc307f5fc50cf70` is superseded before
+merge. Own review found that the new explicit hash expectation hardcoded Unix
+path separators, unlike the existing native-path hash contract. Correct the
+expectation with the standard platform separator; do not change production hash
+normalization. This is a code-based portability finding, not a claimed Windows
+execution. The independent review had no blockers, but it does not override the
+subsequently found regression or approve the next candidate automatically.
+
+Preserve the original producer/policy/identity results and 22 completed SQL
+preparation observations, plus compiler preparation. Stop the scheduler after
+its active combined preparation finishes (373.309s guard, pass, empty session,
+no signals); eight later preparations and guest suites/reuse/broad discovery did
+not run on that candidate. The scheduler's intentional termination is recorded
+in `v4x-supersession.json`; it is not a failed test or a completed gate. Retain all
+build artifacts. Regenerate affected component provenance and rerun the named
+acceptance on the corrected frozen candidate, with a new exact-candidate review.
+
+V4x canonical component regeneration completed from source candidate `bffc88070b9499ff6caf218a2d8b7546fe3ddbea`.
+Per-family orchestration seconds: postgresql=362.233, mysql=31.320, sqlite=44.749.
+Native acceptance and independent review follow on the frozen source/artifact
+candidate; no dependency pin or lockfile change was needed.
+
+
+V4x ownership-inventory reconciliation: actual full-source guards found four
+filesystem sites moved from visit to hash_tree, twelve new test filesystem sites,
+two moved method-policy sites and three new test-assertion sites. The latter
+include the previously omitted V4v LSP package-context helper. Refresh only these
+reviewed entries; preserve every unrelated classification. The proposed ledgers
+validate against all 6,407 method-policy sites and 3,399 filesystem sites. Actual
+checked-in guard reruns and a new exact-candidate review remain required.
+
+The diagnostic checkout remains frozen at 2f0876150bf9c58e269c080e5d7f99cd03614754
+while this separate editing checkout updates only ownership records and this
+phase log. Keep that campaign under its observed identity; do not promote its
+results to the new candidate without checking the affected input boundaries.
+
+Current-candidate failure discovery reached 86 category observations before a
+disk preflight blocked distribution qualification without executing its tests.
+The release representative suite ran 61 cases: 60 passed; the pinned Node check
+failed after its installed files were removed in the authorized external cleanup.
+Restore the exact verified Node archive and pinned npm; the focused contract now
+passes in 0.732s. Preserve the original failed suite. Its self-update JSON parity
+case passed but spent 1,226.286s building/testing its separately targeted binary.
+This is a separate LOCAL-GATE build-cost follow-up, not a watch-inventory gain.
+
+Five individually selected Python suites executed their examples successfully but
+correctly rejected partial area certification. Combining all 30 selected suite
+variants through the canonical combiner produces complete certification: seven
+capabilities, nine compiled evidence entries, three resource-zero entries, zero
+failures. The first reconciliation used profile order instead of manifest order
+and was rejected; that failed orchestration and the corrected pass are preserved.
+This is diagnostic union evidence, not one complete-gate invocation.
+
+Preserve the obsolete interrupted-codegen quarantine by copying its 3,205 files
+and checking every content hash/mode before reclaiming its old filesystem space.
+No active target or report was removed. Resume only unfinished categories with
+unchanged 30-minute caps and per-category reserves. All final gates, mandatory
+clean-build costs and V5 timing qualification remain open.

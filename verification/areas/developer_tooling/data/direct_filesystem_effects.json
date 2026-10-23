@@ -17594,31 +17594,115 @@
     },
     {
       "path": "crates/sifr_identity/src/build.rs",
-      "symbol": "visit",
+      "symbol": "hash_tree",
       "operation": "is_dir",
       "site": "if path.is_dir() {",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr_identity/src/build.rs",
-      "symbol": "visit",
+      "symbol": "hash_tree",
       "operation": "read_dir",
       "site": "let mut children = fs::read_dir(path)?",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr_identity/src/build.rs",
-      "symbol": "visit",
+      "symbol": "hash_tree",
       "operation": "is_file",
       "site": "} else if path.is_file() {",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr_identity/src/build.rs",
-      "symbol": "visit",
+      "symbol": "hash_tree",
       "operation": "read",
       "site": "hash.field(name, &fs::read(path)?);",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "new",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "write",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(path.parent().unwrap()).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "write",
+      "operation": "write",
+      "site": "fs::write(path, bytes).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "drop",
+      "operation": "remove_dir_all",
+      "site": "let _ = fs::remove_dir_all(&self.0);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "new",
+      "operation": "read_to_string",
+      "site": "let source = fs::read_to_string(identity.join(\"src/build.rs\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "run",
+      "operation": "exists",
+      "site": "if tree.0.join(\"Cargo.lock\").exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "cargo_directory_watches_track_the_hashed_inventory",
+      "operation": "rename",
+      "site": "fs::rename(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "cargo_directory_watches_track_the_hashed_inventory",
+      "operation": "remove_file",
+      "site": "fs::remove_file(tree.0.join(\"inputs/new/deeper/renamed.txt\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "cargo_directory_watches_track_the_hashed_inventory",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(tree.0.join(\"inputs/new\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "cargo_directory_watches_track_the_hashed_inventory",
+      "operation": "symlink",
+      "site": "symlink(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "cargo_directory_watches_track_the_hashed_inventory",
+      "operation": "symlink",
+      "site": "symlink(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "cargo_directory_watches_track_the_hashed_inventory",
+      "operation": "remove_file",
+      "site": "fs::remove_file(tree.0.join(\"outside/directory/deep/new.txt\")).unwrap();",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_lint/src/config.rs",
