@@ -215,7 +215,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
         .native_family(
             &dependency_plan.sysroot_root.join("crates/sifr_runtime"),
             dependency_plan.cargo_vendor_mode,
-            &sysroot_cargo_config_args(dependency_plan),
+            &sysroot_cargo_config_args(&dependency_plan),
             &python_environment(&generated_project),
         )
         .map_err(|error| vec![build_error(error.to_string())])?;
