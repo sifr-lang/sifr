@@ -14,6 +14,8 @@ from typing import Any
 
 from verification.json_schema_202012 import lint_schema
 
+from .batch_execution_checks import policy_checks as batch_execution_checks
+from .installed_emission_checks import policy_checks as installed_emission_checks
 from .progress_checks import policy_checks as progress_checks
 from .preparation_checks import policy_checks as preparation_checks
 from .python_preparation_checks import policy_checks as python_preparation_checks
@@ -71,6 +73,8 @@ def run_all() -> list[str]:
         ("DX.10 application and configuration profiles", dx10_profile_checks),
         ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),
+        ("bounded independent command ownership", batch_execution_checks),
+        ("installed public emission completeness", installed_emission_checks),
         ("Python interop segmented profile checks", python_interop_segmentation_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),

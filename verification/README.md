@@ -149,6 +149,15 @@ The `[sifr-build-allocation]` receipt records requests, override sources, policy
 capacity and resolved allocations. Standalone E2E commands retain their explicit
 worker controls; use the profile runner for capacity-bounded admission.
 
+Installed metadata public-emission checks use the same resolved slot limit,
+exported by the profile runner as `SIFR_VERIFY_PROCESS_SLOTS`. Each parallel CLI
+uses one Cargo/Rayon worker; direct invocation without a profile allocation runs
+serially. The batch owns all child process groups on the main thread, retains
+per-command outcomes and restores corpus report order. Exact output/source-map
+checks still run for every fixture. Native examples and shared package-generation
+mutations remain sequential. Batch elapsed time includes queueing; overlapping
+command durations must not be added to it.
+
 ## Layout
 
 - `runner/sifr_verify/` contains runner code and self-tests.
