@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ag duplicate native preparation qualified and merged; V4ah Python native storage investigation; final gates and V1/V5 timing acceptance remain open
+current_stage: V4ah Python native storage qualified and merged; V4ai batch Python preparation; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9227,7 +9227,8 @@ capture; no CI success claimed. Full final gates and repeated V5 remain open.
 
 ### V4ah — investigate Python example native dependency storage
 
-Status: investigation, no production cache change. Return to the 1,301.440s Python
+Status: investigation completed; implementation qualified and merged in #4450
+(closure below). Original investigation scope: return to the 1,301.440s Python
 example preparation cost (29 examples across nine suites) before further isolated
 small optimizations. Inspect exact retained family/root fingerprints and preparation
 commands, accounting for different candidates and warm/cold state. Example fixtures
@@ -9295,3 +9296,64 @@ Cargo fingerprint reuse, remaining family splits and source identity. All founda
 groups, four emitted plans and applicable static checks must pass. Independent
 exact-candidate review required. This intermediate item does not claim the full gate
 is below ten minutes; final create-pr/merge and repeated V5 scenarios remain open.
+
+
+### V4ah closure — Python native storage / #4450
+
+PR [#4450](https://github.com/sifr-lang/sifr/pull/4450) merged as
+`ea63b16a6e42e55169e5d3967ceda0474a131f6f`; candidate
+`485b0e46c0a99e7f095afda24a49c6089a2c1875`, base `27668bed7581aac09994c529d709ad3b28083ac3`.
+All 29 example preparations pass in 377.864s; all 30 Python suites pass in 471.236s,
+including all 29 runtime examples (nested sum 293.888s) and complete certification
+of seven capabilities, nine compiled evidence records and three resource-zero
+records. Together preparation and area execution are 849.100s, versus historical
+1,872.429s; these are diagnostic historical comparisons, not controlled full-gate
+qualification. Additional callback costs: workspace 0.845s, environment 0.323s,
+authoring 55.850s; total selected callbacks 906.118s. The ten-minute goal is open.
+
+All 29 prepared examples occupy one native target while retaining 23 full probe
+identities. Its 50 library-unit fingerprint timestamps precede runtime execution;
+this timestamp observation is not a pre/post byte snapshot. All original source,
+bridge, trust/declaration, certification and runtime assertions remain. Historical
+per-case fixture roots are retained as evidence and accounted for, not cleaned.
+63 actual Rust controls pass, including full/stable identities, changed build-script
+inputs, native trust, ownership, aliases, leases and concurrent capture. All 31
+foundation groups, four unchanged emitted plans and static checks pass (158.316s).
+
+Source review SATISFIED, SHA-256
+`a47789b090a394adb47a43e5bc73bfe63d8682f65707a9c09fe3b607ebbff375`.
+Archive `v4ah-qualified-evidence.tar.gz`, SHA-256
+`4c1f58e179c9484ff4c0981d38f5e9206be69426f6ea912bea678ad87d6b2d15`,
+contains 221 payloads / 2,653,988 bytes, all verified locally. The initial experiment
+wrapper failure and nested-test-summary accounting failure remain preserved;
+successful actual executions were reconciled without rerunning completed tests.
+CI local-first-create-pr stopped at missing SIFR_PERFORMANCE_REFERENCE before tests
+(run 40038611426, job 120704082946), existing owner #4347. No full CI pass claimed.
+Final full correctness gates and repeated V5 remain mandatory.
+
+### V4ai — batch exact Python example preparation in one invocation
+
+Status: registered. Do not delete the explicit build pass merely because runtime
+also compiles: `cmd_build` and cached package `run` exercise distinct materialization
+paths, and the current evidence does not establish their complete equivalence.
+Preserve all 29 explicit release builds and every runtime/certification assertion.
+The preparation CLI already accepts repeated `--suite` arguments and iterates the
+same suite registries; its caller currently starts nine processes. Each process
+starts its own canonical compiler resolver. Batch the exact sorted selected suite
+arguments into one invocation so that its existing in-process resolver is reused.
+No persistent successful-test receipt, new cache identity, fallback or prototype
+compiler path is introduced. Keep per-case timing rows and failure propagation.
+
+Named acceptance: scheduler controls for exact sorted selection, one command,
+unchanged environment handling, no command for non-example suites and no mutation
+of caller environment. Exercise the real preparation implementation with multiple
+suite registries, preserve all builds/certification checks in order and stop after
+certification failure or mutation. All foundation groups, unchanged emitted suite
+plans and applicable static checks must pass. On the frozen candidate execute all
+29 actual preparations once; reconcile exact selected cases with V4ah. Runtime
+source, fixtures and commands remain unchanged; preserve V4ah's actual runtime
+evidence as prior-candidate evidence, not a new full-area pass. Final phase gates
+execute the entire area again. Independent exact-candidate source review required.
+Measured V4ah first population is not a matched warm baseline; report current time
+and the nine-to-one launch change without attributing every elapsed-time difference
+to batching. Continue toward the largest remaining measured costs after closure.
