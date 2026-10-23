@@ -1,6 +1,7 @@
 use crate::session::Session;
 use serde_json::json;
 use sifr_analysis::{ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus};
+use std::ffi::OsString;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -443,7 +444,9 @@ struct CliSysrootStatus {
 }
 
 fn cli_sysroot_status() -> CliSysrootStatus {
-    let output = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string()))
+    let mut command = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string()));
+    remove_parent_package_context(&mut command, std::env::vars_os().map(|(key, _)| key));
+    let output = command
         .args([
             "run", "--locked", "-q", "-p", "sifr", "--", "--print", "sysroot", "--json",
         ])
@@ -506,4 +509,65 @@ def main() -> int | None:
         )
         .expect("open document");
     (session, temp, uri)
+}
+
+/// Cargo injects its package metadata into test processes. Passing it to another
+/// Cargo invocation makes dependency build scripts observe the parent package as
+/// an external input, invalidating the shared target on entry and exit.
+fn remove_parent_package_context(command: &mut Command, keys: impl IntoIterator<Item = OsString>) {
+    for key in keys {
+        if key.to_str().is_some_and(|name| {
+            name.starts_with("CARGO_PKG_")
+                || matches!(
+                    name,
+                    "CARGO_MANIFEST_DIR" | "CARGO_MANIFEST_PATH" | "OUT_DIR"
+                )
+        }) {
+            command.env_remove(key);
+        }
+    }
+}
+
+#[test]
+fn nested_cargo_removes_parent_package_context() {
+    let context = [
+        ("CARGO_MANIFEST_DIR", "/parent/package"),
+        ("CARGO_MANIFEST_PATH", "/parent/package/Cargo.toml"),
+        ("CARGO_PKG_NAME", "parent-package"),
+        ("CARGO_PKG_VERSION_MAJOR", "7"),
+        ("CARGO_PKG_VERSION_PRE", ""),
+        ("CARGO_PKG_DESCRIPTION", "parent description"),
+        ("OUT_DIR", "/parent/build/output"),
+    ];
+    let mut command = Command::new("cargo");
+    command.envs(context);
+    remove_parent_package_context(&mut command, context.map(|(key, _)| OsString::from(key)));
+    assert_eq!(command.get_envs().count(), context.len());
+    assert!(command.get_envs().all(|(_, value)| value.is_none()));
+}
+
+#[test]
+fn nested_cargo_preserves_intentional_build_configuration() {
+    let settings = [
+        ("CARGO_TARGET_DIR", "/owned/target"),
+        ("CARGO_NET_OFFLINE", "true"),
+        ("CARGO_BUILD_JOBS", "2"),
+        ("CARGO_PROFILE_DEV_DEBUG", "1"),
+        ("CARGO_ENCODED_RUSTFLAGS", "-C\x1fdebuginfo=1"),
+        ("RUSTFLAGS", "--cfg retained_configuration"),
+        ("RUSTC", "/selected/rustc"),
+        ("RUSTC_WRAPPER", "/selected/wrapper"),
+        ("RUSTUP_TOOLCHAIN", "selected-toolchain"),
+        ("SIFR_SYSROOT", "/selected/sysroot"),
+    ];
+    let mut command = Command::new("cargo");
+    command.envs(settings);
+    remove_parent_package_context(&mut command, settings.map(|(key, _)| OsString::from(key)));
+    let actual: std::collections::BTreeMap<_, _> = command.get_envs().collect();
+    for (key, value) in settings {
+        assert_eq!(
+            actual.get(std::ffi::OsStr::new(key)),
+            Some(&Some(std::ffi::OsStr::new(value)))
+        );
+    }
 }

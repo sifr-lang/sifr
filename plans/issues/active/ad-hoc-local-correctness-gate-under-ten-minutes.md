@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4o lifecycle repair merged; V4p unsafe comparison cost investigation in progress; V1 feasibility and integrated acceptance remain open
+current_stage: V4u SQL provenance repair merged; V4v repeated build-transition investigation in progress; integrated gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -8043,3 +8043,94 @@ fetch restored exact dependencies without changing manifests or locks. The third
 build completed all families; no validation relaxation or source edits were made.
 See external v4u-build-r3 receipts for per-family preparation time. Native execution,
 negative controls and independent review remain pending at this candidate freeze.
+
+
+### V4u delivered — current SQL provenance and complete selected SQL execution
+
+Merged PR #4438, merge `ef81221d2195c4007eb00d258ea988d627e89744`, candidate
+`ce6e25f87f2af31139cf0ee3bf39d7e00ae226dd`. All ten components were genuinely
+rebuilt; source manifests, byte digests and all selected negative controls pass.
+The producer receipts honestly record the allocation change from four jobs to two;
+all dependency/toolchain pins and flags remain unchanged.
+
+All 30 preparation commands completed using the retained successful prefix after
+an initial 1,801.469s cap. That attempt remains incomplete; continuation does not
+reclassify it. All 19 selected SQL suites and 66 cases pass, including actual
+component-host execution of all six PostgreSQL, three MySQL and one SQLite artifact.
+Every governed session ends empty without cleanup signals or unexpected changes.
+All 14 policy categories pass. Independent exact-candidate review SATISFIED,
+no blockers; SHA-256
+`960399967029ef96783ed111c68cb86901725b81f9f4a606dcc09a098a91dcf4`.
+Native checks pending at review time subsequently passed unchanged.
+
+`v4u-qualified-evidence.tar.gz`: 513 payloads, 33,712,717 payload bytes,
+6,978,911 archive bytes; SHA-256
+`8bee90da369031a99df2d8a842ac16042642059a7a5b88846460967b39f1967b`.
+Archive and every payload independently verified locally. Raw failed builds,
+initial cap and failed continuation launcher remain included. Exact-head CI has
+an unset performance reference, Windows parser portability failure and separate
+report-determinism job failure. The latter two visible symptoms also occurred on
+the prior candidate; this does not prove a shared underlying cause. They belong
+to later CI/cross-platform work, not the emitted local correctness selection.
+No green-CI or final phase acceptance claim.
+
+The mandatory SQL clean-build protocol takes 1,420.006s by itself. Selected
+schema tools take 346.635s, PostgreSQL compiler 306.414s, incremental editor
+222.987s, SQLite 207.416s and schema polymorphism 151.354s. These are guarded
+category observations, not a complete gate timing. Preparation completion did
+not eliminate later compilation: schema tools spend about 291s in Cargo, and
+the polymorphism driver case spends about 118s building versus 7s executing.
+The editor test launches a nested CLI Cargo run; an observed linker has about
+4.5 GiB RSS. The reasons for those repeated builds remain unproven.
+
+### V4v bounded investigation — repeated native compilation between consumers
+
+Owner: LOCAL-GATE V3/V4 build reuse. Register before implementation. Diagnose
+one representative unchanged compiler/driver/SQL transition on the frozen V4u
+candidate using Cargo fingerprint reasons and exact environment, feature, profile
+and dependency identities. Retain the target and source. Compare a repeated
+identical command with the relevant consumer transition; do not call legitimate
+configuration variants corruption, and do not infer correctness from timestamps
+alone. Keep instrumented diagnostics distinct from ordinary elapsed measurements.
+
+Use the 30-minute cap per diagnostic, source/session guards and capacity reserves.
+Do not repeat the complete expensive SQL qualification merely to rediscover its
+known cost. Any repair must be supported by reproduced invalidation and preserve
+freshness for source additions/removals, configuration and dependency changes,
+actual assertions, private target ownership and required isolation. Do not edit
+externally owned Ruff or collapse distinct PostgreSQL major identities. If evidence
+supports a different architectural repair, record its bounded contract before
+implementation. Named acceptance for an eventual implementation: focused freshness
+positive/negative controls, the reproduced transition and its ordinary repeat,
+affected preparation/runner contracts, format/size/diff checks and independent
+exact-candidate review. Full integrated gates and all V5 scenarios remain open.
+
+
+V4v investigation reproduced two distinct effects. Ordinary driver/CLI repetitions
+stay fresh. The real LSP sysroot comparison test launches nested Cargo carrying its
+parent crate's `CARGO_PKG_*`, manifest directory and `OUT_DIR`. The ring build
+receipt changes those tracked input values from absent to LSP-specific values;
+shared dependent build outputs then invalidate other compiler variants. Preserve
+these traces and verify the reverse transition before claiming a complete causal
+chain. Separately, standalone SQLite versus combined SQL-tool preparation replaces
+one cdylib/rlib artifact's dependency fingerprint in both directions. That needs its
+own producer/host-boundary investigation; it is not the same environment repair.
+
+V4v implementation scope is the LSP nested-Cargo invocation boundary. Remove only
+Cargo-injected parent package context (`CARGO_PKG_*`, `CARGO_MANIFEST_DIR`,
+`CARGO_MANIFEST_PATH`, `OUT_DIR`) when invoking Cargo for the CLI comparison.
+Retain the same Cargo command, CLI behavior and assertions, selected toolchain,
+flags, target, offline/locked settings, allocation, wrappers and explicit sysroot.
+No result reuse, external dependency patch, prepared-binary fallback or test skip.
+Use a small local helper with focused controls proving package metadata removal
+and intentional build configuration preservation. Other nested Cargo invocations
+use separately owned fixture targets and are not silently changed in this item.
+
+Named acceptance: focused boundary controls, the actual LSP CLI/sysroot comparison,
+all LSP sysroot request tests, complete LSP unit tests, unchanged ordinary/nested/
+ordinary transitions with actual Cargo freshness checks, source identity and
+cleanup guards, format/size/diff checks, and exact-candidate independent review.
+Compare instrumented diagnostic reasons separately from ordinary before/after
+timing. No SQL component rebuild is required for a test-only LSP change unless
+canonical source validation establishes an affected producer input. Required final
+gates, remaining SQLite/major coexistence work and all V5 scenarios remain open.
