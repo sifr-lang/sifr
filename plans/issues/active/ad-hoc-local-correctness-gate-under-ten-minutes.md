@@ -8705,3 +8705,78 @@ changes dependency version/input, rejects malformed/missing authority despite a
 warm target, and verifies the other published executable remains intact. Existing
 resolution, trust, concurrency and changed-input checks plus exact-candidate
 review and native qualification are still required; no acceptance claim yet.
+
+
+### V4aa delivered — Cargo reuse across independent resolution authorities
+
+Merged [PR #4444](https://github.com/sifr-lang/sifr/pull/4444), merge
+`385af79937ebac7156f56171c5e57c6368845e77`, qualified candidate
+`ba7f3ab7b61c9ac6efed04d4145ff43cb010b87f`. Four focused regressions and 50 existing
+resolution/concurrency/stdlib/runner checks pass. Formatting, source-size,
+method/filesystem inventories and their self-tests pass. All 12 explicitly
+selected native cases pass, including trust revocation, independent clean builds,
+proc macros, Python integration, the complete default-feature advanced-data graph
+and its schema/shape/device negative control. Exact one-test accounting, no cap,
+no source mutation and empty process sessions are verified.
+
+Actual opaque alias/lifecycle executions use the same family and the same saved
+SQLite build output (path, hash and mtime), whose timestamp predates the second
+request. Their first observations are 203.383s / 19.782s; returning fresh assertions
+pass in 15.779s / 14.275s. These diagnostic observations are not matched V5 timings
+or a whole-gate speedup. The large-data case takes1669.817s (27m50s), with3111.76
+user+system CPU-seconds; its negative control takes4.451s. Preserve the initial
+preparation cost rather than substituting a retained-target result.
+
+Independent exact-candidate source review is SATISFIED, no blockers; SHA-256
+`231f6d5aeed6aa8078bae2cf2149f06ef08149b4326a8549269872841f32876a`.
+Qualified archive `v4aa-qualified-evidence.tar.gz`, SHA-256
+`530c1e165d25c812fb9a9feb003d945fec85f9505143983b840fe34bd347950b`, contains
+247 payloads / 2,555,793 payload bytes, all verified locally. CI run39978263306
+reports the existing missing performance reference (#4347) and a missing run1
+report signature; the latter underlying cause is not established by the log.
+No green-CI or full-profile acceptance claim.
+
+Review follow-ups: current public cached-native entrypoints always retain sysroot
+lock authority; consider low-level Some-to-None transition hardening only if an
+authority-free entrypoint is introduced. Explicit same-root A/B alternation is
+optional additional coverage, not a scoped blocker. Wider family queueing remains
+part of final integrated V1/V5 measurements. Complete phase gates, SQL independent
+clean qualification and all under600 scenarios remain open.
+
+### V4ab — bound independent installed-emission concurrency
+
+Status: registered; diagnostic feasibility first, no implementation accepted.
+
+The qualified installed metadata run executes732 independent public emit commands
+serially, accounting for471.010s of its877.727s category duration. Preserve every
+actual CLI invocation, exact emitted byte comparison, newline/preamble/source-map
+assertion, source hash, relocation check, native example and generation/integrity
+mutation. Investigate bounded concurrency for only the independent emit commands;
+keep shared-package mutations, LSP generation transitions and native checks under
+their existing ownership/order. Do not replace public CLI coverage with an API,
+cached pass or reduced fixture set.
+
+First run a diagnostic serial/parallel/parallel/serial experiment on64 evenly
+spaced corpus entries using the same retained qualified installed product and
+exact expected bytes. Use one declared CPU/memory budget, one Rayon worker per
+parallel CLI, retained failure artifacts and the30minute diagnostic cap. This is
+feasibility evidence on the recorded product, not current-candidate acceptance.
+If no useful reduction is observed, reject the approach before implementation.
+
+If warranted, implement a small bounded batch primitive with one explicit process
+owner. The canonical runner currently requires main-thread signal ownership;
+do not bypass that guard through an unsafe thread pool. Preserve deadlines,
+cancellation, output limits, partial failures, descendant cleanup and deterministic
+single-writer evidence. Use the existing profile resource allocation; independent
+outer workers and inner pools must not multiply its budget. Keep the exact plan
+selection and all assertions.
+
+Named acceptance: real subprocess tests for bounded concurrency, ordered outcomes,
+nonzero exits, empty/missing evidence rejection, timeouts/cancellation, partial
+spawn/setup failures and descendant cleanup; installed-emission output drift and
+source-map rejection controls; affected policy/self-tests and emitted plan
+comparison; complete732-case installed metadata qualification with all native,
+integrity and generation controls on the exact candidate; matched serial/bounded
+observations using the same product and inputs. Formatting/source-size/ownership
+guards and independent exact-candidate review remain required. Final phase gates
+and V1/V5 acceptance remain unchanged.
