@@ -8933,12 +8933,17 @@ unchangedA and independent cleanB binary-hash equality. Installed metadata
 reconciles745 commands, including732 public emissions,4 native examples and9
 integrity/generation commands, in539.099s (146.150s public-emission wall time).
 
-Archive `v4ac-discovery-evidence.tar.gz`, SHA-256
-`ac1ccb3fc911448aaa020f648522c233710492c0dd368bf9965f180e1eb53e4e`, preserves
-4953 payloads /230255488 payload bytes, including original launcher failures,
+Archive `v4ac-discovery-evidence-r2.tar.gz`, SHA-256
+`34d13fda02b4e909984e9044cac15eb4d20217a1a999c11774fe9e41b2f0749d`, preserves
+4953 payloads /231033510 payload bytes, all independently verified locally, including original launcher failures,
 capacity recovery, all category receipts, source-bound reconciliations and
 investigation findings. The sortable report includes all categories, native cases,
 E2E fixtures and native groups. Structural HTML checks pass; no visual QA claim.
+The initial archive is retained as rejected: six derived accounting reports were
+refreshed between manifest hashing and packaging. All raw evidence hashes matched.
+The corrected archive preserves the exact immutable payload bytes; each changed
+JSON report also matches the separately transferred completed report. Its manifest
+was built from those same immutable bytes and every payload was reverified.
 This is diagnostic delivery only. Final create-PR/merge correctness gates and
 complete repeated under600s invalidation scenarios remain open.
 
