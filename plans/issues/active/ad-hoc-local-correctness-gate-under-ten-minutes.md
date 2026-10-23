@@ -8357,3 +8357,40 @@ V4x canonical component regeneration completed from source candidate `bffc88070b
 Per-family orchestration seconds: postgresql=362.233, mysql=31.320, sqlite=44.749.
 Native acceptance and independent review follow on the frozen source/artifact
 candidate; no dependency pin or lockfile change was needed.
+
+
+V4x ownership-inventory reconciliation: actual full-source guards found four
+filesystem sites moved from visit to hash_tree, twelve new test filesystem sites,
+two moved method-policy sites and three new test-assertion sites. The latter
+include the previously omitted V4v LSP package-context helper. Refresh only these
+reviewed entries; preserve every unrelated classification. The proposed ledgers
+validate against all 6,407 method-policy sites and 3,399 filesystem sites. Actual
+checked-in guard reruns and a new exact-candidate review remain required.
+
+The diagnostic checkout remains frozen at 2f0876150bf9c58e269c080e5d7f99cd03614754
+while this separate editing checkout updates only ownership records and this
+phase log. Keep that campaign under its observed identity; do not promote its
+results to the new candidate without checking the affected input boundaries.
+
+Current-candidate failure discovery reached 86 category observations before a
+disk preflight blocked distribution qualification without executing its tests.
+The release representative suite ran 61 cases: 60 passed; the pinned Node check
+failed after its installed files were removed in the authorized external cleanup.
+Restore the exact verified Node archive and pinned npm; the focused contract now
+passes in 0.732s. Preserve the original failed suite. Its self-update JSON parity
+case passed but spent 1,226.286s building/testing its separately targeted binary.
+This is a separate LOCAL-GATE build-cost follow-up, not a watch-inventory gain.
+
+Five individually selected Python suites executed their examples successfully but
+correctly rejected partial area certification. Combining all 30 selected suite
+variants through the canonical combiner produces complete certification: seven
+capabilities, nine compiled evidence entries, three resource-zero entries, zero
+failures. The first reconciliation used profile order instead of manifest order
+and was rejected; that failed orchestration and the corrected pass are preserved.
+This is diagnostic union evidence, not one complete-gate invocation.
+
+Preserve the obsolete interrupted-codegen quarantine by copying its 3,205 files
+and checking every content hash/mode before reclaiming its old filesystem space.
+No active target or report was removed. Resume only unfinished categories with
+unchanged 30-minute caps and per-category reserves. All final gates, mandatory
+clean-build costs and V5 timing qualification remain open.
