@@ -99,40 +99,6 @@ pub(super) fn execute_direct_cargo_probe(
         .map_err(probe_io_failure)?;
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
     validate_probe_sqlx_offline_metadata(probe, backend_root)?;
-    let tools = probe
-        .cargo_resolution
-        .native_toolchain
-        .as_ref()
-        .map_err(|error| probe_io_failure(error.clone()))?;
-    let family = super::native_storage::NativeFamily::acquire(
-        tools.identity(),
-        &format!(
-            "{:?}:{:?}:{:?}",
-            probe.cargo_resolution.cargo_vendor_mode,
-            probe.sysroot_vendor_dir,
-            probe.cargo_resolution.normal_seed_cache_fragment()
-        ),
-        "",
-        if probe.trusted_sysroot {
-            "sysroot"
-        } else {
-            "package"
-        },
-    )
-    .map_err(|error| probe_io_failure(error.to_string()))?;
-    let probe_root = family
-        .project(backend_root, &cache_key)
-        .map_err(|error| probe_io_failure(error.to_string()))?;
-    fs::create_dir_all(probe_root.join("src")).map_err(|error| {
-        probe_io_failure(format!("failed to create Rust probe project: {error}"))
-    })?;
-    super::native_storage::write_changed(&probe_root.join("Cargo.toml"), probe_manifest.as_bytes())
-        .map_err(|error| {
-            probe_io_failure(format!("failed to write Rust probe manifest: {error}"))
-        })?;
-    super::native_storage::write_changed(&probe_root.join("src/lib.rs"), probe_source.as_bytes())
-        .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
-
     let vendor_dir = probe
         .cargo_resolution
         .uses_sysroot_vendor()
@@ -147,6 +113,28 @@ pub(super) fn execute_direct_cargo_probe(
         })
         .flatten();
     let cargo_prefix_args = probe_cargo_vendor_args(vendor_dir);
+    let family = probe
+        .cargo_resolution
+        .native_family(
+            &probe.sysroot_runtime_crate,
+            probe.cargo_resolution.cargo_vendor_mode,
+            &cargo_prefix_args,
+            "",
+        )
+        .map_err(|error| probe_io_failure(error.to_string()))?;
+    let probe_root = family
+        .project(backend_root, &cache_key)
+        .map_err(|error| probe_io_failure(error.to_string()))?;
+    fs::create_dir_all(probe_root.join("src")).map_err(|error| {
+        probe_io_failure(format!("failed to create Rust probe project: {error}"))
+    })?;
+    super::native_storage::write_changed(&probe_root.join("Cargo.toml"), probe_manifest.as_bytes())
+        .map_err(|error| {
+            probe_io_failure(format!("failed to write Rust probe manifest: {error}"))
+        })?;
+    super::native_storage::write_changed(&probe_root.join("src/lib.rs"), probe_source.as_bytes())
+        .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
+
     let owned_policy = probe
         .cargo_resolution
         .with_lease(family.lease())

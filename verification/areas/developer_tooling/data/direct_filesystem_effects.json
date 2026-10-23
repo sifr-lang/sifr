@@ -5945,6 +5945,139 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "fixture",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(&path).expect(\"private fixture\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_identity_preserves_source_resolution_and_profile_boundaries",
+      "operation": "write",
+      "site": "fs::write(&authority, \"version = 4\\n\").expect(\"authority\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_identity_preserves_source_resolution_and_profile_boundaries",
+      "operation": "write",
+      "site": "fs::write(&authority, \"version = 4\\n# changed authority\\n\").expect(\"new authority\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_identity_preserves_source_resolution_and_profile_boundaries",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(root).expect(\"cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(dependency.join(\"src\")).expect(\"dependency\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"value.txt\"), \"first\").expect(\"build input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"build.rs\"), r#\"use std::io::Write;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(project.join(\"src\")).expect(\"project\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(project.join(\"Cargo.toml\"), format!(\"[package]\\nname = \\\"family_{name}\\\"\\nversion = \\\"0.0.0\\\"\\nedition = \\\"2024\\\"\\n[dependencies]\\nfamily_dependency = {{ path = {dependency:?} }}\\n{}\", crate::application_profile::MANIFEST)).expect(\"project manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(project.join(\"src\").join(file), source).expect(\"project source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(dependency.join(\"runs.log\")).expect(\"build-script count\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"value.txt\"), \"second\").expect(\"changed build input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(dependency.join(\"runs.log\")).expect(\"rebuild count\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(family_root).expect(\"owned family cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "probe_and_build_reuse_native_preparation_but_recheck_changed_inputs",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(root).expect(\"fixture cleanup\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/cargo_resolution.rs",
       "symbol": "prepare_cargo_resolution",
       "operation": "read_to_string",

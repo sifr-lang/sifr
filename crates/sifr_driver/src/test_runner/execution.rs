@@ -72,18 +72,17 @@ pub(crate) fn execute_test_runner_project(
     if let Some(seed) = cargo_resolution.normal_seed_cache_fragment() {
         cache_key.push_str(&seed);
     }
-    let family = crate::build::native_storage::NativeFamily::acquire(
-        native_toolchain.identity(),
-        &format!(
-            "{:?}:{}:{:?}",
+    let family = cargo_resolution
+        .native_family(
+            &cargo_plan
+                .dependency_plan
+                .sysroot_root
+                .join("crates/sifr_runtime"),
             cargo_plan.dependency_plan.cargo_vendor_mode,
-            cargo_plan.dependency_plan.sysroot_root.display(),
-            cargo_resolution.normal_seed_cache_fragment()
-        ),
-        "",
-        &format!("{:?}", generated_project.interop.rust.trust_requirements),
-    )
-    .map_err(test_io_error)?;
+            &sysroot_cargo_config_args(&cargo_plan.dependency_plan),
+            "",
+        )
+        .map_err(test_io_error)?;
     let project_dir = family
         .project(&generated_project.cache_scope, "sifr_tests")
         .map_err(test_io_error)?;

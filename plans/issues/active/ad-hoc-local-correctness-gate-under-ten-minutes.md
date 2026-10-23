@@ -8558,3 +8558,25 @@ review and explicit case/variant accounting remain required. Full final gates
 and V1/V5 acceptance are unchanged. If the proposed shared context cannot preserve
 these boundaries, reject it and record the evidence before selecting another
 root-cause repair.
+
+
+V4z diagnostic and implementation decision: exact recorded SQLite build-script
+compile/run fingerprints match across the previously separate probe/final targets.
+Copy actual generated inputs into a fresh isolated target: probe check 129.556s,
+final native build 79.153s, unchanged final build 0.351s; all succeed, original
+inputs unchanged, no cap/signals/source mutation and session empty. Cargo reports
+SQLite build-script artifact fresh for the final build, while compiling its Rust
+library for code generation. This is diagnostic evidence, not a matched end-to-end
+speedup or V5 acceptance measurement (`v4z-cargo-experiment/complete.json`).
+
+Implement one canonical native Cargo storage context for probes, executable builds
+and generated test runners. Preserve toolchain/owner, runtime path, actual vendor
+arguments, ordered authorities/trusted vendors, normal-mode seed, profile and
+Python environment. Declaration-specific trust remains per-request validation
+before Cargo and part of finalized artifact identity; it is not an authorization
+provided by a retained target. Keep private roots, leases, actual Cargo execution,
+native-link validation and immutable output capture. Add real Cargo regressions
+for shared build-script reuse, changed build-script inputs, invalid probes and
+failed executable replacement. Strengthen the actual cache-hit/trust-revocation
+case to prove one probe/final family and rejection before native Cargo. All
+qualification and independent review remain pending.
