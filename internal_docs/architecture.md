@@ -2188,7 +2188,7 @@ their external-runtime deployment paths. See
 The DX.10 application policy selects development for ordinary `sifr build` and
 `sifr run`, development-derived test for `sifr test`, and explicit release via
 `--release`. Compiler optimization is independent. Generated Cargo roots carry
-all pinned profile tables; native family storage retains both profile outputs,
+all pinned profile tables; native families retain prepared outputs for each profile,
 while finalized copies use `target/final`. The shared compiler configuration plan
 preserves isolated feature/native selections and original assertion inventories.
 

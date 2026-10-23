@@ -54,6 +54,10 @@ impl NativeFamily {
         let activity = crate::cache_storage::LeaseActivity::start(&lease)?;
         let root = directory.join(&key);
         crate::cache_storage::directory(&root)?;
+        // Every consumer must start with private storage, including a final
+        // build that runs before the first probe. Cargo otherwise applies its
+        // ambient umask and a later probe correctly rejects that target.
+        crate::cache_storage::directory(&root.join("target"))?;
         let metadata = serde_json::to_vec(&serde_json::json!({
             "schema": 1, "family": key,
             "owner_scope": crate::cache_storage::owner_scope()?,

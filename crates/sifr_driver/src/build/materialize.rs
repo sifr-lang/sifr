@@ -211,18 +211,14 @@ pub(super) fn materialize_cached_binary_project_with_report(
     }
     // Always run Cargo before consulting finalized output: build scripts and
     // local dependencies can change without changing generated Rust.
-    let family = super::native_storage::NativeFamily::acquire(
-        tools.identity(),
-        &format!(
-            "{:?}:{}:{:?}",
+    let family = cargo_resolution
+        .native_family(
+            &dependency_plan.sysroot_root.join("crates/sifr_runtime"),
             dependency_plan.cargo_vendor_mode,
-            dependency_plan.sysroot_root.display(),
-            cargo_resolution.normal_seed_cache_fragment()
-        ),
-        &python_environment(&generated_project),
-        &format!("{:?}", generated_project.interop.rust.trust_requirements),
-    )
-    .map_err(|error| vec![build_error(error.to_string())])?;
+            &sysroot_cargo_config_args(&dependency_plan),
+            &python_environment(&generated_project),
+        )
+        .map_err(|error| vec![build_error(error.to_string())])?;
     let scope = cache_scope
         .canonicalize()
         .unwrap_or_else(|_| cache_scope.to_path_buf());
@@ -295,22 +291,18 @@ pub(super) fn materialize_binary_project_at_path(
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let publication = super::native_storage::publication_lock(project_path)
         .map_err(|error| vec![build_error(error.to_string())])?;
-    let tools = cargo_resolution
+    cargo_resolution
         .native_toolchain
         .as_ref()
         .map_err(|error| vec![cargo_build_error(error.clone())])?;
-    let family = super::native_storage::NativeFamily::acquire(
-        tools.identity(),
-        &format!(
-            "{:?}:{}:{:?}",
+    let family = cargo_resolution
+        .native_family(
+            &dependency_plan.sysroot_root.join("crates/sifr_runtime"),
             dependency_plan.cargo_vendor_mode,
-            dependency_plan.sysroot_root.display(),
-            cargo_resolution.normal_seed_cache_fragment()
-        ),
-        &python_environment(&generated_project),
-        &format!("{:?}", generated_project.interop.rust.trust_requirements),
-    )
-    .map_err(|error| vec![build_error(error.to_string())])?;
+            &sysroot_cargo_config_args(dependency_plan),
+            &python_environment(&generated_project),
+        )
+        .map_err(|error| vec![build_error(error.to_string())])?;
     materialize_binary_project_at_path_with_target(
         project_path,
         project_name,

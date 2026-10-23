@@ -3,6 +3,7 @@ mod api;
 mod application_profile_tests;
 mod cargo_invocation_trace;
 mod cargo_manifest;
+mod cargo_native_family;
 mod cargo_resolution;
 mod cargo_resolution_policy;
 mod entrypoint;

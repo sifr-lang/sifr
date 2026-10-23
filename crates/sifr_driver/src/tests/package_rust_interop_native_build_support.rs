@@ -325,9 +325,34 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
     let package_root = inputs.finish();
     let compiler = crate::CompilerContext::for_test();
     let entrypoint = package_root.entrypoint("native-trust-package");
-    let first = package_root
-        .try_build(&compiler, &entrypoint)
-        .expect("trusted local unpushed native build");
+    let (first, invocations) =
+        crate::build::capture_cargo_invocations(|| package_root.try_build(&compiler, &entrypoint));
+    let first = first.expect("trusted local unpushed native build");
+    let family_roots: std::collections::BTreeSet<_> = invocations
+        .iter()
+        .filter(|row| matches!(row.phase, "rust-probe" | "final-build"))
+        .filter_map(|row| {
+            row.args
+                .windows(2)
+                .find(|pair| pair[0] == "--manifest-path")
+        })
+        .map(|pair| {
+            let manifest = std::path::Path::new(&pair[1]);
+            manifest
+                .ancestors()
+                .find(|path| path.file_name().is_some_and(|name| name == "roots"))
+                .and_then(std::path::Path::parent)
+                .expect("owned Cargo family")
+                .to_owned()
+        })
+        .collect();
+    assert!(invocations.iter().any(|row| row.phase == "rust-probe"));
+    assert!(invocations.iter().any(|row| row.phase == "final-build"));
+    assert_eq!(
+        family_roots.len(),
+        1,
+        "probe and final build share artifact storage"
+    );
     let second = package_root
         .try_build(&compiler, &entrypoint)
         .expect("Cargo freshness on repeat");
@@ -342,7 +367,14 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
     assert_ne!(manifest, revoked);
     std::fs::write(&manifest_path, revoked).expect("revoke trust");
     let entrypoint = package_root.entrypoint("native-trust-package");
-    let result = package_root.try_build(&compiler, &entrypoint);
+    let (result, invocations) =
+        crate::build::capture_cargo_invocations(|| package_root.try_build(&compiler, &entrypoint));
+    assert!(
+        !invocations
+            .iter()
+            .any(|row| matches!(row.phase, "rust-probe" | "final-build")),
+        "revoked trust must be rejected before native Cargo"
+    );
     let Err(errors) = result else {
         panic!("old native success cannot authorize revoked trust")
     };

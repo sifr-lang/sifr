@@ -53256,6 +53256,42 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_driver/src/build/cargo_manifest.rs::sysroot_interop_crates enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
+      "site": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs::literal-comparison::1",
+      "fingerprint": "6f1393c852d4b84507498196793125d96d0b391d3c5f401578c8d37bb99a5a07",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "assert ! ( artifacts . iter ( ) . any ( | row | row [ \"reason\" ] == \"compiler-artifact\"",
+      "inputs": "fn probe_and_build_reuse_native_preparation_but_recheck_changed_inputs ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs::literal-comparison::2",
+      "fingerprint": "f251aa00d1c93e331d66bc5f69e02307c3a5b3c32494b7fa3eca4343180f8028",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "row [ \"target\" ] [ \"name\" ] == \"build-script-build\"",
+      "inputs": "fn probe_and_build_reuse_native_preparation_but_recheck_changed_inputs ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs::literal-comparison::3",
+      "fingerprint": "b19a46256133c2392d8a4f593498be60feb3af073847b1859f2428fd0966f7f3",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "row [ \"fresh\" ] == true ) )",
+      "inputs": "fn probe_and_build_reuse_native_preparation_but_recheck_changed_inputs ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
       "site": "crates/sifr_driver/src/build/cargo_resolution.rs::vendor_contains::literal-comparison::1",
       "fingerprint": "b10e39fb443e305ca01789d3a2a6eafa707838ac792c2b0e08d059ec542cfc3e",
       "classification": "compiler-policy",
@@ -57553,7 +57589,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::1",
-      "fingerprint": "dd9575144828018537a155b952676a3e5c2231a983d47f56bc12f2921f22a031",
+      "fingerprint": "be1d81b8b79bda2510ccaa80b009bbdeb0ec425e05bc8d2201bc4bce8eddddf3",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if event [ \"reason\" ] == \"compiler-artifact\"",
@@ -57565,7 +57601,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::2",
-      "fingerprint": "666b5cfb85fe052711e0975231fa5baebdac84e20b3f52e686042fa394bcad17",
+      "fingerprint": "80f90249f2811c0a544264005a6f326ff488bcea1b77f824e51efe942ddf92f9",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"test\" ] == true",
@@ -57577,7 +57613,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::3",
-      "fingerprint": "b0ee368600e0291e0aed53a746a812ff6e5eccf1c41e2f39517fb611dc594d9b",
+      "fingerprint": "88845530bf015caf9285fa6ba21e47fe90fdd1b0defcd9573825be22dd58c290",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"overflow_checks\" ] != true",
@@ -57589,7 +57625,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::4",
-      "fingerprint": "1e69c9acd3740ba75e21ca964f390fda39753bf402b73349a436a01ecf8825c4",
+      "fingerprint": "3682594e9a7e8a8c6ddb514cf1cbaaacfa1bc8f72214b8252ac5c8ed5bb4243d",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "let cargo_executables = String :: from_utf8_lossy ( & output . stdout ) . lines ( ) . filter_map ( | line | serde_json :: from_str :: < serde_json :: Value > ( line ) . ok ( ) ) . filter ( | event | event [ \"reason\" ] == \"compiler-artifact\"",
@@ -57601,7 +57637,7 @@
     },
     {
       "site": "crates/sifr_driver/src/test_runner/execution.rs::execute_test_runner_project::literal-comparison::5",
-      "fingerprint": "128ec5ccdfb6c889e5b0dbf0dfa27fb75a80e4a1cbaf0813b85de802d846f4a1",
+      "fingerprint": "0c84296660e117f5ac5abb39cabaf68734d03347ef32af3800e6dcbfcffee610",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "event [ \"profile\" ] [ \"test\" ] == true ) . filter_map ( | event | event [ \"executable\" ] . as_str ( ) . map ( PathBuf :: from ) ) . collect :: < Vec < _ > > ( )",
@@ -58018,6 +58054,78 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::1",
+      "fingerprint": "d233002882b7c2b6e1ccb51ff404ac0726b5741ca9b7aaaa3a4d222eab5f299e",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( row . phase , \"rust-probe\" | \"final-build\" )",
+      "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::1",
+      "fingerprint": "c0bc7f05be96e9768e1c6e4e37801024c0fa8c728985e4c2d24b9e339c448816",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "row . args . windows ( 2 ) . find ( | pair | pair [ 0 ] == \"--manifest-path\" )",
+      "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::2",
+      "fingerprint": "4b364d17633ff0200e85a5e0e6cb75e2c87486c8c4c78066def69f0c1bb33daf",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "manifest . ancestors ( ) . find ( | path | path . file_name ( ) . is_some_and ( | name | name == \"roots\" ) ) . and_then ( std :: path :: Path :: parent ) . expect ( \"owned Cargo family\" ) . to_owned ( )",
+      "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::3",
+      "fingerprint": "83659d25f3b4ae44c4f6751779538a0c2adb507dcf011139a5921c252b6580c4",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "assert ! ( invocations . iter ( ) . any ( | row | row . phase == \"rust-probe\" ) )",
+      "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::4",
+      "fingerprint": "ab3d887a3f373a645834837df4f262b3143e5a5d5a2203c26adc9726c166ada2",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "assert ! ( invocations . iter ( ) . any ( | row | row . phase == \"final-build\" ) )",
+      "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::2",
+      "fingerprint": "d233002882b7c2b6e1ccb51ff404ac0726b5741ca9b7aaaa3a4d222eab5f299e",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( row . phase , \"rust-probe\" | \"final-build\" )",
+      "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected::literal-comparison::1",

@@ -530,6 +530,18 @@ Ordinary editable projects have stable root/package identity. Immutable test/pro
 
 Serialize mutation of one generated root and the capture of its outputs. Cargo may parallelize its dependency graph. Independent compatible roots may share storage only under the defined family/ownership discipline. Do not allow one process to rewrite a manifest or source file while another process is compiling it. Write generated files only when bytes change.
 
+The driver now selects the same Cargo family for compatible direct probes,
+executable materialization and generated test runners through
+`CargoResolutionPolicy::native_family`. Its storage identity retains the selected
+toolchain/owner, runtime path, actual vendor arguments, ordered lock authorities
+and trusted vendors, normal-mode seed, requested profile and Python environment.
+Declaration-specific trust is validated for every request before native Cargo;
+it remains part of finalized artifact identity, not authorization obtained from
+an existing target. Native link evidence is checked on the current Cargo result.
+The family owner creates its target with canonical private ownership before any
+consumer runs Cargo, and rejects unsafe existing targets or aliases. Cargo still
+owns feature/unit freshness and every probe/build executes independently.
+
 ### 8.3 Freshness and finalized artifacts
 
 On ordinary local `build`, `run`, and `test`, ask Cargo to establish native freshness even when Sifr already has the generated source and a previous finalized artifact. This preserves Cargo's build-script/file/environment dependency checking. A Sifr metadata match and file existence alone do not justify bypassing those checks.
