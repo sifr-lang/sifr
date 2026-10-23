@@ -8352,3 +8352,8 @@ not run on that candidate. The scheduler's intentional termination is recorded
 in `v4x-supersession.json`; it is not a failed test or a completed gate. Retain all
 build artifacts. Regenerate affected component provenance and rerun the named
 acceptance on the corrected frozen candidate, with a new exact-candidate review.
+
+V4x canonical component regeneration completed from source candidate `bffc88070b9499ff6caf218a2d8b7546fe3ddbea`.
+Per-family orchestration seconds: postgresql=362.233, mysql=31.320, sqlite=44.749.
+Native acceptance and independent review follow on the frozen source/artifact
+candidate; no dependency pin or lockfile change was needed.
