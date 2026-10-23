@@ -23,6 +23,7 @@ from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .cargo_crate_setup_checks import CrateSetupPolicyTests
 from .cargo_sysroot_setup_checks import SysrootSetupPolicyTests
+from .release_compiler_checks import ReleaseCompilerPreparationTests
 from .generated_cargo_setup import (
     GIT_SOURCE, fetch_generated_graph, portable_graph, preparation_entries, quality_module,
 )
@@ -373,7 +374,7 @@ def policy_checks() -> None:
     from .ci_smoke_setup_checks import SmokePreparationChecks
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
                                for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests,
-                                            SysrootSetupPolicyTests, SmokePreparationChecks))
+                                            SysrootSetupPolicyTests, ReleaseCompilerPreparationTests, SmokePreparationChecks))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise AssertionError("generated Cargo setup policy checks failed")

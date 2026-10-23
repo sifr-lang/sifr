@@ -10,23 +10,21 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-version="0.1.0-beta.12"
+prepared_binary="$(python3 "${REPO_ROOT}/verification/areas/common/release_compiler.py" --print-binary)"
+version="$("${prepared_binary}" --version)"
+version="${version#sifr }"
+next_version="0.1.0-beta.1301"
 target="$(rustc -vV | sed -n 's/^host: //p')"
 case "${target}" in
   aarch64-apple-darwin|x86_64-apple-darwin|aarch64-unknown-linux-gnu|x86_64-unknown-linux-gnu) ;;
   *) echo "unsupported parity-test host: ${target}" >&2; exit 2 ;;
 esac
 
-build_root="${REPO_ROOT}/target/self-update-json-parity"
-SIFR_RELEASE_VERSION="${version}" \
-  CARGO_TARGET_DIR="${build_root}" \
-  cargo build -q --locked -p sifr --bin sifr
-
 install_root="${tmp_dir}/managed"
 install_dir="${install_root}/bin"
 binary_path="${install_dir}/sifr"
 mkdir -p "${install_dir}"
-cp "${build_root}/debug/sifr" "${binary_path}"
+cp "${prepared_binary}" "${binary_path}"
 chmod 755 "${binary_path}"
 cat >"${install_root}/sysroot.toml" <<EOF
 schema-version = 1
@@ -69,7 +67,7 @@ python3 "${REPO_ROOT}/scripts/distribution/release_governance.py" validate \
 generate_channel_metadata_fixture \
   "${tmp_dir}/channels.json" \
   "0.1.0-alpha.1" \
-  "0.1.0-beta.13"
+  "${next_version}"
 mkdir -p "${tmp_dir}/fake-bin"
 cat >"${tmp_dir}/fake-bin/curl" <<'EOF'
 #!/bin/sh
@@ -82,7 +80,7 @@ PATH="${tmp_dir}/fake-bin:${PATH}" \
 SIFR_TEST_CHANNELS_FILE="${tmp_dir}/channels.json" \
 SIFR_INSTALL_MANIFEST_DIR="${install_root}" \
   "${binary_path}" self update \
-    --version 0.1.0-beta.13 \
+    --version "${next_version}" \
     --dry-run \
     --format json >"${tmp_dir}/self-update-plan.json"
 python3 "${REPO_ROOT}/scripts/distribution/release_governance.py" validate \

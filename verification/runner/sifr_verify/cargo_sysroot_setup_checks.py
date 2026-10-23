@@ -67,7 +67,7 @@ class SysrootSetupPolicyTests(unittest.TestCase):
                 prepare_sysroot_package_binary({"selected_areas": [
                     {"area": "sysroot_release", "suites": [suite, "metadata-structural"]}]}, env, run)
                 self.assertEqual(calls, [([sys.executable, str(REPO_ROOT /
-                    "verification/areas/sysroot_release/package_build.py")], env)])
+                    "verification/areas/sysroot_release/package_build.py"), "--corpus-only"], env)])
         runner = sysroot_module()
         root = Path("/owned/worktree")
         artifact = root / "artifacts"
@@ -107,13 +107,15 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         calls = []
         root = Path("/owned/worktree")
         env = {"CARGO_NET_OFFLINE": "true", "CARGO_BUILD_JOBS": "2"}
-        with patch.object(package_build.subprocess, "check_output", return_value="host: x86_64-unknown-linux-gnu\n"), \
+        with patch.object(package_build, "prepare_release_compiler") as release, \
              patch.object(package_build, "prepare_source_snapshot") as snapshot:
             package_build.prepare(root, env, lambda command, **kw: calls.append((command, kw)))
         corpus, execution_env, producer = runner.corpus_configuration(root, env)
+        release.assert_called_once()
+        self.assertEqual(release.call_args.args[:2], (root, env))
         snapshot.assert_called_once_with(root, producer, runner.RELEASE_VERSION)
-        self.assertEqual(calls[1][0], [*corpus[:7], "--no-run"])
-        self.assertEqual(calls[1][1]["env"], execution_env)
+        self.assertEqual(calls[0][0], [*corpus[:7], "--no-run"])
+        self.assertEqual(calls[0][1]["env"], execution_env)
         self.assertEqual(execution_env["SIFR_RELEASE_VERSION"], runner.RELEASE_VERSION)
         self.assertEqual(execution_env["SIFR_SYSROOT"], str(producer))
         self.assertEqual(corpus[-4:], ["full_corpus_exact_emission", "--", "--ignored", "--nocapture"])

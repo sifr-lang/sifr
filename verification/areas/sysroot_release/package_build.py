@@ -1,23 +1,16 @@
 """Exact packaged compiler preparation, separate from timed installed assertions."""
 from __future__ import annotations
+import argparse
 import os
 from pathlib import Path
 import subprocess
+import sys
 from producer_snapshot import prepare_source_snapshot
 
-RELEASE_VERSION = "0.1.0-beta.1300"
-
-
-def package_build_configuration(root: Path, original: dict[str, str], host: str,
-                                artifact_dir: Path, *, prepare_only: bool = False):
-    env = dict(original, CARGO_TARGET_DIR=str((root / "target/sysroot_release/cargo-target").resolve()),
-               SIFR_RELEASE_VERSION=RELEASE_VERSION)
-    command = ["scripts/distribution/build_release_artifacts.sh", "--version", RELEASE_VERSION,
-               "--output-dir", str(artifact_dir), "--target", host, "--cargo-build"]
-    if prepare_only:
-        command.append("--prepare-only")
-    return command, env
-
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from verification.areas.common.release_compiler import (
+    RELEASE_VERSION, package_build_configuration, prepare_release_compiler,
+)
 
 
 def corpus_configuration(root: Path, original: dict[str, str]):
@@ -28,12 +21,9 @@ def corpus_configuration(root: Path, original: dict[str, str]):
     return command, env, snapshot
 
 
-def prepare(root: Path, env: dict[str, str], run=subprocess.run):
-    host = subprocess.check_output(["rustc", "-vV"], text=True, env=env)
-    host = next(line.removeprefix("host: ") for line in host.splitlines() if line.startswith("host: "))
-    command, build_env = package_build_configuration(
-        root, env, host, root / "target/sysroot_release/preparation", prepare_only=True)
-    run(command, cwd=root, env=build_env, check=True)
+def prepare(root: Path, env: dict[str, str], run=subprocess.run, *, corpus_only=False):
+    if not corpus_only:
+        prepare_release_compiler(root, env, run)
     corpus, corpus_env, snapshot = corpus_configuration(root, env)
     prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
     # Preserve the selected library graph; filters execute only after preparation.
@@ -41,4 +31,8 @@ def prepare(root: Path, env: dict[str, str], run=subprocess.run):
 
 
 if __name__ == "__main__":
-    prepare(Path(__file__).resolve().parents[3], dict(os.environ, CARGO_NET_OFFLINE="true"))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--corpus-only", action="store_true")
+    args = parser.parse_args()
+    prepare(Path(__file__).resolve().parents[3], dict(os.environ, CARGO_NET_OFFLINE="true"),
+            corpus_only=args.corpus_only)

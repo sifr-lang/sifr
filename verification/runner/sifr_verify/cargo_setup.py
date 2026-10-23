@@ -17,6 +17,10 @@ from .cargo_crate_setup import prepare_crate_test_binaries
 from .area_cargo_setup import prepare_area_graphs
 from .python_preparation import python_consumers, prepare_python_environment
 
+from verification.areas.common.release_compiler import (
+    INSTALLED_PACKAGE_SUITES, release_compiler_owners,
+)
+
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
 
@@ -96,6 +100,12 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
             requires += ("python_environment",)
         add("crate_tests", requires,
             lambda: prepare_crate_test_binaries(profile, compiler_env, command_runner), crate_owners)
+    release_owners = release_compiler_owners(profile)
+    if release_owners:
+        add("release_compiler", ("workspace",),
+            lambda: command_runner([sys.executable, str(REPO_ROOT /
+                "verification/areas/common/release_compiler.py")], env=compiler_env),
+            release_owners)
     adapters = (
         ("authoring", prepare_authoring_test_binaries, "python_interop"),
         ("tooling", prepare_tooling_test_binaries, "developer_tooling"),
@@ -106,7 +116,10 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
     )
     for name, adapter, area in adapters:
         if f"area_{area}" in consumers:
-            add(name, area_requires(area),
+            requires = area_requires(area)
+            if name == "sysroot_package" and "area_sysroot_release" in release_owners:
+                requires += ("release_compiler",)
+            add(name, requires,
                 lambda fn=adapter: fn(profile, setup_env, command_runner), (f"area_{area}",))
     for area in profile.get("selected_areas", []):
         if area["area"] in {"sql_platform", "fuzz_property", "python_interop"} or (
@@ -165,12 +178,11 @@ def prepare_sysroot_source_binary(profile, env, command_runner) -> None:
 
 def prepare_sysroot_package_binary(profile, env, command_runner) -> None:
     """Prepare the exact release graph once for every installed-package suite."""
-    required = {"boundary-equivalence", "host-installed-smoke",
-                "host-installed-stdlib-heavy", "metadata-corpus"}
+    required = INSTALLED_PACKAGE_SUITES
     if any(area["area"] == "sysroot_release" and required.intersection(area["suites"])
            for area in profile.get("selected_areas", [])):
         command_runner([sys.executable, str(REPO_ROOT /
-            "verification/areas/sysroot_release/package_build.py")], env=env)
+            "verification/areas/sysroot_release/package_build.py"), "--corpus-only"], env=env)
 
 
 def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
