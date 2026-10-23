@@ -8335,3 +8335,20 @@ V4x canonical component regeneration completed from source candidate `1c288f32f8
 Per-family orchestration seconds: postgresql=365.435, mysql=31.294, sqlite=45.011.
 Native acceptance and independent review follow on the frozen source/artifact
 candidate; no dependency pin or lockfile change was needed.
+
+V4x candidate `ba708cc926db3a1f9405b2c56fc307f5fc50cf70` is superseded before
+merge. Own review found that the new explicit hash expectation hardcoded Unix
+path separators, unlike the existing native-path hash contract. Correct the
+expectation with the standard platform separator; do not change production hash
+normalization. This is a code-based portability finding, not a claimed Windows
+execution. The independent review had no blockers, but it does not override the
+subsequently found regression or approve the next candidate automatically.
+
+Preserve the original producer/policy/identity results and 22 completed SQL
+preparation observations, plus compiler preparation. Stop the scheduler after
+its active combined preparation finishes (373.309s guard, pass, empty session,
+no signals); eight later preparations and guest suites/reuse/broad discovery did
+not run on that candidate. The scheduler's intentional termination is recorded
+in `v4x-supersession.json`; it is not a failed test or a completed gate. Retain all
+build artifacts. Regenerate affected component provenance and rerun the named
+acceptance on the corrected frozen candidate, with a new exact-candidate review.

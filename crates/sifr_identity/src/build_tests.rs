@@ -51,8 +51,14 @@ fn directory_watch_refactor_preserves_hash_framing_order_and_exclusions() {
     let mut actual = IdentityEncoder::new("watch-test");
     hash_tree(&tree.0, &tree.0.join("inputs"), &mut actual).unwrap();
     let mut expected = IdentityEncoder::new("watch-test");
-    expected.field("inputs/a/deep.rs", b"first");
-    expected.field("inputs/z.rs", b"last");
+    expected.field(
+        &["inputs", "a", "deep.rs"].join(std::path::MAIN_SEPARATOR_STR),
+        b"first",
+    );
+    expected.field(
+        &["inputs", "z.rs"].join(std::path::MAIN_SEPARATOR_STR),
+        b"last",
+    );
     assert_eq!(actual.finish(), expected.finish());
     // Missing optional roots previously contributed no fields; preserve that behavior.
     let mut missing = IdentityEncoder::new("watch-test");
