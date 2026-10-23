@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4w native/component build-role repair merged; V4x Cargo watch-inventory investigation in progress; final gates and V1/V5 timing acceptance remain open
+current_stage: V4x Cargo watch-inventory repair merged; broad correctness discovery and remaining rebuild costs in progress; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -8372,7 +8372,7 @@ while this separate editing checkout updates only ownership records and this
 phase log. Keep that campaign under its observed identity; do not promote its
 results to the new candidate without checking the affected input boundaries.
 
-Current-candidate failure discovery reached 86 category observations before a
+Discovery at `2f0876150bf9c58e269c080e5d7f99cd03614754` reached 86 category observations before a
 disk preflight blocked distribution qualification without executing its tests.
 The release representative suite ran 61 cases: 60 passed; the pinned Node check
 failed after its installed files were removed in the authorized external cleanup.
@@ -8394,3 +8394,81 @@ and checking every content hash/mode before reclaiming its old filesystem space.
 No active target or report was removed. Resume only unfinished categories with
 unchanged 30-minute caps and per-category reserves. All final gates, mandatory
 clean-build costs and V5 timing qualification remain open.
+
+
+### V4x delivered — compact Cargo input watches
+
+Merged PR #4441, merge `0de3fd6df771b02d5708d8555b53eefd3af464fd`, final
+candidate `e1718c7b12825efe25e157441fd728389df6580a`. Root watches replace
+redundant descendant directives; content hashing and all mutation detection
+contracts remain unchanged. All six identity tests, all 30 SQL preparations,
+three provider suites / 15 cases, and actual execution of all ten components
+pass on observed candidate `2f0876150bf9c58e269c080e5d7f99cd03614754`. Ordinary
+returning combined preparation is 0.621s versus V4w 24.570s; SQLite returns are
+0.392–0.413s versus about 1.52s. Four JSON observations confirm all artifacts
+fresh. These are bounded observations, not complete-gate timing qualification.
+
+The final candidate changes only the two ownership ledgers and phase prose
+after native observation; all other 35,016 tracked entries have identical Git
+objects. Preserve the original observed candidate and the explicit input-boundary
+record. Actual final-head method/FS inventories and their self-tests, component
+provenance validators, size and diff checks pass. The V4v helper omission is now
+fixed; V4v did not establish a passing full-source method-policy ledger.
+
+Independent final-candidate review is SATISFIED, no blockers. Review SHA-256
+`861ef044ed4c0e339c8b7b8649173bcb7ecdaa1d249b75244c04b41d99727d22`.
+`v4x_r3-qualified-evidence.tar.gz` contains 953 payloads / 54,388,019 payload
+bytes, 8,267,348 archive bytes; SHA-256
+`377f91072fb5f768c5cbde0e15424e289b120c61ddf2b675b155b8f41fa9aecd`.
+Archive and every payload verified locally. Preserve superseded-candidate
+results, failed original ownership checks, diagnostic failures and reconciliation
+corrections. The final-head CI create-PR job failed admission because
+SIFR_PERFORMANCE_REFERENCE is unset; no green-CI claim.
+
+Continue the broad discovery at its frozen observed candidate, including every
+unexecuted suite, configuration preparation/execution and full E2E category.
+Do not rerun completed categories without input changes or a specific diagnostic
+reason. The remaining release-policy suites now pass; installed sysroot
+preparation is in progress. Finish reconciling coverage and largest costs before
+choosing the next bounded architectural repair. Full phase gates and every
+mandatory V1/V5 scenario remain open; no under-600-second claim.
+
+
+### V4y — share the prepared release compiler across public release checks
+
+Status: registered; implementation and qualification pending.
+
+The frozen V4x diagnostic sweep continues independently on observed candidate
+`2f0876150bf9c58e269c080e5d7f99cd03614754`. Its self-update JSON surface case
+passed in 1,226.286s, building a separate beta.12 development compiler. Installed
+qualification independently prepares a real beta.1300 release compiler; that
+preparation took 842.729s. Every canonical profile selecting the distribution
+representative/full suite also selects installed-package qualification. Prepare
+this substantial, already measured waste repair while the unchanged diagnostic
+candidate finishes its remaining categories. Do not mutate its source or targets.
+
+Scope: one canonical verification release-compiler preparation, explicitly owned
+by both distribution JSON-surface and installed-package consumers. Preserve the
+actual release profile, target, Rust flags, offline/locked Cargo freshness and
+compiled-version admission. Share the executable, not old correctness results.
+Keep the real public CLI calls, beta-to-beta upgrade, matching receipt, fake-curl
+transport and governance schema validation. Preserve every case/variant label.
+Direct area/case execution must use the same preparation authority. Failed
+preparation blocks its consumers and leaves independent checks runnable.
+
+Named checks: preparation ownership/selection/failure-injection controls;
+release command/version/target parity and missing/wrong-version artifact rejection;
+existing sysroot preparation and runner controls; actual self-update JSON case;
+complete distribution representative and qualification suites; actual installed
+smoke, boundary, structural and metadata corpus suites on the final candidate.
+Compare emitted correctness plans and run profiles check, file-size and diff
+checks. Reconcile actual case/variant IDs, ordinary elapsed times and prepared
+artifact identity. Require independent exact-candidate review before merge.
+
+This item changes verification preparation only. Compiler identity, runtime,
+dependency pins, component provenance, SQL independent clean qualification and
+the final phase acceptance matrix remain unchanged. Do not claim the observed
+separate-build duration as a measured saving before the candidate executes.
+The broad discovery must still account for all pending suites, configurations
+and full E2E before selecting the next repair. All V1/V5 and final full gates
+remain open.
