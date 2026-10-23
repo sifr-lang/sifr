@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ac complete diagnostic discovery reconciled; V4ad bounded generated-graph preparation investigation; final gates and V1/V5 timing acceptance remain open
+current_stage: V4af pinned Python reuse qualified and merged; V4ag duplicate native preparation; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9131,3 +9131,66 @@ The first V4af candidate passes all 31 foundation groups and unchanged plan chec
 but fails the filesystem inventory guard: the removed temporary pyproject write
 remained declared. Preserve that failed candidate/check receipt; remove only its
 one obsolete inventory entry and qualify the repaired exact candidate.
+
+
+### V4af closure — pinned Python fixture reuse / #4448
+
+PR [#4448](https://github.com/sifr-lang/sifr/pull/4448) merged as
+`faaf99e6ac12f0912ab94990bf77924d69573d82`; candidate
+`6ef1846328fbd12f605cdecd116d73cca51ba356`, base `74f86efc6fa78fd4f38ae7710f575ae6877af512`.
+All nine original cases pass in 131.132s; the affected five take 75.945s initially
+and 26.753s on fresh-project repetition, versus 194.762s in V4ac. These are retained
+artifact diagnostics, not controlled A/B or integrated-gate timing. The ordinary
+PythonError case and all 16 cache/trust controls pass. Ten fresh fixture roots use
+one complete-identity native family. Existing fingerprints retain contents, sizes
+and timestamps; three feature-specific library units are added once. Fixture
+payloads/assertions, release profile and archive controls are unchanged.
+
+Preparation: pinned environment 2.198s; driver configuration 170.827s, including
+77.605s test-binary compilation, 2.774s metadata and 87.041s advanced-data preparation.
+All foundation, focused preparation, four unchanged plans and static checks pass
+(130.775s). Preserve the initial stale inventory failure and the external mistyped
+control command which selected zero tests; the corrected existing control passes.
+Source review SATISFIED, SHA-256
+`a487093e118d68f4cc978fe4cea878d95aa7f2950283b76a0ddc1521858f1391`.
+Archive `v4af-qualified-evidence.tar.gz`, SHA-256
+`6ffc60497e338a872445e289b1a10c9ea741e0f5901ce60d2566798ff951333e`, has
+281 payloads / 5,136,381 bytes, all verified locally. The original archive with a
+copied V4ae scope-label typo is preserved; candidate and raw evidence were correct.
+Optional follow-up: narrower Python preparation consumers if blocking other crate
+binaries becomes costly. Existing CI missing performance reference remains #4347.
+Final phase gates and repeated V5 remain mandatory.
+
+### V4ag — execute declared native preparation once per validation invocation
+
+Status: registered. V4ac executes the advanced-data graph preparation in both
+crate preparation and the ignored-test inventory (the latter 84.925s); V4af again
+measures 87.041s for that preparation. The helper builds the exact same scenario as
+the separate Arrow/tensor runtime test and has no runtime assertion. Retain the
+preparation helper, its graph, command, full identity and locked build behavior.
+Declare that role once for setup and scheduling; require its actual single-case
+execution and successful current-run crate preparation before scheduling native
+assertions. Partition that one helper out of assertion execution without hiding it
+from inventory accounting. Missing helper, failed/blocked/missing preparation,
+truncated/zero-case success and an empty assertion selection must fail closed.
+No disk receipt, environment flag or prior-run correctness result may authorize it.
+
+Named acceptance: affected setup/scheduler/profile-dispatch controls including
+all failure states; all foundation groups, unchanged emitted suite plans and static
+checks. On the frozen candidate run canonical driver preparation; inspect the full
+actual ignored inventory (82 original entries: one declared preparation plus 81
+remaining entries, retaining the existing subprocess helper role). Execute the
+advanced-data runtime roundtrip and negative diagnostics, then prove the canonical
+scheduler schedules all 81 exact remaining names and never reschedules preparation.
+Use actual prepared graph/runtime evidence and instrument only command selection
+for other unaffected cases; do not present that selection proof as executing those
+81 cases. Preserve every assertion payload/name and all existing metadata/trust
+boundaries. Independent exact-candidate source review required. The complete final
+phase gates and all V5 invalidation/timing scenarios remain required.
+
+V4ag first candidate's broader foundation run rejects an allocation-test mock that
+records commands but returns no outcome. Audit all preparation callers and repair
+the allocation, profile-deduplication and generated-setup policy test doubles to
+return explicit single-case success. Preserve their selection/environment checks,
+the first failed receipt and the native preparation attempt. No production fallback
+or weakened execution-count check is introduced.

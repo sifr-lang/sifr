@@ -5,6 +5,8 @@ import unittest
 
 from .cargo_crate_setup import prepare_crate_test_binaries
 from .profile_commands import CommandFailed
+from .errors import VerificationError
+from .native_test_execution_checks import outcome, PASSED
 
 
 class CrateSetupPolicyTests(unittest.TestCase):
@@ -39,7 +41,7 @@ class CrateSetupPolicyTests(unittest.TestCase):
         env = {"CARGO_BUILD_JOBS": "2", "CARGO_INCREMENTAL": "0"}
         calls = []
         prepare_crate_test_binaries(payload, env,
-                                    lambda args, **kw: calls.append((args, kw["env"])))
+                                    lambda args, **kw: (calls.append((args, kw["env"])), outcome(PASSED))[1])
         prefix = ["cargo", "test", "--locked", "--offline", "--no-run"]
         self.assertEqual(calls, [
             (prefix + ["-p", "runtime"], env),
@@ -76,7 +78,7 @@ class CrateSetupPolicyTests(unittest.TestCase):
         calls = []
         env = {"CARGO_NET_OFFLINE": "true"}
         prepare_crate_test_binaries(self.selected(suite, mode="full"), env,
-                                    lambda args, **kw: calls.append((args, kw["env"])))
+                                    lambda args, **kw: (calls.append((args, kw["env"])), outcome(PASSED))[1])
         native = [row for row in calls if any("prepare_advanced_data_native_graph" in
                                               arg for arg in row[0])]
         self.assertEqual(len(native), 1)
@@ -89,6 +91,16 @@ class CrateSetupPolicyTests(unittest.TestCase):
         suite["command"] = ["test", "-p", "sifr_driver", "--lib"]
         calls.clear()
         prepare_crate_test_binaries(self.selected(suite, mode="full"), env,
-                                    lambda args, **kw: calls.append((args, kw["env"])))
+                                    lambda args, **kw: (calls.append((args, kw["env"])), outcome(PASSED))[1])
         self.assertFalse(any("prepare_advanced_data_native_graph" in arg
                              for command, _ in calls for arg in command))
+
+    def test_native_preparation_rejects_missing_or_truncated_execution(self):
+        suite = self.suite(["test", "-p", "sifr_driver", "--lib", "--", "--ignored",
+                            "--test-threads=1"])
+        suite["id"] = "sifr_driver_generated_builds"
+        for result in (outcome("test result: ok. 0 passed; 0 failed; 0 ignored;"),
+                       outcome(PASSED, truncated=True), outcome(PASSED.replace("1 passed", "2 passed"))):
+            with self.subTest(result=result), self.assertRaises(VerificationError):
+                prepare_crate_test_binaries(self.selected(suite, mode="full"), {},
+                                           lambda *args, **kw: result)

@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from .build_allocation import allocate, extract_overrides
 from .errors import VerificationError
+from .native_test_execution_checks import outcome, PASSED
 from .profiles import load_all_profiles, load_profile
 from .resource_capacity import Capacity, linux_capacity
 
@@ -94,7 +95,7 @@ class BuildAllocationTests(unittest.TestCase):
             runner = profile_runner.ProfileRunner('merge', ['--cargo-build-jobs', '2'])
         preparations = []
         prepare_crate_test_binaries(runner.profile, runner.env,
-                                   lambda cmd, **kw: preparations.append((cmd, kw['env'].copy())))
+                                   lambda cmd, **kw: (preparations.append((cmd, kw['env'].copy())), outcome(PASSED))[1])
         executions = []
         with patch.object(profile_runner, 'run_command',
                           side_effect=lambda cmd, **kw: executions.append((cmd, kw['env'].copy()))):
