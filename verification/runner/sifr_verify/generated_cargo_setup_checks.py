@@ -31,6 +31,7 @@ from .generated_cargo_setup import (
 from .paths import REPO_ROOT
 from .profile_commands import CommandFailed, run_command
 from .profile_runner import ProfileRunner
+from .native_test_execution_checks import outcome, PASSED
 from .profiles import load_profile
 
 REVISION = "a" * 40
@@ -60,7 +61,7 @@ class SetupPolicyTests(unittest.TestCase):
                    wraps=prepare_crate_test_binaries) as compiler_setup, \
              patch("sifr_verify.cargo_setup.prepare_area_graphs") as area_setup:
             prepare_cargo_cache(load_profile("merge"), env,
-                                lambda args, **kw: commands.append((args, kw["env"])))
+                                lambda args, **kw: (commands.append((args, kw["env"])), outcome(PASSED))[1])
         self.assertEqual(commands[0][0], ["cargo", "fetch", "--locked"])
         self.assertEqual(commands[1][0], ["cargo", "fetch", "--locked", "--manifest-path",
                                          str(locked_fixture_manifests(load_profile("merge"))[0])])
@@ -363,7 +364,7 @@ class SetupPolicyTests(unittest.TestCase):
                 calls = []
                 with patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION):
                     prepare_cargo_cache(load_profile(name), {"CARGO_TARGET_DIR": "/owned/target"},
-                                        lambda args, **kw: calls.append((args, kw["env"])))
+                                        lambda args, **kw: (calls.append((args, kw["env"])), outcome(PASSED))[1])
                 release_builds = [(args, env) for args, env in calls
                                   if args[:3] == ["cargo", "build", "--release"]]
                 self.assertEqual(len(release_builds), int(expected))

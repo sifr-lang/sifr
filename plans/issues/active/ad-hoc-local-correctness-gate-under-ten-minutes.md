@@ -9187,3 +9187,10 @@ for other unaffected cases; do not present that selection proof as executing tho
 81 cases. Preserve every assertion payload/name and all existing metadata/trust
 boundaries. Independent exact-candidate source review required. The complete final
 phase gates and all V5 invalidation/timing scenarios remain required.
+
+V4ag first candidate's broader foundation run rejects an allocation-test mock that
+records commands but returns no outcome. Audit all preparation callers and repair
+the allocation, profile-deduplication and generated-setup policy test doubles to
+return explicit single-case success. Preserve their selection/environment checks,
+the first failed receipt and the native preparation attempt. No production fallback
+or weakened execution-count check is introduced.
