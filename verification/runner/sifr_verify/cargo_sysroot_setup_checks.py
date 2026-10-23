@@ -93,13 +93,20 @@ class SysrootSetupPolicyTests(unittest.TestCase):
             {"area": "python_interop", "suites": ["dataframe-examples", "arrow-examples", "tier1"]},
             {"area": "fuzz_property", "suites": ["fuzz-smoke"]}]}, env,
             lambda command, **kw: calls.append((command, kw["env"])))
-        self.assertEqual(calls[0][0][-2:], ["--suite", "arrow-examples"])
-        self.assertEqual(calls[1][0][-2:], ["--suite", "dataframe-examples"])
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0][0][-4:], [
+            "--suite", "arrow-examples", "--suite", "dataframe-examples"])
+        self.assertEqual(calls[0][0][:3], ["uv", "run", "--project"])
         self.assertNotIn("VIRTUAL_ENV", calls[0][1])
         self.assertEqual(calls[0][1]["CARGO_NET_OFFLINE"], "true")
-        self.assertEqual(calls[2][0], ["cargo", "build", "--locked", "--offline",
+        self.assertEqual(calls[1][0], ["cargo", "build", "--locked", "--offline",
                                      "-p", "sifr_driver", "--bin", "diagnostic_rendering_harness"])
         self.assertIn("VIRTUAL_ENV", env)
+        calls.clear()
+        prepare_area_graphs({"selected_areas": [
+            {"area": "python_interop", "suites": ["tier1", "env"]}]}, env,
+            lambda command, **kw: calls.append((command, kw["env"])))
+        self.assertEqual(calls, [])
 
     def test_release_corpus_preparation_pins_matching_producer_version(self):
         runner = sysroot_module()
