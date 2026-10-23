@@ -9253,3 +9253,45 @@ change with exact invalidation/isolation/concurrency controls and all 29 actual
 example preparations/runtime assertions. If the experiment does not establish a
 safe useful gain, preserve it and choose the next measured major cost. The existing
 final correctness gates, independent review and all V5 scenarios remain required.
+
+
+### V4ah findings and bounded implementation acceptance
+
+The two real callback fixtures pass in isolated and shared ancestor-environment
+layouts with all source/bridge bytes and runtime markers preserved. The second
+build is 37.316s isolated versus 3.901s shared; the shared family's 47 library
+fingerprints and timestamps are unchanged. First population is diagnostic, not
+host-sensitive acceptance. Preserve the initial wrapper failure (it mistook the
+CLI output directory for an executable); its successful build was reused and all
+four actual executions completed. Full evidence: `v4ah-experiment-evidence.tar.gz`.
+The 29 most recent retained examples have 47 library fingerprints each, 42 identical
+across all 29; their request/import selections still fragment dependency storage.
+
+Implement two parts of that same storage-fragmentation root cause:
+- Place independent example packages under one dedicated ancestor uv project,
+  with its three exact links to the pinned area environment. Use existing ancestor
+  discovery, preserve each source/bridge/certification payload and declaration/trust
+  policy, reject conflicting aliases, and retain separate runtime processes.
+- Select Cargo dependency storage using the existing authoring-environment digest
+  plus selected libpython. That digest retains request paths, interpreter/ABI,
+  platform, sys paths and pyproject/lock contents; only entrypoint import selections
+  are excluded. This is storage selection only. Full probe/distribution identity,
+  generated runtime metadata, package/final-output identities and per-request trust
+  validation remain unchanged. Cargo must run every time; build scripts remain
+  responsible for declaring their external inputs. No cached correctness result or
+  inferred lockfile installation check is introduced. Existing toolchain/source/
+  profile/owner boundaries, family lease and output capture remain unchanged.
+
+Named acceptance: focused package digest controls proving every retained request/
+probe field invalidates the stable environment identity; driver controls proving
+import/trust/full-output differences survive shared storage and changed stable
+identity/libpython selects different storage; existing native build-script freshness,
+trust, ownership, alias, lease/concurrency and finalized-artifact controls. Python
+fixture checks must preserve payloads and declarations, share only environment paths,
+reject wrong/broken aliases and missing pinned inputs. Run all 29 real example
+preparations and the full 30-suite Python area (all nine example suites), preserving
+failures and the 30-minute category cap. Record exact coverage and per-case timings,
+Cargo fingerprint reuse, remaining family splits and source identity. All foundation
+groups, four emitted plans and applicable static checks must pass. Independent
+exact-candidate review required. This intermediate item does not claim the full gate
+is below ten minutes; final create-pr/merge and repeated V5 scenarios remain open.
