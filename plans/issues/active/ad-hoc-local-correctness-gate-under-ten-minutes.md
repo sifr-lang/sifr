@@ -8432,3 +8432,43 @@ reason. The remaining release-policy suites now pass; installed sysroot
 preparation is in progress. Finish reconciling coverage and largest costs before
 choosing the next bounded architectural repair. Full phase gates and every
 mandatory V1/V5 scenario remain open; no under-600-second claim.
+
+
+### V4y — share the prepared release compiler across public release checks
+
+Status: registered; implementation and qualification pending.
+
+The frozen V4x diagnostic sweep continues independently on observed candidate
+`2f0876150bf9c58e269c080e5d7f99cd03614754`. Its self-update JSON surface case
+passed in 1,226.286s, building a separate beta.12 development compiler. Installed
+qualification independently prepares a real beta.1300 release compiler; that
+preparation took 842.729s. Every canonical profile selecting the distribution
+representative/full suite also selects installed-package qualification. Prepare
+this substantial, already measured waste repair while the unchanged diagnostic
+candidate finishes its remaining categories. Do not mutate its source or targets.
+
+Scope: one canonical verification release-compiler preparation, explicitly owned
+by both distribution JSON-surface and installed-package consumers. Preserve the
+actual release profile, target, Rust flags, offline/locked Cargo freshness and
+compiled-version admission. Share the executable, not old correctness results.
+Keep the real public CLI calls, beta-to-beta upgrade, matching receipt, fake-curl
+transport and governance schema validation. Preserve every case/variant label.
+Direct area/case execution must use the same preparation authority. Failed
+preparation blocks its consumers and leaves independent checks runnable.
+
+Named checks: preparation ownership/selection/failure-injection controls;
+release command/version/target parity and missing/wrong-version artifact rejection;
+existing sysroot preparation and runner controls; actual self-update JSON case;
+complete distribution representative and qualification suites; actual installed
+smoke, boundary, structural and metadata corpus suites on the final candidate.
+Compare emitted correctness plans and run profiles check, file-size and diff
+checks. Reconcile actual case/variant IDs, ordinary elapsed times and prepared
+artifact identity. Require independent exact-candidate review before merge.
+
+This item changes verification preparation only. Compiler identity, runtime,
+dependency pins, component provenance, SQL independent clean qualification and
+the final phase acceptance matrix remain unchanged. Do not claim the observed
+separate-build duration as a measured saving before the candidate executes.
+The broad discovery must still account for all pending suites, configurations
+and full E2E before selecting the next repair. All V1/V5 and final full gates
+remain open.
