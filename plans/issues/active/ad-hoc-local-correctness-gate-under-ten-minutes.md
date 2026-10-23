@@ -8312,3 +8312,21 @@ from the canonical plan, continue independent failures and explicitly account fo
 blocked or capped consumers. Do not relabel V4w's old-source assertions as a pass
 for a changed implementation. Reserve repeated full timing qualification for a
 credible candidate; mandatory clean builds remain inside the final budget.
+
+V4x mechanism evidence: the isolated real-Cargo fixture completed in 65.718s,
+with all 30 mutation/freshness controls passing. Warm full-list observations are
+about 7.4s versus about 0.11s for covering roots; these are fixture measurements,
+not an integrated-gate saving. Actual source/archive additions, removals, renames,
+configuration changes and file/directory symlink targets remain detected. The
+production repair separates root watch emission from the unchanged lexical hash
+walk. It retains the existing root boundaries, configuration and dependency
+tracking. Hash framing/order/exclusions have a focused control, and a real Cargo
+control compiles and executes after each inventory mutation using the actual
+production visitor. Both tests run in the ordinary identity crate unit suite,
+without needing its build feature to be selected explicitly.
+
+The initial six identity tests passed; final source/artifact candidate validation
+and ordinary retained preparation comparisons remain required. Component sources
+have changed through their shared identity dependency, so canonically regenerate
+all ten components and check their provenance and real host execution. No old
+assertion result is promoted to the new candidate. The phase remains open.
