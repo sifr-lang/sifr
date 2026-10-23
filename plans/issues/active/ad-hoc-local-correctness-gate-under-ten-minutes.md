@@ -8684,3 +8684,24 @@ related repairs, use the approved focused intermediate policy, require independe
 exact-candidate source review, and retain every failed/incomplete attempt. Do not
 repeat the complete ordinary suite merely for artifact recovery on unchanged
 source. All final integrated gates and V1/V5 acceptance remain unchanged.
+
+
+V4aa diagnostic decision: opaque alias/lifecycle fixture inventories are identical
+except src/main.sifr; their actual SQLite Cargo fingerprint JSON is identical.
+Copy each generated probe/final project into a new isolated Cargo target. First
+probe/build take125.095s/76.192s; second fixture probe/build take0.574s/9.393s,
+with every observed SQLite artifact fresh. Both resulting programs execute and
+match their full existing expected outputs. Original projects/fixtures remain
+byte-identical; guard213.303s, no cap/signals/source mutation, empty session.
+This proves diagnostic unit reuse, not all resolution/trust boundaries or V5.
+
+Implement only the Cargo storage-key separation: keep lock mode, vendor/source
+replacement, runtime, profile, toolchain/owner and environment boundaries, while
+removing ordered authority paths and normal seed from that storage identity.
+Per-project prepared lock identity, authority validation/reseeding and finalized
+artifact seed identity remain unchanged. Add a real-Cargo regression that shares
+one target across independent authorities, checks dependency build-script reuse,
+changes dependency version/input, rejects malformed/missing authority despite a
+warm target, and verifies the other published executable remains intact. Existing
+resolution, trust, concurrency and changed-input checks plus exact-candidate
+review and native qualification are still required; no acceptance claim yet.

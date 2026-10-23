@@ -533,8 +533,11 @@ Serialize mutation of one generated root and the capture of its outputs. Cargo m
 The driver now selects the same Cargo family for compatible direct probes,
 executable materialization and generated test runners through
 `CargoResolutionPolicy::native_family`. Its storage identity retains the selected
-toolchain/owner, runtime path, actual vendor arguments, ordered lock authorities
-and trusted vendors, normal-mode seed, requested profile and Python environment.
+toolchain/owner, runtime path, actual vendor arguments and trusted vendors,
+lock mode, requested profile and Python environment. Each generated project owns
+its ordered lock authorities and normal-mode seed independently: resolution still
+validates and reseeds them before Cargo runs, but they do not partition dependency
+artifact storage. Finalized artifact identity retains the normal-mode seed.
 Declaration-specific trust is validated for every request before native Cargo;
 it remains part of finalized artifact identity, not authorization obtained from
 an existing target. Native link evidence is checked on the current Cargo result.
