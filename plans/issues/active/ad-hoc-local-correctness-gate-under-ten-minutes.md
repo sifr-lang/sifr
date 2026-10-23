@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4x Cargo watch-inventory repair merged; broad correctness discovery and remaining rebuild costs in progress; final gates and V1/V5 timing acceptance remain open
+current_stage: V4ac complete diagnostic discovery reconciled; V4ad bounded generated-graph preparation investigation; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -8887,3 +8887,92 @@ gate. Reconcile original corpus/test IDs, ignored/required selections, negative
 controls and actual output receipts. Use those results to choose the next bounded
 root-cause repair. Full final create-PR/merge correctness gates and all repeated
 under-600s V5 scenarios remain required; this sweep is diagnostic evidence.
+
+
+### V4ac delivered — complete current-candidate diagnostic inventory
+
+Frozen candidate `afd7661de7c518995f64b75bdab86880f561556d` executes all157
+primary categories plus17 preparation nodes. All15 guards,18 actual Cargo
+configurations (and their18 preparation invocations),105 area suites and the
+complete positive E2E corpus are observed. No category is capped, blocked or
+unexecuted. The raw primary results remain152 pass/5 fail: five Python subset
+finalizers reject partial certification. Canonical combined certification over
+the same attested inputs passes all30 suites/30 variants,7 capabilities,9 compiled
+evidence records and3 zero-resource checks; all29 runtime examples pass. Preserve
+those original failures and the source-bound combination attestation.
+
+Full positive E2E takes295.843s guarded /292.619s in the suite: all732 original
+fixture IDs have passing source compilation and fresh runtime outcomes, with186
+successful native groups, zero original batch failures and exact once-only group
+membership. This is one diagnostic observation, not repeated V5 qualification.
+All82 selected ignored driver entries execute in1463.046s. Their roles are80
+selected checks, one subprocess helper and one graph-preparation function; helper
+success is not an extra semantic assertion. All four ordinary parent process
+protocol tests pass. The graph-preparation function is also executed in its
+preparation category; preserve that measured duplication for a scoped follow-up.
+
+The sum of174 separately capped outer invocations is14648.548s (4h04m09s).
+It includes preparation once and is not a single integrated gate measurement.
+The three largest exactly attributed groups are compiler configurations2962.277s,
+SQL2950.897s and Python2015.816s; shared preparation is accounted separately.
+The largest individual costs include driver generated builds1463.046s, SQL
+independent clean qualification1440.033s, Python examples preparation1301.440s
+and SQL preparation1061.270s. Generated-code preparation830.154s plus its
+representative execution867.266s totals1697.420s. Tooling preparation606.043s
+includes566.839s for its nonincremental analysis graph. These are observations,
+not forecasts or matched before/after improvements.
+
+All105 area inventories reconcile, including index expansion for regression,
+ecosystem and fuzz targets. Fuzz permits its declared valid/invalid exits and
+retains determinism, uniqueness and panic checks. The initial external accounting
+helper incorrectly assumed flat case IDs and mandatory single expected exits;
+its failed reconciliation is preserved and corrected against canonical source.
+No product test or result was changed. SQL reconciliation covers30 preparation
+commands and19 suites/66 cases, including real component paths and cleanA,
+unchangedA and independent cleanB binary-hash equality. Installed metadata
+reconciles745 commands, including732 public emissions,4 native examples and9
+integrity/generation commands, in539.099s (146.150s public-emission wall time).
+
+Archive `v4ac-discovery-evidence.tar.gz`, SHA-256
+`ac1ccb3fc911448aaa020f648522c233710492c0dd368bf9965f180e1eb53e4e`, preserves
+4953 payloads /230255488 payload bytes, including original launcher failures,
+capacity recovery, all category receipts, source-bound reconciliations and
+investigation findings. The sortable report includes all categories, native cases,
+E2E fixtures and native groups. Structural HTML checks pass; no visual QA claim.
+This is diagnostic delivery only. Final create-PR/merge correctness gates and
+complete repeated under600s invalidation scenarios remain open.
+
+### V4ad — bounded complete generated-graph preparation
+
+Status: registered; matched feasibility first. Address the measured serial
+materialization of93 independent positive generated Cargo graphs. Preserve the
+complete canonical selection, actual public `build --materialize-only` commands,
+private outputs, exact revision/source portability, locked fetch and unchanged
+manifest/lock checks. Do not reuse stale success or replace CLI coverage with an
+in-process frontend API. Keep generated execution/freshness controls unchanged.
+
+First compare fresh serial and four-worker materialization for all93 entries on
+the same frozen compiler/source candidate. Use the existing qualified bounded
+subprocess owner, one inner Cargo/Rayon worker and the same declared four-slot
+budget; no competing builds. Check every emitted file and exact manifest/lock
+identity across trials. Preserve per-command stdout/stderr, outcome, deadlines,
+source hashes and process/capacity receipts. Each trial retains the30minute cap.
+One pair establishes feasibility only, not final V5 or whole-gate timing.
+
+If useful, implement only this preparation boundary using the existing
+`execute_batch` owner. Centralize public materialization command construction so
+scalar execution and preparation cannot diverge. Results remain ordered and
+single-writer; reject empty/duplicate selection, missing/duplicate outcomes,
+failed/truncated/cancelled commands and missing generated graphs. Continue
+independent outcomes while preserving failures. Keep locked fetch serialized;
+no network/source-policy weakening. Bound nested pools to the allocated budget.
+
+Named acceptance: focused materialization selection, command/environment and
+private-output tests; missing/duplicate/nonzero/truncated/cancelled outcomes;
+all existing bounded-process cancellation/cleanup regressions; generated-setup
+policy and affected foundation self-tests; unchanged emitted profile selection;
+complete93-graph candidate preparation with exact portability/locked identities
+and generated-code representative qualification including freshness and negative
+controls. Compare full93 serial/bounded outputs and timings. Run formatting,
+source-size/ownership guards and exact-candidate independent source review.
+No final gate waiver; this item cannot close the complete LOCAL-GATE phase.
