@@ -8436,7 +8436,7 @@ mandatory V1/V5 scenario remain open; no under-600-second claim.
 
 ### V4y — share the prepared release compiler across public release checks
 
-Status: registered; implementation and qualification pending.
+Status: delivered in PR #4442; exact-candidate qualification recorded below.
 
 The frozen V4x diagnostic sweep continues independently on observed candidate
 `2f0876150bf9c58e269c080e5d7f99cd03614754`. Its self-update JSON surface case
@@ -8472,3 +8472,89 @@ separate-build duration as a measured saving before the candidate executes.
 The broad discovery must still account for all pending suites, configurations
 and full E2E before selecting the next repair. All V1/V5 and final full gates
 remain open.
+
+
+### V4y delivered — one prepared release compiler
+
+Merged PR #4442, merge `2df05774a17adb34cbbf192dcecb416d9e7f027d`, final
+candidate `4f2ecde0315362b1b34e6654f039c5d9caf8362a`. Distribution self-update
+and installed-package checks now share canonical release preparation, preserving
+Cargo freshness, offline/locked inputs, exact version and executable admission.
+All 56 setup-policy tests, profiles check, unchanged emitted correctness plans,
+shell syntax, size and method/filesystem guardrails pass. Independent exact-head
+source review is SATISFIED, no blockers; SHA-256
+`0e636f65df888518a837ee14c95a4e5ed8d6e0fed3e204a204f2e1d7699dd152`.
+
+All six named native suites pass with unchanged case/variant identities:
+distribution representative 77.288s (61 variants), qualification 29.266s,
+installed smoke 131.820s, boundary equivalence 307.926s, metadata structural
+74.808s, metadata corpus 877.727s. The latter reconciles all 745 commands:
+732 public emissions, four native cases and nine generation/integrity controls,
+including expected rejection and live-generation rollback. Installed/prepared
+binary hashes match. Self-update itself passes in 1.463s, with Cargo reporting
+no compilation and the prepared binary stat unchanged. The old 1,226.286s case
+is not a matched cold/warm speedup experiment. No whole-gate timing claim.
+
+Qualified archive `v4y-qualified-evidence.tar.gz` SHA-256
+`c754f9fc21b1afaffdbfe9c34eb1f062539f84cca4dc3f7f7732f7ec7616900f`:
+3,141 payloads / 25,847,575 payload bytes, 3,275,624 archive bytes; every payload
+verified locally. Preserve the original failed policy check and external launcher
+setup failure. Supplemental `v4y-source-corpus-differences.json` explains a raw
+report digest difference: only unordered stdlib_modules arrays differ in order
+in 190 rows; memberships, fixture/generated Rust bytes, source maps and all other
+fields match. Record this pre-existing deterministic-report follow-up for the
+metadata-corpus owner; do not treat the raw digests as identical.
+
+The frozen diagnostic campaign is now complete: all 105 area suites are
+accounted for, all 18 actual Cargo configurations were attempted, and all
+732 E2E source/runtime identities plus 186 native groups pass (301.348s).
+The original generated-driver category reached its 30-minute cap: 38 pass,
+two missing-dependency failures, one interrupted and 41 unexecuted. Restore the
+five exact locked registry archives without manifest/lock drift, then run every
+remaining exact case offline: 44/44 pass. All 82 selected generated-driver cases
+have passing latest observations; retain the original incomplete category.
+Recovery is 1,607.138s including fetch, separate from the original campaign sum
+21,410.618s. This diagnostic union is not one integrated gate. Discovery archive
+SHA-256 `c812d08b7f3d082851e7950b45cffd970ab60ae44ecaf3da6478ee0bcd2dbb3a`,
+5,632 payloads, verified locally. Ordinary timing was not an otherwise-idle V5 run.
+
+CI run 39942416697 failed: full-profile admission lacks
+SIFR_PERFORMANCE_REFERENCE (performance configuration owner); deterministic
+report signature was missing (report-signature owner; root cause not established
+by the available log); Windows PostgreSQL compilation lacks Unix headers
+(cross-platform SQL owner). These failures remain recorded, not waived or claimed
+passing. All final phase gates, mandatory independent clean builds and V5 timing
+scenarios remain open.
+
+### V4z — investigate and repair repeated native Cargo dependency preparation
+
+Status: registered; diagnosis before implementation.
+
+The completed campaign shows two opaque-resource cases taking 310.857s and
+313.361s. Read-only process observations found SQLite's same bundled C source
+being compiled twice per case, with separate probe/final native-family targets.
+The current family keys also include per-test lock-authority paths. These are
+observations and a candidate root cause, not proof that all build inputs match.
+The expensive advanced-data preparation (1,753.186s) and mandatory SQL clean
+qualification (1,409.477s) remain separately measured costs, not repaired here.
+
+Bound this item to compatible native Cargo artifact reuse across frontend probes
+and final compilation. First compare actual manifests, features, profiles,
+lock/source replacement, toolchain, environment and trust boundaries. Select an
+implementation only after establishing which duplicated builds are compatible.
+Preserve per-request resolution and trust checks, check/codegen separation,
+private generated project inputs, leases through Cargo execution and immutable
+output capture, failure propagation and independent clean-build tests. Never
+reuse a successful assertion or hide required rebuild time.
+
+Named acceptance if implementation is warranted: actual affected opaque-resource
+and representative generated-driver tests; Cargo freshness/build-script mutation,
+lock/source replacement, changed trust, same-name output/concurrency, failing
+replacement and immutable output retention regressions; focused affected crate
+checks, formatting, source-size and ownership guards. Measure uninstrumented
+returning runs and one representative diagnostic cold dependency trace without
+promoting the latter to host performance acceptance. Independent exact-candidate
+review and explicit case/variant accounting remain required. Full final gates
+and V1/V5 acceptance are unchanged. If the proposed shared context cannot preserve
+these boundaries, reject it and record the evidence before selecting another
+root-cause repair.
