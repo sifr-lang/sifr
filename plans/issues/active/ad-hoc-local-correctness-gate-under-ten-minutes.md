@@ -8330,3 +8330,8 @@ and ordinary retained preparation comparisons remain required. Component sources
 have changed through their shared identity dependency, so canonically regenerate
 all ten components and check their provenance and real host execution. No old
 assertion result is promoted to the new candidate. The phase remains open.
+
+V4x canonical component regeneration completed from source candidate `1c288f32f874500d7e9566fae0af89f930304cd7`.
+Per-family orchestration seconds: postgresql=365.435, mysql=31.294, sqlite=45.011.
+Native acceptance and independent review follow on the frozen source/artifact
+candidate; no dependency pin or lockfile change was needed.
