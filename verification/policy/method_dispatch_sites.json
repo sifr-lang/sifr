@@ -58057,7 +58057,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::1",
-      "fingerprint": "d40e8ece68aecf57084a7853ff91f6d805415e6e66f910f10d1d9a98c7b5ee13",
+      "fingerprint": "d233002882b7c2b6e1ccb51ff404ac0726b5741ca9b7aaaa3a4d222eab5f299e",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( row . phase , \"rust-probe\" | \"final-build\" )",
@@ -58069,7 +58069,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::1",
-      "fingerprint": "2c94d19e7530e51ac50a792efd7f2e1b5649506d9b8403d58e958f58af183f6e",
+      "fingerprint": "c0bc7f05be96e9768e1c6e4e37801024c0fa8c728985e4c2d24b9e339c448816",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "row . args . windows ( 2 ) . find ( | pair | pair [ 0 ] == \"--manifest-path\" )",
@@ -58081,7 +58081,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::2",
-      "fingerprint": "02ddcb5b3175a0ef86653f79f019a2c3bb5fc955d3afb335c9465bdc3a4addfc",
+      "fingerprint": "4b364d17633ff0200e85a5e0e6cb75e2c87486c8c4c78066def69f0c1bb33daf",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "manifest . ancestors ( ) . find ( | path | path . file_name ( ) . is_some_and ( | name | name == \"roots\" ) ) . and_then ( std :: path :: Path :: parent ) . expect ( \"owned Cargo family\" ) . to_owned ( )",
@@ -58093,7 +58093,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::3",
-      "fingerprint": "c11ed9a76f03a6d835b19fb7d846827320bb67b0e9c3a386e0c8af451f399ea7",
+      "fingerprint": "83659d25f3b4ae44c4f6751779538a0c2adb507dcf011139a5921c252b6580c4",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( invocations . iter ( ) . any ( | row | row . phase == \"rust-probe\" ) )",
@@ -58105,7 +58105,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::4",
-      "fingerprint": "cfc7a59d6d5e3e1a1fdd5bc7d60a07d96db0151a9b1c4a3fc9dcb682c9e74b95",
+      "fingerprint": "ab3d887a3f373a645834837df4f262b3143e5a5d5a2203c26adc9726c166ada2",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( invocations . iter ( ) . any ( | row | row . phase == \"final-build\" ) )",
@@ -58117,7 +58117,7 @@
     },
     {
       "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::2",
-      "fingerprint": "d40e8ece68aecf57084a7853ff91f6d805415e6e66f910f10d1d9a98c7b5ee13",
+      "fingerprint": "d233002882b7c2b6e1ccb51ff404ac0726b5741ca9b7aaaa3a4d222eab5f299e",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( row . phase , \"rust-probe\" | \"final-build\" )",

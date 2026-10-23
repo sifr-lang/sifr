@@ -326,9 +326,7 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
     let compiler = crate::CompilerContext::for_test();
     let entrypoint = package_root.entrypoint("native-trust-package");
     let (first, invocations) =
-        crate::build::cargo_invocation_trace::capture_cargo_invocations(|| {
-            package_root.try_build(&compiler, &entrypoint)
-        });
+        crate::build::capture_cargo_invocations(|| package_root.try_build(&compiler, &entrypoint));
     let first = first.expect("trusted local unpushed native build");
     let family_roots: std::collections::BTreeSet<_> = invocations
         .iter()
@@ -370,9 +368,7 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
     std::fs::write(&manifest_path, revoked).expect("revoke trust");
     let entrypoint = package_root.entrypoint("native-trust-package");
     let (result, invocations) =
-        crate::build::cargo_invocation_trace::capture_cargo_invocations(|| {
-            package_root.try_build(&compiler, &entrypoint)
-        });
+        crate::build::capture_cargo_invocations(|| package_root.try_build(&compiler, &entrypoint));
     assert!(
         !invocations
             .iter()
