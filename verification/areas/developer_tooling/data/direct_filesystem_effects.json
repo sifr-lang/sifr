@@ -5945,6 +5945,125 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(dependency.join(\"src\")).expect(\"dependency\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"Cargo.toml\"), manifest(\"1.0.0\")).expect(\"manifest\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"value.txt\"), \"first\").expect(\"build input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"build.rs\"), r#\"use std::io::Write;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(path, \"version = 4\\n\").expect(\"independent authority\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(dependency.join(\"runs.log\")).expect(\"build count\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(&authority_b, \"version = 4\\n# new package authority\\n\").expect(\"changed authority\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"Cargo.toml\"), manifest(\"2.0.0\")).expect(\"changed package version\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(dependency.join(\"value.txt\"), \"second\").expect(\"changed dependency input\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(root.join(\"two/project/Cargo.lock\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(dependency.join(\"runs.log\")).expect(\"rebuild count\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "write",
+      "site": "fs::write(&authority_b, \"invalid TOML [\").expect(\"malformed authority\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&authority_b).expect(\"missing authority\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(dependency.join(\"runs.log\")).expect(\"no build after rejected authority\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(family).expect(\"owned family cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_authority_tests.rs",
+      "symbol": "shared_target_rechecks_independent_authorities_and_captures_current_outputs",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(root).expect(\"fixture cleanup\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
       "symbol": "fixture",
       "operation": "create_dir_all",
@@ -5953,21 +6072,21 @@
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
-      "symbol": "family_identity_preserves_source_resolution_and_profile_boundaries",
+      "symbol": "family_identity_preserves_storage_boundaries_without_authorizing_resolution",
       "operation": "write",
       "site": "fs::write(&authority, \"version = 4\\n\").expect(\"authority\");",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
-      "symbol": "family_identity_preserves_source_resolution_and_profile_boundaries",
+      "symbol": "family_identity_preserves_storage_boundaries_without_authorizing_resolution",
       "operation": "write",
       "site": "fs::write(&authority, \"version = 4\\n# changed authority\\n\").expect(\"new authority\");",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
-      "symbol": "family_identity_preserves_source_resolution_and_profile_boundaries",
+      "symbol": "family_identity_preserves_storage_boundaries_without_authorizing_resolution",
       "operation": "remove_dir_all",
       "site": "fs::remove_dir_all(root).expect(\"cleanup\");",
       "classification": "output-effect"

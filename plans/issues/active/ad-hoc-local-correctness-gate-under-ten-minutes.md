@@ -8528,7 +8528,7 @@ scenarios remain open.
 
 ### V4z — investigate and repair repeated native Cargo dependency preparation
 
-Status: registered; diagnosis before implementation.
+Status: delivered in PR #4443; qualification and limitations below.
 
 The completed campaign shows two opaque-resource cases taking 310.857s and
 313.361s. Read-only process observations found SQLite's same bundled C source
@@ -8612,3 +8612,96 @@ verified same-owner private parents, with original modes preserved in evidence;
 no production permission fallback or cache-success bypass. Rerun focused checks,
 all five failures, complete ordinary driver integration, named native cases and
 independent exact-candidate review before merge.
+
+
+### V4z delivered — shared probe/final Cargo preparation
+
+Merged [PR #4443](https://github.com/sifr-lang/sifr/pull/4443), merge
+`c48facd901b634481dd9df45fa9a1513d7602f39`, qualified candidate
+`9f28ded6c8c7eddb78126e3c5df8fadd4f444bae`. Three new reuse/mutation/private-target
+regressions pass; all five first-candidate integration failures pass after the
+producer ownership repair. Formatting, source-size, method/filesystem inventories
+and self-tests pass. Independent exact-candidate source review is SATISFIED, no
+blockers; SHA-256 `ae4843672ad9924185996e6244f13f5f9afae35c268a46bf95348be6b72f72e0`.
+
+The complete ordinary driver rerun takes 677.647s: 778 pass, one failure,
+82 explicitly ignored. The sole failure identifies four older dx9-concurrent
+test-family targets with mode0775. Independently reconstruct all four family
+identities from the test/toolchain/owner, verify inactivity and exclusive leases,
+and recover only those target-directory permissions; preserve original states,
+logs and diagnostics. No source or cached payload bytes change. Exact concurrency
+retest passes in 6.684s. Do not reclassify the original complete run as passing;
+all 779 ordinary cases have passing latest observations across that run/recovery.
+
+All ten named explicit native cases pass with exact one-test execution: cache-hit
+trust revocation, opaque alias/lifecycle, direct package linking, untrusted link,
+trusted artifact (both independent clean builds), undeclared link, trusted and
+untrusted proc macros, Python coroutine integration. Remaining ignored cases
+still belong to final phase coverage. Opaque alias/lifecycle first executions
+are 211.409s / 215.010s; retained-target reruns execute fresh assertions in
+7.933s / 8.271s including wrappers. Earlier 310.857s / 313.361s observations are
+not a controlled speedup estimate. Saved actual manifests place each case's
+probes and executable in one family, with exactly one SQLite build-script output.
+These diagnostic observations are not otherwise-idle V5 qualification.
+
+Qualified archive `v4z-qualified-evidence.tar.gz`, SHA-256
+`20268ea9abb70259f67a783e91de53351b7c92748cbf366629cbee4ebdec7b30`, contains
+259 payloads / 1,936,860 payload bytes; every payload verified locally. Preserve
+first-candidate archive SHA-256
+`93342205248faadb776e5b0a7797006e387ce982304735588ae41656653c609e` separately.
+CI run39971075733 repeats missing performance-reference configuration and missing
+report signature (the latter root cause is not established by the available log).
+Record their existing owners, not a green-CI claim. Full final gates, SQL clean
+qualification and all under600/V5 scenarios remain open.
+
+### V4aa — investigate Cargo dependency duplication between native requests
+
+Status: registered; establish actual compatibility before implementation.
+
+V4z removes duplicate probe/final preparation within a request. Opaque alias and
+lifecycle still each prepare SQLite in separate native-family targets because
+storage identity includes their distinct lock-authority paths and normal seed.
+The retained fixtures have distinct mutable project inputs, but expensive
+transitive Cargo units may be identical. Confirm this through actual manifests,
+locks, profiles and build fingerprints, then an isolated real-Cargo experiment
+using copied generated inputs and a fresh target. Keep original evidence intact.
+
+Bound the item to separating mutable resolution authority from Cargo artifact
+storage when Cargo can safely own unit freshness. Per-request lock validation,
+normal-mode reseeding, frozen/locked behavior, source/vendor replacement, trust,
+private project roots, leases and immutable output capture remain authoritative.
+Do not share prepared lockfiles or successful assertions merely because targets
+are shared. Preserve toolchain/owner/profile/environment isolation and independent
+clean-build protocols. Reject an optimization that cannot preserve these contracts.
+
+If the experiment supports implementation, add actual Cargo regressions covering
+alternating independent authority paths, changed authority contents/dependency
+selection, missing/malformed authority rejection, request trust and failing
+replacement. Exercise existing resolution and same-name/concurrent capture
+regressions plus affected native consumers. Measure first and returning executions
+with fresh assertions, explicitly accounting for every selected case. Batch
+related repairs, use the approved focused intermediate policy, require independent
+exact-candidate source review, and retain every failed/incomplete attempt. Do not
+repeat the complete ordinary suite merely for artifact recovery on unchanged
+source. All final integrated gates and V1/V5 acceptance remain unchanged.
+
+
+V4aa diagnostic decision: opaque alias/lifecycle fixture inventories are identical
+except src/main.sifr; their actual SQLite Cargo fingerprint JSON is identical.
+Copy each generated probe/final project into a new isolated Cargo target. First
+probe/build take125.095s/76.192s; second fixture probe/build take0.574s/9.393s,
+with every observed SQLite artifact fresh. Both resulting programs execute and
+match their full existing expected outputs. Original projects/fixtures remain
+byte-identical; guard213.303s, no cap/signals/source mutation, empty session.
+This proves diagnostic unit reuse, not all resolution/trust boundaries or V5.
+
+Implement only the Cargo storage-key separation: keep lock mode, vendor/source
+replacement, runtime, profile, toolchain/owner and environment boundaries, while
+removing ordered authority paths and normal seed from that storage identity.
+Per-project prepared lock identity, authority validation/reseeding and finalized
+artifact seed identity remain unchanged. Add a real-Cargo regression that shares
+one target across independent authorities, checks dependency build-script reuse,
+changes dependency version/input, rejects malformed/missing authority despite a
+warm target, and verifies the other published executable remains intact. Existing
+resolution, trust, concurrency and changed-input checks plus exact-candidate
+review and native qualification are still required; no acceptance claim yet.

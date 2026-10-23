@@ -38,7 +38,7 @@ impl CargoResolutionPolicy {
         vendor_mode: CargoVendorMode,
         cargo_prefix_args: &[String],
     ) -> String {
-        let mut id = IdentityEncoder::new("native-cargo-sources-v1");
+        let mut id = IdentityEncoder::new("native-cargo-sources-v2");
         id.field(
             "runtime-crate",
             runtime_crate.as_os_str().as_encoded_bytes(),
@@ -57,17 +57,15 @@ impl CargoResolutionPolicy {
         for argument in cargo_prefix_args {
             id.field("cargo-prefix-argument", argument.as_bytes());
         }
-        // Keep source replacement and authority boundaries. In particular,
-        // different vendor roots must not thrash each other's Cargo artifacts.
+        // Keep source replacement boundaries: different vendor roots must
+        // not thrash each other's Cargo artifacts.
         for path in &self.trusted_vendor_dirs {
             id.field("trusted-vendor", path.as_os_str().as_encoded_bytes());
         }
-        for path in &self.authoritative_locks {
-            id.field("authority", path.as_os_str().as_encoded_bytes());
-        }
-        if let Some(seed) = self.normal_seed_cache_fragment() {
-            id.field("normal-authority-seed", seed.as_bytes());
-        }
+        // Lock authorities and normal-mode seeds belong to each generated
+        // project's resolution, not dependency artifact storage. Every caller
+        // prepares and validates its own lock before Cargo runs. Cargo checks
+        // the selected units even when another request prepared this target.
         id.finish()
     }
 }

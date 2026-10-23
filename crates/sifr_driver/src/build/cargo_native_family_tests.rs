@@ -14,7 +14,7 @@ fn fixture(label: &str) -> PathBuf {
 }
 
 #[test]
-fn family_identity_preserves_source_resolution_and_profile_boundaries() {
+fn family_identity_preserves_storage_boundaries_without_authorizing_resolution() {
     let root = fixture("identity");
     let runtime = root.join("runtime");
     let authority = root.join("Cargo.lock");
@@ -37,7 +37,11 @@ fn family_identity_preserves_source_resolution_and_profile_boundaries() {
     assert_ne!(original, identity(&changed));
     changed = policy.clone();
     changed.authoritative_locks.push(root.join("other.lock"));
-    assert_ne!(original, identity(&changed));
+    assert_eq!(original, identity(&changed));
+    assert_ne!(
+        policy.normal_seed_cache_fragment(),
+        changed.normal_seed_cache_fragment()
+    );
     assert_ne!(
         original,
         policy.native_family_sources(
@@ -61,8 +65,10 @@ fn family_identity_preserves_source_resolution_and_profile_boundaries() {
             ]
         )
     );
+    let previous_seed = policy.normal_seed_cache_fragment();
     fs::write(&authority, "version = 4\n# changed authority\n").expect("new authority");
-    assert_ne!(original, identity(&policy));
+    assert_eq!(original, identity(&policy));
+    assert_ne!(previous_seed, policy.normal_seed_cache_fragment());
     fs::remove_dir_all(root).expect("cleanup");
 }
 
@@ -221,3 +227,6 @@ fn family_precreates_a_private_target_for_every_consumer() {
     fs::remove_dir_all(family_root).expect("owned family cleanup");
     fs::remove_dir_all(root).expect("fixture cleanup");
 }
+
+#[path = "cargo_native_authority_tests.rs"]
+mod authority_tests;
