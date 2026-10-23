@@ -6078,6 +6078,62 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "is_dir",
+      "site": "target.is_dir(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&target, fs::Permissions::from_mode(0o775))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&target, fs::Permissions::from_mode(0o700)).expect(\"restore fixture\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "remove_dir",
+      "site": "fs::remove_dir(&target).expect(\"empty target\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "symlink",
+      "site": "symlink(&root, &target).expect(\"alias fixture\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&target).expect(\"remove owned alias\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(family_root).expect(\"owned family cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_native_family_tests.rs",
+      "symbol": "family_precreates_a_private_target_for_every_consumer",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(root).expect(\"fixture cleanup\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/cargo_resolution.rs",
       "symbol": "prepare_cargo_resolution",
       "operation": "read_to_string",

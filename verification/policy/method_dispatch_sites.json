@@ -53257,7 +53257,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs::literal-comparison::1",
-      "fingerprint": "089b4172367d535cfafd4dc7da2fe9dc80a37ba6e2b90072b4121eb70f2dbd3a",
+      "fingerprint": "6f1393c852d4b84507498196793125d96d0b391d3c5f401578c8d37bb99a5a07",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( artifacts . iter ( ) . any ( | row | row [ \"reason\" ] == \"compiler-artifact\"",
@@ -53269,7 +53269,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs::literal-comparison::2",
-      "fingerprint": "4803a62c9feda680ce733a4af1b5a33a4c0b630384549e5ab99e6ce6031bcaa0",
+      "fingerprint": "f251aa00d1c93e331d66bc5f69e02307c3a5b3c32494b7fa3eca4343180f8028",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "row [ \"target\" ] [ \"name\" ] == \"build-script-build\"",
@@ -53281,7 +53281,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/cargo_native_family_tests.rs::probe_and_build_reuse_native_preparation_but_recheck_changed_inputs::literal-comparison::3",
-      "fingerprint": "96ac4120f3e52307036689ca8d51593e0aaf9f05c8c685c749320c296e2bc8e4",
+      "fingerprint": "b19a46256133c2392d8a4f593498be60feb3af073847b1859f2428fd0966f7f3",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "row [ \"fresh\" ] == true ) )",

@@ -8580,3 +8580,35 @@ for shared build-script reuse, changed build-script inputs, invalid probes and
 failed executable replacement. Strengthen the actual cache-hit/trust-revocation
 case to prove one probe/final family and rejection before native Cargo. All
 qualification and independent review remain pending.
+
+
+V4z first runtime candidate `906cea01472facda9f4281f76229682d8259f112`:
+the two new focused tests pass after a 104.191s compiler/test command. The external
+helper then incorrectly accessed Outcome.status; preserve its failed orchestration
+and correct it to Outcome.returncode. Final static guards pass (81.197s): 4,473
+files, 6,416 method sites / 235 nodes, 3,418 filesystem sites and guard self-tests.
+Independent source review is SATISFIED, no blockers; SHA-256
+`3619c7cdb6ef5e24640698c0fea16030238aee0b9cc2546b020126920ee4c13a`.
+This source verdict does not qualify the subsequent changed implementation.
+
+The complete ordinary driver suite then finishes in 729.216s including wrapper:
+773 passed, five failed, 82 explicitly ignored; no cap, leftover process or source
+mutation. Four failures are stdlib demand/startup tests and one is nominal-union
+project compilation. Their shared integration failure is private target ownership:
+a final build can let Cargo create a new family target with ambient mode 0775;
+a later probe correctly rejects it. Eleven newly created session-owned targets
+show that mode beneath private, same-owner family roots. Preserve original logs,
+failures and permission observations. The first private-target probe rejection
+masks an expected type error in the negative startup test; rerun it to verify this
+causal explanation rather than treating it as already repaired.
+
+Correct the producer invariant: NativeFamily::acquire creates and validates its
+target through canonical private storage before any consumer can run Cargo.
+Keep rejection of unsafe existing directories and symlinks. Add a fresh-family
+regression proving target existence/private ownership before Cargo, repeat
+admission, unsafe-mode rejection and alias rejection. Recover only explicitly
+identified inactive artifacts created by this candidate, under leases and
+verified same-owner private parents, with original modes preserved in evidence;
+no production permission fallback or cache-success bypass. Rerun focused checks,
+all five failures, complete ordinary driver integration, named native cases and
+independent exact-candidate review before merge.

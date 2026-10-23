@@ -126,7 +126,11 @@ fn main() {
         );
         (family.root.clone(), family.target(), output.stdout)
     };
-    let (family_root, target, _) = run("probe", "check", true);
+    // Cover final-build-before-probe as well as probe-before-final-build.
+    let (family_root, target, _) = run("application", "build", true);
+    crate::cache_storage::check_owned(&target).expect("Cargo preserved private target ownership");
+    let (_, probe_target, _) = run("probe", "check", true);
+    assert_eq!(target, probe_target);
     let (_, application_target, artifacts) = run("application", "build", true);
     assert_eq!(target, application_target);
     assert_eq!(
@@ -175,6 +179,45 @@ fn main() {
     )
     .expect("invalid replacement");
     run("application", "build", false);
+    fs::remove_dir_all(family_root).expect("owned family cleanup");
+    fs::remove_dir_all(root).expect("fixture cleanup");
+}
+
+#[test]
+fn family_precreates_a_private_target_for_every_consumer() {
+    let root = fixture("permissions");
+    let policy = CargoResolutionPolicy::normal();
+    let acquire = || policy.native_family(&root, CargoVendorMode::PackageOwned, &[], "");
+    let family = acquire().expect("new family");
+    let target = family.target();
+    let family_root = family.root.clone();
+    assert!(
+        target.is_dir(),
+        "Cargo must never create the family target with its ambient umask"
+    );
+    crate::cache_storage::check_owned(&target).expect("private target before any Cargo consumer");
+    drop(family);
+    let repeated = acquire().expect("returning family");
+    crate::cache_storage::check_owned(&repeated.target()).expect("retained target stays private");
+    drop(repeated);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o775))
+            .expect("unsafe fixture mode");
+        assert!(
+            acquire().is_err(),
+            "unsafe existing targets must be rejected, not silently repaired"
+        );
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o700)).expect("restore fixture");
+        fs::remove_dir(&target).expect("empty target");
+        symlink(&root, &target).expect("alias fixture");
+        assert!(
+            acquire().is_err(),
+            "a target symlink must never be followed"
+        );
+        fs::remove_file(&target).expect("remove owned alias");
+    }
     fs::remove_dir_all(family_root).expect("owned family cleanup");
     fs::remove_dir_all(root).expect("fixture cleanup");
 }
