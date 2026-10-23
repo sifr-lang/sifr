@@ -16,6 +16,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from env import RunnerPaths, cargo_env_for_repo_manifest
+from example_environment import example_environment_root
 from ordinary_example_policy import (
     ORDINARY_PYTHON_API_ALLOWED_IMPORTS,
     POLICY_REJECTION_SEEDS,
@@ -505,15 +506,7 @@ def run_example_cases(
 
 
 def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCase) -> Path:
-    package_root = (
-        paths.repo_root
-        / "target"
-        / "verification"
-        / "areas"
-        / "python_interop"
-        / f"{suite_name}_examples_package"
-        / case.case_id
-    )
+    package_root = example_environment_root(paths) / suite_name / case.case_id
     if package_root.exists():
         shutil.rmtree(package_root)
     source_root = package_root / "src"
@@ -574,9 +567,6 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
         'root = "src"',
         "",
         "[python]",
-        'venv = ".venv"',
-        'pyproject = "pyproject.toml"',
-        'lock = "uv.lock"',
     ]
     if case.explicit_requirements:
         manifest_lines.append(f"requires-imports = [{roots}]")
@@ -593,16 +583,6 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
         "\n".join(manifest_lines),
         encoding="utf-8",
     )
-    venv_link = package_root / ".venv"
-    area_venv = paths.area_root / ".venv"
-    if not area_venv.exists():
-        raise SystemExit(
-            f"python interop {suite_name} examples require the area uv environment; "
-            "run through `uv run --project verification/areas/python_interop --locked ...`"
-        )
-    venv_link.symlink_to(area_venv, target_is_directory=True)
-    (package_root / "pyproject.toml").symlink_to(paths.area_root / "pyproject.toml")
-    (package_root / "uv.lock").symlink_to(paths.area_root / "uv.lock")
     return package_root
 
 
