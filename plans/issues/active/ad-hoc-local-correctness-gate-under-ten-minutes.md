@@ -8104,3 +8104,33 @@ implementation. Named acceptance for an eventual implementation: focused freshne
 positive/negative controls, the reproduced transition and its ordinary repeat,
 affected preparation/runner contracts, format/size/diff checks and independent
 exact-candidate review. Full integrated gates and all V5 scenarios remain open.
+
+
+V4v investigation reproduced two distinct effects. Ordinary driver/CLI repetitions
+stay fresh. The real LSP sysroot comparison test launches nested Cargo carrying its
+parent crate's `CARGO_PKG_*`, manifest directory and `OUT_DIR`. The ring build
+receipt changes those tracked input values from absent to LSP-specific values;
+shared dependent build outputs then invalidate other compiler variants. Preserve
+these traces and verify the reverse transition before claiming a complete causal
+chain. Separately, standalone SQLite versus combined SQL-tool preparation replaces
+one cdylib/rlib artifact's dependency fingerprint in both directions. That needs its
+own producer/host-boundary investigation; it is not the same environment repair.
+
+V4v implementation scope is the LSP nested-Cargo invocation boundary. Remove only
+Cargo-injected parent package context (`CARGO_PKG_*`, `CARGO_MANIFEST_DIR`,
+`CARGO_MANIFEST_PATH`, `OUT_DIR`) when invoking Cargo for the CLI comparison.
+Retain the same Cargo command, CLI behavior and assertions, selected toolchain,
+flags, target, offline/locked settings, allocation, wrappers and explicit sysroot.
+No result reuse, external dependency patch, prepared-binary fallback or test skip.
+Use a small local helper with focused controls proving package metadata removal
+and intentional build configuration preservation. Other nested Cargo invocations
+use separately owned fixture targets and are not silently changed in this item.
+
+Named acceptance: focused boundary controls, the actual LSP CLI/sysroot comparison,
+all LSP sysroot request tests, complete LSP unit tests, unchanged ordinary/nested/
+ordinary transitions with actual Cargo freshness checks, source identity and
+cleanup guards, format/size/diff checks, and exact-candidate independent review.
+Compare instrumented diagnostic reasons separately from ordinary before/after
+timing. No SQL component rebuild is required for a test-only LSP change unless
+canonical source validation establishes an affected producer input. Required final
+gates, remaining SQLite/major coexistence work and all V5 scenarios remain open.
