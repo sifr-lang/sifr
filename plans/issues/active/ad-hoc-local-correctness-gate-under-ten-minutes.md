@@ -8221,3 +8221,9 @@ modules and no maintained native SQL shared-library consumer. The implementation
 therefore changes only three manifest roles and the canonical guest build command;
 existing assertions and qualification/mutation tests remain. Actual component
 rebuild and native SQL qualification are pending at this source freeze.
+
+V4w producer execution completed all ten components through the canonical explicit
+guest build role. Source/artifact validation and native acceptance follow on the
+frozen candidate. The producer source candidate is `33054b6ca37b71d3888db3451104edca791a2bed`;
+per-family orchestration seconds are postgresql=360.437, mysql=34.854, sqlite=45.760.
+No dependency pins or tracked locks were changed.

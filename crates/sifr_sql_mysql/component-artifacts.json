@@ -1,25 +1,25 @@
 {
   "artifacts": [
     {
-      "core_sha256": "3b4d45d0ab5753f18862fc6273254573d60e26ee81c24c49c88351411a0883fa",
+      "core_sha256": "3f2dc8119136d30acd7e426f4f1e78b4396a5f02ff987a9b3221688e679ec0d6",
       "path": "components/mysql-8.4.wasm",
       "series": "8.4",
-      "sha256": "303198530eb9e2aefe7832fe0018e84294682686f7ad86de9ef98a53bba5af4c",
-      "size_bytes": 1539612
+      "sha256": "9a9e1825c8a970cca4030babf872c60dcd2708afb70180510e12c89c8bd1a1de",
+      "size_bytes": 1495336
     },
     {
-      "core_sha256": "3b4d45d0ab5753f18862fc6273254573d60e26ee81c24c49c88351411a0883fa",
+      "core_sha256": "3f2dc8119136d30acd7e426f4f1e78b4396a5f02ff987a9b3221688e679ec0d6",
       "path": "components/mysql-9.7.wasm",
       "series": "9.7",
-      "sha256": "303198530eb9e2aefe7832fe0018e84294682686f7ad86de9ef98a53bba5af4c",
-      "size_bytes": 1539612
+      "sha256": "9a9e1825c8a970cca4030babf872c60dcd2708afb70180510e12c89c8bd1a1de",
+      "size_bytes": 1495336
     },
     {
-      "core_sha256": "3b4d45d0ab5753f18862fc6273254573d60e26ee81c24c49c88351411a0883fa",
+      "core_sha256": "3f2dc8119136d30acd7e426f4f1e78b4396a5f02ff987a9b3221688e679ec0d6",
       "path": "components/mysql-26.7.wasm",
       "series": "26.7",
-      "sha256": "303198530eb9e2aefe7832fe0018e84294682686f7ad86de9ef98a53bba5af4c",
-      "size_bytes": 1539612
+      "sha256": "9a9e1825c8a970cca4030babf872c60dcd2708afb70180510e12c89c8bd1a1de",
+      "size_bytes": 1495336
     }
   ],
   "parser_generator": {
@@ -141,7 +141,7 @@
       "crates/sifr_sql_contract/src/slice.rs": "8679b0e44f1524392d187b6188d2ccd573a19fb178f95dec9a54633f634c71e6",
       "crates/sifr_sql_contract/src/sql_type.rs": "025f5694825ffa8d94695cbee9fe09bfde9b1279cbee9a5b47a9aab5ffaea673",
       "crates/sifr_sql_contract/src/value_identity.rs": "5cf38cde29f010a0d468b02ba8221771d0ad0ee35152b95b51162d08e7322d67",
-      "crates/sifr_sql_mysql/Cargo.toml": "b25b99f5f0dc28815087eec5fe614b915a507aea57aa60cef8514eb29f5e6129",
+      "crates/sifr_sql_mysql/Cargo.toml": "4ac1ff2bb103bfa957e0ecf0a8d3efadf7cff7e931fab021d5631fc2e36269f7",
       "crates/sifr_sql_mysql/build.rs": "f6a70e74ec4e40e3a47897c9f9ad363516363977c98b720539ee6e7075d00cb6",
       "crates/sifr_sql_mysql/src/analyzer.rs": "a41374d607d577c955793b041232a5a8ef361cac6375af79ffd54abea2b52985",
       "crates/sifr_sql_mysql/src/ast.rs": "bb905dc625642f07c8103e7e27cb7c4b0527169ad25cbc8db5e10fad0f52a7e4",
@@ -170,12 +170,12 @@
       "third_party/ruff/crates/ruff_text_size/src/size.rs": "c080576fb63fe7b65dfcea6b07e2f2e004140930e9f947c2c48632ee0f0a5836",
       "third_party/ruff/crates/ruff_text_size/src/traits.rs": "3aef3ac8ac0f1dad4cfa1ccbe1469b2b4a1fcf684f97a985bbe88a0a3d2b0fb3",
       "verification/areas/sql_platform/tools/build_mysql_components.py": "ed271061a80a014bc884405f30f9ee3cf3c413dc915d8b772dc0b05888e05222",
-      "verification/areas/sql_platform/tools/build_sql_components.py": "84e0a00ccccbdd287f1451fb554d30012b5fc6d205f3b52958a5bd52e25caa0d",
+      "verification/areas/sql_platform/tools/build_sql_components.py": "414aa72d336d659b7288a2754981140b5f4ef647389b4839b6eb2ea2e30537fd",
       "verification/areas/sql_platform/tools/component_provenance.py": "21bb0dd619f92ed86b67a4d0c1ff7f4f19b3d68a0bee6bbf6f41b0385b4793e5",
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "fee11413a4851b5145b67917707a429771a8a8d53ddd9bcbcfb0647acc8f2a65",
+    "source_sha256": "36c9c65f5d15d3aac24e25ecb4997258c54e8932225ae951980b7be1c7b8f3b9",
     "tools": {
       "virtualizer": {
         "binary_sha256": "a72b764380b3a863ffef49b055df9b4ba8d86b9473ad767e7252f007dcfe8843",
