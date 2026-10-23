@@ -9,9 +9,8 @@ def _crate_needs_environment(suite):
         return False
     if suite["package"] == "sifr_lsp":
         return True
-    # The archive/bridge fixture is ignored by ordinary driver library tests.
-    return suite["package"] == "sifr_driver" and any(
-        flag in suite["command"] for flag in ("--ignored", "--include-ignored"))
+    # Both ordinary PythonError and ignored native fixtures use the pinned venv.
+    return suite["package"] == "sifr_driver"
 
 
 def python_consumers(profile):

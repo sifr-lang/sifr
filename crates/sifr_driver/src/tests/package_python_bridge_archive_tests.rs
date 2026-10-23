@@ -144,7 +144,7 @@ fn two_packages_can_execute_the_same_bridge_module_path_without_collision() {
     .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    entrypoint.python_runtime = Some(local_python_runtime(&dir));
+    entrypoint.python_runtime = Some(shared_python_runtime());
 
     let artifact = build_cached_package_project(
         &crate::CompilerContext::for_test(),

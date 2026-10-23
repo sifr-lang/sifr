@@ -9049,3 +9049,85 @@ all selected case/variant identities and required completion/analysis tests.
 Record ordinary timings and actual Cargo freshness evidence separately from the
 historical 566.839s. Perform independent exact-candidate source review. Full final
 correctness gates and repeated V5 invalidation scenarios remain mandatory.
+
+
+### V4ae closure — inherited tooling build policy / #4447
+
+PR [#4447](https://github.com/sifr-lang/sifr/pull/4447) merged as
+`74f86efc6fa78fd4f38ae7710f575ae6877af512`; candidate
+`39b995480640a990f16b82036c6a55891df406a7`, base `973a9aa8d31cd8c23acd73164fcb26fa3643ef38`.
+All seven selected tooling suites / 46 exact command variants pass in 185.425s;
+preparation takes 21.205s, for 206.629s combined separately invoked categories.
+Preparation compiles the analysis test executable once in 18.78s and reuses lint
+and format. A separate actual Cargo JSON probe confirms every artifact fresh in
+all three graphs after qualification. Do not call historical 606.043s preparation
+versus this run a matched saving. All assertions, explicit incremental overrides,
+locked commands and emitted profile selections are preserved.
+
+Focused policy/outcome controls, all 31 foundation groups, four unchanged emitted
+plans and formatting/source-size/ownership checks pass (141.290s). Independent
+source review is SATISFIED with no blockers, SHA-256
+`956423f80b3cd6e7409121296ce04b31677fa1e2c0da1680abe5ca3e43baf4cc`.
+Archive `v4ae-qualified-evidence.tar.gz`, SHA-256
+`1fe74c303af63473a6820240afafb2d194e0ba6e64c082b47173bc098e628805`, contains
+157 payloads / 4,495,653 bytes, all verified locally. Keeping the explicit copied
+environment is harmless; its optional removal is not required follow-up work.
+CI again fails admission for the existing missing performance reference (#4347);
+retain the completed log separately. Full final gates and repeated V5 remain open.
+
+### V4af — reuse pinned Python fixture environment without weakening isolation
+
+Status: registered. The user prioritized the generated-driver Python group after
+V4ae. The proposed validation-runner CLI change has not been implemented and is
+left for later. The measured nine-case Python group takes 283.822s; five cases
+using fresh per-project venvs account for 194.762s. The archive case already uses
+the pinned verification environment; the other three compiler cases account for
+50.262s. These are V4ac observations, not predicted savings.
+
+The five cases cover raw objects, coroutine/resource behavior, source-name
+collisions, same-path bridges from separate packages, and distinct Python error
+identities. They require fresh source projects and runtime processes, not fresh
+venv installation. A sixth ordinary driver test uses the same helper for the
+five-field PythonError runtime contract. Reuse the existing locked Python interop
+environment for these six cases; retain fresh probes, complete request/probe
+identity, selected interpreter/venv identity, native library selection, required
+and trusted root policies and every existing assertion. Keep the release profile
+and all generated fixture compilations. No production cache-key change, stale
+result reuse, merged trust domains or fallback interpreter is authorized here.
+
+Preserve the helper's existing empty probe-import lists and separate required/
+trusted runtime roots (including asyncio). The archive's biip import probing,
+source deletion and no-extraction checks remain unchanged. Add ordinary driver
+library tests to the explicit pinned-environment preparation dependency; blocked
+or failed preparation cannot count as a passing consumer. Keep focused invocation
+requirements clear rather than silently creating an unpinned alternate environment.
+
+Named acceptance: focused Python preparation selection/failure controls, existing
+probe/digest invalidation and runtime trust tests, all runner foundation groups,
+unchanged emitted suite selection, formatting and source-size/ownership checks.
+Prepare exact pinned tools/environment and the actual driver test binary on an
+owned retained target, with capacity/reserve checks and separate 30-minute caps.
+Run all nine original Python-group cases plus the sixth ordinary error-field case,
+including the unchanged archive and three compiler cases. Repeat the five affected
+ignored cases with fresh projects/processes, and reconcile actual family target
+identities and dependency fingerprints to establish reuse across distinct fixtures.
+Record setup separately from individual compilation/runtime results; source
+inspection or identical fingerprints alone is not a timing qualification.
+
+Retain all original test names, fixture payloads, assertions, negative controls
+and failures. Independently review the exact candidate before merging under the
+approved intermediate policy. Full final create-PR/merge correctness gates and all
+repeated under-600s V5 scenarios remain mandatory; do not promise ten seconds or
+attribute the entire 24-minute driver category to this 4m44s subgroup.
+
+V4af retained-artifact cross-check confirms five distinct families with the same
+owner/toolchain and 47 library fingerprint files each; 42 are byte-identical across
+all five. Generated-source timestamps lie inside the frozen V4ac native execution
+interval. Accounting keys preserve simultaneously resolved library versions.
+This supports repeated dependency work; it does not authorize dropping environment
+identity or substituting fingerprint equality for runtime qualification.
+
+The first V4af candidate passes all 31 foundation groups and unchanged plan checks
+but fails the filesystem inventory guard: the removed temporary pyproject write
+remained declared. Preserve that failed candidate/check receipt; remove only its
+one obsolete inventory entry and qualify the repaired exact candidate.

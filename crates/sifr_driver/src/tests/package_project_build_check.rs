@@ -252,7 +252,7 @@ fn package_entrypoint(
 
 #[path = "package_project_build_check_support.rs"]
 mod support;
-use support::{local_python_runtime, local_python_runtime_with_roots};
+use support::{shared_python_runtime, shared_python_runtime_with_roots};
 #[path = "package_python_async_runtime_tests.rs"]
 mod python_async_runtime_tests;
 #[path = "package_python_bridge_archive_tests.rs"]
@@ -595,7 +595,7 @@ def main() -> None:\n    local: PythonError = PythonError(\"local\", 7)\n    ass
     .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    entrypoint.python_runtime = Some(local_python_runtime(&dir));
+    entrypoint.python_runtime = Some(shared_python_runtime());
 
     let artifact = build_cached_package_project(
         &crate::CompilerContext::for_test(),

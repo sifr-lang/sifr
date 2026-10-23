@@ -1,42 +1,17 @@
-use std::path::Path;
+use std::path::PathBuf;
 
-pub(super) fn local_python_runtime(project_root: &Path) -> crate::PackagePythonRuntime {
-    local_python_runtime_with_roots(project_root, &[])
+pub(super) fn shared_python_runtime() -> crate::PackagePythonRuntime {
+    shared_python_runtime_with_roots(&[])
 }
 
-pub(super) fn local_python_runtime_with_roots(
-    project_root: &Path,
-    roots: &[&str],
-) -> crate::PackagePythonRuntime {
-    let pyproject = project_root.join("pyproject.toml");
-    let lock = project_root.join("uv.lock");
-    std::fs::write(
-        &pyproject,
-        "[project]\nname = \"sifr-bridge-test\"\nversion = \"0.0.0\"\nrequires-python = \"==3.14.7\"\n",
-    )
-    .expect("test pyproject should be written");
-    let uv = std::process::Command::new("uv")
-        .args(["lock", "--project"])
-        .arg(project_root)
-        .output()
-        .expect("uv should create the test lock");
-    assert!(
-        uv.status.success(),
-        "uv lock should pass: {}",
-        String::from_utf8_lossy(&uv.stderr)
-    );
-    let venv_root = project_root.join(".venv");
-    let uv = std::process::Command::new("uv")
-        .args(["venv", "--python"])
-        .arg(if cfg!(windows) { "python" } else { "python3" })
-        .arg(&venv_root)
-        .output()
-        .expect("uv should create the test venv");
-    assert!(
-        uv.status.success(),
-        "uv venv should pass: {}",
-        String::from_utf8_lossy(&uv.stderr)
-    );
+pub(super) fn shared_python_runtime_with_roots(roots: &[&str]) -> crate::PackagePythonRuntime {
+    // These fixtures exercise generated Python behavior, not environment setup.
+    // Keep one locked interpreter while each caller owns fresh source/runtime state.
+    let area_root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../verification/areas/python_interop");
+    let pyproject = area_root.join("pyproject.toml");
+    let lock = area_root.join("uv.lock");
+    let venv_root = area_root.join(".venv");
     let interpreter = if cfg!(windows) {
         venv_root.join("Scripts/python.exe")
     } else {
@@ -52,7 +27,7 @@ pub(super) fn local_python_runtime_with_roots(
         native_imports: Vec::new(),
     };
     let probe = sifr_package::probe_python_environment(&request)
-        .expect("local CPython environment should probe");
+        .expect("prepare the locked verification/areas/python_interop environment before driver Python tests");
     let digest = sifr_package::digest_python_environment_probe(&request, &probe)
         .expect("probe identity")
         .hex;
