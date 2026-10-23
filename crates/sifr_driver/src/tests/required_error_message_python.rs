@@ -34,7 +34,7 @@ def main():
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     // Canonical PythonError links the Python runtime even without invoking
     // Python. Use the existing probed package fixture, including native trust.
-    entrypoint.python_runtime = Some(local_python_runtime(&dir));
+    entrypoint.python_runtime = Some(shared_python_runtime());
     let artifact = build_cached_package_project(
         &crate::CompilerContext::for_test(),
         &entrypoint,

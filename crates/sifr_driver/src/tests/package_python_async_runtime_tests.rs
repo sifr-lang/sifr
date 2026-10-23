@@ -313,7 +313,7 @@ def main() -> Result[None, PythonError]:
     .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    entrypoint.python_runtime = Some(local_python_runtime(&app.root));
+    entrypoint.python_runtime = Some(shared_python_runtime());
     let artifact = build_cached_package_project(
         &crate::CompilerContext::for_test(),
         &entrypoint,
@@ -373,7 +373,7 @@ def main() -> Result[None, PythonError]:
     .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    entrypoint.python_runtime = Some(local_python_runtime_with_roots(&app.root, &["asyncio"]));
+    entrypoint.python_runtime = Some(shared_python_runtime_with_roots(&["asyncio"]));
     let artifact = build_cached_package_project(
         &crate::CompilerContext::for_test(),
         &entrypoint,
