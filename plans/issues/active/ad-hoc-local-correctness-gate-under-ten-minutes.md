@@ -9126,3 +9126,8 @@ all five. Generated-source timestamps lie inside the frozen V4ac native executio
 interval. Accounting keys preserve simultaneously resolved library versions.
 This supports repeated dependency work; it does not authorize dropping environment
 identity or substituting fingerprint equality for runtime qualification.
+
+The first V4af candidate passes all 31 foundation groups and unchanged plan checks
+but fails the filesystem inventory guard: the removed temporary pyproject write
+remained declared. Preserve that failed candidate/check receipt; remove only its
+one obsolete inventory entry and qualify the repaired exact candidate.

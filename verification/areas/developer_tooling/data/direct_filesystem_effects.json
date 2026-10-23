@@ -14408,13 +14408,6 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check_support.rs",
-      "symbol": "local_python_runtime_with_roots",
-      "operation": "write",
-      "site": "std::fs::write(",
-      "classification": "output-effect"
-    },
-    {
       "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
       "symbol": "compiler_owned_nominal_paths_and_unions_build_beside_source_collisions",
       "operation": "exists",
