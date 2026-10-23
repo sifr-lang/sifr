@@ -203,25 +203,22 @@ def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
 
 
 def prepare_tooling_test_binaries(profile, env, command_runner) -> None:
-    """Match selected tooling test graphs, including completion's incremental policy."""
+    """Prepare each selected tooling graph with the execution environment."""
     suites = {suite for area in profile.get("selected_areas", [])
               if area["area"] == "developer_tooling" for suite in area["suites"]}
-    builds = []
+    packages = []
     if suites.intersection({"static", "full"}):
-        builds.append(("sifr_lint", env))
-        completion_env = env.copy()
-        completion_env.setdefault("CARGO_INCREMENTAL", "0")
-        builds.append(("sifr_analysis", completion_env))
+        packages.extend(("sifr_lint", "sifr_analysis"))
     if suites.intersection({"formatter", "full"}):
-        builds.append(("sifr_format", env))
+        packages.append("sifr_format")
     if suites.intersection({"analysis", "full"}):
-        builds.append(("sifr_analysis", env))
-    for package, build_env in builds:
+        packages.append("sifr_analysis")
+    for package in dict.fromkeys(packages):
         command = ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
-        incremental = build_env.get("CARGO_INCREMENTAL", "default")
+        incremental = env.get("CARGO_INCREMENTAL", "default")
         print(f"[sifr-profile-setup] tooling-test-build={' '.join(command)} "
               f"incremental={incremental}", flush=True)
-        command_runner(command, env=build_env)
+        command_runner(command, env=env)
 
 
 def prepare_performance_binaries(profile, env, command_runner) -> None:

@@ -125,7 +125,6 @@ def run_cargo_tests(manifest: dict[str, Any]) -> int:
         if isinstance(entry, dict) and isinstance(entry.get("cargo_test"), str)
     }
     env = os.environ.copy()
-    env.setdefault("CARGO_INCREMENTAL", "0")
     for test in sorted(tests):
         result = subprocess.run(
             ["cargo", "test", "--locked", "-p", "sifr_analysis", test],
