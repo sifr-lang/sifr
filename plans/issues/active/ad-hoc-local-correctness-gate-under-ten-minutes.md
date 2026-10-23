@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ah Python native storage qualified and merged; V4ai batch Python preparation; final gates and V1/V5 timing acceptance remain open
+current_stage: V4ai preparation batching qualified and merged; V1h current SQL clean-build attribution; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9357,3 +9357,65 @@ execute the entire area again. Independent exact-candidate source review require
 Measured V4ah first population is not a matched warm baseline; report current time
 and the nine-to-one launch change without attributing every elapsed-time difference
 to batching. Continue toward the largest remaining measured costs after closure.
+
+
+### V4ai closure — one exact preparation invocation / #4451
+
+PR [#4451](https://github.com/sifr-lang/sifr/pull/4451) merged as
+`ea6885b83bc85c9277c1aa6d56bf0bca2ac6f1eb`; candidate
+`f72d902b093b988e1623c7b1f6be21ba0b00889b`, base `ea63b16a6e42e55169e5d3967ceda0474a131f6f`.
+One actual invocation executes all nine selected suites and all 29 explicit release
+preparations, with exactly the V4ah case order, in 204.054s (case sum 203.956s).
+Every certification/check/build remains. This is a retained-artifact observation;
+V4ah's first population is not a matched baseline and the complete timing difference
+cannot be assigned to batching. No new runtime-area pass is claimed: compiler,
+fixture, runtime and preparation-implementation sources are unchanged, and V4ah's
+full runtime evidence remains bound to its earlier candidate. Final gates rerun it.
+
+All 15 affected scheduler tests, multi-suite ordering/failure/mutation controls,
+31 foundation groups, four unchanged emitted plans and applicable static checks
+pass; guarded candidate checks take 89.248s. Exact-candidate source review SATISFIED,
+SHA-256 `ace4cda10d2316473ef87b34962cafbac4b225940ec4df06bc21e06e761e1ce1`.
+Archive `v4ai-qualified-evidence.tar.gz`, SHA-256
+`363ab52db2902d65a03f88b40530756f67f42293ccc9c950dcfd8bda7fa26419`,
+contains 32 payloads / 241,565 bytes, all verified locally. CI local-first-create-pr
+stopped at the existing missing performance reference before tests (run 40041011240,
+job 120711832078, owner #4347). Final complete correctness gates and V5 remain open.
+
+### V1h — attribute the current mandatory SQL clean-build cost
+
+Status: diagnostic investigation; no production source/profile change authorized
+by an elapsed-time observation alone. V4ac measured 1,440.033s for the complete
+category with two Cargo workers. Earlier V1f used six workers and measured 789.540s
+for its three-build protocol on an older source. Do not call the difference a
+compiler regression or a code speedup without reconciling allocation and inputs.
+V1c concurrent clean builds, V1e JIT opt0, V1f lowering opt0 and V1g combined opt0
+are already rejected; do not repeat those unchanged experiments.
+
+Run one current canonical clean A / unchanged A / independent clean B protocol,
+with its seven rejection controls and byte equality for all three linked SQL tools.
+Use six Cargo workers and two Rayon workers only when preflight confirms the same
+previously demonstrated allocation: eight available CPU threads, 8 GiB working
+memory plus 2 GiB reserve, 8 GiB target space plus 20 GiB reserve. Otherwise record
+capacity as unavailable rather than silently altering the experiment. Keep exact
+pinned toolchains, current manifest profiles, debug/overflow behavior, both path
+maps, locked/offline resolution, incremental policy and canonical cleanup intact.
+Do not overlap clean builds or reuse compiled target contents between A and B.
+
+Add only Cargo's built-in timing output and external stage/resource observation.
+Preserve each real command, environment, raw artifact stream, timings report,
+selected linked-tool hashes, unit/profile/features/freshness inventory and cleanup
+result before targets disappear. Record metadata/setup, each build, hashing and
+cleanup separately; unit times overlap and must not be summed as wall-time savings.
+The 30-minute whole diagnostic cap and resource guards remain in force; incomplete
+stages are never a pass. Keep traced cold-build data diagnostic, not host-sensitive
+acceptance evidence. Reconcile current source/toolchain/allocation/graph against
+historical records before choosing one architectural bottleneck for implementation.
+No final gate, profile tradeoff or phase closure follows from this diagnostic alone.
+
+Deferred observation for a later bounded common-resolver item: the canonical
+verification resolver hashes the selected compiler twice even when its explicit
+override resolves to that same Cargo-selected file. The current binary is about
+1.3 GiB. This is source/size evidence, not a measured time saving; preserve Cargo
+freshness and differing-path byte validation if investigated. Keep it separate
+from this mandatory SQL build attribution.
