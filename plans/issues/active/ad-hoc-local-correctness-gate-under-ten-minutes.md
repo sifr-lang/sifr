@@ -8780,3 +8780,32 @@ integrity and generation controls on the exact candidate; matched serial/bounded
 observations using the same product and inputs. Formatting/source-size/ownership
 guards and independent exact-candidate review remain required. Final phase gates
 and V1/V5 acceptance remain unchanged.
+
+
+V4ab diagnostic decision:64 evenly spaced corpus cases execute four times with
+exact bytes/newline/preamble/source-map checks. Serial observations43.421s/43.332s;
+four-worker observations12.758s/12.792s. All256 executions pass using the same
+retained qualified installed product and exact corpus. Four outer workers each
+use one Rayon worker. Guard114.258s, no cap/signals/source mutation, empty session.
+The approximately3.4x sample improvement supports bounded implementation; it does
+not qualify the complete732-case corpus or the current implementation candidate.
+Evidence: `v4ab-emit-probe/complete.json` and its guarded process/capacity records.
+
+Implement a bounded noninteractive command batch with main-thread signal ownership
+and serial result callbacks. Keep canonical scalar execution unchanged. Only
+installed public emission adopts the batch, using profile-owned process slots;
+its parallel children receive one Cargo/Rayon worker each. Preserve fresh command
+execution, exact byte/source-map assertions and all other installed checks.
+Record every independent failure, reject missing/duplicate outcomes, and restore
+corpus report order after completion. Qualify cancellation, setup/callback failures
+and descendant cleanup before full installed execution. No new timing acceptance
+yet; final V1/V5 and complete phase gates remain open.
+
+
+V4ab first focused attempt:16 of17 tests pass; the cancellation control fails
+before exercising the runner because its nested child source has an unterminated
+string. Compile that exact generated script to confirm the construction error,
+then preserve escaped newlines with a raw outer string. The production batch is
+unchanged. All17 focused tests subsequently pass in7.659s including wrapper,
+with no cap/signals/source mutation and an empty session. Preserve the original
+failed attempt and `v4ab-focused-failure.json`; no full candidate qualification yet.

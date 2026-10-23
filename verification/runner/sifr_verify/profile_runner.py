@@ -101,6 +101,7 @@ class ProfileRunner:
         self.env = os.environ.copy()
         overrides, self.forward_args = extract_overrides(self.forward_args)
         self.build_allocation = allocate(self.profile, self.env, overrides)
+        self.env["SIFR_VERIFY_PROCESS_SLOTS"] = str(self.build_allocation.slot_limit)
         self.env["CARGO_BUILD_JOBS"] = str(self.build_allocation.compiler_jobs)
         self.env["RAYON_NUM_THREADS"] = str(self.build_allocation.sifr_jobs)
         for field, variable in E2E_ENV.items():

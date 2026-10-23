@@ -44,6 +44,12 @@ class Qualification:
         command = [str(value) for value in arguments]
         result = execute(command, cwd=self.workspace, env=env or self.env,
                          deadline_seconds=900, limit_bytes=16 * 1024 * 1024)
+        self.record(name, command, result)
+        assert not result.truncated and result.cause == "exit", (name, result)
+        assert (result.returncode == 0) == success, (name, result.stderr.decode(errors="replace")[-3000:])
+        return result
+
+    def record(self, name, command, result):
         (self.output / (name + ".stdout")).write_bytes(result.stdout)
         (self.output / (name + ".stderr")).write_bytes(result.stderr)
         self.rows.append({"id": name, "command": command, "cwd": str(self.workspace),
@@ -52,9 +58,6 @@ class Qualification:
                           "stdout_sha256": hashlib.sha256(result.stdout).hexdigest(),
                           "stderr_sha256": hashlib.sha256(result.stderr).hexdigest()})
         self.save()
-        assert not result.truncated and result.cause == "exit", (name, result)
-        assert (result.returncode == 0) == success, (name, result.stderr.decode(errors="replace")[-3000:])
-        return result
 
     def installed(self):
         # The corpus producer emits single-file Rust. Fixture paths beneath the
@@ -90,26 +93,8 @@ class Qualification:
         self.report["source_corpus_sha256"] = digest(self.corpus / "coverage.json")
         self.report["installed_metadata_id"] = before
         self.report["portable_payload_sha256"] = full["portable_payload_sha256"]
-        for row in coverage["rows"]:
-            name = row["fixture"]
-            source = self.workspace / (name + ".sifr")
-            shutil.copy2(self.corpus / source.name, source)
-            assert digest(source) == row["source_sha256"], ("corpus source bytes differ", name)
-            expected = (self.corpus / (name + ".source.rs")).read_bytes()
-            result = self.run("emit-" + name, [binary, "emit", source])
-            assert result.stdout == expected, ("public emit bytes differ", name)
-            assert result.stdout.endswith(b"\n") == row["final_newline"]
-            start = result.stdout.find(b"// --- stdlib:")
-            end = result.stdout.find(b"\n// --- end stdlib ---")
-            assert (None if start < 0 else start) == row["preamble_start"], name
-            assert (None if end < 0 else end) == row["preamble_end"], name
-            for mapping in row["generated_source_maps"]:
-                mapped = result.stdout
-                if mapping["path"].endswith("#stdlib-preamble"):
-                    assert start >= 0 and end >= start, name
-                    mapped = result.stdout[start:end].decode().rstrip().encode() + b"\n"
-                assert len(mapped) == mapping["source_bytes"], name
-                assert hashlib.sha256(mapped).hexdigest() == mapping["source_sha256"], name
+        from installed_emission import verify_public_emission
+        verify_public_emission(self, binary, coverage["rows"])
         assert digest(metadata) == before, "qualification replaced the consumed metadata"
         self.report["public_emit_cases"] = len(coverage["rows"])
         self.save()
