@@ -76,7 +76,11 @@ class SetupPolicyTests(unittest.TestCase):
             if setup_env is compiler_env:
                 compiler_commands += 1
                 self.assertEqual(setup_env["CARGO_NET_OFFLINE"], "true")
-                self.assertIn("--offline", args)
+                if args[0] == "cargo":
+                    self.assertIn("--offline", args)
+                else:
+                    self.assertEqual(args, [sys.executable, str(REPO_ROOT /
+                        "verification/areas/common/release_compiler.py")])
             else:
                 self.assertNotIn("CARGO_NET_OFFLINE", setup_env)
             self.assertEqual(setup_env["CARGO_HOME"], "/owned/cache")

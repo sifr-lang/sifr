@@ -121,6 +121,19 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         self.assertEqual(corpus[-4:], ["full_corpus_exact_emission", "--", "--ignored", "--nocapture"])
         self.assertNotIn("SIFR_RELEASE_VERSION", env)
 
+    def test_corpus_only_preparation_keeps_release_ownership_with_its_prerequisite(self):
+        sysroot_module()
+        import package_build
+        calls = []
+        root = Path("/owned/worktree")
+        with patch.object(package_build, "prepare_release_compiler") as release, \
+             patch.object(package_build, "prepare_source_snapshot"):
+            package_build.prepare(root, {}, lambda *a, **k: calls.append((a, k)), corpus_only=True)
+        release.assert_not_called()
+        self.assertEqual(len(calls), 1)
+        self.assertIn("--no-run", calls[0][0][0])
+        self.assertEqual(calls[0][1]["env"]["SIFR_RELEASE_VERSION"], package_build.RELEASE_VERSION)
+
     def test_source_preparation_failure_propagates(self):
         def fail(*args, **kwargs):
             raise CommandFailed(101)

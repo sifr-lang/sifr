@@ -114,6 +114,10 @@ class ReleaseCompilerPreparationTests(unittest.TestCase):
                  self.assertRaisesRegex(RuntimeError, "not executable"):
                 release.prepare_release_compiler(root, {}, lambda *a, **k: None)
             self.fixture(root)
+            with patch.object(release.subprocess, "check_output", return_value="host: test-host\n"), \
+                 patch.object(release.os, "access", return_value=False), \
+                 self.assertRaisesRegex(RuntimeError, "not executable"):
+                release.prepare_release_compiler(root, {}, lambda *a, **k: None)
             with patch.object(release.subprocess, "check_output", side_effect=[
                     "host: test-host\n", "sifr 0.1.0-beta.12\n"]), \
                  self.assertRaisesRegex(RuntimeError, "version mismatch"):
