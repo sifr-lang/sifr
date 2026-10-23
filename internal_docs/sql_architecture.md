@@ -1615,6 +1615,12 @@ Each provider distribution contains separate component, runtime, and tool
 artifacts. They can share one source repository and one release identity. Their
 dependency graphs and target environments remain separate.
 
+Native Rust consumers build the provider compiler crates as `rlib` libraries, so
+Cargo can retain separate dependency variants. The [canonical component producer](../verification/areas/sql_platform/tools/build_sql_components.py)
+explicitly selects `cdylib` for the pinned wasm guest build. The guest ABI and
+checked-in component qualification remain unchanged; native consumers do not
+implicitly produce unversioned shared libraries.
+
 The implemented PostgreSQL runtime bridge is detailed in
 [`sql_postgresql_runtime.md`](./sql_postgresql_runtime.md). It defines verified
 pool states, raw-driver boundaries, task ownership, execution shapes,
