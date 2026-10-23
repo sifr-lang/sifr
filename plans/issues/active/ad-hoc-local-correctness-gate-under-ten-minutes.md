@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4u SQL provenance repair merged; V4v repeated build-transition investigation in progress; integrated gates and V1/V5 timing acceptance remain open
+current_stage: V4v nested Cargo context repair merged; V4w native/component build-role investigation in progress; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -8134,3 +8134,78 @@ Compare instrumented diagnostic reasons separately from ordinary before/after
 timing. No SQL component rebuild is required for a test-only LSP change unless
 canonical source validation establishes an affected producer input. Required final
 gates, remaining SQLite/major coexistence work and all V5 scenarios remain open.
+
+
+### V4v delivered — prevent parent package context from invalidating nested Cargo
+
+Merged PR #4439, merge `10a237b4aa7d97581399e6f22f261b81d8c34689`, candidate
+`b85da948693973db2182da7693f7a21321cccbba`. The LSP comparison keeps the same
+Cargo command and CLI assertions, removing only Cargo-injected parent package
+metadata and OUT_DIR. Deliberate target/toolchain/flags/wrappers/offline/allocation
+and sysroot settings remain intact. No production compiler or dependency changes.
+
+The causal chain is reproduced: ring records the LSP package metadata as an
+external rerun-if-env-changed input; returning to ordinary driver preparation
+reports CARGO_MANIFEST_DIR changing from the LSP path to absent. Its actual build
+script still receives Cargo's correct own-package values; this was unnecessary
+invalidation, not demonstrated incorrect ring output or cache corruption.
+
+All two boundary controls, 14 sysroot request tests and 116 LSP unit tests pass.
+The full unit invocation also executes 71 frontend and 158 analysis tests, zero
+failures/ignores. Every guarded session ends empty without cleanup signals.
+Final nested/ordinary fingerprint checks report no dirty units or compilation.
+Formatting, size, diff and current SQL component provenance checks pass.
+One ordinary sequential cycle improves from 320.844s + 134.318s = 455.162s to
+13.689s + 4.688s = 18.377s. This is scoped before/after evidence, not statistical
+whole-gate acceptance. Changed-candidate editor and CLI preparation is separately
+232.197s + 143.362s; that cost is not hidden as bootstrap or a steady-state saving.
+
+Independent exact-candidate review SATISFIED, no blockers; SHA-256
+`dcc091777c9ef7191aec4d27cf1e0a8ef51bc2abeb1f682ba0a613ce720d9873`.
+All checks pending at review subsequently passed unchanged. Follow-ups retain
+other separately targeted Cargo fixture calls, additional unobserved Cargo context
+variables, and the separate SQLite dependency-variant collision.
+`v4v-qualified-evidence.tar.gz`: 385 payloads, 607,144,601 payload bytes,
+20,049,513 archive bytes; SHA-256
+`9f11b774a1fed970aa953bb1a796fc70fa06c1def430474f5911f6a5ee04fe1f`.
+Archive and every payload independently verified locally. The initial truncated
+trace, launcher receipt race and collector syntax failure remain preserved;
+none changed the reviewed source or reclassified test execution. Exact-head CI
+admission still fails an unset performance reference; no green-CI claim.
+
+### V4w bounded investigation and repair — explicit native and component build roles
+
+Owner: LOCAL-GATE V3/V4 SQL artifact coexistence. Register before implementation.
+V4v reproduced standalone SQLite versus combined SQL-tool preparation replacing
+six dependency fingerprints at the same native sifr_sql_sqlite artifact identity,
+then replacing them back. Source/profile/configuration fields remain equal. All
+three SQL provider manifests currently request both rlib and cdylib; their guest
+exports are wasm-only. The canonical builder currently relies on that manifest
+setting to produce wasm components. The pinned Cargo supports an explicit
+`cargo rustc --lib --crate-type cdylib` invocation.
+
+First prove with a small isolated Cargo fixture that a dual-role library replaces
+its dependency variants, that native rlib-only variants coexist, and that explicit
+cdylib production still works. Run real binaries with distinct dependency behavior;
+check actual freshness, not just file existence. This fixture is mechanism evidence,
+not a substitute for real provider execution or an elapsed-time speed claim.
+
+If that proof holds, make the native SQL provider libraries rlib-only and request
+cdylib explicitly in the canonical wasm producer. Keep every provider/series,
+public Rust API, guest export, runtime behavior, exact dependency/toolchain pin,
+SDK/virtualizer identity, source validation and negative control. No new daemon,
+result cache, externally owned patch, new crate or gratuitous lockfile change.
+Do not remove a maintained native C ABI if inspection discovers one; reconcile
+that ownership before implementation. Preserve the generated artifacts and rebuild
+all affected components through the real builder, never relabel their provenance.
+
+Named acceptance: focused builder role/command controls; real native standalone/
+combined/standalone reuse with identical assertion selection; all current artifact
+manifests/digests and affected qualification mutation controls; actual component-host
+execution of all ten artifacts; complete selected SQL area including independent
+clean-build qualification; affected preparation/runner contracts; format/size/diff
+and independent exact-candidate review. Use a separately owned component target,
+retained native targets, 30-minute diagnostic caps and capacity/source/session
+guards. Preserve failed/capped attempts and account for every unexecuted category.
+Measure ordinary runs separately from tracing. Do not claim a ten-minute full gate
+from this bounded repair; final gates and all V5 scenarios remain open.
