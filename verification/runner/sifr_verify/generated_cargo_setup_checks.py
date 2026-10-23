@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -245,20 +246,46 @@ class SetupPolicyTests(unittest.TestCase):
         prepare_tooling_test_binaries(profile(["static"]), original, run)
         self.assertEqual(calls, [
             ("sifr_lint", original),
-            ("sifr_analysis", {**original, "CARGO_INCREMENTAL": "0"})])
+            ("sifr_analysis", original)])
         self.assertNotIn("CARGO_INCREMENTAL", original)
         calls.clear()
-        explicit = {"CARGO_INCREMENTAL": "1"}
-        prepare_tooling_test_binaries(profile(["full", "static"]), explicit, run)
-        self.assertEqual(calls, [(name, explicit) for name in
-                                ("sifr_lint", "sifr_analysis", "sifr_format", "sifr_analysis")])
-        calls.clear()
+        for explicit in ({}, {"CARGO_INCREMENTAL": "0"}, {"CARGO_INCREMENTAL": "1"}):
+            with self.subTest(environment=explicit):
+                prepare_tooling_test_binaries(profile(["full", "static"]), explicit, run)
+                self.assertEqual(calls, [(name, explicit) for name in
+                                        ("sifr_lint", "sifr_analysis", "sifr_format")])
+                calls.clear()
         prepare_tooling_test_binaries(profile(["formatter", "analysis"]), {}, run)
         self.assertEqual(calls, [("sifr_format", {}), ("sifr_analysis", {})])
         def fail(*args, **kw):
             raise CommandFailed(101)
         with self.assertRaises(CommandFailed):
             prepare_tooling_test_binaries(profile(["static"]), {}, fail)
+
+    def test_completion_inherits_policy_and_requires_actual_test_success(self):
+        path = REPO_ROOT / "verification/areas/developer_tooling/check_completion_quality.py"
+        spec = importlib.util.spec_from_file_location("completion_quality_policy_test", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        manifest = {"completion_quality": [{"cargo_test": "ranking"}, {"cargo_test": "ranking"}]}
+        for override in (None, "0", "1"):
+            environment = {"PATH": "/owned/bin", "CARGO_TARGET_DIR": "/owned/target"}
+            if override is not None:
+                environment["CARGO_INCREMENTAL"] = override
+            for returncode, output, expected in ((0, "ranking ... ok", 0),
+                                                 (1, "ranking ... ok", 1),
+                                                 (0, "0 tests passed", 1)):
+                with self.subTest(override=override, returncode=returncode, output=output), \
+                     patch.dict(os.environ, environment, clear=True), \
+                     patch.object(module.subprocess, "run", return_value=
+                                  subprocess.CompletedProcess([], returncode, output)) as run, \
+                     patch.object(module.sys, "stderr", new_callable=io.StringIO):
+                    self.assertEqual(module.run_cargo_tests(manifest), expected)
+                    run.assert_called_once()
+                    self.assertEqual(run.call_args.args[0],
+                                     ["cargo", "test", "--locked", "-p", "sifr_analysis", "ranking"])
+                    self.assertEqual(run.call_args.kwargs["env"], environment)
+                    self.assertEqual(dict(os.environ), environment)
 
     def test_performance_preparation_selects_benchmarks_and_propagates_failure(self):
         calls = []

@@ -8991,3 +8991,61 @@ checks. Every generated file, manifest and lock agrees across trials, with
 identical binary/source/environment identities, private output roots, no cap or
 surviving session process. This is one diagnostic pair, not V5. Proceed with the
 registered bounded preparation implementation and exact-candidate acceptance.
+
+
+### V4ad closure — complete bounded generated preparation / #4446
+
+PR [#4446](https://github.com/sifr-lang/sifr/pull/4446) merged as
+`973a9aa8d31cd8c23acd73164fcb26fa3643ef38`; reviewed/qualified candidate
+`8aa8105830324810ea4c5d6b8d0ba768022a007e`, base `1da7d1bfda10d923cb2438ba89d774266b97f56c`.
+All 93 canonical public materializations and locked portable graph checks pass in
+315.369s (276.556s materialization), using four workers and one inner worker.
+Every graph has exact once-only command/fetch evidence, private output roots and
+unchanged manifest/lock hashes. The matched feasibility saving remains 383.104s;
+830.154s historical preparation versus 315.369s is not a controlled comparison.
+
+All ten representative execution gates pass in 866.789s, including 91 child
+receipts, 17 negative controls, both native compile/link/runtime cases and
+freshness. Preparation plus representative execution is 1182.158s, excluding
+workspace/compiler setup; this scope still exceeds 600s. Eight new regressions,
+all 31 foundation groups, four unchanged emitted plans, formatting and source
+size/ownership checks pass. No cap, source change or surviving session process.
+
+Exact-candidate independent source review is SATISFIED with no blockers;
+response SHA-256 `e1c9bbb7b5508f4daba6ad0474dd439379bb30f6fa5444ad59a34bed54a5306e`.
+Archive `v4ad-qualified-evidence.tar.gz`, SHA-256
+`51daa0efea35b85b65d2e0863ca6ef4e6057668e62b94fb77590c64361b01626`, contains
+2022 payloads / 11,328,799 payload bytes, all independently verified locally.
+Optional report terminal-status/error-excerpt improvements belong to runner
+observability; inherited post-reap PID reuse belongs to common process hardening.
+Neither changes the satisfied scoped contract. CI preserves the existing missing
+performance reference (#4347) and missing run1 report signature with underlying
+cause unestablished. No CI-green or final phase/V5 claim.
+
+### V4ae — one tooling build policy for preparation and execution
+
+Status: registered. Remove an obsolete helper-local nonincremental default, not
+any tests. June commit `23e70e034a65cc497a4a7d1984b7461e9066f703` introduced
+completion's `CARGO_INCREMENTAL=0` to align with the then-current merge policy
+(as recorded in its round-5 review). Current profile policy leaves it unset;
+V4ac therefore prepared two analysis graphs, with the forced nonincremental
+one taking 566.839s. That observation is not a controlled saving forecast.
+
+Completion must inherit the same environment as other analysis checks, preserving
+explicit caller values including 0 and 1. Preparation selects each distinct
+package graph once in stable order using that same environment. Preserve locked
+Cargo commands, every completion fixture/threshold and required actual-test
+success marker, and all selected tooling suites. Do not change profiles, Rust
+source, feature resolution, explicit clean/invalidation protocols or dependency
+pins. No artifact cleaning or fresh cold build merely to manufacture a speedup.
+
+Named acceptance: focused preparation selection/deduplication/environment checks,
+actual completion subprocess command/environment/outcome controls (including
+nonzero and missing success evidence), seeded completion regression, all foundation
+groups, four unchanged emitted plans and static/ownership checks. On the exact
+candidate run canonical tooling preparation and all selected developer-tooling
+suites with retained targets and individual 30-minute diagnostic bounds; reconcile
+all selected case/variant identities and required completion/analysis tests.
+Record ordinary timings and actual Cargo freshness evidence separately from the
+historical 566.839s. Perform independent exact-candidate source review. Full final
+correctness gates and repeated V5 invalidation scenarios remain mandatory.
