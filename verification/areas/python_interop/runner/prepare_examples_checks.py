@@ -6,9 +6,11 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import prepare_examples
+from example_environment_checks import run_example_environment_self_tests
 
 
 def run_preparation_self_tests():
+    run_example_environment_self_tests()
     paths = SimpleNamespace(area_root=Path("/owned/area"))
     package = Path("/owned/examples/case")
     case = SimpleNamespace(case_id="case")

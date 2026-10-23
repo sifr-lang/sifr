@@ -139,3 +139,50 @@ fn authoring_probe_domain_is_distinct_from_empty_full_probe() {
         digest_python_environment_probe(&request, &probe),
     );
 }
+
+#[test]
+fn authoring_environment_identity_binds_each_storage_compatibility_field() {
+    let request = request();
+    let probe = valid_probe();
+    let original = digest_python_authoring_environment_probe(&request, &probe);
+    let check_request = |modify: fn(&mut crate::PythonEnvironmentProbeRequest)| {
+        let mut next = request.clone();
+        modify(&mut next);
+        assert_ne!(
+            original,
+            digest_python_authoring_environment_probe(&next, &probe)
+        );
+    };
+    check_request(|x| x.venv_root = "/other".into());
+    check_request(|x| x.interpreter = "/other/python".into());
+    check_request(|x| x.pyproject = Some("".into()));
+    check_request(|x| x.pyproject = Some("pyproject.toml".into()));
+    check_request(|x| x.lock = Some("".into()));
+    check_request(|x| x.lock = Some("uv.lock".into()));
+
+    let check_probe = |modify: fn(&mut crate::PythonEnvironmentProbe)| {
+        let mut next = probe.clone();
+        modify(&mut next);
+        assert_ne!(
+            original,
+            digest_python_authoring_environment_probe(&request, &next)
+        );
+    };
+    check_probe(|x| x.implementation_name = "PyPy".into());
+    check_probe(|x| x.implementation_version = "3.15".into());
+    check_probe(|x| x.cpython_version_tuple.push(8));
+    check_probe(|x| x.executable = "/other/python".into());
+    check_probe(|x| x.sys_prefix = "/other".into());
+    check_probe(|x| x.sys_base_prefix = "/other".into());
+    check_probe(|x| x.site_packages.push("/other/site".into()));
+    check_probe(|x| x.sys_path.push("/other".into()));
+    check_probe(|x| x.soabi = None);
+    check_probe(|x| x.extension_suffixes.push(".pyd".into()));
+    check_probe(|x| x.pointer_width = 32);
+    check_probe(|x| x.platform = "linux".into());
+    check_probe(|x| x.machine = "x86_64".into());
+    check_probe(|x| x.libpython = None);
+    check_probe(|x| x.free_threaded = true);
+    check_probe(|x| x.pyproject_digest = Some("digest".into()));
+    check_probe(|x| x.uv_lock_digest = Some("digest".into()));
+}

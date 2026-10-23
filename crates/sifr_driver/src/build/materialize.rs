@@ -400,11 +400,7 @@ fn python_environment(project: &GeneratedBinaryProject) -> String {
         .python_runtime
         .as_ref()
         .map_or_else(String::new, |runtime| {
-            format!(
-                "{}:{}",
-                runtime.probe_digest(),
-                runtime.selected_library().unwrap_or("")
-            )
+            runtime.native_dependency_environment()
         })
 }
 

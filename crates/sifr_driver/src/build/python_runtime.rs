@@ -119,6 +119,16 @@ impl PackagePythonRuntime {
         &self.authoring_environment_digest
     }
 
+    /// Storage compatibility only: every request still probes/validates its own
+    /// imports and trust, runs Cargo, and binds the full probe into final output.
+    pub(super) fn native_dependency_environment(&self) -> String {
+        format!(
+            "{}:{}",
+            self.authoring_environment_digest(),
+            self.selected_library().unwrap_or("")
+        )
+    }
+
     pub fn set_arrow_certifications(
         &mut self,
         certifications: Vec<sifr_package::ArrowCertification>,
@@ -506,6 +516,36 @@ mod tests {
         metadata.sys_path = vec!["/tmp/sifr py/lib".to_string()];
         metadata.site_packages = vec!["/tmp/sifr py/site-packages".to_string()];
         metadata
+    }
+
+    #[test]
+    fn dependency_storage_preserves_full_runtime_identity_and_environment_boundaries() {
+        let first = metadata();
+        let mut second = first.clone();
+        second.probe_digest = "different-import-observation".into();
+        second.required_import_roots.push("numpy".into());
+        second.trusted_import_roots.push("numpy".into());
+        second.trusted_native_roots.push("numpy".into());
+        assert_eq!(
+            first.native_dependency_environment(),
+            second.native_dependency_environment()
+        );
+        assert_ne!(first.probe_digest(), second.probe_digest());
+        assert_ne!(
+            render_python_runtime_prelude(&first),
+            render_python_runtime_prelude(&second)
+        );
+        second.authoring_environment_digest = "changed-interpreter-abi-or-lock".into();
+        assert_ne!(
+            first.native_dependency_environment(),
+            second.native_dependency_environment()
+        );
+        second = first.clone();
+        second.libpython = Some("/other/libpython3.14.so".into());
+        assert_ne!(
+            first.native_dependency_environment(),
+            second.native_dependency_environment()
+        );
     }
 
     #[test]

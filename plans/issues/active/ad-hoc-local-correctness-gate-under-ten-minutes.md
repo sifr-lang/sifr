@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4af pinned Python reuse qualified and merged; V4ag duplicate native preparation; final gates and V1/V5 timing acceptance remain open
+current_stage: V4ag duplicate native preparation qualified and merged; V4ah Python native storage investigation; final gates and V1/V5 timing acceptance remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9194,3 +9194,104 @@ the allocation, profile-deduplication and generated-setup policy test doubles to
 return explicit single-case success. Preserve their selection/environment checks,
 the first failed receipt and the native preparation attempt. No production fallback
 or weakened execution-count check is introduced.
+
+
+### V4ag closure — native preparation ownership / #4449
+
+PR [#4449](https://github.com/sifr-lang/sifr/pull/4449) merged as
+`27668bed7581aac09994c529d709ad3b28083ac3`; candidate
+`9201da6e5e9c1be507cb7a65a47efb3acb564d06`, base `faaf99e6ac12f0912ab94990bf77924d69573d82`.
+All 93 affected policy tests pass, as do all 31 foundation groups, four unchanged
+emitted plans and static checks (156.285s guarded). Real driver preparation passes
+in 25.983s (native helper 22.808s), Arrow/tensor runtime roundtrip in 22.076s and
+negative diagnostics in 2.379s; their sum is 50.438s, not a full category or phase.
+The native guard's 169.299s includes waiting for policy checks, not just execution.
+
+Actual ignored inventory remains 82 names. One is explicitly owned by preparation;
+the canonical scheduler selects all 81 remaining entries, including the existing
+subprocess helper. That selection proof uses synthetic command outcomes and does
+not count as executing those 81 tests. Real preparation and both affected semantic
+checks executed. Every Rust source/fixture/assertion is unchanged. This removes a
+duplicate helper that cost 84.925s in V4ac; current full-category savings remain
+unmeasured. No stale result, persistent receipt or environment flag authorizes it.
+
+The initial candidate's failed foundation receipt, preparation-only attempt and
+NOT SATISFIED review are preserved. Three policy modules' recording-only mocks now
+return explicit outcomes while retaining all original checks. Final source review
+SATISFIED with no blockers, SHA-256
+`31976bd8968c2acdf85b3466d8af78662af0caf7f188b88c8a58e03b806d43bd`.
+Archive `v4ag-qualified-evidence.tar.gz`, SHA-256
+`cf096a8b47d928e432cf26a7c301c464501bf50d3c5e018aecf1493205f162e2`, contains
+77 payloads / 687,937 bytes, all verified locally. CI was pending at evidence
+capture; no CI success claimed. Full final gates and repeated V5 remain open.
+
+### V4ah — investigate Python example native dependency storage
+
+Status: investigation, no production cache change. Return to the 1,301.440s Python
+example preparation cost (29 examples across nine suites) before further isolated
+small optimizations. Inspect exact retained family/root fingerprints and preparation
+commands, accounting for different candidates and warm/cold state. Example fixtures
+already point their venv/pyproject/lock symlinks to the pinned interop environment;
+they still have per-example full probe identities and declaration/trust policies.
+Do not merge those identities, weaken import/trust validation or assume aliases are
+safe to canonicalize to the base interpreter.
+
+First run a small owned, capacity-bounded storage experiment with real generated
+projects and exact release/Cargo/PyO3 inputs. Compare separate versus shared Cargo
+dependency storage while keeping generated source, full environment identities,
+runtime processes and all assertions intact. Use ordinary command timing plus
+Cargo freshness evidence; keep first population separate from subsequent reuse.
+No production namespace/key change follows from a timing result alone. Establish
+which native inputs Cargo tracks and which must remain in a storage compatibility
+identity; account for in-place interpreter/library/configuration changes, changed
+imports, alternate venvs, trust isolation, concurrent capture, leases and cleanup.
+Existing complete finalized-artifact identity must continue to include full Python
+request/probe/trust identity, and Cargo must run before finalized-output reuse.
+
+Record findings before implementation. If supported, register a bounded production
+change with exact invalidation/isolation/concurrency controls and all 29 actual
+example preparations/runtime assertions. If the experiment does not establish a
+safe useful gain, preserve it and choose the next measured major cost. The existing
+final correctness gates, independent review and all V5 scenarios remain required.
+
+
+### V4ah findings and bounded implementation acceptance
+
+The two real callback fixtures pass in isolated and shared ancestor-environment
+layouts with all source/bridge bytes and runtime markers preserved. The second
+build is 37.316s isolated versus 3.901s shared; the shared family's 47 library
+fingerprints and timestamps are unchanged. First population is diagnostic, not
+host-sensitive acceptance. Preserve the initial wrapper failure (it mistook the
+CLI output directory for an executable); its successful build was reused and all
+four actual executions completed. Full evidence: `v4ah-experiment-evidence.tar.gz`.
+The 29 most recent retained examples have 47 library fingerprints each, 42 identical
+across all 29; their request/import selections still fragment dependency storage.
+
+Implement two parts of that same storage-fragmentation root cause:
+- Place independent example packages under one dedicated ancestor uv project,
+  with its three exact links to the pinned area environment. Use existing ancestor
+  discovery, preserve each source/bridge/certification payload and declaration/trust
+  policy, reject conflicting aliases, and retain separate runtime processes.
+- Select Cargo dependency storage using the existing authoring-environment digest
+  plus selected libpython. That digest retains request paths, interpreter/ABI,
+  platform, sys paths and pyproject/lock contents; only entrypoint import selections
+  are excluded. This is storage selection only. Full probe/distribution identity,
+  generated runtime metadata, package/final-output identities and per-request trust
+  validation remain unchanged. Cargo must run every time; build scripts remain
+  responsible for declaring their external inputs. No cached correctness result or
+  inferred lockfile installation check is introduced. Existing toolchain/source/
+  profile/owner boundaries, family lease and output capture remain unchanged.
+
+Named acceptance: focused package digest controls proving every retained request/
+probe field invalidates the stable environment identity; driver controls proving
+import/trust/full-output differences survive shared storage and changed stable
+identity/libpython selects different storage; existing native build-script freshness,
+trust, ownership, alias, lease/concurrency and finalized-artifact controls. Python
+fixture checks must preserve payloads and declarations, share only environment paths,
+reject wrong/broken aliases and missing pinned inputs. Run all 29 real example
+preparations and the full 30-suite Python area (all nine example suites), preserving
+failures and the 30-minute category cap. Record exact coverage and per-case timings,
+Cargo fingerprint reuse, remaining family splits and source identity. All foundation
+groups, four emitted plans and applicable static checks must pass. Independent
+exact-candidate review required. This intermediate item does not claim the full gate
+is below ten minutes; final create-pr/merge and repeated V5 scenarios remain open.
