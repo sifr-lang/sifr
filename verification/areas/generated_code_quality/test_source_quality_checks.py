@@ -317,7 +317,7 @@ class CommandContextTests(unittest.TestCase):
                             stack.enter_context(patch.object(gcq, name))
                         stack.enter_context(patch.dict(os.environ, {}, clear=True))
                         stack.enter_context(patch.object(gcq, 'run_command', side_effect=run))
-                        args = SimpleNamespace(group=[], keep_success=True)
+                        args = SimpleNamespace(group=[], keep_success=True, materialize=gcq.materialize_entry)
                         if gate == 'native':
                             run_native_gate(gcq, [entry], args)
                         else:
