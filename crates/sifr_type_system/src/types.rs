@@ -1,5 +1,8 @@
 //! Core type definitions for the Sifr type system.
 
+mod clone_impl;
+#[cfg(test)]
+mod clone_tests;
 mod definitions;
 pub use definitions::*;
 mod display_impl;
