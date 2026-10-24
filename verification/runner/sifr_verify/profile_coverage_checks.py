@@ -63,5 +63,3 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
     for profile_name in ("nightly", "release"):
         if "hardening-determinism-scale" not in profiles[profile_name]["guardrail_steps"]:
             raise AssertionError(f"{profile_name} lost determinism-scale coverage")
-
-
