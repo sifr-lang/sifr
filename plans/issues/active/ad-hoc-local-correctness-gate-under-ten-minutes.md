@@ -12586,3 +12586,79 @@ allocation and all nested case inventories. Reconcile against the emitted plan
 before selecting the next largest root cause. Preserve the independent SQL
 clean-build contract, final scoped create-pr/merge gates and all V5 scenarios.
 Any product repair still needs its own bounded acceptance and independent review.
+
+### V4bg outcome — every selected category executed
+
+Frozen candidate f12a0d0f835e85592cf0506c0280a4c9f31901e2 completed all 72
+selected diagnostic categories: 70 pass, two fail, zero unexecuted, zero
+30-minute caps. The interrupted campaign resumed only its nine pending
+categories after verifying unchanged source, selection and helper identity.
+The interruption gap is excluded; this is not a single facade timing trial.
+
+| Category | Count | Callback sum | Guard sum |
+|---|---:|---:|---:|
+| Preparation | 18 | 1795.918s | 1831.380s |
+| Guardrails | 15 | 323.752s | 347.557s |
+| Verification areas | 20 | 3301.906s | 3333.218s |
+| Crate configurations | 18 | 1759.433s | 1795.476s |
+| Native E2E | 1 | 292.734s | 294.853s |
+
+Preparation rebuilt changed-source retained targets; do not compare it with a
+previous already-primed run as a regression. All 20 area suite selections
+reconcile: 341 runner cases and 564 variants, including both failed cases.
+Nested counts are not all internal assertions. Native E2E exactly matches all
+732 maintained pass fixtures at both source compilation and runtime, across
+186 native groups. All emitted event completions pass. Its suite body is
+291.666s: source 51.690s, cache preparation 30.557s, native build 192.764s,
+runtime 15.708s, plus discovery/planning/reporting.
+
+Generated CLI tests execute all six selected assertions. Generated driver
+executes all 81 selected assertions; the 82nd listed helper belongs to crate
+preparation. Driver guard is 727.688s; invocation sums are Python integration
+47.275s (nine), Rust interop 414.865s (41), other checks 256.878s (31).
+The ordinary driver passes 794 assertions; its 82 ignored entries are the
+separately owned generated cases/helper. Other explicit phase-only or child
+helper ignores remain separately accounted, not falsely marked executed.
+
+SQL passes all 19 suites / 67 cases in 1187.895s guard. Independent clean-build
+protocol costs 1024.340s and all three executable hashes agree across clean A,
+reused A and independent clean B. It still exceeds the complete-gate target.
+Sysroot costs 592.024s; generated quality 343.456s plus preparation 184.293s.
+The CLI/lowering group costs 482.463s, including SQL application tests 221.23s.
+These are observed costs, not additive optimization promises.
+
+The two failures are coverage-matrix registration of the PostgreSQL
+build_selection target and six version features (V4ba owner), and the
+TypeScript/Go filesystem inventory missing the new batched probe boundary
+(V4be owner). The other 45 developer-tooling variants pass. Preserve both
+original failures. No product behavior failure was observed in executed checks.
+
+Evidence: v4bg-discovery/result.json, v4bg-resources.json,
+v4bg-area-reconciliation.json, v4bg-crate-reconciliation.json,
+v4bg-native-reconciliation.json, v4bg-e2e-reconciliation.json and the complete
+owned transcripts. Complete scoped facade gates and every V5 scenario remain
+open. This diagnostic does not establish a sub-ten-minute complete gate.
+
+### V4bh prospective execution — verification ownership registration
+
+Repair the two demonstrated registration omissions together with the previously
+recorded V4bc gap: metadata inventory checking must be part of delivery gates.
+This bounded item changes verification ownership and enforcement only.
+
+Acceptance:
+- Classify the actual PostgreSQL build_selection test and six maintained
+  PostgreSQL features; preserve every existing selected test and profile.
+- Document the batched native probe's physical manifest availability boundary
+  in the existing filesystem inventory, preserving semantic-provider authority.
+- Register the existing metadata audit and its negative controls in create-pr,
+  merge, nightly and release. Run it before preparation and prove a failure
+  blocks preparation. The explicit live profile remains unchanged.
+- Compare all seven emitted plans (five full profiles and the two scoped
+  correctness profiles): only the new guard and its ordinary create-pr budget
+  may differ. Do not weaken an existing budget, skip or selection.
+- Run affected runner controls, metadata audit/self-test, coverage-matrix
+  readiness, filesystem guard/self-test, profile validation, file-size checks,
+  diff checks, locked environment check and complete runner foundation self-test.
+- Require an independent exact-candidate review before intermediate merge.
+  The approved intermediate policy applies; final scoped create-pr/merge gates
+  and every V5 invalidation/coverage/timing qualification remain mandatory.

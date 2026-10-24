@@ -264,6 +264,7 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
         "stdlib-native-intrinsic-allowlist",
         "stdlib-native-adapter-reachability",
         "stdlib-manifest-schema",
+        "dx-metadata-inventory",
         "stdlib-bootstrap-ordering",
         "driver-maintainability",
         "method-dispatch-authority",
