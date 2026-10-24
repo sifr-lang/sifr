@@ -12,11 +12,13 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from batch_adapter import run_shared_gates
-from quality_batch import SHARED_GATES
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
+# The canonical area loader imports this file by path, not as a script.
+sys.path.insert(0, str(AREA_ROOT))
+from batch_adapter import run_shared_gates  # noqa: E402
+from quality_batch import SHARED_GATES  # noqa: E402
+
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 CORPUS_MANIFEST = AREA_ROOT / "data" / "corpus_manifest.json"
 GATE_SCRIPT = AREA_ROOT / "generated_code_quality.py"

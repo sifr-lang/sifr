@@ -10117,3 +10117,16 @@ category cap. Measure ordinary execution; use one targeted trace only if needed
 to explain a remaining cost. If safety or assertion parity cannot be established,
 reject the candidate instead of weakening the contract. Obtain scoped independent
 review before merge. Final complete scoped gates, V1 and all V5 remain required.
+
+
+V4aq initial qualification at `f9e584de2e314929f8bbe16c77b97cb364cc9b73`
+passed foundation checks and all four unchanged profile-plan comparisons. All 93
+portable graphs prepared successfully in 318.867s including guard overhead. The
+canonical area invocation then failed before any quality assertion: dynamic area
+loading did not include the new sibling batch modules on Python's import path.
+The earlier focused tests had supplied that path and missed this integration gap.
+Preserve this failed attempt; it is not a representative-suite pass. The repair
+makes the area adapter establish its own module path and adds an isolated-process
+regression through the actual canonical area loader. All 12 owner/adapter tests
+pass, including a real intrinsic-lint suite through that loader. Requalify the
+frozen repaired candidate before review or merge; no timing gain is claimed yet.

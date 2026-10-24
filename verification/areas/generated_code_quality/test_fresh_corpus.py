@@ -8,6 +8,8 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import subprocess
+import sys
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -209,6 +211,29 @@ class BatchProtocolTests(unittest.TestCase):
 
 
 class AreaAdapterTests(unittest.TestCase):
+    def test_canonical_area_loading_works_without_an_inherited_area_import_path(self):
+        repo = Path(__file__).resolve().parents[3]
+        parent = repo / "target/verification"
+        parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="gcq-loader-", dir=parent) as directory:
+            result_path = Path(directory) / "result.json"
+            script = (
+                "from pathlib import Path; import sys; "
+                "sys.path.insert(0, str(Path(sys.argv[1]) / 'verification/runner')); "
+                "from sifr_verify.areas import run_command; "
+                "raise SystemExit(run_command(['run', '--area', 'generated_code_quality', "
+                "'--suite', 'intrinsic-panic-lint', '--result-json', sys.argv[2]]))"
+            )
+            result = subprocess.run(
+                [sys.executable, "-I", "-c", script, str(repo), str(result_path)],
+                cwd=repo, text=True, capture_output=True, timeout=30, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            payload = json.loads(result_path.read_text())
+            self.assertEqual(payload["summary"]["total_variants"], 1)
+            self.assertEqual(payload["summary"]["total_failures"], 0)
+            self.assertEqual(payload["suites"][0]["name"], "intrinsic-panic-lint")
+
     def test_actual_request_transport_qualifies_each_gate_without_inventing_processes(self):
         import generated_code_quality as api
         fake = FakeQuality()
