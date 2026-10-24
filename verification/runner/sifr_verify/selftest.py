@@ -27,6 +27,8 @@ from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
 from .generated_cargo_setup_checks import policy_checks as generated_cargo_setup_policy_checks
 from .errors import SchemaError
+from .demo_freshness_checks import policy_checks as demo_freshness_checks
+from .demo_freshness_policy import requires_strict_freshness, validate_freshness_ownership
 from .execution_scope_checks import policy_checks as execution_scope_checks
 from .dx10_profile_checks import policy_checks as dx10_profile_checks
 from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
@@ -69,6 +71,7 @@ GOVERNANCE_SCHEMA_COUNT = 20
 
 def run_all() -> list[str]:
     checks = [
+        ("strict demo freshness ownership and evidence", demo_freshness_checks),
         ("R3 command progress and stage accounting", progress_checks),
         ("preparation dependency and failure accounting", preparation_checks),
         ("pinned Python preparation ownership", python_preparation_checks),
@@ -296,7 +299,10 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
             missing = sorted(suites.difference(selected.get(area, set())))
             if missing:
                 raise AssertionError(f"{profile_name} lost canonical {area} coverage: {missing}")
+        validate_freshness_ownership(profile)
         guardrails = set(profile["guardrail_steps"])
+        if requires_strict_freshness(profile, "generated_code_quality"):
+            guardrails.add("demo-emitted-freshness")
         if not required_guardrails.issubset(guardrails):
             raise AssertionError(f"{profile_name} lost canonical guardrail coverage")
         toolchain = set(profile["toolchain_steps"])

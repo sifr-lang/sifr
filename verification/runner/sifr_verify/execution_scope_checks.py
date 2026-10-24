@@ -47,7 +47,10 @@ class ExecutionScopeTests(unittest.TestCase):
             expected_guardrails.index("stdlib-manifest-schema") + 1,
             "dx-metadata-inventory",
         )
+        expected_guardrails.remove("demo-emitted-freshness")
         self.assertEqual(plan["guardrail_steps"], expected_guardrails)
+        quality = next(a for a in plan["selected_areas"] if a["area"] == "generated_code_quality")
+        self.assertIs(quality["require_fresh_demo_companions"], True)
         assert_frozen_crate_coverage(
             frozen["crate_configurations"],
             configuration_plan(select_execution_scope(load_profile("merge"), True), "full"),

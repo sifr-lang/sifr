@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .build_allocation import validate_build_policy
+from .demo_freshness_policy import validate_freshness_ownership
 from .errors import VerificationError
 from .execution_scope import scope_metadata, select_execution_scope
 from .paths import PROFILES_DIR, REPO_ROOT
@@ -55,6 +56,10 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
     validate_build_policy(payload["resource_policy"])
     validate_selected_area_suites(payload)
+    try:
+        validate_freshness_ownership(payload)
+    except ValueError as error:
+        raise ProfileError(str(error)) from error
     validate_toolchain_steps(payload)
     validate_crate_test_membership(payload)
     validate_step_budgets(payload)
@@ -495,6 +500,8 @@ def build_profile_plan(profile_name: str, *, correctness_only: bool = False) -> 
             "area": selection["area"],
             "suites": list(selection["suites"]),
             "resource_classes": list(selection["resource_classes"]),
+            **({"require_fresh_demo_companions": True}
+               if selection.get("require_fresh_demo_companions") else {}),
         }
         for selection in profile["selected_areas"]
     ]

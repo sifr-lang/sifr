@@ -82,6 +82,9 @@ def print_list() -> None:
 
 def run_area(args: argparse.Namespace) -> int:
     area = area_by_name(args.area)
+    strict_freshness = getattr(args, "require_fresh_demo_companions", False)
+    if strict_freshness and area.name != "generated_code_quality":
+        raise DiscoveryError("strict demo freshness is only supported by generated_code_quality")
     runner_path = area.manifest_path.with_name("runner.py")
     if not runner_path.is_file():
         raise DiscoveryError(f"verification area has no runner: {area.name}")
@@ -112,6 +115,8 @@ def run_area(args: argparse.Namespace) -> int:
         raise DiscoveryError(f"verification area runner has no callable main(): {runner_path}")
 
     runner_args: list[str] = []
+    if strict_freshness:
+        runner_args.append("--require-fresh-demo-companions")
     for suite in args.suite:
         runner_args.extend(["--suite", suite])
     if args.bless:
@@ -139,6 +144,8 @@ def run_command(argv: list[str]) -> int:
     run_parser.add_argument("--no-fail-fast", action="store_true", help="Collect independent failures.")
     run_parser.add_argument("--bless", action="store_true", help="Update checked-in baselines.")
     run_parser.add_argument("--result-json", help="Area result JSON path.")
+    run_parser.add_argument("--require-fresh-demo-companions", action="store_true",
+                            help="Require strict and debt freshness policies in GCQ.")
 
     args = parser.parse_args(argv)
     if args.command == "inventory":
