@@ -12220,3 +12220,98 @@ Diagnostic runs have 30-minute caps and retained failed evidence. Current
 compiler source has not changed since V4bb; use its retained prepared executable
 only after verifying product input equality and its recorded artifact identity.
 SQL clean build, full scoped final gates and all V5 remain open.
+
+### V4bd findings — repeated Rust bridge authority work
+
+Measured candidate 5861cc51a134453dbae382af3ef99dfde01b3000 changes only phase
+records since V4bc. Retained compiler SHA-256:
+a863cbdbaa939ce2bfa728300ed70e35901e51ad660beabf8d8fe0b2b30a70ff.
+The complete product input diff against V4bb is empty.
+
+One ordinary fresh TLS demo materialization passed in 30.850s: 22.85 user CPU
+seconds, 3.34 system CPU seconds, no swaps. This isolated measurement is distinct
+from the earlier 60.616s overlapping four-worker preparation observation.
+
+A targeted whole-command CPU capture contains 2,270 samples with zero reported
+lost samples; 1,218 (53.656% of equal-period user CPU samples) are in SHA-256's
+software compression routine. Caller unwinding is incomplete; no exact caller
+percentage or stage duration is inferred. The first profiling attempt interrupted
+capture after a same-user session-guard assertion. The corrected capture covers
+the successful compiler child, but its wrapper rejected profiler shutdown before
+saving a final result; the exact profiler exit was not persisted. Preserve both
+failed wrappers. The complete perf data independently parses successfully and
+generated output bytes match the ordinary run. This is diagnostic evidence,
+not timing qualification.
+
+An independent file-system-call trace completed successfully. The compiler
+read 2,647,656,707 bytes across 1,480 paths. Each bundled SQLite C source was
+opened and fully read 83 times; their combined reads are 1,587,913,587 bytes.
+These are repeated reads, mostly served from the OS page cache, not measured
+physical disk traffic. The trace produced identical seven-file portable output
+to the ordinary run. Instrumented elapsed time is not performance evidence.
+
+The trace observed 41 distinct Rust bridge probe manifests with only two exact
+dependency/profile configurations: 19 net and 22 tls. Source confirms that
+execute_pending_direct_probes calls execute_direct_cargo_probe separately;
+probe_cache_key hashes backend and runtime trees before and after each Cargo
+check. Thus the 41 probes cause 82 runtime-tree walks, plus the separate sysroot
+metadata identity walk. Existing artifact reuse does not remove these checks.
+
+Isolated experiments retained all 41 original source bodies and dependency pins:
+- Two crates with per-probe modules passed in 1.784s total. Both deliberately
+  invalid groups failed and restored groups passed. This was not adopted:
+  general probes may use crate-relative paths, so module wrapping is unnecessary
+  semantic risk.
+- Two same-configuration Cargo workspaces, each retaining independent original
+  probe crates, passed in 2.634s total. Cargo reported all 41 probe artifacts as
+  freshly compiled. Each group's deliberate invalid probe failed with its own
+  source identity; restoring each passed. Features stayed separate and dependency
+  lock records were identical. Initial workspace setup failed on an unavailable
+  diagnostic-only TOML library before Cargo; the corrected experiment preserved
+  original lock sections without adding an environment dependency.
+
+These experiments exclude production identity capture and source generation;
+2.634s is not a measured new materialization time or full-gate projection.
+No product code changed in V4bd. Detailed observations, failed attempts and raw
+capture data remain in v4bd-findings.json and the V4bd evidence directory.
+
+### V4be prospective scope — batch equivalent Rust bridge probes
+
+Status: bounded implementation acceptance registered after measured V4bd.
+Use Cargo's workspace primitive to check independent probe crates together only
+when their dependency manifest, features, backend/runtime paths, native toolchain,
+profile, lock authority/mode, vendor policy and declared environment agree.
+Retain independent crate namespaces, exact source-bound package names and every
+probe contract. Do not union feature sets or wrap arbitrary bodies in modules.
+
+Capture each common source/authority identity once before the batch and recheck
+it after Cargo. Capture is owned by one synchronous batch, never global or reused
+across invocations. Group membership must not rely on an unvalidated cached digest.
+Any missing, unreadable, changed or symlinked required input must fail closed.
+The final result for each probe depends on its own Cargo artifact or diagnostic;
+missing output is incomplete, never success. Run Cargo with failure continuation
+so unrelated probes still produce results. Retain per-probe error classifications,
+source targets, lock modes, SQLx hermetic controls, child leases and native target
+ownership. Do not introduce a sequential fallback or reuse old success markers
+as verdicts.
+
+Acceptance before intermediate merge:
+- Unit/regression controls for exact grouping and split boundaries: manifest,
+  features, native/profile/lock/vendor/root changes, declaration ordering,
+  duplicate contracts, crate-relative references and colliding local type names.
+- Real Cargo checks showing every independent probe was observed; injected
+  failures in different members retain correct identities while valid members
+  execute. Malformed/truncated/missing protocol output cannot pass.
+- Preserve original lock/version authority and negative controls; detect actual
+  source, runtime, lock or metadata mutation between capture and completion and
+  on a later invocation. Preserve missing/empty/unreadable/symlink distinctions.
+- Focused driver/probe tests first, then complete affected Rust interop and
+  generated-driver contract checks, with every named contract accounted for.
+  Run compiler formatting, file-size and affected inventories.
+- Fresh TLS materialization before/after on retained targets, exact output
+  equivalence, and one trace verifying reduced tree walks/Cargo invocations.
+  Keep ordinary timings separate from traces. Broaden to complete selected
+  generated-quality preparation/execution only after the focused candidate passes.
+- Independent exact-candidate review under the approved intermediate policy.
+  All final scoped gates and V5 remain mandatory; do not claim ten minutes from
+  this one fixture. The separate SQL clean-build protocol is still open.
