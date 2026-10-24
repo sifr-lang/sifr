@@ -11813,3 +11813,57 @@ Acceptance:
 - Formatting, file-size, affected authority/self-tests, emitted-plan coverage
   comparison, and exact-candidate independent review before intermediate merge.
 Complete final scoped gates and V5 remain required at phase end.
+
+#### V4ba invalidation audit — header omission reproduced, acceptance still open
+
+The initial canonical producers completed: PostgreSQL 359.447s, MySQL 31.760s
+and SQLite 46.074s. A second PostgreSQL production took 332.417s; all six guest
+outputs and the receipt are byte-identical. This proves output consistency,
+not a guest cache speedup. Native version returns are fresh at 0.407s (13) and
+0.401s (18), with 35 assertions per execution. The comparable version-13
+baseline used four compiler jobs and took 26.577s; the version-18 baseline
+used three jobs, so its 33.231s is not a controlled timing ratio.
+
+An initial direct guest diagnostic omitted canonical SDK environment variables;
+its extra WASI_SYSROOT invalidation is a diagnostic setup difference, not a
+product defect. The corrected diagnostic uses sdk_environment/guest_environment.
+Cargo also identifies the recursively watched Ruff checkout as stale because
+its nested .git directory timestamp changes, although identity hashing excludes
+.git. This is a separate identity-watcher/setup follow-up; do not remove input
+coverage to silence it or attribute every guest rebuild to this one observation.
+
+A first deliberate header-error probe was confounded by that unrelated rebuild.
+The isolated probe runs preparation, an all-fresh baseline and the header edit
+inside one guard, without intervening Git commands. Baseline: 93 artifacts fresh,
+0.381s. After adding an actual #error to the owned WASI errno.h: all 93 artifacts
+still fresh, successful exit, 0.380s. The Git metadata timestamp is unchanged.
+This reproduces stale native artifact reuse; the guard remains failed.
+The original header bytes were restored and verified.
+
+Complete native C input tracking is therefore required in this item. Track the
+selected source's code/header directories and root files, excluding Git
+administration, plus owned WASI compatibility inputs and the selected SDK path.
+Do not watch the entire source repository's .git directory. Add a small real
+Cargo regression exercising the production watch helper, including file edits,
+directory additions/removals and irrelevant Git metadata. Repeat the isolated
+actual-header probe: unchanged inputs must be fresh, the invalid header must
+fail compilation, and restoration must produce valid components again.
+No third-party source changes are required.
+
+Also bind the separate component-host command to postgresql-18, the final
+matrix configuration, avoiding an unnecessary empty-feature test build while
+preserving every component-host assertion. Regenerate the PostgreSQL artifacts
+after its build-input change and complete the previously registered acceptance.
+
+Repaired isolated native probe: preparation 57.438s; unchanged baseline 0.386s,
+all 93 artifacts fresh; the deliberate header error now fails compilation with
+Cargo exit 101 in 0.563s. Git metadata stayed unchanged across the baseline/edit
+boundary, and the original header SHA-256 was restored exactly. The passing
+guard records no unexpected tracked change or leftover worker. The earlier
+failed stale-artifact probe remains preserved as evidence.
+
+Focused input controls pass: five command/input tests (including a real Cargo
+fixture covering root/nested/compatibility header edits, directory file addition
+and removal, SDK selection and irrelevant Git metadata), six producer-inventory
+tests, file-size guardrail and whitespace check. Final component regeneration,
+complete SQL qualification and independent review are still required.

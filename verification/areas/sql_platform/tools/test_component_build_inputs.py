@@ -91,6 +91,7 @@ class SdkInputsTests(unittest.TestCase):
         self.assertIn("crates/sifr_sql_mysql/src/mysql.lalrpop", source_inputs("mysql"))
         self.assertIn("crates/sifr_sql_postgresql/wasi_compat/postgresql_runtime.c", source_inputs("postgresql"))
         self.assertIn("crates/sifr_sql_postgresql/src/build_selection.rs", source_inputs("postgresql"))
+        self.assertIn("crates/sifr_sql_postgresql/src/build_inputs.rs", source_inputs("postgresql"))
         self.assertIn("crates/sifr_compiler_component/fixtures/words_component/Cargo.lock", source_inputs("words"))
 
 

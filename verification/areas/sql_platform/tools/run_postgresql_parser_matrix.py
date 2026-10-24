@@ -37,6 +37,8 @@ def main() -> int:
         "--locked",
         "-p",
         "sifr_sql_postgresql",
+        "--features",
+        "postgresql-18",
         "--test",
         "postgresql_components",
         "every_checked_in_component_executes_in_the_capability_free_host",

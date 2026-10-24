@@ -1,3 +1,6 @@
+#[path = "src/build_inputs.rs"]
+mod build_inputs;
+
 #[path = "src/build_selection.rs"]
 mod build_selection;
 
@@ -65,6 +68,10 @@ fn read_manifest() -> Result<Value, Box<dyn Error>> {
 }
 
 fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
+    build_inputs::track_source(source)?;
+    if is_wasm_target() {
+        build_inputs::track_wasi(&wasi_compatibility_headers()?);
+    }
     let mut build = cc::Build::new();
     configure_wasi_compiler(&mut build)?;
     // The retained PostgreSQL sources use pre-C23 callback declarations.
@@ -186,7 +193,6 @@ fn add_c_files(build: &mut cc::Build, directory: &Path) -> Result<(), io::Error>
             && !is_included_translation_unit(&entry)
             && !is_unused_wasi_server_translation_unit(&entry)
         {
-            println!("cargo:rerun-if-changed={}", entry.display());
             build.file(entry);
         }
     }

@@ -10,6 +10,7 @@ from unittest.mock import patch
 import run_postgresql_migration_matrix as migrations
 import run_postgresql_parser_matrix as parsers
 import run_postgresql_schema_tool_matrix as schemas
+import test_postgresql_build_inputs as build_inputs_tests
 
 
 class PostgreSqlBuildSelectionTests(unittest.TestCase):
@@ -29,6 +30,7 @@ class PostgreSqlBuildSelectionTests(unittest.TestCase):
         host = run.call_args_list[-1].args[0]
         self.assertIn("every_checked_in_component_executes_in_the_capability_free_host", host)
         self.assertEqual(host[-2:], ["--", "--exact"])
+        self.assertEqual(host[host.index("--features") + 1], "postgresql-18")
 
     def test_failed_parser_major_is_not_reported_as_a_pass(self) -> None:
         with patch.object(parsers.subprocess, "run", side_effect=[
@@ -74,6 +76,11 @@ class PostgreSqlBuildSelectionTests(unittest.TestCase):
             self.assertEqual(command[command.index("--features") + 1], f"sifr_sql_postgresql/postgresql-{major}")
             self.assertNotIn("SIFR_POSTGRESQL_MAJOR", calls[0].kwargs["env"])
             self.assertEqual(calls[0].kwargs["env"]["SIFR_POSTGRESQL_MIGRATION_TEST_MAJOR"], str(major))
+
+
+def load_tests(loader, tests, _pattern):
+    tests.addTests(loader.loadTestsFromTestCase(build_inputs_tests.PostgreSqlBuildInputsTests))
+    return tests
 
 
 if __name__ == "__main__":
