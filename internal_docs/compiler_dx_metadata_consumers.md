@@ -1073,18 +1073,12 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_codegen/src/stdlib_codegen_metadata.rs:22` `bootstrap` | read | layered view + demanded record handles | 23, 24, 28 |
 | `crates/sifr_codegen/src/stdlib_demand_plan.rs:8` `plan_demanded_stdlib_sources` | read, enumerate, clone projection | layered view + demanded record handles | 8, 9, 30, 44, 60, 76, 85, 90, 104, 120, 124, 130 |
 | `crates/sifr_codegen/src/stdlib_demand_plan.rs:172` `public_import_roots_seed_matching_transitive_private_definitions` | read | test setup/parity | 173, 174, 178, 189, 197, 198 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:59` `seal_canonical_stdlib_names` | read | layered view + demanded record handles | 59, 64 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:70` `sealed_stdlib_file` | read, enumerate | layered view + demanded record handles | 70, 78, 81 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:139` `rewrite_canonical_stdlib_tokens` | read, enumerate | layered view + demanded record handles | 139, 165 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:181` `rewrite_rust_identifiers` | read | layered view + demanded record handles | 187 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:246` `filter_stdlib_ir_to_needed` | read | layered view + demanded record handles | 246, 250 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:265` `filter_canonical_stdlib_ir_to_needed` | read, enumerate | layered view + demanded record handles | 265, 274, 277, 279, 280 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:387` `parse_stdlib_ir_file` | read, enumerate | layered view + demanded record handles | 387 |
-| `crates/sifr_codegen/src/stdlib_filter/support_pipeline.rs:10` `seal_and_dedup_stdlib_support` | read | layered view + demanded record handles | 10, 20 |
-| `crates/sifr_codegen/src/stdlib_filter/support_pipeline_tests.rs:7` `previous` | read | test setup/parity | 13 |
-| `crates/sifr_codegen/src/stdlib_filter/support_pipeline_tests.rs:19` `structured_support_preserves_names_macros_paths_and_cross_module_dedup` | read, enumerate | test setup/parity | 43 |
-| `crates/sifr_codegen/src/stdlib_filter/support_pipeline_tests.rs:50` `structured_support_preserves_conflicting_body_rejection` | read | test setup/parity | 58, 69 |
-| `crates/sifr_codegen/src/stdlib_filter/support_pipeline_tests.rs:76` `structured_support_rejects_malformed_owned_source` | read | test setup/parity | 95 |
+| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:59` `seal_canonical_stdlib_names` | read, enumerate | layered view + demanded record handles | 59, 67, 72 |
+| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:132` `rewrite_canonical_stdlib_tokens` | read, enumerate | layered view + demanded record handles | 132, 158 |
+| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:174` `rewrite_rust_identifiers` | read | layered view + demanded record handles | 180 |
+| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:239` `filter_stdlib_ir_to_needed` | read | layered view + demanded record handles | 239, 243 |
+| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:258` `filter_canonical_stdlib_ir_to_needed` | read, enumerate | layered view + demanded record handles | 258, 267, 270, 272, 273 |
+| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:493` `parse_stdlib_ir_file` | read, enumerate | layered view + demanded record handles | 493 |
 | `crates/sifr_codegen/src/stdlib_filter/tests.rs:65` `filter_keeps_transitive_dependencies_in_item_order` | read | test setup/parity | 82 |
 | `crates/sifr_codegen/src/stdlib_filter/tests.rs:92` `filter_ignores_name_mentions_in_strings_and_comments` | read | test setup/parity | 103 |
 | `crates/sifr_codegen/src/stdlib_filter/tests.rs:110` `filter_tracks_type_level_dependencies_via_identifiers` | read | test setup/parity | 119 |
@@ -1123,15 +1117,15 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs:490` `lower_stmt_expr_for_ir` | read, enumerate | layered view + demanded record handles | 543 |
 | `crates/sifr_codegen/src/structural_impl_codegen/stdlib_implementations.rs:15` `imported_classes` | read, enumerate | layered view + demanded record handles | 17, 20, 21, 28 |
 | `crates/sifr_codegen/src/structural_impl_codegen.rs:17` `emit_imported_stdlib_structural_impls` | read, enumerate, clone projection | layered view + demanded record handles | 17, 20, 25, 35 |
-| `crates/sifr_codegen/src/support_plan.rs:51` `from_emitter` | read, enumerate | layered view + demanded record handles | 78, 79 |
-| `crates/sifr_codegen/src/support_plan.rs:106` `merge_project_module` | read, enumerate | layered view + demanded record handles | 115, 116, 117, 118 |
-| `crates/sifr_codegen/src/support_plan.rs:138` `needs_support` | read | layered view + demanded record handles | 141 |
-| `crates/sifr_codegen/src/support_plan.rs:146` `directly_used_stdlib_modules` | read | layered view + demanded record handles | 146, 147 |
-| `crates/sifr_codegen/src/support_plan.rs:169` `render_support` | read | layered view + demanded record handles | 171, 173, 174, 177, 186, 187, 189, 191, 230, 231, 232, 239, 253, 289, 294, 331 |
-| `crates/sifr_codegen/src/support_plan.rs:398` `render_stdlib_support` | read, enumerate | layered view + demanded record handles | 398, 400, 405, 409, 411, 416, 417, 419, 420, 440, 462 |
-| `crates/sifr_codegen/src/support_plan.rs:485` `append_stdlib_dependencies` | read, enumerate | layered view + demanded record handles | 485, 487, 494, 497 |
-| `crates/sifr_codegen/src/support_plan.rs:627` `single_file_user_error_suppresses_late_runtime_demand` | read | test setup/parity | 636 |
-| `crates/sifr_codegen/src/support_plan.rs:643` `project_merge_does_not_promote_a_module_shadow_to_a_crate_veto` | read | test setup/parity | 649, 655, 656, 667 |
+| `crates/sifr_codegen/src/support_plan.rs:52` `from_emitter` | read, enumerate | layered view + demanded record handles | 79, 80 |
+| `crates/sifr_codegen/src/support_plan.rs:107` `merge_project_module` | read, enumerate | layered view + demanded record handles | 116, 117, 118, 119 |
+| `crates/sifr_codegen/src/support_plan.rs:139` `needs_support` | read | layered view + demanded record handles | 142 |
+| `crates/sifr_codegen/src/support_plan.rs:147` `directly_used_stdlib_modules` | read | layered view + demanded record handles | 147, 148 |
+| `crates/sifr_codegen/src/support_plan.rs:170` `render_support` | read | layered view + demanded record handles | 172, 174, 175, 178, 187, 188, 190, 192, 231, 232, 233, 240, 254, 290, 295, 332 |
+| `crates/sifr_codegen/src/support_plan.rs:399` `render_stdlib_support` | read, enumerate | layered view + demanded record handles | 399, 401, 406, 410, 412, 417, 418, 420, 421, 441, 463 |
+| `crates/sifr_codegen/src/support_plan.rs:486` `append_stdlib_dependencies` | read, enumerate | layered view + demanded record handles | 486, 488, 495, 498 |
+| `crates/sifr_codegen/src/support_plan.rs:628` `single_file_user_error_suppresses_late_runtime_demand` | read | test setup/parity | 637 |
+| `crates/sifr_codegen/src/support_plan.rs:644` `project_merge_does_not_promote_a_module_shadow_to_a_crate_veto` | read | test setup/parity | 650, 656, 657, 668 |
 | `crates/sifr_codegen/src/union_type_helpers.rs:115` `collect_union_types` | read, enumerate | layered view + demanded record handles | 123, 128, 165, 193 |
 | `crates/sifr_analysis/src/host/construction.rs:8` `open_project` | read, mutate overlay/producer, clone projection, borrow/retain | layered view + demanded record handles | 20, 21, 24 |
 | `crates/sifr_analysis/src/host/construction.rs:30` `open_single_file` | read, borrow/retain | layered view + demanded record handles | 36 |

@@ -15,6 +15,3 @@ mod relocation;
 pub(crate) use relocation::*;
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-mod support_pipeline_tests;

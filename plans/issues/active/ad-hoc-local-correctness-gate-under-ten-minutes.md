@@ -12533,3 +12533,56 @@ Acceptance:
 - Run formatting, size, affected inventories and independent exact-candidate
   review before intermediate merge. Final scoped gates and every V5 scenario
   remain required. This does not resolve the independent SQL clean-build budget.
+
+
+### V4bf outcome — parsing experiment rejected, production behavior restored
+
+Candidate dd09cec6f41725070e84678d2437c1f3281a4b86 passed the complete
+732-fixture metadata emission corpus. All 1,464 retained Rust/source files,
+source-map bytes/offsets and module memberships agree with baseline
+a2bc118441556176e22c566fb7c35274eb604fe4. Portable metadata payloads also agree;
+candidate-bound metadata identities differ as expected.
+
+Ordinary execution was 104.952507s before and 103.929096s after: 1.023411s
+(0.975%) observed reduction in one sequential comparison. That is insufficient
+evidence of useful improvement and may be normal variation. Do not adopt the
+pipeline refactor, claim a statistically established speedup, or spend another
+full native/generated-quality cycle qualifying an unpromising experiment.
+Production Rust and metadata inventory are restored exactly to the baseline.
+Native E2E and generated-quality acceptance were not run for this rejected
+candidate; they are not recorded as passes.
+
+The initial implementation ea582157a1c118c0ac308b296bbe5415f00ed1b7 passed all
+37 affected stdlib-filter tests and all 1,785 codegen tests. Final dd09 only
+removed an unused import and refreshed the owned metadata inventory; the full
+corpus result belongs to dd09. Preparation is separate: baseline driver binary
+was retained (0.459s), candidate driver rebuild was 165.504s, initial focused
+codegen preparation/test command 282.650s versus 7.970s for the subsequently
+prepared complete test command (7.52s test body). These unlike preparation
+states are not a cache regression or an old/new speed comparison.
+
+The first external report comparison incorrectly treated serialized
+HashSet<String> module iteration order as array order, flagging 194 rows.
+Source inspection confirms the field's set contract. The corrected comparator
+compares that field as a sorted multiset and every other field and generated
+file exactly. Preserve the initial comparator failure and its correction;
+do not rewrite the original corpus records or weaken declaration/fixture order.
+
+### V4bg prospective execution — current integrated bottleneck discovery
+
+The source parsing experiment did not establish a worthwhile gain. Return to
+the approved integrated delivery strategy: inspect the current emitted scoped
+merge plan, verify capacity/preparation, then execute every current correctness
+category with failure continuation and a 30-minute diagnostic cap per category.
+Retain targets and all original assertions. A failed prerequisite blocks its
+consumers; independent categories continue. Explicitly account for any category
+that cannot run, and schedule descendants after an in-scope preparation repair.
+Do not use aggregate timeout, ignored entries, old results or missing reports
+as a pass. This is fresh diagnostic coverage, not final timing qualification.
+
+Record preparation, guardrails, ordinary crate tests, generated/native driver
+tests, native E2E and each verification area separately, including observed
+allocation and all nested case inventories. Reconcile against the emitted plan
+before selecting the next largest root cause. Preserve the independent SQL
+clean-build contract, final scoped create-pr/merge gates and all V5 scenarios.
+Any product repair still needs its own bounded acceptance and independent review.
