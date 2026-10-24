@@ -12730,3 +12730,66 @@ Acceptance:
   every V5 remain required. This removes one demonstrated duplicate producer;
   it does not establish a sub-ten-minute complete gate or resolve SQL clean
   build/preparation cost.
+
+### V4bi closure — strict/demo debt emission ownership / #4472
+
+Merged PR #4472 as 9a81a71a46192077002546de7473c9893448fff3.
+Final reviewed candidate 9a15d9c58f6206857f65c3e79c8448dd17f14cbf;
+merge tree identical. Final focused checks: 31 runner/policy and 30 GCQ
+tests, seven exact plan comparisons, profile/schema, metadata inventory,
+file-size and explicit base-to-candidate diff checks pass. Complete runner
+foundation passes in 64.228s guard.
+
+Complete representative qualification remains bound to
+49efbf13da28f67dd4a72bd24b27d67a74f5b154: 93 prepared graphs, ten gate
+variants, the same 101 case/status observations and all 264 companions pass.
+Both strict and exact debt policies ran. Combined quality command 344.617s,
+versus prior separate strict plus quality callbacks 485.037s: 140.420s lower
+in one sequential comparison. Preparation is separate; this is not a whole
+gate or repeated timing qualification. Preserve the initial offline-cache
+prerequisite failure and the passing rerun after canonical preparation.
+
+Initial review rejected only trailing EOF blank lines in the extracted
+coverage checker. Final candidate removes those lines; its AST and every
+other tracked blob are unchanged. Focused checks and foundation reran.
+Explicit range diff checking now replaces the misleading empty-worktree
+check for committed candidates. Independent final review: SATISFIED,
+no blockers, SHA-256
+1f272d7eb7e664a27fb548161a268c28f7cb01d3d948e5ce577c0a796e2421ba.
+Review and evidence are outside the reviewed tree. Attachment was refused
+at the chat's 100-attachment limit.
+
+Evidence archives: v4bi-evidence.tar.gz SHA-256
+90a180e3181caad54a813ed7cd8456792d311bce7e0e2be79160cb6766d130a6;
+v4bi-remediation-evidence.tar.gz SHA-256
+a395c1e08b6624d2d3264fc92f63f158fc1a23a9d94747df2b6027e528faf531.
+Suggestions remain separate: derive companion inventory from the exact
+emitter pair set when next modifying that boundary. Final scoped gates
+and all V5 remain open.
+
+### V2d prospective investigation — bounded parallel component compilation
+
+The resolved Wasmtime 48.0.1 graph omits parallel-compilation. Existing
+lifetime-local compiled reuse remains bounded and unchanged. Investigate
+the V2-authorized latency mechanism before changing production settings.
+
+- First use an external, owned diagnostic harness with pinned Wasmtime,
+  the same Engine optimizer/safety policy and exact maintained component
+  bytes. Compare serial and parallel compilation in the same binary with
+  explicit 1/2/4-worker bounds, ordinary wall/CPU/RSS evidence and alternating
+  order. Compilation-only evidence is feasibility, never semantic acceptance.
+- Admit builds only after CPU/memory/disk checks; retain targets and cap each
+  diagnostic category at 1800 seconds. Preserve every failure and result.
+- Adopt only with material representative benefit and an explicit shared
+  worker budget. Do not enable an unconstrained process-global pool.
+- If feasible, qualify actual provider behavior, all six PostgreSQL versions,
+  existing component security/resource/isolation/reuse controls and ownership
+  lifetimes. Compare exact diagnostics, bytes and markers; observe preparation
+  cost and integrated resource use.
+- Preserve optimizer settings, fresh Store/fuel/memory state, authenticated
+  component identities and every original assertion. No persistent native
+  code deserialization, old verdict reuse, lowered limits or weakened clean
+  SQL protocol. Parallelism does not eliminate CPU work.
+- Reject an ineffective experiment without widening it. Any implementation
+  needs named affected checks and exact-candidate independent review.
+  Final scoped gates and complete V5 remain required.
