@@ -77845,7 +77845,7 @@
     },
     {
       "site": "crates/sifr_metadata/src/metadata/validation_facts_tests.rs::exact_failure_diagnostics_survive_hits_misses_and_eviction::literal-comparison::1",
-      "fingerprint": "331c5dab74fd7b3061dac2d2ebb5777510adc854aad056025bec756fb9bbfe3c",
+      "fingerprint": "1057575fa9aa3f6634d46e76aaed677a5b4763cf796792d7bb0115c9f214b463",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "let slash = payload . windows ( 2 ) . position ( | bytes | bytes == b\"//\" ) . unwrap ( )",
