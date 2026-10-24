@@ -14,6 +14,11 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
+# The canonical area loader imports this file by path, not as a script.
+sys.path.insert(0, str(AREA_ROOT))
+from batch_adapter import run_shared_gates  # noqa: E402
+from quality_batch import SHARED_GATES  # noqa: E402
+
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 CORPUS_MANIFEST = AREA_ROOT / "data" / "corpus_manifest.json"
 GATE_SCRIPT = AREA_ROOT / "generated_code_quality.py"
@@ -95,8 +100,8 @@ def main(argv: list[str] | None = None) -> int:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     validate_smoke_profile(CORPUS_MANIFEST)
     selected = select_suites(manifest, set(args.suite))
-    # Retain dependency artifacts across the gates in this run. Generated source
-    # directories remain private to each request and are always materialized.
+    # Retain dependency artifacts across gates. Compatible read-only consumers
+    # share one fresh corpus inside their batch; other gates remain independent.
     # Profile invocations already supply their prepared dependency root.
     if not os.environ.get("SIFR_GCQ_SHARED_ROOT"):
         shared_parent = REPO_ROOT / "target/sifr_generated_code_quality"
@@ -175,10 +180,19 @@ def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
         raise SystemExit(f"gate suite '{suite_name}' must use generated-code-quality-gate")
 
     gate_plan = PROFILE_SUITES.get(suite_name, [(suite_name, None, None)])
-    variants = [
-        run_gate(suite_name, gate, max_entries, entry_ids)
-        for gate, max_entries, entry_ids in gate_plan
-    ]
+    shared_plan = [item for item in gate_plan if item[0] in SHARED_GATES]
+    shared = None
+    variants = []
+    for gate, max_entries, entry_ids in gate_plan:
+        if gate in SHARED_GATES:
+            if shared is None:
+                shared = run_shared_gates(suite_name, shared_plan,
+                                          repo_root=REPO_ROOT, area_root=AREA_ROOT)
+            variant = shared[gate]
+            emit_case_timing(suite_name, gate, variant["duration_ms"], variant["status"])
+        else:
+            variant = run_gate(suite_name, gate, max_entries, entry_ids)
+        variants.append(variant)
     failed_variants = sum(1 for variant in variants if variant["status"] != "pass")
     result = {
         "name": suite_name,
@@ -239,7 +253,11 @@ def run_gate(
     }
 
 
-def emit_case_timing(suite_name: str, gate: str, elapsed_ms: float, status: str) -> None:
+def emit_case_timing(suite_name: str, gate: str, elapsed_ms: float | None, status: str) -> None:
+    if elapsed_ms is None:
+        print(f"[sifr-case-incomplete] bucket=generated_code_quality "
+              f"case={timing_token(suite_name)}/{timing_token(gate)} status={status}", flush=True)
+        return
     print(
         f"[sifr-case-timing] bucket=generated_code_quality "
         f"case={timing_token(suite_name)}/{timing_token(gate)} "

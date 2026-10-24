@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -259,7 +260,7 @@ def selection_id(entries: list[Entry]) -> str:
 
 
 def run_id(mode: str) -> str:
-    return f"{mode}-{int(time.time())}-{os.getpid()}"
+    return f"{mode}-{uuid.uuid4().hex}-{os.getpid()}"
 
 
 def command_env() -> dict[str, str]:
@@ -407,7 +408,7 @@ def gate_corpus(entries: list[Entry], args: argparse.Namespace) -> None:
     try:
         for entry in selected_positive_entries(entries, args.group):
             def check_entry() -> Path:
-                crate_root_inner = materialize_entry(entry, run_root)
+                crate_root_inner = args.materialize(entry, run_root)
                 run_command(
                     ["cargo", "check", "--locked", "--manifest-path", str(crate_root_inner / "Cargo.toml")],
                     cargo_target_dir=cargo_target_dir,
@@ -460,7 +461,7 @@ def gate_panic_scan(entries: list[Entry], args: argparse.Namespace) -> None:
         summaries = []
         for entry in selected:
             def scan_entry() -> Path:
-                crate_root_inner = materialize_entry(entry, run_root)
+                crate_root_inner = args.materialize(entry, run_root)
                 actual = violation_summary(
                     scan_files(rust_files(crate_root_inner), crate_root_inner)
                 )
@@ -506,7 +507,7 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
         signatures = []
         for entry in selected:
             def format_entry() -> Path:
-                crate_root_inner = materialize_entry(entry, run_root)
+                crate_root_inner = args.materialize(entry, run_root)
                 result = run_command(
                     [
                         "cargo",
@@ -562,7 +563,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
         summaries = []
         for entry in selected:
             def clippy_entry() -> tuple[Path, dict[str, Any]]:
-                crate_root_inner = materialize_entry(entry, run_root)
+                crate_root_inner = args.materialize(entry, run_root)
                 result = run_strict_clippy(
                     crate_root_inner,
                     run_command,
@@ -788,6 +789,7 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
 
 def main() -> None:
     args = parse_args()
+    args.materialize = materialize_entry
     entries = load_manifest(Path(args.manifest))
     try:
         if args.mode == "native":
