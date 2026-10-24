@@ -64,21 +64,44 @@ def sites() -> str:
     return "\n".join([BEGIN, "", "| Exact source symbol | Current access (conservative union within symbol) | DX.7 migration | Matching source lines |", "| --- | --- | --- | --- |", *rows, "", END])
 
 
-def fields(text: str, name: str) -> set[str]:
+def struct_body(text: str, name: str) -> str:
     text = scrub(text)
     match = re.search(r"pub struct " + name + r"\s*\{", text)
     if not match:
         raise ValueError(f"missing schema struct {name}")
     start = match.end()
     end = text.find("\n}", start)
-    return set(re.findall(r"(?:pub\s+)?(\w+)\s*:(?!:)", text[start:end])) - {"std", "collections", "sifr_ir", "num_bigint"}
+    if end < 0:
+        raise ValueError(f"unterminated schema struct {name}")
+    return text[start:end]
+
+
+def fields(text: str, name: str) -> set[str]:
+    return set(re.findall(r"(?:pub\s+)?(\w+)\s*:(?!:)", struct_body(text, name))) - {"std", "collections", "sifr_ir", "num_bigint"}
+
+
+# These are live compiler authorities, not semantic payload. Pin their shapes so
+# a future field/type change cannot silently inherit a transport exemption.
+LIVE_EXTERNAL_AUTHORITIES = {
+    "provider": "Option<std::sync::Arc<dyn ExternalProvider>>",
+    "typed_method_processor": "Option<std::sync::Arc<dyn TypedMethodProcessor>>",
+}
+
+
+def check_external_fields(source: str, wire: str) -> None:
+    compact = re.sub(r"\s+", "", struct_body(source, "ExternalDefs"))
+    for name, shape in LIVE_EXTERNAL_AUTHORITIES.items():
+        pattern = r"(?:^|,)pub" + re.escape(name + ":" + re.sub(r"\s+", "", shape)) + r"(?:,|$)"
+        if re.search(pattern, compact) is None:
+            raise ValueError(f"ExternalDefs live authority shape changed: {name}")
+    if fields(source, "ExternalDefs") - LIVE_EXTERNAL_AUTHORITIES.keys() != fields(wire, "SemanticExports"):
+        raise ValueError("ExternalDefs field inventory changed; explicitly classify and preserve the payload")
 
 
 def check_fields() -> None:
     source = (ROOT / "crates/sifr_lowering/src/lower/external_defs.rs").read_text()
     wire = (ROOT / "crates/sifr_metadata/src/metadata/semantic_records.rs").read_text()
-    if fields(source, "ExternalDefs") - {"provider"} != fields(wire, "SemanticExports"):
-        raise ValueError("ExternalDefs field inventory changed; explicitly classify and preserve the payload")
+    check_external_fields(source, wire)
     groups = ("hir_nodes", "specialization_metadata", "rust_interop", "python_interop", "template_strings", "sql_queries", "sql_migrations")
     for group in groups:
         source = (ROOT / f"crates/sifr_ir/src/{group}.rs").read_text()
@@ -98,8 +121,15 @@ def check_fields() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--refresh-sites", action="store_true")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--refresh-sites", action="store_true")
+    action.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
+    if args.self_test:
+        import unittest
+        from test_dx_metadata_inventory import MetadataInventoryTests
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(MetadataInventoryTests)
+        return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
     check_fields()
     current = INVENTORY.read_text()
     generated = sites()

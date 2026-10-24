@@ -40,14 +40,14 @@
       "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
       "symbol": "sifr_test_modes_use_package_resolution_and_final_test_trace",
       "operation": "read",
-      "site": "let mut source_lock = std::fs::read(scenario.root.join(\"Cargo.lock\")).expect(\"package lock\");",
+      "site": "std::fs::read(scenario.root.join(\"Cargo.lock\")).expect(\"package lock\");",
       "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
       "symbol": "sifr_test_modes_use_package_resolution_and_final_test_trace",
       "operation": "read",
-      "site": "let current_lock = std::fs::read(scenario.root.join(\"Cargo.lock\")).expect(\"package lock\");",
+      "site": "std::fs::read(scenario.root.join(\"Cargo.lock\")).expect(\"package lock\");",
       "classification": "tooling-input"
     },
     {
@@ -933,6 +933,20 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr/src/isolated_cli_tests.rs",
+      "symbol": "child_execution_preserves_cwd_and_rejects_missing_or_failed_tests",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/isolated_cli_tests.rs",
+      "symbol": "child_execution_preserves_cwd_and_rejects_missing_or_failed_tests",
+      "operation": "remove_dir",
+      "site": "std::fs::remove_dir(directory).expect(\"remove control directory\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr/src/lint_cli.rs",
       "symbol": "run_fix_command",
       "operation": "write",
@@ -1118,7 +1132,7 @@
       "path": "crates/sifr/src/mode_resolution_tests.rs",
       "symbol": "test_package_cli_check_explicit_file_uses_package_imports",
       "operation": "read_to_string",
-      "site": "std::fs::read_to_string(&cargo_toml).expect(\"app cargo manifest should be readable\");",
+      "site": "let cargo_source = std::fs::read_to_string(&cargo_toml)",
       "classification": "tooling-input"
     },
     {
