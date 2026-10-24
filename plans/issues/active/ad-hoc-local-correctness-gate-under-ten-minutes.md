@@ -11770,3 +11770,46 @@ No compatibility/fallback path or coverage removal is authorized by this
 hypothesis. Register exact implementation acceptance before product edits.
 Mandatory SQL clean reproduction, producer provenance, final scoped gates and
 V5 remain required; a parser-matrix gain cannot substitute for them.
+
+#### V4ba baseline and implementation acceptance
+
+Ordinary split preparation/execution observations:
+- PostgreSQL 18 unchanged: compile 0.400s, tests 0.593s, no rebuilt artifacts.
+- Switch 18 to 13: compile 26.577s, tests 0.597s; eight package targets rebuilt.
+- Return 13 to 18: compile 33.231s, tests 0.593s; eight package targets rebuilt.
+All 31 selected parser assertions pass per invocation; the all-component host
+test is deliberately separate and remains required. Initial preparation rebuilt
+55 units in 132.581s and is not part of these retained-artifact comparisons.
+On return to 18, 96 native files were recreated: 95 object files are byte-identical
+to their retained previous-18 copies; the shared archive had contained version 13.
+The separately instrumented return to 13 attributes 22.920s to the native build
+script, followed by library/test compilation and linking. Those unit durations
+overlap and must not be summed as independent wall-time savings.
+
+Implement version ownership using postgresql-13 through postgresql-18 Cargo
+features on the existing package. With none selected, preserve the existing
+default of PostgreSQL 18. Reject multiple selections and the old environment
+override instead of silently choosing one. Keep the build script's emitted
+version/tag/commit metadata and native parser/version agreement. Migrate every
+owned parser-matrix, guest-producer and live-tool command to explicit features.
+No custom cache, copied target directories, assertion removal, optimization
+downgrade or native/guest substitution.
+
+Acceptance:
+- Pure selection controls for default, every supported major, ambiguous and
+  unsupported selections, and legacy override rejection.
+- Actual native builds/tests for all six majors; assert the requested runtime
+  major independently of the compiled selection and reject a stale version.
+- Alternate retained versions and confirm fresh Cargo artifacts, unchanged
+  native file identities and passing assertions. Compare ordinary matrix time,
+  preserving first preparation separately.
+- Complete all-component guest host assertions; regenerate affected component
+  artifacts through canonical producers and pass provenance/substitution checks.
+- Test parser-matrix and live-tool command construction without pretending that
+  mocked Docker execution qualifies live database behavior.
+- Complete the selected SQL area, including canonical clean/reused/independent
+  builds and negative controls. Follow the existing 30-minute cap and account
+  separately for any blocked or unexecuted category.
+- Formatting, file-size, affected authority/self-tests, emitted-plan coverage
+  comparison, and exact-candidate independent review before intermediate merge.
+Complete final scoped gates and V5 remain required at phase end.
