@@ -11707,3 +11707,66 @@ identical source changes with unchanged allocation and each variant's own
 retained incremental directory. Reject a clean-build gain that creates a
 material ordinary edit regression. Broader runtime/SQL qualification still
 precedes any actual profile adoption.
+
+#### V1l outcome — fresh-unit gain does not establish a better edit loop
+
+No profile change adopted. All temporary diagnostic source bytes were restored
+in b8f48ab8735d55783286dc77132f34a3b9c0800b. Baseline, edited and restored public
+parser/lowering probes passed for all three variants: diagnostic message, code,
+range and positive input. Retained old binaries failed the changed-message
+assertion in both directions, so stale behavior could not pass these probes.
+
+| Lowering code-generation units | Fresh unit observations (s) | Actual wording edit (s) | Restoration edit, reverse order (s) |
+| --- | --- | ---: | ---: |
+| 256 | 41.074, 41.313 | 26.302 | 20.915 |
+| 64 | 35.305 | 22.478 | 22.372 |
+| 16 | 32.238, 32.287 | 23.947 | 26.552 |
+
+These ordinary Cargo command durations use four admitted compiler jobs and the
+same optimization/debug/assertion/overflow settings. Only lowering rebuilt.
+The initial 64-unit edit attempt stopped before compilation because available
+memory admitted only three jobs; the later retry admitted four. That failed
+attempt remains recorded. No capacity reserve was weakened.
+
+Sixteen units improves the fresh selected unit by about 22%, but the restoration
+observation is about 27% slower than 256. Sixty-four is promising on the first
+edit but about 7% slower on restoration. These are two directional observations
+of one small diagnostic change, not a general edit-workload benchmark. Defer
+profile adoption: broad source/installed/runtime/SQL qualification would still
+be required, and this does not solve repeated preparation or the ten-minute gate.
+Do not reinterpret this diagnostic experiment as V5 qualification.
+
+Evidence archive v1l-evidence.tar.gz contains 229 payloads,
+SHA-256 7aa4137c8bd55c2f21cb730515defc95f8db9e58df9195c60c7018aed2818221.
+Compiled libraries, executables and incremental states remain retained with
+identities in the receipts. V1k trace evidence remains separately archived.
+No production implementation differs from the merged base.
+
+### V4ba prospective investigation — PostgreSQL version-owned build reuse
+
+Status: bounded diagnosis, following V1l feasibility closure.
+
+The current parser matrix changes SIFR_POSTGRESQL_MAJOR through six versions
+in one Cargo configuration. Its build script declares that variable as an
+invalidation input and compiles the selected native C library. V4ay measured the
+whole parser matrix at 247.067s; that alone does not attribute its cost.
+
+First measure unchanged/switch/return invocations on retained artifacts,
+separating preparation, native C object/archive recreation, Rust compilation,
+linking and test execution where the evidence permits. Preserve every existing
+parser assertion and the separate all-component host test. Capture Cargo
+artifact freshness, build-script output directories, native object/archive
+identities and test counts. Use ordinary commands for elapsed time; any process
+observations are diagnostic lower bounds, not complete CPU attribution.
+Keep capacity/source ownership, failure evidence and 30-minute caps.
+
+If version switching causes avoidable rebuilds, evaluate expressing version
+selection as explicit Cargo features on the existing package, so Cargo owns
+distinct version artifacts while sharing compatible dependency builds. Check
+default selection, conflicting selections, dependency feature unification,
+guest producers and live-tool command construction before adoption. Do not
+create six independent full target directories or a custom unchecked cache.
+No compatibility/fallback path or coverage removal is authorized by this
+hypothesis. Register exact implementation acceptance before product edits.
+Mandatory SQL clean reproduction, producer provenance, final scoped gates and
+V5 remain required; a parser-matrix gain cannot substitute for them.
