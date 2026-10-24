@@ -4279,6 +4279,20 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr/tests/validation_suite_support/command.rs",
+      "symbol": "expand_argv",
+      "operation": "is_file",
+      "site": "if !compiler.is_file() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/validation_suite_support/command.rs",
+      "symbol": "selected_cli_preserves_argument_boundaries_and_working_path_tokens",
+      "operation": "write",
+      "site": "std::fs::write(&compiler, b\"selected fixture\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr/tests/validation_suite_support/manifest.rs",
       "symbol": "load",
       "operation": "read_to_string",
@@ -7518,6 +7532,20 @@
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(root).expect(\"cleanup\");",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
+      "symbol": "dx9_finalized_artifact_survives_same_root_edit_and_runs_again",
+      "operation": "is_file",
+      "site": "assert!(final_binary.is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
+      "symbol": "dx9_finalized_artifact_survives_same_root_edit_and_runs_again",
+      "operation": "exists",
+      "site": "!intermediate.exists(),",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
