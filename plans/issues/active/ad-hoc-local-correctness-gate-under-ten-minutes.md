@@ -11678,3 +11678,32 @@ iteration regressions rather than weaken optimization or coverage.
 Do not change product profiles during this feasibility step. No ten-minute
 claim follows from unit timing. Full final gates, remaining inventory repairs,
 all invalidation scenarios and V5 remain required.
+
+#### V1l initial feasibility and actual-edit check
+
+Ordinary isolated lowering compilation (only the selected unit rebuilt):
+256 units 41.074s, 64 units 35.305s, 16 units 32.238s.
+Reversed repeat: 16 units 32.287s, then 256 units 41.313s.
+This supports about 22% less isolated compilation time for 16 units. It does
+not predict full SQL/gate elapsed time or establish an acceptable edit loop.
+
+The first normal-preparation diagnostic failed its historical archive-byte
+equality check after Cargo successfully rebuilt the ordinary graph. All package,
+target, feature and profile selections agree and the rmeta hash is unchanged;
+the library archive differs. Preserve that failure and do not infer its cause.
+A fresh ordinary preparation then reused every artifact and established the new
+baseline. The mandatory SQL reproducibility contract is unchanged.
+
+Next measure an actual source edit against retained 256-, 64- and 16-unit
+incremental states. Temporarily change the undefined-variable diagnostic wording
+in name_diagnostics.rs and verify the changed observable message through the
+public parser/lowering API, including the existing diagnostic code and range.
+Compile the same small probe against retained baseline and edited libraries so
+a stale artifact cannot pass unnoticed. Keep this diagnostic-only change out of
+the final product diff by restoring its exact original bytes afterward. This
+is an iteration-cost experiment, not a new error-message policy or a V5 pass.
+Record command preparation and probe compilation separately; compare only
+identical source changes with unchanged allocation and each variant's own
+retained incremental directory. Reject a clean-build gain that creates a
+material ordinary edit regression. Broader runtime/SQL qualification still
+precedes any actual profile adoption.
