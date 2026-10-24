@@ -10,8 +10,7 @@ use crate::ir_optimize::{
 };
 use crate::stdlib_demand_plan::plan_demanded_stdlib_sources;
 use crate::stdlib_filter::{
-    RustItemDeduper, absolutize_external_crate_paths, collect_and_strip_shared_prelude,
-    dedup_rust_items, seal_canonical_stdlib_names,
+    RustItemDeduper, collect_and_strip_shared_prelude, seal_and_dedup_stdlib_support,
 };
 use crate::{
     BUILTIN_ERROR_CLASSES, Renderer, RuntimeNeeds, RuntimeSupportDemand, RustEmitter, RustExpr,
@@ -460,13 +459,13 @@ fn render_stdlib_support(
             .shared_needs
             .file_handles
             .provides_file_handle_struct;
-        let sealed = seal_canonical_stdlib_names(
+        let deduped = seal_and_dedup_stdlib_support(
             &prepared.stripped_code,
             &module_source.module,
             &module_source.nominal_types,
+            &mut emitted_items,
+            &skip_types,
         );
-        let absolute = absolutize_external_crate_paths(&sealed);
-        let deduped = dedup_rust_items(&absolute, &mut emitted_items, &skip_types);
         if deduped.trim().is_empty() {
             continue;
         }

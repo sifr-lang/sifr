@@ -12502,7 +12502,7 @@ Status: bounded source-generation investigation and feasibility implementation.
 The complete generated-driver run measured full_corpus_exact_emission at
 102.337s. Earlier sampling found substantial syn/token processing, but did not
 attribute a reliable exact caller fraction. Current source identifies an actual
-serial chain in support_plan::build_stdlib_support: demand filtering renders
+serial chain in support_plan::render_stdlib_support: demand filtering renders
 Rust, shared-prelude stripping parses/renders it, name sealing tokenizes and
 parses/renders it, external-path rewriting parses/renders it, and item dedup
 parses/renders it again. Preserve the transformations; investigate carrying
