@@ -54,23 +54,69 @@ pub(super) fn mark_probe_cache_hit(path: &Path) {
     }
 }
 
+/// One synchronous batch owns this observation. Re-capture after Cargo; never
+/// retain this authority across batches or use it as a successful-result cache.
+#[derive(Debug, PartialEq, Eq)]
+pub(super) struct ProbeInputSnapshot {
+    backend_tree: String,
+    runtime_tree: String,
+    nearest_lock: String,
+    vendor_identity: String,
+    authorities: Vec<Option<String>>,
+    seed: Option<String>,
+    sqlx: Option<String>,
+}
+
+impl ProbeInputSnapshot {
+    pub(super) fn capture(
+        probe: &PendingRustBridgeProbe,
+        backend_root: &Path,
+    ) -> Result<Self, String> {
+        let (backend_tree, runtime_tree) =
+            probe_tree_input_digests(backend_root, &probe.sysroot_runtime_crate)?;
+        let nearest_lock = nearest_lock_digest(backend_root)?;
+        let vendor_identity = optional_vendor_identity(
+            probe
+                .cargo_resolution
+                .uses_sysroot_vendor()
+                .then_some(probe.sysroot_vendor_dir.as_deref())
+                .flatten(),
+        )?;
+        let authorities = probe
+            .cargo_resolution
+            .authoritative_locks
+            .iter()
+            .map(|path| {
+                digest_lock_file_checked(path).map_err(|error| {
+                    format!(
+                        "unreadable authoritative Cargo lock '{}': {error}",
+                        path.display()
+                    )
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self {
+            backend_tree,
+            runtime_tree,
+            nearest_lock,
+            vendor_identity,
+            authorities,
+            seed: probe.cargo_resolution.normal_seed_cache_fragment(),
+            sqlx: sqlx_offline_metadata_digest(backend_root)?,
+        })
+    }
+}
+
 pub(super) fn probe_cache_key(
     probe: &PendingRustBridgeProbe,
-    backend_root: &Path,
     probe_manifest: &str,
     probe_source: &str,
+    inputs: &ProbeInputSnapshot,
 ) -> Result<String, String> {
+    if inputs.authorities.len() != probe.cargo_resolution.authoritative_locks.len() {
+        return Err("Rust probe authority snapshot has a different lock inventory".into());
+    }
     let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v4");
-    let (backend_tree, runtime_tree) =
-        probe_tree_input_digests(backend_root, &probe.sysroot_runtime_crate)?;
-    let nearest_lock = nearest_lock_digest(backend_root)?;
-    let vendor_identity = optional_vendor_identity(
-        probe
-            .cargo_resolution
-            .uses_sysroot_vendor()
-            .then_some(probe.sysroot_vendor_dir.as_deref())
-            .flatten(),
-    )?;
     for (name, value) in [
         ("package-id", probe.backend.cargo_package_id.0.as_str()),
         ("dependency", probe.backend.dependency_name.as_str()),
@@ -83,10 +129,10 @@ pub(super) fn probe_cache_key(
         ("target-path", &probe.path.dotted()),
         ("manifest", probe_manifest),
         ("source", probe_source),
-        ("backend-tree", &backend_tree),
-        ("nearest-lock", &nearest_lock),
-        ("sysroot-runtime-tree", &runtime_tree),
-        ("vendor", &vendor_identity),
+        ("backend-tree", &inputs.backend_tree),
+        ("nearest-lock", &inputs.nearest_lock),
+        ("sysroot-runtime-tree", &inputs.runtime_tree),
+        ("vendor", &inputs.vendor_identity),
     ] {
         input.field(name, value.as_bytes());
     }
@@ -116,14 +162,13 @@ pub(super) fn probe_cache_key(
         "authority-count",
         &(probe.cargo_resolution.authoritative_locks.len() as u64).to_be_bytes(),
     );
-    for path in &probe.cargo_resolution.authoritative_locks {
+    for (path, digest) in probe
+        .cargo_resolution
+        .authoritative_locks
+        .iter()
+        .zip(&inputs.authorities)
+    {
         input.field("authority-path", path.to_string_lossy().as_bytes());
-        let digest = digest_lock_file_checked(path).map_err(|error| {
-            format!(
-                "unreadable authoritative Cargo lock '{}': {error}",
-                path.display()
-            )
-        })?;
         input.field("authority-readable", &[u8::from(digest.is_some())]);
         if let Some(digest) = digest {
             input.field("authority-digest", digest.as_bytes());
@@ -136,12 +181,12 @@ pub(super) fn probe_cache_key(
     if let Ok(tools) = &probe.cargo_resolution.native_toolchain {
         input.field("toolchain", tools.identity().as_bytes());
     }
-    let seed = probe.cargo_resolution.normal_seed_cache_fragment();
+    let seed = &inputs.seed;
     input.field("seed-present", &[u8::from(seed.is_some())]);
     if let Some(seed) = seed {
         input.field("seed", seed.as_bytes());
     }
-    let metadata = sqlx_offline_metadata_digest(backend_root)?;
+    let metadata = &inputs.sqlx;
     input.field("sqlx-present", &[u8::from(metadata.is_some())]);
     if let Some(metadata) = metadata {
         input.field("sqlx", metadata.as_bytes());

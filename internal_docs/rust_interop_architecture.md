@@ -932,7 +932,23 @@ The driver materializes generated glue from this plan. It must not scan emitted 
 
 ## Rust Signature Probing
 
-Sifr does not implement a Rust resolver. Direct binding signatures are validated through a Sifr-generated `RustBridgeProbePlan` that asks Cargo/rustc to type-check item existence, visibility, arity, receiver mode, asyncness, and bridge-compatible types in an isolated probe module before final generated binary build.
+Sifr does not implement a Rust resolver. Direct binding signatures are validated through a Sifr-generated `RustBridgeProbePlan` that asks Cargo/rustc to type-check item existence, visibility, arity, receiver mode, asyncness, and bridge-compatible types in an isolated probe crate before final generated binary build.
+
+Distinct probe sources remain independent, source-bound crates. The driver groups
+them into one Cargo workspace only when dependency manifests and features,
+backend/runtime roots, native toolchain and declared environment, selected
+profile, lock authority/mode, and vendor policy agree. It does not combine
+different feature configurations or move probe bodies into a shared module.
+
+Each synchronous batch captures its common source and authority inputs before
+Cargo and rechecks them afterward. Cargo runs with failure continuation; every
+probe needs its own artifact observation or attributed failure. A failed Cargo
+command's stderr preserves dependency/build-script diagnostics for unobserved
+members. Missing or malformed success evidence cannot authorize a probe.
+Cargo may also carry arbitrary procedural-macro text on stdout; this text is
+never probe evidence. Required artifacts and completion still must be present.
+Failures retain original declaration order and source spans. Retained Cargo
+artifacts are reusable; old probe success markers are never reused as verdicts.
 
 Probe code uses generated type assertions rather than semantic Rust item metadata:
 

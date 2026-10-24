@@ -12161,3 +12161,219 @@ Acceptance:
 Continue with the largest measured execution bottleneck after these known
 qualification failures are repaired. Do not repeat the full slow gate merely
 to rediscover the already measured SQL clean-build cost.
+
+### V4bc closure — validation inventories / #4468
+
+Merged PR #4468 as 09b8b272f1aa1e8ce771d6f275c842faae2b589a.
+Exact reviewed and qualified candidate: 2955d918f0b09c2152a4ead60a630ec4fd382e8f;
+merged tree identical. Independent Claude Opus: SATISFIED, no blockers.
+Review SHA-256:
+320af7bb4bc74711659cc9532fdcf5fc7b50d94d8d789223e7b5165a63371273.
+The reviewer inspected both exact source and archived qualification records.
+Archive v4bc-evidence.tar.gz: 51 payloads locally size/hash verified, SHA-256
+b99266c6278344bddf14c2f4c59e761aff5b3b2509ff04d684485d00a378cf0e.
+
+All three original inventory failures reproduced before repair. Eight affected
+commands pass on the final candidate in a 59.247s guard: 11 metadata controls,
+17 method controls, filesystem self-tests, complete metadata/method/filesystem
+inventories (6,419 method sites and 3,450 filesystem sites), file size and diff.
+The 1,149 metadata consumer rows preserve order and classifications; 29 source
+anchors change. Preserve the first-draft shape-normalization test failure and
+diagnostic inventory-audit assertion as failed evidence. Neither is a product
+timing measurement. No Rust, wire schema, lockfile or profile selection changed.
+
+Follow-up: register the currently manual metadata guard and its self-tests in
+canonical verification before final qualification. Its shape parser deliberately
+fails closed on future attributes or visibility changes; no compatibility path
+was added. No full-gate speedup or phase completion is claimed.
+
+### V4bd prospective scope — attribute fresh source-generation cost
+
+Status: bounded investigation, not an adopted compiler redesign. V4bb measured
+277.654s parallel materialization for all 93 fresh positive graphs at four outer
+workers. Individual TLS graphs occupied 60–67s of overlapping subprocess time.
+Retained quality execution still spends 141.271s on all 264 freshness companions,
+81.591s on demos, 80.089s on corpus and 53.021s on determinism. These observations
+justify attribution, not an unmeasured claim of duplicated semantic work.
+
+First measure one ordinary isolated slow TLS graph with the same one-worker
+per-process preparation policy. Record compiler/product identity, capacity,
+environment, fresh output ownership, successful graph production and output
+hashes. Repeat only to distinguish startup/retained effects or to verify an
+explanation. Use one targeted CPU profile separately if ordinary timing and
+source inspection cannot attribute the cost. Keep sampling overhead out of
+performance comparisons and disclose unresolved stacks or lost samples.
+Do not rerun the full gate to rediscover already measured costs.
+
+Trace preparation, frontend/metadata loading, semantic work, lowering/codegen,
+portable graph writing and verification consumers. Distinguish CPU work, I/O,
+subprocess work and concurrency effects. In particular, establish whether the
+same work is repeated before proposing sharing. No daemon, cached verdict,
+skipped fixture, weakened freshness/negative control or compiler bypass.
+The global strict freshness guard and area's debt/orphan-aware gate are not
+assumed interchangeable.
+
+Any implementation requires explicit bounded acceptance in this record first:
+fresh input and provider isolation, invalidation, unchanged coverage and actual
+output equivalence, affected tests and exact-candidate independent review.
+Diagnostic runs have 30-minute caps and retained failed evidence. Current
+compiler source has not changed since V4bb; use its retained prepared executable
+only after verifying product input equality and its recorded artifact identity.
+SQL clean build, full scoped final gates and all V5 remain open.
+
+### V4bd findings — repeated Rust bridge authority work
+
+Measured candidate 5861cc51a134453dbae382af3ef99dfde01b3000 changes only phase
+records since V4bc. Retained compiler SHA-256:
+a863cbdbaa939ce2bfa728300ed70e35901e51ad660beabf8d8fe0b2b30a70ff.
+The complete product input diff against V4bb is empty.
+
+One ordinary fresh TLS demo materialization passed in 30.850s: 22.85 user CPU
+seconds, 3.34 system CPU seconds, no swaps. This isolated measurement is distinct
+from the earlier 60.616s overlapping four-worker preparation observation.
+
+A targeted whole-command CPU capture contains 2,270 samples with zero reported
+lost samples; 1,218 (53.656% of equal-period user CPU samples) are in SHA-256's
+software compression routine. Caller unwinding is incomplete; no exact caller
+percentage or stage duration is inferred. The first profiling attempt interrupted
+capture after a same-user session-guard assertion. The corrected capture covers
+the successful compiler child, but its wrapper rejected profiler shutdown before
+saving a final result; the exact profiler exit was not persisted. Preserve both
+failed wrappers. The complete perf data independently parses successfully and
+generated output bytes match the ordinary run. This is diagnostic evidence,
+not timing qualification.
+
+An independent file-system-call trace completed successfully. The compiler
+read 2,647,656,707 bytes across 1,480 paths. Each bundled SQLite C source was
+opened and fully read 83 times; their combined reads are 1,587,913,587 bytes.
+These are repeated reads, mostly served from the OS page cache, not measured
+physical disk traffic. The trace produced identical seven-file portable output
+to the ordinary run. Instrumented elapsed time is not performance evidence.
+
+The trace observed 41 distinct Rust bridge probe manifests with only two exact
+dependency/profile configurations: 19 net and 22 tls. Source confirms that
+execute_pending_direct_probes calls execute_direct_cargo_probe separately;
+probe_cache_key hashes backend and runtime trees before and after each Cargo
+check. Thus the 41 probes cause 82 runtime-tree walks, plus the separate sysroot
+metadata identity walk. Existing artifact reuse does not remove these checks.
+
+Isolated experiments retained all 41 original source bodies and dependency pins:
+- Two crates with per-probe modules passed in 1.784s total. Both deliberately
+  invalid groups failed and restored groups passed. This was not adopted:
+  general probes may use crate-relative paths, so module wrapping is unnecessary
+  semantic risk.
+- Two same-configuration Cargo workspaces, each retaining independent original
+  probe crates, passed in 2.634s total. Cargo reported all 41 probe artifacts as
+  freshly compiled. Each group's deliberate invalid probe failed with its own
+  source identity; restoring each passed. Features stayed separate and dependency
+  lock records were identical. Initial workspace setup failed on an unavailable
+  diagnostic-only TOML library before Cargo; the corrected experiment preserved
+  original lock sections without adding an environment dependency.
+
+These experiments exclude production identity capture and source generation;
+2.634s is not a measured new materialization time or full-gate projection.
+No product code changed in V4bd. Detailed observations, failed attempts and raw
+capture data remain in v4bd-findings.json and the V4bd evidence directory.
+
+### V4be prospective scope — batch equivalent Rust bridge probes
+
+Status: bounded implementation acceptance registered after measured V4bd.
+Use Cargo's workspace primitive to check independent probe crates together only
+when their dependency manifest, features, backend/runtime paths, native toolchain,
+profile, lock authority/mode, vendor policy and declared environment agree.
+Retain independent crate namespaces, exact source-bound package names and every
+probe contract. Do not union feature sets or wrap arbitrary bodies in modules.
+
+Capture each common source/authority identity once before the batch and recheck
+it after Cargo. Capture is owned by one synchronous batch, never global or reused
+across invocations. Group membership must not rely on an unvalidated cached digest.
+Any missing, unreadable, changed or symlinked required input must fail closed.
+The final result for each probe depends on its own Cargo artifact or diagnostic;
+missing output is incomplete, never success. Run Cargo with failure continuation
+so unrelated probes still produce results. Retain per-probe error classifications,
+source targets, lock modes, SQLx hermetic controls, child leases and native target
+ownership. Do not introduce a sequential fallback or reuse old success markers
+as verdicts.
+
+Acceptance before intermediate merge:
+- Unit/regression controls for exact grouping and split boundaries: manifest,
+  features, native/profile/lock/vendor/root changes, declaration ordering,
+  duplicate contracts, crate-relative references and colliding local type names.
+- Real Cargo checks showing every independent probe was observed; injected
+  failures in different members retain correct identities while valid members
+  execute. Malformed/truncated/missing protocol output cannot pass.
+- Preserve original lock/version authority and negative controls; detect actual
+  source, runtime, lock or metadata mutation between capture and completion and
+  on a later invocation. Preserve missing/empty/unreadable/symlink distinctions.
+- Focused driver/probe tests first, then complete affected Rust interop and
+  generated-driver contract checks, with every named contract accounted for.
+  Run compiler formatting, file-size and affected inventories.
+- Fresh TLS materialization before/after on retained targets, exact output
+  equivalence, and one trace verifying reduced tree walks/Cargo invocations.
+  Keep ordinary timings separate from traces. Broaden to complete selected
+  generated-quality preparation/execution only after the focused candidate passes.
+- Independent exact-candidate review under the approved intermediate policy.
+  All final scoped gates and V5 remain mandatory; do not claim ten minutes from
+  this one fixture. The separate SQL clean-build protocol is still open.
+
+### V4be integrated discovery and Cargo protocol corrections
+
+Status: implementation qualification remains in progress; no merge or full-gate
+timing claim. Candidate c8fc3d42aa62e2346d24d7d5ff3b9d9c5ca873fa passed 41
+focused probe tests, complete selected Rust interop area (28.244s), all 790
+ordinary driver tests (336.060s test body; 337.960s guard), and all 81 generated
+driver assertion cases (776.574s category; 779.774s guard). The separate advanced
+data preparation helper also passed, accounting for the remaining ignored
+libtest entry. Preparation passed all 271 maintained Rust demos. No required
+case is treated as passed merely because it was ignored in the ordinary run.
+
+The generated category admitted one native worker with three Cargo jobs:
+10,180 MiB available was below the two-worker policy's 10,240 MiB threshold.
+The earlier complete discovery used two workers. Do not interpret this run as
+a matched speed comparison. Record the admission threshold as a separate
+scheduling investigation; do not relax memory reserves in this item. Read-only
+inventory auditing and small isolated protocol experiments also overlapped parts
+of functional qualification. Final host-sensitive timing remains independent.
+
+Ordinary isolated TLS materialization decreased from 30.850s at V4bd to
+18.590s on the first V4be invocation. A subsequent ordinary invocation with
+retained dependencies and a fresh output directory took 6.969s. These first
+and retained observations have different artifact states; no matched retained
+baseline or full-gate speedup is claimed. All Rust/build-script output bytes
+agree. Manifest/lock differences are exclusively their exact candidate revision.
+The independent trace observes two workspaces containing all 19 + 22 probe
+crates, five reads of each large runtime C source instead of 83, and
+298,086,262 compiler read bytes instead of 2,647,656,707. Trace time is not
+performance evidence.
+
+Two additional real-Cargo fixtures exposed in-scope parser regressions before
+adoption, even though the existing broad tests passed:
+- Runtime build-script failure emits a failed build-finished record but puts the
+  explanatory diagnostic on stderr. The initial parser replaced it with a
+  missing-observation error. Preserve the original failure for unobserved probes
+  and retain their existing diagnostic classification and declaration identities.
+- Procedural macros may emit ordinary text alongside Cargo JSON. A valid macro
+  compiled successfully but the initial parser rejected its stdout. Follow the
+  [documented Cargo stream contract](https://doc.rust-lang.org/cargo/reference/external-tools.html#json-messages):
+  only recognized Cargo records supply evidence. Arbitrary text, non-record
+  JSON and undecodable text cannot supply an artifact or completion observation.
+  Every required observation remains mandatory; damaged/missing required
+  records cannot pass, and contradictory or repeated completion is rejected.
+
+Standalone replay of captured real Cargo output through the actual production
+parser reproduced both failures at c8fc3d42aa. Retain those failures and the
+original grouping/profile test failures. Add permanent real-Cargo regressions
+for macro stdout and build-script diagnostics, synthetic missing-evidence
+controls, and the original missing-manifest diagnostic contract. The repaired
+candidate must pass replay and the complete affected ordinary Rust interop
+tests before generated-quality qualification.
+
+Reviewed inventory updates cover only this item's code: independent workspace
+output creation, probe manifest admission, test-owned file operations, Cargo
+message classification, and test assertions. Existing classifications and
+unrelated records remain unchanged. Update the architecture description to
+document independent crates, exact grouping boundaries and per-probe results.
+The broad c8fc3d42aa evidence remains tied to that observed candidate; subsequent
+focused repairs require their own affected checks and independent final review.
+Complete generated-quality preparation/execution, final scoped phase gates and
+all V5 scenarios remain open. SQL clean-build cost is still independently open.

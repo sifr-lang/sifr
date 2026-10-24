@@ -1,17 +1,9 @@
-use super::cargo_invocation_trace::record_cargo_invocation;
-use super::cargo_resolution::{CargoResolutionPolicy, prepare_cargo_resolution};
+use super::cargo_resolution::CargoResolutionPolicy;
 use super::rust_interop_panic_probe::panic_mapper_probe;
-use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
-use super::rust_interop_probe_diagnostics::{
-    classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
-};
+#[cfg(test)]
 use super::rust_interop_probe_features::dependency_features;
-use super::rust_interop_probe_manifest::{
-    bind_probe_package_identity, probe_cargo_toml, probe_cargo_vendor_args,
-};
-use super::rust_interop_sqlx_offline::{
-    configure_hermetic_build_environment, validate_probe_sqlx_offline_metadata,
-};
+#[cfg(test)]
+use super::rust_interop_probe_manifest::{probe_cargo_toml, probe_cargo_vendor_args};
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
 };
@@ -21,7 +13,6 @@ use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::PathBuf;
-use std::{env, fs};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) enum AsyncThreadAffinity {
@@ -45,6 +36,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) cargo_resolution: CargoResolutionPolicy,
 }
 
+#[derive(Clone)]
 pub(super) struct ProbeExecutionFailure {
     pub(super) code: DiagnosticCode,
     pub(super) message_template: &'static str,
@@ -52,147 +44,7 @@ pub(super) struct ProbeExecutionFailure {
     pub(super) notes: Vec<String>,
 }
 
-pub(super) fn execute_direct_cargo_probe(
-    probe: &PendingRustBridgeProbe,
-) -> Result<(), ProbeExecutionFailure> {
-    if !probe.backend.cargo_manifest_path.is_file() {
-        return Err(probe_cargo_resolution_failure(format!(
-            "Rust probe Cargo manifest '{}' is missing or unreadable in {} mode",
-            probe.backend.cargo_manifest_path.display(),
-            probe.cargo_resolution.lock_mode.as_str()
-        )));
-    }
-    let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
-        return Err(probe_io_failure(format!(
-            "Rust probe Cargo manifest '{}' has no parent directory",
-            probe.backend.cargo_manifest_path.display()
-        )));
-    };
-    let dependency_features =
-        dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
-    let requires_structural_runtime = probe
-        .signature
-        .as_ref()
-        .is_some_and(|signature| !signature.structural_type_params.is_empty())
-        || sifr_ir::rust_opaque_structural_mapping(std::slice::from_ref(
-            &probe.declaration.declaration,
-        ))
-        .is_some();
-    let probe_manifest = probe_cargo_toml(
-        &probe.backend.dependency_name,
-        &probe.backend.cargo_package_name,
-        backend_root,
-        &probe.sysroot_runtime_crate,
-        &dependency_features,
-        requires_structural_runtime,
-    );
-    let probe_source = probe_source(probe);
-    let probe_manifest = bind_probe_package_identity(&probe_manifest, &probe_source);
-    let invocation_cwd = env::current_dir()
-        .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
-    probe
-        .cargo_resolution
-        .native_toolchain
-        .as_ref()
-        .map_err(|error| probe_io_failure(error.clone()))?;
-    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source)
-        .map_err(probe_io_failure)?;
-    let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
-    validate_probe_sqlx_offline_metadata(probe, backend_root)?;
-    let vendor_dir = probe
-        .cargo_resolution
-        .uses_sysroot_vendor()
-        .then(|| {
-            probe.sysroot_vendor_dir.as_deref().or_else(|| {
-                probe
-                    .cargo_resolution
-                    .trusted_vendor_dirs
-                    .first()
-                    .map(PathBuf::as_path)
-            })
-        })
-        .flatten();
-    let cargo_prefix_args = probe_cargo_vendor_args(vendor_dir);
-    let family = probe
-        .cargo_resolution
-        .native_family(
-            &probe.sysroot_runtime_crate,
-            probe.cargo_resolution.cargo_vendor_mode,
-            &cargo_prefix_args,
-            "",
-        )
-        .map_err(|error| probe_io_failure(error.to_string()))?;
-    let probe_root = family
-        .project(backend_root, &cache_key)
-        .map_err(|error| probe_io_failure(error.to_string()))?;
-    fs::create_dir_all(probe_root.join("src")).map_err(|error| {
-        probe_io_failure(format!("failed to create Rust probe project: {error}"))
-    })?;
-    super::native_storage::write_changed(&probe_root.join("Cargo.toml"), probe_manifest.as_bytes())
-        .map_err(|error| {
-            probe_io_failure(format!("failed to write Rust probe manifest: {error}"))
-        })?;
-    super::native_storage::write_changed(&probe_root.join("src/lib.rs"), probe_source.as_bytes())
-        .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
-
-    let owned_policy = probe
-        .cargo_resolution
-        .with_lease(family.lease())
-        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
-    let prepared_resolution =
-        prepare_cargo_resolution(&probe_root, &owned_policy, &cargo_prefix_args)
-            .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
-    let mut command = prepared_resolution
-        .command_policy(&owned_policy)
-        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?
-        .cargo_command()
-        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
-    command
-        .args(&cargo_prefix_args)
-        .args(["check", "--quiet"])
-        .arg("--manifest-path")
-        .arg(probe_root.join("Cargo.toml"));
-    probe
-        .cargo_resolution
-        .application_profile
-        .configure(&mut command);
-    if let Some(argument) = probe.cargo_resolution.lock_mode.cargo_arg() {
-        command.arg(argument);
-    }
-    if !matches!(
-        probe.cargo_resolution.lock_mode,
-        sifr_package::CargoLockMode::Normal | sifr_package::CargoLockMode::Frozen
-    ) {
-        command.arg("--frozen");
-    }
-    let target_dir = family.target();
-    crate::cache_storage::directory(&target_dir)
-        .map_err(|error| probe_io_failure(format!("unsafe Rust probe target: {error}")))?;
-    command.env("CARGO_TARGET_DIR", target_dir);
-    configure_hermetic_build_environment(&mut command);
-    record_cargo_invocation("rust-probe", probe.cargo_resolution.lock_mode, &command);
-    let output = crate::process_execution::output(&mut command)
-        .map_err(|error| probe_io_failure(format!("failed to run Rust probe: {error}")))?;
-    let unchanged = prepared_resolution
-        .assert_unchanged()
-        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics));
-    unchanged?;
-    let current_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source)
-        .map_err(probe_io_failure)?;
-    if current_key != cache_key {
-        return Err(probe_io_failure(
-            "Rust probe inputs changed while Cargo was running".to_string(),
-        ));
-    }
-    if output.status.success() {
-        mark_probe_cache_hit(&cache_file);
-        return Ok(());
-    }
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    Err(classify_probe_failure(probe, &stderr))
-}
-
-fn probe_source(probe: &PendingRustBridgeProbe) -> String {
+pub(super) fn probe_source(probe: &PendingRustBridgeProbe) -> String {
     let rust_path = probe.path.segments.join("::");
     let body = match probe.declaration.declaration.kind {
         RustInteropDecoratorKind::Opaque => opaque_probe_source(probe, &rust_path),
@@ -722,7 +574,7 @@ fn collect_generated_bridge_paths(
     }
 }
 
-fn probe_io_failure(message: String) -> ProbeExecutionFailure {
+pub(super) fn probe_io_failure(message: String) -> ProbeExecutionFailure {
     ProbeExecutionFailure {
         code: DiagnosticCode::RUST_CARGO_METADATA,
         message_template: "{message}",

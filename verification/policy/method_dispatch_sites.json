@@ -85198,6 +85198,114 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_lsp/src/session/tests/sysroot_request_tests.rs::remove_parent_package_context enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_lsp/src/session/tests/sysroot_request_tests.rs::remove_parent_package_context enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::actual_batch_runs_every_probe_and_refreshes_after_a_source_edit::literal-comparison::1",
+      "fingerprint": "7837f12ca1a1a24fdb6bf4a8704b7b87150b829bc1dcaf12f7634ee12d011d22",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "v ) | v == \"batch.first\" ) )",
+      "inputs": "fn actual_batch_runs_every_probe_and_refreshes_after_a_source_edit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::actual_batch_runs_every_probe_and_refreshes_after_a_source_edit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::actual_batch_runs_every_probe_and_refreshes_after_a_source_edit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::actual_batch_runs_every_probe_and_refreshes_after_a_source_edit::literal-comparison::2",
+      "fingerprint": "de312821c8fb368f9c50dc1eefe592d72a0f9c4a289d14ab8eb7b928636fcf5d",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "v ) | v == \"batch.second\" ) )",
+      "inputs": "fn actual_batch_runs_every_probe_and_refreshes_after_a_source_edit ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::actual_batch_runs_every_probe_and_refreshes_after_a_source_edit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::actual_batch_runs_every_probe_and_refreshes_after_a_source_edit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::cargo_cannot_publish_a_batch_after_mutating_its_input::literal-comparison::1",
+      "fingerprint": "fb68f5df079ad6a766fc5ddaa75e7558721f2fd414a0ab192198bc6af5664b39",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "message ) | message == \"Rust probe inputs changed while Cargo was running\" )",
+      "inputs": "fn cargo_cannot_publish_a_batch_after_mutating_its_input ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::cargo_cannot_publish_a_batch_after_mutating_its_input enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::cargo_cannot_publish_a_batch_after_mutating_its_input enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls::literal-comparison::1",
+      "fingerprint": "b368541a9427f5ec04422e7e3a31bc7aa39d3edbd47bc92da694fc8e13ab58ac",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "if call . phase != \"rust-probe\"",
+      "inputs": "fn owned_probe_calls ( calls : & [ crate :: CargoInvocation ] , backend : & Path )",
+      "outputs": "usize",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls::literal-comparison::2",
+      "fingerprint": "b1106d84cf56d466917d4a80d2df516c21e4c12982a0a39ab1addaa5fddf85c4",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "let Some ( argument ) = call . args . windows ( 2 ) . find ( | pair | pair [ 0 ] == \"--manifest-path\" ) else",
+      "inputs": "fn owned_probe_calls ( calls : & [ crate :: CargoInvocation ] , backend : & Path )",
+      "outputs": "usize",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls::literal-comparison::3",
+      "fingerprint": "a546cd05f8cb024b078963a8cb7c6e235f46d12fd354c12ea6b2f962f5caa99b",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "package . get ( \"dependencies\" ) . and_then ( | v | v . get ( \"probe_backend\" ) ) . and_then ( | v | v . get ( \"path\" ) ) . and_then ( toml :: Value :: as_str ) . is_some_and ( | path | Path :: new ( path ) == backend )",
+      "inputs": "fn owned_probe_calls ( calls : & [ crate :: CargoInvocation ] , backend : & Path )",
+      "outputs": "usize",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs::owned_probe_calls enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes::literal-comparison::1",
+      "fingerprint": "bf69a4ce6c4216b9e75687efb91d9cdb8be21b763821237931b0f8a4280398c1",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "Some ( \"compiler-message\" ) if value [ \"message\" ] [ \"level\" ] == \"error\"",
+      "inputs": "fn outcomes ( stdout : & [ u8 ] , stderr : & [ u8 ] , success : bool , members : & [ PathBuf ] , )",
+      "outputs": "Result < Vec < Result < ( ) , String > > , String >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes::literal-match::1",
+      "fingerprint": "ff878d27f78600136007cb8336a6fa4ee9ba92935c1b555f780ca6f8d74c00e0",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "matches ! ( value [ \"reason\" ] . as_str ( ) , Some ( \"build-finished\" | \"compiler-artifact\" | \"compiler-message\" | \"build-script-executed\" ) )",
+      "inputs": "fn outcomes ( stdout : & [ u8 ] , stderr : & [ u8 ] , success : bool , members : & [ PathBuf ] , )",
+      "outputs": "Result < Vec < Result < ( ) , String > > , String >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes::literal-match::2",
+      "fingerprint": "1886bf906828890e3f77f1e3a81560981758ad1a2389173a0cccecff8c309db8",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "match value [ \"reason\" ] . as_str ( ) { Some ( \"build-finished\" ) => { let result = value [ \"success\" ] . as_bool ( ) . ok_or ( \"Rust probe completion has no status\" ) ? ; finished = Some ( result ) ; } Some ( \"compiler-artifact\" ) => { if let Some ( source ) = value [ \"target\" ] [ \"src_path\" ] . as_str ( ) { let source = Path :: new ( source ) ; if expected . contains ( source ) { artifacts . insert ( source . to_path_buf ( ) ) ; } } } Some ( \"compiler-message\" ) if value [ \"message\" ] [ \"level\" ] == \"error\" => { let rendered = value [ \"message\" ] [ \"rendered\" ] . as_str ( ) . ok_or ( \"Rust probe error has no rendered diagnostic\" ) ? ; let source = value [ \"target\" ] [ \"src_path\" ] . as_str ( ) . map ( Path :: new ) ; if let Some ( source ) = source . filter ( | p | expected . contains ( * p ) ) { errors . entry ( source . to_path_buf ( ) ) . or_default ( ) . push_str ( rendered ) ; } else { shared_errors . push_str ( rendered ) ; } } Some ( \"compiler-message\" | \"build-script-executed\" ) => { } _ => return Err ( \"Rust probe Cargo output has an unknown record\" . into ( ) ) , }",
+      "inputs": "fn outcomes ( stdout : & [ u8 ] , stderr : & [ u8 ] , success : bool , members : & [ PathBuf ] , )",
+      "outputs": "Result < Vec < Result < ( ) , String > > , String >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     }
   ]
 }

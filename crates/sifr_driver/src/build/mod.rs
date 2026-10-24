@@ -54,6 +54,7 @@ mod rust_interop_opaque_contract_tests;
 mod rust_interop_panic_contract_tests;
 mod rust_interop_panic_probe;
 mod rust_interop_probe;
+mod rust_interop_probe_batch;
 mod rust_interop_probe_cache;
 mod rust_interop_probe_diagnostics;
 mod rust_interop_probe_features;

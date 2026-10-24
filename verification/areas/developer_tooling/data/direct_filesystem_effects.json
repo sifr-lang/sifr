@@ -9193,20 +9193,6 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/build/rust_interop_probe.rs",
-      "symbol": "execute_direct_cargo_probe",
-      "operation": "is_file",
-      "site": "if !probe.backend.cargo_manifest_path.is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_probe.rs",
-      "symbol": "execute_direct_cargo_probe",
-      "operation": "create_dir_all",
-      "site": "fs::create_dir_all(probe_root.join(\"src\")).map_err(|error| {",
-      "classification": "output-effect"
-    },
-    {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
       "symbol": "mark_probe_cache_hit",
       "operation": "sync_all",
@@ -24149,6 +24135,167 @@
       "symbol": "collect_tooling_and_cleanup_actual",
       "operation": "remove_dir_all",
       "site": "let cleanup_ok = fs::remove_dir_all(&base).is_ok() && !exists(&base);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch.rs",
+      "symbol": "plan",
+      "operation": "is_file",
+      "site": "if !probe.backend.cargo_manifest_path.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "actual_batch_runs_every_probe_and_refreshes_after_a_source_edit",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "batch_snapshots_recheck_bytes_and_reject_missing_or_linked_inputs",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(temp.path().join(\"runtime\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "batch_snapshots_recheck_bytes_and_reject_missing_or_linked_inputs",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&source).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "batch_snapshots_recheck_bytes_and_reject_missing_or_linked_inputs",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&backend, temp.path().join(\"runtime\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "batch_snapshots_recheck_bytes_and_reject_missing_or_linked_inputs",
+      "operation": "write",
+      "site": "std::fs::write(&authority, b\"first\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "batch_snapshots_recheck_bytes_and_reject_missing_or_linked_inputs",
+      "operation": "write",
+      "site": "std::fs::write(&path, b\"changed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "build_script_failure_keeps_original_diagnostics_for_every_probe",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "cargo_cannot_publish_a_batch_after_mutating_its_input",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "fixture",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(crate_root.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "missing_backend_manifest_keeps_the_resolution_contract",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(temp.path().join(\"backend/Cargo.toml\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "owned_probe_calls",
+      "operation": "read_to_string",
+      "site": "let source = std::fs::read_to_string(&manifest).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "owned_probe_calls",
+      "operation": "read_to_string",
+      "site": "let source = std::fs::read_to_string(member).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "procedural_macro_stdout_keeps_all_real_probes_valid",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(macros.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "procedural_macro_stdout_keeps_all_real_probes_valid",
+      "operation": "read_to_string",
+      "site": "let mut contents = std::fs::read_to_string(&manifest).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "procedural_macro_stdout_keeps_all_real_probes_valid",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "procedural_macro_stdout_keeps_all_real_probes_valid",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "procedural_macro_stdout_keeps_all_real_probes_valid",
+      "operation": "write",
+      "site": "std::fs::write(backend.join(\"src/lib.rs\"), \"probe_output_macro::make!();\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs",
+      "symbol": "procedural_macro_stdout_keeps_all_real_probes_valid",
+      "operation": "write",
+      "site": "std::fs::write(manifest, contents).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_tests.rs",
+      "symbol": "workspace_preserves_original_crate_scope_and_independent_failures",
+      "operation": "read_to_string",
+      "site": "assert_eq!(std::fs::read_to_string(member).unwrap(), *source);",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_batch_workspace.rs",
+      "symbol": "write",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(member_root.join(\"src\")).map_err(|e| e.to_string())?;",
       "classification": "output-effect"
     }
   ]
