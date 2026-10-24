@@ -9,13 +9,16 @@ from producer_snapshot import prepare_source_snapshot
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from verification.areas.common.release_compiler import (
-    RELEASE_VERSION, package_build_configuration, prepare_release_compiler,
+    RELEASE_VERSION, package_build_configuration, prepare_release_compiler, release_target_dir,
 )
 
 
 def corpus_configuration(root: Path, original: dict[str, str]):
     snapshot = root / "target/sysroot_release/corpus-producer-source"
-    env = dict(original, SIFR_RELEASE_VERSION=RELEASE_VERSION, SIFR_SYSROOT=str(snapshot))
+    # This test embeds the packaged version. Sharing the development target
+    # would invalidate its normal-version compiler and reverse on the next check.
+    env = dict(original, CARGO_TARGET_DIR=str(release_target_dir(root)),
+               SIFR_RELEASE_VERSION=RELEASE_VERSION, SIFR_SYSROOT=str(snapshot))
     command = ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--lib",
                "full_corpus_exact_emission", "--", "--ignored", "--nocapture"]
     return command, env, snapshot
