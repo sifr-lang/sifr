@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1h SQL attribution complete, mandatory build feasibility still open; V4aj same-file compiler override comparison; final gates and V5 remain open
+current_stage: V1h recorded in #4452; V4aj same-file resolver repair in qualification; final gates and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9519,3 +9519,29 @@ from whole-gate savings. Reject an apparent saving caused by skipped preparation
 or changed binary selection. Source review must cover the exact candidate.
 This inexpensive repeated-work repair does not establish SQL feasibility or waive
 final full correctness gates and repeated V5 qualification.
+
+
+### V4aj implementation checkpoint
+
+V1h's record/next contract merged through [#4452](https://github.com/sifr-lang/sifr/pull/4452)
+as `65d936c30b312fb3fb669d49a3e75dcb17a58736`. Three fresh-process baseline
+resolver observations retain all 451 Cargo artifacts and select the same
+1,318,566,952-byte compiler. The first call takes 6.674s: Cargo 0.578s and two
+same-file digest reads 6.075s. These are targeted resolver observations, not
+whole-gate measurements. The Python example launcher already has a process-local
+resolver cache, so do not multiply this cost by every case in one invocation.
+
+The repair retains Cargo preparation first, selected-file existence, environment
+handling and the original differing-path byte comparison. It avoids digest reads
+only when both resolved paths identify the same pathname. Exact-path and symlink
+regression subcases both fail against the unchanged implementation, then pass
+after the repair. All 17 affected resolver/source-consumer controls pass (1.573s),
+including actual timeout/descendant behavior, preserved failure propagation,
+missing cached candidate, identical copies and stale differing files.
+
+Next qualification on the frozen candidate: all foundation groups, four unchanged
+emitted plans, profile/static/size checks, three actual resolver observations and
+the real Python example launcher self-test. The latter retains its mismatched
+compiler rejection and full byte comparison of a separate copied compiler. No
+new full Python-area pass is claimed; final phase gates execute all selected
+consumers. Independent source review and evidence reconciliation precede merge.

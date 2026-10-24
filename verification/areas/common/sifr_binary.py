@@ -16,7 +16,9 @@ def resolve_sifr_binary(repo_root: Path, *, explicit_env_var: str | None = None,
     override = selected_env.get(explicit_env_var) if explicit_env_var else None
     if override:
         selected = Path(override).resolve()
-        if not selected.is_file() or _digest(selected) != _digest(candidate):
+        # Cargo already selected this file; only a different path needs a byte comparison.
+        if not selected.is_file() or (
+                selected != candidate.resolve() and _digest(selected) != _digest(candidate)):
             raise RuntimeError(f"compiler override {selected} does not match prepared candidate {candidate}")
         return selected
     return candidate

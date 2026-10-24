@@ -219,12 +219,73 @@ class SysrootSetupPolicyTests(unittest.TestCase):
             outcome = SimpleNamespace(returncode=0, cause="exit", truncated=False,
                                       stdout=json.dumps(event), stderr="")
             env = {"SIFR_GCQ_BIN": str(override)}
-            with patch.object(fixture_execution, "run_process", return_value=outcome):
+            with patch.object(fixture_execution, "run_process", return_value=outcome), \
+                 patch.object(sifr_binary, "_digest", wraps=sifr_binary._digest) as digest:
                 with self.assertRaisesRegex(RuntimeError, "does not match prepared candidate"):
                     sifr_binary.resolve_sifr_binary(root, explicit_env_var="SIFR_GCQ_BIN", env=env)
+                self.assertEqual([call.args[0] for call in digest.call_args_list], [override, binary])
+                digest.reset_mock()
                 override.write_text("current")
                 self.assertEqual(sifr_binary.resolve_sifr_binary(
                     root, explicit_env_var="SIFR_GCQ_BIN", env=env), override)
+                self.assertEqual([call.args[0] for call in digest.call_args_list], [override, binary])
+
+    def test_same_path_compiler_override_avoids_self_hash_after_preparation(self):
+        sysroot_module()
+        import sifr_binary
+        from . import fixture_execution
+        self.addCleanup(sifr_binary._prepare.cache_clear)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            binary, alias = root / "candidate", root / "alias"
+            binary.write_text("current")
+            alias.symlink_to(binary)
+            event = {"reason": "compiler-artifact", "target": {"name": "sifr"},
+                     "executable": str(binary)}
+            outcome = SimpleNamespace(returncode=0, cause="exit", truncated=False,
+                                      stdout=json.dumps(event), stderr="")
+            for selected in (binary, alias):
+                sifr_binary._prepare.cache_clear()
+                env = {"SIFR_GCQ_BIN": str(selected)}
+                original_env = dict(env)
+                with self.subTest(selected=selected.name), \
+                     patch.object(fixture_execution, "run_process", return_value=outcome) as prepare, \
+                     patch.object(sifr_binary, "_digest", side_effect=AssertionError("self hash")):
+                    self.assertEqual(sifr_binary.resolve_sifr_binary(
+                        root, explicit_env_var="SIFR_GCQ_BIN", env=env), binary)
+                    prepare.assert_called_once()
+                    self.assertEqual(prepare.call_args.args[0][:3], ["cargo", "build", "--locked"])
+                    self.assertEqual(prepare.call_args.kwargs["env"], original_env)
+                    self.assertEqual(env, original_env)
+
+    def test_same_path_compiler_override_does_not_bypass_cargo_failure_or_missing_file(self):
+        sysroot_module()
+        import sifr_binary
+        from . import fixture_execution
+        self.addCleanup(sifr_binary._prepare.cache_clear)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            binary = root / "candidate"
+            binary.write_text("current")
+            event = {"reason": "compiler-artifact", "target": {"name": "sifr"},
+                     "executable": str(binary)}
+            env = {"SIFR_GCQ_BIN": str(binary)}
+            for code, cause, truncated in ((101, "exit", False), (0, "exit", True),
+                                           (124, "safety_deadline", False)):
+                sifr_binary._prepare.cache_clear()
+                outcome = SimpleNamespace(returncode=code, cause=cause, truncated=truncated,
+                                          stdout=json.dumps(event), stderr="control")
+                with self.subTest(code=code, cause=cause, truncated=truncated), \
+                     patch.object(fixture_execution, "run_process", return_value=outcome) as prepare, \
+                     self.assertRaises(RuntimeError):
+                    sifr_binary.resolve_sifr_binary(root, explicit_env_var="SIFR_GCQ_BIN", env=env)
+                prepare.assert_called_once()
+            # Even an already prepared candidate must still exist on a cache hit.
+            with patch.object(sifr_binary, "_prepare", return_value=binary), \
+                 patch.object(sifr_binary, "_digest", side_effect=AssertionError("missing hash")):
+                binary.unlink()
+                with self.assertRaisesRegex(RuntimeError, "does not match prepared candidate"):
+                    sifr_binary.resolve_sifr_binary(root, explicit_env_var="SIFR_GCQ_BIN", env=env)
 
     def test_source_consumer_retains_900_second_and_shorter_parent_deadlines(self):
         runner = sysroot_module()
