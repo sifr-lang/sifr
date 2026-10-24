@@ -80,7 +80,9 @@ fn child_execution_preserves_cwd_and_rejects_missing_or_failed_tests() {
         "isolated_cli_tests::child_execution_preserves_cwd_and_rejects_missing_or_failed_tests";
     if let Ok(mode) = std::env::var("SIFR_ISOLATED_CLI_TEST_CONTROL") {
         run(NAME, || {
-            let directory = crate::mode_resolution_tests::mktemp_dir("isolation_control");
+            let directory = crate::mode_resolution_tests::mktemp_dir("isolation_control")
+                .canonicalize()
+                .expect("canonical control directory");
             let previous = std::env::current_dir().expect("parent cwd");
             {
                 let _cwd = CurrentDirGuard::enter(&directory);
