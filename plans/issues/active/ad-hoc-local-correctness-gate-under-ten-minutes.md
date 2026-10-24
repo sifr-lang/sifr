@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4at merged; V1i SQL capability-boundary audit in progress; final timing and V1/V5 remain open
+current_stage: V1i ownership audit complete; V1j HIR clone ownership feasibility registered; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10527,3 +10527,77 @@ contract and affected qualification before changing product sources. Use the
 smallest checks and retained artifacts; every subsequent long build still needs
 capacity admission and the thirty-minute diagnostic cap. Full phase acceptance
 remains unchanged.
+
+
+### V1i outcome — required capabilities and duplicated HIR implementations
+
+Locked offline metadata and normal/build dependency trees complete on
+217f83d7328c7589ecde1b6d805d434eb8f45c0c without compilation or source changes.
+The three SQL tool graphs contain 272 / 315 / 232 unique package-name/version
+nodes for PostgreSQL / MySQL / SQLite. These are graph nodes, not compiled units.
+None includes sifr_codegen; the existing semantic/native facade separation is
+already effective.
+
+Migration source checking reaches sifr_semantic_services::single_file and the
+canonical frontend/lowering pipeline. Source and installed stdlib authority
+remain in SemanticContext; metadata is a real dependency. SQL profile loading
+in sql_editor.rs actually executes components through ComponentCompilation,
+whose Component::new uses Wasmtime/Cranelift. PostgreSQL and MySQL clients
+actually use their Rustls/aws-lc TLS stack. Native dialect parsers are required
+by schema/migration analysis. No accidentally linked facade has been demonstrated.
+Moving those capabilities into a helper process would also require qualification
+of that producer, its identities and the host-tool sandbox/subprocess boundary;
+it would not by itself remove the measured work.
+
+A separate retained-object inspection identifies narrower duplication:
+HirExpr and HirStmt use derived Clone in sifr_ir/src/hir_nodes.rs,
+while the downstream lowering rlib contains repeated compiled definitions of
+their large clone methods. Exact counts, artifact digest and raw nm output
+are in v1i-dependency-audit/clone-ownership.json and lowering-symbols.txt.
+This is evidence of repeated code generation, not elapsed-time attribution.
+The retained rlib is a development artifact, not a recovered clean SQL artifact.
+
+The bounded proposal is to put these two non-generic clone implementations in
+their owning IR crate, using exhaustive field-by-field Clone implementations
+without an inline hint. Keep node layout, API, all fields and deep-clone semantics.
+An exhaustive match fails compilation when variants or fields are added; no
+wildcard, serialization roundtrip, shared mutable representation or custom derive
+dependency is needed. Normal release LTO remains available. Measure before adoption.
+
+Evidence: v1i-dependency-audit/ retains ten successful read-only commands,
+locked graph output, ownership map and object evidence. Historical V1a already
+tested opt1 for first-party hot crates without a useful improvement; V1e/f/g
+opt0 experiments remain rejected. Do not repeat them as a new proposal.
+
+### V1j — feasibility of canonical HIR clone ownership
+
+This bounded diagnostic follows the demonstrated duplicated definitions in V1i.
+Replace only derived Clone for HirExpr and HirStmt with exhaustive
+field-by-field implementations in their IR owner, without an inline attribute.
+Preserve each field's existing Clone operation, public node definitions,
+layout, trait API, optimization profiles and dependencies. Separate expression
+and statement implementation files keep maintained sources below 900 lines.
+Do not change other clone types or introduce arenas, a new macro system or IPC.
+
+Start with IR deep-clone/metadata independence checks and existing affected IR
+tests. Then measure the canonical SQL clean A / unchanged A / independent clean B
+protocol, seven rejection controls and all three executable byte comparisons,
+at the established six-Cargo/two-Rayon allocation and resource reserves.
+Capture actual emitted units, features, profiles and clone-definition ownership
+before target cleanup. The previous V1h build baseline may be reused only after
+proving relevant normal/build source, manifest, lock, toolchain, protocol and
+allocation identity; unrelated driver/test changes must be explicitly excluded
+by the resolved dependency graph. Otherwise make a matched baseline.
+
+Compile unchanged migration-source and PostgreSQL component probes from those
+actual libraries and run fresh-process comparisons. Preparation and runtime must
+be reported separately. Use matched baseline probes if historical runtime
+inputs do not match. Keep all original tests and assertions. A build saving that
+causes a material compiler/runtime regression is not acceptable. Stop after the
+first decisive rejection rather than repeat an unpromising candidate.
+
+This is feasibility evidence, not phase acceptance. If worthwhile, register and
+complete broader canonical source/installed/native regression qualification and
+independent review before adoption. Retain all failed or interrupted evidence.
+Every long run needs capacity admission and a 30-minute cap. Full scoped final
+gates, complete coverage, producer accounting and every V5 scenario remain required.
