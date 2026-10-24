@@ -10602,3 +10602,42 @@ complete broader canonical source/installed/native regression qualification and
 independent review before adoption. Retain all failed or interrupted evidence.
 Every long run needs capacity admission and a 30-minute cap. Full scoped final
 gates, complete coverage, producer accounting and every V5 scenario remain required.
+
+
+### V1j refined candidate — batch the same clone-ownership cause
+
+Before the candidate SQL timing run, the matched baseline's actual clean SQL
+lowering artifact confirms 122 Type::clone definitions (321,592 symbol bytes)
+and 16 HirExpr::clone definitions (199,227 symbol bytes). This strengthens V1i's
+retained-object observation; it is still not compile-time attribution. HirStmt
+remains outside scope. The baseline IR artifact has no separately emitted
+definition of either method.
+
+Extend the same bounded ownership experiment to Type in sifr_type_system:
+an exhaustive ordinary Clone implementation in its defining crate, with no
+inline hint, layout change, new dependency or other trait change. Preserve
+every field's existing clone semantics, including SharedVec copy-on-write,
+nominal identity, symbolic recursive aliases and structural-record source order.
+Add focused controls for those ownership/metadata contracts and run the existing
+type-system plus IR tests. Batch these two related implementations into one
+candidate before the expensive SQL protocol, rather than running one protocol
+per small clone repair. The earlier expression-only candidate and its eight
+passing focused IR tests remain recorded; it has no SQL timing claim.
+
+The matched baseline probe preparation has now passed: one clean native build
+383.304s, additional symbol/probe preparation 3.500s, and all four unchanged
+runtime tests in three fresh-process repetitions. Guarded total is 508.090s,
+including runtime and cleanup; there is no reserve stop, leftover process or
+source mutation. This single preparation build is not a newly executed full
+reproducibility protocol. Full V1h build evidence is reused only after the
+recorded 35-package normal/build source and fixed-input identity check.
+No V1h SQL dependency, manifest, lock, toolchain or protocol input changed;
+unrelated driver/test and verification/doc changes are listed explicitly.
+
+Run the combined candidate through the previously registered complete SQL
+protocol and matched runtime probes, collecting type-system, IR and downstream
+lowering symbols. Compare actual features/profile/units and all three linked
+executable hashes within the candidate's clean/reused/independent builds.
+All earlier runtime, correctness, capacity, review and final phase obligations
+remain. If a worthwhile saving is absent or runtime regresses materially,
+record the rejection without adopting this source change.
