@@ -1,7 +1,6 @@
 use super::dedup_keys::dedup_impl_key;
 use super::item_refs::referenced_item_names_via_ast;
 use proc_macro2::{Group, Ident, TokenStream, TokenTree};
-use quote::ToTokens;
 use sifr_type_system::{is_global_rust_nominal_identity, stdlib_class_rust_name};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
