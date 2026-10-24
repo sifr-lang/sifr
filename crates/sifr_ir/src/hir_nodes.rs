@@ -594,7 +594,7 @@ pub enum HirIteratorOp {
 }
 
 /// A typed expression.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum HirExpr {
     /// Integer literal
     IntLiteral(i64),
