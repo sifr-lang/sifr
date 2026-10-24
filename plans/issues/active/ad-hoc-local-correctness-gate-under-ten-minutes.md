@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ax CLI isolation merged; V4ay SQL regeneration registered; final timing and V1/V5 remain open
+current_stage: V4ax/V4ay correctness repairs merged; V4az metadata validation investigation; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -11410,3 +11410,87 @@ RawVecInner::finish_grow copies from compiler-component and SQL-contract.
 The new exact artifact/core hashes and sizes come from actual production.
 This structural comparison does not replace runtime and mutation qualification;
 the full named SQL checks remain pending on the produced candidate.
+
+### V4ay closure — SQL component provenance repaired
+
+Status: merged in [PR #4464](https://github.com/sifr-lang/sifr/pull/4464).
+Reviewed candidate 6a2dc6d986c2c15c9c9fd50dcfcb85537f98b46c; squash merge
+c058f9dddd23f30d3231087f9f3faf1db927b011 has the identical tree.
+
+All 19 selected SQL suites, 66 ordered cases and 66 variants passed with no
+mismatches. Inventory reconciliation confirms all six native PostgreSQL majors
+and the separate all-component host invocation. The clean A, reused A and
+independent clean B linked protocol passed with matching hashes for all three
+native tools under the locked/offline contract. All mutation checks passed.
+The canonical area took 1244.030s; its external guard took 1247.009s with no
+cap, leftover process or unexpected tracked mutation. Preparation took 101.455s;
+six producer controls and diff checks passed in a 2.194s guard.
+
+The three largest SQL cases were independent build qualification 874.276s,
+PostgreSQL parser matrix 247.067s and incremental-editor tests 65.984s.
+These are diagnostic observations, not final timing acceptance. Read-only
+process sampling covered part of clean A and all of clean B; sampled CPU
+counters are lower bounds, exit observations have polling delay, and overlapping
+crate times cannot be added as wall-time savings.
+
+Independent Claude review: SATISFIED, no blocking findings.
+Review SHA-256: 6a8685d77ff7b9be01d52f0a37ead1ee141d49d1b5bcc9363d60f333a78e886a.
+Archive v4ay-evidence.tar.gz contains 73 verified payloads;
+SHA-256: ced9b7294b76ba5f7210cfab9c5d06af16bd307605abe74e042c222a4ab95be0.
+One evidence-label correction: the controls wrapper's generic scope and copied
+selection describe planned SQL inventory, whereas its actual execution is only
+six producer controls and diff checks. Full coverage is established by the
+separate qualification report/reconciliation. Original evidence is preserved.
+The app again rejected PR attachment at its 100-attachment limit.
+
+The prior CLI race and SQL provenance failures now have completed repairs.
+This does not establish an integrated passing gate: the prior broad run remains
+failed, and final complete scoped gates plus V5 remain open.
+
+### V4az prospective execution — reduce repeated complete-metadata validation work
+
+Status: registered bounded diagnosis and conditional optimization.
+
+V4aw observed roughly one second per fresh compiler check, with metadata
+validation before the much shorter consumer-open trace. Source inspection shows
+complete validation traverses each structural root, repeatedly resolving record
+identities. Prior record-fact caching avoids some decoding; it intentionally does
+not reuse root-level depth/work verdicts. First attribute current complete
+validation using a captured real metadata image and targeted instrumentation.
+Keep ordinary elapsed observations separate from profiling overhead.
+
+Optimize only demonstrated repeated work in complete validation and its internal
+lookup/fact ownership. Preserve all payload decoding, digest and field checks,
+unreachable-record checks, reference kinds, anchor boundaries, cycle rejection,
+each root's depth/work budgets, bounded retention, exact compatibility and
+immutable captured inputs. Do not add trusted-receipt bypasses, persistent
+validation verdicts, cache identity relaxations or source fallbacks. Lazy demanded
+consumer validation keeps its contract. If a proposed optimization cannot
+preserve existing acceptance/error behavior, reject it rather than weaken tests.
+
+Use a focused standalone metadata probe or leaf-crate tests first, avoiding a
+full compiler rebuild for an unproven experiment. Record actual source/tool/
+artifact identities. Only advance a material demonstrated improvement to the
+integrated candidate. Follow capacity admission and 30-minute category caps.
+
+Named intermediate acceptance for any adopted implementation:
+- Differential complete-validation results against the original algorithm on
+  valid graphs, shared subgraphs, cycles, anchors, missing/wrong-kind references,
+  malformed records, depth/work limits and small/evicting fact budgets.
+- All metadata crate tests, affected compiler-services/semantic metadata checks,
+  ownership/corruption and retention controls; preserve every existing assertion.
+- Actual metadata image validation and source-versus-installed corpus comparison,
+  all 732 fixtures and required emitted-byte equivalence. Run the complete
+  installed-sysroot area when the candidate is credible.
+- Current compiler command observations with equal inputs; measure ordinary
+  runs separately from instrumentation. No whole-gate saving claimed by summing
+  overlapping measurements.
+- Formatting, size, affected authority/inventory and diff/docs checks, followed
+  by exact-candidate independent review.
+
+The component dependency audit is a separate follow-up, not an adopted refactor:
+frontend/package/SQL-contract normal graphs inherit Wasmtime, while lowering,
+type-system and metadata do not. Therefore a host/protocol split cannot be claimed
+to remove their entire compilation cost. Earlier V1 profile/concurrent-build
+experiments remain rejected. Mandatory SQL clean reproduction and final V1/V5
+qualification remain required.
