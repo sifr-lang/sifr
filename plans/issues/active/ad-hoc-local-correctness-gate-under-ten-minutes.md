@@ -10256,3 +10256,103 @@ implementation and its focused regression/area acceptance before editing product
 code. The diagnostic/record work requires diff/local-link/scope checks and scoped
 review of its conclusions; no unrelated compiler rebuild or final gate is implied.
 V1 and all final V5/full-scope obligations remain mandatory.
+
+### V4ar diagnostic result — complete retained native selection
+
+Frozen candidate `66393fda2268086a972a08fb68d41c25042f9343` passes
+current-run native configuration preparation (97.835s guarded, including the
+77.096s declared native-graph helper) and every selected generated-driver
+invocation. The ordered inventory matches V4an: 81 invocations, comprising 80
+semantic checks and the subprocess-protocol helper. No selected case is missing,
+failed, cancelled or skipped. The category takes 858.715s guarded; sequential
+preparation plus category is 956.550s. Neither is an under-ten-minute full gate.
+
+| Nested case group | Invocations | Seconds |
+| --- | ---: | ---: |
+| Rust interoperability | 41 | 510.655 |
+| Other generated-driver checks | 31 | 272.064 |
+| Python integration | 9 | 68.416 |
+| Total nested invocation time | 81 | 851.135 |
+
+Per-case durations are inside category time, not additional work. The historical
+V4an category was 1,546.120s; differing retained-artifact states prevent a matched
+code-speedup claim. Native preparation here covers this configuration only, not
+the full crate-preparation inventory.
+
+The largest cases are metadata/source corpus exact emission (102.691s), trusted
+native-build artifacts (94.941s), semantic/native frontend corpus (79.196s),
+Arrow/tensor roundtrips (45.501s), and trusted proc-macro deterministic codegen
+(32.000s). The two corpus checks preserve different differential oracles. The
+trusted native-build test deliberately compares two fresh locked release builds;
+do not classify that explicit reproducibility work as cache fragmentation.
+
+One targeted CPU-sampled invocation of the largest case passes. Its 10,108
+samples have zero reported loss; mutually exclusive leaf-symbol buckets place
+33.538% in Rust syntax/token libraries, 9.626% in metadata/serialization and
+8.043% in named allocator symbols. The remaining 48.793% is other or unresolved.
+These are sampled CPU categories, not wall-time stages. Caller attribution is
+incomplete: verbose postprocessing records 6,301 unwind failures. Do not infer
+bootstrap versus per-fixture stage costs or a specific implementation from this
+profile. The first profiler-control attempt failed before launching any test;
+its evidence remains failed. The repaired control handshake accounts for perf's
+NUL-terminated acknowledgement; only one instrumented test actually ran.
+
+Resource accounting records 811.10s user plus 88.24s system CPU in the 858.17s
+timed command (104% CPU). Admission selected four slots on eight effective
+logical CPUs, but the existing executor dispatches every isolated case serially.
+GNU time's 3,303,652 KiB maximum RSS is not aggregate process-tree memory and
+does not by itself prove concurrent admission safe. This makes a bounded
+scheduling experiment worth testing before more compiler changes.
+
+Evidence: `v4ar-preparation/`, `v4ar-native-matrix/`, their guarded receipts,
+`v4ar-targeted-profile/` (failed pre-launch control), and
+`v4arr-targeted-profile/` (successful sampling and limited attribution).
+The sortable report contains all 81 individual timings, subgroup sums and
+separate preparation/category totals. Structural HTML checks pass; no visual
+inspection is claimed. Scoped review remains required. V1, final scoped gates
+and all V5 scenarios remain open.
+
+### V4as — bounded two-worker native scheduling experiment
+
+Prospective scope: test whether independent native libtest processes can use the
+existing resource allocation productively. First use an external diagnostic
+driver on a frozen candidate; do not change canonical scheduling until the
+experiment demonstrates safe coverage and useful elapsed time. Preserve every
+canonical Cargo argument, native environment, target, feature/profile, fixture,
+assertion, current-run preparation and cache/fixture ownership contract.
+
+Admit at most two isolated worker processes. Charge each worker the existing
+two compiler-job slots; require four available slots and an eight-GiB working
+allowance plus the existing two-GiB memory reserve. Check disk/capacity before
+launch and monitor the live reserve. Do not infer admission from single-process
+maximum RSS. Keep the existing 30-minute cap per preparation/category and owned
+descendant cleanup. Resource exhaustion, cancellation and invalid worker evidence
+stop further dispatch and remain failed/incomplete evidence.
+
+Use the same lexically selected 81 invocations, dispatch each once, preserve
+per-invocation logs and reconcile all results in selection order. Independent
+ordinary test failures may continue; never count a missing or truncated result as
+passing. Each worker calls the existing command executor and one-case execution
+validator on its main thread, preserving signal/child ownership. Do not share
+mutable in-process test state or relax Cargo/fixture locks to manufacture overlap.
+
+Inspect fixture ownership and negative controls before the trial. Retained
+ScenarioInputs owners are keyed by checkout/fixture/scenario/test and reconcile
+under their bounded lease; temporary fixtures and test process state remain
+isolated. Existing shared Cargo locks may limit overlap: measure that outcome
+instead of bypassing them. No compiler profile, release semantics, environment
+identity, debug settings, source results or test assertions change.
+
+Run current preparation then the complete untraced two-worker selection. Record
+coverage, category and preparation times, overlap, peak aggregate resource
+observations, remaining failures and source cleanliness. This is a diagnostic
+trial, not a controlled speedup or final full-gate qualification. If it fails or
+does not help, preserve the result and choose the next measured bottleneck.
+
+If the trial succeeds, register the canonical scheduler implementation and its
+resource, failure-continuation, cancellation, deterministic-reporting and exact
+selection regressions before editing runner code. Qualify the actual implementation
+with the complete native selection and applicable runner/profile contracts, then
+obtain scoped independent review. Final full-scope gates, V1 and all V5 remain
+required. Direct corpus stage instrumentation remains a followup if needed; no
+specific corpus optimization is justified by incomplete call stacks.
