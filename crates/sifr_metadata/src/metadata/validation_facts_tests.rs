@@ -224,7 +224,8 @@ fn exact_failure_diagnostics_survive_hits_misses_and_eviction() {
             "source path must be normalized and packaged-source relative",
         ),
     ] {
-        let baseline = complete(&bytes, 0).0;
+        let baseline = super::complete_graph_tests::original_complete(&open(&bytes));
+        assert_eq!(complete(&bytes, 0).0, baseline);
         assert!(baseline.as_ref().unwrap_err().0.contains(expected));
         for budget in [1, 700, 1 << 20] {
             assert_eq!(complete(&bytes, budget).0, baseline);
