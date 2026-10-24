@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import os
+import json
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable
 
 from .build_allocation import E2E_ENV, allocate, extract_overrides
+from .native_test_allocation import ALLOCATION_ENV, allocate_native
 from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
     cargo_preparation_plan,
@@ -101,6 +103,7 @@ class ProfileRunner:
         self.env = os.environ.copy()
         overrides, self.forward_args = extract_overrides(self.forward_args)
         self.build_allocation = allocate(self.profile, self.env, overrides)
+        self.env[ALLOCATION_ENV] = json.dumps(asdict(allocate_native(self.build_allocation)))
         self.env["SIFR_VERIFY_PROCESS_SLOTS"] = str(self.build_allocation.slot_limit)
         self.env["CARGO_BUILD_JOBS"] = str(self.build_allocation.compiler_jobs)
         self.env["RAYON_NUM_THREADS"] = str(self.build_allocation.sifr_jobs)

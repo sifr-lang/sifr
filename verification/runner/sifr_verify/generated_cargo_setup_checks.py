@@ -31,7 +31,7 @@ from .generated_cargo_setup import (
 from .paths import REPO_ROOT
 from .profile_commands import CommandFailed, run_command
 from .profile_runner import ProfileRunner
-from .native_test_execution_checks import outcome, PASSED
+from .native_test_execution_checks import outcome, PASSED, ENV, ROOM
 from .profiles import load_profile
 
 REVISION = "a" * 40
@@ -54,9 +54,10 @@ class SetupPolicyTests(unittest.TestCase):
         )
 
     def test_profile_order_environment_and_exact_source_namespace(self):
-        env = {"CARGO_NET_OFFLINE": "true", "CARGO_HOME": "/owned/cache"}
+        env = dict(ENV, CARGO_NET_OFFLINE="true", CARGO_HOME="/owned/cache")
         commands = []
-        with patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION), \
+        with patch("sifr_verify.native_test_allocation.discover_capacity", return_value=ROOM), \
+             patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION), \
              patch("sifr_verify.cargo_setup.prepare_crate_test_binaries",
                    wraps=prepare_crate_test_binaries) as compiler_setup, \
              patch("sifr_verify.cargo_setup.prepare_area_graphs") as area_setup:
@@ -75,7 +76,7 @@ class SetupPolicyTests(unittest.TestCase):
         self.assertIs(area_setup.call_args.args[1], compiler_env)
         compiler_commands = 0
         for args, setup_env in commands:
-            if setup_env is compiler_env:
+            if setup_env is compiler_env or any("prepare_advanced_data_native_graph" in arg for arg in args):
                 compiler_commands += 1
                 self.assertEqual(setup_env["CARGO_NET_OFFLINE"], "true")
                 if args[0] == "cargo":
@@ -362,8 +363,9 @@ class SetupPolicyTests(unittest.TestCase):
                                ("nightly", True), ("release", True)):
             with self.subTest(profile=name):
                 calls = []
-                with patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION):
-                    prepare_cargo_cache(load_profile(name), {"CARGO_TARGET_DIR": "/owned/target"},
+                with patch("sifr_verify.native_test_allocation.discover_capacity", return_value=ROOM), \
+                     patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION):
+                    prepare_cargo_cache(load_profile(name), dict(ENV, CARGO_TARGET_DIR="/owned/target"),
                                         lambda args, **kw: (calls.append((args, kw["env"])), outcome(PASSED))[1])
                 release_builds = [(args, env) for args, env in calls
                                   if args[:3] == ["cargo", "build", "--release"]]

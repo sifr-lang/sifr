@@ -101,7 +101,12 @@ class BuildAllocationTests(unittest.TestCase):
                           side_effect=lambda cmd, **kw: executions.append((cmd, kw['env'].copy()))):
             runner.run_e2e_pass_suite()
         self.assertTrue(preparations)
-        self.assertEqual({env['CARGO_BUILD_JOBS'] for _, env in preparations + executions}, {'3'})
+        native = [(cmd, env) for cmd, env in preparations
+                  if any('prepare_advanced_data_native_graph' in arg for arg in cmd)]
+        self.assertEqual(len(native), 1)
+        self.assertEqual(native[0][1]['CARGO_BUILD_JOBS'], '2')
+        self.assertEqual({env['CARGO_BUILD_JOBS'] for cmd, env in preparations + executions
+                          if (cmd, env) not in native}, {'3'})
         command, env = executions[0]
         self.assertEqual(command.count('--cargo-build-jobs'), 1)
         self.assertEqual(command[command.index('--cargo-build-jobs') + 1], '2')

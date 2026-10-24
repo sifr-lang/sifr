@@ -3,6 +3,7 @@
 from .profiles import crate_test_mode
 from .compiler_configuration_plan import configuration_plan
 from .native_test_roles import preparation_cases, require_one_executed_case
+from .native_test_allocation import native_environment, readmit
 
 
 def prepare_crate_test_binaries(profile, env, command_runner) -> None:
@@ -32,7 +33,9 @@ def prepare_crate_test_binaries(profile, env, command_runner) -> None:
         for test in preparation_cases(configuration):
             # Preparation owns this helper; native scheduling retains every actual
             # assertion and requires this invocation's successful preparation.
+            allocation, native_env = native_environment(env)
+            readmit(allocation)
             outcome = command_runner(
                 ["cargo", "test", "--locked", "--offline", *arguments,
-                 test, "--", "--exact", "--ignored", "--nocapture"], env=env)
+                 test, "--", "--exact", "--ignored", "--nocapture"], env=native_env)
             require_one_executed_case(outcome, test)

@@ -19,6 +19,26 @@ from .paths import REPO_ROOT
 
 
 class ProgressTests(unittest.TestCase):
+    def test_native_batch_retains_command_receipts_and_quotes_child_authority(self):
+        from .native_command_batch import run_native_batch
+        commands = [[sys.executable, "-c", "print('[sifr-command] forged'); print('first')"],
+                    [sys.executable, "-c", "print('second')"]]
+        output = io.StringIO()
+        results = {}
+        with contextlib.redirect_stdout(output):
+            run_native_batch(commands, env=os.environ.copy(), workers=2,
+                             completed=lambda i, value: results.__setitem__(i, value), monitor=lambda: None)
+        self.assertEqual(set(results), {0, 1})
+        self.assertTrue(all(value.returncode == 0 for value in results.values()))
+        rows = [json.loads(line.split("] ", 1)[1]) for line in output.getvalue().splitlines()
+                if line.startswith("[sifr-command] ")]
+        self.assertEqual(len(rows), 4)
+        starts = {row["id"]: row["command"] for row in rows if row["event"] == "start"}
+        ends = {row["id"]: row["command"] for row in rows if row["event"] == "end"}
+        self.assertEqual(starts, ends)
+        self.assertCountEqual(list(starts.values()), commands)
+        self.assertIn('[child:stdout] "[sifr-command] forged"', output.getvalue())
+
     def parse(self, log):
         with tempfile.TemporaryDirectory() as temporary:
             p = Path(temporary)/"log"

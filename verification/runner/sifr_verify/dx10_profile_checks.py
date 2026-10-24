@@ -5,7 +5,8 @@ import json
 from .paths import REPO_ROOT
 import unittest
 from .compiler_configuration_plan import configuration_plan
-from .native_test_execution_checks import outcome, PASSED
+from .native_test_execution_checks import outcome, PASSED, ENV, ROOM
+from unittest.mock import patch
 from .profiles import load_profile
 
 class ProfilePlanTests(unittest.TestCase):
@@ -64,7 +65,8 @@ class ProfilePlanTests(unittest.TestCase):
         from .cargo_crate_setup import prepare_crate_test_binaries
         profile = load_profile("merge")
         calls = []
-        prepare_crate_test_binaries(profile, {}, lambda command, **kwargs: (calls.append(command), outcome(PASSED))[1])
+        with patch("sifr_verify.native_test_allocation.discover_capacity", return_value=ROOM):
+            prepare_crate_test_binaries(profile, ENV, lambda command, **kwargs: (calls.append(command), outcome(PASSED))[1])
         builds = [tuple(command) for command in calls if "--no-run" in command]
         self.assertEqual(len(builds), len(set(builds)))
 

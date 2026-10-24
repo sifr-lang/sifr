@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ap merged; V4aq fresh generated-corpus sharing in progress; final timing and V1/V5 remain open
+current_stage: V4aq merged; V4ar retained native-driver attribution in progress; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10147,3 +10147,291 @@ to assert complete generated-file snapshot equality and successful/failing strea
 retention in that directory. The mutation guard remains unchanged. All affected
 source-quality, 12 owner/adapter and failure-artifact checks pass; requalify the
 new frozen candidate before scoped review and merge.
+
+### V4aq closure — fresh generated quality corpus / #4458
+
+PR [#4458](https://github.com/sifr-lang/sifr/pull/4458) merged as
+`286016ac7d00276f99b68a409a3e91fe85ec6a64`; reviewed candidate
+`fe87f881e207b634295a3c2fb0c1a9d90b814bd4`, base
+`8906c014bc205b99dee194cd02db0f783c7fc375`. All ten representative variants
+pass in 545.596s, or 547.074s including guard overhead. The exact multiset of
+101 case/control observations matches V4an, including all 18 negative/cache
+controls, 264 freshness companions and 12 double-emission determinism checks.
+Fresh materializations fall from 60 to 19: 17 invocation-owned shared programs
+and two independently generated native programs. Every assertion is retained.
+
+| Representative variant | Seconds |
+| --- | ---: |
+| Inventory | 20.498 |
+| Corpus, including first fresh generation | 104.818 |
+| Independent native execution | 24.506 |
+| Panic scan | 0.615 |
+| Intrinsic panic lint | 0.190 |
+| Rustfmt | 1.014 |
+| Clippy, including isolation/negative controls | 11.427 |
+| Independent determinism | 66.369 |
+| Demos, including additional fresh generation | 143.367 |
+| Freshness | 172.505 |
+
+The enclosing command includes adapter/startup/cleanup overhead. Shared child
+process duration is a separate observation and must not be added once per variant.
+All 93 portable preparations also pass, separately, in 310.863s guarded.
+Preparation plus area is 857.936s: this is not a full-gate under-ten-minute result.
+V4an's 825.246s area and the current 547.074s are ordinary diagnostic runs with
+different retained-cache states, not a controlled matched-cache speedup. The
+eliminated 41 materializations are a structural reduction.
+
+Focused owner/adapter tests (12), real-Cargo source-quality/input-preservation,
+failure-artifact and generated-preparation controls pass. Frozen-candidate runner
+foundation, profile validation, four unchanged emitted plans and file-size/diff
+checks pass. The original loader failure and later Clippy diagnostic-log mutation
+failure remain failed and preserved, including the latter's generated inputs.
+The successful candidate keeps mutation detection intact and writes diagnostics
+only to the existing gate-owned evidence directory.
+
+Independent review SATISFIED, no blockers, SHA-256
+`d287274efeebfa2391b1d5d7f23cc5f412523b264651541a791ae8a26be790e9`.
+The complete reviewed implementation path inventory is the GCQ area's
+`batch_adapter.py`, `fresh_corpus.py`, `generated_code_quality.py`,
+`quality_batch.py`, `runner.py`, `source_quality_checks.py`,
+`test_fresh_corpus.py`, `test_source_quality_checks.py`, plus runner
+`generated_quality_batch_checks.py` and `selftest.py`; the phase record is the
+eleventh changed path. The request's initial list omitted the subsequently changed
+`source_quality_checks.py`; the reviewer explicitly inspected it and the complete
+exact-base/candidate diff. The original prompt is preserved unchanged.
+
+Nonblocking followups remain separately owned: completed small-receipt retention,
+measured full-profile hashing scalability, documentation of content/inventory
+versus mode/mtime coverage, and existing standalone timeout ownership. No new
+optimization or exclusion follows from those suggestions. The review's suggestion
+about distinct gate Cargo targets is not an added proof: compatible gates actually
+share the profile dependency target; existing Clippy root invalidation remains.
+
+Archive `v4aq-qualified-evidence.tar.gz`, SHA-256
+`8548a289e8bee761ef2f10f05ebc2bd1af57619008ae2a27cdcb93246b9d2b4a`,
+contains 295 payloads / 3,088,193 bytes, all independently hash/size verified.
+Supplemental CI job 120796815121 (run 40068547489) stopped before preparation at
+missing SIFR_PERFORMANCE_REFERENCE, existing owner #4347. No CI-green claim.
+Complete final gates, V1 feasibility and all V5 scenarios remain open.
+
+### V4ar — retained generated-driver cost attribution
+
+Status: prospective diagnostic continuation. V4an's generated-driver category
+costs 1,546.120s, including 1,146.804s over 41 Rust-interoperability invocations;
+the nine original Python selections total 119.892s. V4ap demonstrates that one
+previously expensive alias fixture can execute in roughly five seconds when
+focused/canonical launch contexts and retained artifacts match. It does not
+establish the current cost of the remaining matrix. Determine the largest
+remaining actual cost before another product change.
+
+On a frozen source candidate, retain the canonical compiler/native targets and
+the same effective toolchain, environment, feature/profile and allocation inputs.
+Run the declared native graph preparation helper once in the current run; do not
+set preparation_complete merely from an old passing receipt. Then run the complete
+canonical generated-driver selection using the existing per-case executor,
+including all 81 selected invocations (80 semantic checks and its subprocess
+protocol helper), with no failure-fast exit for independent ordinary failures.
+Reconcile inventory, explicit preparation ownership and exactly one execution per
+selected invocation. Preserve every Python/archive/isolation/native assertion.
+
+Keep preparation and the generated-driver category separate, each with the usual
+30-minute diagnostic cap, capacity reserve and child cleanup. If a cap prevents
+later selected cases, retain the incomplete attempt and explicitly account for and
+schedule the remaining selection. Use ordinary untraced runs for elapsed time.
+Do not scan a large artifact tree concurrently with this baseline. Per-case Cargo
+and outer libtest durations are nested attribution, not additional category time.
+This measures retained behavior; it is not a matched code-speedup or V5 result.
+
+Choose the largest remaining measured case for at most one targeted attribution
+run if existing logs cannot distinguish preparation, compilation/linking, artifact
+validation/publication and runtime assertions. Instrumented time is explanatory,
+not performance acceptance. Preserve native family/owner/trust, compiler identity,
+Cargo freshness, full artifact validation and release application semantics.
+Do not rerun rejected SQL profile/clean-build experiments or change cache keys,
+profile/debug settings or assertions based on this diagnostic alone.
+
+Record exact candidate, commands, coverage, preparation/category/case totals,
+remaining failures and the resulting root-cause evidence. Register any proposed
+implementation and its focused regression/area acceptance before editing product
+code. The diagnostic/record work requires diff/local-link/scope checks and scoped
+review of its conclusions; no unrelated compiler rebuild or final gate is implied.
+V1 and all final V5/full-scope obligations remain mandatory.
+
+### V4ar diagnostic result — complete retained native selection
+
+Frozen candidate `66393fda2268086a972a08fb68d41c25042f9343` passes
+current-run native configuration preparation (97.835s guarded, including the
+77.096s declared native-graph helper) and every selected generated-driver
+invocation. The ordered inventory matches V4an: 81 invocations, comprising 80
+semantic checks and the subprocess-protocol helper. No selected case is missing,
+failed, cancelled or skipped. The category takes 858.715s guarded; sequential
+preparation plus category is 956.550s. Neither is an under-ten-minute full gate.
+
+| Nested case group | Invocations | Seconds |
+| --- | ---: | ---: |
+| Rust interoperability | 41 | 510.655 |
+| Other generated-driver checks | 31 | 272.064 |
+| Python integration | 9 | 68.416 |
+| Total nested invocation time | 81 | 851.135 |
+
+Per-case durations are inside category time, not additional work. The historical
+V4an category was 1,546.120s; differing retained-artifact states prevent a matched
+code-speedup claim. Native preparation here covers this configuration only, not
+the full crate-preparation inventory.
+
+The largest cases are metadata/source corpus exact emission (102.691s), trusted
+native-build artifacts (94.941s), semantic/native frontend corpus (79.196s),
+Arrow/tensor roundtrips (45.501s), and trusted proc-macro deterministic codegen
+(32.000s). The two corpus checks preserve different differential oracles. The
+trusted native-build test deliberately compares two fresh locked release builds;
+do not classify that explicit reproducibility work as cache fragmentation.
+
+One targeted CPU-sampled invocation of the largest case passes. Its 10,108
+samples have zero reported loss; mutually exclusive leaf-symbol buckets place
+33.538% in Rust syntax/token libraries, 9.626% in metadata/serialization and
+8.043% in named allocator symbols. The remaining 48.793% is other or unresolved.
+These are sampled CPU categories, not wall-time stages. Caller attribution is
+incomplete: verbose postprocessing records 6,301 unwind failures. Do not infer
+bootstrap versus per-fixture stage costs or a specific implementation from this
+profile. The first profiler-control attempt failed before launching any test;
+its evidence remains failed. The repaired control handshake accounts for perf's
+NUL-terminated acknowledgement; only one instrumented test actually ran.
+
+Resource accounting records 811.10s user plus 88.24s system CPU in the 858.17s
+timed command (104% CPU). Admission selected four slots on eight effective
+logical CPUs, but the existing executor dispatches every isolated case serially.
+GNU time's 3,303,652 KiB maximum RSS is not aggregate process-tree memory and
+does not by itself prove concurrent admission safe. This makes a bounded
+scheduling experiment worth testing before more compiler changes.
+
+Evidence: `v4ar-preparation/`, `v4ar-native-matrix/`, their guarded receipts,
+`v4ar-targeted-profile/` (failed pre-launch control), and
+`v4arr-targeted-profile/` (successful sampling and limited attribution).
+The sortable report contains all 81 individual timings, subgroup sums and
+separate preparation/category totals. Structural HTML checks pass; no visual
+inspection is claimed. Scoped review remains required. V1, final scoped gates
+and all V5 scenarios remain open.
+
+### V4as — bounded two-worker native scheduling experiment
+
+Prospective scope: test whether independent native libtest processes can use the
+existing resource allocation productively. First use an external diagnostic
+driver on a frozen candidate; do not change canonical scheduling until the
+experiment demonstrates safe coverage and useful elapsed time. Preserve every
+canonical Cargo argument, native environment, target, feature/profile, fixture,
+assertion, current-run preparation and cache/fixture ownership contract.
+
+Admit at most two isolated worker processes. Charge each worker the existing
+two compiler-job slots; require four available slots and an eight-GiB working
+allowance plus the existing two-GiB memory reserve. Check disk/capacity before
+launch and monitor the live reserve. Do not infer admission from single-process
+maximum RSS. Keep the existing 30-minute cap per preparation/category and owned
+descendant cleanup. Resource exhaustion, cancellation and invalid worker evidence
+stop further dispatch and remain failed/incomplete evidence.
+
+Use the same lexically selected 81 invocations, dispatch each once, preserve
+per-invocation logs and reconcile all results in selection order. Independent
+ordinary test failures may continue; never count a missing or truncated result as
+passing. Each worker calls the existing command executor and one-case execution
+validator on its main thread, preserving signal/child ownership. Do not share
+mutable in-process test state or relax Cargo/fixture locks to manufacture overlap.
+
+Inspect fixture ownership and negative controls before the trial. Retained
+ScenarioInputs owners are keyed by checkout/fixture/scenario/test and reconcile
+under their bounded lease; temporary fixtures and test process state remain
+isolated. Existing shared Cargo locks may limit overlap: measure that outcome
+instead of bypassing them. No compiler profile, release semantics, environment
+identity, debug settings, source results or test assertions change.
+
+Run current preparation then the complete untraced two-worker selection. Record
+coverage, category and preparation times, overlap, peak aggregate resource
+observations, remaining failures and source cleanliness. This is a diagnostic
+trial, not a controlled speedup or final full-gate qualification. If it fails or
+does not help, preserve the result and choose the next measured bottleneck.
+
+If the trial succeeds, register the canonical scheduler implementation and its
+resource, failure-continuation, cancellation, deterministic-reporting and exact
+selection regressions before editing runner code. Qualify the actual implementation
+with the complete native selection and applicable runner/profile contracts, then
+obtain scoped independent review. Final full-scope gates, V1 and all V5 remain
+required. Direct corpus stage instrumentation remains a followup if needed; no
+specific corpus optimization is justified by incomplete call stacks.
+
+### V4as diagnostic result — all native invocations overlap safely
+
+Candidate `003db321b54f91305dd66831393ff25f5f82a601` passes the external
+two-worker experiment: all 81 selected invocations execute once and pass with
+untruncated evidence. Each actual command matches V4ar's recorded command-end
+event, and the recorded native input maps are identical. Canonical runner code
+is still unchanged.
+
+Preparation takes 62.745s guarded; the native category takes 509.512s guarded.
+Their sequential sum is 572.258s (9m32s). This is below ten minutes for this
+configuration plus its preparation, not for the complete local correctness gate.
+The previous sequential category was 858.715s. Differing retained-artifact states
+still prevent a matched-cache code-speedup claim; the experiment measures the
+actual schedule and complete coverage under those recorded inputs.
+
+Nested command durations sum to 989.306s because two commands can overlap.
+Do not add that sum to elapsed category time. Resource accounting records 891.90s
+user and 91.87s system CPU, averaging 193% CPU. The sampled aggregate process-tree
+RSS peaks at 3.740 GiB (shared pages can be counted more than once), and available
+memory never drops below 8.582 GiB. Maximum observed concurrency is two; no
+reserve cancellation, unsafe worker result, leftover group or tracked-source
+mutation is reported. The initial common preflight records its generic six-GiB
+working allowance; the experiment additionally enforces eight GiB plus two GiB
+reserve before dispatch, as its selection record and admission assertion show.
+
+Evidence is `v4as-preparation/`, `v4as-native-matrix/`, both guarded receipts,
+and `v4as-native-matrix/reconciliation.json`. Per-case logs, results, exact jobs,
+dispatch/progress and live resource samples are retained. This external worker
+driver is diagnostic only and must not become a second production executor.
+V4ar/V4as findings and the ensuing implementation are one related review candidate
+in PR [#4459](https://github.com/sifr-lang/sifr/pull/4459); scoped review is pending.
+
+### V4at — canonical bounded native execution
+
+Implement the demonstrated scheduling improvement by reusing the existing
+`batch_execution.execute_batch` authority and its qualified ownership controls.
+Retain the single-command executor unchanged; add only the batch progress and
+capacity hooks needed by native execution. The repository already owns bounded
+output, monotonic deadlines, signals and process-group cleanup for this pool. Avoid a second worker
+protocol, a new test-runner dependency, shared-process libtest execution, or changes
+to compiler/test semantics. Other profile categories continue to execute as before.
+
+Resolve an explicit native-test allocation from the existing CPU/memory/slot
+budget: at most two concurrent test processes, at least four GiB working memory
+per process, and inner Cargo jobs divided within the same slot limit. Preserve
+the existing profile reserve. Ordinary compiler preparation retains its own job
+allocation; the declared native graph preparation and native test execution use
+the same resolved native Cargo job setting. Record the derived allocation and
+readmit against current capacity before execution; live reserve failure cancels
+owned work and fails the category. Low capacity may reduce concurrency, never
+selection. Do not force additional workers or change native cache identities.
+
+Keep strict inventory parsing, helper ownership/current-run preparation, exact
+case commands, one actual execution per case, output bounds and every assertion.
+Dispatch in selection order and reconcile outcomes deterministically. Preserve
+ordinary failure continuation when requested; fail-fast, cancellation, unsafe
+execution and invalid evidence stop new dispatch and clean up all owned active
+process groups. Missing/unexecuted cases remain visible and cannot count as
+passing. Command progress and quoted child output remain distinguishable.
+
+Before broad qualification, exercise the existing process-ownership controls plus
+focused controls for actual overlap within the limit, capacity arithmetic,
+single-slot operation, callback/registration/spawn failures, cancellation and
+deadlines with multiple active children, abandoned grandchildren, truncated or
+missing results, ordinary failure continuation, early-stop dispatch, exact
+selection/order, and matching native preparation/execution allocation. Update
+normal runner self-tests and relevant contracts. No implementation-mirroring tests
+or broad compiler rebuild are required merely for Python runner edits.
+
+Then run current affected preparation, the complete 81-invocation driver selection
+and the complete six-invocation CLI-generated selection through the real canonical
+executor on one frozen implementation candidate. Use ordinary elapsed-time
+measurement and the usual 30-minute diagnostic caps. Reconcile every invocation,
+resource/cleanup evidence, selected profile plans and unchanged correctness scope.
+Run affected runner/workflow contracts, profiles validation and file-size/diff
+checks. Obtain independent review of that exact candidate and evidence before
+merge. Final complete scoped gates, V1 and every V5 scenario remain required;
+a category-level result never closes the phase.
