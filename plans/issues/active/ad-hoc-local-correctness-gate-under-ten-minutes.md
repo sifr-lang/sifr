@@ -10008,3 +10008,39 @@ capacity reserve, immutable evidence and scoped independent-review policy.
 The next item remains a separate decision based on this result: repeated generated
 materialization, native fixture preparation, or mandatory SQL graph architecture.
 V1 clean A/reuse A/independent clean B and all V5 scenarios remain mandatory.
+
+
+### V4ap measured result and bounded documentation change
+
+Observed candidate `1a074ceed286c27691065e092ad5fb0799ce1b0b` retains exactly
+the V4ao product/test implementation. The opaque-resource alias runtime fixture
+passes through canonical Cargo execution in 24.491s (outer Cargo 0.44s; libtest
+23.95s). Its actual libtest process has the same captured native environment inputs
+as V4an. Only one generated-binary fingerprint's metadata changes; none of the
+1,676 recorded native fingerprint files is newly created. These metadata
+observations are not proof that all artifact bytes match.
+
+The literal locked `uv ... cargo test` focused command then executes the same
+single assertion in 5.682s (outer Cargo 0.47s; libtest 5.13s). Returning to the
+canonical entry executes it again in 5.473s. Both repeats have zero added/changed
+native fingerprint metadata, and the effective parent native inputs and queried
+native context match. All three guards pass with empty child sessions and frozen
+source. First/second/return guard times are 38.218s / 7.685s / 7.688s; setup and
+fingerprint observation costs are separate from the timed fixture commands.
+The first run includes one bounded readonly libtest-environment observation.
+There is no matched cold/warm optimization comparison or newly implemented speedup.
+
+This confirms compatible retained reuse across the focused and canonical launch
+paths. It does not explain every rebuild in the larger driver category or prove
+that all fixtures become this fast. The initial first-use result and subsequent
+repeats must remain distinct. A failed diagnostic preflight compared parent
+variables with Rustup-injected child variables and stopped before testing; the
+corrected run and actual child capture are separately retained.
+
+Update only the two development-guide focused Cargo examples and AGENTS' focused
+Cargo example to use the existing locked verification uv entry. Explain matching
+parent environment, one uv layer, and unchanged target/features/profile/flags/native
+environment requirements. No new wrapper, key normalization, profile selection or
+test change. The measured commands remain attributed to the observed candidate;
+the documentation candidate requires diff/local-link/scope checks and independent
+review, not another compiler build. All V1/V5 and final full-scope obligations remain.
