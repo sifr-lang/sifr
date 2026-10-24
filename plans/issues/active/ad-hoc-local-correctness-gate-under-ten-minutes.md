@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ao merged; V4ap native reuse diagnosis in progress; final timing and V1/V5 remain open
+current_stage: V4ap merged; V4aq fresh generated-corpus sharing in progress; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10044,3 +10044,76 @@ environment requirements. No new wrapper, key normalization, profile selection o
 test change. The measured commands remain attributed to the observed candidate;
 the documentation candidate requires diff/local-link/scope checks and independent
 review, not another compiler build. All V1/V5 and final full-scope obligations remain.
+
+
+### V4ap closure — focused launch guidance / #4457
+
+PR [#4457](https://github.com/sifr-lang/sifr/pull/4457) merged as
+`8906c014bc205b99dee194cd02db0f783c7fc375`; reviewed documentation candidate
+`9be958f5ac8001dba23f98322db8bf53351c95b0`, base
+`8fceb5b563fa1e691f84910c079b33b6ce5aaec2`. The actual diagnostic remains
+at `1a074ceed286c27691065e092ad5fb0799ce1b0b`: canonical/focused/canonical
+commands pass in 24.491s / 5.682s / 5.473s. The final return's outer Cargo and
+libtest portions are 0.38s and 5.03s. No additional product change or full-gate
+speedup is inferred. Three Markdown paths changed; scope/local-link/diff checks
+pass without repeating compiler tests for documentation.
+
+Independent review is SATISFIED, no blockers, SHA-256
+`07a9581412fb0caf43a4c7cb5f51940af0f22d7c460db4b18dfaab7d58e1b2d8`.
+Nonblocking followups remain separate: overview-document examples, uniform observer
+fields and extra explanation of activated parent shells. Canonical guidance already
+requires the same parent environment. Archive `v4ap-qualified-evidence.tar.gz`,
+SHA-256 `329f6a17d05dbf6209e1b2867018df543a4482fba20bdc649903c347a7601291`,
+has 74 payloads / 4,873,711 bytes, independently verified locally. Original
+preflight failure and all three real passing executions are retained separately.
+The complete phase, V1 clean-build requirement and V5 remain open.
+
+Supplemental V4ao CI job `120788201521` failed before preparation because
+`SIFR_PERFORMANCE_REFERENCE` was unset (existing reference-admission owner #4347).
+Its raw log is preserved separately. It is not a failed local inventory assertion
+or a passing full-profile gate.
+
+### V4aq — one fresh generated corpus for compatible quality checks
+
+Status: prospective bounded implementation of the measured repeated-materialization
+cost. V4an executes 60 materializations across 17 distinct entries in generated-code
+quality: corpus, panic scan, rustfmt, clippy, native and demo checks repeatedly
+regenerate overlapping programs. The full area costs 825.246s. Those aggregate
+measurements identify repeated work but do not establish a projected saving.
+
+Introduce one explicit, invocation-owned fresh corpus for compatible read-only
+checks: corpus Cargo check, panic scan, rustfmt check, clippy and demo Cargo check.
+Generate each selected entry once for that validation transaction and run every
+existing check against that newly generated program. Keep all selected entries,
+per-mode selection limits, exact-debt comparison, exit/output rules and negative
+controls. Native execution and companion qualification keep their current separate
+materialization; determinism keeps two independent compiler emissions per entry.
+Preparation must still admit all 93 required portable graphs. Do not reuse a prior
+invocation's generated source, a saved passing result or a Python approximation of
+compiler input freshness. Compilation owns the fresh program; the current batch
+owns its lifetime and all consumers.
+
+Prefer a bounded in-process batch owner and the existing gate functions over a
+persistent service or cross-process cache protocol. Keep existing standalone gate
+commands fresh and usable. The area adapter must preserve each declared variant's
+identity, outcome and selection, explicitly rejecting missing/duplicate/mismatched
+batch evidence. Continue independent checks after ordinary failures as before;
+missing execution is never pass. Keep failed program/log evidence. Check that
+shared generated inputs remain unchanged by read-only consumers; if a consumer
+mutates them, reject it and do not let downstream consumers claim success on the
+modified program. Keep mutable negative-control workspaces private. Ensure output
+identities are unique when several gates run in one process. Account for materializing
+and checking together in category elapsed time; do not move cost outside the gate.
+
+First add focused owner/adapter regressions for fresh invocation boundaries,
+selection identity, successful sharing, failed generation, mutation rejection,
+missing/duplicate results, failure continuation and cleanup/failure retention.
+Retain existing canonical-freshness, determinism and negative-control tests. Run
+existing GCQ/source-quality/generated-preparation self-tests, affected runner
+contracts and file-size checks. Compare emitted create-pr/merge selections to
+baseline. Then execute the real canonical representative GCQ suite with all ten
+variants and explicit entry/control reconciliation, under the usual 30-minute
+category cap. Measure ordinary execution; use one targeted trace only if needed
+to explain a remaining cost. If safety or assertion parity cannot be established,
+reject the candidate instead of weakening the contract. Obtain scoped independent
+review before merge. Final complete scoped gates, V1 and all V5 remain required.
