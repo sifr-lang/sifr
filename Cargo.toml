@@ -252,9 +252,10 @@ codegen-units = 1
 [profile.release.package.ruff_python_ast]
 codegen-units = 1
 
-# Keep development compiler code compact while preserving debug information.
+# Keep compiler code compact and source-line backtraces available in dev/tests.
 [profile.dev]
 opt-level = 1
+debug = "line-tables-only"
 
 [profile.dev.package.insta]
 opt-level = 3

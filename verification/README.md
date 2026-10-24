@@ -79,6 +79,19 @@ checks freshness and every selected test executes; a retained target is not a
 cached test result. Do not remove environment identity or copy artifacts between
 incompatible targets to force reuse.
 
+Development and test builds retain line tables for source-located backtraces,
+alongside the existing optimization levels, debug assertions and overflow checks.
+Full debugger variable/type inspection needs full debug information. Build that
+explicitly in a separately owned target after checking capacity:
+
+```bash
+CARGO_TARGET_DIR=target/debugger-full CARGO_PROFILE_DEV_DEBUG=2 \
+  uv run --project verification --locked cargo test --locked -p sifr_driver --lib --no-run
+```
+
+Keep this debugger target separate from normal iteration targets so switching
+debug-information settings does not repeatedly invalidate their artifacts.
+
 Focused commands supplement the affected checks and acceptance gates in
 [AGENTS.md](../AGENTS.md#minimum-validation). A fixture subset is diagnostic
 coverage, not full E2E qualification. Release and live-integration contracts
