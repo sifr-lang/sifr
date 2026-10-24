@@ -88,7 +88,8 @@ class SetupPolicyTests(unittest.TestCase):
                 self.assertNotIn("CARGO_NET_OFFLINE", setup_env)
             self.assertEqual(setup_env["CARGO_HOME"], "/owned/cache")
         self.assertGreater(compiler_commands, 0)
-        self.assertIn(REVISION, env["SIFR_GCQ_SHARED_ROOT"])
+        self.assertTrue(Path(env["SIFR_GCQ_SHARED_ROOT"]).is_relative_to(
+            REPO_ROOT / "target/sifr_generated_code_quality"))
         self.assertEqual(env["CARGO_NET_OFFLINE"], "true")
 
     def test_workspace_failure_does_not_prepare_generated_graphs(self):
@@ -406,9 +407,11 @@ class SetupPolicyTests(unittest.TestCase):
 
 def policy_checks() -> None:
     from .ci_smoke_setup_checks import SmokePreparationChecks
+    from .generated_target_reuse_checks import GeneratedTargetReuseTests
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
                                for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests,
-                                            SysrootSetupPolicyTests, ReleaseCompilerPreparationTests, SmokePreparationChecks))
+                                            SysrootSetupPolicyTests, ReleaseCompilerPreparationTests, SmokePreparationChecks,
+                                            GeneratedTargetReuseTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise AssertionError("generated Cargo setup policy checks failed")

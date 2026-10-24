@@ -87,7 +87,8 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
         revision = subprocess.check_output(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT,
             text=True).strip()
-        shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{profile['name']}.{revision}.shared"
+        # Fresh generated graphs retain the exact revision independently of Cargo artifacts.
+        shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{profile['name']}.shared"
         for target_env in (env, setup_env, compiler_env):
             target_env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root)
         command_runner([sys.executable, "-m", "sifr_verify.generated_cargo_setup",

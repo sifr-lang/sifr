@@ -406,6 +406,18 @@ server is alive. Preserve such consumers; use a separate owned cache if needed.
 Old failure evidence remains preserved even after a later successful retry.
 
 
+### Generated-quality dependency artifacts
+
+Profile runs retain Cargo artifacts under
+`target/sifr_generated_code_quality/<profile>.shared/cargo-target`.
+A new Git revision does not create another dependency target. Each preparation
+still creates fresh generated source directories, and every portable manifest
+and lock must name the exact current Sifr revision. Source generation, checks,
+runtime assertions and failure evidence remain fresh for each invocation;
+only Cargo dependency artifacts are retained. Cargo remains responsible for
+dependency, compiler and profile invalidation. Profiles keep separate owned
+roots; standalone area invocation behavior is unchanged.
+
 ### Preparation failures and independent feedback
 
 Profiles retain default fail-fast execution. With `--no-fail-fast`, preparation

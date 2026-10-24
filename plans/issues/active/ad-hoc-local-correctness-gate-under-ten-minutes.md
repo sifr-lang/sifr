@@ -12044,3 +12044,23 @@ Acceptance before adoption/merge:
 
 All full phase gates and V5 scenarios remain required. This work does not
 resolve the independent SQL clean-build protocol's measured 867.226s cost.
+
+
+#### V4bb baseline reproduced and bounded implementation
+
+The real-Cargo baseline uses the production profile target selector with fresh
+generated program roots. A stable Git dependency is unchanged, while its consumer
+gets an identical-content new Git revision and the generated program's output
+changes from 11 to 12. Both outputs execute correctly, but the stable dependency
+rebuilds because the profile chooses a new revision-owned target. The regression
+fails specifically on the dependency freshness assertion; preserve that failure.
+An earlier wrapper import-path failure is diagnostic setup evidence, not a
+product failure.
+
+Retain the existing per-profile shared root across revisions. Keep the exact
+revision argument to generated preparation, portable graph validation, fresh
+batch ownership, standalone semantics, profile selections and every consumer.
+The added real-Cargo regression also changes product code and then its pinned
+dependency; each newly expected output must execute and the affected artifacts
+must rebuild. This establishes correctness/freshness behavior, not a timing gain
+for the complete generated-quality area. Complete affected qualification follows.
