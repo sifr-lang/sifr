@@ -130,7 +130,7 @@ impl PythonArrowKind {
 }
 
 /// Represents a type in the Sifr language.
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
     /// Exact source-level integer (`int` in Sifr).
     Int,
