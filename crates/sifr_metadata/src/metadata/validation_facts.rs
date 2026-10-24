@@ -1,10 +1,10 @@
 //! Successful record-local facts for one complete validation invocation.
 use super::container::Entry;
-use super::{BTreeMap, MetadataStore, RecordId, Result};
+use super::{BTreeMap, MetadataStore, Result};
 use std::collections::VecDeque;
 use std::sync::Arc;
 
-type References = Arc<[(RecordId, u16)]>;
+type References = Arc<[(Option<usize>, u16)]>;
 const MAX_FACT_BYTES: u64 = 32 * 1024 * 1024;
 // Covers the key, Arc, FIFO slot and conservative map/node allocation overhead.
 const ENTRY_OVERHEAD: u64 = 256;
@@ -12,8 +12,8 @@ const ENTRY_OVERHEAD: u64 = 256;
 pub(super) struct ValidationFacts {
     limit: u64,
     bytes: u64,
-    records: BTreeMap<RecordId, References>,
-    order: VecDeque<RecordId>,
+    records: BTreeMap<usize, References>,
+    order: VecDeque<usize>,
     #[cfg(test)]
     pub(super) hits: usize,
     #[cfg(test)]
@@ -37,7 +37,7 @@ impl ValidationFacts {
     pub(super) fn references(
         &mut self,
         store: &MetadataStore,
-        id: RecordId,
+        id: usize,
         entry: &Entry,
     ) -> Result<References> {
         if let Some(refs) = self.records.get(&id) {
@@ -50,7 +50,12 @@ impl ValidationFacts {
         let bytes = store.read_payload(entry)?;
         // This performs canonical decoding and all field validation. Failed facts
         // are never retained. Reference kinds and graph verdicts remain caller-owned.
-        let refs: References = super::decode::references(store, entry.kind, &bytes)?.into();
+        let refs: References = super::decode::references(store, entry.kind, &bytes)?
+            .into_iter()
+            .map(|(id, kind)| (store.directory.index(&id), kind))
+            .collect();
+        // Positions belong only to this captured directory. Missing references and
+        // wrong kinds remain caller-owned errors, in the original traversal order.
         let retained_charge = charge(&refs);
         if retained_charge <= self.limit {
             while self.bytes > self.limit - retained_charge {
@@ -73,8 +78,8 @@ impl ValidationFacts {
     }
 }
 
-fn charge(refs: &[(RecordId, u16)]) -> u64 {
+fn charge(refs: &[(Option<usize>, u16)]) -> u64 {
     ENTRY_OVERHEAD.saturating_add(
-        (refs.len() as u64).saturating_mul(std::mem::size_of::<(RecordId, u16)>() as u64),
+        (refs.len() as u64).saturating_mul(std::mem::size_of::<(Option<usize>, u16)>() as u64),
     )
 }

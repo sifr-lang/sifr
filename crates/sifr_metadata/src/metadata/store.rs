@@ -332,18 +332,15 @@ impl MetadataStore {
         &self,
         facts: &mut super::validation_facts::ValidationFacts,
     ) -> Result<()> {
-        for (id, entry) in &self.directory {
-            let references = facts.references(self, *id, entry)?;
+        let mut graph = super::complete_graph::CompleteGraph::new(self.directory.0.len());
+        for (index, (_, entry)) in self.directory.0.iter().enumerate() {
+            let references = facts.references(self, index, entry)?;
             for &(reference, kind) in references.iter() {
-                if self
-                    .directory
-                    .get(&reference)
-                    .is_none_or(|entry| entry.kind != kind)
-                {
+                if reference.is_none_or(|index| self.directory.0[index].1.kind != kind) {
                     return Err(err("missing or wrong-kind complete record reference"));
                 }
             }
-            self.validate_graph_with_facts(*id, facts)?;
+            graph.validate(self, index, facts)?;
         }
         Ok(())
     }

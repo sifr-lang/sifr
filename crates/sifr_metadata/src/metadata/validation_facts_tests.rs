@@ -224,7 +224,8 @@ fn exact_failure_diagnostics_survive_hits_misses_and_eviction() {
             "source path must be normalized and packaged-source relative",
         ),
     ] {
-        let baseline = complete(&bytes, 0).0;
+        let baseline = super::complete_graph_tests::original_complete(&open(&bytes));
+        assert_eq!(complete(&bytes, 0).0, baseline);
         assert!(baseline.as_ref().unwrap_err().0.contains(expected));
         for budget in [1, 700, 1 << 20] {
             assert_eq!(complete(&bytes, budget).0, baseline);
@@ -269,4 +270,37 @@ fn captured_input_survives_file_mutation_but_new_store_rejects_it() {
             .is_err()
     );
     std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn malformed_descendants_keep_graph_errors_before_later_root_checks() {
+    let mut encoder = MetadataEncoder::new(identity(), Limits::default());
+    encoder
+        .insert(reference::<Type>(1), &Type::List(reference(2)))
+        .unwrap();
+    encoder
+        .insert(reference::<Type>(2), &Type::List(reference(3)))
+        .unwrap();
+    encoder.insert(reference::<Type>(3), &Type::Int).unwrap();
+    encoder
+        .insert(
+            reference::<Text>(4),
+            &Text {
+                value: "other kind".into(),
+            },
+        )
+        .unwrap();
+    let bytes = encoder.finish().unwrap();
+    for target in [4, 99] {
+        let corrupt = corrupt_payload(&bytes, reference::<Type>(2).id, |payload| {
+            payload.copy_from_slice(
+                &serde_json::to_vec(&Type::List(reference::<Type>(target))).unwrap(),
+            );
+        });
+        let expected = super::complete_graph_tests::original_complete(&open(&corrupt));
+        assert_eq!(expected, Err(err("missing or wrong-kind graph reference")));
+        for budget in [0, 1, 700, 1 << 20] {
+            assert_eq!(complete(&corrupt, budget).0, expected);
+        }
+    }
 }

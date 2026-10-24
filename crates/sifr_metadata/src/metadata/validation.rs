@@ -142,13 +142,6 @@ impl MetadataStore {
             super::decode::references(self, entry.kind, bytes)
         })
     }
-    pub(super) fn validate_graph_with_facts(
-        &self,
-        root: RecordId,
-        facts: &mut super::validation_facts::ValidationFacts,
-    ) -> Result<()> {
-        self.validate_graph_records(root, |id, entry| facts.references(self, id, entry))
-    }
     fn validate_graph_records<R: AsRef<[(RecordId, u16)]>>(
         &self,
         root: RecordId,
@@ -203,6 +196,6 @@ impl MetadataStore {
         Ok(())
     }
 }
-fn anchor_kind(kind: u16) -> bool {
+pub(super) fn anchor_kind(kind: u16) -> bool {
     [Module::KIND, Declaration::KIND, Binder::KIND].contains(&kind)
 }

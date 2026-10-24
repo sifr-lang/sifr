@@ -5,10 +5,10 @@ use super::container::Entry;
 pub(super) struct Directory(pub Vec<(RecordId, Entry)>);
 impl Directory {
     pub(super) fn get(&self, id: &RecordId) -> Option<&Entry> {
-        self.0
-            .binary_search_by_key(id, |(key, _)| *key)
-            .ok()
-            .map(|index| &self.0[index].1)
+        self.index(id).map(|index| &self.0[index].1)
+    }
+    pub(super) fn index(&self, id: &RecordId) -> Option<usize> {
+        self.0.binary_search_by_key(id, |(key, _)| *key).ok()
     }
     pub(super) fn iter(&self) -> impl Iterator<Item = (&RecordId, &Entry)> {
         self.0.iter().map(|(id, entry)| (id, entry))

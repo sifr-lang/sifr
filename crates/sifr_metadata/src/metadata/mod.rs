@@ -10,6 +10,9 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
 
+mod complete_graph;
+#[cfg(test)]
+mod complete_graph_tests;
 mod container;
 mod decode;
 mod directory;

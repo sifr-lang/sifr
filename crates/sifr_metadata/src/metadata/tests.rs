@@ -275,18 +275,35 @@ fn nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject() 
         )
         .unwrap();
     let good = store(encoded);
+    assert_eq!(
+        super::complete_graph_tests::original_complete(&good),
+        Ok(())
+    );
+    assert_eq!(good.validate_complete(), Ok(()));
     assert!(good.get(recursive).is_ok());
     assert!(good.get(view).is_ok());
     let mut encoded = encoder();
     let cycle = Ref::<Type>::anchor(&[b"invalid-cycle"]);
     encoded.insert(cycle, &Type::List(cycle)).unwrap();
-    assert!(store(encoded).get(cycle).unwrap_err().0.contains("cycle"));
+    let bad = store(encoded);
+    assert_eq!(
+        bad.validate_complete(),
+        super::complete_graph_tests::original_complete(&bad)
+    );
+    assert!(bad.validate_complete().unwrap_err().0.contains("cycle"));
+    assert!(bad.get(cycle).unwrap_err().0.contains("cycle"));
     let mut encoded = encoder();
     let mut last = fixture::<Type>();
     for _ in 0..300 {
         last = encoded.intern(&Type::List(last)).unwrap();
     }
-    assert!(store(encoded).get(last).unwrap_err().0.contains("depth"));
+    let deep = store(encoded);
+    assert_eq!(
+        deep.validate_complete(),
+        super::complete_graph_tests::original_complete(&deep)
+    );
+    assert!(deep.validate_complete().unwrap_err().0.contains("depth"));
+    assert!(deep.get(last).unwrap_err().0.contains("depth"));
 }
 
 #[test]
@@ -615,6 +632,11 @@ fn mutually_recursive_nominal_views_stay_lazy() {
         encoder.insert(view, &value).unwrap();
     }
     let store = store(encoder);
+    assert_eq!(
+        super::complete_graph_tests::original_complete(&store),
+        Ok(())
+    );
+    assert_eq!(store.validate_complete(), Ok(()));
     assert!(store.get(a).is_ok());
     assert!(store.get(b).is_ok());
     assert_eq!(store.retained_records().unwrap(), 2);
