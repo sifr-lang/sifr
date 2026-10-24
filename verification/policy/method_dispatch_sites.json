@@ -80485,10 +80485,10 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/build.rs::main::literal-comparison::1",
-      "fingerprint": "2235f6e3b8bead0c3185283666e3e289328264df3b63e8dbf872dc6178b7c2ca",
+      "fingerprint": "7165999aecfce7237faf46a3d5b5871d6b6bccdae693d7adacd4a3cda66b7ff6",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
-      "operation": "source [ \"server_major\" ] . as_u64 ( ) . map ( | value | value . to_string ( ) ) == Some ( major . clone ( ) )",
+      "operation": "sources . iter ( ) . find ( | source | source [ \"server_major\" ] . as_u64 ( ) == Some ( u64 :: from ( major ) ) )",
       "inputs": "fn main ( )",
       "outputs": "Result < ( ) , Box < dyn Error > >",
       "role": "select compiler policy by the recorded lexical operation",
@@ -80497,7 +80497,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/build.rs::compile_libpg_query::literal-comparison::1",
-      "fingerprint": "f384834a906e31affb19b27d60d06cdd94846334c320771282bf673a2da87ffe",
+      "fingerprint": "07a5fa3a5eaac1a5005cedabb50969162d59ced392755668e4fbb6bf63842c26",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if target_os . as_deref ( ) == Ok ( \"macos\" )",
@@ -80509,7 +80509,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/build.rs::compile_libpg_query::literal-comparison::2",
-      "fingerprint": "93f60efbcc6cf1ea449b2b7ac75afba75b5af3a014450073c02516736a5cb551",
+      "fingerprint": "2b99c5504df7c36b198cd802be925cfd30d367dcb567475ff90c5cd89cd7c25c",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "( target_os . as_deref ( ) == Ok ( \"linux\" )",
@@ -80521,7 +80521,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/build.rs::compile_libpg_query::literal-comparison::3",
-      "fingerprint": "1ee5e1488345b0a71ea05ce8203830eb36e1a7ac6ad8f909082fc8ed2456575f",
+      "fingerprint": "66f8c5dfede73c31082a8aa21287d8b596a1f80f0af8e4a383f995d07e5e2587",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "target_env . as_deref ( ) == Ok ( \"gnu\" ) )",
@@ -80533,7 +80533,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/build.rs::compile_libpg_query::literal-comparison::4",
-      "fingerprint": "2e0c1a4821a61e47d9ca7b58a41e71679617b6c2ac98eff1dfa3ced309abb356",
+      "fingerprint": "b1e369e1b3342c3a2f1cd9852729ba9d47b07fee62d2dfca7819d64d6494fabf",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if env :: var ( \"CARGO_CFG_TARGET_OS\" ) . as_deref ( ) == Ok ( \"windows\" )",
@@ -80557,7 +80557,7 @@
     },
     {
       "site": "crates/sifr_sql_postgresql/build.rs::add_c_files::literal-comparison::1",
-      "fingerprint": "bd5047c7548fea6a153f8e995057aeca4058dd69e9dca3ed0140273f7960c382",
+      "fingerprint": "c8c6d378a5e06903ddadfdfece6292f1a0e60b44e5e879ccf910af507d61a0fa",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if entry . extension ( ) . and_then ( | value | value . to_str ( ) ) == Some ( \"c\" )",
@@ -80674,6 +80674,18 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_sql_postgresql/src/analysis.rs::infer enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sql_postgresql/src/analysis.rs::infer enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_sql_postgresql/src/build_inputs.rs::track_source::literal-comparison::1",
+      "fingerprint": "d5e6e487d606e4b55f6e3ad34bbb0a3e19675789ca9203705343571015f2116d",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "path . file_name ( ) . is_some_and ( | name | name != \".git\" )",
+      "inputs": "fn track_source ( source : & Path )",
+      "outputs": "io :: Result < ( ) >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_sql_postgresql/src/build_inputs.rs::track_source enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sql_postgresql/src/build_inputs.rs::track_source enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_sql_postgresql/src/cardinality_analysis.rs::equality_columns::literal-match::1",

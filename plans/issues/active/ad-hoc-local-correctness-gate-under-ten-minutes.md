@@ -11876,3 +11876,49 @@ their source-input inventories, and all three families' binary hashes remain
 unchanged by the header-tracking repair. This is correctness/provenance evidence,
 not a guest-build speedup. Complete SQL qualification follows on the committed
 artifact candidate.
+
+#### V4ba preparation completed; integration inventory and capacity reconciliation
+
+On candidate 6330a71883dd2867446af49c97f2a364be198224, focused final controls
+passed and all selected SQL preparation nodes completed. The preparation guard
+took 1,549.388s; its area-graph node took 1,524.444s. This initial preparation
+overlapped read-only authority audits and verified copying of inactive artifacts,
+so it is diagnostic elapsed time, not a controlled performance comparison.
+Qualification then failed capacity admission before any area tests ran:
+29,424,635,904 free bytes were below the 28 GiB allocation threshold. Preserve
+that blocked attempt; preparation is not test execution.
+
+Authority checks passed source layering and identified six PostgreSQL lexical
+fingerprint updates, one new build-input policy site, and two new input-tracking
+filesystem reads. Reconcile only those owned records with the canonical binding
+schema; both new filesystem reads belong to build identity. Earlier CLI method/
+filesystem records and the ExternalDefs inventory failure remain separately
+owned LOCAL-GATE follow-ups. They must pass before final phase acceptance.
+
+Capacity recovery copied and verified every regular file's bytes/hash/mode/mtime
+and every symlink target in ten obsolete revision-owned generated-quality roots
+before retiring the originals. The latest integrated baseline remains in place.
+One additional inactive codegen incremental state was copied and verified before
+retirement; every file predates the development debug-policy transition at
+c8b5c5364. All current-profile incremental states, native targets, libraries and
+test executables remain retained. The last operation increased free space from
+29,424,607,232 to 30,320,443,392 bytes. Complete source artifacts and manifests
+remain retained outside the active targets; no shared/unowned target was cleaned.
+
+The prepared Cargo configurations also expose repeated transitive feature
+contexts: some Wasmtime/Cranelift fingerprints have identical direct features,
+profiles and Rust flags but different dependency identities; Serde and Syn
+feature sets differ. This is diagnostic evidence for a subsequent bounded
+configuration-ownership investigation, not proof of safe unification or a
+speedup. No feature-unification change is part of this item.
+
+After the owned inventory corrections, all remaining metadata, method and
+filesystem guard output matches the retained base failure output byte-for-byte.
+Both affected guard self-tests and whitespace checks pass. The guards themselves
+and their schemas are unchanged. Complete global guards remain failed on those
+earlier issues; this result qualifies only the current item's inventory changes.
+
+A fresh continuation will repeat canonical preparation against the policy-only
+candidate using retained targets, then execute all 67 selected SQL cases and the
+retained six-major parser matrix. No previous preparation is relabelled as an
+executed test, and the blocked qualification attempt remains unchanged.

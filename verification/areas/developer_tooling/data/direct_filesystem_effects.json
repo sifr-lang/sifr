@@ -22283,6 +22283,20 @@
       "classification": "semantic-input"
     },
     {
+      "path": "crates/sifr_sql_postgresql/src/build_inputs.rs",
+      "symbol": "track_source",
+      "operation": "read_dir",
+      "site": "let mut entries = fs::read_dir(source)?",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_postgresql/src/build_inputs.rs",
+      "symbol": "track_source",
+      "operation": "is_file",
+      "site": "if path.is_file() && path.file_name().is_some_and(|name| name != \".git\") {",
+      "classification": "build-identity"
+    },
+    {
       "path": "crates/sifr_sql_postgresql/src/component.rs",
       "symbol": "component_registration",
       "operation": "read",
