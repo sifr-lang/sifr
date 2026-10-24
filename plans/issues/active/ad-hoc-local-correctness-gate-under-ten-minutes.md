@@ -11391,3 +11391,22 @@ Use the approved focused-intermediate policy. Passing this item removes the
 known provenance failures; it does not by itself meet the ten-minute requirement.
 Preserve the 869.629s clean-build observation and all larger costs as remaining
 optimization work. Final complete scoped gates and V5 still apply.
+
+#### V4ay production observation
+
+All three canonical producers completed without a cap, leftover process or
+unexpected source mutation: PostgreSQL 362.165s, MySQL 32.924s and SQLite 59.780s
+including their external guards. These are producer invocations, not gate timing.
+All ten artifacts were actually produced; all three receipts validate against
+current source inputs. Tool identities, parser identities and words artifacts
+remain unchanged.
+
+Every artifact differs from its predecessor by one byte in total length.
+Recursive WebAssembly section comparison identifies exactly two LLVM-generated
+function-name suffix changes per artifact, inside the standard name custom
+section. Every other section payload, including executable code and data in
+embedded modules/components, is byte-identical. Both function names belong to
+RawVecInner::finish_grow copies from compiler-component and SQL-contract.
+The new exact artifact/core hashes and sizes come from actual production.
+This structural comparison does not replace runtime and mutation qualification;
+the full named SQL checks remain pending on the produced candidate.
