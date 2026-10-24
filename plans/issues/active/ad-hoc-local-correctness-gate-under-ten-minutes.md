@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ak current costs reconciled; V4al single native publication in qualification; final gates and V1/V5 remain open
+current_stage: V4al merged; V4am validation matrix CLI/context repair registered; final gates and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9694,3 +9694,89 @@ resource/source guards. Review the exact implementation candidate independently
 before merge under the approved intermediate policy. The full final correctness
 profiles and all V5 invalidation scenarios remain mandatory and open. Reconcile
 this bounded repair before selecting the next measured bottleneck.
+
+
+### V4al closure — single native publication / #4454
+
+PR [#4454](https://github.com/sifr-lang/sifr/pull/4454) merged as
+`49f6059267efc0f678042043b9deab06b2e9918a`; reviewed candidate
+`2f0c2647bac2ef5da9c5a72907f797acb0bd21e3`, base
+`1affb3dfeea8865a0bdb7c4c658c04d8156305dd`. Cached builds now compile into a
+private compiled state and publish only to the final cache bundle. Explicit-output
+builds retain their independent destination. Final identity, full byte validation,
+Cargo freshness, owned leases, sidecars and all runtime assertions remain.
+
+The post-change exact-file trace confirms two complete reads of the same
+894,150,648-byte Cargo executable, versus four before: 1,788,301,296 source bytes
+of redundant work removed. One fresh identity and final destination comparison
+remain. The traced runtime assertion passes; traced durations are diagnostic.
+Actual ordinary advanced-data and Python coroutine observations pass in 17.732s
+and 9.794s, respectively, after 22.594s of actual driver preparation. Guarded
+preparation/inventory/both cases costs 52.710s; prerequisites separately cost
+55.710s, including a 53-second Cargo fetch. Different revisions/cache states mean
+these durations are not a controlled elapsed-time speedup. The `cargo_elapsed`
+stage now includes actual final publication, not bare Cargo process time.
+
+All 41 focused materialization, snapshot/byte, identity-streaming, lease, native
+reuse and actual profile controls pass, as do format/file-size/diff checks.
+The enhanced finalized-artifact test covers miss/hit/edited-miss, actual Cargo
+execution, independent old/new executables, final report path and absence of
+intermediate output. Preserve two failed diagnostic attempts: the initial collector
+misread a nested subprocess summary despite 18 actual passing tests; the first
+prerequisite admission used an empty published-ref query from a local mirror.
+Corrected continuations passed under source/resource guards, with no process
+leftovers. Neither failed attempt is reclassified as a passing category.
+
+Exact-candidate independent review is SATISFIED with no blockers, SHA-256
+`0568dd9a4610095a5c28f0355b7b85a748eee64634e0cc16f33280827308ba5f`.
+Nonblocking follow-ups remain separate: repeated constrained authority checks may
+be consolidated if worthwhile; an additional cached constrained-lock regression
+could cover their ordering; actual contended lock timing was not measured here.
+Archive `v4al-qualified-evidence.tar.gz`, SHA-256
+`89f4393c2a5e5122cac1b33b2ef524facc2f9f041bc75670467e8d0d4efd4aaf`,
+contains 135 payloads / 11,295,285 bytes, independently verified locally. The
+completed CI local-first job `120730111164` in run `40046745394` separately fails
+full-profile performance-reference admission (`SIFR_PERFORMANCE_REFERENCE` unset),
+owned by #4347; preserve its supplemental raw log. No whole-CI or final-phase pass
+is claimed. The complete V4ak 81-case sweep remains prior-candidate evidence.
+
+### V4am — direct selected CLI and clean child context in validation matrices
+
+Status: prospective bounded repair of the previously measured nested-Cargo cost.
+The current two area-owned manifests contain 43 `cargo run ... -p sifr --` launches
+across HIR (9), CFG (9), frontend parity (8) and project graph (17). They also
+contain two explicit Cargo test commands and one Python assertion command, which
+must remain. There are six suites / 16 rows / 46 commands overall. Reconcile
+these counts from the manifests; they are evidence, not a second selection list.
+
+Replace only the 43 compiler-launch prefixes with one explicit `<SIFR>` command
+selector bound to Cargo's `CARGO_BIN_EXE_sifr` for this integration test. Cargo's
+outer test preparation remains responsible for building/selecting the current
+binary. Preserve every remaining argument, working directory, row, assertion,
+expected exit, lexical ordering and parallel group. No PATH fallback, guessed
+`target/debug` path, stale binary override, or automatic arbitrary-command rewrite.
+Retain both explicit Cargo tests and the Python command. Before launching any
+matrix child, remove only parent package metadata (`CARGO_PKG_*`,
+`CARGO_MANIFEST_DIR`, `CARGO_MANIFEST_PATH`, `OUT_DIR`) as the proven nested-context
+contract does; retain intentional toolchain, flags, profile, sysroot and target
+configuration. This also protects Cargo grandchildren launched by the selected CLI.
+
+Add focused command-selection/context boundary regressions, including spaces in
+paths and preservation of intentional settings; ensure they are enrolled in normal
+local validation. Independently compare transformed manifests to the old input:
+all fields/assertions and all noncompiler commands must match, and each transformed
+argv must preserve the original compiler arguments exactly. Run all six actual
+matrix suites through their canonical area adapter, with preparation and per-suite
+elapsed time, positive row/command coverage and all existing stream/exit assertions.
+Observe retained Cargo artifacts before/after to verify that avoiding nested
+compiler preparation does not skip required outer preparation or spoil the next
+normal Cargo invocation. Use existing V4ac dirty-context evidence only for its
+recorded mechanism; do not claim its old timings as current candidate acceptance.
+Do not rerun the entire old slow matrix merely to collect another baseline.
+
+Required intermediate acceptance: focused regressions, all six actual suites,
+applicable format/file-size checks, manifest/selection reconciliation and scoped
+independent review. Preserve failed/incomplete observations and apply the existing
+30-minute diagnostic category cap and resource ownership rules. No compilation
+profile, coverage or concurrency-policy changes. Final complete correctness gates,
+independent SQL clean-build budget and repeated V5 qualification remain open.
