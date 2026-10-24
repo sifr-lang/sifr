@@ -10774,3 +10774,105 @@ Use normal runs for timings and one bounded diagnostic for rebuild causes.
 Retain build targets and measure capacity before first provisioning. Require
 exact-candidate independent review before adoption. Final scoped gates, SQL
 protocol and V5 remain open and unchanged.
+
+### V4au closure — isolate the packaged corpus target
+
+Accepted PR #4461 (https://github.com/sifr-lang/sifr/pull/4461), merged
+25c96c7b8c571ebfe04f89a950f09b0880f11378. Exact qualified/reviewed implementation:
+442c61c8d3aa770333c887d7f45a72f01397d675. The common release target authority now
+serves both packaged compiler and version-matched corpus preparation/execution.
+Normal development retains its own target. Commands, profiles, flags, versions,
+source snapshot, selected suites and all runtime assertions remain unchanged.
+
+| Bounded guarded observation | Seconds | Result |
+| --- | ---: | --- |
+| Focused preparation controls (24 tests), profile/diff/file checks | 9.694 | pass |
+| Small-crate version-switch causal diagnostic | 24.701 | pass |
+| Initial isolated corpus graph preparation | 1121.861 | pass; 326 artifacts built |
+| Normal driver preparation | 54.726 | pass |
+| Four alternating real driver preparations | 6.191 | pass; 326 fresh each |
+| Source CLI preparation | 93.902 | pass |
+| Release compiler preparation | 755.123 | pass |
+| Complete selected sysroot area | 664.573 | pass |
+| Sum of separate guarded observations | 2730.772 | not one gate |
+
+The four inner alternating Cargo invocations take 1.310s, 0.646s, 0.445s and
+0.450s, with zero rebuilt artifacts each. Their 326 package/target/profile/feature
+entries match exactly. The complete source corpus then runs in 104.86s after
+0.85s Cargo freshness checking. This demonstrates the elimination of repeated
+version-switch compiler rebuilds, without treating existing paths as evidence.
+
+All four selected suites pass: boundary equivalence 225.302s, installed smoke
+23.040s, metadata corpus 372.023s and metadata structural 39.335s. Reconciliation
+confirms 732 source cases, 732 installed public emissions, 745 recorded installed
+commands, four native runtime cases and the live-generation, recovery, structural
+and development-doctor assertions. Public emissions run in a 145.338s batch;
+individual parallel command times must not be summed as elapsed time. Structural
+qualification also builds an additional driver binary/test graph in 13.45s.
+That work is retained, not described as eliminated.
+
+Historical V4an selected-area time was 882.832s. Cache histories differ, so the
+current 664.573s observation is not a controlled A/B speedup. The initial new
+corpus graph takes 1119.824s inside its guard and repeats after full invalidation.
+It is explicitly not hidden as free reuse. This fix does not establish the
+ten-minute complete gate, V1 feasibility, or any final V5 timing acceptance.
+All guards have exit zero, no capacity/deadline stop, no leftover session and no
+unexpected tracked source change. Four emitted create-pr/merge plans are unchanged.
+
+Evidence: v4au-qualified-evidence.tar.gz, SHA-256
+0e4522a40f0745976a4ed58ac2baeb69c035d3d3e019a56e76a743640f391423,
+3106 payloads / 28,912,282 bytes, all hashes and sizes verified after transfer.
+Independent read-only Opus review is SATISFIED with no blockers; response SHA-256
+dc4759bd439bdd1cfa2b81c754f37fb080ac9a1acf833e67a21b08a838446e48.
+The sortable report includes every installed command timing and all preparation.
+
+Review follow-ups remain separate: release/distribution owns the inherited-target
+version switch in scripts/distribution/qualify_native_package.py metadata_corpus;
+compiler build feasibility owns the added debug graph and release preparation
+costs. Full CI is not green: performance admission lacks SIFR_PERFORMANCE_REFERENCE
+(existing owner #4347); Windows native SQL fails on libpg_query unistd.h/dirent.h
+headers (SQL native Windows/third-party owner); standalone E2E determinism produces
+no run1 report signature, with the underlying run log absent from the job output
+(E2E determinism/CI owner, root cause unresolved). These untouched paths are not
+absorbed into V4au or relabeled passing. Normal merge succeeded without an
+administrative bypass under the approved intermediate execution policy.
+
+### V4av — attribute compiler build costs before the next feasibility experiment
+
+Status: registered bounded investigation; no compiler profile change adopted.
+
+V4au exposes two separate costs: the corpus debug graph's first preparation and
+the optimized release CLI build. Actual Cargo artifacts contain full debug info:
+driver test executable 1,222,886,264 bytes; sifr_codegen rlib 860,845,484 bytes;
+sifr_lowering rlib 314,634,346 bytes. These file sizes are not proof of debug-section
+size or time spent generating it. The final release CLI compiler process was
+long-running; release uses ThinLTO, but this observation alone is not pass-level
+cost attribution. Do not promise a saving from either hypothesis.
+
+First inspect retained artifact section sizes, actual profiles/flags, available
+Cargo build records and the prospective input/acceptance contracts. Distinguish
+debug information, optimization/code generation, linking and dependency work.
+Use read-only evidence before requesting another build. Preserve every existing
+target and failed/rejected experiment. V1j clone ownership and prior SQL
+optimization-level experiments remain rejected; do not repeat them unchanged.
+SQL's qualified clean-build protocol already uses debug=0 and cannot be credited
+with a new debug-info reduction.
+
+This investigation must produce one precise, bounded feasibility protocol before
+any source/profile-policy edits or rebuild experiments. Keep flags, allocation,
+cache history, profile and source inputs explicit. Change one factor per matched
+comparison; choose representative edit/invalidation work from the existing
+acceptance scenarios rather than a synthetic result that cannot qualify the goal.
+Any debug-information proposal must retain debug assertions, overflow checks,
+optimization levels and all tests. Any release optimization proposal must retain
+real packaged-compiler qualification and test compilation/runtime performance;
+no claim based only on faster building is sufficient.
+
+The historical two-worker override was retained for V4au comparability; merge
+normally requests four workers before capacity admission. Future paired
+experiments should use the same admitted profile allocation for both variants
+and record it, rather than silently carrying the historical override or treating
+different allocations as an optimization result. Admit storage/memory before
+builds and keep the 30-minute diagnostic cap per category. First provisioning
+and full invalidation costs remain counted. Final scoped gates, all V5 scenarios,
+SQL reproducibility, and exact-candidate independent review remain required.
