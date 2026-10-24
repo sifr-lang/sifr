@@ -52,14 +52,13 @@ def build(family: str) -> int:
     with tempfile.TemporaryDirectory(prefix=f"{family}-components-", dir=target) as raw_stage:
         stage = Path(raw_stage)
         for index, series in enumerate(SERIES[family]):
-            if family == "postgresql":
-                environment["SIFR_POSTGRESQL_MAJOR"] = str(series)
+            selection = ["--features", f"postgresql-{series}"] if family == "postgresql" else []
             if family == "postgresql" or index == 0:
                 # Native dependencies remain hashed rlibs; only this producer links a guest.
                 subprocess.run([
                     "cargo", "rustc", "--lib", "--crate-type", "cdylib",
                     "--locked", "--offline", "--release", "--target",
-                    "wasm32-wasip2", "--package", f"sifr_sql_{family}",
+                    "wasm32-wasip2", "--package", f"sifr_sql_{family}", *selection,
                 ], cwd=ROOT, env=environment, check=True)
             filename = f"{family}-{series}.wasm"
             output = stage / filename

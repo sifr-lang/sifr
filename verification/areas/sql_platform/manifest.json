@@ -180,6 +180,13 @@
       "kind": "adapter",
       "cases": [
         {
+          "id": "sql-postgresql-build-selection-controls",
+          "entry": "verification/areas/sql_platform/tools/test_postgresql_build_selection.py",
+          "command": "sql-postgresql-build-selection-controls",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
           "id": "sql-postgresql-compiler-qualification",
           "entry": "verification/areas/sql_platform/data/postgresql_compiler_qualification.json",
           "command": "sql-postgresql-compiler-qualification",
