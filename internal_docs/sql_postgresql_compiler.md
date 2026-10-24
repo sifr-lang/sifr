@@ -92,8 +92,11 @@ these names enters the Sifr user API.
 
 ## Parser selection
 
-`SIFR_POSTGRESQL_MAJOR` selects one parser source during the component build.
-The default selection is PostgreSQL 18.
+Select one parser source with the Cargo features `postgresql-13` through
+`postgresql-18`. No version feature preserves the PostgreSQL 18 default; multiple
+version features are rejected. `SIFR_POSTGRESQL_MAJOR` remains emitted adapter
+metadata, but setting it as a build override is rejected. Canonical guest
+producers and the native parser matrix select explicit version features.
 
 The build follows the selected upstream build layout, with the documented
 WASI-only exclusions. It does not link a system PostgreSQL library.

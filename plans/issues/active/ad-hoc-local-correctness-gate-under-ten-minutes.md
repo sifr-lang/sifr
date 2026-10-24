@@ -11922,3 +11922,47 @@ A fresh continuation will repeat canonical preparation against the policy-only
 candidate using retained targets, then execute all 67 selected SQL cases and the
 retained six-major parser matrix. No previous preparation is relabelled as an
 executed test, and the blocked qualification attempt remains unchanged.
+
+
+#### V4ba qualification complete — retained native versions are reusable
+
+Qualified implementation candidate: dd135c04d2078d0df342f8ab4068ef449fcb8f25.
+The subsequent commit updates only this evidence record and the internal parser
+selection guide; all non-Markdown tracked objects are identical. Compiler input
+identity excludes Markdown, and both documents are outside the selected SQL
+build/fixture/producer inputs. Retain the actual observed candidate identity.
+
+The repeated preparation completed in 16.821s (area graph 13.398s); all 32
+preparation commands passed. This is retained preparation after the initial
+1,549.388s diagnostic, not a controlled before/after optimization benchmark.
+
+All 19 selected SQL suites and 67 cases passed. Area elapsed: 1,262.776s;
+guard elapsed: 1,266.038s. The linked-native clean A / unchanged A / independent
+clean B protocol passed in 867.226s, including identical executable hashes.
+The first six-major matrix passed in 259.551s, including preparation of newly
+owned native version artifacts. Every existing selected case remains; the one
+added case runs command/input-tracking controls.
+
+The additional retained matrix initially stopped before execution at its blanket
+eight-GiB working-space admission. The successful bounded continuation reserves
+two GiB for the already-prepared matrix, with the same twenty-GiB free-disk
+reserve, memory admission, source freeze and 30-minute deadline. It requires the
+complete same-candidate SQL qualification first. No product capacity policy or
+test selection changed. Both blocked admission records remain failed.
+
+Retained matrix execution: 42.956s; guard 44.715s; outer invocation 44.844s.
+All six native majors pass 35 assertions each (31 original plus four selection
+controls), and the separate host assertion executes all six checked-in guests.
+No compilation occurred. Across the selected native output directory for every
+major, all 455 object/archive file paths, bytes, hashes and modification times
+remain unchanged. The capacity policy admitted three compiler workers for this
+retained invocation versus four in the first preparation; no compiler work ran,
+but do not present this pair as a controlled compilation benchmark. The earlier
+four-worker version-13 switch/return comparison remains the controlled reuse
+measurement.
+
+The native reuse improvement is established; complete local-gate acceptance is
+not. The clean-build protocol alone still exceeds ten minutes. The pre-existing
+CLI/metadata inventory failures remain phase-owned work before final scoped
+gates and V5. Independent exact-candidate review and intermediate merge follow
+this evidence record; neither is claimed complete here.
