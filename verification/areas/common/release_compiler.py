@@ -24,9 +24,14 @@ def release_compiler_owners(profile):
     ))
 
 
+def release_target_dir(root: Path) -> Path:
+    """Keep packaged-version graphs separate from normal development builds."""
+    return (root / "target/sysroot_release/cargo-target").resolve()
+
+
 def package_build_configuration(root: Path, original: dict[str, str], host: str,
                                 artifact_dir: Path, *, prepare_only: bool = False):
-    env = dict(original, CARGO_TARGET_DIR=str((root / "target/sysroot_release/cargo-target").resolve()),
+    env = dict(original, CARGO_TARGET_DIR=str(release_target_dir(root)),
                SIFR_RELEASE_VERSION=RELEASE_VERSION, CARGO_NET_OFFLINE="true")
     command = ["scripts/distribution/build_release_artifacts.sh", "--version", RELEASE_VERSION,
                "--output-dir", str(artifact_dir), "--target", host, "--cargo-build"]

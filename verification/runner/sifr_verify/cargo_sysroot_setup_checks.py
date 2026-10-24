@@ -113,7 +113,10 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         import package_build
         calls = []
         root = Path("/owned/worktree")
-        env = {"CARGO_NET_OFFLINE": "true", "CARGO_BUILD_JOBS": "2"}
+        env = {"CARGO_NET_OFFLINE": "true", "CARGO_BUILD_JOBS": "2",
+               "CARGO_TARGET_DIR": "/owned/development-target", "RAYON_NUM_THREADS": "2",
+               "RUSTFLAGS": "--cfg caller", "CARGO_BUILD_TARGET": "host"}
+        original = dict(env)
         with patch.object(package_build, "prepare_release_compiler") as release, \
              patch.object(package_build, "prepare_source_snapshot") as snapshot:
             package_build.prepare(root, env, lambda command, **kw: calls.append((command, kw)))
@@ -125,6 +128,12 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         self.assertEqual(calls[0][1]["env"], execution_env)
         self.assertEqual(execution_env["SIFR_RELEASE_VERSION"], runner.RELEASE_VERSION)
         self.assertEqual(execution_env["SIFR_SYSROOT"], str(producer))
+        _, packaged_env = runner.package_build_configuration(root, env, "host", root / "artifacts")
+        self.assertEqual(execution_env["CARGO_TARGET_DIR"], packaged_env["CARGO_TARGET_DIR"])
+        self.assertNotEqual(execution_env["CARGO_TARGET_DIR"], env["CARGO_TARGET_DIR"])
+        for key in ("CARGO_BUILD_JOBS", "RAYON_NUM_THREADS", "RUSTFLAGS", "CARGO_BUILD_TARGET"):
+            self.assertEqual(execution_env[key], original[key])
+        self.assertEqual(env, original)
         self.assertEqual(corpus[-4:], ["full_corpus_exact_emission", "--", "--ignored", "--nocapture"])
         self.assertNotIn("SIFR_RELEASE_VERSION", env)
 
