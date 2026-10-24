@@ -12161,3 +12161,62 @@ Acceptance:
 Continue with the largest measured execution bottleneck after these known
 qualification failures are repaired. Do not repeat the full slow gate merely
 to rediscover the already measured SQL clean-build cost.
+
+### V4bc closure — validation inventories / #4468
+
+Merged PR #4468 as 09b8b272f1aa1e8ce771d6f275c842faae2b589a.
+Exact reviewed and qualified candidate: 2955d918f0b09c2152a4ead60a630ec4fd382e8f;
+merged tree identical. Independent Claude Opus: SATISFIED, no blockers.
+Review SHA-256:
+320af7bb4bc74711659cc9532fdcf5fc7b50d94d8d789223e7b5165a63371273.
+The reviewer inspected both exact source and archived qualification records.
+Archive v4bc-evidence.tar.gz: 51 payloads locally size/hash verified, SHA-256
+b99266c6278344bddf14c2f4c59e761aff5b3b2509ff04d684485d00a378cf0e.
+
+All three original inventory failures reproduced before repair. Eight affected
+commands pass on the final candidate in a 59.247s guard: 11 metadata controls,
+17 method controls, filesystem self-tests, complete metadata/method/filesystem
+inventories (6,419 method sites and 3,450 filesystem sites), file size and diff.
+The 1,149 metadata consumer rows preserve order and classifications; 29 source
+anchors change. Preserve the first-draft shape-normalization test failure and
+diagnostic inventory-audit assertion as failed evidence. Neither is a product
+timing measurement. No Rust, wire schema, lockfile or profile selection changed.
+
+Follow-up: register the currently manual metadata guard and its self-tests in
+canonical verification before final qualification. Its shape parser deliberately
+fails closed on future attributes or visibility changes; no compatibility path
+was added. No full-gate speedup or phase completion is claimed.
+
+### V4bd prospective scope — attribute fresh source-generation cost
+
+Status: bounded investigation, not an adopted compiler redesign. V4bb measured
+277.654s parallel materialization for all 93 fresh positive graphs at four outer
+workers. Individual TLS graphs occupied 60–67s of overlapping subprocess time.
+Retained quality execution still spends 141.271s on all 264 freshness companions,
+81.591s on demos, 80.089s on corpus and 53.021s on determinism. These observations
+justify attribution, not an unmeasured claim of duplicated semantic work.
+
+First measure one ordinary isolated slow TLS graph with the same one-worker
+per-process preparation policy. Record compiler/product identity, capacity,
+environment, fresh output ownership, successful graph production and output
+hashes. Repeat only to distinguish startup/retained effects or to verify an
+explanation. Use one targeted CPU profile separately if ordinary timing and
+source inspection cannot attribute the cost. Keep sampling overhead out of
+performance comparisons and disclose unresolved stacks or lost samples.
+Do not rerun the full gate to rediscover already measured costs.
+
+Trace preparation, frontend/metadata loading, semantic work, lowering/codegen,
+portable graph writing and verification consumers. Distinguish CPU work, I/O,
+subprocess work and concurrency effects. In particular, establish whether the
+same work is repeated before proposing sharing. No daemon, cached verdict,
+skipped fixture, weakened freshness/negative control or compiler bypass.
+The global strict freshness guard and area's debt/orphan-aware gate are not
+assumed interchangeable.
+
+Any implementation requires explicit bounded acceptance in this record first:
+fresh input and provider isolation, invalidation, unchanged coverage and actual
+output equivalence, affected tests and exact-candidate independent review.
+Diagnostic runs have 30-minute caps and retained failed evidence. Current
+compiler source has not changed since V4bb; use its retained prepared executable
+only after verifying product input equality and its recorded artifact identity.
+SQL clean build, full scoped final gates and all V5 remain open.
