@@ -285,7 +285,8 @@ class AreaAdapterTests(unittest.TestCase):
             return {mode: {"label": mode, "max_entries": limit, "entry_ids": ids,
                            "duration_ms": None, "status": "fail"}
                     for mode, limit, ids in plan}
-        def individual(_suite, mode, limit, ids):
+        def individual(_suite, mode, limit, ids, require_fresh):
+            self.assertFalse(require_fresh)
             independent.append((mode, limit, ids))
             return {"label": mode, "status": "pass"}
         with patch.object(runner, "run_shared_gates", side_effect=shared), \
