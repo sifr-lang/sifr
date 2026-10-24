@@ -10876,3 +10876,62 @@ different allocations as an optimization result. Admit storage/memory before
 builds and keep the 30-minute diagnostic cap per category. First provisioning
 and full invalidation costs remain counted. Final scoped gates, all V5 scenarios,
 SQL reproducibility, and exact-candidate independent review remain required.
+
+### V4av prospective feasibility protocol — retained line information
+
+Read-only section attribution passes: driver debug information/relocations occupy
+1,119,098,531 bytes; codegen 772,042,692; lowering 288,636,890; Cranelift
+196,336,602. An independent objcopy diagnostic on an unused external copy reduces
+the 1,222,886,264-byte driver executable to 101,350,288 bytes while preserving the
+57,149,441-byte machine-code section exactly (SHA-256
+4cb7b1ca823a800e50b3d92998262b7a52f4162925dde6e8eb7c2bf40118aaa0).
+The original artifact hash remains unchanged. This establishes storage cost only;
+post-build stripping is not an adopted workflow or measured compilation saving.
+Raw records: v4av-artifact-sections and v4av-debug-crosscheck, both guarded passes.
+
+Register one diagnostic compiler-build configuration, without editing repository
+profile policy: compile the complete version-matched driver library/test graph
+with CARGO_PROFILE_DEV_DEBUG=line-tables-only in a new session-owned retained
+target on the same filesystem. Use the merge profile's admitted allocation,
+removing only the historical compiler-worker override; preserve all other
+required producer inputs, source snapshot, version, features, toolchain and
+optimization/assertion/overflow settings. Capture Cargo JSON and ordinary Cargo
+unit timings. Record first provisioning, all built/fresh units, capacity, disk
+growth and artifact sizes. Require actual package/target/feature equivalence to
+the qualified V4au graph and matching profiles except debug-information degree.
+No copy of compiled artifacts into the new target is permitted.
+
+The V4au initial build used two workers, whereas this feasibility trial uses
+the admitted merge allocation. Therefore its 1119.824s is historical context,
+not a matched cold-build comparison or proof of time saved. This initial
+diagnostic asks whether the complete candidate graph is materially smaller and
+feasible to prepare; it does not qualify representative edit-cycle or V5 timings.
+Any later time-saving claim needs matched allocation, cache history and inputs,
+using the registered behavioral-edit scenarios. Do not repeat an unchanged cold
+baseline solely to populate a table.
+
+Execute the exact Cargo-selected candidate test executable and the retained,
+hash-verified V4au baseline executable in alternating order, three fresh-process
+full corpus repetitions each. Use identical runtime environments and source
+inputs; keep the build-only profile override out of runtime child environments
+so it cannot alter generated-program Cargo settings. Every repetition must
+explicitly execute metadata_reader::corpus_tests::full_corpus_exact_emission,
+report all 732 cases with no narrowing/failures, and preserve every source/
+metadata emission assertion. Compare emitted source and coverage payloads across
+variants; retain raw outputs. Record median and worst duration, including any
+first-use metadata preparation. Material runtime regression above 10% requires
+diagnosis before adoption; no correctness regression is acceptable.
+
+Retain line-level diagnosis: demonstrate an actual source-located backtrace
+using the same pinned compiler and intended debug setting in a disposable
+assertion probe, with debug assertions/overflow checking enabled. This is a
+diagnostic control, not a substitute for the compiler corpus. A section-size
+reduction alone is insufficient to adopt a profile policy.
+
+This feasibility experiment may use only external helpers and owned build/output
+paths. No Cargo.toml/profile-policy change is authorized by its registration.
+If it succeeds, register the exact production change and broader owning checks
+before editing policy. Full selected correctness gates, V5 behavioral edits and
+complete invalidation, release/compiler runtime performance and SQL reproduction
+remain required; SQL debug=0 is unchanged. Each diagnostic category retains its
+30-minute cap, resource reserves, failure evidence and process cleanup.
