@@ -12064,3 +12064,100 @@ The added real-Cargo regression also changes product code and then its pinned
 dependency; each newly expected output must execute and the affected artifacts
 must rebuild. This establishes correctness/freshness behavior, not a timing gain
 for the complete generated-quality area. Complete affected qualification follows.
+
+### V4bb closure — retained generated-quality dependency targets / #4467
+
+Merged PR #4467 as 514331044d7f6f44e3b1a41024005f50cbe8adff.
+Exact reviewed and executed candidate: 951cdf7250dfc54b81f65baf648e594f0c3154d4;
+the merged tree is identical. Independent Claude Opus verdict SATISFIED, no
+blockers. Review SHA-256:
+aeba9efa8f7d5450b5f2d842ccb007f927dca7bed4c213c85da941bf5284ef4f.
+The reviewer independently inspected the exact diff and consumer code, explicitly
+relying on the supplied validation summary rather than reading archive payloads.
+The implementing session independently reconciled reports and verified all 132
+archive payloads. Archive v4bb-evidence.tar.gz SHA-256:
+ddd13cd52fe13e46eda2e66f7e1d8bac7a054750884066ad2cca0e7209a8884f.
+
+All 93 positive generated graphs were freshly materialized and their portable
+manifests/locks validated at the exact current revision. Preparation guard:
+323.389s, including 277.654s parallel source generation. All ten canonical merge
+representative gate variants passed initially (470.040s guard) and with retained
+artifacts (402.489s). Both runs have the same 101 logged case/gate observations:
+ten aggregate gate rows and 91 nested case/control rows. Each execution owns
+17 fresh shared programs plus two independent native programs; batch roots are
+disjoint and generated file snapshots agree. Determinism, negative controls,
+native output assertions, inventory and all 264 demo freshness companions remain.
+
+Effective worker allocation is identical; recorded available-memory admission
+differs normally (10,296 versus 10,381 MiB). Across 507 observed target files,
+497 retain identical bytes, hash and modification time: 227 library fingerprint
+JSONs, 215 metadata files and 55 rlibs. Only ten generated-program metadata files
+changed; no files were added or removed. The real-Cargo regression separately
+proves unchanged dependency reuse across an identical-content new Git revision,
+and observes changed program, product and dependency outputs. First/retained
+timings have different artifact population states; they are not a matched
+old-code/new-code full-area speedup.
+
+Preparation plus retained execution is 725.878s (12m06s), a sum of separately
+observed categories, not a full-gate measurement. The largest retained variants
+are freshness 141.271s, demos 81.591s, corpus 80.089s and determinism 53.021s.
+The canonical merge selection is representative; release-only full selection is
+not claimed. Preparation was not repeated for the retained execution: its exact
+candidate/report binding is checked and compiler authority resolved again.
+
+Focused controls pass: 61 preparation-policy tests, eight materialization tests,
+two artifact tests, 12 corpus/adapter tests and 16 source-quality tests; standalone
+regression/batch entry-point invocations repeat existing coverage. Initial helper
+rows 2 and 3 only imported modules and are not test execution. The supplemental
+run explicitly invoked their test entry points and checked nonzero counts.
+Profile validation, byte-identical scoped emitted plans, file-size and whitespace
+checks pass. The old-selector dependency-freshness failure and earlier diagnostic
+import failure remain retained and are not relabelled as passing.
+
+Disk admission originally blocked before build. Three obsolete session-owned
+installed-corpus invocation outputs were copied and hash/metadata verified before
+retiring their originals; active targets and four newer installed roots remain.
+Free space increased from 26,091,982,848 to 33,633,402,880 bytes. Complete copied
+outputs remain retained outside active targets. The capacity operation is not
+included in product performance timings.
+
+Follow-ups: retain bounded target/batch retirement as a V5 obligation; consider
+tighter exact-root test assertions if ownership behavior changes; count the
+four-build real-Cargo regression in policy-suite timing. No additional product
+change was required by review. The SQL clean-build cost, remaining inventories,
+complete scoped final gates and every V5 scenario remain open.
+
+### V4bc prospective scope — reconcile phase-owned validation inventories
+
+Status: registered bounded repair after V4bb closure. Current known failures
+were preserved and reproduced before V4bb: ExternalDefs versus SemanticExports
+classification, four CLI test literal fingerprints plus their operation binding,
+and direct filesystem effects changed by the already-merged CLI isolation work.
+
+Audit the actual source and wire ownership before updating inventory. Distinguish
+process-local provider callbacks from persisted semantic payloads explicitly;
+do not hide a missing semantic field by excluding it. Preserve rejection of new,
+removed or misclassified payload fields. Review each affected CLI assertion and
+filesystem operation, retaining its existing test-owner/isolation classification.
+Refresh the metadata consumer source inventory only after reviewing classifications.
+Do not bulk-bless unrelated production operations or relax scanner/schema rules.
+
+Acceptance:
+- Demonstrate each current failure against the merged base; retain exact output.
+- Reconcile only those owned records. If metadata mismatch reveals missing
+  transport semantics rather than a live provider, stop this inventory repair
+  and register the necessary implementation acceptance before changing Rust.
+- Add focused negative controls for any changed metadata classification rule:
+  new/untransported payload fields and changed provider shape must still fail.
+  Keep every semantic payload family comparison intact.
+- Run all three affected complete inventory checks and their relevant self-tests,
+  metadata consumer regeneration/check, file-size and whitespace/local-link checks.
+  No compiler build is needed for policy/data-only work. Do not rerun previously
+  qualified Rust behavior without an implementation change.
+- Independent exact-candidate review before intermediate merge under the approved
+  policy. Full phase gates, all coverage/invalidation qualification and the
+  under-ten-minute target remain required; this repair itself claims no speedup.
+
+Continue with the largest measured execution bottleneck after these known
+qualification failures are repaired. Do not repeat the full slow gate merely
+to rediscover the already measured SQL clean-build cost.
