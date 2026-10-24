@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1j clone experiment rejected; V4au shared preparation identity audit registered; final timing and V1/V5 remain open
+current_stage: V4aw complete integrated discovery; V4ax CLI process isolation registered; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -11158,3 +11158,145 @@ and overlapping worker times. Identify the three largest observed costs and
 their immediate causes, then register the next bounded root-cause repair.
 Do not adopt a feature union, cache-identity relaxation, test reduction or
 benchmark exclusion beyond the existing approved scope through this observation.
+
+
+### V4aw closure — complete integrated discovery, acceptance still failed
+
+Status: observation complete on frozen candidate
+0ca74ff7b24ca465666189d50aa473ed5a01aa79. No product implementation or test-selection
+change was made in this item. The canonical merge --correctness-only
+--no-fail-fast invocation took 6741.592s (1h52m22s), including reporting overhead;
+the external guard took 6750.010s. All 38 steps completed: 36 passed, two failed.
+No category reached its 1800-second diagnostic cap, no category was omitted,
+no tracked input changed and no child process remained after cleanup.
+
+| Integrated category group | Seconds | Outcome |
+| --- | ---: | --- |
+| Preparation, all 18 nodes | 561.204 | pass; oracle node is a scope no-op |
+| Guardrails, all 15 | 356.030 | pass |
+| Area verifications, all 20 / 105 suites | 3863.029 | 19 areas pass; SQL fails |
+| Crate configurations, all 18 | 1643.633 | 17 pass; CLI/lowering configuration fails |
+| Positive E2E | 294.357 | pass |
+| Sum of nonoverlapping steps | 6718.253 | diagnostic failure |
+
+Area reports contain 340 declared cases and 563 variants. These counts are
+adapter-expanded dimensions, not an inference from the old wrapper count.
+Fifteen inline inventory assertions do not publish separate stopwatches; they
+executed inside their enclosing area and are not zero-duration or omitted tests.
+All 29 Python examples, their runtime markers and aggregate certification passed.
+The installed metadata report reconciles all 732 public emissions, four native
+cases and nine integrity/generation commands, including three expected nonzero
+negative checks. Child durations overlap and are not additional wall time.
+
+All 87 selected native assertions passed: six CLI and 81 driver cases. The driver
+inventory also lists one preparation helper, executed successfully during current
+preparation in 35.267s; it is not counted as a runtime assertion. The complete
+crate inventory ran in 1643.633s. Driver generated assertions took 587.705s,
+driver library tests 339.607s, and the CLI/lowering configuration 491.847s.
+Within that last configuration, the SQL application binary passed all 11 tests
+in 234.91s. The original nine-case Python/native group passed with 70.237s of
+summed, overlapping command time. The five previously fragmented cases now
+observed raw objects 7.899s, coroutine 7.723s, object-name collisions 5.457s,
+two-package isolation 4.201s and error identities 5.485s. The archive case took
+4.784s. These are current observations, not a controlled historical speedup.
+
+Positive E2E reconciles all 732 fixtures compiled and executed exactly once,
+186 original native groups, zero original batch failures and every telemetry
+span completed successfully. Its suite took 293.121s: source compilation 52.144s,
+cache preparation 31.319s, native builds 190.904s and runtime assertions 17.571s.
+Other stage intervals account for the remainder. This passing corpus is not a
+whole-gate pass or proof of final timing acceptance.
+
+Two repair owners remain:
+
+- LOCAL-GATE component regeneration after V4av: SQL ran all 66 canonical case
+  invocations, 62 passed and four failed. The general and PostgreSQL provenance
+  qualifications and their mutation-baseline checks reject changed Cargo.toml.
+  Read-only provenance validation identifies the same changed input in MySQL,
+  PostgreSQL and SQLite. Regenerate all three families with the qualified
+  producers; do not rewrite receipt hashes without actual production.
+- LOCAL-GATE CLI test isolation: the main CLI unit target passed 148 cases and
+  failed cargo_lock_mode_certification_tests::sifr_test_modes_use_package_resolution_and_final_test_trace.
+  Two modules mutate the process working directory under different locks.
+  A focused unchanged-candidate probe passed the lock-mode test alone in 52.733s;
+  pairing it with the other module's package-check test reproduced the Locked
+  authority failure and an abort while restoring a deleted directory in 27.737s.
+  The observed directory changed while the lock-mode test remained active.
+  This confirms an isolation defect, not permission to weaken Cargo authority.
+
+The largest completed categories are crate tests (1643.633s), SQL (1233.783s)
+and installed sysroot verification (621.152s). Immediate cost boundaries:
+
+- SQL's required clean/reuse/independent linked-build protocol alone passed in
+  869.629s; PostgreSQL's six-major parser matrix took 245.151s. All three tool
+  hashes matched across clean/reused/independent results. Four compiler workers
+  differ from the historical six-worker experiment; do not call this a matched
+  regression. The protocol alone still exceeds the phase's whole-gate target.
+- Generated preparation took 300.622s and Python preparation 187.013s, together
+  approximately 87% of current preparation. Seventeen compiler no-run commands
+  totaled only 7.606s. Prepared compiler artifacts are being reused.
+- The direct demo freshness guard (172.659s) and quality freshness (173.938s)
+  both regenerate the same 264 companions. Their strict, debt, orphan and
+  protocol assertions differ; a future single generation owner must retain all.
+- Native-family storage holds an exclusive lease across mutation, Cargo and
+  capture. Two workers do not establish two concurrent native compilations.
+  Attribute waiting versus compilation before changing ownership or admission.
+
+A fresh-process diagnostic check took 1.423s, 1.150s and 1.127s with identical
+outputs. Its trace reports 1.120s invocation time but only 27.435ms opening the
+metadata consumer; source inspection places complete development-metadata
+validation before that interval. CPU sampling repeatedly identifies metadata
+lookup/validation, but 306 of 546 samples have an unresolved frame. Do not infer
+an exact complete-validation percentage from incomplete stacks. Preserve the
+first profiler-control acknowledgement failure; its corrected sampling-only
+retry reused the completed ordinary observations without relabeling them as new
+execution. No optimization or cross-invocation trust relaxation is adopted here.
+
+Evidence archive v4aw-discovery-evidence.tar.gz contains 3751 payloads /
+115917485 bytes, with every payload authenticated before archiving. Archive
+SHA-256: 04a1dc2192dd26c5095d677b08d7bea0806e5a4850b50ade95dc4012903c7439.
+The sortable report includes all category totals, case timings, native inventory
+reconciliation, the complete E2E telemetry and the reproduced failure. Initial
+preparation/capacity interventions remain separate historical observations,
+not components of this uninterrupted integrated timing. Full final scoped gates,
+SQL clean reproduction and all V5 edit/invalidation scenarios remain open.
+
+### V4ax prospective execution — isolate CLI directory-mutating tests
+
+Status: registered; bounded repair owned by LOCAL-GATE integrated correctness.
+
+Repair the reproduced interaction between cargo_lock_mode_certification_tests
+and mode_resolution_tests. A module-local lock cannot protect process-wide cwd
+from other test modules or readers. Isolate the tests that change cwd in owned
+child test processes, or remove their process-global mutation through explicit
+invocation inputs. Keep the rest of the suite parallel. Do not mask the failure
+by blanket test serialization, retries, changing Cargo lock modes or removing
+assertions. Preserve package-resolution, all four test lock modes, final-test
+invocation traces, lockfile immutability, diagnostics and actual runtime checks.
+
+If using child test processes, bind each launch to its exact selected test,
+require successful execution of that test (not merely exit zero), preserve
+failure diagnostics, bound child lifetime and prevent recursion. Include controls
+for missing selection, failed child execution and isolation from the parent's
+cwd. Keep every existing case name and native role enrolled; do not turn these
+assertions into ignored or optional coverage. No production command, dependency,
+lockfile, Cargo profile or canonical profile-selection change is in scope.
+
+Named intermediate acceptance:
+
+- Reproduce the original failing pair on the repaired candidate with two test
+  threads; both assertions must execute and pass. Preserve the original failure.
+- Run the complete sifr binary unit target with parallel tests, including all
+  existing ordinary assertions and focused child-execution regression controls.
+- Run all six canonical ignored/generated CLI cases, preserving their exact
+  inventory, Cargo flags and one-executed-case checks.
+- Run cargo fmt --check, file-size guardrails, the affected test-helper authority
+  inventory and runner contracts, and documentation/diff checks. Compare native
+  case identities and roles with the frozen discovery inventory.
+- Obtain SATISFIED independent review of the exact implementation candidate.
+
+Retain the qualified tools, native targets and preparation environment; check
+capacity before rebuilding. Use the approved focused-intermediate policy. SQL
+provenance remains explicitly owned by the next component-regeneration item;
+this repair cannot claim a passing integrated gate. Final create-pr/merge and V5
+qualification remain required after the integrated implementation is credible.
