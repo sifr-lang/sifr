@@ -12377,3 +12377,212 @@ The broad c8fc3d42aa evidence remains tied to that observed candidate; subsequen
 focused repairs require their own affected checks and independent final review.
 Complete generated-quality preparation/execution, final scoped phase gates and
 all V5 scenarios remain open. SQL clean-build cost is still independently open.
+
+### V4be closure — equivalent Rust bridge batches / #4469
+
+Merged PR #4469 as b089486fa520ce0ebc7263b7cae5bd956b3f0c32.
+Exact reviewed and final qualified candidate:
+f7572abfd9ef8b56de3300a7ef4388f5a2f31043; merged tree identical.
+Independent Claude Opus: SATISFIED, no blocking findings. Review SHA-256:
+6b9966cd06198127e299a7caae8f5abe51515474f61d64ad9abb0cab38ee1fa3.
+The reviewer inspected exact source, inventories and key receipts, without
+rerunning tests; payload hashes were independently checked by this session.
+
+Final repaired candidate passes all 237 affected ordinary interop tests, the
+two real-Cargo protocol replays, complete selected Rust-interop area (31.202s
+guard), and all nine formatting, file-size, inventory, profile and emitted-plan
+controls (68.223s guard). Scoped create-pr/merge plans remain byte-identical.
+The earlier c8fc3 candidate's 790 ordinary and 81 generated driver cases remain
+bound to that candidate; the repaired candidate does not inherit a fictitious
+new broad run. All 13 added batch tests executed in final focused qualification.
+
+Complete selected generated-quality preparation passes all 93 fresh graphs:
+154.367s parallel materialization at four workers; 194.299s complete preparation
+guard. All ten canonical merge representative quality gates pass in 341.466s.
+The same 101 logged observations as V4bb are present (ten aggregate gates plus
+91 nested cases/controls), and all 93 preparation IDs match. Detailed inventory
+confirms all 264 demo companions. Native assertions and determinism remain.
+Largest gates: freshness 142.443s, corpus 60.747s, determinism 53.221s and demos
+37.036s. Preparation plus qualification is 535.765s (8m56s), a sum of separately
+observed categories, not the complete local gate. Artifact states differ from
+V4bb; qualification admitted three compiler jobs versus four in preparation.
+Do not claim a controlled old-code/new-code whole-gate speed ratio.
+
+Main archive v4be-evidence.tar.gz: 696 payloads locally size/hash verified;
+SHA-256 cc2eaedeaf3e19f4e916fecec57939733ace84a1ba2aaf10907095ae35ef76b6.
+Nine referenced detailed quality records were subsequently copied without
+rerunning tests, archived and verified as v4be-quality-details.tar.gz:
+748af68a578cd6c59ee8ffb3acf455585c8de54bf8d00951180a873dd2d3539b.
+Preserve initial grouping/parser test failures and diagnostic reconciliation
+schema errors. The latter were report-helper errors, not failed product runs.
+The app rejected attaching the PR because this chat already has 100 attachments.
+
+Review follow-ups, not blockers: improve rare crash/stderr attribution and
+explicit internal-compiler-error diagnostics when touching that parser; remove
+its unreachable unknown-record arm with its inventory record; keep the virtual
+workspace resolver aligned with the probe edition if it changes. The TLS timing
+and I/O observations remain c8fc3 measurements, not fresh f757 measurements.
+
+The generated-driver allocation cliff is a separate investigation: two workers
+require two 4 GiB allocations plus the 2 GiB reserve. Lower Cargo job counts alone
+do not change the floor. Existing one-worker monitoring observed at least
+9,440 MiB available, while GNU time reported a 3,298,136 KiB maximum child RSS;
+neither is aggregate concurrent subtree peak usage. Do not weaken the reserve
+or infer a safe new floor from these unlike metrics. Final full scoped gates,
+mandatory SQL clean builds and every V5 scenario remain open.
+
+### V1m prospective investigation — shared compiler capability boundary for SQL
+
+Status: bounded architectural investigation after V4be closure. The current
+SQL clean A / unchanged A / independent clean B protocol still costs 867.226s.
+V1i already established that semantic frontend/lowering, component compilation,
+TLS clients and dialect parsers are real capabilities. Do not repeat an audit
+looking for a nonexistent accidental facade or rerun rejected profile/CGU/Clone
+experiments. Merely moving code into a differently named crate or helper does
+not remove producer work.
+
+Investigate a specific remaining architectural possibility: whether the
+canonical compiler already prepared and qualified by the local gate can own
+semantic checking and component compilation for SQL tools, with one explicit
+versioned, input-bound service/artifact contract. Determine the actual overlap
+in normal/build dependencies, operations and existing installed distributions.
+Compare the full producer-plus-consumer accounting, including invalidation.
+Two independently linked SQL tool builds must still be genuinely clean and all
+three executable hashes compared. No unqualified prebuilt external producer,
+warm replacement for an independent clean build, hidden bootstrap cost, fallback,
+removed operation, changed runtime backend or silent profile downgrade.
+
+First deliver an exact operation/dependency/installation ownership map and
+identify which expensive units would leave the consumer graph versus which
+producer costs remain in the timed gate. Reuse V1i/V1k/V1l evidence where inputs
+still apply, and distinguish structural feasibility from measured speed.
+If existing standalone-tool, offline, sandbox, identity or component-safety
+contracts make the boundary invalid, record that conclusion instead of adopting
+a workaround. Any product implementation requires a precise bounded acceptance
+contract in this phase first, preserving all semantic/runtime and negative
+controls, actual installation behavior, locked/offline resolution, candidate
+identity and final V5 qualification. This investigation authorizes read-only
+source/graph inspection and isolated diagnostic scripts, not a production change.
+
+### V1m outcome — possible boundary, no simple extraction adopted
+
+Locked normal/build Cargo trees and host-filtered metadata complete without
+compilation. Actual compiler/tool trees both include frontend, lowering,
+component host and Cranelift. The workspace-resolved host package graph has
+380 nodes for the three SQL tools. Cutting their direct semantic-services edges
+would leave 315 (65 removed, all also present in the compiler graph). Cranelift
+still remains through sifr_sql_contract -> sifr_compiler_component -> Wasmtime.
+A hypothetical protocol/native-host split as well would leave 259 nodes.
+These are structural graph counts, not compiled units or additive timing gains;
+workspace feature unification differs from per-command compiled unit selection.
+
+The two actual operations are narrow: load_authority consumes a cloned
+ProfileAuthority from load_sql_editor_profiles, and migration compilation
+consumes canonical MigrationSourceDeclaration values from SemanticContext.
+However, the current tools also expose direct library/binary entrypoints and
+the generic host-tool runner has no compiler-service channel. Linux denies
+subprocess creation without its grant and macOS limits executable paths.
+An unqualified helper or expanding capability grants would not preserve the
+existing boundary. A real versioned parent service would require new transport,
+identity, cancellation, installation and confinement contracts. A protocol/host
+crate split alone does not remove genuine component use in semantic services.
+
+Do not adopt that larger deployment change from package counts alone. Preserve
+it as a possible architectural direction, with all producer preparation and
+invalidation inside accounting. No product source changed, no SQL speedup was
+measured and mandatory independent builds remain open. Two initial source
+searches included nonexistent paths; their partial results/exit2 are retained,
+and actual existing source files were subsequently inspected directly.
+Evidence v1m-evidence.tar.gz: 18 locally size/hash-verified payloads; SHA-256
+c5120e300fa92252abd2b21d7ee61c5b8d71b46926ddd49d797b1087f9c9f16a.
+
+### V4bf prospective execution — eliminate intermediate stdlib support reparsing
+
+Status: bounded source-generation investigation and feasibility implementation.
+The complete generated-driver run measured full_corpus_exact_emission at
+102.337s. Earlier sampling found substantial syn/token processing, but did not
+attribute a reliable exact caller fraction. Current source identifies an actual
+serial chain in support_plan::render_stdlib_support: demand filtering renders
+Rust, shared-prelude stripping parses/renders it, name sealing tokenizes and
+parses/renders it, external-path rewriting parses/renders it, and item dedup
+parses/renders it again. Preserve the transformations; investigate carrying
+structured items between compatible adjacent passes instead.
+
+Acceptance:
+- Capture an ordinary current baseline of the complete maintained metadata
+  emission corpus, retaining all fixture output bytes, source maps and coverage.
+  Record preparation separately, capacity, candidate/tool identities and actual
+  execution count. Keep the 30-minute category cap and owned retained targets.
+- Preserve exact transformation order, token-aware canonical name ownership,
+  macro/qualified-path behavior, shared-prelude needs, duplicate/conflicting
+  implementation checks and malformed-input behavior. Do not replace structural
+  parsing with text substitution or add a global syntax/result cache.
+- One owned parsed item representation may pass through compatible transforms;
+  retain necessary token reconstruction where its semantics require it. No
+  second frontend, skipped assertion, changed profile, reduced corpus or
+  persisted correctness verdict. Split maintained code by responsibility as
+  needed to stay below the file-size guardrail.
+- Run existing affected stdlib-filter/support tests first, with targeted controls
+  for any new ownership boundary. Compare complete baseline/candidate corpus
+  fixture IDs and actual generated bytes/source maps, then native E2E coverage
+  and complete selected generated-quality qualification for an adopted candidate.
+  Use focused intermediate repairs under the approved phase policy.
+- Measure ordinary full-corpus elapsed time after the change and investigate any
+  regression. Do not equate removed parse calls with a promised wall-time gain;
+  reject a change that adds complexity without useful measured benefit.
+- Run formatting, size, affected inventories and independent exact-candidate
+  review before intermediate merge. Final scoped gates and every V5 scenario
+  remain required. This does not resolve the independent SQL clean-build budget.
+
+
+### V4bf outcome — parsing experiment rejected, production behavior restored
+
+Candidate dd09cec6f41725070e84678d2437c1f3281a4b86 passed the complete
+732-fixture metadata emission corpus. All 1,464 retained Rust/source files,
+source-map bytes/offsets and module memberships agree with baseline
+a2bc118441556176e22c566fb7c35274eb604fe4. Portable metadata payloads also agree;
+candidate-bound metadata identities differ as expected.
+
+Ordinary execution was 104.952507s before and 103.929096s after: 1.023411s
+(0.975%) observed reduction in one sequential comparison. That is insufficient
+evidence of useful improvement and may be normal variation. Do not adopt the
+pipeline refactor, claim a statistically established speedup, or spend another
+full native/generated-quality cycle qualifying an unpromising experiment.
+Production Rust and metadata inventory are restored exactly to the baseline.
+Native E2E and generated-quality acceptance were not run for this rejected
+candidate; they are not recorded as passes.
+
+The initial implementation ea582157a1c118c0ac308b296bbe5415f00ed1b7 passed all
+37 affected stdlib-filter tests and all 1,785 codegen tests. Final dd09 only
+removed an unused import and refreshed the owned metadata inventory; the full
+corpus result belongs to dd09. Preparation is separate: baseline driver binary
+was retained (0.459s), candidate driver rebuild was 165.504s, initial focused
+codegen preparation/test command 282.650s versus 7.970s for the subsequently
+prepared complete test command (7.52s test body). These unlike preparation
+states are not a cache regression or an old/new speed comparison.
+
+The first external report comparison incorrectly treated serialized
+HashSet<String> module iteration order as array order, flagging 194 rows.
+Source inspection confirms the field's set contract. The corrected comparator
+compares that field as a sorted multiset and every other field and generated
+file exactly. Preserve the initial comparator failure and its correction;
+do not rewrite the original corpus records or weaken declaration/fixture order.
+
+### V4bg prospective execution — current integrated bottleneck discovery
+
+The source parsing experiment did not establish a worthwhile gain. Return to
+the approved integrated delivery strategy: inspect the current emitted scoped
+merge plan, verify capacity/preparation, then execute every current correctness
+category with failure continuation and a 30-minute diagnostic cap per category.
+Retain targets and all original assertions. A failed prerequisite blocks its
+consumers; independent categories continue. Explicitly account for any category
+that cannot run, and schedule descendants after an in-scope preparation repair.
+Do not use aggregate timeout, ignored entries, old results or missing reports
+as a pass. This is fresh diagnostic coverage, not final timing qualification.
+
+Record preparation, guardrails, ordinary crate tests, generated/native driver
+tests, native E2E and each verification area separately, including observed
+allocation and all nested case inventories. Reconcile against the emitted plan
+before selecting the next largest root cause. Preserve the independent SQL
+clean-build contract, final scoped create-pr/merge gates and all V5 scenarios.
+Any product repair still needs its own bounded acceptance and independent review.
