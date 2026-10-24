@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4al merged; V4am validation matrix CLI/context repair registered; final gates and V1/V5 remain open
+current_stage: V4am merged; V4an integrated correctness discovery registered; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9780,3 +9780,92 @@ independent review. Preserve failed/incomplete observations and apply the existi
 30-minute diagnostic category cap and resource ownership rules. No compilation
 profile, coverage or concurrency-policy changes. Final complete correctness gates,
 independent SQL clean-build budget and repeated V5 qualification remain open.
+
+
+### V4am closure — selected CLI/context in matrices / #4455
+
+PR [#4455](https://github.com/sifr-lang/sifr/pull/4455) merged as
+`51e01cd5399ff16c42e63a55eabda659413b2b5c`; reviewed candidate
+`4db9ca74da7c840f447d8d90be6e61b80772a359`, base
+`49f6059267efc0f678042043b9deab06b2e9918a`. All 43 compiler-launch prefixes now
+use the integration test's Cargo-selected binary. Every other manifest field,
+compiler argument, working directory, expected exit, assertion and parallel group
+is unchanged. Both explicit Cargo tests and the Python command remain. Four new
+unignored selection/context regressions are enrolled in existing create-pr/merge
+CLI coverage. Intentional toolchain/profile/target/flags settings are retained.
+
+All six canonical matrix suites execute successfully, with all 16 rows and all
+46 declared commands reconciled through their passing rows:
+
+| Suite | Guarded category seconds | Actual matrix process seconds |
+|---|---:|---:|
+| Integer dtype rules | 18.194 | 0.576 |
+| HIR analysis | 34.209 | 27.857 |
+| CFG flow | 31.703 | 25.393 |
+| Syntax/parser/lexer | 7.191 | 0.953 |
+| Frontend parity | 27.197 | 20.653 |
+| Project graph isolation | 40.206 | 33.909 |
+| Sum | 158.699 | 109.341 |
+
+Matrix-process times are nested within category times. Six separate area launches
+include repeated launcher work; neither column is a complete gate. Historical
+comparisons use different revisions/cache states, not a controlled speedup estimate.
+Actual selected-binary/test preparation takes 52.031s; the guarded preparation,
+four controls and profile checks take 59.724s. Three canonical prerequisites take
+7.054s guarded combined. The subsequent same-configuration ordinary Cargo
+preparation takes 0.564s: **458/458 artifacts fresh**, no rebuild, and the selected
+compiler path and profile unchanged. All source/resource guards pass without
+stops, leftovers or tracked changes. Four emitted plans remain identical;
+formatting, file-size and exact manifest transformation checks pass.
+
+Exact-candidate independent review is SATISFIED with no blockers, SHA-256
+`963a9b7182040bfd1634d8533e61ac7b8a1354c1955731ea4ed8bdb7c830b1bb`.
+Nonblocking suggestions remain separate: a future manifest rule could prevent
+reintroduction of Cargo compiler-launch prefixes. The canonical adapter uses the
+unchanged default profile; manual nondefault outer Cargo invocations intentionally
+select that outer profile. Archive `v4am-qualified-evidence.tar.gz`, SHA-256
+`0c804df9bfd62962be546aef6186c4a446bd6702e2ba9517c886bb5ef5d834ab`,
+contains 143 payloads / 63,809,141 bytes, all independently verified locally.
+CI job `120733400067` in run `40047804877` separately fails the known full-profile
+performance-reference admission (#4347). Preserve its supplemental raw log; no
+whole-CI success is claimed. Full final correctness gates and V5 remain open.
+
+### V4an — integrated current-candidate correctness discovery
+
+Status: prospective read-only validation of the combined repairs. The previous
+complete diagnostic preceded the Python environment/preparation, native publication,
+tooling and validation-matrix repairs. Obtain one current integrated result before
+choosing another implementation item. No source/profile/selection/concurrency change
+is authorized by this diagnostic item itself.
+
+Freeze and publish the exact current revision; verify its emitted correctness-only
+merge plan, toolchain/preparation readiness, actual disk/target/CPU/memory and declared
+capacity reserve before launching work. Retain owned targets, interpreter environments,
+fixtures and native families. If resource admission fails, diagnose that actual
+prerequisite instead of repeating the unchanged command. Use the existing two-Cargo,
+two-Rayon diagnostic allocation and selected E2E allocation, not V1h's isolated
+six-worker SQL diagnostic. Their different costs must remain distinguishable.
+
+Run the canonical `scripts/run_all_tests.sh --profile merge --correctness-only
+--no-fail-fast` invocation with the existing 30-minute step/child safety limits,
+20-GiB disk and 2-GiB memory reserves, complete raw output, source freeze and owned
+session cleanup. An outer four-hour safety guard may bound the aggregate invocation;
+it does not extend any category's 30-minute limit. Do not use profiling/tracing for
+this ordinary discovery run. Keep preparation and consumers tied to actual current
+results. No fabricated preparation-complete state or reuse of old passing assertions.
+
+Reconcile every emitted step, preparation dependency, selected configuration,
+area suite and E2E role against actual executed evidence, including counts, outcomes,
+elapsed time and missing/blocked/cancelled work. If a cap or prerequisite prevents
+later categories, record them explicitly and schedule independent remaining categories
+separately under their own guards; do not count partial execution as a complete gate.
+Preserve every failure and its owner. Continue independent ordinary failures where
+the canonical runner permits it; do not override its cancellation or resource stops.
+Report functional outcome separately from timing budgets and the three largest costs.
+
+This is current integrated failure discovery, not approval of the ten-minute target.
+V1h's independent SQL clean protocol already exceeds 600s at six workers; the
+normal diagnostic allocation may cost more. Do not repeat the rejected V1c/V1e/V1f/V1g
+experiments or infer feasibility from isolated savings. Full phase closure still
+requires complete scoped create-pr and merge gates plus all V5 repetitions and
+invalidation scenarios. The new measurements determine the next bounded repair.
