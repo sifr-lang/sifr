@@ -56,14 +56,28 @@ running the full gate after every local edit.
 
 | Change or checkpoint | Next command from the repository root |
 |---|---|
-| One compiler behavior | `cargo test --locked -p <crate> <test-filter>` |
-| CLI tests excluding the E2E pass suite | `cargo test --locked -p sifr -- --skip test_e2e_pass` |
+| One compiler behavior | `uv run --project verification --locked cargo test --locked -p <crate> <test-filter>` |
+| CLI tests excluding the E2E pass suite | `uv run --project verification --locked cargo test --locked -p sifr -- --skip test_e2e_pass` |
 | Verification runner mechanics | Affected self-tests; the runner foundation suite is `uv run --project verification --locked python -m sifr_verify --self-test` |
 | One verification area/suite | `uv run --project verification --locked python -m sifr_verify areas run --area <area> --suite <suite>` |
 | Full E2E pass corpus | `verification/runner/e2e/run_e2e_pass.sh --profile merge` |
 | Implementation PR candidate | `scripts/run_all_tests.sh --profile create-pr` |
 | Final implementation merge candidate | `scripts/run_all_tests.sh --profile merge` |
 | Planning, prose or review records only | `git diff --check`; verify changed local links, scope and status; no compiler build or broad gate |
+
+Run focused Cargo commands through the same locked verification `uv` entry used
+by the full gate, from the same parent shell environment. This keeps the launcher
+PATH consistent; the native build identity includes PATH because build scripts
+can resolve tools through it. An extra virtual-environment prefix can otherwise
+select a separate native target even when Cargo and rustc themselves are unchanged.
+Use one `uv run` layer: the full-gate facade already provides it.
+
+This aligns the launcher, not every build input. Preserve the same owned
+`CARGO_TARGET_DIR`, toolchain, features, profile, flags and relevant native/Python
+environment settings. Keep intentional resource allocations explicit. Cargo still
+checks freshness and every selected test executes; a retained target is not a
+cached test result. Do not remove environment identity or copy artifacts between
+incompatible targets to force reuse.
 
 Focused commands supplement the affected checks and acceptance gates in
 [AGENTS.md](../AGENTS.md#minimum-validation). A fixture subset is diagnostic

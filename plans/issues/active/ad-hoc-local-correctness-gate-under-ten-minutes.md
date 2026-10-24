@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4an discovery complete; V4ao inventory reconciliation in progress; final timing and V1/V5 remain open
+current_stage: V4ao merged; V4ap native reuse diagnosis in progress; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9943,3 +9943,104 @@ these acceptance criteria. Merge only after those checks and review pass. Record
 V4an's original failed categories unchanged, link the repair's fresh passing
 evidence separately, and retain all remaining performance work. No timing saving
 is claimed for this inventory repair.
+
+
+### V4ao closure — authority inventories / #4456
+
+PR [#4456](https://github.com/sifr-lang/sifr/pull/4456) merged as
+`8fceb5b563fa1e691f84910c079b33b6ce5aaec2`; exact reviewed candidate
+`30dd6cb61fe2644fe5e2c44d08ac46c3e317f536`, inventory base
+`2cccaccc2789332cd0d2ee0dcc9ed02e7d83b783`. Exactly two method sites, one
+method fingerprint and four filesystem-effect sites were reconciled. Parsed
+comparisons preserve all unrelated records/order, all classifications outside
+those additions, and all 235 method-authority constituents. No implementation,
+assertion, selection or cache-key change.
+
+The complete method guard passes (6,418 sites / 235 nodes, 33.839s), its self-test
+passes (0.438s), and all 18 canonical developer-tooling static variants pass
+(52.088s). File-size, local-link and diff checks pass. Guarded validation takes
+94.242s with exit 0, clean frozen source and an empty owned child session. An
+external helper import error failed before testing; its original receipt/logs
+remain beside the corrected run. The proof helper's initial wrong constituent
+lookup was corrected before proof publication; no failed helper is a test pass.
+
+Exact-candidate independent review is SATISFIED, no blockers; SHA-256
+`ea6459d2423e3964c10f9fc703eda51e556b33c0b0f93f746200f93ab0a64b2d`.
+The nonblocking request to copy the preserved failed helper locally is completed;
+a suggestion to duplicate the candidate into the guard receipt is deferred (the
+existing spec already records it). Archive `v4ao-qualified-evidence.tar.gz`, SHA-256
+`2ed6dd98c12c1fd80b5fa695b540c116542251b189c8cc59bd4bccb757f8b9d5`,
+contains 44 payloads / 82,127 bytes, independently verified locally. Supplemental
+CI remains separate from this scoped intermediate acceptance. V4an's original
+failed/capped attempts remain unchanged. Complete final gates and V1/V5 remain open.
+
+### V4ap — focused/canonical native reuse diagnosis and launch alignment
+
+Status: prospective bounded continuation after V4ao. V4an found distinct native
+family identities when only the focused versus canonical launcher PATH changed,
+despite identical resolved Cargo/rustc paths and versions. It also measured
+1,146.804s across 41 Rust-interoperability invocations. Establish how much remains
+under retained canonical inputs before changing fixture isolation or cache keys.
+
+First compare the actual public locked uv focused entry with the canonical profile
+entry under the same caller environment, target, flags, allocation and owned
+fixture. Capture the effective native identity, not just selected executable
+versions. Avoid nested uv calls and accidental PATH-prefix injection by diagnostic
+wrappers. Keep an ordinary baseline separate from targeted instrumentation. Run
+the actual slow opaque-resource alias fixture, preserving every runtime/error
+assertion, then repeat through the equivalent focused entry. Capture command,
+source identity, elapsed time and target/freshness evidence. If still slow, break
+that fixture into compiler preparation, Cargo work, linking/artifact validation and
+runtime execution using existing receipts or one targeted trace; do not infer
+stage durations solely from artifact completion timestamps. Independent retained
+artifact reuse is allowed, reuse of old assertion results is not.
+
+Prefer documented existing entry points if they provide equivalent contexts;
+change no product cache identity merely to force a hit. Any documentation change
+must describe its actual configuration/environment prerequisites, without claiming
+uv alone unifies all Cargo configurations. If code changes prove necessary, scope
+and enroll their affected regression checks before implementation. Preserve all
+features, profile semantics, negative controls, trust, fixture ownership and source
+freshness. No broad rerun until the bounded result justifies it. No unmeasured
+full-gate saving or final timing claim. Apply the normal 30-minute diagnostic cap,
+capacity reserve, immutable evidence and scoped independent-review policy.
+
+The next item remains a separate decision based on this result: repeated generated
+materialization, native fixture preparation, or mandatory SQL graph architecture.
+V1 clean A/reuse A/independent clean B and all V5 scenarios remain mandatory.
+
+
+### V4ap measured result and bounded documentation change
+
+Observed candidate `1a074ceed286c27691065e092ad5fb0799ce1b0b` retains exactly
+the V4ao product/test implementation. The opaque-resource alias runtime fixture
+passes through canonical Cargo execution in 24.491s (outer Cargo 0.44s; libtest
+23.95s). Its actual libtest process has the same captured native environment inputs
+as V4an. Only one generated-binary fingerprint's metadata changes; none of the
+1,676 recorded native fingerprint files is newly created. These metadata
+observations are not proof that all artifact bytes match.
+
+The literal locked `uv ... cargo test` focused command then executes the same
+single assertion in 5.682s (outer Cargo 0.47s; libtest 5.13s). Returning to the
+canonical entry executes it again in 5.473s. Both repeats have zero added/changed
+native fingerprint metadata, and the effective parent native inputs and queried
+native context match. All three guards pass with empty child sessions and frozen
+source. First/second/return guard times are 38.218s / 7.685s / 7.688s; setup and
+fingerprint observation costs are separate from the timed fixture commands.
+The first run includes one bounded readonly libtest-environment observation.
+There is no matched cold/warm optimization comparison or newly implemented speedup.
+
+This confirms compatible retained reuse across the focused and canonical launch
+paths. It does not explain every rebuild in the larger driver category or prove
+that all fixtures become this fast. The initial first-use result and subsequent
+repeats must remain distinct. A failed diagnostic preflight compared parent
+variables with Rustup-injected child variables and stopped before testing; the
+corrected run and actual child capture are separately retained.
+
+Update only the two development-guide focused Cargo examples and AGENTS' focused
+Cargo example to use the existing locked verification uv entry. Explain matching
+parent environment, one uv layer, and unchanged target/features/profile/flags/native
+environment requirements. No new wrapper, key normalization, profile selection or
+test change. The measured commands remain attributed to the observed candidate;
+the documentation candidate requires diff/local-link/scope checks and independent
+review, not another compiler build. All V1/V5 and final full-scope obligations remain.

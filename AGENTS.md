@@ -41,7 +41,7 @@ affected checks. Do not run the whole table for every edit.
 | Work | Run |
 |---|---|
 | Planning, prose, or review records only | `git diff --check`; verify changed local links, scope, and status. No compiler build or broad gate. |
-| Rust/compiler code | Focused affected crate/test, e.g. `cargo test -p <crate> <test>`; `cargo fmt --check`; `python3 scripts/check_file_size_guardrails.py`; affected area/regression checks. |
+| Rust/compiler code | Focused affected crate/test, e.g. `uv run --project verification --locked cargo test --locked -p <crate> <test>`; `cargo fmt --check`; `python3 scripts/check_file_size_guardrails.py`; affected area/regression checks. |
 | Verification runner or policy | Affected self-tests and area/workflow contracts; file-size guardrail. If profile selection changes, run `uv run --project verification --locked python -m sifr_verify profiles check` and compare emitted plans. |
 | Implementation PR candidate | `scripts/run_all_tests.sh --profile create-pr`. |
 | Final implementation merge candidate | `scripts/run_all_tests.sh --profile merge` once; correct failures and rerun affected checks after relevant changes. |
