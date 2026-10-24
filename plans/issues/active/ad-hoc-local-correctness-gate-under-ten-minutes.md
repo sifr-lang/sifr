@@ -9925,7 +9925,7 @@ No product correctness failure is inferred from these inventory failures.
 Update exactly the seven reviewed records identified by V4an: two new method
 dispatch records, one changed method fingerprint, and four direct filesystem
 effect records. Preserve all unrelated records, order, classifications and the
-235 filesystem constituent declarations. Classify test assertions and test-owned
+235 method-authority constituent declarations. Classify test assertions and test-owned
 input/output effects according to the existing schema. Do not bless an entire
 inventory, weaken discovery, suppress drift, or modify compiler/runtime behavior.
 
