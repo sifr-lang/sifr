@@ -5,38 +5,12 @@ use crate::cli_model_and_entrypoint::{
 };
 use crate::diagnostic_rendering_and_run::{cmd_run, fetch_success_message};
 use crate::explain_cli::diagnostic_explanation;
+use crate::isolated_cli_tests::CurrentDirGuard;
 use clap::Parser;
 use sifr_diagnostics::{DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity};
 use sifr_frontend::DiskSourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard, OnceLock};
-
-static CWD_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
-struct CurrentDirGuard {
-    previous: PathBuf,
-    _lock: MutexGuard<'static, ()>,
-}
-
-impl Drop for CurrentDirGuard {
-    fn drop(&mut self) {
-        std::env::set_current_dir(&self.previous).expect("restore cwd");
-    }
-}
-
-fn enter_test_cwd(path: &Path) -> CurrentDirGuard {
-    let lock = CWD_TEST_LOCK
-        .get_or_init(|| Mutex::new(()))
-        .lock()
-        .expect("cwd test lock should not be poisoned");
-    let previous = std::env::current_dir().expect("cwd exists");
-    std::env::set_current_dir(path).expect("chdir to test cwd");
-    CurrentDirGuard {
-        previous,
-        _lock: lock,
-    }
-}
 
 pub(super) fn mktemp_dir(name: &str) -> PathBuf {
     let unique = format!(
@@ -347,30 +321,35 @@ pub(super) fn test_package_cli_init_lib_creates_projection() {
 
 #[test]
 pub(super) fn test_package_cli_repair_check_reports_projection_drift() {
-    let dir = mktemp_dir("package_cli_repair_check");
-    let package = dir.join("demo_json");
-    assert_eq!(
-        cmd_init(
-            &package,
-            true,
-            false,
-            Some("demo_json"),
-            false,
-            DiagnosticFormat::Compact,
-        ),
-        EXIT_SUCCESS
+    crate::isolated_cli_tests::run(
+        "mode_resolution_tests::test_package_cli_repair_check_reports_projection_drift",
+        || {
+            let dir = mktemp_dir("package_cli_repair_check");
+            let package = dir.join("demo_json");
+            assert_eq!(
+                cmd_init(
+                    &package,
+                    true,
+                    false,
+                    Some("demo_json"),
+                    false,
+                    DiagnosticFormat::Compact,
+                ),
+                EXIT_SUCCESS
+            );
+            std::fs::write(
+                package.join("Cargo.toml"),
+                "[package]\nname = \"sifr-demo-json\"\n",
+            )
+            .expect("break projection");
+            let exit = {
+                let _cwd = CurrentDirGuard::enter(&package);
+                cmd_repair(true, DiagnosticFormat::Compact)
+            };
+            assert_eq!(exit, EXIT_USER_DIAGNOSTIC);
+            let _ = std::fs::remove_dir_all(dir);
+        },
     );
-    std::fs::write(
-        package.join("Cargo.toml"),
-        "[package]\nname = \"sifr-demo-json\"\n",
-    )
-    .expect("break projection");
-    let exit = {
-        let _cwd = enter_test_cwd(&package);
-        cmd_repair(true, DiagnosticFormat::Compact)
-    };
-    assert_eq!(exit, EXIT_USER_DIAGNOSTIC);
-    let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
@@ -409,77 +388,82 @@ pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 pub(super) fn test_package_cli_run_selects_workspace_package_from_root() {
-    let project = TestProject::new("package_cli_workspace_run_selection");
-    project.write(
+    crate::isolated_cli_tests::run(
+        "mode_resolution_tests::test_package_cli_run_selects_workspace_package_from_root",
+        || {
+            let project = TestProject::new("package_cli_workspace_run_selection");
+            project.write(
         "Cargo.toml",
         "[workspace]\nmembers = [\"packages/app\"]\ndefault-members = [\"packages/app\"]\nresolver = \"3\"\n",
         "workspace manifest should be written",
     );
-    let app_root = project.dir.join("packages/app");
-    write_real_sifr_package(&app_root, "sifr-demo-app", "demo_app", "");
-    let sifr_manifest = app_root.join("sifr.toml");
-    let manifest_source =
-        std::fs::read_to_string(&sifr_manifest).expect("sifr manifest should be readable");
-    std::fs::write(
+            let app_root = project.dir.join("packages/app");
+            write_real_sifr_package(&app_root, "sifr-demo-app", "demo_app", "");
+            let sifr_manifest = app_root.join("sifr.toml");
+            let manifest_source =
+                std::fs::read_to_string(&sifr_manifest).expect("sifr manifest should be readable");
+            std::fs::write(
         &sifr_manifest,
         format!("{manifest_source}\n[scripts]\nadmin-script = {{ command = \"run\", args = [\"admin\"] }}\n"),
     )
     .expect("sifr manifest should include script");
-    std::fs::write(
-        app_root.join("src/main.sifr"),
-        "def main():\n    print(\"workspace default\")\n",
-    )
-    .expect("main app should be written");
-    std::fs::create_dir_all(app_root.join("src/bin")).expect("bin dir should exist");
-    std::fs::write(
-        app_root.join("src/bin/admin.sifr"),
-        "def main():\n    print(\"workspace admin\")\n",
-    )
-    .expect("bin app should be written");
+            std::fs::write(
+                app_root.join("src/main.sifr"),
+                "def main():\n    print(\"workspace default\")\n",
+            )
+            .expect("main app should be written");
+            std::fs::create_dir_all(app_root.join("src/bin")).expect("bin dir should exist");
+            std::fs::write(
+                app_root.join("src/bin/admin.sifr"),
+                "def main():\n    print(\"workspace admin\")\n",
+            )
+            .expect("bin app should be written");
 
-    let exit_codes = {
-        let _cwd = enter_test_cwd(&project.dir);
-        [
-            cmd_run(
-                None,
-                None,
-                None,
-                &["sifr-demo-app".to_string()],
-                &[],
-                sifr_package::CargoLockMode::Normal,
-                DiagnosticFormat::Compact,
-            ),
-            cmd_run(
-                None,
-                Some("admin"),
-                None,
-                &["sifr-demo-app".to_string()],
-                &[],
-                sifr_package::CargoLockMode::Normal,
-                DiagnosticFormat::Compact,
-            ),
-            cmd_run(
-                None,
-                None,
-                Some("admin-script"),
-                &["sifr-demo-app".to_string()],
-                &[],
-                sifr_package::CargoLockMode::Normal,
-                DiagnosticFormat::Compact,
-            ),
-            cmd_run(
-                None,
-                None,
-                None,
-                &[],
-                &[],
-                sifr_package::CargoLockMode::Normal,
-                DiagnosticFormat::Compact,
-            ),
-        ]
-    };
+            let exit_codes = {
+                let _cwd = CurrentDirGuard::enter(&project.dir);
+                [
+                    cmd_run(
+                        None,
+                        None,
+                        None,
+                        &["sifr-demo-app".to_string()],
+                        &[],
+                        sifr_package::CargoLockMode::Normal,
+                        DiagnosticFormat::Compact,
+                    ),
+                    cmd_run(
+                        None,
+                        Some("admin"),
+                        None,
+                        &["sifr-demo-app".to_string()],
+                        &[],
+                        sifr_package::CargoLockMode::Normal,
+                        DiagnosticFormat::Compact,
+                    ),
+                    cmd_run(
+                        None,
+                        None,
+                        Some("admin-script"),
+                        &["sifr-demo-app".to_string()],
+                        &[],
+                        sifr_package::CargoLockMode::Normal,
+                        DiagnosticFormat::Compact,
+                    ),
+                    cmd_run(
+                        None,
+                        None,
+                        None,
+                        &[],
+                        &[],
+                        sifr_package::CargoLockMode::Normal,
+                        DiagnosticFormat::Compact,
+                    ),
+                ]
+            };
 
-    assert_eq!(exit_codes, [EXIT_SUCCESS; 4]);
+            assert_eq!(exit_codes, [EXIT_SUCCESS; 4]);
+        },
+    );
 }
 
 #[test]
@@ -492,19 +476,22 @@ pub(super) fn test_package_cli_fetch_success_message_is_user_visible() {
 
 #[test]
 pub(super) fn test_package_cli_check_explicit_file_uses_package_imports() {
-    let dir = mktemp_dir("package_cli_check_package_imports");
-    let app_root = dir.join("app");
-    let json_root = dir.join("json");
-    write_real_sifr_package(
-        &app_root,
-        "sifr-demo-app",
-        "demo_app",
-        "demo_json = { path = \"../json\", package = \"sifr-demo-json\" }\n",
-    );
-    let cargo_toml = app_root.join("Cargo.toml");
-    let cargo_source =
-        std::fs::read_to_string(&cargo_toml).expect("app cargo manifest should be readable");
-    std::fs::write(
+    crate::isolated_cli_tests::run(
+        "mode_resolution_tests::test_package_cli_check_explicit_file_uses_package_imports",
+        || {
+            let dir = mktemp_dir("package_cli_check_package_imports");
+            let app_root = dir.join("app");
+            let json_root = dir.join("json");
+            write_real_sifr_package(
+                &app_root,
+                "sifr-demo-app",
+                "demo_app",
+                "demo_json = { path = \"../json\", package = \"sifr-demo-json\" }\n",
+            );
+            let cargo_toml = app_root.join("Cargo.toml");
+            let cargo_source = std::fs::read_to_string(&cargo_toml)
+                .expect("app cargo manifest should be readable");
+            std::fs::write(
             &cargo_toml,
             cargo_source.replace(
                 "[dependencies]",
@@ -512,35 +499,37 @@ pub(super) fn test_package_cli_check_explicit_file_uses_package_imports() {
             ),
         )
         .expect("app cargo manifest should be updated with alias");
-    write_real_sifr_package(&json_root, "sifr-demo-json", "demo_json", "");
-    std::fs::write(
-        app_root.join("src/main.sifr"),
-        "from demo_json_v1 import parse_json\n\n\
+            write_real_sifr_package(&json_root, "sifr-demo-json", "demo_json", "");
+            std::fs::write(
+                app_root.join("src/main.sifr"),
+                "from demo_json_v1 import parse_json\n\n\
 def main():\n    assert parse_json() == 1\n",
-    )
-    .expect("app source should be written");
-    std::fs::write(
-        json_root.join("src/__init__.sifr"),
-        "from .parse import parse_json\n",
-    )
-    .expect("json namespace should be written");
-    std::fs::write(
-        json_root.join("src/parse.sifr"),
-        "def parse_json() -> int:\n    return 1\n",
-    )
-    .expect("json implementation should be written");
-    let exit = {
-        let _cwd = enter_test_cwd(&app_root);
-        cmd_check(
-            Some(Path::new("src/main.sifr")),
-            None,
-            &sifr_package::CargoPackageSelection::default(),
-            sifr_package::CargoLockMode::Normal,
-            DiagnosticFormat::Compact,
-        )
-    };
-    assert_eq!(exit, EXIT_SUCCESS);
-    let _ = std::fs::remove_dir_all(dir);
+            )
+            .expect("app source should be written");
+            std::fs::write(
+                json_root.join("src/__init__.sifr"),
+                "from .parse import parse_json\n",
+            )
+            .expect("json namespace should be written");
+            std::fs::write(
+                json_root.join("src/parse.sifr"),
+                "def parse_json() -> int:\n    return 1\n",
+            )
+            .expect("json implementation should be written");
+            let exit = {
+                let _cwd = CurrentDirGuard::enter(&app_root);
+                cmd_check(
+                    Some(Path::new("src/main.sifr")),
+                    None,
+                    &sifr_package::CargoPackageSelection::default(),
+                    sifr_package::CargoLockMode::Normal,
+                    DiagnosticFormat::Compact,
+                )
+            };
+            assert_eq!(exit, EXIT_SUCCESS);
+            let _ = std::fs::remove_dir_all(dir);
+        },
+    );
 }
 
 #[test]
