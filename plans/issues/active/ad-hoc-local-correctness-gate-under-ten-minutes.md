@@ -12793,3 +12793,31 @@ the V2-authorized latency mechanism before changing production settings.
 - Reject an ineffective experiment without widening it. Any implementation
   needs named affected checks and exact-candidate independent review.
   Final scoped gates and complete V5 remain required.
+
+V2d feasibility completed before implementation: four rotated observations per
+mode on each of SQLite 3.53.4, MySQL 8.4 and PostgreSQL 18. Two workers reduce
+median process time from 3.922/2.920/6.552s to 2.094/1.542/3.697s. Four
+workers reach 1.167/0.866/2.068s but use more CPU and memory. One worker is
+slightly slower than the serial branch. All dependencies retain workspace
+versions/checksums; exports and image sizes match. These are compilation-only
+results, not semantic qualification. Owned harness preparation took 95.760s
+guard; 48 measured processes plus three warmups took 167.783s guard.
+
+Bounded implementation decision: enable Wasmtime's existing parallel-compilation
+feature. Reuse its single process-wide Rayon pool and the runner's existing
+RAYON_NUM_THREADS allocation; do not add a pool, new knob or custom cache.
+ProfileRunner already sets the bound, native test allocation bounds workers
+times inner Rayon threads, and multi-process generated/installed emission
+uses one inner Rayon worker. Verify those contracts with their existing tests.
+Outside the gate, Wasmtime follows Rayon's standard process pool policy.
+
+Before adoption: run all component-host controls; complete MySQL/SQLite provider
+integration and all six PostgreSQL component artifacts; real SQL applications;
+semantic-service, frontend SQL, analysis and LSP checks; SQL area qualification,
+including producer provenance and ordinary independent clean protocol. Compare
+the five unchanged baseline/candidate test inventories and results with two
+Rayon workers; report test execution separately from preparation. Regenerate
+affected SQL producer receipts canonically, retaining declared artifacts and
+all stale-input failures. Run dependency/coverage/metadata/profile/size checks
+and exact committed range checks. Independent candidate review is mandatory.
+No new native-code deserialization or Engine safety/optimization setting change.
