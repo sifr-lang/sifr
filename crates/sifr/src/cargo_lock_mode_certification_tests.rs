@@ -3,20 +3,18 @@ use crate::cli_model_and_entrypoint::{
     Cli, Commands, DiagnosticFormat, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC,
 };
 use crate::diagnostic_rendering_and_run::{cmd_build, cmd_run};
+use crate::isolated_cli_tests::CurrentDirGuard;
 use crate::test_cli::cmd_test;
 use clap::Parser;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::DiskSourceProvider;
 use sifr_package::{CargoLockMode, PackageSession, PackageSessionOptions};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard, OnceLock};
 
 const SCENARIO_ROOT: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../verification/areas/rust_interop/fixtures/cargo_locked_offline/examples/locked_offline_cache"
 );
-
-static CWD_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 struct Scenario {
     root: PathBuf,
@@ -47,32 +45,6 @@ impl Scenario {
 impl Drop for Scenario {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.root);
-    }
-}
-
-struct CurrentDirGuard {
-    previous: PathBuf,
-    _lock: MutexGuard<'static, ()>,
-}
-
-impl CurrentDirGuard {
-    fn enter(path: &Path) -> Self {
-        let lock = CWD_LOCK
-            .get_or_init(|| Mutex::new(()))
-            .lock()
-            .expect("cargo lock-mode test cwd lock should not be poisoned");
-        let previous = std::env::current_dir().expect("test cwd should exist");
-        std::env::set_current_dir(path).expect("scenario cwd should be selected");
-        Self {
-            previous,
-            _lock: lock,
-        }
-    }
-}
-
-impl Drop for CurrentDirGuard {
-    fn drop(&mut self) {
-        std::env::set_current_dir(&self.previous).expect("test cwd should be restored");
     }
 }
 
@@ -147,123 +119,135 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
 
 #[test]
 fn constrained_modes_reject_manifestless_check_build_run_and_test() {
-    let scenario = Scenario::empty("manifestless");
-    std::fs::write(
-        scenario.root.join("main.sifr"),
-        "def main() -> None:\n    pass\n",
-    )
-    .expect("manifestless source should be written");
-    let _cwd = CurrentDirGuard::enter(&scenario.root);
-    for (command, operation) in [
-        (
-            "check",
-            Box::new(|| {
-                cmd_check(
-                    Some(Path::new("main.sifr")),
-                    None,
-                    &sifr_package::CargoPackageSelection::default(),
-                    CargoLockMode::Frozen,
-                    DiagnosticFormat::Compact,
-                )
-            }) as Box<dyn Fn() -> i32>,
-        ),
-        (
-            "build",
-            Box::new(|| {
-                cmd_build(
-                    Path::new("main.sifr"),
-                    Path::new("build"),
-                    CargoLockMode::Frozen,
-                    true,
-                    DiagnosticFormat::Compact,
-                    false,
-                )
-            }),
-        ),
-        (
-            "run",
-            Box::new(|| {
-                cmd_run(
-                    Some("main.sifr"),
-                    None,
-                    None,
-                    &[],
-                    &[],
-                    CargoLockMode::Frozen,
-                    DiagnosticFormat::Compact,
-                )
-            }),
-        ),
-        (
-            "test",
-            Box::new(|| {
-                cmd_test(
-                    Path::new("."),
-                    CargoLockMode::Frozen,
-                    DiagnosticFormat::Compact,
-                )
-            }),
-        ),
-    ] {
-        let (exit_code, diagnostics) = crate::diagnostic_test_sink::capture(operation);
-        assert_eq!(exit_code, EXIT_USER_DIAGNOSTIC);
-        let [diagnostic] = diagnostics.as_slice() else {
-            panic!("{command} must emit one diagnostic: {diagnostics:#?}");
-        };
-        assert_eq!(diagnostic.code, DiagnosticCode::RUST_CARGO_METADATA.code());
-        assert!(
-            diagnostic
-                .message
-                .contains(&format!("sifr {command} --frozen requires")),
-            "{command} must reject the manifestless lock mode: {diagnostic:#?}"
-        );
-    }
+    crate::isolated_cli_tests::run(
+        "cargo_lock_mode_certification_tests::constrained_modes_reject_manifestless_check_build_run_and_test",
+        || {
+            let scenario = Scenario::empty("manifestless");
+            std::fs::write(
+                scenario.root.join("main.sifr"),
+                "def main() -> None:\n    pass\n",
+            )
+            .expect("manifestless source should be written");
+            let _cwd = CurrentDirGuard::enter(&scenario.root);
+            for (command, operation) in [
+                (
+                    "check",
+                    Box::new(|| {
+                        cmd_check(
+                            Some(Path::new("main.sifr")),
+                            None,
+                            &sifr_package::CargoPackageSelection::default(),
+                            CargoLockMode::Frozen,
+                            DiagnosticFormat::Compact,
+                        )
+                    }) as Box<dyn Fn() -> i32>,
+                ),
+                (
+                    "build",
+                    Box::new(|| {
+                        cmd_build(
+                            Path::new("main.sifr"),
+                            Path::new("build"),
+                            CargoLockMode::Frozen,
+                            true,
+                            DiagnosticFormat::Compact,
+                            false,
+                        )
+                    }),
+                ),
+                (
+                    "run",
+                    Box::new(|| {
+                        cmd_run(
+                            Some("main.sifr"),
+                            None,
+                            None,
+                            &[],
+                            &[],
+                            CargoLockMode::Frozen,
+                            DiagnosticFormat::Compact,
+                        )
+                    }),
+                ),
+                (
+                    "test",
+                    Box::new(|| {
+                        cmd_test(
+                            Path::new("."),
+                            CargoLockMode::Frozen,
+                            DiagnosticFormat::Compact,
+                        )
+                    }),
+                ),
+            ] {
+                let (exit_code, diagnostics) = crate::diagnostic_test_sink::capture(operation);
+                assert_eq!(exit_code, EXIT_USER_DIAGNOSTIC);
+                let [diagnostic] = diagnostics.as_slice() else {
+                    panic!("{command} must emit one diagnostic: {diagnostics:#?}");
+                };
+                assert_eq!(diagnostic.code, DiagnosticCode::RUST_CARGO_METADATA.code());
+                assert!(
+                    diagnostic
+                        .message
+                        .contains(&format!("sifr {command} --frozen requires")),
+                    "{command} must reject the manifestless lock mode: {diagnostic:#?}"
+                );
+            }
+        },
+    );
 }
 
 #[test]
 fn sifr_test_modes_use_package_resolution_and_final_test_trace() {
-    let scenario = Scenario::copy("test-modes");
-    std::fs::write(
-        scenario.root.join("test_policy.sifr"),
-        "def test_policy():\n    assert 2 + 2 == 4\n",
-    )
-    .expect("package test source");
-    let mut source_lock = std::fs::read(scenario.root.join("Cargo.lock")).expect("package lock");
-    let _cwd = CurrentDirGuard::enter(&scenario.root);
-    let mut saw_generated_resolution = false;
-    for mode in [
-        CargoLockMode::Normal,
-        CargoLockMode::Locked,
-        CargoLockMode::Offline,
-        CargoLockMode::Frozen,
-    ] {
-        let (exit, invocations) = sifr_driver::capture_cargo_invocations(|| {
-            cmd_test(Path::new("."), mode, DiagnosticFormat::Compact)
-        });
-        assert_eq!(exit, EXIT_SUCCESS, "{mode:?} test must run");
-        saw_generated_resolution |= invocations
-            .iter()
-            .any(|invocation| invocation.phase == "resolution" && invocation.lock_mode == mode);
-        assert!(invocations.iter().any(|invocation| {
-            invocation.phase == "final-test"
-                && invocation.lock_mode == mode
-                && mode
-                    .cargo_arg()
-                    .is_none_or(|flag| invocation.args.iter().any(|arg| arg == flag))
-        }));
-        let current_lock = std::fs::read(scenario.root.join("Cargo.lock")).expect("package lock");
-        if mode == CargoLockMode::Normal {
-            source_lock = current_lock;
-        } else {
-            assert_eq!(
-                current_lock, source_lock,
-                "{mode:?} must retain the source lock"
+    crate::isolated_cli_tests::run(
+        "cargo_lock_mode_certification_tests::sifr_test_modes_use_package_resolution_and_final_test_trace",
+        || {
+            let scenario = Scenario::copy("test-modes");
+            std::fs::write(
+                scenario.root.join("test_policy.sifr"),
+                "def test_policy():\n    assert 2 + 2 == 4\n",
+            )
+            .expect("package test source");
+            let mut source_lock =
+                std::fs::read(scenario.root.join("Cargo.lock")).expect("package lock");
+            let _cwd = CurrentDirGuard::enter(&scenario.root);
+            let mut saw_generated_resolution = false;
+            for mode in [
+                CargoLockMode::Normal,
+                CargoLockMode::Locked,
+                CargoLockMode::Offline,
+                CargoLockMode::Frozen,
+            ] {
+                let (exit, invocations) = sifr_driver::capture_cargo_invocations(|| {
+                    cmd_test(Path::new("."), mode, DiagnosticFormat::Compact)
+                });
+                assert_eq!(exit, EXIT_SUCCESS, "{mode:?} test must run");
+                saw_generated_resolution |= invocations.iter().any(|invocation| {
+                    invocation.phase == "resolution" && invocation.lock_mode == mode
+                });
+                assert!(invocations.iter().any(|invocation| {
+                    invocation.phase == "final-test"
+                        && invocation.lock_mode == mode
+                        && mode
+                            .cargo_arg()
+                            .is_none_or(|flag| invocation.args.iter().any(|arg| arg == flag))
+                }));
+                let current_lock =
+                    std::fs::read(scenario.root.join("Cargo.lock")).expect("package lock");
+                if mode == CargoLockMode::Normal {
+                    source_lock = current_lock;
+                } else {
+                    assert_eq!(
+                        current_lock, source_lock,
+                        "{mode:?} must retain the source lock"
+                    );
+                }
+            }
+            assert!(
+                saw_generated_resolution,
+                "constrained test mode prepares Cargo resolution"
             );
-        }
-    }
-    assert!(
-        saw_generated_resolution,
-        "constrained test mode prepares Cargo resolution"
+        },
     );
 }
 
@@ -271,137 +255,142 @@ fn sifr_test_modes_use_package_resolution_and_final_test_trace() {
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-cargo-probe"]
 fn test_locked_offline_sifr_commands_and_warm_cache() {
-    let scenario = Scenario::copy("positive");
-    let _cwd = CurrentDirGuard::enter(&scenario.root);
-    let source = Path::new("src/main.sifr");
-    let source_lock = Path::new("Cargo.lock");
-    let source_lock_before =
-        std::fs::read(source_lock).expect("checked-in scenario lock should be readable");
+    crate::isolated_cli_tests::run(
+        "cargo_lock_mode_certification_tests::test_locked_offline_sifr_commands_and_warm_cache",
+        || {
+            let scenario = Scenario::copy("positive");
+            let _cwd = CurrentDirGuard::enter(&scenario.root);
+            let source = Path::new("src/main.sifr");
+            let source_lock = Path::new("Cargo.lock");
+            let source_lock_before =
+                std::fs::read(source_lock).expect("checked-in scenario lock should be readable");
 
-    let mut provider = DiskSourceProvider::new();
-    let session = PackageSession::discover(
-        PackageSessionOptions {
-            current_dir: scenario.root.clone(),
-            lock_mode: CargoLockMode::Frozen,
+            let mut provider = DiskSourceProvider::new();
+            let session = PackageSession::discover(
+                PackageSessionOptions {
+                    current_dir: scenario.root.clone(),
+                    lock_mode: CargoLockMode::Frozen,
+                },
+                &mut provider,
+            )
+            .expect("frozen package session should resolve");
+            let entrypoint = package_entrypoint_for_file(
+                source,
+                &session,
+                CargoLockMode::Frozen,
+                DiagnosticFormat::Human,
+                false,
+                &mut provider,
+            )
+            .expect("package entrypoint resolution should not render an error")
+            .expect("scenario must resolve as a package entrypoint");
+            let (cold, mut cargo_invocations) = sifr_driver::capture_cargo_invocations(|| {
+                sifr_driver::build_cached_package_project(
+                    &crate::compiler_context(),
+                    &entrypoint,
+                    &mut provider,
+                )
+            });
+            let cold = cold.expect("cold frozen prepared build should succeed");
+            assert!(!cold.build_report().cache_hit());
+            let (warm, warm_invocations) = sifr_driver::capture_cargo_invocations(|| {
+                sifr_driver::build_cached_package_project(
+                    &crate::compiler_context(),
+                    &entrypoint,
+                    &mut provider,
+                )
+            });
+            let warm = warm.expect("warm frozen build should succeed");
+            assert!(warm.build_report().cache_hit());
+            assert_eq!(cold.binary_path(), warm.binary_path());
+            // A finalized snapshot hit does not replace live native authority.
+            // Cargo still validates probes and final-build freshness under frozen mode.
+            assert_eq!(
+                warm_invocations
+                    .iter()
+                    .filter(|call| call.phase == "final-build")
+                    .count(),
+                1,
+                "the warm request must establish Cargo freshness"
+            );
+            assert!(
+                warm_invocations
+                    .iter()
+                    .any(|call| call.phase == "rust-probe")
+            );
+            assert!(
+                warm_invocations
+                    .iter()
+                    .all(|call| call.lock_mode == CargoLockMode::Frozen)
+            );
+            // The comprehensive phase/mode inventory is asserted below after the CLI
+            // check/build/run requests; this entrypoint is already package-resolved.
+            cargo_invocations.extend(warm_invocations);
+
+            for mode in [
+                CargoLockMode::Frozen,
+                CargoLockMode::Locked,
+                CargoLockMode::Offline,
+            ] {
+                let (check_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
+                    cmd_check(
+                        Some(source),
+                        None,
+                        &sifr_package::CargoPackageSelection::default(),
+                        mode,
+                        DiagnosticFormat::Human,
+                    )
+                });
+                cargo_invocations.extend(captured);
+                assert_eq!(
+                    check_exit,
+                    EXIT_SUCCESS,
+                    "sifr check must preserve {} mode",
+                    mode.as_str()
+                );
+                let output = scenario.root.join(format!("build-{}", mode.as_str()));
+                let (build_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
+                    cmd_build(source, &output, mode, true, DiagnosticFormat::Human, false)
+                });
+                cargo_invocations.extend(captured);
+                assert_eq!(
+                    build_exit,
+                    EXIT_SUCCESS,
+                    "sifr build must preserve {} mode",
+                    mode.as_str()
+                );
+                assert!(
+                    output
+                        .join("sifr_output/target/final/sifr_output")
+                        .is_file()
+                );
+                let (run_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
+                    cmd_run(
+                        Some("src/main.sifr"),
+                        None,
+                        None,
+                        &[],
+                        &[],
+                        mode,
+                        DiagnosticFormat::Human,
+                    )
+                });
+                cargo_invocations.extend(captured);
+                assert_eq!(
+                    run_exit,
+                    EXIT_SUCCESS,
+                    "sifr run must preserve {} mode",
+                    mode.as_str()
+                );
+            }
+            assert_cargo_invocations_preserve_lock_modes(&cargo_invocations);
+
+            assert_eq!(
+                std::fs::read(source_lock).expect("scenario lock should remain readable"),
+                source_lock_before,
+                "check/build/run must not mutate the authoritative package lock"
+            );
         },
-        &mut provider,
-    )
-    .expect("frozen package session should resolve");
-    let entrypoint = package_entrypoint_for_file(
-        source,
-        &session,
-        CargoLockMode::Frozen,
-        DiagnosticFormat::Human,
-        false,
-        &mut provider,
-    )
-    .expect("package entrypoint resolution should not render an error")
-    .expect("scenario must resolve as a package entrypoint");
-    let (cold, mut cargo_invocations) = sifr_driver::capture_cargo_invocations(|| {
-        sifr_driver::build_cached_package_project(
-            &crate::compiler_context(),
-            &entrypoint,
-            &mut provider,
-        )
-    });
-    let cold = cold.expect("cold frozen prepared build should succeed");
-    assert!(!cold.build_report().cache_hit());
-    let (warm, warm_invocations) = sifr_driver::capture_cargo_invocations(|| {
-        sifr_driver::build_cached_package_project(
-            &crate::compiler_context(),
-            &entrypoint,
-            &mut provider,
-        )
-    });
-    let warm = warm.expect("warm frozen build should succeed");
-    assert!(warm.build_report().cache_hit());
-    assert_eq!(cold.binary_path(), warm.binary_path());
-    // A finalized snapshot hit does not replace live native authority.
-    // Cargo still validates probes and final-build freshness under frozen mode.
-    assert_eq!(
-        warm_invocations
-            .iter()
-            .filter(|call| call.phase == "final-build")
-            .count(),
-        1,
-        "the warm request must establish Cargo freshness"
-    );
-    assert!(
-        warm_invocations
-            .iter()
-            .any(|call| call.phase == "rust-probe")
-    );
-    assert!(
-        warm_invocations
-            .iter()
-            .all(|call| call.lock_mode == CargoLockMode::Frozen)
-    );
-    // The comprehensive phase/mode inventory is asserted below after the CLI
-    // check/build/run requests; this entrypoint is already package-resolved.
-    cargo_invocations.extend(warm_invocations);
-
-    for mode in [
-        CargoLockMode::Frozen,
-        CargoLockMode::Locked,
-        CargoLockMode::Offline,
-    ] {
-        let (check_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
-            cmd_check(
-                Some(source),
-                None,
-                &sifr_package::CargoPackageSelection::default(),
-                mode,
-                DiagnosticFormat::Human,
-            )
-        });
-        cargo_invocations.extend(captured);
-        assert_eq!(
-            check_exit,
-            EXIT_SUCCESS,
-            "sifr check must preserve {} mode",
-            mode.as_str()
-        );
-        let output = scenario.root.join(format!("build-{}", mode.as_str()));
-        let (build_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
-            cmd_build(source, &output, mode, true, DiagnosticFormat::Human, false)
-        });
-        cargo_invocations.extend(captured);
-        assert_eq!(
-            build_exit,
-            EXIT_SUCCESS,
-            "sifr build must preserve {} mode",
-            mode.as_str()
-        );
-        assert!(
-            output
-                .join("sifr_output/target/final/sifr_output")
-                .is_file()
-        );
-        let (run_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
-            cmd_run(
-                Some("src/main.sifr"),
-                None,
-                None,
-                &[],
-                &[],
-                mode,
-                DiagnosticFormat::Human,
-            )
-        });
-        cargo_invocations.extend(captured);
-        assert_eq!(
-            run_exit,
-            EXIT_SUCCESS,
-            "sifr run must preserve {} mode",
-            mode.as_str()
-        );
-    }
-    assert_cargo_invocations_preserve_lock_modes(&cargo_invocations);
-
-    assert_eq!(
-        std::fs::read(source_lock).expect("scenario lock should remain readable"),
-        source_lock_before,
-        "check/build/run must not mutate the authoritative package lock"
     );
 }
 
@@ -490,15 +479,20 @@ fn assert_cargo_invocations_preserve_lock_modes(invocations: &[sifr_driver::Carg
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_lockfile_feature_and_frozen_drift_rejected_without_network() {
-    for case in [
-        DriftCase::MissingLock,
-        DriftCase::StaleVersion,
-        DriftCase::Checksum,
-        DriftCase::Source,
-        DriftCase::Feature,
-    ] {
-        assert_drift_rejected(case);
-    }
+    crate::isolated_cli_tests::run(
+        "cargo_lock_mode_certification_tests::test_lockfile_feature_and_frozen_drift_rejected_without_network",
+        || {
+            for case in [
+                DriftCase::MissingLock,
+                DriftCase::StaleVersion,
+                DriftCase::Checksum,
+                DriftCase::Source,
+                DriftCase::Feature,
+            ] {
+                assert_drift_rejected(case);
+            }
+        },
+    );
 }
 
 #[derive(Clone, Copy, Debug)]

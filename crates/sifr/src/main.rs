@@ -60,6 +60,8 @@ mod cargo_lock_mode_certification_tests;
 #[cfg(test)]
 mod diagnostics_and_packages_tests;
 #[cfg(test)]
+mod isolated_cli_tests;
+#[cfg(test)]
 mod mode_resolution_tests;
 mod python_cli;
 
