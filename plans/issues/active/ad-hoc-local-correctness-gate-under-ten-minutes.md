@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1h recorded in #4452; V4aj same-file resolver repair in qualification; final gates and V1/V5 remain open
+current_stage: V4ak current costs reconciled; V4al single native publication in qualification; final gates and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9545,3 +9545,152 @@ the real Python example launcher self-test. The latter retains its mismatched
 compiler rejection and full byte comparison of a separate copied compiler. No
 new full Python-area pass is claimed; final phase gates execute all selected
 consumers. Independent source review and evidence reconciliation precede merge.
+
+
+### V4aj closure — same-file compiler comparison / #4453
+
+PR [#4453](https://github.com/sifr-lang/sifr/pull/4453) merged as
+`1affb3dfeea8865a0bdb7c4c658c04d8156305dd`; candidate
+`3b77e52b489667d7b7e16fed536a33638283a623`, base
+`65d936c30b312fb3fb669d49a3e75dcb17a58736`.
+Three retained-artifact resolver observations per candidate have medians
+6.621035s before and 0.564579s after. The old redundant digest work has median
+6.052998s. All six actual Cargo invocations retain all 451 artifacts; they select
+identical compiler bytes (SHA-256
+`2043b34ddd52bf20411f88f32a1d80453919461cfec43b10adac15efc46271b4`).
+The candidate performs zero same-file digest reads. Different-path comparison
+remains; the original actual Python launcher copy/mismatch self-test passes in
+13.489s. Do not multiply the saving by every fixture: callers can already cache
+resolution within one process. No whole-gate speedup is claimed.
+
+All 17 affected controls, 31 foundation groups, four unchanged emitted plans,
+profile checks and applicable static checks pass. Guarded candidate policy checks
+take 94.765s; guarded actual resolver/launcher observations take 27.697s, including
+independent observer hashes outside the resolver timing. Every guard completes
+without stop, leftovers or source changes. Exact-candidate source review is
+SATISFIED with no blockers; SHA-256
+`dc1deed81cd40643ffe59a080d1ad7a3bcbd2e9e2f6b1019651c1aeb557cac99`.
+The review's hardlink suggestion is deliberately deferred: different paths remain
+byte-validated, with no inode cache. Archive `v4aj-qualified-evidence.tar.gz`, SHA-256
+`0b0cc8ed6fcc37a9e579b8fbb0016806481cdfdcfbf2860564cdfd235659016d`,
+contains 59 payloads / 2,875,546 bytes, all independently verified locally.
+CI remained queued/running in the retained snapshot; no CI success or specific
+current-run failure is claimed. Final correctness gates and V5 remain open.
+
+### V4ak — refresh the largest remaining preparation/native costs
+
+Status: diagnostic continuation on one frozen, published revision. The historical
+SQL preparation (1,061.270s) and full generated-driver category (1,463.046s) precede
+the combined preparation/cache/fixture fixes. Obtain current complete execution
+rather than choosing another repair from stale category totals. This is bounded
+failure discovery and cost attribution, not a final integrated gate or V5 timing.
+Keep all existing source, test selections, profiles, assertions and failure semantics.
+
+Execute the canonical workspace, locked-fixture and Python-environment prerequisites
+with explicit dependency/status accounting, retaining their costs separately.
+Only successful actual prerequisites admit their consumers on the same frozen
+revision. Then run the complete current SQL graph preparation and the generated
+driver configuration's actual preparation plus every native assertion. Discover
+the native inventory from the real Cargo-selected test binary. Respect the newly
+separated advanced-data graph helper: run it in preparation, require its one-case
+execution proof, and execute every remaining assertion exactly once through the
+canonical native runner with failure continuation. Never fabricate
+`preparation_complete` without that successful current-run preparation.
+
+Give each diagnostic category its own 30-minute cap, resource admission and owned
+session cleanup. Record each real command, wall time, outcome and raw output.
+Continue independent consumers after ordinary failures; stop on cancellation or
+resource exhaustion and mark dependent/unexecuted work explicitly. If the generated
+category reaches its cap, reconcile the executed inventory and schedule remaining
+cases separately, without turning partial coverage into a pass. Preserve lexical
+selection and existing child isolation; no concurrency policy change yet.
+Use the prior two-Cargo/two-Rayon allocation for this comparison, with the recorded
+profile slot budget and unchanged disk/memory reserves. Do not confuse the V1h
+six-worker cold-build diagnostic with this preparation/test allocation.
+
+Verify capacity and exact published Git identity before generated fixtures fetch
+it; keep canonical targets, pinned interpreter environments and native dependency
+families. Do not clear warm artifacts to manufacture a cold result. Retain source
+and preparation boundaries while testing. V1h's freshly completed SQL clean-build
+protocol remains prior-candidate diagnostic evidence; do not repeat it merely for
+another timing or count it as a new V4ak full-gate pass. Its thirteen-minute cost
+remains an unresolved requirement. Reconcile the new largest costs, coverage and
+failures before registering the next bounded root-cause repair. Full final gates,
+all other selected consumers and repeated V5 acceptance remain mandatory.
+
+
+### V4ak results — complete current SQL/native refresh
+
+Frozen published candidate `060b786400ceacde7da5a4bf444d5982da344221` passes
+all three actual prerequisites, all 30 SQL preparation commands, actual generated
+driver preparation and all 81 remaining selected native cases. The discovered
+82 entries contain one separately executed advanced-data preparation helper;
+every selected case has exactly-one-executed-case proof. No failures, missing
+execution, caps, resource stops, changed sources or process leftovers occurred.
+SQL preparation costs 386.975s in commands / 421.395s guarded. Driver preparation
+costs 86.116s; selected case commands total 958.045s; the complete guarded driver
+category costs 1,054.889s. Nested command/callback/guard totals must not be added.
+The Python group totals 124.925s. These historical comparisons use different
+revisions and retained cache states, not a controlled causal speedup experiment.
+
+The five largest SQL preparation commands account for 358.460s (92.63%). Retained
+fingerprints distinguish real transitive configurations: three `syn` feature
+sets through `serde_derive`/`serde`, and the `digest` mac feature through `sha2`.
+These differences do not demonstrate a broken Cargo cache or justify silently
+unifying the coverage graphs. Metadata-emission and semantic/native frontend
+corpora also remain distinct oracles despite overlapping fixture inventories.
+
+The largest individual driver cases are metadata emission 102.896s, native
+build-script freshness 94.522s, advanced-data runtime 85.800s and semantic/native
+frontend differential coverage 79.538s. A targeted process trace of advanced-data
+finds final Cargo at 4.756s, followed by 30.805s before executable startup. A
+second exact-file I/O trace confirms four complete reads of the 894,150,648-byte
+Cargo executable: two identity streams and two publication comparisons. The
+cached materialization caller first invokes ordinary publication, then performs
+its own final-cache inspection/publication. The first publication/identity is
+redundant for that caller. Both diagnostic runtime assertions pass. Tracing and
+different OS cache states preclude treating these runs as acceptance timing or
+a measured repair speedup; the entire original gap is not attributed to one
+operation. No significant lock wait appeared in the process trace.
+
+Archive `v4ak-qualified-evidence.tar.gz`, SHA-256
+`69423333233c165648d64b55d55131f9d02c918c280db88065cc9a5a4afba97e`,
+contains 438 payloads / 19,764,131 bytes, independently verified locally. The
+sortable report includes every driver case and all SQL preparation commands.
+This is diagnostic refresh, not a complete gate or V5 pass. V1h's separate
+independent clean SQL protocol still exceeds the entire 600-second budget.
+
+Supplemental CI observation for #4453: run `40043478813`, job `120719690988`
+completed with the existing full-profile performance-reference admission failure
+(`SIFR_PERFORMANCE_REFERENCE` unset), owned by #4347. This is distinct from the
+scoped local correctness checks; no complete CI success is claimed. Preserve the
+previous queued/running snapshot and the supplemental raw completed log.
+
+### V4al — publish each cached native bundle once
+
+Status: prospective bounded root-cause repair based on V4ak's exact-file trace.
+Separate native compilation from publication. The cached caller must run Cargo
+and validate its resolution authority, inspect the current native bundle once,
+then either freshly validate the final cache hit or capture/commit a miss. It
+must not create an unused intermediate executable. Ordinary explicit-output
+builds must still publish their independent executable at the documented path.
+Use distinct compiled/published states rather than a flag that silently skips
+required validation. Preserve family/publication leases, platform debug sidecars,
+native runtime libraries, executable permissions, collision/path checks, fresh
+byte identities, late read errors, cache-hit corruption rejection and independent
+old executables after same-root edits. Do not weaken metadata or hash validation,
+change profiles, remove assertions, bypass Cargo or introduce cache heuristics.
+
+Extend the existing finalized-artifact regression to assert the actual returned
+published path and absence of intermediate output, while retaining real Cargo
+execution on a repeat and old/new executable independence. Run focused native
+storage/byte/identity and materialization/reuse regressions, affected profile and
+runtime/library contracts, formatting and file-size checks. Run the actual
+advanced-data runtime case plus its preparation dependency, and a representative
+cached Python runtime consumer with existing assertions. Record normal elapsed
+times separately from a targeted post-change trace that verifies one publication.
+Retain all slow/failed evidence; use 30-minute category diagnostics and existing
+resource/source guards. Review the exact implementation candidate independently
+before merge under the approved intermediate policy. The full final correctness
+profiles and all V5 invalidation scenarios remain mandatory and open. Reconcile
+this bounded repair before selecting the next measured bottleneck.

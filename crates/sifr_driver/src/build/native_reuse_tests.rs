@@ -294,19 +294,33 @@ edition = "2024"
 #[test]
 fn dx9_finalized_artifact_survives_same_root_edit_and_runs_again() {
     let root = root("finalized");
+    let project_name = root.file_name().unwrap().to_str().unwrap();
     let compile = |source: &str| {
         let mut project = base_project();
         project.main_rs = source.to_owned();
-        super::materialize::materialize_cached_binary_project_with_report(
+        let (entry, report, _) = super::materialize::materialize_cached_binary_project_with_report(
             "dx9-tests",
             &root,
-            "same_name",
+            project_name,
             project,
             CargoVendorMode::SysrootOnly,
             &CargoResolutionPolicy::normal(),
         )
-        .expect("finalized build")
-        .0
+        .expect("finalized build");
+        let report = report.expect("native build report");
+        let final_binary =
+            super::materialize::cached_binary_path(entry.workspace_root(), project_name);
+        assert_eq!(report.binary_path, final_binary);
+        assert!(final_binary.is_file());
+        let intermediate = super::materialize::cached_binary_path(
+            report.generated_project_root.parent().unwrap(),
+            project_name,
+        );
+        assert!(
+            !intermediate.exists(),
+            "cached builds must publish only the final bundle"
+        );
+        entry
     };
     let first = compile(r#"fn main() { println!("first"); }"#);
     let (repeat, invocations) = super::cargo_invocation_trace::capture_cargo_invocations(|| {
@@ -331,7 +345,7 @@ fn dx9_finalized_artifact_survives_same_root_edit_and_runs_again() {
 ",
         ),
     ] {
-        let binary = super::materialize::cached_binary_path(entry.workspace_root(), "same_name");
+        let binary = super::materialize::cached_binary_path(entry.workspace_root(), project_name);
         assert!(!binary.starts_with(crate::cache_storage::root().join("native/families")));
         assert_eq!(
             std::process::Command::new(binary)

@@ -4,7 +4,8 @@ use super::cargo_manifest::{
     try_generate_sysroot_dependency_plan,
 };
 use super::cargo_resolution::{
-    CargoResolutionPolicy, cargo_lock_mode_diagnostic, prepare_cargo_resolution,
+    CargoResolutionPolicy, PreparedCargoResolution, cargo_lock_mode_diagnostic,
+    prepare_cargo_resolution,
 };
 #[cfg(test)]
 use super::native_link_policy::sysroot_trusted_native_links;
@@ -28,12 +29,50 @@ pub(super) struct MaterializedBinaryProject {
     #[cfg(test)]
     pub(super) generated_project_root: PathBuf,
     pub(super) cargo_artifact_profile: serde_json::Value,
+    #[cfg(test)]
     pub(super) native_executable: PathBuf,
+    #[cfg(test)]
     pub(super) native_libraries: Vec<PathBuf>,
     pub(super) binary_path: PathBuf,
     pub(super) sysroot: BuildSysrootReport,
     pub(super) materialize_elapsed: Duration,
     pub(super) cargo_elapsed: Duration,
+}
+
+// Compilation retains resolution ownership until its single publication finishes.
+struct CompiledBinaryProject {
+    #[cfg(test)]
+    generated_project_root: PathBuf,
+    cargo_artifact_profile: serde_json::Value,
+    native_executable: PathBuf,
+    native_libraries: Vec<PathBuf>,
+    sysroot: BuildSysrootReport,
+    materialize_elapsed: Duration,
+    cargo_elapsed: Duration,
+    prepared_resolution: PreparedCargoResolution,
+}
+
+impl CompiledBinaryProject {
+    fn published(
+        self,
+        binary_path: PathBuf,
+        publication_elapsed: Duration,
+    ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
+        self.prepared_resolution.assert_unchanged()?;
+        Ok(MaterializedBinaryProject {
+            #[cfg(test)]
+            generated_project_root: self.generated_project_root,
+            cargo_artifact_profile: self.cargo_artifact_profile,
+            #[cfg(test)]
+            native_executable: self.native_executable,
+            #[cfg(test)]
+            native_libraries: self.native_libraries,
+            binary_path,
+            sysroot: self.sysroot,
+            materialize_elapsed: self.materialize_elapsed,
+            cargo_elapsed: self.cargo_elapsed + publication_elapsed,
+        })
+    }
 }
 
 pub(super) fn materialize_binary_project_with_report(
@@ -225,7 +264,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
     let project_root = family
         .project(&scope, project_name)
         .map_err(|error| vec![build_error(error.to_string())])?;
-    let report = materialize_binary_project_at_path_with_target(
+    let report = compile_binary_project_at_path_with_target(
         &project_root,
         project_name,
         generated_project,
@@ -233,6 +272,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
         &cargo_resolution.with_lease(family.lease())?,
         &family.target(),
     )?;
+    let publication_start = std::time::Instant::now();
     let snapshot = super::native_storage::NativeSnapshot::inspect(
         &report.native_executable,
         &binary_relative_path(project_name),
@@ -253,15 +293,20 @@ pub(super) fn materialize_cached_binary_project_with_report(
             snapshot
                 .verify(entry.workspace_root())
                 .map_err(|error| vec![build_error(error.to_string())])?;
+            let binary = cached_binary_path(entry.workspace_root(), project_name);
+            let report = report.published(binary, publication_start.elapsed())?;
             Ok((entry, Some(report), sysroot))
         }
         PreparedArtifactCache::Miss(pending) => {
             snapshot
                 .capture(pending.workspace_root())
                 .map_err(|error| vec![build_error(error.to_string())])?;
-            pending
-                .commit(&required_refs)
-                .map(|entry| (entry, Some(report), sysroot))
+            // Validate the held resolution authority before committing the bundle.
+            report.prepared_resolution.assert_unchanged()?;
+            let entry = pending.commit(&required_refs)?;
+            let binary = cached_binary_path(entry.workspace_root(), project_name);
+            let report = report.published(binary, publication_start.elapsed())?;
+            Ok((entry, Some(report), sysroot))
         }
     }
 }
@@ -323,6 +368,47 @@ pub(super) fn materialize_binary_project_at_path_with_target(
     cargo_resolution: &CargoResolutionPolicy,
     target: &Path,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
+    let compiled = compile_binary_project_at_path_with_target(
+        project_path,
+        project_name,
+        generated_project,
+        dependency_plan,
+        cargo_resolution,
+        target,
+    )?;
+    let publication_start = std::time::Instant::now();
+    let destination = cached_binary_path(
+        project_path.parent().unwrap_or(Path::new(".")),
+        project_name,
+    );
+    let output_name = destination
+        .file_name()
+        .ok_or_else(|| vec![build_error("native output has no filename".to_owned())])?;
+    let output_parent = destination
+        .parent()
+        .ok_or_else(|| vec![build_error("native output has no directory".to_owned())])?;
+    super::native_storage::NativeSnapshot::inspect(
+        &compiled.native_executable,
+        Path::new(output_name),
+        &compiled.native_libraries,
+    )
+    .and_then(|snapshot| snapshot.capture(output_parent))
+    .map_err(|error| {
+        vec![cargo_build_error(format!(
+            "failed to publish native output bundle: {error}"
+        ))]
+    })?;
+    compiled.published(destination, publication_start.elapsed())
+}
+
+fn compile_binary_project_at_path_with_target(
+    project_path: &Path,
+    project_name: &str,
+    generated_project: GeneratedBinaryProject,
+    dependency_plan: &SysrootDependencyPlan,
+    cargo_resolution: &CargoResolutionPolicy,
+    target: &Path,
+) -> Result<CompiledBinaryProject, Vec<RenderedDiagnostic>> {
     let python_interpreter = generated_project
         .python_runtime
         .as_ref()
@@ -355,43 +441,19 @@ pub(super) fn materialize_binary_project_at_path_with_target(
         &prepared_resolution.command_policy(cargo_resolution)?,
         target,
     )?;
-    let destination = cached_binary_path(
-        project_path.parent().unwrap_or(Path::new(".")),
-        project_name,
-    );
-    let output_name = destination
-        .file_name()
-        .ok_or_else(|| vec![build_error("native output has no filename".to_owned())])?;
-    let output_parent = destination
-        .parent()
-        .ok_or_else(|| vec![build_error("native output has no directory".to_owned())])?;
-    super::native_storage::NativeSnapshot::inspect(
-        &executable,
-        Path::new(output_name),
-        &native_libraries,
-    )
-    .and_then(|snapshot| snapshot.capture(output_parent))
-    .map_err(|error| {
-        vec![cargo_build_error(format!(
-            "failed to publish native output bundle: {error}"
-        ))]
-    })?;
     prepared_resolution.assert_unchanged()?;
     let cargo_elapsed = cargo_start.elapsed();
 
-    Ok(MaterializedBinaryProject {
+    Ok(CompiledBinaryProject {
         #[cfg(test)]
         generated_project_root: project_path.to_path_buf(),
         cargo_artifact_profile,
         native_executable: executable,
         native_libraries,
-        binary_path: cached_binary_path(
-            project_path.parent().unwrap_or(Path::new(".")),
-            project_name,
-        ),
         sysroot,
         materialize_elapsed,
         cargo_elapsed,
+        prepared_resolution,
     })
 }
 
