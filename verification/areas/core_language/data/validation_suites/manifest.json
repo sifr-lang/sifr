@@ -38,12 +38,7 @@
             {
               "id": "hir_analysis_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/branch_paths/main.sifr"
               ],
@@ -52,12 +47,7 @@
             {
               "id": "hir_analysis_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/branch_paths/main.sifr",
                 "--output",
@@ -68,12 +58,7 @@
             {
               "id": "hir_analysis_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/branch_paths/main.sifr"
               ],
@@ -82,14 +67,7 @@
             {
               "id": "hir_analysis_test",
               "argv": [
-                "cargo",
-                "run",
-                "--manifest-path",
-                "<REPO>/Cargo.toml",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "."
               ],
@@ -124,12 +102,7 @@
             {
               "id": "hir_analysis_neg_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
               ],
@@ -138,12 +111,7 @@
             {
               "id": "hir_analysis_neg_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr",
                 "--output",
@@ -154,12 +122,7 @@
             {
               "id": "hir_analysis_neg_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
               ],
@@ -193,12 +156,7 @@
             {
               "id": "hir_analysis_neg_check_first",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
               ],
@@ -207,12 +165,7 @@
             {
               "id": "hir_analysis_neg_check_second",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
               ],
@@ -240,12 +193,7 @@
             {
               "id": "cfg_flow_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/control_flow_paths/main.sifr"
               ],
@@ -254,12 +202,7 @@
             {
               "id": "cfg_flow_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/control_flow_paths/main.sifr",
                 "--output",
@@ -270,12 +213,7 @@
             {
               "id": "cfg_flow_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/control_flow_paths/main.sifr"
               ],
@@ -284,12 +222,7 @@
             {
               "id": "cfg_flow_test",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "demos/control_flow_paths"
               ],
@@ -349,12 +282,7 @@
             {
               "id": "cfg_flow_neg_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
               ],
@@ -363,12 +291,7 @@
             {
               "id": "cfg_flow_neg_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr",
                 "--output",
@@ -379,12 +302,7 @@
             {
               "id": "cfg_flow_neg_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
               ],
@@ -418,12 +336,7 @@
             {
               "id": "cfg_flow_neg_check_first",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
               ],
@@ -432,12 +345,7 @@
             {
               "id": "cfg_flow_neg_check_second",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
               ],

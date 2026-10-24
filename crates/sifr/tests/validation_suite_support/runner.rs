@@ -185,17 +185,18 @@ fn run_command(
         return Err(format!("row command '{}' has empty argv", command.id));
     }
 
-    let argv = command
-        .argv
-        .iter()
-        .map(|value| {
-            value
-                .replace("<TMP>", &tmp_dir.display().to_string())
-                .replace("<REPO>", &repo_root.display().to_string())
-        })
-        .collect::<Vec<_>>();
+    let argv = super::command::expand_argv(
+        &command.argv,
+        repo_root,
+        tmp_dir,
+        Path::new(env!("CARGO_BIN_EXE_sifr")),
+    )?;
     let mut child = Command::new(&argv[0]);
     child.args(&argv[1..]);
+    super::command::remove_parent_package_context(
+        &mut child,
+        std::env::vars_os().map(|(key, _)| key),
+    );
     child.current_dir(
         command
             .cwd

@@ -11,12 +11,7 @@
             {
               "id": "positive_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/mode_consistency/main.sifr"
               ],
@@ -25,12 +20,7 @@
             {
               "id": "positive_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/mode_consistency/main.sifr",
                 "--output",
@@ -41,12 +31,7 @@
             {
               "id": "positive_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/mode_consistency/main.sifr"
               ],
@@ -55,14 +40,7 @@
             {
               "id": "positive_test",
               "argv": [
-                "cargo",
-                "run",
-                "--manifest-path",
-                "<REPO>/Cargo.toml",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "."
               ],
@@ -91,12 +69,7 @@
             {
               "id": "negative_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/mode_consistency/negative_cases/type_error_project/main.sifr"
               ],
@@ -105,12 +78,7 @@
             {
               "id": "negative_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/mode_consistency/negative_cases/type_error_project/main.sifr",
                 "--output",
@@ -121,12 +89,7 @@
             {
               "id": "negative_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/mode_consistency/negative_cases/type_error_project/main.sifr"
               ],
@@ -135,14 +98,7 @@
             {
               "id": "negative_test",
               "argv": [
-                "cargo",
-                "run",
-                "--manifest-path",
-                "<REPO>/Cargo.toml",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "."
               ],
@@ -189,12 +145,7 @@
             {
               "id": "single_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/graph_isolation/single_file/main.sifr"
               ],
@@ -203,12 +154,7 @@
             {
               "id": "single_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/graph_isolation/single_file/main.sifr",
                 "--output",
@@ -219,12 +165,7 @@
             {
               "id": "single_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/graph_isolation/single_file/main.sifr"
               ],
@@ -246,12 +187,7 @@
             {
               "id": "multi_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/graph_isolation/main.sifr"
               ],
@@ -260,12 +196,7 @@
             {
               "id": "multi_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/graph_isolation/main.sifr",
                 "--output",
@@ -276,12 +207,7 @@
             {
               "id": "multi_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/graph_isolation/main.sifr"
               ],
@@ -290,12 +216,7 @@
             {
               "id": "multi_test",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "demos/graph_isolation"
               ],
@@ -323,12 +244,7 @@
             {
               "id": "closure_neg_check",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/graph_isolation/negative_cases/reachable_parse_error/main.sifr"
               ],
@@ -337,12 +253,7 @@
             {
               "id": "closure_neg_build",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "build",
                 "demos/graph_isolation/negative_cases/reachable_parse_error/main.sifr",
                 "--output",
@@ -353,12 +264,7 @@
             {
               "id": "closure_neg_run",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/graph_isolation/negative_cases/reachable_parse_error/main.sifr"
               ],
@@ -367,12 +273,7 @@
             {
               "id": "closure_neg_test",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "demos/project_test_discovery/negative_cases/reachable_parse_error"
               ],
@@ -400,12 +301,7 @@
             {
               "id": "cycle_check_first",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/graph_isolation/negative_cases/module_cycle/main.sifr"
               ],
@@ -414,12 +310,7 @@
             {
               "id": "cycle_check_second",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "check",
                 "demos/graph_isolation/negative_cases/module_cycle/main.sifr"
               ],
@@ -447,12 +338,7 @@
             {
               "id": "parallel_run_a",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/temp_workspace_isolation/parallel_runs/a/main.sifr"
               ],
@@ -462,12 +348,7 @@
             {
               "id": "parallel_run_b",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "run",
                 "demos/temp_workspace_isolation/parallel_runs/b/main.sifr"
               ],
@@ -477,12 +358,7 @@
             {
               "id": "parallel_test_a",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "demos/temp_workspace_isolation/parallel_tests/a"
               ],
@@ -492,12 +368,7 @@
             {
               "id": "parallel_test_b",
               "argv": [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                "<SIFR>",
                 "test",
                 "demos/temp_workspace_isolation/parallel_tests/b"
               ],
