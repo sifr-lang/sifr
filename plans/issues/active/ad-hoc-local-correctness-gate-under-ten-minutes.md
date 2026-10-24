@@ -10550,14 +10550,15 @@ of that producer, its identities and the host-tool sandbox/subprocess boundary;
 it would not by itself remove the measured work.
 
 A separate retained-object inspection identifies narrower duplication:
-HirExpr and HirStmt use derived Clone in sifr_ir/src/hir_nodes.rs,
-while the downstream lowering rlib contains repeated compiled definitions of
-their large clone methods. Exact counts, artifact digest and raw nm output
+HirExpr uses derived Clone in sifr_ir/src/hir_nodes.rs, while the
+downstream lowering rlib contains 16 compiled definitions of its clone method,
+totalling 199,227 symbol bytes. HirStmt has no separately named clone definition
+in this artifact; do not claim the same measured duplication for it. Exact counts, artifact digest and raw nm output
 are in v1i-dependency-audit/clone-ownership.json and lowering-symbols.txt.
 This is evidence of repeated code generation, not elapsed-time attribution.
 The retained rlib is a development artifact, not a recovered clean SQL artifact.
 
-The bounded proposal is to put these two non-generic clone implementations in
+The bounded proposal is to put this non-generic clone implementation in
 their owning IR crate, using exhaustive field-by-field Clone implementations
 without an inline hint. Keep node layout, API, all fields and deep-clone semantics.
 An exhaustive match fails compilation when variants or fields are added; no
@@ -10572,11 +10573,11 @@ opt0 experiments remain rejected. Do not repeat them as a new proposal.
 ### V1j — feasibility of canonical HIR clone ownership
 
 This bounded diagnostic follows the demonstrated duplicated definitions in V1i.
-Replace only derived Clone for HirExpr and HirStmt with exhaustive
-field-by-field implementations in their IR owner, without an inline attribute.
+Replace only derived Clone for HirExpr with an exhaustive
+field-by-field implementation in its IR owner, without an inline attribute.
 Preserve each field's existing Clone operation, public node definitions,
-layout, trait API, optimization profiles and dependencies. Separate expression
-and statement implementation files keep maintained sources below 900 lines.
+layout, trait API, optimization profiles and dependencies. A separate expression
+implementation file keeps maintained sources below 900 lines.
 Do not change other clone types or introduce arenas, a new macro system or IPC.
 
 Start with IR deep-clone/metadata independence checks and existing affected IR
