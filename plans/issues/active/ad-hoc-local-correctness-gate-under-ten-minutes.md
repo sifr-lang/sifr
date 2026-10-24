@@ -11867,3 +11867,12 @@ fixture covering root/nested/compatibility header edits, directory file addition
 and removal, SDK selection and irrelevant Git metadata), six producer-inventory
 tests, file-size guardrail and whitespace check. Final component regeneration,
 complete SQL qualification and independent review are still required.
+
+Final PostgreSQL canonical regeneration after the input-watcher repair passed in
+332.613s (outer elapsed). All six PostgreSQL Wasm files are byte-identical to the
+earlier canonical feature-selected production; the updated receipt includes the
+new input helper. Current PostgreSQL, MySQL and SQLite receipts exactly match
+their source-input inventories, and all three families' binary hashes remain
+unchanged by the header-tracking repair. This is correctness/provenance evidence,
+not a guest-build speedup. Complete SQL qualification follows on the committed
+artifact candidate.
