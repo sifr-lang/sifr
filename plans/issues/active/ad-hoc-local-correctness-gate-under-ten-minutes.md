@@ -11030,3 +11030,131 @@ different identities or weaken version/hash checks to avoid rebuilds.
 Final adoption still requires the exact candidate's independent review and named
 intermediate acceptance. Full selected final gates, SQL clean reproduction and
 all V5 scenarios remain mandatory before declaring the phase complete.
+
+### V4av closure — development line information adopted
+
+Status: delivered in PR #4462, merged as c8b5c536408ad49764a274e36712503ce8efa9de.
+Reviewed implementation candidate: 7684abb02407b484557e078309fd9e28e4a7ce36.
+The merge tree is byte-identical to that candidate. Only Cargo.toml, the
+development iteration documentation and this phase record changed.
+
+The actual manifest-selected driver graph passed package/target/features and
+non-debug-profile equivalence: 326 artifact observations, 162 fresh / 164 built,
+518.988s inner (524.054s guard). Its executable is 412,255,752 bytes. A subsequent
+canonical locked-uv preparation reported 326 fresh / zero built in 0.474s,
+preserving the exact executable hash. All 1,782 codegen and 24 compiler-services
+library tests passed. All 14 metadata-reader tests passed, including the complete
+732-case corpus; all 1,464 input/generated source files match exactly and all
+coverage rows match under the declared unique HashSet membership comparison.
+
+The normal CLI/E2E graph prepared in 522.658s (527.061s guard), with 458 Cargo
+artifact observations: 292 fresh / 166 built. Full positive E2E passed in
+296.249s suite time (302.857s guard). Inventory reconciliation proves every one
+of the 732 maintained fixtures compiled and executed exactly once, all 186
+original native groups passed, zero original batch failures, and every telemetry
+span completed successfully.
+
+| E2E stage | Seconds |
+| --- | ---: |
+| Source compilation | 52.604 |
+| Cache preparation | 31.921 |
+| Native builds | 192.423 |
+| Runtime assertions | 18.514 |
+| Other recorded stages | 0.786 |
+
+These are one E2E execution's stage times, not a whole-gate result or matched
+before/after speedup. Compiler preparation is separate. Cargo unit timings
+overlap and must not be summed. The resolved driver/E2E graph observations
+preserve duplicate artifact records and show different feature-configuration
+multisets for 17 shared package/target/profile contexts. This justifies further
+attribution; it does not prove the graphs can safely be combined or that focused
+preparation costs are additive in the canonical gate.
+
+The initial E2E execution stopped before tests at capacity admission (1.686s).
+After all build processes exited, only unchanged catalogued old-profile
+incremental state was retired: 12,339,636,671 bytes, verified by complete
+per-file inode/size/mtime inventories. Compiled artifacts and evidence remain.
+The successful retry changes only the external output directory. An earlier
+inactive full-debug target was archived with every file/link verified before
+retiring its original copy. Its archival copy is evidence, not a claimed
+relocatable Cargo cache.
+
+Scheduling-parent interruptions are preserved separately from test outcomes:
+the first waiting campaign stopped before dependent work; the second parent
+was retired only after its library guard completed. No running library check
+was killed. Remaining checks use the canonical locked-uv launch, and exact
+compiler-artifact freshness was reconfirmed. The original failed feasibility
+comparison and capacity receipt remain failed/incomplete records.
+
+Formatting, 24 preparation/release controls, file-size guardrails, profiles
+check, all four full/scoped create-pr/merge plan comparisons, documentation
+scope/links and diff checks passed. Independent exact-candidate review:
+SATISFIED, no blocking findings; response SHA-256
+e636c3e9648390e64bb80406fc8bb21135abf838086edc3e4ae05932bc8cb7ef.
+The record-only follow-up is this closure. Existing nested-build debug=1
+overrides are a separate observation, not changed by this item.
+
+Policy archive v4av-policy-evidence.tar.gz, SHA-256
+38823b128812212a8c46a8c2a157cc9a2c5588d4134cc2b2d4ed29c48b8d3683,
+contains 1,600 payloads / 29,559,080 bytes, all verified locally. It supplements
+the separate feasibility archive. The sortable report includes all native groups
+and individual source/runtime case timings.
+
+CI was not green at merge: full-profile admission lacks
+SIFR_PERFORMANCE_REFERENCE (existing performance-reference owner #4347), and the
+determinism job reports a missing run1 signature without publishing the
+underlying run log. Its cause remains unresolved with the determinism workflow
+owner. The Windows component job was still running at the merge observation.
+No missing execution counts as a pass; no admin merge bypass was used.
+
+The approved intermediate policy applies. Full final scoped correctness gates,
+SQL reproduction and all V5 scenarios remain open under the canonical scope;
+review wording does not add unrelated benchmark/cross-platform acceptance.
+This item establishes smaller artifacts and preserved named behavior. It does
+not establish a matched compiler build-time saving or complete phase acceptance.
+
+### V4aw prospective execution — integrated correctness discovery
+
+Status: registered; one bounded observation item, no product implementation.
+
+Before selecting another isolated optimization, obtain a current combined
+failure/cost inventory on the integrated merged source. Preserve all selected
+local correctness tests and use the canonical merge --correctness-only
+selection with --no-fail-fast. This is diagnostic discovery, not V5 timing
+qualification and not a replacement for final create-pr/merge acceptance.
+
+First emit and retain the actual plan, preparation DAG, consumer dependencies,
+effective allocations, exact pinned tools, input identities and capacity.
+Use one canonical locked-uv launch and retained owned compiler/native targets.
+Do not import old passing results as new execution; retain build artifacts and
+let the declared input-bound protocols determine any result reuse.
+
+Verify preparation readiness before the broad sweep. Run each canonical
+preparation node with its dependencies satisfied and a 30-minute diagnostic cap.
+If aggregate crate preparation exceeds the cap, retain that incomplete result
+and inspect/execute its remaining canonical configurations separately; do not
+narrow their feature/target or assertion contracts. Do not repeat unchanged
+failed preparation. A preparation failure blocks its consumers while independent
+categories continue. Capacity or source-identity failures require diagnosis
+before dependent work resumes.
+
+The actual broad entry remains scripts/run_all_tests.sh --profile merge
+--correctness-only --no-fail-fast. Apply the existing 1,800-second step safety
+deadline; an external overall safety guard is not a category timeout or a pass.
+If an aggregate cap prevents later subcategories from executing, explicitly
+schedule those missing canonical subcategories separately under the same frozen
+candidate and reconcile them against the emitted inventory. Preserve the broad
+run's original failure status rather than rewriting it as a complete gate pass.
+
+Before long work inspect actual target filesystems, CPU/memory and planned
+working space/reserve. Retire only inactive obsolete session-owned artifacts
+with recorded ownership and unchanged inventory. Preserve current build outputs,
+leases, consumer inputs and all failure evidence. No shared target cleanup.
+
+Report every preparation/category/subcategory as passed, failed, capped,
+blocked or unexecuted, with actual elapsed time, executed coverage and owner.
+Keep one-run wall time distinct from sums of separate diagnostic observations
+and overlapping worker times. Identify the three largest observed costs and
+their immediate causes, then register the next bounded root-cause repair.
+Do not adopt a feature union, cache-identity relaxation, test reduction or
+benchmark exclusion beyond the existing approved scope through this observation.
