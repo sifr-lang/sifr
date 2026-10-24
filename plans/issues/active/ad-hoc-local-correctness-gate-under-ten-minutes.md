@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4aq merged; V4ar retained native-driver attribution in progress; final timing and V1/V5 remain open
+current_stage: V4at merged; V1i SQL capability-boundary audit in progress; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10435,3 +10435,95 @@ Run affected runner/workflow contracts, profiles validation and file-size/diff
 checks. Obtain independent review of that exact candidate and evidence before
 merge. Final complete scoped gates, V1 and every V5 scenario remain required;
 a category-level result never closes the phase.
+
+### V4at closure — canonical native execution accepted
+
+Merged through [#4459](https://github.com/sifr-lang/sifr/pull/4459) at
+`8f7d4efc0c71b491ce4028f44f5ab2e21f900c7b`. The independently reviewed and tested
+implementation candidate is `11eab4ae0a66f9b7a934dd77cf8ccde98d60d3c2`.
+The existing bounded batch executor now owns native scheduling; the single-command
+executor is unchanged. At most two separate native test processes share the
+profile slot budget, with resolved inner Cargo/Rayon settings and at least four
+GiB working allowance per worker plus the existing memory reserve. Native graph
+preparation and execution use the same resolved settings. Current capacity can
+reduce width or reject admission; it never removes selected cases.
+
+All 81 driver invocations and all six CLI invocations execute once and pass in
+their successful runs. Exact commands, ordered inventory, one-test execution
+evidence, untruncated results and empty owned sessions reconcile. No source
+mutation or reserve failure occurs. Observed native concurrency is two.
+Ordinary test failures still continue under `--no-fail-fast`; invalid or truncated
+execution evidence now deliberately stops dispatch, as the prospective contract
+requires. Unexecuted cases are explicit incomplete results.
+
+| Successful observation | Guarded seconds |
+| --- | ---: |
+| Current canonical preparation for both configurations | 62.242 |
+| Complete generated-driver configuration | 471.966 |
+| Complete generated-CLI configuration | 53.217 |
+| Sum of separate successful observations | 587.425 |
+
+This sum is **not one uninterrupted gate measurement**, and covers neither the
+complete correctness selection nor V5. Retained-artifact histories differ from
+earlier diagnostics; do not claim a matched-cache speedup. The driver records
+884.55s user and 87.37s system CPU (206% CPU), versus the prior serial observation's
+104% CPU. Overlapping command seconds must not be added to category wall time.
+
+The initial CLI-labelled diagnostic launcher omitted its suite argument and
+started the driver configuration again. That duplicate was cancelled at 59.222s
+and retained as incomplete, with owned-session cleanup verified. The corrected
+diagnostic explicitly selects the CLI configuration and verifies its command
+against the prepared inventory. Product code and the successful driver evidence
+did not change. This failed attempt is not hidden inside the successful sum.
+Earlier focused callback-name and test-environment failures are also retained.
+
+Complete runner foundation controls, focused allocation/selection/preparation/
+progress/process-ownership controls, profile validation, four unchanged emitted
+plans, file-size and diff checks pass. Independent read-only Claude Opus review
+is SATISFIED, with no blocking findings. Review SHA-256 is
+`331e4f8d6472a4264112288e51d6aff67fa07d25afcc526b8ebdef3069bc387f`.
+The raw `v4at-qualified-evidence.tar.gz` archive has SHA-256
+`24ed7baa6df3c36b9c39b36da2b9908ab168f179412819f0026bf3dcfd62a50b`;
+all 108 payloads / 1,945,601 bytes were independently verified locally.
+The HTML report includes every successful case and subgroup in sortable tables;
+structural checks pass, while browser visual inspection remains unavailable.
+
+Review followups are separate from this accepted item: optional bounded live
+native log observations (current buffered output is documented), a later
+platform-capacity polling improvement for Darwin's bounded `vm_stat` subprocess,
+and optional inner-job readmission only with coherent preparation settings.
+Existing infrastructure owner #4347 still lacks `SIFR_PERFORMANCE_REFERENCE`;
+CI create-pr fails before preparation. No green-CI or full-gate pass is claimed.
+Final complete scoped gates, V1 and every V5 scenario remain open.
+
+### V1i — audit SQL capability and compilation ownership
+
+Status: registered read-only architecture investigation. Return to V1h's measured
+mandatory clean-build blocker rather than accumulating more isolated small
+improvements. Reuse its complete clean A / unchanged A / independent clean B
+evidence and unit timings. Do not repeat rejected opt0, concurrent clean-build
+or unchanged thirteen-minute experiments.
+
+Map each SQL tool's actual operations to the canonical compiler/frontend,
+metadata, component execution, database client and native-parser owners. Inspect
+manifests, features, call paths and the resolved locked dependency graph. Distinguish
+required runtime capabilities from accidental facade dependencies and monomorphized
+implementation coupling. A crate rename or import shuffle is not an optimization.
+Preserve canonical migration checking, real component execution, all three tool
+identities, byte reproducibility, independent clean targets and seven rejection
+controls.
+
+The deliverable is an evidence-backed ownership map and one bounded architectural
+proposal that removes demonstrated compilation work, with source references and
+explicit obligations for producer preparation, invalidation and runtime correctness.
+Do not hide work in unqualified external/prebuilt tools, weaken clean-build
+semantics, remove valuable tests, or project overlapping unit durations as additive
+wall-time savings. If a qualified compiler/service boundary is warranted, all its
+producer and invalidation costs must remain inside the declared gate accounting.
+
+This item authorizes source/graph inspection and lightweight metadata diagnostics,
+not a production refactor or a new timing claim. Register the precise implementation
+contract and affected qualification before changing product sources. Use the
+smallest checks and retained artifacts; every subsequent long build still needs
+capacity admission and the thirty-minute diagnostic cap. Full phase acceptance
+remains unchanged.
