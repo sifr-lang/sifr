@@ -11966,3 +11966,81 @@ not. The clean-build protocol alone still exceeds ten minutes. The pre-existing
 CLI/metadata inventory failures remain phase-owned work before final scoped
 gates and V5. Independent exact-candidate review and intermediate merge follow
 this evidence record; neither is claimed complete here.
+
+
+#### V4ba intermediate closure
+
+Merged PR #4466 as a64c98a25b030fdd73a2b3ee61c3bc97bdb914f3.
+Reviewed candidate 637ffcef531e9c13f5f0c6201ce605c4a37c0588 has the same tree.
+Independent Claude Opus verdict: SATISFIED; no blocking findings.
+Review SHA-256:
+6e13dfd199b99701c98a6069db8c03aaf30815c88d0492dff6eb80f84026de6a.
+The review remains outside the approved tree, keyed by the reviewed candidate.
+Evidence archive v4ba-evidence.tar.gz: 493 locally hash-verified payloads,
+SHA-256 6ad389bd88e33e3305a1c4dba3269b1b4b123d5e0b247d07ca3bc8b61bc6a5ac.
+The actual executed implementation remains dd135c04d2; the documented
+Markdown-only equivalence binds its evidence to the reviewed/merged candidate.
+
+Nonblocking follow-ups, not silently absorbed into the merged item:
+- Default PostgreSQL 18 and explicit postgresql-18 produce two native artifact
+  identities. Evaluate sharing that default matrix configuration after checking
+  version coverage; do not silently weaken ambiguous-selection rejection.
+- The inactive nightly/release all-targets-all-features inventory cannot describe
+  a real invocation with mutually exclusive major features. Reconcile its owner
+  before enabling that suite.
+- SDK selection is tracked by path; in-place replacement needs a separate input
+  identity investigation. Canonical SDK qualification remains required.
+- The tiny input-watcher test relies on filesystem modification timestamps;
+  assess coarse-timestamp filesystems. Conservatively watched non-C root files
+  can cause additional rebuilds.
+- Existing CLI/metadata authority inventory failures remain LOCAL-GATE-owned
+  before final scoped gates and V5.
+
+### V4bb prospective scope — generated-quality dependency target lifetime
+
+Status: bounded feasibility and implementation acceptance registered; no product
+change or measured saving yet. Continue the user's authorized phase sequence.
+
+Current profile setup selects
+target/sifr_generated_code_quality/<profile>.<revision>.shared. The quality
+target resolver appends cargo-target. Thus a new revision also selects a new
+dependency build directory. Two retained older roots contain 209 common library
+fingerprint JSONs that are all byte-identical, and 49 byte-identical common rlibs
+(105,312,254 bytes in one copy). This is artifact overlap, not proof that every
+artifact was independently compiled or a measured speedup.
+
+Generated preparation already creates a new preparation/batch-* directory every
+time; execution uses fresh invocation/batch roots. Portable manifests and locks
+are independently checked against the exact current Git revision. Investigate
+retaining the profile-owned Cargo target across revisions while keeping these
+fresh source owners and exact revision checks. Prefer the smallest existing
+ownership change; do not add an unchecked cache, correctness-result reuse, a
+compiler daemon or a compatibility path. Keep profiles independently owned and
+standalone invocation semantics unchanged in this bounded item.
+
+Acceptance before adoption/merge:
+- Trace all consumers of the shared root and prove that current revision
+  selection, fresh materialization and failure evidence do not depend on its
+  directory-name revision suffix.
+- Exercise actual Cargo with fresh source roots sharing a retained target.
+  Observe unchanged dependency freshness and execute the changed program's
+  expected output. Exercise a real dependency change and an identical-content
+  new Git revision; stale outputs or stale revision bindings must not pass.
+  Keep compiler/profile/lock selection explicit and source preparation distinct
+  from executed runtime assertions.
+- Preserve exact manifest/lock revision rejection, source-override rejection,
+  all selected corpus entries, deterministic/freshness checks, native output
+  assertions and failure-continuation semantics. Each consumer still runs.
+- Run affected preparation, fresh-corpus, artifact-ownership and generated
+  quality self-tests, file-size and whitespace checks. Check profiles and compare
+  emitted scoped plans; no profile selection or coverage reduction is intended.
+- Run complete selected generated-code-quality preparation and execution on the
+  integrated candidate, with 30-minute per-category caps and preserved failures.
+  Measure the first preparation separately from retained invocations. Check
+  capacity before builds and retain owned artifacts.
+- Document observed artifact reuse and actual elapsed time without projecting a
+  whole-gate saving from one target. Independent exact-candidate review precedes
+  this intermediate merge under the approved policy.
+
+All full phase gates and V5 scenarios remain required. This work does not
+resolve the independent SQL clean-build protocol's measured 867.226s cost.
