@@ -182,10 +182,8 @@ def run_strict_clippy(
         cargo_target_dir=cargo_target_dir,
     )
 
-    # Root-package invalidation replaces Cargo fingerprint diagnostics on the next
-    # case. Retain the actual process streams beside this case's generated source.
-    (crate_root / "clippy.stdout.jsonl").write_text(result.stdout, encoding="utf-8")
-    (crate_root / "clippy.stderr.log").write_text(result.stderr, encoding="utf-8")
+    # The caller preserves both streams in its owned diagnostics directory before
+    # interpreting them. Generated inputs stay read-only for other consumers.
     return result
 
 

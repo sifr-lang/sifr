@@ -10130,3 +10130,20 @@ makes the area adapter establish its own module path and adds an isolated-proces
 regression through the actual canonical area loader. All 12 owner/adapter tests
 pass, including a real intrinsic-lint suite through that loader. Requalify the
 frozen repaired candidate before review or merge; no timing gain is claimed yet.
+
+The repaired loader candidate `8f7e01d75c90e26bbcc267a3790ef07d1c7caa96`
+passes foundation/selection checks and all 93 preparations (311.362s guarded).
+Its representative run exposes a second integration issue: the Clippy helper
+writes duplicate diagnostic logs into a shared generated crate. The owner detects
+that mutation and rejects the shared batch; all five independent variants still
+complete and pass, including native execution, determinism and demo freshness.
+The 395.500s failed guard, raw batch outcomes and generated inputs are retained.
+This is neither passing area evidence nor a qualified performance improvement.
+
+Remove only the redundant input-directory log writes: both real gate callers
+already preserve complete streams in their separate diagnostic directory before
+interpreting the result. Extend the existing real-Cargo root-isolation regression
+to assert complete generated-file snapshot equality and successful/failing stream
+retention in that directory. The mutation guard remains unchanged. All affected
+source-quality, 12 owner/adapter and failure-artifact checks pass; requalify the
+new frozen candidate before scoped review and merge.

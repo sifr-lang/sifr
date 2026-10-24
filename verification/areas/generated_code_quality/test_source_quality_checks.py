@@ -12,6 +12,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from failure_artifacts import preserve_clippy_output
+from fresh_corpus import snapshot
 from source_quality_checks import run_strict_clippy
 
 
@@ -75,16 +77,20 @@ class ClippyIsolationTests(unittest.TestCase):
                 env["CARGO_TARGET_DIR"] = str(cargo_target_dir)
                 return subprocess.run(command, env=env, check=check, capture_output=True, text=True)
 
+            inputs = {name: snapshot(root / name) for name in sources}
+            evidence = root / "gate-evidence"
             first = run_strict_clippy(root / "clean", run, ["-D", "warnings"], target)
+            preserve_clippy_output(evidence, "clean", first)
             self.assertEqual(first.returncode, 0, first.stderr)
             artifacts = list(target.rglob("libprobe_dependency*"))
             self.assertTrue(artifacts)
             before = {path: (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns) for path in artifacts}
             second = run_strict_clippy(root / "warning", run, ["-D", "warnings"], target)
+            preserve_clippy_output(evidence, "warning", second)
             self.assertNotEqual(second.returncode, 0, second.stdout)
-            self.assertEqual((root / "warning/clippy.stdout.jsonl").read_text(encoding="utf-8"), second.stdout)
-            self.assertEqual((root / "warning/clippy.stderr.log").read_text(encoding="utf-8"), second.stderr)
-            self.assertEqual((root / "clean/clippy.stdout.jsonl").read_text(encoding="utf-8"), first.stdout)
+            self.assertEqual((evidence / "diagnostics/warning.stdout.jsonl").read_text(encoding="utf-8"), second.stdout)
+            self.assertEqual((evidence / "diagnostics/warning.stderr.log").read_text(encoding="utf-8"), second.stderr)
+            self.assertEqual((evidence / "diagnostics/clean.stdout.jsonl").read_text(encoding="utf-8"), first.stdout)
 
             diagnostics = [json.loads(line) for line in second.stdout.splitlines() if line.startswith("{")]
             self.assertTrue(any(
@@ -95,6 +101,7 @@ class ClippyIsolationTests(unittest.TestCase):
             after = {path: (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns) for path in artifacts}
             self.assertEqual(before, after, "dependency artifacts must remain cached")
             for name, source in sources.items():
+                self.assertEqual(snapshot(root / name), inputs[name], "Clippy must not write into generated inputs")
                 self.assertEqual((root / name / "src/main.rs").read_text(encoding="utf-8"), source)
 
 
