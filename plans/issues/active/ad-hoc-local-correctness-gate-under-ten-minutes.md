@@ -11494,3 +11494,104 @@ type-system and metadata do not. Therefore a host/protocol split cannot be claim
 to remove their entire compilation cost. Earlier V1 profile/concurrent-build
 experiments remain rejected. Mandatory SQL clean reproduction and final V1/V5
 qualification remain required.
+
+### V4az closure — complete metadata validation lookup work reduced
+
+Status: merged in [PR #4465](https://github.com/sifr-lang/sifr/pull/4465).
+Reviewed candidate 9fcec2d203210449b57c90a35855efad4e828624; squash merge
+652fe800da82cc7a5c5f6d10830fd283fb9beaa3 has the identical tree.
+
+Complete validation resolves references to directory positions and uses
+generation-tagged scratch for each root. Every root still traverses its graph
+with the same cycle, depth, work, reference-kind and ordering rules. Record
+decoding, fields, hashes, unreachable records, compatibility and immutable
+captured input checks remain; no persistent verdict or source fallback exists.
+
+All 31 metadata tests passed, including 2,304 original-algorithm comparisons.
+The 24 compiler-services and 14 semantic-services library tests passed.
+All 14 metadata-reader tests passed, with 732 fixtures and 1,464 source/Rust
+files byte-identical to the retained baseline. All four installed-sysroot suites
+passed in 637.252s (external guard 643.060s): boundary 219.333s, host 23.214s,
+corpus 359.733s and structural 34.656s. Detailed reconciliation verifies all
+745 commands, 732 unique emissions, four native cases, three expected negative
+doctor rejections, generation/LSP rollback and all output hashes.
+
+Five alternating ordinary final-candidate observations, with first invocations
+preserved separately and no profiling in these timings:
+- Complete captured-image validation: median 1.054749s to 0.510255s.
+- Invalid compiler check: 1.149359s to 0.602389s.
+- Valid compiler check: 1.851351s to 1.292394s.
+All paired command output and exit codes agree. These are bounded measurements,
+not additive whole-gate savings. The captured probe uses header-derived
+compatibility only for diagnosis; actual production compatibility is exercised
+by the compiler, reader and installed-sysroot qualification.
+
+Runtime receipts retain b0b1eb35ff91890fdc5d9dc0e89580adce093e11. The final
+commit changes only one test inventory fingerprint, with unchanged classification
+and operation binding. All metadata tests were rerun; all 326 driver Cargo
+artifacts are fresh and driver/installed executable hashes match their qualified
+inputs. The initial reuse probe named a nonexistent release path; the second
+combined test request compiled another metadata test variant and a direct CLI
+build changed the debug executable. Both attempts remain failed. Final debug
+checks were rerun; do not claim identical debug executables or an established
+cause for their rebuild.
+
+Formatting, size, source layering, policy self-tests and diff checks passed.
+Three global inventory controls remain failed with byte-identical failures at
+the exact base revision. Follow-up owner: LOCAL-GATE inventory reconciliation,
+covering ExternalDefs field classification and existing CLI method/filesystem
+inventory drift. This item corrects only its affected metadata test fingerprint.
+Those remaining failures must be repaired before final gate acceptance.
+
+Independent Claude review: SATISFIED, no blocking findings.
+Review SHA-256: baacfe651dff310b1e366424d7c3f2acced74b9a17f54096bb7a6eff7a2f324d.
+The reviewer read the complete code/test/policy diff and three evidence files;
+other executed checks were supplied in the review summary.
+Main archive v4az-evidence.tar.gz: 3,222 locally verified payloads,
+SHA-256 48e83de94cf7bffbfafe57c14cd0d75998a219478bfef0cf9e3ceb0a32089c13.
+Supplement v4az-supplement.tar.gz: 88 locally verified payloads,
+SHA-256 092a1052523e7eb3907d7cbf275729916251f10a54340a29ecdf3853fd3f2066.
+Large profiling/executable artifacts remain retained with recorded hashes.
+PR attachment was again rejected by the app's 100-attachment limit.
+
+Remaining suggestions: exercise the maximum generation tag before wrap in a
+future affected test change; investigate differing debug preparation inputs.
+Neither changes the accepted algorithm or current coverage. Complete final
+scoped gates, mandatory SQL clean reproduction and V5 remain open.
+
+### V1k prospective execution — attribute expensive lowering machine-code generation
+
+Status: bounded diagnostic investigation, following V4az closure.
+
+V1h measured lowering's machine-code generation at 163.16s of its 175.35s
+overlapping unit. V4ay again observed substantial lowering CPU work during the
+mandatory SQL clean protocol, whose total remained 874.276s. The earlier
+profile downgrades, concurrent clean builds and manual HIR Clone ownership
+experiments are rejected; do not repeat them unchanged. A file/crate split or
+helper process is not a speedup without identifying removed work.
+
+Attribute optimization/code-generation costs to actual functions and passes,
+starting with lowering. Use the exact pinned compiler and current source,
+optimization/debug/overflow settings. Reuse compatible dependency artifacts and
+force a fresh diagnostic compilation of only the selected unit when needed.
+Record any difference from the SQL clean graph (including debug/remapping and
+incremental paths); this retained development graph is attribution evidence,
+not a measured replacement for the canonical SQL protocol.
+
+The pinned compiler exposes LLVM tracing through diagnostic -Z flags. A
+crate-scoped RUSTC_BOOTSTRAP setting may enable tracing only for this external
+experiment with the same compiler binary; it is not a repository/toolchain or
+production profile change. Verify trace support using an isolated tiny probe
+first. Capture exact commands, flags, units, source/tool/profile identities,
+capacity and trace completeness. Keep trace overhead separate from ordinary
+timings. Preserve default artifacts and qualified binaries; record any actual
+rebuild instead of asserting reuse.
+
+Keep the 30-minute category cap, disk/memory reserves, source freeze and process
+cleanup. No new full SQL clean run is required merely to rediscover its known
+cost. Analyze overlapping trace spans without adding inclusive parent/child
+times as independent savings. Deliver a ranked cost attribution with source
+owners and one concrete next hypothesis, or explicitly reject the hypothesis
+if the trace is insufficient. Register an implementation/acceptance contract
+before adopting any product change. Correctness, independent linked builds,
+every selected test, producer/invalidation accounting and final V5 remain intact.
