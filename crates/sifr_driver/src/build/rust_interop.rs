@@ -8,9 +8,7 @@ use super::rust_interop_cargo_inputs::{
 use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_diagnostics::{render_template, source_diagnostic};
 use super::rust_interop_digest::normalized_path_string;
-use super::rust_interop_probe::{
-    AsyncThreadAffinity, PendingRustBridgeProbe, execute_direct_cargo_probe,
-};
+use super::rust_interop_probe::{AsyncThreadAffinity, PendingRustBridgeProbe};
 use super::rust_interop_probe_policy::DirectProbePolicy;
 #[cfg(test)]
 pub(super) use super::rust_interop_resolution::apply_package_rust_interop_metadata;
@@ -714,14 +712,17 @@ impl<'a> RustInteropResolver<'a> {
         });
     }
     fn execute_pending_direct_probes(&mut self) {
-        for probe in self.pending_direct_probes.clone() {
-            if !self
-                .direct_probe_policy
-                .should_execute(probe.trusted_sysroot)
-            {
-                continue;
-            }
-            if let Err(failure) = execute_direct_cargo_probe(&probe) {
+        let probes = self
+            .pending_direct_probes
+            .iter()
+            .filter(|probe| {
+                self.direct_probe_policy
+                    .should_execute(probe.trusted_sysroot)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        for (index, failure) in super::rust_interop_probe_batch::execute(&probes) {
+            if let Some(probe) = probes.get(index) {
                 self.push_diagnostic(
                     &probe.declaration,
                     probe.declaration.declaration.span,
