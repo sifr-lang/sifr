@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4aq merged; V4ar retained native-driver attribution in progress; final timing and V1/V5 remain open
+current_stage: V1j clone experiment rejected; V4au shared preparation identity audit registered; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10435,3 +10435,295 @@ Run affected runner/workflow contracts, profiles validation and file-size/diff
 checks. Obtain independent review of that exact candidate and evidence before
 merge. Final complete scoped gates, V1 and every V5 scenario remain required;
 a category-level result never closes the phase.
+
+### V4at closure — canonical native execution accepted
+
+Merged through [#4459](https://github.com/sifr-lang/sifr/pull/4459) at
+`8f7d4efc0c71b491ce4028f44f5ab2e21f900c7b`. The independently reviewed and tested
+implementation candidate is `11eab4ae0a66f9b7a934dd77cf8ccde98d60d3c2`.
+The existing bounded batch executor now owns native scheduling; the single-command
+executor is unchanged. At most two separate native test processes share the
+profile slot budget, with resolved inner Cargo/Rayon settings and at least four
+GiB working allowance per worker plus the existing memory reserve. Native graph
+preparation and execution use the same resolved settings. Current capacity can
+reduce width or reject admission; it never removes selected cases.
+
+All 81 driver invocations and all six CLI invocations execute once and pass in
+their successful runs. Exact commands, ordered inventory, one-test execution
+evidence, untruncated results and empty owned sessions reconcile. No source
+mutation or reserve failure occurs. Observed native concurrency is two.
+Ordinary test failures still continue under `--no-fail-fast`; invalid or truncated
+execution evidence now deliberately stops dispatch, as the prospective contract
+requires. Unexecuted cases are explicit incomplete results.
+
+| Successful observation | Guarded seconds |
+| --- | ---: |
+| Current canonical preparation for both configurations | 62.242 |
+| Complete generated-driver configuration | 471.966 |
+| Complete generated-CLI configuration | 53.217 |
+| Sum of separate successful observations | 587.425 |
+
+This sum is **not one uninterrupted gate measurement**, and covers neither the
+complete correctness selection nor V5. Retained-artifact histories differ from
+earlier diagnostics; do not claim a matched-cache speedup. The driver records
+884.55s user and 87.37s system CPU (206% CPU), versus the prior serial observation's
+104% CPU. Overlapping command seconds must not be added to category wall time.
+
+The initial CLI-labelled diagnostic launcher omitted its suite argument and
+started the driver configuration again. That duplicate was cancelled at 59.222s
+and retained as incomplete, with owned-session cleanup verified. The corrected
+diagnostic explicitly selects the CLI configuration and verifies its command
+against the prepared inventory. Product code and the successful driver evidence
+did not change. This failed attempt is not hidden inside the successful sum.
+Earlier focused callback-name and test-environment failures are also retained.
+
+Complete runner foundation controls, focused allocation/selection/preparation/
+progress/process-ownership controls, profile validation, four unchanged emitted
+plans, file-size and diff checks pass. Independent read-only Claude Opus review
+is SATISFIED, with no blocking findings. Review SHA-256 is
+`331e4f8d6472a4264112288e51d6aff67fa07d25afcc526b8ebdef3069bc387f`.
+The raw `v4at-qualified-evidence.tar.gz` archive has SHA-256
+`24ed7baa6df3c36b9c39b36da2b9908ab168f179412819f0026bf3dcfd62a50b`;
+all 108 payloads / 1,945,601 bytes were independently verified locally.
+The HTML report includes every successful case and subgroup in sortable tables;
+structural checks pass, while browser visual inspection remains unavailable.
+
+Review followups are separate from this accepted item: optional bounded live
+native log observations (current buffered output is documented), a later
+platform-capacity polling improvement for Darwin's bounded `vm_stat` subprocess,
+and optional inner-job readmission only with coherent preparation settings.
+Existing infrastructure owner #4347 still lacks `SIFR_PERFORMANCE_REFERENCE`;
+CI create-pr fails before preparation. No green-CI or full-gate pass is claimed.
+Final complete scoped gates, V1 and every V5 scenario remain open.
+
+### V1i — audit SQL capability and compilation ownership
+
+Status: registered read-only architecture investigation. Return to V1h's measured
+mandatory clean-build blocker rather than accumulating more isolated small
+improvements. Reuse its complete clean A / unchanged A / independent clean B
+evidence and unit timings. Do not repeat rejected opt0, concurrent clean-build
+or unchanged thirteen-minute experiments.
+
+Map each SQL tool's actual operations to the canonical compiler/frontend,
+metadata, component execution, database client and native-parser owners. Inspect
+manifests, features, call paths and the resolved locked dependency graph. Distinguish
+required runtime capabilities from accidental facade dependencies and monomorphized
+implementation coupling. A crate rename or import shuffle is not an optimization.
+Preserve canonical migration checking, real component execution, all three tool
+identities, byte reproducibility, independent clean targets and seven rejection
+controls.
+
+The deliverable is an evidence-backed ownership map and one bounded architectural
+proposal that removes demonstrated compilation work, with source references and
+explicit obligations for producer preparation, invalidation and runtime correctness.
+Do not hide work in unqualified external/prebuilt tools, weaken clean-build
+semantics, remove valuable tests, or project overlapping unit durations as additive
+wall-time savings. If a qualified compiler/service boundary is warranted, all its
+producer and invalidation costs must remain inside the declared gate accounting.
+
+This item authorizes source/graph inspection and lightweight metadata diagnostics,
+not a production refactor or a new timing claim. Register the precise implementation
+contract and affected qualification before changing product sources. Use the
+smallest checks and retained artifacts; every subsequent long build still needs
+capacity admission and the thirty-minute diagnostic cap. Full phase acceptance
+remains unchanged.
+
+
+### V1i outcome — required capabilities and duplicated HIR implementations
+
+Locked offline metadata and normal/build dependency trees complete on
+217f83d7328c7589ecde1b6d805d434eb8f45c0c without compilation or source changes.
+The three SQL tool graphs contain 272 / 315 / 232 unique package-name/version
+nodes for PostgreSQL / MySQL / SQLite. These are graph nodes, not compiled units.
+None includes sifr_codegen; the existing semantic/native facade separation is
+already effective.
+
+Migration source checking reaches sifr_semantic_services::single_file and the
+canonical frontend/lowering pipeline. Source and installed stdlib authority
+remain in SemanticContext; metadata is a real dependency. SQL profile loading
+in sql_editor.rs actually executes components through ComponentCompilation,
+whose Component::new uses Wasmtime/Cranelift. PostgreSQL and MySQL clients
+actually use their Rustls/aws-lc TLS stack. Native dialect parsers are required
+by schema/migration analysis. No accidentally linked facade has been demonstrated.
+Moving those capabilities into a helper process would also require qualification
+of that producer, its identities and the host-tool sandbox/subprocess boundary;
+it would not by itself remove the measured work.
+
+A separate retained-object inspection identifies narrower duplication:
+HirExpr uses derived Clone in sifr_ir/src/hir_nodes.rs, while the
+downstream lowering rlib contains 16 compiled definitions of its clone method,
+totalling 199,227 symbol bytes. HirStmt has no separately named clone definition
+in this artifact; do not claim the same measured duplication for it. Exact counts, artifact digest and raw nm output
+are in v1i-dependency-audit/clone-ownership.json and lowering-symbols.txt.
+This is evidence of repeated code generation, not elapsed-time attribution.
+The retained rlib is a development artifact, not a recovered clean SQL artifact.
+
+The bounded proposal is to put this non-generic clone implementation in
+their owning IR crate, using exhaustive field-by-field Clone implementations
+without an inline hint. Keep node layout, API, all fields and deep-clone semantics.
+An exhaustive match fails compilation when variants or fields are added; no
+wildcard, serialization roundtrip, shared mutable representation or custom derive
+dependency is needed. Normal release LTO remains available. Measure before adoption.
+
+Evidence: v1i-dependency-audit/ retains ten successful read-only commands,
+locked graph output, ownership map and object evidence. Historical V1a already
+tested opt1 for first-party hot crates without a useful improvement; V1e/f/g
+opt0 experiments remain rejected. Do not repeat them as a new proposal.
+
+### V1j — feasibility of canonical HIR clone ownership
+
+This bounded diagnostic follows the demonstrated duplicated definitions in V1i.
+Replace only derived Clone for HirExpr with an exhaustive
+field-by-field implementation in its IR owner, without an inline attribute.
+Preserve each field's existing Clone operation, public node definitions,
+layout, trait API, optimization profiles and dependencies. A separate expression
+implementation file keeps maintained sources below 900 lines.
+Do not change other clone types or introduce arenas, a new macro system or IPC.
+
+Start with IR deep-clone/metadata independence checks and existing affected IR
+tests. Then measure the canonical SQL clean A / unchanged A / independent clean B
+protocol, seven rejection controls and all three executable byte comparisons,
+at the established six-Cargo/two-Rayon allocation and resource reserves.
+Capture actual emitted units, features, profiles and clone-definition ownership
+before target cleanup. The previous V1h build baseline may be reused only after
+proving relevant normal/build source, manifest, lock, toolchain, protocol and
+allocation identity; unrelated driver/test changes must be explicitly excluded
+by the resolved dependency graph. Otherwise make a matched baseline.
+
+Compile unchanged migration-source and PostgreSQL component probes from those
+actual libraries and run fresh-process comparisons. Preparation and runtime must
+be reported separately. Use matched baseline probes if historical runtime
+inputs do not match. Keep all original tests and assertions. A build saving that
+causes a material compiler/runtime regression is not acceptable. Stop after the
+first decisive rejection rather than repeat an unpromising candidate.
+
+This is feasibility evidence, not phase acceptance. If worthwhile, register and
+complete broader canonical source/installed/native regression qualification and
+independent review before adoption. Retain all failed or interrupted evidence.
+Every long run needs capacity admission and a 30-minute cap. Full scoped final
+gates, complete coverage, producer accounting and every V5 scenario remain required.
+
+
+### V1j refined candidate — batch the same clone-ownership cause
+
+Before the candidate SQL timing run, the matched baseline's actual clean SQL
+lowering artifact confirms 122 Type::clone definitions (321,592 symbol bytes)
+and 16 HirExpr::clone definitions (199,227 symbol bytes). This strengthens V1i's
+retained-object observation; it is still not compile-time attribution. HirStmt
+remains outside scope. The baseline IR artifact has no separately emitted
+definition of either method.
+
+Extend the same bounded ownership experiment to Type in sifr_type_system:
+an exhaustive ordinary Clone implementation in its defining crate, with no
+inline hint, layout change, new dependency or other trait change. Preserve
+every field's existing clone semantics, including SharedVec copy-on-write,
+nominal identity, symbolic recursive aliases and structural-record source order.
+Add focused controls for those ownership/metadata contracts and run the existing
+type-system plus IR tests. Batch these two related implementations into one
+candidate before the expensive SQL protocol, rather than running one protocol
+per small clone repair. The earlier expression-only candidate and its eight
+passing focused IR tests remain recorded; it has no SQL timing claim.
+
+The matched baseline probe preparation has now passed: one clean native build
+383.304s, additional symbol/probe preparation 3.500s, and all four unchanged
+runtime tests in three fresh-process repetitions. Guarded total is 508.090s,
+including runtime and cleanup; there is no reserve stop, leftover process or
+source mutation. This single preparation build is not a newly executed full
+reproducibility protocol. Full V1h build evidence is reused only after the
+recorded 35-package normal/build source and fixed-input identity check.
+No V1h SQL dependency, manifest, lock, toolchain or protocol input changed;
+unrelated driver/test and verification/doc changes are listed explicitly.
+
+Run the combined candidate through the previously registered complete SQL
+protocol and matched runtime probes, collecting type-system, IR and downstream
+lowering symbols. Compare actual features/profile/units and all three linked
+executable hashes within the candidate's clean/reused/independent builds.
+All earlier runtime, correctness, capacity, review and final phase obligations
+remain. If a worthwhile saving is absent or runtime regresses materially,
+record the rejection without adopting this source change.
+
+
+### V1j outcome — reject a real duplication fix without a gate saving
+
+The combined experimental candidate
+b1204ee351911ccaa7ebfb3b8fc47f5330bbc31a passes its bounded qualification, but
+does not improve the mandatory SQL build protocol meaningfully. Do not adopt it.
+
+| Observation | Baseline | Combined owned-clone candidate |
+| --- | ---: | ---: |
+| Full clean/reused/independent SQL build stages | 775.138s (qualified V1h inputs) | 773.968s |
+| Newly measured matched clean-A preparation | 383.304s | 384.538s |
+| Unchanged A | 1.382s (V1h) | 1.192s |
+| Independent clean B | 391.728s (V1h) | 388.238s |
+| Source-migration probe median | 0.558s | 0.537s |
+| PostgreSQL component probe median | 39.128s | 39.265s |
+| Additional candidate symbol/probe preparation | — | 3.512s |
+| Whole candidate diagnostic, including runtime and cleanup | — | 900.428s |
+
+The complete build-stage difference is only 1.170s (0.15%). This is not a
+demonstrated speedup. The small source-probe difference does not establish a
+whole-gate saving; component runtime is effectively unchanged in these three
+observations. No timing here qualifies the complete local correctness gate.
+
+All 490 actual package/target/feature/profile entries match the baseline.
+Both clean stages build all 490 entries with zero fresh units; unchanged A
+reports all 490 fresh. All three executable hashes match within the candidate's
+three builds. Seven rejection controls pass, as do the four unchanged runtime
+tests in each of three fresh-process repetitions. Runtime inputs, current guest
+bytes, probe sources, toolchain and allocation reconcile. The 165 focused IR and
+type-system tests also pass. Guards record no reserve stop, leftover session
+or unexpected tracked source change; private build targets are removed.
+
+The mechanism itself is confirmed: lowering's 122 Type::clone and 16
+HirExpr::clone definitions disappear; one definition remains in each defining
+crate. Lowering's first-build duration falls from 175.270s to 165.030s, while
+the complete build remains flat. Overlapping unit durations cannot be added
+as wall-time savings. This experiment distinguishes real code-generation
+duplication from a useful end-to-end optimization.
+
+Both experimental source commits are reverted at
+41a16215be79b6d21eb8285e84436b546f887678. Product sources, manifests and lockfiles
+are byte-identical in Git to accepted main 8f7d4efc0c71b491ce4028f44f5ab2e21f900c7b;
+only these phase records remain different. The rejected source, focused tests,
+full diagnostic results and exact inputs remain available for inspection.
+There is no implementation adoption or new compiler qualification claim.
+
+Evidence: v1j-comparison.json, v1j-first-build-attribution.json,
+v1j-build-baseline-inputs.json and the complete raw packet
+v1j-qualified-evidence.tar.gz, SHA-256
+c84f3ae2d46377739fb941c08837d578a6de4eafd7a65bb04e9f7c46d98ae0f2
+(185 payloads / 181,292,358 bytes). Preserve the unchanged V1h protocol archive
+included in this packet. The next item targets potentially duplicated producer
+preparation rather than maintaining hundreds of clone lines for an unproven gain.
+V1, complete final scoped gates and every V5 scenario remain open.
+
+### V4au — audit source and installed compiler preparation identities
+
+Status: registered bounded investigation. Reuse the V4an discovery records:
+release preparation took 668.079s and the sysroot-release area 882.832s.
+These separate timings are not proof of duplicated work and must not be summed
+as an achievable saving. Determine which producer operations each actually
+executes and why retained artifacts are or are not reusable.
+
+Trace the emitted preparation plan and real source/installed commands through
+their Cargo targets, features, profiles, Rust flags, toolchain, selected version
+and producer identity. In particular inspect SIFR_RELEASE_VERSION and related
+configuration at each boundary; do not assume it is the dirty cause. Start with
+retained command/artifact/fingerprint evidence and current code. Distinguish
+intentional version/invalidation checks, profile/feature differences, bootstrap
+provisioning and otherwise identical repeated compilation.
+
+If the retained records cannot establish a rebuild reason, run only the smallest
+affected current preparation with bounded Cargo fingerprint diagnostics,
+retaining its target. Admit capacity first and keep the 30-minute cap. Instrumented
+runs explain causality; they are not acceptance timings. Do not repeat a complete
+gate or an unchanged cold build just to obtain another elapsed number.
+
+The deliverable is an exact producer/consumer identity map and one simple
+proposal backed by demonstrated redundant work, if any. Prefer preparing a
+required producer once under coherent existing inputs over adding another cache
+or executor. Preserve version-policy checks, compiler/source/installed boundaries,
+invalidation coverage, all declared inputs and failed evidence. Do not drop an
+identity field or silently merge incompatible profiles/features/versions.
+Register the precise implementation and qualification contract before source edits.
+The complete final gates, SQL clean-build protocol and V5 are unchanged.
