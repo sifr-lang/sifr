@@ -21,6 +21,9 @@ from .execution_scope import evidence_name, scope_name, select_execution_scope
 from .preparation import PreparationRun
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, run_segmented_python_interop
+from .demo_freshness_policy import (
+    STRICT_FLAG, requires_strict_freshness, validate_strict_freshness_evidence,
+)
 from .process_execution import SAFETY_DEADLINE_ENV, deadline_environment
 from .profile_commands import CommandFailed, cargo_command, run_command, area_command
 from .profile_reporting import run_profile_with_report
@@ -359,15 +362,19 @@ class ProfileRunner:
             )
             return
         result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
-        run_selected_area(
+        strict_freshness = requires_strict_freshness(self.profile, area)
+        result_path = run_selected_area(
             area=area,
             suites=suites,
             profile_name=self.evidence_name,
             result_slug=result_slug,
             command_builder=lambda *args: area_command(
-                *args, *(["--no-fail-fast"] if self.no_fail_fast else [])),
+                *args, *(["--no-fail-fast"] if self.no_fail_fast else []),
+                *([STRICT_FLAG] if strict_freshness else [])),
             command_runner=lambda command: run_command(command, env=self.env),
         )
+        if strict_freshness:
+            validate_strict_freshness_evidence(json.loads(result_path.read_text()))
 
     def run_toolchain_step(self, toolchain_step: str) -> None:
         if toolchain_step == "cargo-build-release":

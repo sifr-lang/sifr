@@ -226,6 +226,10 @@
           "area": {
             "type": "string"
           },
+          "require_fresh_demo_companions": {
+            "type": "boolean",
+            "enum": [true]
+          },
           "suites": {
             "type": "array",
             "minItems": 1,

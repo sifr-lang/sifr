@@ -90,6 +90,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
         help="Path for machine-readable generated-code quality result summary.",
     )
+    parser.add_argument("--require-fresh-demo-companions", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -100,6 +101,12 @@ def main(argv: list[str] | None = None) -> int:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     validate_smoke_profile(CORPUS_MANIFEST)
     selected = select_suites(manifest, set(args.suite))
+    if args.require_fresh_demo_companions and not any(
+        any(gate == "freshness" for gate, _, _ in
+            PROFILE_SUITES.get(suite["name"], [(suite["name"], None, None)]))
+        for suite in selected
+    ):
+        raise SystemExit("strict demo freshness requires a selected freshness gate")
     # Retain dependency artifacts across gates. Compatible read-only consumers
     # share one fresh corpus inside their batch; other gates remain independent.
     # Profile invocations already supply their prepared dependency root.
@@ -113,7 +120,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  corpus_manifest={CORPUS_MANIFEST.relative_to(REPO_ROOT)}", flush=True)
     print("  bless=no", flush=True)
 
-    suite_results = [run_suite(suite) for suite in selected]
+    suite_results = [run_suite(suite, args.require_fresh_demo_companions)
+                     for suite in selected]
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     blocking_failures = total_failures
@@ -167,7 +175,7 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
     return selected
 
 
-def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
+def run_suite(area_suite: dict[str, Any], require_fresh: bool = False) -> dict[str, Any]:
     suite_name = str(area_suite["name"])
     cases = area_suite.get("cases", [])
     if not isinstance(cases, list) or len(cases) != 1:
@@ -191,7 +199,8 @@ def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
             variant = shared[gate]
             emit_case_timing(suite_name, gate, variant["duration_ms"], variant["status"])
         else:
-            variant = run_gate(suite_name, gate, max_entries, entry_ids)
+            variant = run_gate(suite_name, gate, max_entries, entry_ids,
+                               require_fresh and gate == "freshness")
         variants.append(variant)
     failed_variants = sum(1 for variant in variants if variant["status"] != "pass")
     result = {
@@ -219,6 +228,7 @@ def run_gate(
     gate: str,
     max_entries: str | None,
     entry_ids: tuple[str, ...] | None,
+    require_fresh: bool = False,
 ) -> dict[str, Any]:
     env = os.environ.copy()
     if max_entries is None:
@@ -234,22 +244,28 @@ def run_gate(
     detail_path.unlink(missing_ok=True)
     env["SIFR_GCQ_CASE_REPORT"] = str(detail_path)
     argv = [sys.executable, str(GATE_SCRIPT), gate, "--manifest", str(CORPUS_MANIFEST)]
+    if require_fresh:
+        argv.append("--require-fresh-demo-companions")
     started = time.perf_counter()
     proc = subprocess.run(argv, cwd=REPO_ROOT, env=env, text=True, check=False)
     elapsed_ms = (time.perf_counter() - started) * 1000.0
-    status = "pass" if proc.returncode == 0 else "fail"
+    detail = json.loads(detail_path.read_text()) if detail_path.is_file() else None
+    policies_pass = (isinstance(detail, dict)
+                     and detail.get("checks") == {"strict": "pass", "debt": "pass"})
+    status = "pass" if proc.returncode == 0 and (not require_fresh or policies_pass) else "fail"
     emit_case_timing(suite_name, gate, elapsed_ms, status)
     return {
         "label": gate,
         "argv": argv,
         "max_entries": max_entries,
         "status": status,
-        "mismatches": [] if status == "pass" else ["unexpected-exit"],
+        "mismatches": [] if status == "pass" else [
+            "missing-policy-evidence" if proc.returncode == 0 else "unexpected-exit"],
         "expected_exit_code": 0,
         "actual_exit_code": proc.returncode,
         "duration_ms": round(elapsed_ms, 3),
         "entry_ids": list(entry_ids) if entry_ids is not None else None,
-        "case_evidence": json.loads(detail_path.read_text()) if detail_path.is_file() else None,
+        "case_evidence": detail,
     }
 
 

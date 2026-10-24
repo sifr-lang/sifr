@@ -772,6 +772,7 @@
     },
     {
       "area": "generated_code_quality",
+      "require_fresh_demo_companions": true,
       "suites": [
         "representative"
       ],
@@ -917,7 +918,6 @@
   "guardrail_steps": [
     "hir-maintainability",
     "file-size",
-    "demo-emitted-freshness",
     "source-crate-dependency-direction",
     "submodule-ownership",
     "sysroot-resource-certification",

@@ -144,7 +144,11 @@ def parse_args() -> argparse.Namespace:
         default=os.environ.get("SIFR_GCQ_KEEP_SUCCESS") == "1",
         help="Keep successful transient generated projects.",
     )
-    return parser.parse_args()
+    parser.add_argument("--require-fresh-demo-companions", action="store_true")
+    args = parser.parse_args()
+    if args.require_fresh_demo_companions and args.mode != "freshness":
+        parser.error("strict demo freshness requires freshness mode")
+    return args
 
 
 def load_manifest(path: Path) -> list[Entry]:
@@ -396,8 +400,15 @@ def gate_inventory(_entries: list[Entry], _args: argparse.Namespace) -> None:
     run_inventory_gate(timed_case, record_evidence, run_id)
 
 
-def gate_freshness(_entries: list[Entry], _args: argparse.Namespace) -> None:
-    run_freshness_gate(timed_case, record_evidence, run_id, run_command, sifr_binary)
+def gate_freshness(_entries: list[Entry], args: argparse.Namespace) -> None:
+    result = run_freshness_gate(
+        timed_case, record_evidence, run_id, run_command, sifr_binary,
+        require_fresh=args.require_fresh_demo_companions,
+    )
+    if os.environ.get("SIFR_GCQ_CASE_REPORT"):
+        Path(os.environ["SIFR_GCQ_CASE_REPORT"]).write_text(
+            json.dumps(result, indent=2) + "\n", encoding="utf-8",
+        )
 
 
 def gate_corpus(entries: list[Entry], args: argparse.Namespace) -> None:

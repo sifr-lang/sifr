@@ -155,7 +155,9 @@ def gate_freshness(
     run_id: Callable[[str], str],
     run_command: Callable[..., Any],
     sifr_binary: Callable[[], str],
-) -> None:
+    *,
+    require_fresh: bool = False,
+) -> dict[str, Any]:
     def check_freshness() -> dict[str, Any] | None:
         debt = load_debt(QUALITY_DEBT)
         validate_debt_owners(debt)
@@ -187,12 +189,19 @@ def gate_freshness(
             actual=actual,
             debt=debt,
         )
+        if require_fresh and stale:
+            raise RuntimeError("strict demo freshness rejects stale companions: " + ", ".join(stale))
         return actual
 
     actual = timed_case("generated_code_quality", "freshness/demo-companions", check_freshness)
-    evidence = record_evidence(
-        "freshness",
-        run_id("freshness"),
-        [{"debt": actual, "status": "passed"}],
-    )
+    result = {
+        "debt": actual,
+        "status": "passed",
+        "checks": {"strict": "pass" if require_fresh else "not-requested", "debt": "pass"},
+        "companions": sorted(path.relative_to(REPO_ROOT).as_posix()
+                             for path in (REPO_ROOT / "demos").glob("**/emitted.rs")
+                             if path.with_name("main.sifr").is_file()),
+    }
+    evidence = record_evidence("freshness", run_id("freshness"), [result])
     print(f"generated-code freshness passed; evidence={evidence.relative_to(REPO_ROOT)}")
+    return result

@@ -27,6 +27,8 @@ from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
 from .generated_cargo_setup_checks import policy_checks as generated_cargo_setup_policy_checks
 from .errors import SchemaError
+from .demo_freshness_checks import policy_checks as demo_freshness_checks
+from .profile_coverage_checks import _profile_coverage_self_test
 from .execution_scope_checks import policy_checks as execution_scope_checks
 from .dx10_profile_checks import policy_checks as dx10_profile_checks
 from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
@@ -69,6 +71,7 @@ GOVERNANCE_SCHEMA_COUNT = 20
 
 def run_all() -> list[str]:
     checks = [
+        ("strict demo freshness ownership and evidence", demo_freshness_checks),
         ("R3 command progress and stage accounting", progress_checks),
         ("preparation dependency and failure accounting", preparation_checks),
         ("pinned Python preparation ownership", python_preparation_checks),
@@ -251,62 +254,6 @@ def _profile_schema_self_test() -> None:
         if budget.get("enforcement") != "blocking" or any(int(limit) <= 0 for limit in limits):
             raise AssertionError(f"create-pr step budget is not blocking/positive: {step}={budget}")
     _profile_coverage_self_test(profiles)
-
-
-def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
-    required_guardrails = {
-        "hir-maintainability",
-        "file-size",
-        "demo-emitted-freshness",
-        "source-crate-dependency-direction",
-        "submodule-ownership",
-        "sysroot-resource-certification",
-        "stdlib-native-intrinsic-allowlist",
-        "stdlib-native-adapter-reachability",
-        "stdlib-manifest-schema",
-        "dx-metadata-inventory",
-        "stdlib-bootstrap-ordering",
-        "driver-maintainability",
-        "method-dispatch-authority",
-        "unsafe-abi-contracts",
-        "verification-hardening-self-test",
-        "verification-runner-foundation",
-    }
-    required_area_suites = {
-        "core_language": {"audit-fixtures"},
-        "project_workspace": {"audit-fixtures"},
-        "stdlib_parity": {
-            "module-merge-check",
-            "audit-fixtures",
-            "complexity-resource",
-            "module-inventory",
-        },
-        "developer_tooling": {"typescript-go-transfer", "diagnostic-rules", "architecture-policy"},
-        "package_management": {"guardrails", "offline-merge-smoke"},
-        "performance": {"frontend-syntax-guardrails"},
-    }
-    for profile_name in ("create-pr", "merge", "nightly", "release"):
-        profile = profiles[profile_name]
-        selected = {
-            str(selection["area"]): {str(suite) for suite in selection["suites"]}
-            for selection in profile["selected_areas"]
-            if isinstance(selection, dict)
-        }
-        for area, suites in required_area_suites.items():
-            missing = sorted(suites.difference(selected.get(area, set())))
-            if missing:
-                raise AssertionError(f"{profile_name} lost canonical {area} coverage: {missing}")
-        guardrails = set(profile["guardrail_steps"])
-        if not required_guardrails.issubset(guardrails):
-            raise AssertionError(f"{profile_name} lost canonical guardrail coverage")
-        toolchain = set(profile["toolchain_steps"])
-        if "e2e-pass" not in toolchain or not any(
-            str(step).startswith("cargo-test-sifr-") for step in toolchain
-        ):
-            raise AssertionError(f"{profile_name} lost crate-test or e2e coverage")
-    for profile_name in ("nightly", "release"):
-        if "hardening-determinism-scale" not in profiles[profile_name]["guardrail_steps"]:
-            raise AssertionError(f"{profile_name} lost determinism-scale coverage")
 
 
 def _crate_membership_self_test() -> None:

@@ -12662,3 +12662,71 @@ Acceptance:
 - Require an independent exact-candidate review before intermediate merge.
   The approved intermediate policy applies; final scoped create-pr/merge gates
   and every V5 invalidation/coverage/timing qualification remain mandatory.
+
+### V4bh closure — verification registration / #4471
+
+Merged PR #4471 as ae978a9d5cbb0eba5d6effe6ec80b12aae7325b5.
+Exact reviewed/qualified candidate 4cd65b0cede18bf06a7769a8bdf8fe8c53b9c0a0;
+merged tree identical. Nine focused commands pass in 66.226s guard, including
+77 affected runner controls and all four coverage-readiness variants. Both
+original failed registrations now pass. Seven emitted plans preserve every
+prior field except the new metadata guard and its create-pr budget. Locked
+environment plus complete runner foundation self-test pass in 64.232s guard.
+
+Initial candidate 9cb04da609a72ebcdafc991e6f7d43aff4041fb4 failed the foundation
+test's hard-coded 15-guard count. The repaired check compares the exact frozen
+guardrail list plus the new audit, preserving ordering and detecting omissions.
+Retain original failure and final passing evidence separately.
+
+Independent Claude Opus review: SATISFIED, no blocking findings. Review SHA-256
+5541c447a0905f7ee81da339d361aec4d5b26e4ff4dfde44795e5f0bf890d22d.
+The first attempt failed authentication without a verdict; the successful
+read-only review inspected exact local Git objects and copied candidate-bound
+evidence. The app refused attachment because this chat has 100 attachments.
+Suggestions only: explicitly assert blocked-step reporting when touching the
+control, and clarify the external comparison receipt's generic budget wording;
+its exact assertions already limit the new budget to create-pr.
+
+V4bf archive a4d7189932aad2c332f4797d6849eca179b04cd3d3d1925c0f63b605751a4501:
+2996 payloads verified locally. V4bg archive
+9ec6337112b3b2225c4a10e3e229810ddf05ee6dad44205a3fa5b1f9a1c5fab2:
+774 payloads verified locally. Each archive also contains its exact manifest.
+The initial local comparator rejected this additional manifest member; the
+corrected comparator checks it byte-for-byte as well as every payload hash.
+Original source evidence remains retained. No product/compiler semantics changed.
+Final scoped gates and every V5 scenario remain open.
+
+### V4bi prospective execution — one emission, both demo freshness policies
+
+The V4bg strict guard takes 143.264s and the GCQ freshness gate 142.375s.
+Both invoke the same current emitter for the 264 maintained companions, but
+GCQ additionally enforces owned exact freshness/orphan debt. Compose these
+policies around one fresh emission; do not cache or reuse an earlier verdict.
+
+Acceptance:
+- Give merge/nightly/release's selected GCQ representative/full area explicit
+  ownership of strict-zero-stale plus exact debt/orphan freshness. Preserve
+  the create-pr smoke profile's independent strict guard and standalone command
+  defaults. Selection without freshness cannot claim the combined owner.
+- Carry an explicit option through the canonical runner and gate; reject
+  incompatible selections/options. Expose the owner in emitted plans and actual
+  result evidence, and require that evidence before accepting the consumer.
+- Preserve compiler failure, missing/forbidden reference, stale, exact allowed
+  debt, orphan, malformed/empty protocol and missing-execution rejection. Keep
+  existing debt, fixture bytes, compiler profiles and all selected assertions.
+  Both policies inspect the same newly executed emission result.
+- Retain failure evidence. The transferred strict check runs with the GCQ owner;
+  document and test its failure/result handling instead of reporting an
+  unexecuted old guard as passing.
+- Run focused runner/area negative controls, complete runner foundation,
+  profile/schema and emitted-plan comparisons, file-size and diff checks.
+  Compare all profiles and both scoped plans; only explicit freshness ownership
+  and associated step budgeting may change.
+- Execute complete representative GCQ with retained matching compiler inputs:
+  reconcile all original ten gate variants/nested cases and all 264 companions,
+  observe both policies and ordinary elapsed time. No partial/filtered pass
+  substitutes for the selected complete qualification.
+- Independent exact-candidate review before adoption. Final scoped gates and
+  every V5 remain required. This removes one demonstrated duplicate producer;
+  it does not establish a sub-ten-minute complete gate or resolve SQL clean
+  build/preparation cost.
