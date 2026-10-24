@@ -42,7 +42,12 @@ class ExecutionScopeTests(unittest.TestCase):
         actual = {(a["area"], s) for a in plan["selected_areas"] for s in a["suites"]}
         self.assertEqual(actual, expected)
         self.assertEqual(len(actual), 105)
-        self.assertEqual(len(plan["guardrail_steps"]), 15)
+        expected_guardrails = list(frozen["guardrails"])
+        expected_guardrails.insert(
+            expected_guardrails.index("stdlib-manifest-schema") + 1,
+            "dx-metadata-inventory",
+        )
+        self.assertEqual(plan["guardrail_steps"], expected_guardrails)
         assert_frozen_crate_coverage(
             frozen["crate_configurations"],
             configuration_plan(select_execution_scope(load_profile("merge"), True), "full"),
