@@ -7,7 +7,9 @@ use super::rust_interop_probe::{
 use super::rust_interop_probe_cache::{
     ProbeInputSnapshot, mark_probe_cache_hit, probe_cache_file, probe_cache_key,
 };
-use super::rust_interop_probe_diagnostics::{classify_probe_failure, probe_resolution_diagnostics};
+use super::rust_interop_probe_diagnostics::{
+    classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
+};
 use super::rust_interop_probe_features::dependency_features;
 use super::rust_interop_probe_manifest::{
     bind_probe_package_identity, probe_cargo_toml, probe_cargo_vendor_args,
@@ -72,9 +74,10 @@ fn plan(
     probe: &PendingRustBridgeProbe,
 ) -> Result<(String, PlannedProbe<'_>), ProbeExecutionFailure> {
     if !probe.backend.cargo_manifest_path.is_file() {
-        return Err(probe_io_failure(format!(
-            "Rust probe Cargo manifest '{}' is missing or unreadable",
-            probe.backend.cargo_manifest_path.display()
+        return Err(probe_cargo_resolution_failure(format!(
+            "Rust probe Cargo manifest '{}' is missing or unreadable in {} mode",
+            probe.backend.cargo_manifest_path.display(),
+            probe.cargo_resolution.lock_mode.as_str()
         )));
     }
     let backend_root = probe

@@ -57,6 +57,7 @@ fn protocol_damage_cannot_authorize_a_probe() {
         bytes(&[artifact("/a/lib.rs")]),
         bytes(&[artifact("/a/lib.rs"), finished(false)]),
         bytes(&[artifact("/a/lib.rs"), finished(true), finished(true)]),
+        bytes(&[finished(true), artifact("/a/lib.rs")]),
         bytes(&[json!({"reason":"unknown"}), finished(true)]),
     ] {
         assert!(protocol::outcomes(&rows, b"", true, &members).is_err());
@@ -157,4 +158,19 @@ fn different_feature_manifests_cannot_share_a_workspace() {
     let temp = tempfile::tempdir().unwrap();
     let other = format!("{MANIFEST}\n[features]\nextra=[]\n");
     assert!(workspace::write(temp.path(), &[(MANIFEST, ""), (&other, "")]).is_err());
+}
+
+#[test]
+fn macro_stdout_is_not_cargo_evidence() {
+    let members = vec![PathBuf::from("/a/lib.rs")];
+    let text = b"ordinary macro output\n{\n{\"log\":\"macro data\"}\n\xff\n";
+    let mut complete = text.to_vec();
+    complete.extend(bytes(&[artifact("/a/lib.rs"), finished(true)]));
+    assert!(protocol::outcomes(&complete, b"", true, &members).unwrap()[0].is_ok());
+    let mut missing_artifact = text.to_vec();
+    missing_artifact.extend(bytes(&[finished(true)]));
+    assert!(protocol::outcomes(&missing_artifact, b"", true, &members).is_err());
+    let mut missing_completion = text.to_vec();
+    missing_completion.extend(bytes(&[artifact("/a/lib.rs")]));
+    assert!(protocol::outcomes(&missing_completion, b"", true, &members).is_err());
 }

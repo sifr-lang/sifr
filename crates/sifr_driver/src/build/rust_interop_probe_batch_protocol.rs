@@ -13,18 +13,34 @@ pub(super) fn outcomes(
     let mut errors: BTreeMap<PathBuf, String> = BTreeMap::new();
     let mut shared_errors = String::new();
     let mut finished = None;
-    let text = std::str::from_utf8(stdout).map_err(|_| "Rust probe Cargo output is not UTF-8")?;
-    for line in text.lines() {
-        let value: serde_json::Value = serde_json::from_str(line)
-            .map_err(|_| "Rust probe Cargo output is malformed or truncated")?;
+    let cargo_stderr = String::from_utf8_lossy(stderr);
+    // Cargo's stream also carries arbitrary procedural-macro stdout. Only
+    // recognized Cargo records supply evidence; text can never authorize a probe.
+    // https://doc.rust-lang.org/cargo/reference/external-tools.html#json-messages
+    for line in stdout.split(|byte| *byte == b'\n') {
+        let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
+            continue;
+        };
+        if !matches!(
+            value["reason"].as_str(),
+            Some(
+                "build-finished"
+                    | "compiler-artifact"
+                    | "compiler-message"
+                    | "build-script-executed"
+            )
+        ) {
+            continue;
+        }
+        if finished.is_some() {
+            return Err("Rust probe Cargo output continues after completion".into());
+        }
         match value["reason"].as_str() {
             Some("build-finished") => {
                 let result = value["success"]
                     .as_bool()
                     .ok_or("Rust probe completion has no status")?;
-                if finished.replace(result).is_some() {
-                    return Err("Rust probe Cargo output repeats completion".into());
-                }
+                finished = Some(result);
             }
             Some("compiler-artifact") => {
                 if let Some(source) = value["target"]["src_path"].as_str() {
@@ -56,7 +72,7 @@ pub(super) fn outcomes(
         // Cargo resolution can fail before emitting build-finished. Preserve its
         // diagnostic as a failure for every unobserved member, never a pass.
         if !success && finished.is_none() && artifacts.is_empty() && errors.is_empty() {
-            let message = String::from_utf8_lossy(stderr).into_owned();
+            let message = cargo_stderr.to_string();
             if !message.trim().is_empty() {
                 return Ok(members.iter().map(|_| Err(message.clone())).collect());
             }
@@ -75,6 +91,10 @@ pub(super) fn outcomes(
                 Ok(Ok(()))
             } else if !shared_errors.is_empty() {
                 Ok(Err(shared_errors.clone()))
+            } else if !success && !cargo_stderr.trim().is_empty() {
+                // Cargo reports runtime build-script failures only on stderr.
+                // Preserve that failure for each unobserved dependent probe.
+                Ok(Err(cargo_stderr.to_string()))
             } else {
                 Err(format!(
                     "Rust probe Cargo did not observe {}",

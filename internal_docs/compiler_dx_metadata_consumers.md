@@ -559,6 +559,7 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs:659` `sysroot_metadata_identity_binds_authority_and_tree_payloads` | read | test setup/parity | 664, 667, 675, 676, 695, 696, 697, 699, 711, 722 |
 | `crates/sifr_driver/src/build/rust_interop_contract_tests.rs:476` `base_project_with_contracts` | read | test setup/parity | 483 |
 | `crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs:310` `package_rust_interop_sifr_stdlib_named_root_still_requires_explicit_policy` | read | test setup/parity | 310 |
+| `crates/sifr_driver/src/build/rust_interop_probe_batch_authority_tests.rs:84` `configurations_split_on_every_shared_authority_boundary` | read | test setup/parity | 129 |
 | `crates/sifr_driver/src/build/rust_interop_probe_tests.rs:90` `sysroot_probe_manifest_enables_declared_stdlib_features` | read | test setup/parity | 90 |
 | `crates/sifr_driver/src/build/rust_interop_probe_tests.rs:161` `python_raw_callback_probe_uses_concrete_stdlib_error_type` | read | test setup/parity | 161 |
 | `crates/sifr_driver/src/build/rust_interop_probe_tests.rs:268` `sysroot_stdlib_probe_features_follow_target_module_segment` | read | test setup/parity | 268, 269, 282 |

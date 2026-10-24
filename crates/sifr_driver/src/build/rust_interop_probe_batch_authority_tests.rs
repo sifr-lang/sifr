@@ -284,3 +284,97 @@ fn owned_probe_calls(calls: &[crate::CargoInvocation], backend: &Path) -> usize 
         })
         .count()
 }
+
+#[test]
+fn build_script_failure_keeps_original_diagnostics_for_every_probe() {
+    let temp = tempfile::tempdir().unwrap();
+    fixture(temp.path());
+    std::fs::write(
+        temp.path().join("backend/build.rs"),
+        "fn main() { panic!(\"intentional bridge build failure\"); }",
+    )
+    .unwrap();
+    let tools = sifr_sysroot::NativeToolchain::resolve_at(temp.path()).unwrap();
+    let selections = vec![
+        probe(temp.path(), &tools, "first"),
+        probe(temp.path(), &tools, "second"),
+    ];
+    let failures = execute(&selections);
+    assert_eq!(failures.len(), 2);
+    for ((index, failure), target) in failures.iter().zip(["batch.first", "batch.second"]) {
+        assert!(*index < selections.len());
+        assert!(failure.code == sifr_diagnostics::DiagnosticCode::RUST_TYPE_PROBE_FAILURE);
+        assert!(failure.args.iter().any(|(_, value)| value == target));
+        assert!(
+            failure
+                .notes
+                .iter()
+                .any(|note| note.contains("intentional bridge build failure"))
+        );
+    }
+}
+
+#[test]
+fn missing_backend_manifest_keeps_the_resolution_contract() {
+    let temp = tempfile::tempdir().unwrap();
+    fixture(temp.path());
+    let tools = sifr_sysroot::NativeToolchain::resolve_at(temp.path()).unwrap();
+    let selected = probe(temp.path(), &tools, "first");
+    std::fs::remove_file(temp.path().join("backend/Cargo.toml")).unwrap();
+    let failure = plan(0, &selected)
+        .err()
+        .expect("missing manifest must fail");
+    assert!(failure.code == sifr_diagnostics::DiagnosticCode::RUST_CARGO_METADATA);
+    assert!(
+        failure
+            .args
+            .iter()
+            .any(|(_, value)| value.contains("missing or unreadable in normal mode"))
+    );
+    assert!(
+        failure
+            .notes
+            .iter()
+            .any(|note| note.contains("prepare the package lockfile"))
+    );
+}
+
+#[test]
+fn procedural_macro_stdout_keeps_all_real_probes_valid() {
+    let temp = tempfile::tempdir().unwrap();
+    fixture(temp.path());
+    let backend = temp.path().join("backend");
+    let macros = backend.join("macros");
+    std::fs::create_dir_all(macros.join("src")).unwrap();
+    std::fs::write(
+        macros.join("Cargo.toml"),
+        "[package]\nname=\"probe_output_macro\"\nversion=\"0.0.0\"\nedition=\"2024\"\n[lib]\nproc-macro=true\n",
+    )
+    .unwrap();
+    std::fs::write(
+        macros.join("src/lib.rs"),
+        r#"use proc_macro::TokenStream;
+#[proc_macro]
+pub fn make(_: TokenStream) -> TokenStream {
+    println!("ordinary procedural macro output");
+    "pub fn first() {} pub fn second() {}".parse().unwrap()
+}
+"#,
+    )
+    .unwrap();
+    let manifest = backend.join("Cargo.toml");
+    let mut contents = std::fs::read_to_string(&manifest).unwrap();
+    contents.push_str("\n[dependencies]\nprobe_output_macro={path=\"macros\"}\n");
+    std::fs::write(manifest, contents).unwrap();
+    std::fs::write(backend.join("src/lib.rs"), "probe_output_macro::make!();").unwrap();
+    let tools = sifr_sysroot::NativeToolchain::resolve_at(temp.path()).unwrap();
+    let failures = execute(&[
+        probe(temp.path(), &tools, "first"),
+        probe(temp.path(), &tools, "second"),
+    ]);
+    assert!(
+        failures.is_empty(),
+        "{:?}",
+        failures.iter().map(|(_, f)| &f.args).collect::<Vec<_>>()
+    );
+}

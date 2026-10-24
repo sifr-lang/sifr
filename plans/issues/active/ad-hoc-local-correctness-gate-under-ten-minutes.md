@@ -12315,3 +12315,65 @@ Acceptance before intermediate merge:
 - Independent exact-candidate review under the approved intermediate policy.
   All final scoped gates and V5 remain mandatory; do not claim ten minutes from
   this one fixture. The separate SQL clean-build protocol is still open.
+
+### V4be integrated discovery and Cargo protocol corrections
+
+Status: implementation qualification remains in progress; no merge or full-gate
+timing claim. Candidate c8fc3d42aa62e2346d24d7d5ff3b9d9c5ca873fa passed 41
+focused probe tests, complete selected Rust interop area (28.244s), all 790
+ordinary driver tests (336.060s test body; 337.960s guard), and all 81 generated
+driver assertion cases (776.574s category; 779.774s guard). The separate advanced
+data preparation helper also passed, accounting for the remaining ignored
+libtest entry. Preparation passed all 271 maintained Rust demos. No required
+case is treated as passed merely because it was ignored in the ordinary run.
+
+The generated category admitted one native worker with three Cargo jobs:
+10,180 MiB available was below the two-worker policy's 10,240 MiB threshold.
+The earlier complete discovery used two workers. Do not interpret this run as
+a matched speed comparison. Record the admission threshold as a separate
+scheduling investigation; do not relax memory reserves in this item. Read-only
+inventory auditing and small isolated protocol experiments also overlapped parts
+of functional qualification. Final host-sensitive timing remains independent.
+
+Ordinary isolated TLS materialization decreased from 30.850s at V4bd to
+18.590s on the first V4be invocation. A subsequent ordinary invocation with
+retained dependencies and a fresh output directory took 6.969s. These first
+and retained observations have different artifact states; no matched retained
+baseline or full-gate speedup is claimed. All Rust/build-script output bytes
+agree. Manifest/lock differences are exclusively their exact candidate revision.
+The independent trace observes two workspaces containing all 19 + 22 probe
+crates, five reads of each large runtime C source instead of 83, and
+298,086,262 compiler read bytes instead of 2,647,656,707. Trace time is not
+performance evidence.
+
+Two additional real-Cargo fixtures exposed in-scope parser regressions before
+adoption, even though the existing broad tests passed:
+- Runtime build-script failure emits a failed build-finished record but puts the
+  explanatory diagnostic on stderr. The initial parser replaced it with a
+  missing-observation error. Preserve the original failure for unobserved probes
+  and retain their existing diagnostic classification and declaration identities.
+- Procedural macros may emit ordinary text alongside Cargo JSON. A valid macro
+  compiled successfully but the initial parser rejected its stdout. Follow the
+  [documented Cargo stream contract](https://doc.rust-lang.org/cargo/reference/external-tools.html#json-messages):
+  only recognized Cargo records supply evidence. Arbitrary text, non-record
+  JSON and undecodable text cannot supply an artifact or completion observation.
+  Every required observation remains mandatory; damaged/missing required
+  records cannot pass, and contradictory or repeated completion is rejected.
+
+Standalone replay of captured real Cargo output through the actual production
+parser reproduced both failures at c8fc3d42aa. Retain those failures and the
+original grouping/profile test failures. Add permanent real-Cargo regressions
+for macro stdout and build-script diagnostics, synthetic missing-evidence
+controls, and the original missing-manifest diagnostic contract. The repaired
+candidate must pass replay and the complete affected ordinary Rust interop
+tests before generated-quality qualification.
+
+Reviewed inventory updates cover only this item's code: independent workspace
+output creation, probe manifest admission, test-owned file operations, Cargo
+message classification, and test assertions. Existing classifications and
+unrelated records remain unchanged. Update the architecture description to
+document independent crates, exact grouping boundaries and per-probe results.
+The broad c8fc3d42aa evidence remains tied to that observed candidate; subsequent
+focused repairs require their own affected checks and independent final review.
+Complete generated-quality preparation/execution, final scoped phase gates and
+all V5 scenarios remain open. SQL clean-build cost is still independently open.
