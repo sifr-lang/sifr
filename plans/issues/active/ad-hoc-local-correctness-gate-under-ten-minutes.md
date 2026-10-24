@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4am merged; V4an integrated correctness discovery registered; final timing and V1/V5 remain open
+current_stage: V4an discovery complete; V4ao inventory reconciliation in progress; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9869,3 +9869,77 @@ normal diagnostic allocation may cost more. Do not repeat the rejected V1c/V1e/V
 experiments or infer feasibility from isolated savings. Full phase closure still
 requires complete scoped create-pr and merge gates plus all V5 repetitions and
 invalidation scenarios. The new measurements determine the next bounded repair.
+
+
+### V4an closure — complete current-candidate failure discovery
+
+Frozen candidate `2cccaccc2789332cd0d2ee0dcc9ed02e7d83b783` completed the
+remaining selection through independently guarded continuations after the initial
+preparation cap. All 18 preparations and 18 Rust configurations pass. All 732 E2E
+source/runtime fixtures and 186 native groups pass in 296.854s guarded (293.586s
+suite). All 66 selected SQL cases have passing completion observations. The
+original SQL area remains capped/failed: eleven suites have passing case observations
+but no final canonical report. Eight unfinished suites were subsequently executed.
+The schema-tools canonical category passes in 312.134s, while its interrupted
+campaign wrapper retains failure status (120); no missing tests were inferred from
+that wrapper outcome. The remaining two suites executed separately and passed.
+
+The continuation records 71 category attempts: 67 pass, four fail (two maintained
+inventory drift failures, original SQL cap, schema-tools wrapper interruption).
+Canonical suite reports account for 93 pass, one developer-tooling failure and
+11 missing reports explained above. The sum of separate continuation attempts is
+12,466.614s; the initial capped attempt adds 1,842.370s separately. These are not
+one gate runtime or timing qualification. Original failures remain unchanged.
+
+Largest completed costs include generated driver 1,546.120s, SQL preparation
+895.867s, sysroot verification 882.832s and generated-code quality 825.246s.
+The independent SQL clean protocol takes 1,407.268s under this two-worker diagnostic
+allocation; V1h's isolated six-worker result remains a distinct measurement.
+The driver Python group now totals 119.892s, its five shared-environment fixtures
+52.861s, and 41 Rust interoperability invocation checks 1,146.804s. Different
+cache states prevent a controlled speedup claim. One optional readonly native
+cache observer briefly overlapped driver execution and was cancelled; these are
+diagnostic costs, not acceptance performance measurements. The lowering/CLI
+configuration's 654.670s includes CLI/native integration harnesses; lowering's own
+1,148 tests took 0.94s. Do not attribute the whole category to lowering.
+
+Exact commands, harnesses, preparation dependencies, source/runtime fixture hashes,
+SQL case completions and all failures are reconciled in the external discovery
+report. Archive `v4an-discovery-evidence.tar.gz`, SHA-256
+`98b3e44af769a9c50eacfd3342826cb6a1c11bbe04736bdcc72e2b8069a36332`,
+contains 2,865 payloads / 94,003,391 bytes, independently verified locally before
+any source repair. Structural report checks pass; no visual verification is claimed.
+Next repair: seven stale inventory records introduced by V4al/V4am. Next performance
+investigations: focused/canonical launch environment identity, repeated generated
+materialization, and native compilation/preparation boundaries. None is presumed
+safe or effective without affected checks and direct evidence. Final complete
+scoped gates, V1 mandatory clean budget and all V5 scenarios remain open.
+
+### V4ao — reconcile test-helper authority inventories
+
+Status: prospective bounded repair of the two V4an inventory failures. V4al's
+finalized-artifact regression and V4am's selected-CLI/context helper changed
+first-party test code without updating their maintained authority inventories.
+No product correctness failure is inferred from these inventory failures.
+
+Update exactly the seven reviewed records identified by V4an: two new method
+dispatch records, one changed method fingerprint, and four direct filesystem
+effect records. Preserve all unrelated records, order, classifications and the
+235 filesystem constituent declarations. Classify test assertions and test-owned
+input/output effects according to the existing schema. Do not bless an entire
+inventory, weaken discovery, suppress drift, or modify compiler/runtime behavior.
+
+Before applying the prepared patch, finish accounting for the frozen V4an
+campaign and archive its evidence. Check the patch against its recorded exact
+base; if inputs differ, inspect the difference rather than forcing the patch.
+Run the complete method-dispatch authority guard and its self-test, the complete
+developer_tooling static suite including filesystem guard/self-test, the file-size
+guard and documentation/diff checks. Compare parsed old/new inventories to prove
+only the seven intended records changed. These are intermediate checks under the
+approved LOCAL-GATE policy; final complete create-pr/merge and V5 are not waived.
+
+Open a draft PR and obtain scoped independent review of the exact candidate and
+these acceptance criteria. Merge only after those checks and review pass. Record
+V4an's original failed categories unchanged, link the repair's fresh passing
+evidence separately, and retain all remaining performance work. No timing saving
+is claimed for this inventory repair.

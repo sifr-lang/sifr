@@ -7825,6 +7825,30 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr/tests/sql_native_application.rs::editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
+      "site": "crates/sifr/tests/validation_suite_support/command.rs::expand_argv::literal-comparison::1",
+      "fingerprint": "e828db706486935462d0e3be5d33a58f6ae50f25c74d17951da576b4cacf4588",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "if argv [ 0 ] == \"<SIFR>\"",
+      "inputs": "fn expand_argv ( argv : & [ String ] , repo_root : & Path , tmp_dir : & Path , compiler : & Path , )",
+      "outputs": "Result < Vec < String > , String >",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr/tests/validation_suite_support/command.rs::expand_argv enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/validation_suite_support/command.rs::expand_argv enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr/tests/validation_suite_support/command.rs::remove_parent_package_context::literal-match::1",
+      "fingerprint": "3922e0c2e928255ba4bf2d84cb775086f1df0c162581002f230ea3dcc2bab01b",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( name , \"CARGO_MANIFEST_DIR\" | \"CARGO_MANIFEST_PATH\" | \"OUT_DIR\" )",
+      "inputs": "fn remove_parent_package_context ( command : & mut Command , keys : impl IntoIterator < Item = OsString > , )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr/tests/validation_suite_support/command.rs::remove_parent_package_context enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/validation_suite_support/command.rs::remove_parent_package_context enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
       "site": "crates/sifr_analysis/src/editor.rs::semantic_token_modifiers::literal-comparison::1",
       "fingerprint": "6205781135d2c1813db0e4da02409c6deb526dbe5c38ede3d804485171aa0d6e",
       "classification": "compiler-policy",
@@ -53473,7 +53497,7 @@
     },
     {
       "site": "crates/sifr_driver/src/build/native_reuse_tests.rs::dx9_finalized_artifact_survives_same_root_edit_and_runs_again::literal-comparison::1",
-      "fingerprint": "e477856cf66ac72e0602e38f7af55988dd6bab4392d9d06778fc4d1ab38bde8d",
+      "fingerprint": "0f18ab84b691ad7bd3b24c61309bf6a4fa5492ffe6fc4797a93793364f7d6d8f",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( invocations . iter ( ) . any ( | invocation | invocation . phase == \"final-build\" ) )",
