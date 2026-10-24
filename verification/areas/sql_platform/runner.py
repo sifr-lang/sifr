@@ -127,6 +127,10 @@ COMMANDS = {
         str(AREA_ROOT / "tools" / "check_postgresql_compiler.py"),
         "--self-test",
     ],
+    "sql-postgresql-build-selection-controls": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "test_postgresql_build_selection.py"),
+    ],
     "sql-postgresql-parser-matrix": [
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_parser_matrix.py"),

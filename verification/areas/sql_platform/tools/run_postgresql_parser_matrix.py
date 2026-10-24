@@ -13,13 +13,15 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 def main() -> int:
     for major in range(13, 19):
         environment = os.environ.copy()
-        environment["SIFR_POSTGRESQL_MAJOR"] = str(major)
+        environment["SIFR_POSTGRESQL_TEST_MAJOR"] = str(major)
         command = [
             "cargo",
             "test",
             "--locked",
             "-p",
             "sifr_sql_postgresql",
+            "--features",
+            f"postgresql-{major}",
             "--tests",
             "--",
             "--skip",
@@ -35,6 +37,8 @@ def main() -> int:
         "--locked",
         "-p",
         "sifr_sql_postgresql",
+        "--features",
+        "postgresql-18",
         "--test",
         "postgresql_components",
         "every_checked_in_component_executes_in_the_capability_free_host",

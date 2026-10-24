@@ -11494,3 +11494,475 @@ type-system and metadata do not. Therefore a host/protocol split cannot be claim
 to remove their entire compilation cost. Earlier V1 profile/concurrent-build
 experiments remain rejected. Mandatory SQL clean reproduction and final V1/V5
 qualification remain required.
+
+### V4az closure — complete metadata validation lookup work reduced
+
+Status: merged in [PR #4465](https://github.com/sifr-lang/sifr/pull/4465).
+Reviewed candidate 9fcec2d203210449b57c90a35855efad4e828624; squash merge
+652fe800da82cc7a5c5f6d10830fd283fb9beaa3 has the identical tree.
+
+Complete validation resolves references to directory positions and uses
+generation-tagged scratch for each root. Every root still traverses its graph
+with the same cycle, depth, work, reference-kind and ordering rules. Record
+decoding, fields, hashes, unreachable records, compatibility and immutable
+captured input checks remain; no persistent verdict or source fallback exists.
+
+All 31 metadata tests passed, including 2,304 original-algorithm comparisons.
+The 24 compiler-services and 14 semantic-services library tests passed.
+All 14 metadata-reader tests passed, with 732 fixtures and 1,464 source/Rust
+files byte-identical to the retained baseline. All four installed-sysroot suites
+passed in 637.252s (external guard 643.060s): boundary 219.333s, host 23.214s,
+corpus 359.733s and structural 34.656s. Detailed reconciliation verifies all
+745 commands, 732 unique emissions, four native cases, three expected negative
+doctor rejections, generation/LSP rollback and all output hashes.
+
+Five alternating ordinary final-candidate observations, with first invocations
+preserved separately and no profiling in these timings:
+- Complete captured-image validation: median 1.054749s to 0.510255s.
+- Invalid compiler check: 1.149359s to 0.602389s.
+- Valid compiler check: 1.851351s to 1.292394s.
+All paired command output and exit codes agree. These are bounded measurements,
+not additive whole-gate savings. The captured probe uses header-derived
+compatibility only for diagnosis; actual production compatibility is exercised
+by the compiler, reader and installed-sysroot qualification.
+
+Runtime receipts retain b0b1eb35ff91890fdc5d9dc0e89580adce093e11. The final
+commit changes only one test inventory fingerprint, with unchanged classification
+and operation binding. All metadata tests were rerun; all 326 driver Cargo
+artifacts are fresh and driver/installed executable hashes match their qualified
+inputs. The initial reuse probe named a nonexistent release path; the second
+combined test request compiled another metadata test variant and a direct CLI
+build changed the debug executable. Both attempts remain failed. Final debug
+checks were rerun; do not claim identical debug executables or an established
+cause for their rebuild.
+
+Formatting, size, source layering, policy self-tests and diff checks passed.
+Three global inventory controls remain failed with byte-identical failures at
+the exact base revision. Follow-up owner: LOCAL-GATE inventory reconciliation,
+covering ExternalDefs field classification and existing CLI method/filesystem
+inventory drift. This item corrects only its affected metadata test fingerprint.
+Those remaining failures must be repaired before final gate acceptance.
+
+Independent Claude review: SATISFIED, no blocking findings.
+Review SHA-256: baacfe651dff310b1e366424d7c3f2acced74b9a17f54096bb7a6eff7a2f324d.
+The reviewer read the complete code/test/policy diff and three evidence files;
+other executed checks were supplied in the review summary.
+Main archive v4az-evidence.tar.gz: 3,222 locally verified payloads,
+SHA-256 48e83de94cf7bffbfafe57c14cd0d75998a219478bfef0cf9e3ceb0a32089c13.
+Supplement v4az-supplement.tar.gz: 88 locally verified payloads,
+SHA-256 092a1052523e7eb3907d7cbf275729916251f10a54340a29ecdf3853fd3f2066.
+Large profiling/executable artifacts remain retained with recorded hashes.
+PR attachment was again rejected by the app's 100-attachment limit.
+
+Remaining suggestions: exercise the maximum generation tag before wrap in a
+future affected test change; investigate differing debug preparation inputs.
+Neither changes the accepted algorithm or current coverage. Complete final
+scoped gates, mandatory SQL clean reproduction and V5 remain open.
+
+### V1k prospective execution — attribute expensive lowering machine-code generation
+
+Status: bounded diagnostic investigation, following V4az closure.
+
+V1h measured lowering's machine-code generation at 163.16s of its 175.35s
+overlapping unit. V4ay again observed substantial lowering CPU work during the
+mandatory SQL clean protocol, whose total remained 874.276s. The earlier
+profile downgrades, concurrent clean builds and manual HIR Clone ownership
+experiments are rejected; do not repeat them unchanged. A file/crate split or
+helper process is not a speedup without identifying removed work.
+
+Attribute optimization/code-generation costs to actual functions and passes,
+starting with lowering. Use the exact pinned compiler and current source,
+optimization/debug/overflow settings. Reuse compatible dependency artifacts and
+force a fresh diagnostic compilation of only the selected unit when needed.
+Record any difference from the SQL clean graph (including debug/remapping and
+incremental paths); this retained development graph is attribution evidence,
+not a measured replacement for the canonical SQL protocol.
+
+The pinned compiler exposes LLVM tracing through diagnostic -Z flags. A
+crate-scoped RUSTC_BOOTSTRAP setting may enable tracing only for this external
+experiment with the same compiler binary; it is not a repository/toolchain or
+production profile change. Verify trace support using an isolated tiny probe
+first. Capture exact commands, flags, units, source/tool/profile identities,
+capacity and trace completeness. Keep trace overhead separate from ordinary
+timings. Preserve default artifacts and qualified binaries; record any actual
+rebuild instead of asserting reuse.
+
+Keep the 30-minute category cap, disk/memory reserves, source freeze and process
+cleanup. No new full SQL clean run is required merely to rediscover its known
+cost. Analyze overlapping trace spans without adding inclusive parent/child
+times as independent savings. Deliver a ranked cost attribution with source
+owners and one concrete next hypothesis, or explicitly reject the hypothesis
+if the trace is insufficient. Register an implementation/acceptance contract
+before adopting any product change. Correctness, independent linked builds,
+every selected test, producer/invalidation accounting and final V5 remain intact.
+
+### V1k outcome — broad backend work, not one oversized function
+
+The pinned compiler's LLVM trace contains 13,409,545 events across 513 trace
+threads. Streaming reconstruction reconciles exactly 138.538093 recorded thread
+seconds, with zero crossing intervals, out-of-order completions or negative
+exclusive durations. An independent timestamp-sorted implementation agrees
+with every pass/function/backend row on the 8,073-event probe. These are
+instrumented thread durations, not CPU seconds or removable command wall time.
+
+| Exclusive attribution group | Recorded thread seconds |
+| --- | ---: |
+| Module / not attributed to a function | 36.508419 |
+| Drop glue | 20.058738 |
+| Clone implementations | 9.898439 |
+| PartialEq implementations | 2.036055 |
+| Lowering functions | 26.156890 |
+| Other generic/runtime functions | 43.879552 |
+| Total | 138.538093 |
+
+The largest named function is Type drop glue at 3.663420s, about 2.64% of the
+total. The largest lowering function, lower_module_impl, is 0.879410s.
+No single giant function explains the whole cost. The largest exclusive passes
+are InstCombine 13.731249s, instruction selection 11.106102s and inlining
+10.218583s. Existing manual HIR Clone ownership remains a rejected experiment;
+its observed duplication does not justify repeating it unchanged.
+
+Partition reconciliation identifies 256 code-generation modules, 7,796 backend
+function instances and 6,126 distinct backend symbols. Eighty-six symbols occur
+in multiple modules. Type drop glue appears in 118, HirExpr drop glue in 62 and
+Type Clone in 100 modules. The summed backend spans for symbols in multiple
+modules are 9.297698s; this includes necessary instances and is not a removable
+saving. Module-level work and repeated optimization motivate a small partition
+count experiment, not an assumed improvement or a crate split.
+
+Preparation took 48.532s and rebuilt three units. Instrumented Cargo reported
+1m22s and rebuilt 42 units: crate-scoped diagnostic bootstrap also invalidated
+dependencies, so the experiment did not compile only lowering as hoped. Cargo's
+build-finished event is successful and all recorded optimization/debug/assertion/
+overflow settings match. The 3.3GB trace caused the first whole-file parser to be
+terminated intentionally; that guard remains failed at 194.483s/exit143. The
+retained trace was analyzed without recompilation in 124.280s externally guarded,
+followed by a 45.731s partition reconciliation. Both completed without caps,
+leftovers or source drift. Default hashed lowering artifacts remain byte-identical;
+Cargo's top-level library alias changed to the traced variant. Restore normal
+selection through ordinary Cargo before further qualification.
+
+Evidence: v1k-trace-probe/, v1k-lowering-trace/, v1k-lowering-analysis/,
+v1k-partition-analysis/, v1k-analyzer-parity.json and
+v1k-trace-compilation-reconciliation.json in the owned external evidence root.
+No production code/profile changed and no ordinary speedup was established.
+The development trace has line-table debug information; mandatory SQL clean
+builds instead set debug=0, explicit host target and two path maps. Do not claim
+the trace is an exact SQL clean timing or use its thread totals as wall savings.
+
+### V1l prospective execution — bounded lowering partition-count experiment
+
+Status: registered feasibility experiment, not an adopted profile change.
+
+Compare 256, 64 and 16 lowering code-generation units with the same pinned
+compiler, current source, opt2, debug/assertion/overflow settings and allocation.
+First restore ordinary dependency preparation without diagnostic bootstrap.
+Each measured candidate gets an empty, separately owned incremental directory
+for the selected lowering unit; compatible dependencies are retained. Use explicit
+root rustc flags outside the repository, keep every other compiler option equal,
+capture actual artifacts/profile/features and record any unexpected rebuild.
+Measure ordinary compilation without LLVM tracing. Run one initial observation
+per count; repeat only a promising candidate against 256 in reversed order.
+Keep capacity admission, separate preparation accounting and 30-minute caps.
+
+Reject a negligible or slower result before rebuilding the compiler or rerunning
+the entire SQL protocol. A material unit improvement is only a feasibility
+signal: before adopting it, register and execute affected correctness, complete
+source/installed corpus equality, representative ordinary compiler/runtime
+comparisons and the full canonical SQL clean/reused/independent reproduction
+protocol with all rejection controls. Preserve named producer/provenance checks
+for any actual manifest change. Qualify both clean and incremental development
+costs; fewer partitions may hurt edit rebuilds. Reject unacceptable runtime or
+iteration regressions rather than weaken optimization or coverage.
+
+Do not change product profiles during this feasibility step. No ten-minute
+claim follows from unit timing. Full final gates, remaining inventory repairs,
+all invalidation scenarios and V5 remain required.
+
+#### V1l initial feasibility and actual-edit check
+
+Ordinary isolated lowering compilation (only the selected unit rebuilt):
+256 units 41.074s, 64 units 35.305s, 16 units 32.238s.
+Reversed repeat: 16 units 32.287s, then 256 units 41.313s.
+This supports about 22% less isolated compilation time for 16 units. It does
+not predict full SQL/gate elapsed time or establish an acceptable edit loop.
+
+The first normal-preparation diagnostic failed its historical archive-byte
+equality check after Cargo successfully rebuilt the ordinary graph. All package,
+target, feature and profile selections agree and the rmeta hash is unchanged;
+the library archive differs. Preserve that failure and do not infer its cause.
+A fresh ordinary preparation then reused every artifact and established the new
+baseline. The mandatory SQL reproducibility contract is unchanged.
+
+Next measure an actual source edit against retained 256-, 64- and 16-unit
+incremental states. Temporarily change the undefined-variable diagnostic wording
+in name_diagnostics.rs and verify the changed observable message through the
+public parser/lowering API, including the existing diagnostic code and range.
+Compile the same small probe against retained baseline and edited libraries so
+a stale artifact cannot pass unnoticed. Keep this diagnostic-only change out of
+the final product diff by restoring its exact original bytes afterward. This
+is an iteration-cost experiment, not a new error-message policy or a V5 pass.
+Record command preparation and probe compilation separately; compare only
+identical source changes with unchanged allocation and each variant's own
+retained incremental directory. Reject a clean-build gain that creates a
+material ordinary edit regression. Broader runtime/SQL qualification still
+precedes any actual profile adoption.
+
+#### V1l outcome — fresh-unit gain does not establish a better edit loop
+
+No profile change adopted. All temporary diagnostic source bytes were restored
+in b8f48ab8735d55783286dc77132f34a3b9c0800b. Baseline, edited and restored public
+parser/lowering probes passed for all three variants: diagnostic message, code,
+range and positive input. Retained old binaries failed the changed-message
+assertion in both directions, so stale behavior could not pass these probes.
+
+| Lowering code-generation units | Fresh unit observations (s) | Actual wording edit (s) | Restoration edit, reverse order (s) |
+| --- | --- | ---: | ---: |
+| 256 | 41.074, 41.313 | 26.302 | 20.915 |
+| 64 | 35.305 | 22.478 | 22.372 |
+| 16 | 32.238, 32.287 | 23.947 | 26.552 |
+
+These ordinary Cargo command durations use four admitted compiler jobs and the
+same optimization/debug/assertion/overflow settings. Only lowering rebuilt.
+The initial 64-unit edit attempt stopped before compilation because available
+memory admitted only three jobs; the later retry admitted four. That failed
+attempt remains recorded. No capacity reserve was weakened.
+
+Sixteen units improves the fresh selected unit by about 22%, but the restoration
+observation is about 27% slower than 256. Sixty-four is promising on the first
+edit but about 7% slower on restoration. These are two directional observations
+of one small diagnostic change, not a general edit-workload benchmark. Defer
+profile adoption: broad source/installed/runtime/SQL qualification would still
+be required, and this does not solve repeated preparation or the ten-minute gate.
+Do not reinterpret this diagnostic experiment as V5 qualification.
+
+Evidence archive v1l-evidence.tar.gz contains 229 payloads,
+SHA-256 7aa4137c8bd55c2f21cb730515defc95f8db9e58df9195c60c7018aed2818221.
+Compiled libraries, executables and incremental states remain retained with
+identities in the receipts. V1k trace evidence remains separately archived.
+No production implementation differs from the merged base.
+
+### V4ba prospective investigation — PostgreSQL version-owned build reuse
+
+Status: bounded diagnosis, following V1l feasibility closure.
+
+The current parser matrix changes SIFR_POSTGRESQL_MAJOR through six versions
+in one Cargo configuration. Its build script declares that variable as an
+invalidation input and compiles the selected native C library. V4ay measured the
+whole parser matrix at 247.067s; that alone does not attribute its cost.
+
+First measure unchanged/switch/return invocations on retained artifacts,
+separating preparation, native C object/archive recreation, Rust compilation,
+linking and test execution where the evidence permits. Preserve every existing
+parser assertion and the separate all-component host test. Capture Cargo
+artifact freshness, build-script output directories, native object/archive
+identities and test counts. Use ordinary commands for elapsed time; any process
+observations are diagnostic lower bounds, not complete CPU attribution.
+Keep capacity/source ownership, failure evidence and 30-minute caps.
+
+If version switching causes avoidable rebuilds, evaluate expressing version
+selection as explicit Cargo features on the existing package, so Cargo owns
+distinct version artifacts while sharing compatible dependency builds. Check
+default selection, conflicting selections, dependency feature unification,
+guest producers and live-tool command construction before adoption. Do not
+create six independent full target directories or a custom unchecked cache.
+No compatibility/fallback path or coverage removal is authorized by this
+hypothesis. Register exact implementation acceptance before product edits.
+Mandatory SQL clean reproduction, producer provenance, final scoped gates and
+V5 remain required; a parser-matrix gain cannot substitute for them.
+
+#### V4ba baseline and implementation acceptance
+
+Ordinary split preparation/execution observations:
+- PostgreSQL 18 unchanged: compile 0.400s, tests 0.593s, no rebuilt artifacts.
+- Switch 18 to 13: compile 26.577s, tests 0.597s; eight package targets rebuilt.
+- Return 13 to 18: compile 33.231s, tests 0.593s; eight package targets rebuilt.
+All 31 selected parser assertions pass per invocation; the all-component host
+test is deliberately separate and remains required. Initial preparation rebuilt
+55 units in 132.581s and is not part of these retained-artifact comparisons.
+On return to 18, 96 native files were recreated: 95 object files are byte-identical
+to their retained previous-18 copies; the shared archive had contained version 13.
+The separately instrumented return to 13 attributes 22.920s to the native build
+script, followed by library/test compilation and linking. Those unit durations
+overlap and must not be summed as independent wall-time savings.
+
+Implement version ownership using postgresql-13 through postgresql-18 Cargo
+features on the existing package. With none selected, preserve the existing
+default of PostgreSQL 18. Reject multiple selections and the old environment
+override instead of silently choosing one. Keep the build script's emitted
+version/tag/commit metadata and native parser/version agreement. Migrate every
+owned parser-matrix, guest-producer and live-tool command to explicit features.
+No custom cache, copied target directories, assertion removal, optimization
+downgrade or native/guest substitution.
+
+Acceptance:
+- Pure selection controls for default, every supported major, ambiguous and
+  unsupported selections, and legacy override rejection.
+- Actual native builds/tests for all six majors; assert the requested runtime
+  major independently of the compiled selection and reject a stale version.
+- Alternate retained versions and confirm fresh Cargo artifacts, unchanged
+  native file identities and passing assertions. Compare ordinary matrix time,
+  preserving first preparation separately.
+- Complete all-component guest host assertions; regenerate affected component
+  artifacts through canonical producers and pass provenance/substitution checks.
+- Test parser-matrix and live-tool command construction without pretending that
+  mocked Docker execution qualifies live database behavior.
+- Complete the selected SQL area, including canonical clean/reused/independent
+  builds and negative controls. Follow the existing 30-minute cap and account
+  separately for any blocked or unexecuted category.
+- Formatting, file-size, affected authority/self-tests, emitted-plan coverage
+  comparison, and exact-candidate independent review before intermediate merge.
+Complete final scoped gates and V5 remain required at phase end.
+
+#### V4ba invalidation audit — header omission reproduced, acceptance still open
+
+The initial canonical producers completed: PostgreSQL 359.447s, MySQL 31.760s
+and SQLite 46.074s. A second PostgreSQL production took 332.417s; all six guest
+outputs and the receipt are byte-identical. This proves output consistency,
+not a guest cache speedup. Native version returns are fresh at 0.407s (13) and
+0.401s (18), with 35 assertions per execution. The comparable version-13
+baseline used four compiler jobs and took 26.577s; the version-18 baseline
+used three jobs, so its 33.231s is not a controlled timing ratio.
+
+An initial direct guest diagnostic omitted canonical SDK environment variables;
+its extra WASI_SYSROOT invalidation is a diagnostic setup difference, not a
+product defect. The corrected diagnostic uses sdk_environment/guest_environment.
+Cargo also identifies the recursively watched Ruff checkout as stale because
+its nested .git directory timestamp changes, although identity hashing excludes
+.git. This is a separate identity-watcher/setup follow-up; do not remove input
+coverage to silence it or attribute every guest rebuild to this one observation.
+
+A first deliberate header-error probe was confounded by that unrelated rebuild.
+The isolated probe runs preparation, an all-fresh baseline and the header edit
+inside one guard, without intervening Git commands. Baseline: 93 artifacts fresh,
+0.381s. After adding an actual #error to the owned WASI errno.h: all 93 artifacts
+still fresh, successful exit, 0.380s. The Git metadata timestamp is unchanged.
+This reproduces stale native artifact reuse; the guard remains failed.
+The original header bytes were restored and verified.
+
+Complete native C input tracking is therefore required in this item. Track the
+selected source's code/header directories and root files, excluding Git
+administration, plus owned WASI compatibility inputs and the selected SDK path.
+Do not watch the entire source repository's .git directory. Add a small real
+Cargo regression exercising the production watch helper, including file edits,
+directory additions/removals and irrelevant Git metadata. Repeat the isolated
+actual-header probe: unchanged inputs must be fresh, the invalid header must
+fail compilation, and restoration must produce valid components again.
+No third-party source changes are required.
+
+Also bind the separate component-host command to postgresql-18, the final
+matrix configuration, avoiding an unnecessary empty-feature test build while
+preserving every component-host assertion. Regenerate the PostgreSQL artifacts
+after its build-input change and complete the previously registered acceptance.
+
+Repaired isolated native probe: preparation 57.438s; unchanged baseline 0.386s,
+all 93 artifacts fresh; the deliberate header error now fails compilation with
+Cargo exit 101 in 0.563s. Git metadata stayed unchanged across the baseline/edit
+boundary, and the original header SHA-256 was restored exactly. The passing
+guard records no unexpected tracked change or leftover worker. The earlier
+failed stale-artifact probe remains preserved as evidence.
+
+Focused input controls pass: five command/input tests (including a real Cargo
+fixture covering root/nested/compatibility header edits, directory file addition
+and removal, SDK selection and irrelevant Git metadata), six producer-inventory
+tests, file-size guardrail and whitespace check. Final component regeneration,
+complete SQL qualification and independent review are still required.
+
+Final PostgreSQL canonical regeneration after the input-watcher repair passed in
+332.613s (outer elapsed). All six PostgreSQL Wasm files are byte-identical to the
+earlier canonical feature-selected production; the updated receipt includes the
+new input helper. Current PostgreSQL, MySQL and SQLite receipts exactly match
+their source-input inventories, and all three families' binary hashes remain
+unchanged by the header-tracking repair. This is correctness/provenance evidence,
+not a guest-build speedup. Complete SQL qualification follows on the committed
+artifact candidate.
+
+#### V4ba preparation completed; integration inventory and capacity reconciliation
+
+On candidate 6330a71883dd2867446af49c97f2a364be198224, focused final controls
+passed and all selected SQL preparation nodes completed. The preparation guard
+took 1,549.388s; its area-graph node took 1,524.444s. This initial preparation
+overlapped read-only authority audits and verified copying of inactive artifacts,
+so it is diagnostic elapsed time, not a controlled performance comparison.
+Qualification then failed capacity admission before any area tests ran:
+29,424,635,904 free bytes were below the 28 GiB allocation threshold. Preserve
+that blocked attempt; preparation is not test execution.
+
+Authority checks passed source layering and identified six PostgreSQL lexical
+fingerprint updates, one new build-input policy site, and two new input-tracking
+filesystem reads. Reconcile only those owned records with the canonical binding
+schema; both new filesystem reads belong to build identity. Earlier CLI method/
+filesystem records and the ExternalDefs inventory failure remain separately
+owned LOCAL-GATE follow-ups. They must pass before final phase acceptance.
+
+Capacity recovery copied and verified every regular file's bytes/hash/mode/mtime
+and every symlink target in ten obsolete revision-owned generated-quality roots
+before retiring the originals. The latest integrated baseline remains in place.
+One additional inactive codegen incremental state was copied and verified before
+retirement; every file predates the development debug-policy transition at
+c8b5c5364. All current-profile incremental states, native targets, libraries and
+test executables remain retained. The last operation increased free space from
+29,424,607,232 to 30,320,443,392 bytes. Complete source artifacts and manifests
+remain retained outside the active targets; no shared/unowned target was cleaned.
+
+The prepared Cargo configurations also expose repeated transitive feature
+contexts: some Wasmtime/Cranelift fingerprints have identical direct features,
+profiles and Rust flags but different dependency identities; Serde and Syn
+feature sets differ. This is diagnostic evidence for a subsequent bounded
+configuration-ownership investigation, not proof of safe unification or a
+speedup. No feature-unification change is part of this item.
+
+After the owned inventory corrections, all remaining metadata, method and
+filesystem guard output matches the retained base failure output byte-for-byte.
+Both affected guard self-tests and whitespace checks pass. The guards themselves
+and their schemas are unchanged. Complete global guards remain failed on those
+earlier issues; this result qualifies only the current item's inventory changes.
+
+A fresh continuation will repeat canonical preparation against the policy-only
+candidate using retained targets, then execute all 67 selected SQL cases and the
+retained six-major parser matrix. No previous preparation is relabelled as an
+executed test, and the blocked qualification attempt remains unchanged.
+
+
+#### V4ba qualification complete — retained native versions are reusable
+
+Qualified implementation candidate: dd135c04d2078d0df342f8ab4068ef449fcb8f25.
+The subsequent commit updates only this evidence record and the internal parser
+selection guide; all non-Markdown tracked objects are identical. Compiler input
+identity excludes Markdown, and both documents are outside the selected SQL
+build/fixture/producer inputs. Retain the actual observed candidate identity.
+
+The repeated preparation completed in 16.821s (area graph 13.398s); all 32
+preparation commands passed. This is retained preparation after the initial
+1,549.388s diagnostic, not a controlled before/after optimization benchmark.
+
+All 19 selected SQL suites and 67 cases passed. Area elapsed: 1,262.776s;
+guard elapsed: 1,266.038s. The linked-native clean A / unchanged A / independent
+clean B protocol passed in 867.226s, including identical executable hashes.
+The first six-major matrix passed in 259.551s, including preparation of newly
+owned native version artifacts. Every existing selected case remains; the one
+added case runs command/input-tracking controls.
+
+The additional retained matrix initially stopped before execution at its blanket
+eight-GiB working-space admission. The successful bounded continuation reserves
+two GiB for the already-prepared matrix, with the same twenty-GiB free-disk
+reserve, memory admission, source freeze and 30-minute deadline. It requires the
+complete same-candidate SQL qualification first. No product capacity policy or
+test selection changed. Both blocked admission records remain failed.
+
+Retained matrix execution: 42.956s; guard 44.715s; outer invocation 44.844s.
+All six native majors pass 35 assertions each (31 original plus four selection
+controls), and the separate host assertion executes all six checked-in guests.
+No compilation occurred. Across the selected native output directory for every
+major, all 455 object/archive file paths, bytes, hashes and modification times
+remain unchanged. The capacity policy admitted three compiler workers for this
+retained invocation versus four in the first preparation; no compiler work ran,
+but do not present this pair as a controlled compilation benchmark. The earlier
+four-worker version-13 switch/return comparison remains the controlled reuse
+measurement.
+
+The native reuse improvement is established; complete local-gate acceptance is
+not. The clean-build protocol alone still exceeds ten minutes. The pre-existing
+CLI/metadata inventory failures remain phase-owned work before final scoped
+gates and V5. Independent exact-candidate review and intermediate merge follow
+this evidence record; neither is claimed complete here.

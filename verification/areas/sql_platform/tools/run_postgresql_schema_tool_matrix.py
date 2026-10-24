@@ -135,10 +135,10 @@ def run_server(major: int) -> dict[str, Any]:
             **os.environ,
             "SIFR_POSTGRESQL_SCHEMA_TOOL_TEST_URL": url,
             "SIFR_POSTGRESQL_SCHEMA_TOOL_TEST_MAJOR": str(major),
-            "SIFR_POSTGRESQL_MAJOR": str(major),
         }
         run([
             "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_tools",
+            "--features", f"sifr_sql_postgresql/postgresql-{major}",
             "--test", "live_catalog", "--", "--ignored", "--exact",
             "live_catalog_preserves_postgresql_semantic_objects",
         ], env=environment, cwd=REPO_ROOT)

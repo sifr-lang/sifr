@@ -171,12 +171,12 @@
       "third_party/ruff/crates/ruff_text_size/src/size.rs": "c080576fb63fe7b65dfcea6b07e2f2e004140930e9f947c2c48632ee0f0a5836",
       "third_party/ruff/crates/ruff_text_size/src/traits.rs": "3aef3ac8ac0f1dad4cfa1ccbe1469b2b4a1fcf684f97a985bbe88a0a3d2b0fb3",
       "verification/areas/sql_platform/tools/build_mysql_components.py": "ed271061a80a014bc884405f30f9ee3cf3c413dc915d8b772dc0b05888e05222",
-      "verification/areas/sql_platform/tools/build_sql_components.py": "414aa72d336d659b7288a2754981140b5f4ef647389b4839b6eb2ea2e30537fd",
+      "verification/areas/sql_platform/tools/build_sql_components.py": "7d96c2213d1f900d2622ca0221ca005b4f6412fd5293b2b9e7c1e570f6203cc3",
       "verification/areas/sql_platform/tools/component_provenance.py": "21bb0dd619f92ed86b67a4d0c1ff7f4f19b3d68a0bee6bbf6f41b0385b4793e5",
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "0eeb58b11102f9585ad633381285c01c2b19b339cc8e3fd137181ee284d35cd4",
+    "source_sha256": "eae7035fe445d24821c0056fbe9d7537e54aee7f474e9529fbc2dfa99f83ac2b",
     "tools": {
       "virtualizer": {
         "binary_sha256": "a72b764380b3a863ffef49b055df9b4ba8d86b9473ad767e7252f007dcfe8843",

@@ -1,3 +1,9 @@
+#[path = "src/build_inputs.rs"]
+mod build_inputs;
+
+#[path = "src/build_selection.rs"]
+mod build_selection;
+
 use serde_json::Value;
 use std::env;
 use std::error::Error;
@@ -8,19 +14,22 @@ use std::path::{Path, PathBuf};
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-env-changed=SIFR_POSTGRESQL_MAJOR");
     println!("cargo:rerun-if-changed=component-sources.json");
-    let major = env::var("SIFR_POSTGRESQL_MAJOR").unwrap_or_else(|_| "18".to_string());
+    let features = (13..=18)
+        .filter(|major| env::var_os(format!("CARGO_FEATURE_POSTGRESQL_{major}")).is_some())
+        .collect::<Vec<_>>();
+    let major =
+        build_selection::select_major(&features, env::var_os("SIFR_POSTGRESQL_MAJOR").is_some())?;
     let manifest = read_manifest()?;
     let entry = manifest["sources"]
         .as_array()
         .and_then(|sources| {
-            sources.iter().find(|source| {
-                source["server_major"]
-                    .as_u64()
-                    .map(|value| value.to_string())
-                    == Some(major.clone())
-            })
+            sources
+                .iter()
+                .find(|source| source["server_major"].as_u64() == Some(u64::from(major)))
         })
-        .ok_or_else(|| io::Error::other(format!("unsupported SIFR_POSTGRESQL_MAJOR={major}")))?;
+        .ok_or_else(|| {
+            io::Error::other(format!("unsupported PostgreSQL feature selection: {major}"))
+        })?;
     let relative = entry["path"]
         .as_str()
         .ok_or_else(|| io::Error::other("PostgreSQL source manifest entry has no path"))?;
@@ -59,6 +68,10 @@ fn read_manifest() -> Result<Value, Box<dyn Error>> {
 }
 
 fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
+    build_inputs::track_source(source)?;
+    if is_wasm_target() {
+        build_inputs::track_wasi(&wasi_compatibility_headers()?);
+    }
     let mut build = cc::Build::new();
     configure_wasi_compiler(&mut build)?;
     // The retained PostgreSQL sources use pre-C23 callback declarations.
@@ -180,7 +193,6 @@ fn add_c_files(build: &mut cc::Build, directory: &Path) -> Result<(), io::Error>
             && !is_included_translation_unit(&entry)
             && !is_unused_wasi_server_translation_unit(&entry)
         {
-            println!("cargo:rerun-if-changed={}", entry.display());
             build.file(entry);
         }
     }
