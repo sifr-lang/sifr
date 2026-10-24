@@ -129,6 +129,7 @@ fn grouping_key(
         ("package-version", probe.backend.cargo_version.as_str()),
         ("native-toolchain", tools.identity()),
         ("profile", policy.application_profile.policy_identity()),
+        ("profile-name", policy.application_profile.name()),
         ("lock-mode", policy.lock_mode.as_str()),
     ] {
         key.field(name, value.as_bytes());

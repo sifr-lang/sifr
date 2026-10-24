@@ -202,7 +202,7 @@ fn actual_batch_runs_every_probe_and_refreshes_after_a_source_edit() {
         "{:?}",
         result.iter().map(|(_, f)| &f.args).collect::<Vec<_>>()
     );
-    assert_eq!(calls.iter().filter(|c| c.phase == "rust-probe").count(), 1);
+    assert_eq!(owned_probe_calls(&calls, &temp.path().join("backend")), 1);
     std::fs::write(
         temp.path().join("backend/src/lib.rs"),
         "pub fn unrelated() {}",
@@ -213,7 +213,7 @@ fn actual_batch_runs_every_probe_and_refreshes_after_a_source_edit() {
         result.iter().map(|(i, _)| *i).collect::<Vec<_>>(),
         vec![0, 1]
     );
-    assert_eq!(calls.iter().filter(|c| c.phase == "rust-probe").count(), 1);
+    assert_eq!(owned_probe_calls(&calls, &temp.path().join("backend")), 1);
     assert!(result[0].1.args.iter().any(|(_, v)| v == "batch.first"));
     assert!(result[1].1.args.iter().any(|(_, v)| v == "batch.second"));
 }
@@ -244,4 +244,43 @@ fn cargo_cannot_publish_a_batch_after_mutating_its_input() {
             .iter()
             .any(|(_, message)| message == "Rust probe inputs changed while Cargo was running")
     }));
+}
+
+fn owned_probe_calls(calls: &[crate::CargoInvocation], backend: &Path) -> usize {
+    calls
+        .iter()
+        .filter(|call| {
+            if call.phase != "rust-probe" {
+                return false;
+            }
+            let Some(argument) = call
+                .args
+                .windows(2)
+                .find(|pair| pair[0] == "--manifest-path")
+            else {
+                return false;
+            };
+            let manifest = std::path::PathBuf::from(&argument[1]);
+            let source = std::fs::read_to_string(&manifest).unwrap();
+            let root: toml::Table = source.parse().unwrap();
+            let Some(member) = root
+                .get("workspace")
+                .and_then(|v| v.get("members"))
+                .and_then(toml::Value::as_array)
+                .and_then(|members| members.first())
+                .and_then(toml::Value::as_str)
+            else {
+                return false;
+            };
+            let member = manifest.parent().unwrap().join(member).join("Cargo.toml");
+            let source = std::fs::read_to_string(member).unwrap();
+            let package: toml::Table = source.parse().unwrap();
+            package
+                .get("dependencies")
+                .and_then(|v| v.get("probe_backend"))
+                .and_then(|v| v.get("path"))
+                .and_then(toml::Value::as_str)
+                .is_some_and(|path| Path::new(path) == backend)
+        })
+        .count()
 }
