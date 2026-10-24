@@ -10391,10 +10391,11 @@ in PR [#4459](https://github.com/sifr-lang/sifr/pull/4459); scoped review is pen
 
 ### V4at — canonical bounded native execution
 
-Implement the demonstrated scheduling improvement through the existing owned
-process-execution authority. Share command ownership, bounded output, monotonic
-deadlines, signal handling, process-group cleanup and handler restoration between
-single-command execution and a main-thread bounded pool. Avoid a second worker
+Implement the demonstrated scheduling improvement by reusing the existing
+`batch_execution.execute_batch` authority and its qualified ownership controls.
+Retain the single-command executor unchanged; add only the batch progress and
+capacity hooks needed by native execution. The repository already owns bounded
+output, monotonic deadlines, signals and process-group cleanup for this pool. Avoid a second worker
 protocol, a new test-runner dependency, shared-process libtest execution, or changes
 to compiler/test semantics. Other profile categories continue to execute as before.
 
