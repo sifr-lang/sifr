@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ap merged; V4aq fresh generated-corpus sharing in progress; final timing and V1/V5 remain open
+current_stage: V4aq merged; V4ar retained native-driver attribution in progress; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10147,3 +10147,112 @@ to assert complete generated-file snapshot equality and successful/failing strea
 retention in that directory. The mutation guard remains unchanged. All affected
 source-quality, 12 owner/adapter and failure-artifact checks pass; requalify the
 new frozen candidate before scoped review and merge.
+
+### V4aq closure — fresh generated quality corpus / #4458
+
+PR [#4458](https://github.com/sifr-lang/sifr/pull/4458) merged as
+`286016ac7d00276f99b68a409a3e91fe85ec6a64`; reviewed candidate
+`fe87f881e207b634295a3c2fb0c1a9d90b814bd4`, base
+`8906c014bc205b99dee194cd02db0f783c7fc375`. All ten representative variants
+pass in 545.596s, or 547.074s including guard overhead. The exact multiset of
+101 case/control observations matches V4an, including all 18 negative/cache
+controls, 264 freshness companions and 12 double-emission determinism checks.
+Fresh materializations fall from 60 to 19: 17 invocation-owned shared programs
+and two independently generated native programs. Every assertion is retained.
+
+| Representative variant | Seconds |
+| --- | ---: |
+| Inventory | 20.498 |
+| Corpus, including first fresh generation | 104.818 |
+| Independent native execution | 24.506 |
+| Panic scan | 0.615 |
+| Intrinsic panic lint | 0.190 |
+| Rustfmt | 1.014 |
+| Clippy, including isolation/negative controls | 11.427 |
+| Independent determinism | 66.369 |
+| Demos, including additional fresh generation | 143.367 |
+| Freshness | 172.505 |
+
+The enclosing command includes adapter/startup/cleanup overhead. Shared child
+process duration is a separate observation and must not be added once per variant.
+All 93 portable preparations also pass, separately, in 310.863s guarded.
+Preparation plus area is 857.936s: this is not a full-gate under-ten-minute result.
+V4an's 825.246s area and the current 547.074s are ordinary diagnostic runs with
+different retained-cache states, not a controlled matched-cache speedup. The
+eliminated 41 materializations are a structural reduction.
+
+Focused owner/adapter tests (12), real-Cargo source-quality/input-preservation,
+failure-artifact and generated-preparation controls pass. Frozen-candidate runner
+foundation, profile validation, four unchanged emitted plans and file-size/diff
+checks pass. The original loader failure and later Clippy diagnostic-log mutation
+failure remain failed and preserved, including the latter's generated inputs.
+The successful candidate keeps mutation detection intact and writes diagnostics
+only to the existing gate-owned evidence directory.
+
+Independent review SATISFIED, no blockers, SHA-256
+`d287274efeebfa2391b1d5d7f23cc5f412523b264651541a791ae8a26be790e9`.
+The complete reviewed implementation path inventory is the GCQ area's
+`batch_adapter.py`, `fresh_corpus.py`, `generated_code_quality.py`,
+`quality_batch.py`, `runner.py`, `source_quality_checks.py`,
+`test_fresh_corpus.py`, `test_source_quality_checks.py`, plus runner
+`generated_quality_batch_checks.py` and `selftest.py`; the phase record is the
+eleventh changed path. The request's initial list omitted the subsequently changed
+`source_quality_checks.py`; the reviewer explicitly inspected it and the complete
+exact-base/candidate diff. The original prompt is preserved unchanged.
+
+Nonblocking followups remain separately owned: completed small-receipt retention,
+measured full-profile hashing scalability, documentation of content/inventory
+versus mode/mtime coverage, and existing standalone timeout ownership. No new
+optimization or exclusion follows from those suggestions. The review's suggestion
+about distinct gate Cargo targets is not an added proof: compatible gates actually
+share the profile dependency target; existing Clippy root invalidation remains.
+
+Archive `v4aq-qualified-evidence.tar.gz`, SHA-256
+`8548a289e8bee761ef2f10f05ebc2bd1af57619008ae2a27cdcb93246b9d2b4a`,
+contains 295 payloads / 3,088,193 bytes, all independently hash/size verified.
+Supplemental CI job 120796815121 (run 40068547489) stopped before preparation at
+missing SIFR_PERFORMANCE_REFERENCE, existing owner #4347. No CI-green claim.
+Complete final gates, V1 feasibility and all V5 scenarios remain open.
+
+### V4ar — retained generated-driver cost attribution
+
+Status: prospective diagnostic continuation. V4an's generated-driver category
+costs 1,546.120s, including 1,146.804s over 41 Rust-interoperability invocations;
+the nine original Python selections total 119.892s. V4ap demonstrates that one
+previously expensive alias fixture can execute in roughly five seconds when
+focused/canonical launch contexts and retained artifacts match. It does not
+establish the current cost of the remaining matrix. Determine the largest
+remaining actual cost before another product change.
+
+On a frozen source candidate, retain the canonical compiler/native targets and
+the same effective toolchain, environment, feature/profile and allocation inputs.
+Run the declared native graph preparation helper once in the current run; do not
+set preparation_complete merely from an old passing receipt. Then run the complete
+canonical generated-driver selection using the existing per-case executor,
+including all 81 selected invocations (80 semantic checks and its subprocess
+protocol helper), with no failure-fast exit for independent ordinary failures.
+Reconcile inventory, explicit preparation ownership and exactly one execution per
+selected invocation. Preserve every Python/archive/isolation/native assertion.
+
+Keep preparation and the generated-driver category separate, each with the usual
+30-minute diagnostic cap, capacity reserve and child cleanup. If a cap prevents
+later selected cases, retain the incomplete attempt and explicitly account for and
+schedule the remaining selection. Use ordinary untraced runs for elapsed time.
+Do not scan a large artifact tree concurrently with this baseline. Per-case Cargo
+and outer libtest durations are nested attribution, not additional category time.
+This measures retained behavior; it is not a matched code-speedup or V5 result.
+
+Choose the largest remaining measured case for at most one targeted attribution
+run if existing logs cannot distinguish preparation, compilation/linking, artifact
+validation/publication and runtime assertions. Instrumented time is explanatory,
+not performance acceptance. Preserve native family/owner/trust, compiler identity,
+Cargo freshness, full artifact validation and release application semantics.
+Do not rerun rejected SQL profile/clean-build experiments or change cache keys,
+profile/debug settings or assertions based on this diagnostic alone.
+
+Record exact candidate, commands, coverage, preparation/category/case totals,
+remaining failures and the resulting root-cause evidence. Register any proposed
+implementation and its focused regression/area acceptance before editing product
+code. The diagnostic/record work requires diff/local-link/scope checks and scoped
+review of its conclusions; no unrelated compiler rebuild or final gate is implied.
+V1 and all final V5/full-scope obligations remain mandatory.
