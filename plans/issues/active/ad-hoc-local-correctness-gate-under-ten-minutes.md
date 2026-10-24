@@ -11595,3 +11595,86 @@ owners and one concrete next hypothesis, or explicitly reject the hypothesis
 if the trace is insufficient. Register an implementation/acceptance contract
 before adopting any product change. Correctness, independent linked builds,
 every selected test, producer/invalidation accounting and final V5 remain intact.
+
+### V1k outcome — broad backend work, not one oversized function
+
+The pinned compiler's LLVM trace contains 13,409,545 events across 513 trace
+threads. Streaming reconstruction reconciles exactly 138.538093 recorded thread
+seconds, with zero crossing intervals, out-of-order completions or negative
+exclusive durations. An independent timestamp-sorted implementation agrees
+with every pass/function/backend row on the 8,073-event probe. These are
+instrumented thread durations, not CPU seconds or removable command wall time.
+
+| Exclusive attribution group | Recorded thread seconds |
+| --- | ---: |
+| Module / not attributed to a function | 36.508419 |
+| Drop glue | 20.058738 |
+| Clone implementations | 9.898439 |
+| PartialEq implementations | 2.036055 |
+| Lowering functions | 26.156890 |
+| Other generic/runtime functions | 43.879552 |
+| Total | 138.538093 |
+
+The largest named function is Type drop glue at 3.663420s, about 2.64% of the
+total. The largest lowering function, lower_module_impl, is 0.879410s.
+No single giant function explains the whole cost. The largest exclusive passes
+are InstCombine 13.731249s, instruction selection 11.106102s and inlining
+10.218583s. Existing manual HIR Clone ownership remains a rejected experiment;
+its observed duplication does not justify repeating it unchanged.
+
+Partition reconciliation identifies 256 code-generation modules, 7,796 backend
+function instances and 6,126 distinct backend symbols. Eighty-six symbols occur
+in multiple modules. Type drop glue appears in 118, HirExpr drop glue in 62 and
+Type Clone in 100 modules. The summed backend spans for symbols in multiple
+modules are 9.297698s; this includes necessary instances and is not a removable
+saving. Module-level work and repeated optimization motivate a small partition
+count experiment, not an assumed improvement or a crate split.
+
+Preparation took 48.532s and rebuilt three units. Instrumented Cargo reported
+1m22s and rebuilt 42 units: crate-scoped diagnostic bootstrap also invalidated
+dependencies, so the experiment did not compile only lowering as hoped. Cargo's
+build-finished event is successful and all recorded optimization/debug/assertion/
+overflow settings match. The 3.3GB trace caused the first whole-file parser to be
+terminated intentionally; that guard remains failed at 194.483s/exit143. The
+retained trace was analyzed without recompilation in 124.280s externally guarded,
+followed by a 45.731s partition reconciliation. Both completed without caps,
+leftovers or source drift. Default hashed lowering artifacts remain byte-identical;
+Cargo's top-level library alias changed to the traced variant. Restore normal
+selection through ordinary Cargo before further qualification.
+
+Evidence: v1k-trace-probe/, v1k-lowering-trace/, v1k-lowering-analysis/,
+v1k-partition-analysis/, v1k-analyzer-parity.json and
+v1k-trace-compilation-reconciliation.json in the owned external evidence root.
+No production code/profile changed and no ordinary speedup was established.
+The development trace has line-table debug information; mandatory SQL clean
+builds instead set debug=0, explicit host target and two path maps. Do not claim
+the trace is an exact SQL clean timing or use its thread totals as wall savings.
+
+### V1l prospective execution — bounded lowering partition-count experiment
+
+Status: registered feasibility experiment, not an adopted profile change.
+
+Compare 256, 64 and 16 lowering code-generation units with the same pinned
+compiler, current source, opt2, debug/assertion/overflow settings and allocation.
+First restore ordinary dependency preparation without diagnostic bootstrap.
+Each measured candidate gets an empty, separately owned incremental directory
+for the selected lowering unit; compatible dependencies are retained. Use explicit
+root rustc flags outside the repository, keep every other compiler option equal,
+capture actual artifacts/profile/features and record any unexpected rebuild.
+Measure ordinary compilation without LLVM tracing. Run one initial observation
+per count; repeat only a promising candidate against 256 in reversed order.
+Keep capacity admission, separate preparation accounting and 30-minute caps.
+
+Reject a negligible or slower result before rebuilding the compiler or rerunning
+the entire SQL protocol. A material unit improvement is only a feasibility
+signal: before adopting it, register and execute affected correctness, complete
+source/installed corpus equality, representative ordinary compiler/runtime
+comparisons and the full canonical SQL clean/reused/independent reproduction
+protocol with all rejection controls. Preserve named producer/provenance checks
+for any actual manifest change. Qualify both clean and incremental development
+costs; fewer partitions may hurt edit rebuilds. Reject unacceptable runtime or
+iteration regressions rather than weaken optimization or coverage.
+
+Do not change product profiles during this feasibility step. No ten-minute
+claim follows from unit timing. Full final gates, remaining inventory repairs,
+all invalidation scenarios and V5 remain required.
