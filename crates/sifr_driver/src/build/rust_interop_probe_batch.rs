@@ -293,3 +293,7 @@ fn execute_group(
 #[cfg(test)]
 #[path = "rust_interop_probe_batch_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "rust_interop_probe_batch_authority_tests.rs"]
+mod authority_tests;

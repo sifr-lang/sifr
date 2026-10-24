@@ -17,7 +17,7 @@ pub(super) fn write(root: &Path, probes: &[(&str, &str)]) -> Result<Vec<PathBuf>
         if manifest != first.0 {
             return Err("Rust probe workspace has incompatible manifests".into());
         }
-        let manifest = bind_probe_package_identity(&manifest, source_bytes);
+        let manifest = bind_probe_package_identity(manifest, source_bytes);
         let mut member: toml::Table = manifest.parse().map_err(|e| format!("{e}"))?;
         let name = member
             .get("package")
