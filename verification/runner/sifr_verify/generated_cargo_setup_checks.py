@@ -127,7 +127,7 @@ class SetupPolicyTests(unittest.TestCase):
                 offline.assert_not_called()
                 self.assertEqual([call.args[0] for call in guard.call_args_list], [
                 "hir-maintainability", "file-size", "source-crate-dependency-direction",
-                "submodule-ownership", "stdlib-manifest-schema"])
+                "submodule-ownership", "stdlib-manifest-schema", "dx-metadata-inventory"])
 
     def test_simulated_runner_output_preserves_release_step_evidence(self):
         from .release_evidence import build_steps
@@ -148,6 +148,27 @@ class SetupPolicyTests(unittest.TestCase):
                 "name": "cargo_cache_setup", "status": "pass",
                 "elapsed_ms": 1, "suite_results": [],
             }])
+
+    def test_metadata_inventory_runs_current_check_and_negative_controls(self):
+        runner = ProfileRunner("merge", [], correctness_only=True)
+        with patch.object(runner, "run_python") as run:
+            runner.run_guardrail("dx-metadata-inventory")
+        self.assertEqual([call.args for call in run.call_args_list], [
+            ("scripts/check_dx_metadata_inventory.py",),
+            ("scripts/check_dx_metadata_inventory.py", "--self-test"),
+        ])
+
+    def test_metadata_inventory_failure_precedes_all_preparation(self):
+        runner = ProfileRunner("merge", [], correctness_only=True)
+        def guard(name):
+            if name == "dx-metadata-inventory":
+                raise CommandFailed(7)
+        with patch.object(runner, "prepare_step_budget", return_value=None), \
+             patch.object(runner, "run_guardrail", side_effect=guard), \
+             patch.object(runner, "prepare_cargo_cache") as prepare:
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(runner.run(), 7)
+        prepare.assert_not_called()
 
     def test_constructor_does_not_build_before_preparation(self):
         with patch("sifr_verify.profile_runner.resolve_sifr_binary") as resolve:

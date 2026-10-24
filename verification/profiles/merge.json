@@ -924,6 +924,7 @@
     "stdlib-native-intrinsic-allowlist",
     "stdlib-native-adapter-reachability",
     "stdlib-manifest-schema",
+    "dx-metadata-inventory",
     "stdlib-bootstrap-ordering",
     "driver-maintainability",
     "verification-hardening-self-test",

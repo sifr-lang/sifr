@@ -133,7 +133,7 @@ class ProfileRunner:
                 self.block_steps("performance_reference_admission")
                 return admission
         early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
-                 "submodule-ownership", "stdlib-manifest-schema"}
+                 "submodule-ownership", "stdlib-manifest-schema", "dx-metadata-inventory"}
         failed = 0
         for guardrail in self.profile["guardrail_steps"]:
             if guardrail in early:
@@ -304,6 +304,8 @@ class ProfileRunner:
             self.run_script_with_self_test("scripts/check_stdlib_native_adapter_reachability.py")
         elif guardrail == "stdlib-manifest-schema":
             self.run_script_with_self_test("scripts/check_stdlib_manifest_schema.py")
+        elif guardrail == "dx-metadata-inventory":
+            self.run_script_with_self_test("scripts/check_dx_metadata_inventory.py")
         elif guardrail == "stdlib-bootstrap-ordering":
             self.run_script_with_self_test("scripts/check_stdlib_bootstrap_ordering.py")
         elif guardrail == "driver-maintainability":

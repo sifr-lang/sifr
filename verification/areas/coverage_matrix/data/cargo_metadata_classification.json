@@ -233,9 +233,17 @@
         {"name": "postgresql_properties", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "postgresql_regressions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "view_normalization", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "build_selection", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "merge"}
       ],
-      "features": []
+      "features": [
+        {"name": "postgresql-13", "profile_assignment": "merge", "classification": "first_party_compiler"},
+        {"name": "postgresql-14", "profile_assignment": "merge", "classification": "first_party_compiler"},
+        {"name": "postgresql-15", "profile_assignment": "merge", "classification": "first_party_compiler"},
+        {"name": "postgresql-16", "profile_assignment": "merge", "classification": "first_party_compiler"},
+        {"name": "postgresql-17", "profile_assignment": "merge", "classification": "first_party_compiler"},
+        {"name": "postgresql-18", "profile_assignment": "merge", "classification": "first_party_compiler"}
+      ]
     },
     {
       "name": "sifr_sql_mysql",
