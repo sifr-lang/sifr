@@ -9,6 +9,9 @@ mod class_ancestry;
 pub mod diagnostic_types;
 pub mod flow_graph;
 mod hir_expr;
+mod hir_expr_clone;
+#[cfg(test)]
+mod hir_expr_clone_tests;
 mod hir_flow;
 pub mod hir_nodes;
 pub mod lowering_outcome;
