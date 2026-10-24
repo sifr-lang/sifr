@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1i ownership audit complete; V1j HIR clone ownership feasibility registered; final timing and V1/V5 remain open
+current_stage: V1j clone experiment rejected; V4au shared preparation identity audit registered; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -10641,3 +10641,89 @@ executable hashes within the candidate's clean/reused/independent builds.
 All earlier runtime, correctness, capacity, review and final phase obligations
 remain. If a worthwhile saving is absent or runtime regresses materially,
 record the rejection without adopting this source change.
+
+
+### V1j outcome — reject a real duplication fix without a gate saving
+
+The combined experimental candidate
+b1204ee351911ccaa7ebfb3b8fc47f5330bbc31a passes its bounded qualification, but
+does not improve the mandatory SQL build protocol meaningfully. Do not adopt it.
+
+| Observation | Baseline | Combined owned-clone candidate |
+| --- | ---: | ---: |
+| Full clean/reused/independent SQL build stages | 775.138s (qualified V1h inputs) | 773.968s |
+| Newly measured matched clean-A preparation | 383.304s | 384.538s |
+| Unchanged A | 1.382s (V1h) | 1.192s |
+| Independent clean B | 391.728s (V1h) | 388.238s |
+| Source-migration probe median | 0.558s | 0.537s |
+| PostgreSQL component probe median | 39.128s | 39.265s |
+| Additional candidate symbol/probe preparation | — | 3.512s |
+| Whole candidate diagnostic, including runtime and cleanup | — | 900.428s |
+
+The complete build-stage difference is only 1.170s (0.15%). This is not a
+demonstrated speedup. The small source-probe difference does not establish a
+whole-gate saving; component runtime is effectively unchanged in these three
+observations. No timing here qualifies the complete local correctness gate.
+
+All 490 actual package/target/feature/profile entries match the baseline.
+Both clean stages build all 490 entries with zero fresh units; unchanged A
+reports all 490 fresh. All three executable hashes match within the candidate's
+three builds. Seven rejection controls pass, as do the four unchanged runtime
+tests in each of three fresh-process repetitions. Runtime inputs, current guest
+bytes, probe sources, toolchain and allocation reconcile. The 165 focused IR and
+type-system tests also pass. Guards record no reserve stop, leftover session
+or unexpected tracked source change; private build targets are removed.
+
+The mechanism itself is confirmed: lowering's 122 Type::clone and 16
+HirExpr::clone definitions disappear; one definition remains in each defining
+crate. Lowering's first-build duration falls from 175.270s to 165.030s, while
+the complete build remains flat. Overlapping unit durations cannot be added
+as wall-time savings. This experiment distinguishes real code-generation
+duplication from a useful end-to-end optimization.
+
+Both experimental source commits are reverted at
+41a16215be79b6d21eb8285e84436b546f887678. Product sources, manifests and lockfiles
+are byte-identical in Git to accepted main 8f7d4efc0c71b491ce4028f44f5ab2e21f900c7b;
+only these phase records remain different. The rejected source, focused tests,
+full diagnostic results and exact inputs remain available for inspection.
+There is no implementation adoption or new compiler qualification claim.
+
+Evidence: v1j-comparison.json, v1j-first-build-attribution.json,
+v1j-build-baseline-inputs.json and the complete raw packet
+v1j-qualified-evidence.tar.gz, SHA-256
+c84f3ae2d46377739fb941c08837d578a6de4eafd7a65bb04e9f7c46d98ae0f2
+(185 payloads / 181,292,358 bytes). Preserve the unchanged V1h protocol archive
+included in this packet. The next item targets potentially duplicated producer
+preparation rather than maintaining hundreds of clone lines for an unproven gain.
+V1, complete final scoped gates and every V5 scenario remain open.
+
+### V4au — audit source and installed compiler preparation identities
+
+Status: registered bounded investigation. Reuse the V4an discovery records:
+release preparation took 668.079s and the sysroot-release area 882.832s.
+These separate timings are not proof of duplicated work and must not be summed
+as an achievable saving. Determine which producer operations each actually
+executes and why retained artifacts are or are not reusable.
+
+Trace the emitted preparation plan and real source/installed commands through
+their Cargo targets, features, profiles, Rust flags, toolchain, selected version
+and producer identity. In particular inspect SIFR_RELEASE_VERSION and related
+configuration at each boundary; do not assume it is the dirty cause. Start with
+retained command/artifact/fingerprint evidence and current code. Distinguish
+intentional version/invalidation checks, profile/feature differences, bootstrap
+provisioning and otherwise identical repeated compilation.
+
+If the retained records cannot establish a rebuild reason, run only the smallest
+affected current preparation with bounded Cargo fingerprint diagnostics,
+retaining its target. Admit capacity first and keep the 30-minute cap. Instrumented
+runs explain causality; they are not acceptance timings. Do not repeat a complete
+gate or an unchanged cold build just to obtain another elapsed number.
+
+The deliverable is an exact producer/consumer identity map and one simple
+proposal backed by demonstrated redundant work, if any. Prefer preparing a
+required producer once under coherent existing inputs over adding another cache
+or executor. Preserve version-policy checks, compiler/source/installed boundaries,
+invalidation coverage, all declared inputs and failed evidence. Do not drop an
+identity field or silently merge incompatible profiles/features/versions.
+Register the precise implementation and qualification contract before source edits.
+The complete final gates, SQL clean-build protocol and V5 are unchanged.
