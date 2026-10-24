@@ -161,6 +161,29 @@ change(-1)
             time.sleep(1.1)
             self.assertFalse(marker.exists())
 
+    def test_started_and_heartbeat_errors_clean_owned_children_and_stop_dispatch(self):
+        original = subprocess.Popen
+        for hook in ("started", "heartbeat"):
+            children = []
+            def spawn(*args, **kwargs):
+                child = original(*args, **kwargs)
+                children.append(child)
+                return child
+            def started(index):
+                if hook == "started" and index == 1:
+                    raise RuntimeError("injected ownership hook failure")
+            def heartbeat():
+                if hook == "heartbeat" and len(children) == 2:
+                    raise RuntimeError("injected ownership hook failure")
+            before = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+            with self.subTest(hook=hook), patch.object(batch.subprocess, "Popen", side_effect=spawn):
+                with self.assertRaisesRegex(RuntimeError, "ownership hook failure"):
+                    self.run_batch([command("import time; time.sleep(10)")] * 3,
+                                   started=started, heartbeat=heartbeat)
+            self.assertEqual(len(children), 2)
+            self.assertTrue(all(c.poll() is not None and c.stdout.closed and c.stderr.closed for c in children))
+            self.assertEqual(before, {sig: signal.getsignal(sig) for sig in before})
+
     def test_signal_registration_failure_restores_handlers_before_spawn(self):
         original = signal.signal
         before = signal.getsignal(signal.SIGINT)

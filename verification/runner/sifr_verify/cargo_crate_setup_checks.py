@@ -2,14 +2,20 @@
 
 import copy
 import unittest
+from unittest.mock import patch
 
 from .cargo_crate_setup import prepare_crate_test_binaries
 from .profile_commands import CommandFailed
 from .errors import VerificationError
-from .native_test_execution_checks import outcome, PASSED
+from .native_test_execution_checks import outcome, PASSED, ENV, ROOM
 
 
 class CrateSetupPolicyTests(unittest.TestCase):
+    def setUp(self):
+        capacity = patch("sifr_verify.native_test_allocation.discover_capacity", return_value=ROOM)
+        capacity.start()
+        self.addCleanup(capacity.stop)
+
     def selected(self, *suites, mode="smoke"):
         return {"toolchain_steps": [f"cargo-test-sifr-{mode}"],
                 "crate_test_membership": {"suites": list(suites)}}
@@ -76,7 +82,7 @@ class CrateSetupPolicyTests(unittest.TestCase):
                             "--test-threads=1"])
         suite["id"] = "sifr_driver_generated_builds"
         calls = []
-        env = {"CARGO_NET_OFFLINE": "true"}
+        env = dict(ENV, CARGO_NET_OFFLINE="true", CARGO_BUILD_JOBS="4", RAYON_NUM_THREADS="4")
         prepare_crate_test_binaries(self.selected(suite, mode="full"), env,
                                     lambda args, **kw: (calls.append((args, kw["env"])), outcome(PASSED))[1])
         native = [row for row in calls if any("prepare_advanced_data_native_graph" in
@@ -85,7 +91,8 @@ class CrateSetupPolicyTests(unittest.TestCase):
         self.assertEqual(native[0][0][:7],
                          ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--lib"])
         self.assertEqual(native[0][0][-4:], ["--", "--exact", "--ignored", "--nocapture"])
-        self.assertIs(native[0][1], env)
+        self.assertEqual(native[0][1], dict(env, CARGO_BUILD_JOBS="2", RAYON_NUM_THREADS="2"))
+        self.assertTrue(all(e is env for c, e in calls if (c, e) not in native))
         # A driver unit-only selection must not prepare unrelated native work.
         suite["id"] = "sifr_driver_lib"
         suite["command"] = ["test", "-p", "sifr_driver", "--lib"]
@@ -102,5 +109,5 @@ class CrateSetupPolicyTests(unittest.TestCase):
         for result in (outcome("test result: ok. 0 passed; 0 failed; 0 ignored;"),
                        outcome(PASSED, truncated=True), outcome(PASSED.replace("1 passed", "2 passed"))):
             with self.subTest(result=result), self.assertRaises(VerificationError):
-                prepare_crate_test_binaries(self.selected(suite, mode="full"), {},
+                prepare_crate_test_binaries(self.selected(suite, mode="full"), ENV,
                                            lambda *args, **kw: result)

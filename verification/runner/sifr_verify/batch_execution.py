@@ -69,6 +69,8 @@ def execute_batch(
     env: dict[str, str] | None = None, max_parallel: int,
     completed: Callable[[int, Outcome], None],
     deadline_seconds: float | str = 2400, limit_bytes: int = 1048576,
+    started: Callable[[int], None] | None = None,
+    heartbeat: Callable[[], None] | None = None,
 ) -> None:
     """Deliver each outcome once, in completion order, with its selection index.
 
@@ -108,6 +110,8 @@ def execute_batch(
             previous[sig] = signal.signal(sig, cancel)
         selector = selectors.DefaultSelector()
         while next_index < len(commands) or active:
+            if heartbeat is not None:
+                heartbeat()
             for index, state in list(active.items()):
                 if cancelled or time.monotonic() >= state.deadline:
                     state.cause = "cancelled" if cancelled else "safety_deadline"
@@ -130,12 +134,14 @@ def execute_batch(
                     completed(index, Outcome(130 if cancelled else 124, cause,
                                              b"", b"", False, 0.0))
                     continue
-                started = time.monotonic()
+                spawned_at = time.monotonic()
                 process = subprocess.Popen(commands[index], cwd=cwd, env=child_env,
                                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE, start_new_session=True)
-                state = _Active(index, process, started, deadline)
+                state = _Active(index, process, spawned_at, deadline)
                 active[index] = state  # ownership precedes fallible registration
+                if started is not None:
+                    started(index)
                 for stream, pipe in (("stdout", process.stdout), ("stderr", process.stderr)):
                     selector.register(pipe, selectors.EVENT_READ, (index, stream))
                     state.open_streams.add(stream)

@@ -437,3 +437,21 @@ Spans without a valid start/end pair are incomplete. Child and nested command
 observations are diagnostic data; the profile runner remains the authority for
 functional and performance-budget results. A test failure, blocked prerequisite,
 safety deadline, cancellation and performance-budget failure remain distinct.
+
+### Isolated native test scheduling
+
+Generated driver and CLI native suites retain their exact ignored-test inventory
+and one process per selected case. The runner admits at most two cases at once,
+with at least 4 GiB working memory per worker and the profile memory reserve.
+Inner Cargo/Rayon settings share the existing slot budget; native graph preparation
+and test execution use the same resolved settings. Ordinary compiler preparation
+keeps its separate allocation. Admission can reduce concurrency without removing
+cases. Allocation, admission and periodic memory observations appear in the log.
+
+The existing bounded command executor owns each process group. Cancellation,
+deadlines, unsafe outcomes, invalid execution evidence and exhausted memory reserve
+stop dispatch and clean up active groups. `--no-fail-fast` continues independent
+ordinary test failures. Final case lines follow selection order and explicitly mark
+unexecuted cases incomplete. Quoted child output is emitted on command completion;
+runner-owned command heartbeats remain visible while it runs. Overlapping case
+seconds are diagnostic costs, not category wall time to add together.

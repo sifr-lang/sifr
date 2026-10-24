@@ -8,7 +8,8 @@ from unittest.mock import patch
 from .compiler_configuration_plan import configuration_plan
 from .errors import VerificationError
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
-from .native_test_execution_checks import outcome, PASSED
+from .native_test_execution_checks import outcome, PASSED, ENV, ROOM, deliver
+from .process_execution import Outcome
 from .native_test_roles import ADVANCED_DATA_PREPARATION
 from .preparation import PreparationRun
 from .profile_commands import CommandFailed
@@ -120,14 +121,20 @@ class CrateExecutionTests(unittest.TestCase):
         configuration = next(g for g in configuration_plan(load_profile("merge"), "full")
                              if g.ids == ("sifr_driver_generated_builds",))
         inventory = f"alpha: test\nbeta: test\ngamma: test\n{ADVANCED_DATA_PREPARATION}: test\n\n4 tests, 0 benchmarks\n"
-        for terminal in (CommandFailed(-15), CommandFailed(124, "deadline"), CommandFailed(130, "cancelled")):
+        for terminal in (Outcome(-15, "exit", b"", b"", False, .01),
+                         Outcome(124, "deadline", b"", b"", False, .01),
+                         Outcome(130, "cancelled", b"", b"", False, .01)):
+            calls = []
             with self.subTest(terminal=terminal), patch(
-                "sifr_verify.native_test_execution.run_command",
-                side_effect=[outcome(inventory), CommandFailed(101), terminal, outcome(PASSED)],
-            ) as run, contextlib.redirect_stdout(io.StringIO()), self.assertRaises(CommandFailed) as caught:
-                run_native_configuration(configuration, env={}, no_fail_fast=True, preparation_complete=True)
-            self.assertIs(caught.exception, terminal)
-            self.assertEqual(run.call_count, 3)
+                "sifr_verify.native_test_execution.run_command", return_value=outcome(inventory)
+            ), patch("sifr_verify.native_test_allocation.discover_capacity", return_value=ROOM), \
+                 patch("sifr_verify.native_test_execution.run_native_batch", side_effect=deliver(
+                    [Outcome(101, "exit", b"", b"", False, .01), terminal, outcome(PASSED)], calls)), \
+                 contextlib.redirect_stdout(io.StringIO()), self.assertRaises(CommandFailed) as caught:
+                run_native_configuration(configuration, env=ENV, no_fail_fast=True, preparation_complete=True)
+            self.assertEqual(caught.exception.returncode, terminal.returncode)
+            self.assertEqual(caught.exception.cause, terminal.cause)
+            self.assertEqual(len(calls), 2)
 
     def test_native_failure_continues_to_independent_configuration(self):
         runner = self.runner(True)

@@ -7,6 +7,8 @@ import re
 from .errors import VerificationError
 from .native_test_roles import preparation_cases, require_one_executed_case
 from .profile_commands import CommandFailed, run_command
+from .native_test_allocation import native_environment, readmit, reserve_monitor
+from .native_command_batch import run_native_batch
 
 NATIVE_SUITES = frozenset({"sifr_cli_generated_builds", "sifr_driver_generated_builds"})
 
@@ -39,6 +41,8 @@ def run_native_configuration(configuration, *, env, no_fail_fast, preparation_co
     separator = command.index("--")
     if command[separator + 1:] != ["--ignored", "--test-threads=1"]:
         raise VerificationError("native case scheduling selection changed; review its flags")
+    allocation, env = native_environment(env)
+    workers = readmit(allocation)
     names = selected_native_cases(run_command([*command, "--list"], env=env))
     helpers = preparation_cases(configuration)
     if not set(helpers) <= set(names):
@@ -51,21 +55,32 @@ def run_native_configuration(configuration, *, env, no_fail_fast, preparation_co
     for helper in helpers:
         print(f"[sifr-native-selection] suite={configuration.ids[0]} case={helper} "
               "role=preparation owner=crate_tests")
-    first_failure = None
-    for name in names:
-        status = "pass"
+    results = {}
+    def completed(index, outcome):
+        if index in results or index < 0 or index >= len(names):
+            raise VerificationError("duplicate or invalid native outcome index")
+        error = None
         try:
-            outcome = run_command([*command, "--exact", name], env=env)
-            require_one_executed_case(outcome, name)
-        except (CommandFailed, VerificationError) as error:
-            status = "fail"
-            first_failure = first_failure or error
-            if not no_fail_fast or (
-                isinstance(error, CommandFailed)
-                and (error.cause not in (None, "exit") or error.returncode < 0)
-            ):
-                raise
-        finally:
-            print(f"[sifr-native-case] suite={configuration.ids[0]} case={name} status={status}")
-    if first_failure:
-        raise first_failure
+            if outcome.cause != "exit" or outcome.returncode:
+                raise CommandFailed(outcome.returncode or 2, outcome.cause)
+            require_one_executed_case(outcome, names[index])
+        except (CommandFailed, VerificationError) as failure:
+            error = failure
+        results[index] = error
+        if error is not None and (not no_fail_fast or outcome.cause != "exit"
+                                  or outcome.returncode < 0 or outcome.truncated
+                                  or isinstance(error, VerificationError)):
+            raise error
+    try:
+        run_native_batch([[*command, "--exact", name] for name in names], env=env,
+                         workers=workers, completed=completed,
+                         monitor=reserve_monitor(allocation))
+        if len(results) != len(names):
+            raise VerificationError("native execution returned incomplete selection")
+    finally:
+        for index, name in enumerate(names):
+            status = "incomplete" if index not in results else "fail" if results[index] else "pass"
+            print(f"[sifr-native-case] suite={configuration.ids[0]} case={name} status={status}", flush=True)
+    for index in range(len(names)):
+        if results[index] is not None:
+            raise results[index]
