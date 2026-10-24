@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4aw complete integrated discovery; V4ax CLI process isolation registered; final timing and V1/V5 remain open
+current_stage: V4ax CLI isolation merged; V4ay SQL regeneration registered; final timing and V1/V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -11300,3 +11300,94 @@ capacity before rebuilding. Use the approved focused-intermediate policy. SQL
 provenance remains explicitly owned by the next component-regeneration item;
 this repair cannot claim a passing integrated gate. Final create-pr/merge and V5
 qualification remain required after the integrated implementation is credible.
+
+
+### V4ax closure — CLI working-directory isolation repaired
+
+Status: merged in [PR #4463](https://github.com/sifr-lang/sifr/pull/4463).
+Reviewed candidate e6a722f28db884a8162d285f59f15a753c8e8f73; squash merge
+7364c62c09c90ef121916655e2a541990605850b has the identical tree.
+
+All seven directory-mutating test bodies now run in bounded child processes,
+with exact test selection, recursion prevention, preserved failure diagnostics
+and a completion marker emitted only after the full body returns. Other CLI
+tests remain parallel. The existing case names, feature gates, native roles,
+Cargo modes, trace assertions, lockfile immutability and runtime checks remain.
+No production behavior, dependency, lockfile, profile or selection changed.
+
+Exact final candidate checks passed:
+
+- Canonical locked-uv test-binary preparation: 19.376s.
+- Subprocess controls reject empty selection and failed assertions, accept a
+  completed child, and retain the parent's cwd. The original racing pair passes
+  with two test threads in 43.94s.
+- Complete ordinary CLI target: 150 passed, zero failed, six native cases
+  separately executed below; 39.192s. All 155 original cases remain enrolled,
+  with one added control.
+- All six native CLI cases pass with one-executed-case attestation. Individual
+  durations: 48.987s, 1.336s, 2.446s, 3.103s, 2.115s and 6.531s.
+- Canonical source evidence parser confirms all seven affected declarations
+  retain their feature gates, ignore flags and execution roles.
+- Twelve runner/allocation controls, 246 interop provenance controls, actual
+  interop fixture inventory, formatting, file-size and diff checks pass.
+
+The first wrapper control failed because libtest placed its prefix on the
+completion marker's line. That attempt remains failed. An explicit delimiter
+repairs it; all final checks above use the corrected candidate. The directory
+control canonicalizes temporary paths to handle symlinked temporary roots.
+
+Independent Claude review: SATISFIED; zero blocking findings.
+Review SHA-256 f02d9741f7ef235ed3593fc56925c3ffa4088166b73d93089de58fd874c6922c.
+Evidence archive v4ax-evidence.tar.gz: 139 verified payloads;
+SHA-256 699368d94ad06d73b0ef7cde6ec63a365b7ec16fd76c09ac6a4f28e6ca453660.
+Review and validation remain outside the reviewed tree. PR attachment was
+attempted but the application rejected it at its 100-attachment limit.
+
+Nonblocking review follow-ups remain separate: consider a policy against future
+direct cwd mutations, keep bounded-output rejection visible for exceptionally
+chatty tests, and distinguish arbitrary all-in-one include-ignored concurrency
+from the selected canonical cases. No new acceptance requirement was adopted.
+This is a correctness repair, not a matched speedup or integrated acceptance.
+SQL provenance, final scoped gates and V5 remain open.
+
+### V4ay prospective execution — regenerate SQL component provenance
+
+Status: registered; bounded repair owned by LOCAL-GATE integrated correctness.
+
+V4aw's complete SQL invocation ran all 66 cases. Four provenance-related checks
+failed after V4av changed the root Cargo manifest. Read-only validation identifies
+stale source identity in all three SQL component families. Rebuild the MySQL,
+PostgreSQL and SQLite guests through their existing canonical producers using
+the pinned Rust toolchain, authenticated SDK archive/extraction, pinned parser
+sources and virtualizer. Retain owned compatible build targets. Do not merely
+rewrite hashes or relax provenance checks.
+
+Allowed produced files are the three component-artifacts.json receipts and their
+ten existing Wasm components: three MySQL series, PostgreSQL majors 13–18 and one
+SQLite series. Preserve words-component artifacts, producer code, dependency
+versions, lockfiles, feature selections and qualification policies. If production
+exposes a separate defect, record its owner and scope before any additional fix.
+Record whether regenerated Wasm bytes match the previous artifacts; identical
+bytes do not excuse bypassing the actual producer.
+
+Named intermediate acceptance:
+
+- Run all three producers with explicit capacity/allocation and a 30-minute cap
+  per family. Preserve failed or incomplete outputs and continue independent
+  families where safe.
+- Validate complete source/tool/artifact provenance for each family, retaining
+  all server-major/parser-source identities. Compare allowed output inventory
+  and explain any binary changes.
+- Run the affected canonical SQL preparation and all 19 selected SQL suites /
+  all 66 current ordered cases, including mutation checks, compiler/provider
+  runtime checks, all six PostgreSQL majors and clean/reuse/independent linked
+  reproduction. Apply the diagnostic cap per category; explicitly schedule any
+  unexecuted remainder rather than treating a partial report as complete.
+- Run affected producer/provenance self-tests and docs/diff checks. No broad Rust
+  formatting gate is needed for generated binary/receipt-only changes.
+- Obtain SATISFIED exact-candidate independent review before merge.
+
+Use the approved focused-intermediate policy. Passing this item removes the
+known provenance failures; it does not by itself meet the ten-minute requirement.
+Preserve the 869.629s clean-build observation and all larger costs as remaining
+optimization work. Final complete scoped gates and V5 still apply.
