@@ -10935,3 +10935,98 @@ before editing policy. Full selected correctness gates, V5 behavioral edits and
 complete invalidation, release/compiler runtime performance and SQL reproduction
 remain required; SQL debug=0 is unchanged. Each diagnostic category retains its
 30-minute cap, resource reserves, failure evidence and process cleanup.
+
+### V4av feasibility outcome — smaller artifacts, preserved corpus behavior
+
+Frozen source ab4cba40c2e0f72315b3e71e89432d0cacc0bf19 passes the registered
+external experiment. No repository profile was changed during these observations.
+The empty target prepares all 326 artifacts in 556.631s (guard 564.592s), using
+four admitted compiler workers. Package/target/features and all profile fields
+except debug information match the qualified V4au graph. Its historical
+1119.824s build used two workers; do not call this a matched build-time saving.
+
+| Artifact | Full debug bytes | Line-table bytes |
+| --- | ---: | ---: |
+| Driver test executable | 1,222,886,264 | 412,255,840 |
+| sifr_codegen archive | 860,845,484 | 334,634,442 |
+| sifr_lowering archive | 314,634,346 | 79,125,216 |
+| Cranelift archive | 257,545,060 | 120,941,578 |
+
+The driver executable is 66.3% smaller. The fresh target occupies 5,244,610,371
+bytes. Largest Cargo unit durations are codegen 193.510s (171.940s backend),
+Cranelift 168.260s, lowering 147.030s and frontend 90.920s. They overlap and
+must not be summed. Removing full debug information does not eliminate the
+remaining optimization/backend work or the separate SQL debug=0 build cost.
+
+All six fresh-process corpus runs execute all 732 cases, including fresh metadata
+preparation at the same initially empty owned cache path. Baseline times:
+109.725 / 108.067 / 107.880s; line tables: 108.657 / 107.620 / 107.962s.
+Median/worst: baseline 108.067 / 109.725s, candidate 107.962 / 108.657s.
+The median ratio is 0.999029, with no material measured runtime regression.
+Every input/generated source file is byte-identical; portable metadata payload
+and coverage contents agree. Source-located assertion and overflow backtrace
+controls pass with the pinned compiler and intended debug setting.
+
+The original comparison wrapper remains failed (225.305s). It incorrectly
+compared serialization order of HashSet<String> module members; 192 rows differ
+only in that unordered array. All 1,464 source files already match exactly.
+The typed comparison rejects duplicate/missing modules and changed hashes,
+compares unique membership and all other coverage values, and retains raw output.
+The first two successful test executions are reconciled under unchanged verified
+inputs; only the remaining four executions run again, under a passing 443.434s
+guard. No failed wrapper is relabeled a pass and no test assertion is removed.
+
+Evidence archive v4av-qualified-evidence.tar.gz, SHA-256
+3f2c29fe4ae8a7c69cd9b9d704b60a207c058c29a128cd16293cd313ae62d714,
+contains 8,925 payloads / 316,700,905 bytes. Helpers, raw sections, Cargo timings,
+all corpus outputs, failed/passing guards and source snapshot are retained.
+This is feasibility evidence, not complete gate, installed/native, V5 or phase
+acceptance. Source-line diagnosis remains; full debugger local-variable/type
+inspection is the explicit debug-information tradeoff.
+
+
+### V4av prospective adoption — development line information
+
+Status: registered for implementation after successful feasibility qualification.
+
+All registered corpus repetitions and diagnostic controls pass. Use
+debug = "line-tables-only" in the existing workspace development profile.
+Cargo's test profile inherits this setting. Keep every optimization override,
+debug assertion, overflow check, dependency, selected suite and application
+profile unchanged. Document the exact tradeoff: source-line backtraces remain;
+full debugger local-variable/type inspection requires Cargo's explicit
+debug-information override and a separately owned target. Do not introduce a
+second custom validation profile or a hidden runner environment override.
+
+This is justified by measured artifact-size reduction and preserved correctness,
+not a claimed matched compiler build speedup. The historical cold build uses a
+different allocation. Full gate time and V5 invalidation remain unqualified.
+
+Named checks:
+- Prepare actual driver library tests with the declared manifest policy and no
+  CARGO_PROFILE_DEV_DEBUG/TEST_DEBUG override. Compare effective Cargo units,
+  features and profiles against the feasibility graph; account for manifest
+  identity rebuilds rather than relabeling the old executable.
+- Run the complete sifr_codegen and sifr_compiler_services library test suites.
+- Run affected sifr_driver metadata-reader tests, including the explicit full
+  732-case corpus against its matching source sysroot. Reconcile inventory and
+  outputs; compare module membership as the declared HashSet, preserving all
+  other coverage values and exact emitted bytes.
+- Prepare the actual normal CLI and execute the complete positive E2E corpus
+  through verification/runner/e2e/run_e2e_pass.sh --profile merge.
+- Run cargo fmt --check, file-size guardrails, profiles check and compare full/
+  scoped create-pr and merge emitted selections. Check documentation links and
+  git diff --check.
+
+Use one admitted four-worker compiler allocation with the same retained owned
+targets and pinned launch environment. Inspect actual resolved target filesystems
+and temporary allocation before builds. Preserve all previous failure evidence.
+The full final gate still owns unchanged release/SQL/ASAN contracts; this focused
+policy qualification cannot stand in for those contracts. Account for all rebuilds and required identity refreshes caused by
+the manifest change. Keep separate initial, unchanged and edited-state observations.
+Use the prepared targets when inputs still match; do not transfer artifacts into
+different identities or weaken version/hash checks to avoid rebuilds.
+
+Final adoption still requires the exact candidate's independent review and named
+intermediate acceptance. Full selected final gates, SQL clean reproduction and
+all V5 scenarios remain mandatory before declaring the phase complete.
