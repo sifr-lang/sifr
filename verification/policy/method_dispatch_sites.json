@@ -6338,10 +6338,10 @@
   "sites": [
     {
       "site": "crates/sifr/src/cargo_lock_mode_certification_tests.rs::sifr_test_modes_use_package_resolution_and_final_test_trace::literal-comparison::1",
-      "fingerprint": "77178020999584dc15c8e9bf0a0e9da4ec967f9a32810bf3c52d5a5591e0f131",
+      "fingerprint": "82a95f4bc9f5fbba6b7e107f211ee044a3ff6a9896b52cc80757ca0bcd7926fc",
       "classification": "test-assertion",
       "owner": "test-owner",
-      "operation": "saw_generated_resolution | = invocations . iter ( ) . any ( | invocation | invocation . phase == \"resolution\"",
+      "operation": "invocation . phase == \"resolution\"",
       "inputs": "fn sifr_test_modes_use_package_resolution_and_final_test_trace ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
@@ -6350,7 +6350,7 @@
     },
     {
       "site": "crates/sifr/src/cargo_lock_mode_certification_tests.rs::sifr_test_modes_use_package_resolution_and_final_test_trace::literal-comparison::2",
-      "fingerprint": "f4edaeff035fbf69fa1a5a94973c78b31ec91db7ab4511ad0040989a97bce1e0",
+      "fingerprint": "c2a278b349b3898415a937b5f648a6cb28217bc646eb8597021f6653404201e5",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "invocation . phase == \"final-test\"",
@@ -6362,7 +6362,7 @@
     },
     {
       "site": "crates/sifr/src/cargo_lock_mode_certification_tests.rs::test_locked_offline_sifr_commands_and_warm_cache::literal-comparison::1",
-      "fingerprint": "fb6b6a0f3dcda7ab819af17d0098d07608b5a6c4cfa02ababeb82a4ae8abce89",
+      "fingerprint": "d17639374a2f846c4d30a6bc6cbfba301d53b405dbd174a5870834134af78f55",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert_eq ! ( warm_invocations . iter ( ) . filter ( | call | call . phase == \"final-build\" ) . count ( )",
@@ -6374,7 +6374,7 @@
     },
     {
       "site": "crates/sifr/src/cargo_lock_mode_certification_tests.rs::test_locked_offline_sifr_commands_and_warm_cache::literal-comparison::2",
-      "fingerprint": "cf88b75a2ce6d42219143dba3074bd337c7363ad96fbfddc2a693f7553c7a99b",
+      "fingerprint": "9f3d75b66738f15755f378c35eabff2e09c870245208a0c234d9021dc4282cd1",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( warm_invocations . iter ( ) . any ( | call | call . phase == \"rust-probe\" ) )",
