@@ -11,7 +11,7 @@ pub(super) fn run(name: &str, body: impl FnOnce()) {
         Ok(selected) => {
             assert_eq!(selected, name, "isolated child selected a different test");
             body();
-            println!("{COMPLETED}{name}");
+            println!("\n{COMPLETED}{name}");
         }
         Err(std::env::VarError::NotPresent) => {
             let output = launch(name, None);
