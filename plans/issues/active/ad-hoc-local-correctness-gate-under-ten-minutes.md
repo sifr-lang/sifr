@@ -10727,3 +10727,50 @@ invalidation coverage, all declared inputs and failed evidence. Do not drop an
 identity field or silently merge incompatible profiles/features/versions.
 Register the precise implementation and qualification contract before source edits.
 The complete final gates, SQL clean-build protocol and V5 are unchanged.
+
+### V4au audit result and prospective implementation contract
+
+Cargo's bounded five-step diagnostic at cd8d71b22b53a4ce6c6caf7dd59c8dabb4e02cc0
+confirms EnvVarChanged for SIFR_RELEASE_VERSION in both directions. Normal to
+beta.1300 and back each rebuild sifr_sysroot; unchanged repetitions report all
+57 library/build artifacts fresh. Initial preparation is 19.006s, switches
+0.767s each, unchanged repetitions 0.316s and 0.366s; guarded total 24.701s.
+These are instrumented small-crate diagnostics, not full compiler speed claims.
+
+The retained V4an logs independently show the downstream chain (sysroot,
+stdlib manifest/imports, lowering, codegen, frontend, package, semantic/compiler
+services and driver) rebuilt in corpus preparation (55.78s Cargo), corpus
+execution (50.26s Cargo) and structural execution (about 61s Cargo).
+Preparation and execution share the outer development target while corpus alone
+sets the packaged version. Boundary source preparation between them can replace
+that target's version-specific freshness state. The release compiler itself
+already uses a separate canonical target and was fresh during artifact packaging
+(0.51s Cargo); its preceding 664s rebuild is not established as duplicate work.
+Preserve distinctions between required optimized release builds, normal compiler
+builds, corpus test profile, source snapshots, packaging and runtime assertions.
+
+Implement one correction: define the existing packaged target path in the common
+release preparation module and use it for both packaged release preparation and
+version-matched corpus preparation/execution. Preserve the normal inherited
+development target, exact release version, source snapshot, flags, host/profile/
+feature selection, Cargo freshness and every runtime assertion. Do not copy
+artifacts or remove any identity input. The corpus debug graph is still distinct
+from the release graph; account for its real initial build and disk cost.
+
+Qualification: focused sysroot/release preparation controls must demonstrate
+matching corpus preparation/execution environments, unchanged caller environment
+and resource/flag forwarding, separation from normal development target, and
+unchanged version/failure rejection. Check file sizes, diff and unchanged emitted
+create-pr/merge plans (full and correctness scope). On the frozen candidate,
+prepare the actual normal driver library and version-matched corpus library;
+record each cost separately. Alternate normal/corpus/normal/corpus preparations
+with real Cargo artifact/fingerprint evidence: after preparation there must be
+no rebuild attributable to version switching. Execute the complete source corpus
+and existing metadata-structural tests, then the complete selected sysroot-release
+area when prerequisites are ready. Every category retains its 30-minute cap;
+a cap or failed prerequisite remains incomplete, never a pass. Count initial
+preparation, all selected suites and remaining packaging work explicitly.
+Use normal runs for timings and one bounded diagnostic for rebuild causes.
+Retain build targets and measure capacity before first provisioning. Require
+exact-candidate independent review before adoption. Final scoped gates, SQL
+protocol and V5 remain open and unchanged.
