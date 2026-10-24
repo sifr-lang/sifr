@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ai preparation batching qualified and merged; V1h current SQL clean-build attribution; final gates and V1/V5 timing acceptance remain open
+current_stage: V1h SQL attribution complete, mandatory build feasibility still open; V4aj same-file compiler override comparison; final gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -9419,3 +9419,103 @@ override resolves to that same Cargo-selected file. The current binary is about
 1.3 GiB. This is source/size evidence, not a measured time saving; preserve Cargo
 freshness and differing-path byte validation if investigated. Keep it separate
 from this mandatory SQL build attribution.
+
+
+### V1h outcome — fresh compilation, not an unchanged-cache failure
+
+Frozen candidate `667eea244ee7c87649f1995511de62565aaec413` completes the canonical
+native SQL protocol with six Cargo workers and two Rayon threads. All seven
+rejection controls pass; all three linked executable hashes agree across all
+three stages. Both clean builds compile 490 artifact units with zero fresh units;
+unchanged A reuses all 490 and compiles none. Temporary targets are removed.
+No resource stop, source change or remaining process occurs.
+
+| Stage | Seconds |
+| --- | ---: |
+| Clean A, including output selection/hash | 382.028 |
+| Unchanged A, including output selection/hash | 1.382 |
+| Independent clean B, including output selection/hash | 391.728 |
+| Sum of the three build stages | 775.138 |
+| Metadata | 0.065 |
+| Target cleanup, both calls | 0.791 |
+| Observed protocol window, including observation/source checks | 780.105 |
+| Complete guarded diagnostic, including admission and seven controls | 781.344 |
+
+Output selection/hashing takes 0.519 / 0.505 / 0.518s and is already included in
+the build rows. The remaining observation window includes timing/artifact capture,
+protocol setup and source-freeze verification; do not report it all as compiler
+work. The process tree consumes 4,275.38 user plus 176.14 system CPU-seconds.
+Minimum sampled available memory is 7,832,641,536 bytes; minimum root free space
+is 31,562,772,480 bytes, above both reserves.
+
+| Overlapping timed unit | Clean A seconds | Clean B seconds |
+| --- | ---: | ---: |
+| Cranelift codegen | 202.86 | 200.14 |
+| Sifr lowering | 175.35 | 174.59 |
+| Sifr frontend | 100.55 | 107.37 |
+| TLS native preparation (aws-lc-sys build script) | 105.66 | 107.33 |
+| Sifr metadata | 80.79 | 77.25 |
+
+In clean A, lowering spends 12.19s in its frontend and 163.16s in machine-code
+generation; Cranelift spends 32.66 / 170.20s, and the Sifr frontend 9.78 / 90.77s.
+These units overlap and their durations are not additive savings. Splitting files
+or crates does not by itself demonstrate reduced machine-code generation work.
+PostgreSQL's build-script compile is reported unblocked at 22.89s but starts at
+296.75s; its native preparation runs at 304.89–363.26s. Scheduling contributes to
+that interval, but this is not proof that a crate move or reorder reduces the
+complete build. The final PostgreSQL tool binary unit takes 2.82s; linking is not
+the largest observed unit.
+
+The canonical qualification script, root manifest, lock and toolchain are unchanged
+from V1f. Both observations select 490 artifacts; the three SQL component libraries
+now have rlib-only targets instead of rlib+cdylib, reflecting the already accepted
+component-producer separation. Other package/features/profile selections agree.
+The source-difference inventory retains cache-storage, identity, Python-probe and
+component-artifact changes. V1f's six-worker protocol measured 789.540s; V4ac's
+1,440.033s category used two workers. This does not establish a controlled code
+speedup or regression. It establishes that the current six-worker path remains
+about thirteen minutes and that unchanged-build caching works in this path.
+
+No production source/profile or coverage change follows from this diagnostic.
+Rejected opt0 and concurrent-clean experiments remain rejected. The next V1
+architecture investigation must reduce actual compilation work while preserving
+canonical migration checking, real component execution and complete product
+qualification; an unqualified external/prebuilt compiler is not a solution.
+Do not repeat this unchanged protocol merely to accumulate another timing.
+The SQL obligation alone still exceeds 600s. Final gates and V5 remain open.
+
+Archive `v1h-qualified-evidence.tar.gz`, SHA-256
+`546a2205bcde3cd685ddb6f75c7e6efd366d494260f7f9826e233ff259bde5e9`,
+contains 44 payloads / 7,818,884 bytes, all independently verified locally. It
+preserves real commands, profiles/features/freshness inventories, full Cargo
+artifact/timing output, sampled resources, stage/hash/cleanup records, seven
+controls and source/ownership guards. The HTML report includes every timed unit
+for each independent clean build in sortable tables. This is diagnostic evidence,
+not final host-sensitive timing acceptance.
+
+### V4aj — avoid comparing a Cargo-selected compiler with itself
+
+Status: registered, narrow common-resolver repair. Measure the existing real
+resolver with an explicit override resolving to its Cargo-selected compiler path.
+The current code hashes that same approximately 1.3 GiB file twice. This occurs
+after canonical Cargo preparation and proves no additional equality fact. Keep
+Cargo preparation first, its environment/key, its failure handling and artifact
+selection unchanged. Require the selected file to exist even on the same-path
+route. Compare normalized paths; do not turn this into a generic successful-test
+receipt, inode cache, persistent preparation cache or fallback compiler selector.
+Different paths must still undergo the existing full byte-digest comparison,
+including identical copies and mismatching files. Caller inputs remain unmodified.
+
+Named acceptance: exact-path and symlink-to-candidate routes avoid digest reads
+only after actual preparation; missing candidate/override, Cargo failure, duplicate
+or absent Cargo artifact, truncated capture and safety cancellation remain errors.
+Different-path equal bytes pass and different bytes fail, with both digests checked.
+New same-path regression controls must fail against the unchanged implementation.
+Run affected resolver/source-consumer tests, all foundation groups, four unchanged
+emitted plans, profile validation and applicable static/size checks. Record actual
+before/after resolver invocations using the retained canonical target, same pinned
+tools and exact candidate identity; distinguish Cargo time and redundant hash work
+from whole-gate savings. Reject an apparent saving caused by skipped preparation
+or changed binary selection. Source review must cover the exact candidate.
+This inexpensive repeated-work repair does not establish SQL feasibility or waive
+final full correctness gates and repeated V5 qualification.
