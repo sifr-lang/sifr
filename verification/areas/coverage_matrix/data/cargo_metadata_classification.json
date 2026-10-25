@@ -2,6 +2,25 @@
   "schema_version": 1,
   "packages": [
     {
+      "name": "sifr_process",
+      "classification": "first_party_compiler",
+      "targets": [
+        {
+          "name": "sifr_process",
+          "kind": "lib",
+          "classification": "first_party_compiler",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_compiler",
+          "profile_assignment": "merge"
+        }
+      ],
+      "features": []
+    },
+    {
       "name": "sifr_semantic_services",
       "classification": "first_party_compiler",
       "targets": [
@@ -300,51 +319,242 @@
       "name": "sifr_sql_mysql_tools",
       "classification": "first_party_tooling",
       "targets": [
-        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sifr_sql_mysql_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sifr-sql-mysql", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
-        {"name": "live_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
-        {"name": "migration_qualification", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr_sql_mysql_tools",
+          "kind": "lib",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr-sql-mysql",
+          "kind": "bin",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "live_catalog",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "test-fixture"
+        },
+        {
+          "name": "live_migrations",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "test-fixture"
+        },
+        {
+          "name": "migration_qualification",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "injected_commands",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        }
       ],
-      "features": []
+      "features": [
+        {
+          "name": "compiler",
+          "profile_assignment": "merge",
+          "classification": "first_party_tooling"
+        },
+        {
+          "name": "default",
+          "profile_assignment": "merge",
+          "classification": "first_party_tooling"
+        }
+      ]
     },
     {
       "name": "sifr_sql_postgresql_tools",
       "classification": "first_party_tooling",
       "targets": [
-        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sifr_sql_postgresql_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sifr-sql-postgresql", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
-        {"name": "live_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
-        {"name": "migration_qualification", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr_sql_postgresql_tools",
+          "kind": "lib",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr-sql-postgresql",
+          "kind": "bin",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "live_catalog",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "test-fixture"
+        },
+        {
+          "name": "live_migrations",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "test-fixture"
+        },
+        {
+          "name": "migration_qualification",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "injected_commands",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        }
       ],
-      "features": []
+      "features": [
+        {
+          "name": "compiler",
+          "profile_assignment": "merge",
+          "classification": "first_party_tooling"
+        },
+        {
+          "name": "default",
+          "profile_assignment": "merge",
+          "classification": "first_party_tooling"
+        }
+      ]
     },
     {
       "name": "sifr_sql_sqlite_tools",
       "classification": "first_party_tooling",
       "targets": [
-        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sifr_sql_sqlite_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sifr-sql-sqlite", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "sqlite-runtime-probe", "kind": "bin", "classification": "test_fixture", "profile_assignment": "test-fixture"},
-        {"name": "catalog_qualification", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
-        {"name": "migration_qualification", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr_sql_sqlite_tools",
+          "kind": "lib",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr-sql-sqlite",
+          "kind": "bin",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sqlite-runtime-probe",
+          "kind": "bin",
+          "classification": "test_fixture",
+          "profile_assignment": "test-fixture"
+        },
+        {
+          "name": "catalog_qualification",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "migration_qualification",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "injected_commands",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        }
       ],
-      "features": []
+      "features": [
+        {
+          "name": "compiler",
+          "profile_assignment": "merge",
+          "classification": "first_party_tooling"
+        },
+        {
+          "name": "default",
+          "profile_assignment": "merge",
+          "classification": "first_party_tooling"
+        }
+      ]
     },
     {
       "name": "sifr_sql_tool",
       "classification": "first_party_tooling",
       "targets": [
-        {"name": "sifr_sql_tool", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "migration_artifacts", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
-        {"name": "migration_source", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
-        {"name": "schema_lifecycle", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
+        {
+          "name": "sifr_sql_tool",
+          "kind": "lib",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "migration_artifacts",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "migration_source",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "schema_lifecycle",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_tooling",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "sifr-sql-compiler-fixture",
+          "kind": "bin",
+          "classification": "test_fixture",
+          "profile_assignment": "test-fixture"
+        },
+        {
+          "name": "compiler_session",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "native_compiler",
+          "kind": "test",
+          "classification": "test_fixture",
+          "profile_assignment": "merge"
+        }
       ],
-      "features": []
+      "features": [
+        {
+          "name": "__compiler_fixture",
+          "profile_assignment": "test-fixture",
+          "classification": "test_fixture"
+        }
+      ]
     },
     {
       "name": "sifr_structural_identity",

@@ -122,3 +122,22 @@ locked namespace admission tests remain separately selected; the real native
 sandbox tests directly provide trusted executables and do not claim to repeat
 Cargo/package admission in that same invocation. No Windows or macOS execution
 qualification is inferred from these observations.
+
+
+## Pre-launch admission for the confined route
+
+Before starting the confined tool, the caller captures the canonical frozen graph's
+manifest, lock, schema and component file identities, absent root-manifest slots,
+and configured migration file identities. A bounded receipt stays in a temporary
+file outside the project and is not mounted into the tool sandbox. Only the
+selected worker receives its path and SHA-256. The worker checks those bytes and
+the admitted inputs before loading metadata, then verifies its selected input set
+against the caller's receipt. Per-operation drift checks remain in place.
+
+Admission failure is retained until a semantic request arrives. Thus reading an
+existing plan or cleaning up a database still starts no compiler worker and does
+not depend on successful semantic preparation. Input capture and checks are
+charged to the confined invocation; they are not free or reusable evidence.
+Direct unsandboxed execution retains its own first-request admission lifetime.
+These before/after checks detect drift; they do not claim an atomic filesystem
+snapshot against arbitrary concurrent host writes.

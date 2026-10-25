@@ -13566,3 +13566,52 @@ No sub-ten-minute gate result follows from these development comparisons.
 Remaining: complete feature/coverage and policy-inventory reconciliation, declared
 producer refresh, named affected contracts and clean-build reproducibility,
 exact-candidate independent review, then final scoped gates and all V5 scenarios.
+
+
+### V1s development checkpoint — executable build result and caller admission
+
+At a57a1cc7d01d490ab20afb1c29d01e7eaf78a6a7, both test variants retain every
+previous test name and the same five live-service exclusions: 29 native tests
+and 93 compiler-enabled tests pass. The actual three-executable build protocol
+takes 400.950s: independent clean A 196.847s, reuse A 1.197s, independent clean B
+199.101s. All three executable hashes match across all builds, and the native
+dependency graph excludes the semantic compiler and component engine. The earlier
+complete observation was 878.767s at a different recorded candidate. This is a
+category comparison, not controlled repeated full-gate qualification.
+
+Real commands from both clean targets pass in a separate 140.269s batch: 18
+output/exit comparisons, 66 byte-identical schema/migration artifact files, and
+two actual SQLite provisioning/integrity/cleanup paths. Canonical preparation
+remains charged. Retain the earlier capacity-preflight failures with zero tests;
+inactive incremental artifacts were checksum-verified and retained elsewhere
+under the same logical paths, not discarded.
+
+The actual pre-request admission regression at
+21d2d88fc99210491d052c6fbb19a1962afb1f67 failed: the lazy worker accepted a lock
+edited after caller admission but before its first request. This is a confirmed
+in-scope omission, not speculation. The repair records the caller's selected
+input identities before launching the confined tool and passes a bounded,
+digest-bound receipt only to the selected worker. The worker checks it before
+loading metadata; initial graph/profile input selection must match it. Native
+tools receive no additional sandbox permissions. Nonsemantic commands remain
+lazy; admission errors are required only when the service is requested.
+
+At 7f31b716e711a3d8ac7307d20a5c970d31624300, six sandbox/adapter tests pass,
+including seven pre-request drift cases and an independent worker-side
+before-metadata check. Six admission/input units, four real canonical compiler
+comparisons, the existing locked namespace CLI regression, formatting, size and
+diff checks pass. The guarded batch took 174.790s. Preserve the first repair's
+hash-formatting compile failure as a separate failed attempt.
+
+The policy reconciliation transfers 28 existing unsafe sites to sifr_process
+and explicitly binds the four new socket/reaping sites and allowances. It also
+updates affected method/filesystem inventories and Cargo target/feature ownership.
+Full policy and runner validation is next; no pass is inferred from bookkeeping.
+All seven emitted plans preserve their previous selections with only the new
+sifr_process owner added; the SQL host-tools suite adds the native-command and
+session cases. Execute and reconcile those selections before review.
+
+V1s remains unmerged and unreviewed. Refresh affected component producers,
+complete current source/installed and executable qualification, reconcile
+affected coverage, and obtain exact-candidate review. Final scoped gates and
+every V5 scenario remain open; no sub-ten-minute full-gate claim is made.
