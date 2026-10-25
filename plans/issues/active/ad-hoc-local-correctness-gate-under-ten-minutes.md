@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1q merged; V1r capability assertion inventory repair; full gates and V5 remain open
+current_stage: V1q/V1r merged; V1s integrated SQL compiler execution boundary; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13345,3 +13345,94 @@ removing it still fails and a production-semantic classification is rejected;
 file-size and documentation/diff checks; exact-candidate independent review.
 No compiler rebuild is required because no compiler or test implementation
 changes. Full final gates and V5 remain required.
+
+### V1r closure — capability assertion inventory repaired
+
+PR [#4476](https://github.com/sifr-lang/sifr/pull/4476) merged as
+8734e8200b34aebe649b087cc9c30a6853da8380, with the exact reviewed tree
+b97407ee4c99a78a5243073ec0d43f0a987f6d81. The one missing test-assertion
+classification is added; all 6,428 previous rows, compiler/test sources and
+classifier rules are unchanged. The real guard passes 6,429 sites and 235
+reviewed nodes. All 17 existing guard self-tests pass. Three focused controls
+reject a missing row, wrong fingerprint and production-semantic classification.
+Size, documentation and exact-range diff checks pass. Guarded validation took
+41.234s without a compiler build.
+
+Independent review SATISFIED, no blockers; response SHA-256
+38fb63f0c3372731017b8e91b7f19474bc9d2f777119d5345d6c9d780473fa49.
+Evidence v1r-evidence.tar.gz has 26 verified payloads; SHA-256
+ff3edcdcd44e8cc2bde1fc2a06572d08572bfeeb3b5a698a5aed269e86cbd192.
+The raw self-test log retains all 17 case names; optional inventory ordering
+cleanup is not part of this repair. The pre-existing V1o inventory omission is
+closed. Full phase acceptance remains open.
+
+### V1s prospective execution — integrated compiler execution boundary for SQL tools
+
+Address the remaining demonstrated build root cause: independently building each
+standalone native SQL tool still builds the canonical semantic compiler and its
+component engine. V1q proves the native operation libraries can consume explicit
+canonical inputs; it does not remove the compiler from the actual executables.
+This item must deliver the complete execution/installation adapter and measure
+the actual three-tool clean-build protocol, rather than another library-only
+speedup.
+
+Keep one canonical implementation of profile preparation and migration source
+compilation. Native tools retain catalogs, connections, credentials, provider
+validation, execution plans and artifact writes. The owning compiler prepares
+semantic values under explicit project/lock/input authority. Use existing
+bounded framing and installed-generation integrity where they fit. Do not
+invent a daemon, alternate frontend, cache of correctness verdicts, unchecked
+helper lookup, or implicit fallback to the old expensive execution path.
+
+Resolve and document the production call/lifetime contract before selecting the
+final transport. Both direct tool entrypoints and confined namespace dispatch
+must work. An installed compiler must come from the selected immutable generation
+and pass its existing executable/metadata binding. Development execution needs
+an explicit source/build identity relationship and must reject stale or mismatched
+compiler selections. A digest alone is not permission to execute a helper.
+No whole-installation authenticity claim is inferred from local checksums.
+
+The confined route must use a caller-owned capability boundary; do not grant an
+arbitrary subprocess or filesystem/network access merely to make compilation
+work. Service operations may access only admitted project inputs and canonical
+compiler resources. Lock/source drift, unknown protocol/version/operation,
+wrong identity, malformed/truncated/oversized data, worker death, cancellation
+and timeout must fail explicitly and leave no owned children. Charge all
+canonical preparation, verification, IPC and cleanup to the measured operation.
+No free reuse across mismatched inputs or repeated compiler preparation hidden
+outside the gate.
+
+Batch the coupled protocol, compiler adapter, native CLI, installation and runner
+repairs on one integrated candidate. Use focused checks while implementing, then
+review the complete candidate. Do not change default tool feature selection or
+the clean-build protocol's selected executable authority until the complete
+replacement qualifies. Existing optional in-process APIs can retain explicit
+ownership, but normal commands must have one clear execution path.
+
+Named acceptance:
+- Run actual schema/migration/provisioning operations through the production
+  entrypoints using source and installed compiler selections; retain exact
+  canonical artifacts, diagnostics, exit behavior and every applicable existing
+  test assertion. Classify the same existing live-service exclusions explicitly.
+- Exercise actual sandbox grants and denial controls, including outside-project
+  requests and compiler/input substitutions, with no broad permission fallback.
+  Preserve the existing output contract and bound new request/response traffic.
+- Exercise protocol framing/identity/staleness and worker lifecycle negative
+  controls, including cancellation/death cleanup. Unit mocks cannot substitute
+  for the real canonical compiler or process tests.
+- Preserve the complete default/native SQL, package/host-tool, compiler/editor,
+  installation/metadata and runner coverage affected by the new ownership.
+  Update guard inventories and feature contracts intentionally; do not hide
+  changed build dependencies or add skips.
+- Build the actual three maintained SQL executables from independent clean
+  owned targets under the existing reproducibility protocol. Compare all
+  executable hashes and execute their real commands. Retain producer preparation
+  and failed/capped attempts. Compare normal elapsed measurements; no tracing
+  overhead in timing evidence and no library-only extrapolation.
+- Run affected formatting/size/dependency/area contracts, compare emitted plans,
+  reconcile every selected test/variant and obtain exact-candidate independent
+  review before merge. Final scoped create-pr/merge and all V5 scenarios remain
+  mandatory after integration.
+Keep the 1,800-second diagnostic category cap and resource reserves. If the
+complete adapter cannot preserve a named contract, record that exact failure
+and revise the design instead of weakening acceptance or claiming a speedup.
