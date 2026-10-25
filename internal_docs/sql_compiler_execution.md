@@ -1,7 +1,9 @@
-# SQL compiler execution boundary — implementation in progress
+# SQL compiler execution boundary
 
-The LOCAL-GATE V1s phase owns this change. This document records the intended
-call and lifetime contract; the production adapter is not yet qualified.
+The LOCAL-GATE V1s phase owns this change. This document records the implemented
+call and lifetime contract. Source, installed and sandbox execution and the
+independent native build protocol have named qualification; scoped independent
+review and complete LOCAL-GATE acceptance remain pending.
 
 ## Ownership and entrypoints
 
@@ -85,8 +87,8 @@ checks compare real profiles and migration declarations against the existing
 in-process semantics for all three providers and reject input drift. Native source and installed execution and the private sandbox capability now have
 focused development qualification. Ordinary binaries use the worker adapter and
 no longer select the optional embedded compiler feature. Explicit compiler-enabled
-test commands preserve the existing in-process API coverage. Complete affected
-coverage, clean executable qualification, independent review and the phase gate
+test commands preserve the existing in-process API coverage. Named affected contracts and clean executable qualification pass at the
+recorded candidates in the phase. Independent review and the complete phase gate
 remain open.
 
 The worker fixes its frozen graph and profile inputs at initial preparation.

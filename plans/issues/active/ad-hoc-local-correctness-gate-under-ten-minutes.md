@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1q/V1r merged; V1s integrated SQL compiler execution boundary; full gates and V5 remain open
+current_stage: V1s named qualification passed; exact-candidate independent review pending; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13710,3 +13710,63 @@ conservative aggregate source identity includes this test file, so refresh paire
 binaries and preserve the observed candidate identities instead of relabeling
 the earlier execution records. Draft PR #4477 remains unreviewed and unmerged.
 Final scoped phase gates and every V5 scenario remain required.
+
+### V1s named qualification — final CLI repair and refreshed execution
+
+At ba0bb4eb3c54fa62570203063af2f4b21dfe0735, the full main-CLI unit selection passes:
+157 passed, zero failed, six existing ignored generated-build cases. Those six
+remain selected separately by the full profiles; they are not live-service
+exclusions and are not counted as passing here. The independent eager schema now
+declares the hidden worker and exercises paired admission arguments without
+weakening complete parser/help/error comparisons.
+
+The source identity includes test code, so all eight binary qualification
+categories were refreshed at this exact implementation revision:
+
+| Category | Guarded elapsed | Result |
+| --- | ---: | --- |
+| source commands | 258.459s | pass |
+| installed preparation | 130.064s | pass |
+| installed commands | 449.687s | pass |
+| installed negative | 14.034s | pass |
+| native tests | 28.828s | pass |
+| default tests | 74.926s | pass |
+| clean executables | 422.462s | pass |
+| clean commands | 127.958s | pass |
+
+The source and installed comparisons each preserve 24 output/exit/diagnostic
+cases, 33 exact artifact files and both actual SQLite integrity/cleanup paths.
+Installed qualification uses a development compiler packaged by the actual
+distribution metadata pipeline, not a release or foreign-platform claim.
+All five installed rejection controls pass. Native/default qualification retains
+29/93 passing tests and the same five explicitly excluded live-service cases.
+The clean protocol builds all three maintained executables: A 202.466s,
+reuse A 7.553s and independent B 202.765s.
+All three executable hashes match, with no semantic compiler or component engine
+in the native build graph. Commands from both independent builds preserve
+18 comparisons, 66 exact artifact files and both real SQLite cleanup paths.
+
+The current focused regression batch passes (154.776s guarded): dependency audit,
+source identity, IPC/process, component provenance with mutations, all seven
+real sandbox/adapter cases, admission units, five canonical compiler comparisons,
+locked namespace CLI, formatting, size and base-to-candidate diff checks.
+Complete quality and runner checks and 530 package/compiler/editor units remain
+recorded at e58236e3614cc95b56402e8197b7fffd836eca9d. The intervening repair
+changes only the independent CLI test file and phase record: 35,095 other tracked
+entries are identical. Their earlier observed SHA is retained; the failed CLI
+result is not relabelled. Full CLI and source-identity-sensitive execution were
+rerun as above. Original failed and incomplete attempts remain preserved.
+
+Evidence is retained outside Git in v1s-final-qualification-r2-result.json,
+the eight named category records and guards, v1s-final-regressions-r2,
+v1s-cli-parity-checks and the hashed acceptance manifest. Exact candidate/input
+proof accompanies the final documentation-only record update. Draft PR #4477
+still requires scoped independent review before merge.
+
+These overlapping diagnostic categories are not additive full-gate timing.
+The earlier actual clean protocol took 878.767s at its recorded candidate; the
+latest result removes compiler/engine rebuild work, but is not a controlled
+repeated full-gate comparison. The full runner still executes top-level categories
+sequentially. After this item closes, measure the integrated candidate, account
+for every category and choose the next repair from current costs. Final scoped
+create-pr/merge and every V5 timing/invalidation scenario remain mandatory.
