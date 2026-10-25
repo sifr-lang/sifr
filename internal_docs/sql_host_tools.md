@@ -26,17 +26,20 @@ writes stay in the native libraries. Reading an already built migration plan
 does not invoke either compiler callable. Compiler failures retain their original
 diagnostics and stop dependent work.
 
-Each library's default-enabled `compiler` feature provides the existing public
-entrypoints through the same in-process semantic services. The ordinary provider
-CLI requires that feature. Library consumers can disable default features and
-provide the explicit callables; that build excludes semantic services and the
-component engine. This is an explicit API choice, with no automatic fallback or
-alternate frontend. The SQL host-tools suite tests both the dependency boundary
-and the native libraries, while existing default-mode tests remain selected.
+Ordinary provider binaries use the lazy canonical worker adapter and their
+default native build graph excludes semantic services and the component engine.
+The optional compiler feature is explicitly enabled only for the existing
+in-process library entrypoints and their selected tests. Library consumers can
+instead provide the explicit callables. There is one normal executable path,
+with no runtime fallback or alternate frontend. The SQL host-tools suite checks
+the native dependency boundary and preserves both native and compiler-enabled
+library test coverage.
 
-This boundary does not change executable installation, sandbox grants or the
-independent clean-build qualification below. A future external compiler adapter
-requires its own identity, input, confinement and lifecycle qualification.
+Direct execution selects a paired source compiler or the compiler bound to its
+installed generation. Confined namespace execution requires the sql-compiler
+capability. The independent clean-build protocol below builds the actual native
+executables. See the [compiler execution contract](sql_compiler_execution.md)
+for selection, input admission, confinement, lifecycle and qualification scope.
 
 ## Workspace configuration
 

@@ -13770,3 +13770,27 @@ repeated full-gate comparison. The full runner still executes top-level categori
 sequentially. After this item closes, measure the integrated candidate, account
 for every category and choose the next repair from current costs. Final scoped
 create-pr/merge and every V5 timing/invalidation scenario remain mandatory.
+
+
+### V1s independent review — documentation correction
+
+The exact-candidate review of cf1867c0efe3c3614b471ead297b121b4fc6bd05
+returned NOT SATISFIED for one prose omission in sql_host_tools.md: its older
+paragraph still said the compiler feature was default-enabled and required by
+ordinary binaries. The implementation and retained evidence passed that review.
+Rewrite the paragraph to match the actual non-default in-process API and normal
+worker path, and link the execution contract. Also clarify source-tree layout
+pairing and that caller admission runs eagerly even when worker startup is lazy.
+No implementation, tests, fixtures, locks or verification selections change.
+
+The original review remains outside Git and is not relabelled. Its response
+SHA-256 is c696acbbdae8ea6ccff7fd17b3438d2a898c9affc24c2b4e742cc02810b10154.
+Run documentation/link and exact-input checks; obtain only a narrow confirmation
+that the documented blocker is resolved to satisfy this phase's explicit positive
+independent-verdict prerequisite. Do not repeat implementation review or tests.
+
+Record nonblocking follow-ups for phase integration: a combined real SQL tool
+through locked namespace dispatch would join the already independently tested
+boundaries; name and explain the existing five-second cleanup bound when that
+code is next changed. Revisit eager admission cost only with measured evidence
+and unchanged pre-launch input authority. Final gates and V5 remain open.

@@ -39,7 +39,15 @@ configured identity algorithm unchanged.
 The source identity detects a mismatched compiler revision or edited inputs;
 it is not executable authentication or an installation signature. Executable
 selection, integrity, target/protocol compatibility and channel custody remain
-separate checks. An installed generation's existing binary binding remains the
+separate checks. The build helper locates the source root two directories above
+each package manifest and hashes the declared roots relative to that root.
+Pairing therefore requires the same declared source contents and package layout
+as the compiler build; it does not require the same absolute checkout path.
+Building a tool from a partial or differently arranged copied source tree does
+not establish that pairing and is rejected. The installed tests pair workspace-built
+native tools with that workspace compiler packaged into an installed generation.
+
+An installed generation's existing binary binding remains the
 authority for its selected executable. Source execution must retain its explicit
 build selection and reject replacement or drift.
 
@@ -137,7 +145,9 @@ the admitted inputs before reconstructing the graph from the caller's normalized
 Cargo metadata, then verifies the complete canonical graph/source-map identities
 and selected input set against that receipt. Per-operation drift checks remain in place.
 
-Admission failure is retained until a semantic request arrives. Thus reading an
+The caller captures admission, including Cargo metadata, before starting the tool.
+Only worker startup is lazy; plan reads and cleanup still pay the caller admission
+cost. Admission failure is retained until a semantic request arrives. Thus reading an
 existing plan or cleaning up a database still starts no compiler worker and does
 not depend on successful semantic preparation. Input capture and checks are
 charged to the confined invocation; they are not free or reusable evidence.
