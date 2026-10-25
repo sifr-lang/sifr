@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1w owner build parallelism qualified; independent review pending; full phase open"
+current_stage: "V1ab complete diagnostic passes; V1ac single-file native authority repair; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14197,3 +14197,348 @@ preparation are recorded separately rather than hidden in that warm result.
 
 Full correctness-only facade gates and every V5 scenario remain mandatory.
 This intermediate item requires exact-candidate independent review before merge.
+
+### V1w closure — PostgreSQL C compilation ownership
+
+PR #4479 merged reviewed candidate
+75cf1137abe23210044dbbff32cd7cdf0bc08cbe as
+ff30bde05ddc9a3c97f546e00deab5cef8c7e2f0; the Git trees match exactly.
+Independent scoped review is SATISFIED with no blockers. Its external response
+SHA-256 is bbeab79a00ddfa75dd8b4761d93f391c08e901d43fc1f985f358731c6ed1e17c.
+All 196 archived evidence payloads are independently size/hash verified locally;
+archive SHA-256 ec731e3c8d428ab9d64c8f602ba624c2260ff506fb1b6f43963810877cc019ad.
+The two disposable V1v compressed/decompressed executables remain separately
+retained with exact hashes; their complete analysis and logs are in the archive.
+
+The generated receipt truthfully records four Cargo jobs instead of the prior two,
+as allocated by the existing LOCAL-GATE resource policy. No allocation policy was
+changed. The rebuilt components differ in bytes; runtime qualification passes,
+but this experiment does not isolate parallelism, job count or producer variance
+as the cause of that difference. Reproducibility remains separately qualified
+under the phase's mandatory clean-build and V5 contracts.
+Keep the producer cross-filesystem publication limitation and V1v's uncaptured
+historical root rebuild reason as separate follow-ups. Final phase acceptance
+remains open.
+
+### V1x prospective investigation — guest compilation/runtime tradeoff
+
+The remaining SQL application tests repeatedly invoke fresh real compiler
+processes. Each must compile its authenticated provider artifact before execution;
+bounded in-process reuse from V2b cannot cross that process boundary. The normal
+six-major component-host case alone takes 22.16s on the prepared V1w candidate.
+Investigate the cost of optimizing the generated guest code before changing test
+selection, isolation or introducing persistent native-code reuse.
+
+Compare the current Wasmtime guest optimization policy against a diagnostic
+Config::cranelift_opt_level(OptLevel::None) setting at the existing component
+compilation owner. This changes guest-code optimization, not the native Rust
+optimization level of cranelift-codegen rejected in V1e. Keep the exact same
+Wasmtime version, features, parallel pool budget, capability/import restrictions,
+NaN policy, fuel, memory, stack, fresh Stores/instances and request assertions.
+No profile, lockfile, fixture or component bytes change for this diagnostic.
+
+Begin with the existing complete PostgreSQL component-host test over all six
+artifacts. Attribute actual test preparation separately and retain targets.
+Use the same admitted resource envelope and ordinary complete runtime assertions
+for baseline and candidate, with the 1,800-second category cap. Measure both
+fresh compilation plus execution and repeated execution before any adoption;
+a faster compilation stage alone is insufficient. Include SQLite and MySQL and
+the actual SQL application assertions in any subsequent acceptance proposal.
+Record exact source identities and distinguish diagnostic source changes from an
+accepted implementation. Preserve failures and restore the previous policy if
+the complete measurements reject the tradeoff.
+
+Any adopted host-source change requires canonical provenance regeneration for
+affected artifacts, all applicable component safety/isolation/resource/cache
+controls, actual provider/editor/native application checks, and exact-candidate
+independent review. Guest-policy behavior and cache ownership must remain coherent;
+no environment-only test bypass, serialized native-code trust or assertion removal.
+Final correctness-only facade gates and every V5 scenario remain mandatory.
+
+V1x diagnostic attribution supplement: add temporary stage timers to the existing
+six-major host case, preserving its original assertions. For each compiled major,
+execute 100 extra identical valid requests with no response cache, asserting full
+response equality and no cache-hit flag, plus 20 extra view-normalization rounds
+with the original semantic assertions. Record first analyze, repeated requests,
+remaining original assertions and extra view rounds separately. Use identical
+diagnostic source under both guest policies. These additions are investigative
+instrumentation, not a new product API or accepted replacement for the ordinary
+test. Preserve their source/results outside Git and restore the original test
+before deciding an implementation.
+
+### V1x diagnostic outcome — defer guest optimization change
+
+The ordinary default-policy host case passes at ba60590b9abac9801375dff4ae06a0e422b93932:
+22.03s test body, 23.094s callback, 24.698s guarded; Cargo preparation is 0.65s.
+The identical temporary six-major instrumentation passes at both
+5dd0ab20ba6e833657edcd0a3849c9cad00e7c05 (default) and
+a31c6b5f196287692e7dc921a50ec3be7bb7e3bd (OptLevel::None).
+Every original assertion remains, with 600 additional complete-response equality
+checks and 120 extra view-normalization rounds across the six artifacts.
+
+| Instrumented stage sums across six majors | Default | Guest OptLevel::None |
+| --- | ---: | ---: |
+| First analyze per fresh owner | 21.045s | 17.037s |
+| 100 repeated requests per owner | 11.610s | 11.616s |
+| Remaining original assertions | 0.735s | 0.744s |
+| 20 extra view rounds per owner | 5.607s | 5.633s |
+| Complete diagnostic test body | 39.13s | 35.17s |
+
+Preparation differs (1.86s versus 18.08s reported by Cargo) and is recorded
+separately; callback/guard times are not presented as equal-state speedups.
+The first-request interval includes compilation and execution, not just JIT CPU.
+This single paired diagnostic supports a modest startup option with no measured
+repeated-request penalty here. It does not qualify every provider, full application
+behavior, safety controls or long-session performance. Defer adoption while
+investigating a potentially broader shared cost. Restore the original host policy
+and test source exactly; retain both experimental sources and all raw results
+outside the tree. No accepted product/runtime policy change results from V1x.
+
+### V1y prospective investigation — shared content-hashing cost
+
+The measured native Arrow publication performs substantial full-content reads of
+a 894 MB executable; repeated provider requests also authenticate multi-megabyte
+component bytes. The current development profile optimizes dependencies at level
+one unless overridden. Investigate actual SHA-256 cost before attributing either
+whole interval to hashing or changing integrity authority.
+
+Use a small owned external diagnostic package with the same pinned SHA-256
+version/features and Rust toolchain. Compare the current optimization setting
+against a narrow dependency optimization setting, preserving all other profile
+fields and input bytes. Record actual resolved dependencies, compile preparation,
+resource admission and ordinary digest throughput; check known answers and the
+complete digest against an independent implementation. Keep these measurements
+separate from real compiler timing and do not modify production profiles.
+
+If the probe is promising, measure representative actual owner operations using
+the same input/identity checks before registering a production repair. Never
+replace content hashing with metadata trust, reuse an old test result, or weaken
+corruption detection. A microbenchmark alone cannot justify a gate-saving claim.
+Keep the 1,800-second category cap, retained targets and capacity reserves.
+Final full-gate and V5 acceptance remain open.
+
+### V1y diagnostic outcome — no hashing profile change
+
+The first external probe stops before benchmarking because independent lock
+resolution selects cpufeatures 0.3.1 instead of the product's pinned graph.
+Preserve that failed admission. The second seeds its diagnostic lock from the
+product lock; all selected dependency versions and registry checksums match.
+Both binaries use sha2 0.11.0 with alloc/default/oid and the pinned compiler.
+
+Three alternating observations per configuration pass the known SHA-256 answer
+and independent complete-file digest checks, preserving original input bytes.
+For 128 hashes of the 4,006,259-byte PostgreSQL component, the median is 2.385s
+at current opt1 and 2.347s with only sha2 at opt3. For one hash of the retained
+894,150,648-byte native executable, medians are 4.223s and 4.141s. Input reads
+are measured separately. Preparation is 3.139s for the initial diagnostic graph
+and 1.385s for the narrow alternate; these are different build states.
+
+The roughly two-percent hashing difference does not justify a product override.
+Retain the current profile. Source inspection and recorded CPU capabilities show
+the pinned SHA-256 implementation selects its software backend in this envelope;
+do not assume a higher optimization level can remove all content-processing cost.
+The microprobe does establish that full hashing alone can account for seconds on
+the measured executable, but it is not a complete compiler publication timing.
+No identity algorithm, integrity check, dependency version or product code changes.
+
+### V1z prospective investigation — linker-produced compressed debug sections
+
+V1v's external-copy experiment preserved all debug payloads and runtime output
+while reducing the large native executable from 894 MB to 276 MB. V1y now measures
+over four seconds per full hash of that input. Test standard linker-produced
+compression so the native output is compact when first published, rather than
+adding a separate post-build rewrite or dropping debug information.
+
+Use the existing owned Arrow/tensor fixture and native dependency target under
+its exclusive family lease. Preserve original executable bytes, source/lock
+identities and fingerprint evidence outside the mutable target first. Compare
+root-only Cargo rustc builds with explicit linker compression none and zstd,
+keeping dependencies, Rust optimization, generated source, runtime assertions,
+loader policy and resource allocation unchanged. Account for actual root rebuild
+and linking time separately from complete-file hashing and publication work.
+Reject any unexpected dependency rebuild or identity drift rather than expanding
+this diagnostic into a cold build. Restore the canonical normal Cargo build after
+the experiment, using Cargo's own freshness authority instead of manually
+restoring fingerprint files.
+
+Verify both actual executables with the unchanged fixture output and failure
+semantics, inspect debug sections and tooling support, and compare decompressed
+debug information, machine-code/unwind payloads and symbols with appropriate
+semantic normalization. Record artifact size and actual copy/hash costs; a
+storage-only result still cannot establish whole-gate speed. No source/profile
+implementation is adopted by this diagnostic. Before adoption, register the
+precise native owner, target/linker support contract, identity effects, caller
+overrides and debugging controls. Preserve the 1,800-second cap and reserves.
+All final correctness gates and V5 scenarios remain mandatory.
+
+### V1z diagnostic outcome — compact artifacts, adoption deferred
+
+The qualified linker probe preserves the actual Arrow/tensor runtime output.
+Compressed output is 291,522,872 bytes versus 894,150,648 bytes; every decompressed
+debug payload, all 412,783 ordered semantic symbols, and allocated executable
+payloads (apart from build-id representation) match. Source-address lookup matches
+for 32 sampled addresses, of which 31 resolve. The original strict metadata
+comparison remains failed: nonallocated .debug_aranges alignment changes from
+16 to 1. The compressed header and matching-version LLVM 22.1.8 source explain
+that deliberate linker representation; the separate semantic supplement does
+not relabel the strict failure or prove every debugger compatible.
+
+Six alternating root-only builds retain dependency artifacts, source bytes and
+allocation. Only the generated root rebuilds. Uncompressed observations are
+34.803s, 2.873s and 4.329s; compressed observations are 5.330s, 5.432s and 5.284s.
+The first uncompressed observation is an unresolved state-sensitive outlier,
+not a measured compression speedup. Cargo restores the original executable hash,
+source mtime and canonical state. No dependency compilation occurs.
+
+The external publication probe compiles the actual unchanged IdentityEncoder
+and native_bytes module, mirroring the current NativeSnapshot operations. Three
+alternating observations per format give the following medians:
+
+| Actual owner primitive | Uncompressed | Compressed |
+| --- | ---: | ---: |
+| Complete framed content identity | 4.219s | 1.381s |
+| Capture comparison with missing destination | 0.083s | 0.027s |
+| File copy | 0.267s | 0.088s |
+| Complete destination verification | 0.189s | 0.060s |
+| Unchanged capture comparison | 0.189s | 0.060s |
+
+Independent framed SHA-256 identities match; every trial rejects corruption at
+the last destination byte. Source sizes, mtimes and complete hashes remain equal.
+These are primitive timings, not a complete driver invocation. Do not combine
+their medians with independently observed link timings to claim an end-to-end
+speedup. Linking incurs additional work; support for caller-selected linkers,
+debuggers and targets remains unqualified.
+
+Preserve the initial rustc-wrapper admission failure, intentionally cancelled
+quadratic diagnostic symbol decoder, strict metadata comparison failure and
+initial publication guard-label launch failure. Corrected diagnostic attempts
+are separate evidence. No product source/profile/compression policy is adopted.
+V1y/V1z evidence archive SHA-256 is
+092cdaa1927a9da187c6cd7c4c7d11f9fc6cc6c7b58be6ba7f961af25fb9d8cc,
+containing 221 payloads; three large executable copies remain separately retained
+with exact size/hash identities. The whole phase remains open.
+
+### V1aa prospective integration refresh — prioritize the complete current path
+
+Stop expanding micro-optimizations before obtaining a current integrated result.
+The latest accepted implementations are the SQL inventory/feature correction and
+PostgreSQL C-build jobserver ownership; guest policy, hash optimization and native
+debug compression remain unchanged. Refresh the emitted correctness-only merge
+plan, preparation readiness and actual capacity before launching the canonical
+facade with failure continuation and retained targets.
+
+The diagnostic retains the 1,800-second cap, all selected coverage and complete
+logs. A cap or failed prerequisite is not a pass. Account for every unexecuted
+category and continue independent categories separately if the facade stops.
+Keep actual contiguous facade wall time distinct from sums across resumed
+categories and historical measurements. Attribute preparation, native compilation,
+test body and integrity/publication costs before choosing the next root-cause
+repair. Preserve the 20 GiB disk and 2 GiB memory reserves, ownership and source
+freeze. Only inactive, session-owned artifacts with recoverable verified evidence
+may be reclaimed. Do not alter policy merely to fit a measurement.
+
+This refresh is diagnostic, not final phase acceptance. It neither replaces
+complete final create-pr/merge qualification nor any V5 scenario.
+
+### V1aa/V1ab outcome — complete current diagnostic accounting
+
+The first contiguous correctness-only merge facade stopped at its 1,800-second
+preparation deadline: 1,880.608s facade / 1,882.952s guarded. Six early guards and
+four preparation nodes passed. The remaining preparation and test selections
+were not inferred to pass. Native launch-context investigation found an additional
+virtual-environment PATH prefix; the existing native identity correctly distinguished
+it. The verified ordinary launcher restores the intended context without normalizing
+cache keys or ignoring environment inputs.
+
+At source candidate 943c9e193e4107643276c6266ae320391b399d99, V1ab executes every
+canonical selection independently with the same 1,800-second category cap.
+All 72 final selections pass: 15 guards, 18 preparations, 20 verification areas,
+18 expanded Cargo configurations, and the positive E2E category. Receipt and
+prerequisite reconciliation has zero errors, zero missing categories, no unexpected
+tracked changes and empty owned process sessions. Prior attempts remain preserved:
+authoring admission overlapped a read-only Cargo metadata diagnostic, and two
+later admissions stopped below their working-allocation requirement before reaching
+the retained 20 GiB reserve. None of those attempts is relabeled a pass.
+Verified lossless archival of obsolete session-owned artifacts enabled resumption;
+current compiler/native targets and failure records remain retained.
+
+| Successful diagnostic group | Observed category sum |
+| --- | ---: |
+| Guards | 251.331s |
+| Preparation | 1,406.846s |
+| Verification areas | 2,840.120s |
+| Crate configurations | 1,493.637s |
+| Positive E2E | 299.391s |
+| Total across separate callbacks/resumptions | 6,291.325s |
+
+This 1h44m51s sum is not contiguous gate acceptance. Accounted process CPU totals
+11,982.09s; maximum-process RSS is not simultaneous process-tree peak memory.
+Preparation includes actual rebuild work and cannot be presented as unchanged-run
+cost. SQL remains largest at 725.945s, including its passing 403.245s clean protocol
+and 122.698s complete seven-command PostgreSQL matrix. Sysroot qualification takes
+585.018s; CLI/lowering 487.964s; generated-driver cases 468.497s; release compiler
+preparation 424.964s; generated-code quality 343.442s; ordinary driver 318.861s.
+
+Coverage reconciliation proves all 732 positive source/runtime fixture outcomes
+and 186 native groups. The passing negative and runtime-failure entrypoints consume
+frozen physical inventories of 569 and 6 inputs respectively; their captured
+libtest output does not expose independent per-fixture timing. Generated-driver
+inventory reconciles 81 exact commands and scheduler outcomes, plus the separately
+owned passing preparation helper; all six CLI native cases also reconcile.
+The nine Python cases total 46.137s of invocation time. Rust interoperability
+totals 604.721s and the other 31 driver cases 280.374s, overlapping under two workers.
+The two frontend corpus comparisons have different authorities and assertions;
+their common fixture inventory alone does not justify deleting either.
+Installed metadata qualification executes 732 public emits and 13 additional
+commands, with generation, corruption, relocation and native assertions retained.
+
+The evidence archive contains 813 independently verified payloads, SHA-256
+868146876ca300b555be1fc724e77ca050e3102ba0765da4ac6a91d83b6d5836.
+Large capacity archives are separately retained and identified. The external HTML
+report includes sortable category, preparation, verification, crate, native-case,
+E2E-stage, fixture and native-group detail. Browser interaction was not exercised;
+structural checks validate its current tables and local evidence links.
+
+### V1ac prospective repair — resolve native authority at its actual consumer
+
+A child-scoped CPU profile of 15 real installed emits passes byte-exact stdout
+and stderr checks against V1ab. It observes 27.61% self samples in the ring SHA-256
+backend and 5.67% in sha2; incomplete unwind stacks do not establish their callers.
+Independent syscall traces of three complete emits identify two complete reads
+of each Cargo/rustc/rustup executable, totaling 124,878,976 bytes per invocation.
+Source inspection explains the duplication: single-file metadata emission prepares
+a native policy inside RootedEntrypointPlan, discards that policy while converting
+the plan to frontend/codegen output, then resolves a new policy during Rust interop
+metadata resolution. The latter also prepares tools before its existing empty-
+declaration early return. This is separate from the earlier native-publication
+hash finding.
+
+Repair only this single-file emission boundary. Do not prepare a native policy
+for the frontend/codegen plan that cannot consume it. At the interop resolution
+boundary, return the unchanged generated project when its Rust declarations are
+empty; otherwise retain the complete existing native resolution, identities,
+trusted/deferred-probe policy and input validation. Existing invocation sessions
+retain their one explicitly captured native selection. Actual builds, project/
+package entrypoints, toolchain hashing, cache keys and tool-selection policy remain
+unchanged. Remove obsolete prepared-native plumbing from the rooted plan only
+where its single-file consumer no longer uses it.
+
+Named acceptance: extend the isolated real-tool wrapper control to prove zero
+native version probes for standalone non-interop emission and syntax/name errors,
+exactly one resolution for standalone demanded stdlib interop, and unchanged
+per-session capture/reuse. Run session controls and complete positive/negative
+session equivalence (Rust bytes, source maps, features, interop metadata, statistics
+and diagnostics), affected stdlib-demand resolution controls, normal positive E2E,
+formatting, file-size and diff checks. Preserve exact native runtime/probe controls;
+do not turn check into a codegen path. Compare ordinary real compiler invocations
+before/after with the same profile and inputs; separate compiler preparation and
+metadata regeneration from retained observations. Confirm changed syscall/tool
+counts on the actual CLI, keeping instrumentation out of elapsed-time comparisons.
+Require scoped exact-candidate independent review before intermediate merge.
+
+The unused explicit-publication bundle hash, successful installed-artifact lifetime,
+and remaining SQL/compiler CPU costs remain separate follow-ups. The direct Winch
+substitution is not adopted: pinned Wasmtime rejects exception features required by
+the existing component contract. No guest capability or test assertion is removed.
+All final correctness-only gates and every V5 timing/invalidation scenario remain
+mandatory; the ten-minute objective is still unproven.

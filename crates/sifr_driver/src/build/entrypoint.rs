@@ -115,7 +115,6 @@ pub(crate) fn compile_single_file_frontend(
         },
         &mut Vec::new(),
         false,
-        None,
     )?;
     plan.into_single_file_frontend()
 }
@@ -153,8 +152,9 @@ pub(crate) fn compile_single_file_with_prepared_native(
             lowering_options,
         },
         &mut Vec::new(),
-        true,
-        native,
+        // Native authority is consumed only after codegen, when resolving
+        // demanded Rust interop. This frontend plan never uses its native policy.
+        false,
     )?;
     plan.stdlib = plan
         .stdlib
@@ -184,7 +184,6 @@ pub(crate) fn check_frontend_entrypoint(
         entrypoint,
         &mut Vec::new(),
         prepare_native,
-        None,
     ) {
         Ok((plan, _, _)) => plan.frontend_diagnostics(),
         Err(errors) => errors,
@@ -265,13 +264,8 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     let total_start = Instant::now();
     let mut stages = Vec::new();
-    let (plan, mode, entrypoint_path) = RootedEntrypointPlan::from_entrypoint_with_stages(
-        compiler,
-        entrypoint,
-        &mut stages,
-        true,
-        None,
-    )?;
+    let (plan, mode, entrypoint_path) =
+        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let query_signatures = plan.query_signature_artifact()?;
     let cargo_resolution = plan.cargo_resolution.clone();
@@ -353,7 +347,7 @@ impl RootedEntrypointPlan {
         entrypoint: RootedEntrypoint<'_>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut stages = Vec::new();
-        Self::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true, None)
+        Self::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true)
             .map(|(plan, _mode, _entrypoint_path)| plan)
     }
 
@@ -362,7 +356,6 @@ impl RootedEntrypointPlan {
         entrypoint: RootedEntrypoint<'_>,
         stages: &mut Vec<BuildStageReport>,
         prepare_native: bool,
-        prepared_native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let mode = entrypoint.build_mode();
         let entrypoint_path = entrypoint.display_path();
@@ -381,14 +374,8 @@ impl RootedEntrypointPlan {
         let mut cargo_resolution = super::entrypoint_resolution::package_cargo_resolution_policy(
             package_entrypoint,
             &stdlib,
-            prepare_native && prepared_native.is_none(),
+            prepare_native,
         );
-        if let Some(native) = prepared_native {
-            // The prepared path is only exposed by the single-file session.
-            // Package and frontend-only callers retain their original authority.
-            assert!(matches!(entrypoint, RootedEntrypoint::SingleFile { .. }) && prepare_native);
-            cargo_resolution.native_toolchain = native.clone();
-        }
         if let RootedEntrypoint::PackageProject { leases, .. } = &entrypoint {
             cargo_resolution.child_leases = leases.clone();
         }
