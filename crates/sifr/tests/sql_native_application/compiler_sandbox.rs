@@ -192,6 +192,19 @@ fn reading_a_missing_plan_is_lazy_even_with_a_granted_compiler_channel() {
 
 #[test]
 fn lazy_compiler_rejects_lock_drift_before_the_first_request() {
+    for path in [
+        "Cargo.lock",
+        "Cargo.toml",
+        "sifr.toml",
+        "provider/Cargo.toml",
+        "db/schema.sql",
+        "provider/components/sqlite.wasm",
+        "migrations/app/all_kinds.sifr",
+    ] {
+        rejects_admission_drift(path);
+    }
+}
+fn rejects_admission_drift(path: &str) {
     use std::io::Read;
     use std::process::Stdio;
     use std::time::{Duration, Instant};
@@ -208,7 +221,7 @@ fn lazy_compiler_rejects_lock_drift_before_the_first_request() {
     let mut service =
         super::host_tool_compiler::LazyCompiler::attach(&mut command, root, compiler())
             .expect("admit the invocation before the tool starts");
-    let lock = root.join("Cargo.lock");
+    let lock = root.join(path);
     let mut changed = std::fs::read(&lock).expect("initial lock");
     changed.extend_from_slice(b"\n# changed after parent admission\n");
     std::fs::write(&lock, changed).expect("lock drift before first request");
@@ -241,7 +254,7 @@ fn lazy_compiler_rejects_lock_drift_before_the_first_request() {
     service.finish(status.success()).expect("worker cleanup");
     assert!(
         !status.success(),
-        "compiler accepted a lock changed after caller admission"
+        "compiler accepted {path} changed after caller admission"
     );
     let diagnostic = rejected.as_deref().unwrap_or(&stderr);
     assert!(diagnostic.contains("changed"), "{diagnostic}");
@@ -249,4 +262,33 @@ fn lazy_compiler_rejects_lock_drift_before_the_first_request() {
         !root.join(".sifr/sql/app").exists(),
         "rejected inputs must not publish artifacts"
     );
+}
+
+#[test]
+fn worker_independently_checks_the_callers_admission_before_loading_inputs() {
+    let project = compiler_worker::project("sqlite", "3.53.4");
+    let root = project.root.path();
+    let receipt =
+        super::sql_compiler_admission::AdmissionFile::capture(root).expect("caller admission");
+    let mut command = Command::new(compiler());
+    command
+        .args(["__sql-compiler-worker", "--workspace"])
+        .arg(root);
+    receipt.configure(&mut command);
+    std::fs::write(root.join("Cargo.toml"), "invalid manifest after admission").expect("drift");
+    let mut session = sifr_sql_tool::compiler_session::CompilerSession::spawn_admitted(
+        &mut command,
+        env!("SIFR_COMPILER_SOURCE_ID"),
+        std::time::Duration::from_secs(60),
+    )
+    .expect("actual worker");
+    let error = session
+        .profile("app")
+        .expect_err("worker must reject the original input mismatch");
+    assert!(error.contains("changed"), "{error}");
+    assert!(
+        !error.contains("parse manifest"),
+        "worker loaded mutated metadata before checking admission: {error}"
+    );
+    assert!(!root.join(".sifr/sql/app").exists());
 }

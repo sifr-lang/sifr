@@ -4,16 +4,22 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 #[derive(PartialEq, Eq)]
-pub(super) struct Inputs {
+pub(crate) struct Inputs {
     pub snapshot: Option<(PackageGraphSnapshot, SifrPackageId)>,
-    files: BTreeMap<PathBuf, (PathBuf, String)>,
+    pub(crate) files: BTreeMap<PathBuf, (PathBuf, String)>,
     pub profile_names: BTreeSet<String>,
 }
 
 impl Inputs {
-    pub(super) fn capture(root: &Path) -> Result<Self, String> {
+    pub(crate) fn capture(root: &Path) -> Result<Self, String> {
         let snapshot = sifr_semantic_services::sql_editor::load_sql_editor_snapshot(root, root)
-            .map_err(super::messages)?;
+            .map_err(|failures| {
+                failures
+                    .into_iter()
+                    .map(|failure| failure.message)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            })?;
         let mut paths = BTreeSet::new();
         let mut profile_names = BTreeSet::new();
         for name in ["Cargo.toml", "Cargo.lock", "sifr.toml"] {
@@ -79,7 +85,7 @@ impl Inputs {
         })
     }
 
-    pub(super) fn verify(&self, root: &Path) -> Result<(), String> {
+    pub(crate) fn verify(&self, root: &Path) -> Result<(), String> {
         if Self::capture(root)? != *self {
             return Err(
                 "SQL compiler project, lock or schema inputs changed during the session".into(),
@@ -98,7 +104,7 @@ fn admit(path: &Path, root: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn pin(path: &Path) -> Result<(PathBuf, String), String> {
+pub(crate) fn pin(path: &Path) -> Result<(PathBuf, String), String> {
     let canonical = path.canonicalize().map_err(|error| error.to_string())?;
     if !canonical
         .metadata()
@@ -124,7 +130,7 @@ fn package_messages(failures: Vec<sifr_package::PackageDiagnostic>) -> String {
 /// Sources are admitted by bytes from configured migration directories. Requests
 /// cannot supply a filename or another root. Native tools still own baseline
 /// loading and filename/declaration consistency checks.
-pub(super) fn migration_sources(
+pub(crate) fn migration_sources(
     root: &Path,
     profiles: &BTreeSet<String>,
 ) -> Result<BTreeMap<PathBuf, String>, String> {

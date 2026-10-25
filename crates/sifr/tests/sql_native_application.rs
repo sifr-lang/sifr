@@ -620,3 +620,8 @@ mod host_tool_compiler;
 #[cfg(unix)]
 #[path = "../src/host_tool_sandbox.rs"]
 mod host_tool_sandbox;
+
+#[path = "../src/sql_compiler_admission.rs"]
+mod sql_compiler_admission;
+#[path = "../src/sql_compiler_inputs.rs"]
+mod sql_compiler_inputs;

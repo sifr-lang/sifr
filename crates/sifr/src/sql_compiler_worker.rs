@@ -5,8 +5,8 @@ use sifr_sql_tool::compiler_protocol::{CompilerOperations, serve};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
-mod inputs;
-use inputs::Inputs;
+use crate::sql_compiler_admission::Admission;
+use crate::sql_compiler_inputs::{self as inputs, Inputs};
 
 struct Pipes;
 impl Read for Pipes {
@@ -31,14 +31,18 @@ struct Worker {
     root: PathBuf,
     semantic: sifr_semantic_services::SemanticContext,
     prepared: Option<Prepared>,
+    admission: Result<Option<Admission>, String>,
     migrations: Option<std::collections::BTreeMap<PathBuf, String>>,
 }
 
-pub(super) fn run(root: &Path) -> i32 {
+pub(super) fn run(root: &Path, admission: Option<(&Path, &str)>) -> i32 {
     let mut worker = Worker {
         root: root.to_owned(),
         semantic: sifr_semantic_services::SemanticContext::new(crate::compiler_identity()),
         prepared: None,
+        admission: admission
+            .map(|(path, hash)| Admission::load(path, hash, root))
+            .transpose(),
         migrations: None,
     };
     // Diagnostics are carried in Failed frames. Do not print a second copy or
@@ -48,8 +52,15 @@ pub(super) fn run(root: &Path) -> i32 {
 
 impl Worker {
     fn prepare(&mut self) -> Result<&Prepared, String> {
+        let admission = self.admission.as_ref().map_err(Clone::clone)?;
+        if let Some(admission) = admission {
+            admission.verify()?;
+        }
         if self.prepared.is_none() {
             let inputs = Inputs::capture(&self.root)?;
+            if let Some(admission) = admission {
+                admission.verify_inputs(&inputs)?;
+            }
             let profiles = match &inputs.snapshot {
                 Some((snapshot, owner)) => {
                     prepare_sql_profiles(&snapshot.graph, owner).map_err(messages)?

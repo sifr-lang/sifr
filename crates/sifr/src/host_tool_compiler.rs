@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 
 pub(super) struct LazyCompiler {
     workspace: PathBuf,
+    admission: Result<crate::sql_compiler_admission::AdmissionFile, String>,
     compiler_executable: PathBuf,
     endpoint: Option<UnixStream>,
     worker: Option<(SelectedCompiler, OwnedChild)>,
@@ -19,12 +20,14 @@ impl LazyCompiler {
         workspace: &Path,
         compiler_executable: &Path,
     ) -> Result<Self, String> {
+        let admission = crate::sql_compiler_admission::AdmissionFile::capture(workspace);
         let (tool, endpoint) = UnixStream::pair().map_err(|error| error.to_string())?;
         command
             .stdin(Stdio::from(OwnedFd::from(tool)))
             .env("SIFR_TOOL_SQL_COMPILER", "stdin-v1");
         Ok(Self {
             workspace: workspace.to_owned(),
+            admission,
             compiler_executable: compiler_executable.to_owned(),
             endpoint: Some(endpoint),
             worker: None,
@@ -42,6 +45,8 @@ impl LazyCompiler {
             }
             SocketReadiness::Data => {}
         }
+        let admission = self.admission.as_ref().map_err(Clone::clone)?;
+        admission.verify()?;
         let root = sifr_sysroot::resolve_sysroot(None).map_err(|error| error.boundary_message())?;
         let selected = match root.mode() {
             sifr_sysroot::SysrootMode::SourceTreeDevelopment => {
@@ -50,6 +55,7 @@ impl LazyCompiler {
             sifr_sysroot::SysrootMode::InstalledToolchain => SelectedCompiler::installed(root)?,
         };
         let mut command = selected.worker_command(&self.workspace)?;
+        admission.configure(&mut command);
         let endpoint = self
             .endpoint
             .take()

@@ -82,6 +82,10 @@ pub(crate) enum Commands {
     SqlCompilerWorker {
         #[arg(long)]
         workspace: PathBuf,
+        #[arg(long, requires = "admission_sha256")]
+        admission: Option<PathBuf>,
+        #[arg(long, requires = "admission")]
+        admission_sha256: Option<String>,
     },
     /// Prepare matching stdlib toolchain metadata
     Sysroot(DeferredArgs<crate::metadata_cli::SysrootArgs>),
@@ -265,7 +269,14 @@ fn run_cli(cli: Cli) -> i32 {
     let config = cli.config;
     let isolated = cli.isolated;
     match command {
-        Commands::SqlCompilerWorker { workspace } => crate::sql_compiler_worker::run(&workspace),
+        Commands::SqlCompilerWorker {
+            workspace,
+            admission,
+            admission_sha256,
+        } => crate::sql_compiler_worker::run(
+            &workspace,
+            admission.as_deref().zip(admission_sha256.as_deref()),
+        ),
         Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
             release: _,
             file,
