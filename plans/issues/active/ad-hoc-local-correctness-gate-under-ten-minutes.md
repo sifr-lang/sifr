@@ -13861,3 +13861,94 @@ Use those current results to register the next bounded root-cause repair before
 editing implementation. Focused profiling may follow only for a measured slow
 case. The full facade create-pr/merge gates and every V5 timing/invalidation
 scenario remain required; this separately capped diagnostic cannot replace them.
+
+### V1t completion — integrated failure discovery
+
+Frozen candidate 28cf17f85c43edf25e1b68b1cf6d6107d9e3bc8b completed all
+72 selected diagnostic categories: 70 pass, two fail, no capped or unexecuted
+categories. All 18 preparations, 15 guards, 18 crate configurations and the
+positive E2E category pass. Of 20 verification areas, developer-tooling and
+SQL-platform each retain one failed variant; all other selected variants pass.
+Three preflight capacity stops occurred before their callbacks and are retained
+separately. Each resumption preserved completed results and reran only work that
+had not executed. Every completed category records an empty owned process session,
+with no unexpected tracked changes or leftover child signalling.
+
+| Category | Selections | Sum of observed guarded durations |
+| --- | ---: | ---: |
+| Preparation | 18 | 3047.944s |
+| Verification areas | 20 | 3012.469s |
+| Crate configurations | 18 | 1937.618s |
+| Guardrails | 15 | 212.367s |
+| Positive E2E | 1 | 300.856s |
+| Total observed category work | 72 | 8511.254s |
+
+These are separate capped callbacks accumulated across resumptions, including
+actual preparation, not a continuous facade timing or unchanged-input median.
+Capacity maintenance, pauses and overlapping nested observations are not added
+to this sum. This run is not final create-pr/merge or V5 acceptance.
+
+The three largest categories are SQL-platform (862.240s), generated driver tests
+(832.777s), and crate preparation (610.189s). SQL's actual independent clean-build
+qualification passes in 399.851s, and the PostgreSQL parser matrix passes in
+267.540s. SQL's failure is the command-selection self-test described below.
+Sysroot qualification takes 593.492s, with all four variants passing.
+The CLI/lowering configuration passes in 558.032s; its test-body observations
+include SQL applications 235.19s and the other E2E harness tests 152.60s.
+Ordinary driver tests pass in 327.372s.
+
+Generated selections reconcile exactly against their actual inventories and
+scheduler outcomes: six CLI cases and 81 driver cases, plus one separately
+executed driver preparation helper. The CLI category takes 50.229s with two
+admitted workers; the driver category takes 832.777s with one admitted worker
+under the existing memory policy. The driver's invocation sums are Rust interop
+515.346s (41 cases), Python integration 52.940s (nine cases), and other checks
+255.616s (31 cases). The Python observation is lower than the historical 284s
+group, but differing candidate/cache conditions prevent a controlled speedup
+claim. Existing conditional and helper ignores remain explicit transcript
+observations, never counted as passes solely because they were ignored.
+
+All 732 physical positive fixtures reconcile with source compilation, membership
+of 186 native attempts, and runtime outcomes. All event spans close successfully.
+The installed metadata supplement separately retains 745 command records,
+including 732 public emission cases and four native cases; source corpus and
+every nested command's stdout/stderr hashes were verified. Wrapper variant and
+libtest summary counts are not misrepresented as unique atomic assertion counts.
+
+The evidence archive contains 2311 remotely and locally size/hash-verified
+payloads, SHA-256
+bb918e07bf7d426774187c46af76c8df2da0ebf8728173bedd5c8e60264169ee.
+Original failures, capacity attempts, allocation records, helper differences,
+source logs, emitted selection, case inventories and cleanup receipts remain
+retained outside Git. The sortable report includes all categories, individual
+preparation commands, area variants, crate harnesses, generated case invocations,
+E2E stages/fixtures and CPU accounting.
+
+Investigative leads are not accepted fixes. The prepared Arrow/tensor scenario
+costs 82.492s during preparation and 72.184s during its later runtime invocation,
+using the same test binary and retained scenario helper; profile that invocation
+before attributing its cost. Metadata corpus executions in the driver and
+sysroot area use different compiler-version/sysroot inputs and cannot simply be
+deduplicated. Resolve actual C compilation features before considering parallel
+C compilation. Any crate grouping change must prove feature and inventory
+equivalence. Full facade gates and every V5 scenario remain open.
+
+### V1u prospective execution — SQL verification integration omissions
+
+Repair the two V1s integration omissions discovered by V1t as one bounded batch.
+Document the five physical input probes/reads in sql_compiler_inputs.rs under
+their real package/sandbox admission ownership. Keep the scanner unchanged and
+do not introduce a general source-provider exception. Update both strict
+PostgreSQL live-command construction expectations to include the explicit
+sifr_sql_postgresql_tools/compiler feature alongside each selected provider
+major. Preserve the 13–18 matrix, environment checks, command selection,
+failure propagation and live-service exclusions.
+
+Run the affected filesystem-transfer guard and its controls, PostgreSQL command
+selection/build-input self-tests, file-size guardrail and diff/link checks.
+Production Rust, dependencies, profile selections and runtime assertions are
+unchanged; preserve V1t at its observed candidate and prove that unchanged input
+boundary. Obtain exact-candidate scoped independent review before merging this
+intermediate repair under the approved phase policy. Do not repeat unrelated
+successful categories. Final scoped facade gates and complete V5 qualification
+remain required.
