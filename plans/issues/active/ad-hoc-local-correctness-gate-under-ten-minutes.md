@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1u merged; V1v prepared native fixture investigation; full gates and V5 remain open
+current_stage: "V1w standalone PostgreSQL C compilation investigation; V1v diagnostic recorded; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14065,3 +14065,53 @@ Compression time is preparation work and must be charged. This experiment can
 establish storage/equivalence feasibility only: it cannot establish actual linker,
 whole-gate, cross-platform or V5 timing gains. Do not adopt post-build processing
 or weaken debugging/integrity contracts on the basis of file size alone.
+
+### V1v storage experiment — diagnostic result, no product adoption
+
+At 6ffbab30b34e53ee1de059f35dd4d19e04255528, standard zstd debug-section
+compression on an external copy takes 2.562s and reduces the 894,150,648-byte
+executable to 276,014,008 bytes. Decompression takes 1.410s. Original and compressed
+executions both succeed with identical complete stdout and empty stderr.
+The original executable's bytes, inode/mtime and root fingerprints stay unchanged.
+
+Preserve the original failed strict-layout comparison: objcopy interns string
+tables, remaps symbol-table links and changes the init-array entry-size metadata.
+A separate read-only semantic supplement confirms all 412,783 ordered symbol
+records are equal after resolving names and section indices. Every other section's
+payload and fields match exactly, including decompressed debug information,
+machine code and unwind data; init-array payload and other fields also match.
+This explains the raw-layout mismatch without relabelling its original result.
+
+The result establishes storage feasibility on this fixture only. No profile,
+publication implementation, integrity check, test assertion or selection changes.
+Post-build compression is not adopted; linker integration and actual end-to-end
+benefit would need their own measurements and debugging/toolchain qualification.
+The original first-use root rebuild reason remains uncaptured. Capture actual
+Cargo freshness reasons if it recurs; do not attribute it to repeated dependency
+compilation or the seven excluded interposing cases. Further unchanged warm
+repetitions would not resolve that missing historical evidence.
+
+### V1w prospective execution — standalone PostgreSQL C compilation
+
+Investigate the current 267.540s parser-matrix category before choosing the next
+implementation. The native SQL tools already resolve cc/parallel, but the standalone
+parser test graph does not. The PostgreSQL build script supplies multiple C
+translation units to one cc::Build invocation. Confirm the exact source inventory,
+Cargo jobserver budget and actual concurrent compiler activity.
+
+Start with one existing parser major using the same retained canonical target,
+toolchain, assertions and build budget. An external diagnostic may select the
+existing dependency feature cc/parallel to measure its mechanism; this is not
+an adopted verification-only workaround. Preserve the normal feature selection,
+locked dependency state and every existing target. Charge actual preparation,
+record Cargo build work separately from test bodies, and retain the current
+serial baseline at its observed revision rather than inventing a matched speedup.
+
+Before a production manifest change, check component-provenance consequences and
+the exact affected owner. An accepted fix must belong to the C-build dependency,
+respect the existing jobserver/memory reserve and preserve all six parser majors,
+component-host assertions, provider selection and source freshness. Do not claim
+a native SQL clean-build saving for a feature already enabled there. Keep the
+1,800-second category cap. Register affected checks, full matrix/provenance
+qualification and scoped review before adopting an implementation. Final full
+correctness gates and every V5 scenario remain open.
