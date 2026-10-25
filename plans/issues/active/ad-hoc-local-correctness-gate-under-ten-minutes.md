@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1s merged; V1t complete integrated diagnostic; full gates and V5 remain open
+current_stage: "V1w owner build parallelism qualified; independent review pending; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13966,3 +13966,234 @@ Original V1t failures are preserved at their observed candidate. This
 documentation-only validation record requires unchanged-input/link checks and
 exact-candidate scoped review before the intermediate merge; it does not close
 the final correctness or timing criteria.
+
+### V1u closure — verification integration contracts
+
+PR #4478 merged as ab6b3574b8130645d48412bcb48c1eec4af54759.
+Its tree exactly matches reviewed candidate
+5c714b0e857de1db89a24f79f8adbe32ed071ccd. Independent review returned
+SATISFIED with no blocking findings; response SHA-256
+8eabe4b035d2f5d148a751f01bca910edb73278119934a70507b825f8e884b98.
+The response remains outside the reviewed Git tree. Focused checks retain their
+observed 06aac candidate, with an exact proof that only the validation record
+changed afterward. Both affected failures are repaired; the original diagnostic
+is preserved and is not relabelled as a full passing gate at the new revision.
+No additional implementation review or broad test repetition is required for
+this closure record.
+
+Review follow-ups remain separate: widening the direct-filesystem scanner beyond
+its existing patterns would be new work. The prior V1s locked-namespace SQL,
+cleanup-deadline naming and eager-admission-cost follow-ups remain recorded.
+Update the stage marker to the actual active item. Final facade and V5 acceptance
+remain open.
+
+### V1v prospective execution — prepared native fixture cost
+
+Investigate the measured Arrow/tensor scenario before selecting its root-cause
+repair. V1t used the same driver test binary and prepared-runtime helper for
+82.492s of preparation and 72.184s of later runtime qualification. The fixture
+already retains its source tree and build ownership. Do not assume those elapsed
+times prove repeated dependency compilation.
+
+Freeze the merged implementation, check actual capacity/allocation and preserve
+the retained artifacts. Run one normal focused invocation under the existing
+canonical exact-test command, with its runtime assertions and a 1,800-second
+diagnostic cap. Capture its observed candidate, inputs, Cargo/native freshness,
+process accounting and outcomes. Profile only this representative slow case
+when needed; profiler overhead cannot become acceptance timing. A read-only
+permission probe established that an explicitly targeted profiler is available.
+
+Distinguish input reconciliation and hashing, Cargo metadata/probes, frontend and
+code generation, native compilation/linking, artifact publication and runtime.
+Check whether intervening canonical tests or retention invalidate the prepared
+fixture, and whether adjacent preparation and consumption reuse its exact
+inputs. Keep test source/runtime isolation and the existing complete output,
+ownership/copy/cleanup assertions. Do not replace independent clean-build
+qualification with warmed artifacts.
+
+Record the causal evidence and the smallest ownership-correct repair before
+editing production code. If the slow case is already warm, explain the original
+miss or intervening invalidation rather than repeating an unchanged full sweep.
+Use focused regressions and scoped review for any implementation under the
+approved intermediate policy; then continue toward final full gates and V5.
+
+The post-sweep feature-graph check narrows a separate SQL hypothesis: default
+native SQL tools already enable cc/parallel through their resolved dependencies,
+whereas the standalone PostgreSQL parser test matrix does not. Enabling that
+feature cannot be claimed as a native SQL clean-build improvement. Its parser
+matrix benefit remains unmeasured and is not bundled into this fixture item.
+
+### V1v focused observations and debug-storage feasibility boundary
+
+At e6f2af0e979d63aaa1224b54aa034f35bc6d8ca7 the exact Arrow/tensor
+runtime case passes normally in 72.702s (77.268s guarded). Only the final
+generated-binary fingerprint was updated during that run; retained dependency
+fingerprints were not rebuilt. Its root invocation timestamp and completion span
+38.548s, which is a compilation completion interval, not a CPU-stage breakdown.
+The preceding source inputs retain their older mtimes. The initial freshness
+invalidation reason was not captured and remains unresolved.
+
+An adjacent process-traced run passes in 21.243s, launching no native compiler
+or linker. Within that instrumented observation, native Cargo build spans 1.567s,
+the interval after it exits until runtime launch is 10.049s, and runtime launch
+through exit is 0.010s. Process sampling shows substantial content reads in the
+post-Cargo interval; it does not separately instrument every publication stage.
+The following ordinary control passes in 10.135s (11.690s guarded). These are
+different cache states, not a measured source-change speedup.
+
+A scoped interposition of the seven earlier generated-project cases passes, then
+the same Arrow/tensor case passes in 10.468s under process tracing. Its executable
+and fingerprint metadata remain unchanged across both transitions, with no native
+compilation launch. This rejects those seven cases as an invalidator in this
+controlled sequence; it does not clear every intervening full-gate category.
+
+The executable is 894,150,648 bytes, including 694,971,197 debug-section bytes.
+This confirms the earlier V4an storage observation, not a newly discovered
+regression. V4al already removed the two redundant source reads. Preserve the
+remaining fresh identity, full destination-byte comparison and all runtime
+assertions rather than repeating that repair or trusting metadata alone.
+
+Before proposing any profile/publication change, permit one external-copy
+feasibility experiment using standard debug-section compression. Keep the
+original executable, source, Cargo inputs, target and fingerprints unchanged.
+Record the tool version, actual resource admission, transformation time and size;
+decompress into another owned external copy and compare section contents,
+including machine code, unwind tables, symbols and debug information. Run the
+original and compressed executables and require identical success, complete
+stdout and empty stderr. Failure or incomplete equivalence is not acceptance.
+Compression time is preparation work and must be charged. This experiment can
+establish storage/equivalence feasibility only: it cannot establish actual linker,
+whole-gate, cross-platform or V5 timing gains. Do not adopt post-build processing
+or weaken debugging/integrity contracts on the basis of file size alone.
+
+### V1v storage experiment — diagnostic result, no product adoption
+
+At 6ffbab30b34e53ee1de059f35dd4d19e04255528, standard zstd debug-section
+compression on an external copy takes 2.562s and reduces the 894,150,648-byte
+executable to 276,014,008 bytes. Decompression takes 1.410s. Original and compressed
+executions both succeed with identical complete stdout and empty stderr.
+The original executable's bytes, inode/mtime and root fingerprints stay unchanged.
+
+Preserve the original failed strict-layout comparison: objcopy interns string
+tables, remaps symbol-table links and changes the init-array entry-size metadata.
+A separate read-only semantic supplement confirms all 412,783 ordered symbol
+records are equal after resolving names and section indices. Every other section's
+payload and fields match exactly, including decompressed debug information,
+machine code and unwind data; init-array payload and other fields also match.
+This explains the raw-layout mismatch without relabelling its original result.
+
+The result establishes storage feasibility on this fixture only. No profile,
+publication implementation, integrity check, test assertion or selection changes.
+Post-build compression is not adopted; linker integration and actual end-to-end
+benefit would need their own measurements and debugging/toolchain qualification.
+The original first-use root rebuild reason remains uncaptured. Capture actual
+Cargo freshness reasons if it recurs; do not attribute it to repeated dependency
+compilation or the seven excluded interposing cases. Further unchanged warm
+repetitions would not resolve that missing historical evidence.
+
+### V1w prospective execution — standalone PostgreSQL C compilation
+
+Investigate the current 267.540s parser-matrix category before choosing the next
+implementation. The native SQL tools already resolve cc/parallel, but the standalone
+parser test graph does not. The PostgreSQL build script supplies multiple C
+translation units to one cc::Build invocation. Confirm the exact source inventory,
+Cargo jobserver budget and actual concurrent compiler activity.
+
+Start with one existing parser major using the same retained canonical target,
+toolchain, assertions and build budget. An external diagnostic may select the
+existing dependency feature cc/parallel to measure its mechanism; this is not
+an adopted verification-only workaround. Preserve the normal feature selection,
+locked dependency state and every existing target. Charge actual preparation,
+record Cargo build work separately from test bodies, and retain the current
+serial baseline at its observed revision rather than inventing a matched speedup.
+
+Before a production manifest change, check component-provenance consequences and
+the exact affected owner. An accepted fix must belong to the C-build dependency,
+respect the existing jobserver/memory reserve and preserve all six parser majors,
+component-host assertions, provider selection and source freshness. Do not claim
+a native SQL clean-build saving for a feature already enabled there. Keep the
+1,800-second category cap. Register affected checks, full matrix/provenance
+qualification and scoped review before adopting an implementation. Final full
+correctness gates and every V5 scenario remain open.
+
+### V1w feasibility and bounded adoption contract
+
+At 8692b72710b484f1cde5b238c0b3b592213a2620, the external major-13
+feature experiment passes all 35 selected tests in 48.500s (49.720s guarded).
+Cargo records 13.010s in the PostgreSQL C-build stage; samples observe three
+simultaneous cc1 compiler processes. Initial shared Rust library preparation
+overlaps that stage. Returning to the normal serial feature graph takes 2.685s
+guarded; returning to parallel major 13 inside the matrix takes 0.630s. Thus this
+control does not reproduce the proposed shared-library graph-thrashing mechanism.
+
+The full canonical matrix, with only the external cc/parallel diagnostic addition
+and Cargo timing observation, passes 211 selected test invocations across six
+majors and the actual component-host test over all six artifacts. Callback time
+is 155.903s, guarded 157.290s. Major 13 was prepared by the preceding experiment.
+Majors 14–18 take 25.289/26.327/26.264/26.282/28.205s, and the actual host check
+takes 22.447s. Their PostgreSQL C-build stages take 10.120/11.330/11.260/11.220/
+12.850s; samples observe at most four cc1 workers within the four-job budget.
+Cargo stages overlap and cannot be added as wall time. V1t's 267.540s result has
+different retained inputs; no controlled percentage speedup is claimed.
+
+Adopt the feature at its real owner: add parallel to the existing cc build
+dependency in sifr_sql_postgresql/Cargo.toml. Keep version pins, compiler flags,
+source files, all six major selections, assertions, jobserver allocation,
+reservations and canonical matrix commands unchanged. No diagnostic-only command
+feature override enters production. The locked dependency graph already contains
+the feature's dependencies; require no Cargo.lock change.
+
+That manifest participates in PostgreSQL component provenance. Rebuild all six
+components through the existing canonical producer, using the retained component
+target and exact toolchain/SDK/virtualizer. Preserve previous artifacts and the
+receipt outside Git before generation. Only the six declared component paths and
+their producer receipt may change during that explicitly owned generation step;
+no input may change. Keep generation distinct from source-frozen validation.
+
+After integrating the real generated outputs, run the normal complete parser
+matrix without diagnostic feature additions, component source/provenance checks
+and mutations, build-selection/input controls, applicable dependency/feature
+boundary and file-size/diff checks. Reconcile actual graph features and verify
+that all matrix selections and runtime assertions remain. Obtain scoped
+independent review of the exact candidate before intermediate merge. Account for
+component regeneration/preparation separately; do not waive final full gates or
+any V5 invalidation/retention scenario.
+### V1w implementation and focused qualification
+
+The sole implementation edit enables the existing cc build dependency's parallel
+feature at its PostgreSQL owner. No lockfile, native source, compiler flags,
+runtime assertion, matrix command or allocation policy changes. Regeneration
+uses the canonical producer and exact SDK/virtualizer; all six generated binaries
+and their real provenance receipt are committed. Their bytes differ from the
+prior outputs, and all six are exercised by the actual component host.
+
+Preserve the two failed preparation attempts: the first omitted the SDK archive
+variable and stopped before compilation (0.388s callback); the second compiled
+the components but publication hit the existing cross-filesystem rename limitation
+(203.237s). Neither changed checked-in artifacts. The successful producer runs
+from the existing owned source worktree on the target's filesystem, the same
+supported arrangement used previously: 199.452s callback, 201.265s guarded.
+No producer fallback or manual provenance rewrite was introduced. Record the
+cross-filesystem publication limitation under
+verification/areas/sql_platform/tools/build_sql_components.py as a separate
+pre-existing follow-up; it is not an accepted pass for the failed attempt.
+
+Integrated candidate a434078f5ddcfd28674d4f7d52b2dab59108ab0c passes
+all nine focused commands in 24.276s guarded: provenance with 51 mutation controls,
+PostgreSQL compiler qualification and controls, all five selection/build-input
+tests, all 15 dependency audit tests, native and component feature-graph checks,
+formatting, file-size and base-to-candidate diff checks. Both owner graphs select
+cc/parallel. Source inputs stay frozen and owned process sessions finish empty.
+
+The unchanged normal parser matrix passes in 27.665s callback (28.696s guarded).
+Its seven canonical commands reconcile to 49 passing libtest summaries and
+211 selected test invocations across majors 13–18 plus the actual component-host
+case. The host case takes 22.16s and executes every rebuilt component.
+No diagnostic feature override, tracing or process sampling enters this run.
+The graph was already prepared by the preceding diagnostics: this is a warm
+complete matrix observation, not a matched reduction from the historical
+267.540s category or an invalidation timing claim. Regeneration and earlier
+preparation are recorded separately rather than hidden in that warm result.
+
+Full correctness-only facade gates and every V5 scenario remain mandatory.
+This intermediate item requires exact-candidate independent review before merge.
