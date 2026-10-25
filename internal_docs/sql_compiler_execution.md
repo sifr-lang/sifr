@@ -131,8 +131,9 @@ manifest, lock, schema and component file identities, absent root-manifest slots
 and configured migration file identities. A bounded receipt stays in a temporary
 file outside the project and is not mounted into the tool sandbox. Only the
 selected worker receives its path and SHA-256. The worker checks those bytes and
-the admitted inputs before loading metadata, then verifies its selected input set
-against the caller's receipt. Per-operation drift checks remain in place.
+the admitted inputs before reconstructing the graph from the caller's normalized
+Cargo metadata, then verifies the complete canonical graph/source-map identities
+and selected input set against that receipt. Per-operation drift checks remain in place.
 
 Admission failure is retained until a semantic request arrives. Thus reading an
 existing plan or cleaning up a database still starts no compiler worker and does
@@ -141,3 +142,14 @@ charged to the confined invocation; they are not free or reusable evidence.
 Direct unsandboxed execution retains its own first-request admission lifetime.
 These before/after checks detect drift; they do not claim an atomic filesystem
 snapshot against arbitrary concurrent host writes.
+
+
+The confined worker does not reselect a native toolchain or invoke Cargo.
+The caller's normalized metadata is reconstructed through the same canonical
+package graph and source-map functions as ordinary package loading; graph and
+source-map digests must match the caller's original snapshot. This is a
+paired internal receipt, not a native-tool input format or a second frontend.
+The direct route obtains its own initial frozen graph. Both routes retain that
+graph and check pinned files instead of repeatedly re-running metadata commands.
+Selected source-module bytes are also pinned. New files outside this frozen
+input set are not silently admitted into later semantic operations.

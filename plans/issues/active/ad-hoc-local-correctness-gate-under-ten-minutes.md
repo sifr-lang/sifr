@@ -13627,3 +13627,44 @@ producer refresh. These are separately recorded, not treated as passing.
 The two feature rows belong to the affected compiler/component boundary; no
 feature, target or profile is removed. Inventory ordering is restored without
 changing entries or multiplicities to keep the final review focused.
+
+
+### V1s development checkpoint — refreshed producers and frozen graph ownership
+
+The three declared producers pass with retained targets and bounded guards:
+MySQL 38.156s, SQLite 59.234s, PostgreSQL's six versions 337.308s. All ten guest
+artifacts changed; receipts were produced by the actual build scripts, not
+edited to bless old binaries. Generated outputs are committed at
+015205304ae9f0ab18a8b6fd76a65ff13b26e2d6; the exact producer commit is recorded in
+v1s-producer-candidate.json. The resulting component qualification and its
+mutation tests pass. Words has unchanged declared inputs and retained valid
+provenance.
+
+A follow-up test at b019e1adb2cf79705df244c6f3cdadcc122f5cd7 confirmed that
+the worker reselected native tools even though its caller had already admitted
+the graph. With native selection made unavailable only in the worker, profile
+loading failed. This exposes repeated metadata work and a configuration boundary
+that the file-only receipt did not remove; it is not evidence of an executed
+sandbox escape.
+
+The implementation at a5357888c896c43b582605787f07a302e2c3d818 carries the
+caller-admitted normalized Cargo metadata in the bounded private receipt.
+The same canonical package graph/source-map loader reconstructs it without
+Cargo execution. Existing canonical graph/source-map digests bind the result.
+Both routes retain their initial graph and verify pinned input files before and
+after semantic operations; source-module contents join the selected input set.
+The direct route performs initial metadata loading itself.
+
+Focused validation passes: all 171 package units, component qualification and
+mutations, seven actual sandbox/adapter tests, six admission/input units, five
+canonical worker comparisons (including complete snapshot round-trip equality),
+the locked namespace CLI regression, formatting and size/diff checks. The guarded
+batch took 210.312s. The seven adapter tests took 49.34s in their test process;
+their command including separate native/compiler preparation took 110.214s.
+This is a larger batch with fresh compilation and refreshed guest artifacts,
+not a controlled timing comparison with the preceding admission repair.
+
+Reconcile the two changed policy inventories, run the integrated host-tools and
+runner contracts, then qualify current source/installed commands and clean
+executables before independent review. Earlier observations remain bound to
+their recorded candidates. Full phase gates and V5 remain unproven.

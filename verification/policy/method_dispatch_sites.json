@@ -85380,6 +85380,30 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr/src/sql_compiler_inputs.rs::migration_sources enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
+      "site": "crates/sifr/src/sql_compiler_inputs.rs::verify::literal-comparison::1",
+      "fingerprint": "889a5fa1314e23b881310202113f4742d58438bd0b0d0657616a023968b86541",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "if path . try_exists ( ) . map_err ( | error | format ! ( \"{CHANGED}: {error}\" ) ) ? != self . files . contains_key ( & path )",
+      "inputs": "fn verify ( & self , root : & Path )",
+      "outputs": "Result < ( ) , String >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr/src/sql_compiler_inputs.rs::verify enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr/src/sql_compiler_inputs.rs::verify enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr/src/sql_compiler_inputs.rs::verify::literal-comparison::2",
+      "fingerprint": "0195e5004c987d615555287ca61e5ccd4020aa5f1a00e6f587f8e53895dbe276",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "if pin ( path ) . map_err ( | error | format ! ( \"{CHANGED}: {error}\" ) ) ? != * expected",
+      "inputs": "fn verify ( & self , root : & Path )",
+      "outputs": "Result < ( ) , String >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr/src/sql_compiler_inputs.rs::verify enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr/src/sql_compiler_inputs.rs::verify enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
       "site": "crates/sifr_identity/src/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration::literal-match::1",
       "fingerprint": "2dd2516205be030600134cf6a239ba7f3705cbe02eda00c7efeeb813ed891343",
       "classification": "test-assertion",

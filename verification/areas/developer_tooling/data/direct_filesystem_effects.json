@@ -24405,7 +24405,7 @@
     },
     {
       "path": "crates/sifr/src/sql_compiler_inputs.rs",
-      "symbol": "capture",
+      "symbol": "from_snapshot",
       "operation": "try_exists",
       "site": "if path.try_exists().map_err(|error| error.to_string())? {",
       "classification": "semantic-input"
@@ -24597,6 +24597,13 @@
       "symbol": "pin",
       "operation": "metadata",
       "site": ".metadata()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "verify",
+      "operation": "try_exists",
+      "site": ".try_exists()",
       "classification": "semantic-input"
     },
     {
