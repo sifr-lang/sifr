@@ -86,7 +86,13 @@ impl Admission {
         file.take(LIMIT + 1)
             .read_to_end(&mut bytes)
             .map_err(|error| error.to_string())?;
-        if bytes.len() as u64 > LIMIT || format!("{:x}", Sha256::digest(&bytes)) != expected_hash {
+        if bytes.len() as u64 > LIMIT
+            || Sha256::digest(&bytes)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>()
+                != expected_hash
+        {
             return Err("SQL compiler admission snapshot changed or exceeded its bound".into());
         }
         let admitted: Self = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
@@ -113,7 +119,10 @@ impl AdmissionFile {
         if bytes.len() as u64 > LIMIT {
             return Err("SQL compiler admission snapshot exceeded its bound".into());
         }
-        let hash = format!("{:x}", Sha256::digest(&bytes));
+        let hash = Sha256::digest(&bytes)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>();
         let mut file = tempfile::NamedTempFile::new().map_err(|error| error.to_string())?;
         if file
             .path()
