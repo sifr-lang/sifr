@@ -1,6 +1,7 @@
 //! Provider-neutral schema lifecycle contracts for Sifr host tools.
 
 mod artifacts;
+pub mod compiler_protocol;
 mod lifecycle;
 mod migration_artifacts;
 mod migration_source;
