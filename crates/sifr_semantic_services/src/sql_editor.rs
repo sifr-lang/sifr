@@ -369,13 +369,25 @@ pub fn load_sql_editor_profiles(
     entrypoint: &Path,
     compilation: Option<ComponentCompilation>,
 ) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
-    if !workspace_root.join("sifr.toml").is_file() || !workspace_root.join("Cargo.toml").is_file() {
+    let Some((snapshot, owner)) = load_sql_editor_snapshot(workspace_root, entrypoint)? else {
         return Ok(PreparedSqlProfiles::default());
+    };
+    prepare_sql_profiles_in_compilation(&snapshot.graph, &owner, compilation)
+}
+
+/// Read the same frozen graph and owner used by editor profile preparation.
+/// Compiler workers retain this snapshot to check their admitted input lifetime.
+pub fn load_sql_editor_snapshot(
+    workspace_root: &Path,
+    entrypoint: &Path,
+) -> Result<Option<(sifr_package::PackageGraphSnapshot, SifrPackageId)>, Vec<RenderedDiagnostic>> {
+    if !workspace_root.join("sifr.toml").is_file() || !workspace_root.join("Cargo.toml").is_file() {
+        return Ok(None);
     }
     // Editor analysis must not create or update dependency state. Defer SQL
     // profile loading until the normal package workflow has produced a lockfile.
     if !workspace_root.join("Cargo.lock").is_file() {
-        return Ok(PreparedSqlProfiles::default());
+        return Ok(None);
     }
     let mut provider = sifr_frontend::DiskSourceProvider::new();
     let snapshot = sifr_package::load_package_graph_snapshot(
@@ -413,9 +425,9 @@ pub fn load_sql_editor_profiles(
         .max_by_key(|package| package.package_root.components().count())
         .map(|package| package.package_id.clone());
     let Some(owner) = owner else {
-        return Ok(PreparedSqlProfiles::default());
+        return Ok(None);
     };
-    prepare_sql_profiles_in_compilation(&snapshot.graph, &owner, compilation)
+    Ok(Some((snapshot, owner)))
 }
 
 pub fn prepare_sql_profiles(

@@ -47,6 +47,7 @@ mod self_update_metadata;
 mod self_update_metadata_source;
 mod self_update_receipt;
 mod self_update_runner;
+mod sql_compiler_worker;
 mod sysroot_cli;
 mod test_cli;
 mod trace_artifacts;

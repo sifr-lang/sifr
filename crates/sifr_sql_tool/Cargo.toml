@@ -1,4 +1,5 @@
 [package]
+links = "sifr_sql_tool_compiled_identity"
 name = "sifr_sql_tool"
 version = "0.0.0"
 publish = false
@@ -32,3 +33,6 @@ path = "tests/fixtures/compiler_worker.rs"
 required-features = ["__compiler_fixture"]
 test = false
 bench = false
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

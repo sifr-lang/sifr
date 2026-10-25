@@ -28,3 +28,7 @@ pub use migration_source::{
     MigrationSourceInputs, compile_migration_sources, load_migration_source_inputs,
 };
 pub use transaction::{write_artifacts_atomically, write_migration_artifacts_atomically};
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

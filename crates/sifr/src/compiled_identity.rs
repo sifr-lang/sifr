@@ -18,6 +18,8 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
             tokens.extend(sifr_sysroot::compiled_input_tokens());
             tokens.extend(sifr_syntax::compiled_input_tokens());
             tokens.extend(sifr_sql_contract::compiled_input_tokens());
+            tokens.extend(sifr_sql_tool::compiled_input_tokens());
+            tokens.extend(sifr_semantic_services::compiled_input_tokens());
             tokens.sort_unstable();
             tokens.dedup();
             tokens

@@ -12,6 +12,8 @@ name = "sifr"
 path = "src/main.rs"
 
 [dependencies]
+sifr_semantic_services = { workspace = true }
+sifr_sql_tool = { workspace = true }
 sifr_identity.workspace = true
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 ruff_text_size = { workspace = true }

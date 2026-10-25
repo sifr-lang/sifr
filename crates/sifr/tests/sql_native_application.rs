@@ -605,3 +605,5 @@ fn editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes() {
         .expect("later enable");
     assert!(diagnostics(&mut editor).is_empty());
 }
+
+mod compiler_worker;
