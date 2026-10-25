@@ -1,6 +1,6 @@
 use crate::pull_live_catalog;
 use serde::Serialize;
-use sifr_semantic_services::{QUERY_SIGNATURE_ARTIFACT_NAME, load_sql_editor_profiles};
+use sifr_sql_contract::QUERY_SIGNATURE_ARTIFACT_NAME;
 use sifr_sql_contract::{
     ProfileAuthority, QuerySignatureArtifact, SchemaEvidence, SchemaIr, build_profile_authority,
     schema_source_fingerprint,
@@ -42,7 +42,10 @@ enum SchemaCommand {
     Build { profile: String },
 }
 
-pub async fn run_schema_command(
+/// Execute schema operations with a caller-owned canonical profile loader.
+/// The loader owns compiler identity and input admission; no alternate frontend is selected.
+pub async fn run_schema_command_with_profile_loader(
+    load_profile: &impl Fn(&Path, &str) -> Result<ProfileAuthority, String>,
     arguments: &[String],
     workspace_root: &Path,
     connection_url: Option<&str>,
@@ -54,7 +57,7 @@ pub async fn run_schema_command(
         | SchemaCommand::Validate { profile, .. }
         | SchemaCommand::Build { profile } => profile,
     };
-    let authority = load_authority(workspace_root, profile_name)?;
+    let authority = load_profile(workspace_root, profile_name).map_err(command_error)?;
     let output = artifact_directory(workspace_root, profile_name);
     match command {
         SchemaCommand::Pull { accept, .. } => {
@@ -185,27 +188,6 @@ async fn live_schema(
     )
     .await
     .map_err(|failure| command_error(failure.message))
-}
-
-pub(crate) fn load_authority(
-    workspace_root: &Path,
-    profile_name: &str,
-) -> Result<ProfileAuthority, CommandError> {
-    let prepared =
-        load_sql_editor_profiles(workspace_root, workspace_root, None).map_err(|failures| {
-            command_error(
-                failures
-                    .into_iter()
-                    .map(|failure| failure.message)
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-            )
-        })?;
-    prepared
-        .registry()
-        .profile(profile_name)
-        .map(|registered| registered.authority().clone())
-        .map_err(|failure| command_error(failure.to_string()))
 }
 
 fn authority_with_schema(

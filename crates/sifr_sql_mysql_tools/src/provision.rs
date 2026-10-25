@@ -1,4 +1,4 @@
-use crate::command::{CommandError, command_error, load_authority};
+use crate::command::{CommandError, command_error};
 use crate::lower_hex;
 use mysql_async::{Conn, Opts, prelude::Queryable};
 use sha2::{Digest, Sha256};
@@ -12,13 +12,15 @@ use url::Url;
 
 const PASSWORD_ENVIRONMENT: &str = "SIFR_SQL_TEST_PASSWORD";
 
-pub async fn provision_test_database(
+/// Provision using the same native implementation and an explicit canonical profile loader.
+pub async fn provision_test_database_with_profile_loader(
+    load_profile: &impl Fn(&Path, &str) -> Result<ProfileAuthority, String>,
     workspace_root: &Path,
     profile_name: &str,
     admin_url: &str,
     password: &str,
 ) -> Result<TestConnectionManifest, CommandError> {
-    let authority = load_authority(workspace_root, profile_name)?;
+    let authority = load_profile(workspace_root, profile_name).map_err(command_error)?;
     provision_with_authority(&authority, profile_name, admin_url, password).await
 }
 

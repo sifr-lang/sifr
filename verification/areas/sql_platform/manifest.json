@@ -38,7 +38,9 @@
     {
       "name": "integrated-qualification",
       "kind": "adapter",
-      "resource_classes": ["default-local"],
+      "resource_classes": [
+        "default-local"
+      ],
       "network_mode": "offline",
       "timeout_seconds": 900,
       "cases": [
@@ -61,7 +63,10 @@
     {
       "name": "build-qualification",
       "kind": "adapter",
-      "resource_classes": ["default-local", "long-running"],
+      "resource_classes": [
+        "default-local",
+        "long-running"
+      ],
       "network_mode": "offline",
       "timeout_seconds": 3600,
       "cases": [
@@ -347,13 +352,29 @@
           "command": "sql-host-tool-cli-tests",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-native-tool-boundary",
+          "entry": "verification/areas/sql_platform/tools/check_native_tool_boundary.py",
+          "command": "sql-native-tool-boundary",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-native-tool-tests",
+          "entry": "crates/sifr_sql_sqlite_tools/tests/injected_commands.rs",
+          "command": "sql-native-tool-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
     {
       "name": "mysql-provider",
       "kind": "adapter",
-      "resource_classes": ["default-local"],
+      "resource_classes": [
+        "default-local"
+      ],
       "network_mode": "offline",
       "timeout_seconds": 900,
       "cases": [
@@ -551,7 +572,11 @@
     {
       "name": "mysql-live",
       "kind": "adapter",
-      "resource_classes": ["container-runtime", "network", "platform-specific"],
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
       "network_mode": "live",
       "timeout_seconds": 3600,
       "cases": [
@@ -659,7 +684,9 @@
     {
       "name": "sqlite-provider",
       "kind": "adapter",
-      "resource_classes": ["default-local"],
+      "resource_classes": [
+        "default-local"
+      ],
       "network_mode": "offline",
       "timeout_seconds": 1800,
       "cases": [
