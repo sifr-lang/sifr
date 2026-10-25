@@ -12971,3 +12971,91 @@ acceptance contract here first, including complete affected SQL/provider/editor/
 host-tool checks, transport and stale-input negative controls, all three clean
 executable comparisons and final V5 accounting. If the boundary cannot preserve
 the existing contracts, retain that evidence and reject it.
+
+### V1n outcome — executable transfer and real artifact equivalence, no speedup claimed
+
+Observed candidate 174b34564d87d18cc61ed0b80d649f8cf7358ac5. An external
+diagnostic calls the actual canonical profile loader and migration frontend;
+it does not copy semantic logic or mock compiler answers. Five direct/transfer
+comparisons preserve exact response bytes: valid SQLite profile, unknown profile,
+valid maintained migration, syntax error and semantic error. All 13 negative
+controls reject malformed, oversized, mismatched, escaping or stale inputs,
+including changed bytes with restored mtime. The diagnostic's root inventory,
+4 MiB packet bound and supplied packet checksum are probe constraints, not a
+production authorization or supported-input contract.
+
+A second consumer decodes the canonical ProfileAuthority and calls the actual
+sifr_sql_tool artifact builder. Its seven generated files and manifest match
+the existing SQLite CLI exactly. Corrupt authority fingerprints and a missing
+profile are rejected. Producer plus consumer took 2.518s versus 2.375s for the
+CLI in one ordinary observation. This establishes no runtime gain. The first
+transport comparison took 2.403s for profile preparation/transfer and 0.307s for
+migration preparation/transfer, including both processes. Preparation guards
+were 140.779s and 95.252s; these are not controlled cold-build comparisons.
+
+The real artifact consumer compiled 139 distinct packages / 218 artifact events.
+It excludes semantic services/frontend but still includes Wasmtime/Cranelift
+through SQL contract types -> compiler-component. Thus executable evidence
+corroborates V1m's second dependency path. No production IPC, deployment,
+standalone entrypoint, sandbox or package contract has changed. Typed migration
+consumption, all providers/commands, installation, confinement, independent clean
+tools, invalidation and final gates remain unqualified.
+
+The initial extended probe stopped before compilation because its reduced lock
+had dropped three approved transitive pins. Re-seeding its external lock from
+the unchanged repository lock resolves this; all 261 selected registry identities
+and checksums then match. Preserve the failed 4.219s attempt. Inactive owned
+build-script artifacts were relocated after checksum/metadata verification,
+preserving their logical paths and all bytes; this is capacity maintenance,
+not performance evidence. No tracked product source changed.
+
+Evidence v1n-evidence.tar.gz SHA-256
+bccfa89452eefadf45ecd8ae1bd15facd4d0848f60e6a490ff45bdb0e2db5e6d:
+195 payloads plus manifest independently verified locally. The measured
+one-way prototype is not adopted as a production solution. Its useful result
+is a verified typed-artifact boundary and concrete evidence that both compiler
+and native component-host dependencies must be addressed.
+
+### V1o prospective execution — explicit native component-host ownership
+
+Bounded scope: make Wasmtime/native component execution an explicit Cargo
+capability of sifr_compiler_component. Keep the crate's existing default host
+behavior for direct consumers, while workspace protocol-only dependencies
+disable defaults. Actual host users and native provider integration tests must
+explicitly select the host capability. Preserve canonical protocol types,
+registration validation, guest semantics, Engine configuration, resource limits,
+compiled-code ownership, runtime assertions and all existing command entrypoints.
+This is a dependency boundary, not a new process service, fallback or backend.
+
+Before implementation, retain an ordinary controlled clean build of the existing
+real artifact consumer. Afterward, compare the same source/profile/toolchain
+and allocation with a separate clean target, recording all preparation and
+registry identities. Require actual compiled artifact evidence that the
+protocol-only consumer has no Wasmtime/Cranelift units, and exact equality of
+all seven real SQLite schema artifacts. Do not infer full-tool or gate savings
+from this consumer, package counts, or a warm/cold comparison.
+
+Named intermediate acceptance:
+- All existing component tests in host mode, plus the applicable existing
+  protocol tests in no-default-features mode. Do not count disabled host tests
+  as no-host passes; reconcile the two inventories explicitly.
+- Distinguish host/protocol mode in compiled identity. Add focused regression
+  and mutation controls for dependency-feature drift and missing host grants.
+- Qualify both compiler/editor host owners and protocol-only Cargo selections;
+  all 359 previously selected compiler/editor tests and the 64 real component,
+  provider and application tests remain required on the integrated candidate.
+- Regenerate affected guest artifacts/receipts with canonical pinned producers
+  when their declared inputs change. Validate complete producer coverage and
+  actual component execution, not just changed hashes or package metadata.
+- Run affected SQL contract/tool tests, component/dependency qualification
+  controls, direct-dependency audit, formatting, file-size/dependency-direction
+  guards and emitted-profile checks where selection or policy changes.
+- Independent exact-candidate review under the approved intermediate policy.
+  No final correctness/timing claim until the scoped phase gates and every V5
+  scenario pass; the full SQL clean protocol remains mandatory there.
+
+No production compiler-to-tool transport or installation migration is authorized
+by this item. After this boundary is measured and qualified, reassess the remaining
+semantic-service dependency using the V1n evidence. Preserve the current SQL
+clean protocol and its last 878.767s result; this item does not promise to bring
+that protocol, or the complete gate, below 600s by itself.
