@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1s merged; V1t complete integrated diagnostic; full gates and V5 remain open
+current_stage: V1u merged; V1v prepared native fixture investigation; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13966,3 +13966,59 @@ Original V1t failures are preserved at their observed candidate. This
 documentation-only validation record requires unchanged-input/link checks and
 exact-candidate scoped review before the intermediate merge; it does not close
 the final correctness or timing criteria.
+
+### V1u closure — verification integration contracts
+
+PR #4478 merged as ab6b3574b8130645d48412bcb48c1eec4af54759.
+Its tree exactly matches reviewed candidate
+5c714b0e857de1db89a24f79f8adbe32ed071ccd. Independent review returned
+SATISFIED with no blocking findings; response SHA-256
+8eabe4b035d2f5d148a751f01bca910edb73278119934a70507b825f8e884b98.
+The response remains outside the reviewed Git tree. Focused checks retain their
+observed 06aac candidate, with an exact proof that only the validation record
+changed afterward. Both affected failures are repaired; the original diagnostic
+is preserved and is not relabelled as a full passing gate at the new revision.
+No additional implementation review or broad test repetition is required for
+this closure record.
+
+Review follow-ups remain separate: widening the direct-filesystem scanner beyond
+its existing patterns would be new work. The prior V1s locked-namespace SQL,
+cleanup-deadline naming and eager-admission-cost follow-ups remain recorded.
+Update the stage marker to the actual active item. Final facade and V5 acceptance
+remain open.
+
+### V1v prospective execution — prepared native fixture cost
+
+Investigate the measured Arrow/tensor scenario before selecting its root-cause
+repair. V1t used the same driver test binary and prepared-runtime helper for
+82.492s of preparation and 72.184s of later runtime qualification. The fixture
+already retains its source tree and build ownership. Do not assume those elapsed
+times prove repeated dependency compilation.
+
+Freeze the merged implementation, check actual capacity/allocation and preserve
+the retained artifacts. Run one normal focused invocation under the existing
+canonical exact-test command, with its runtime assertions and a 1,800-second
+diagnostic cap. Capture its observed candidate, inputs, Cargo/native freshness,
+process accounting and outcomes. Profile only this representative slow case
+when needed; profiler overhead cannot become acceptance timing. A read-only
+permission probe established that an explicitly targeted profiler is available.
+
+Distinguish input reconciliation and hashing, Cargo metadata/probes, frontend and
+code generation, native compilation/linking, artifact publication and runtime.
+Check whether intervening canonical tests or retention invalidate the prepared
+fixture, and whether adjacent preparation and consumption reuse its exact
+inputs. Keep test source/runtime isolation and the existing complete output,
+ownership/copy/cleanup assertions. Do not replace independent clean-build
+qualification with warmed artifacts.
+
+Record the causal evidence and the smallest ownership-correct repair before
+editing production code. If the slow case is already warm, explain the original
+miss or intervening invalidation rather than repeating an unchanged full sweep.
+Use focused regressions and scoped review for any implementation under the
+approved intermediate policy; then continue toward final full gates and V5.
+
+The post-sweep feature-graph check narrows a separate SQL hypothesis: default
+native SQL tools already enable cc/parallel through their resolved dependencies,
+whereas the standalone PostgreSQL parser test matrix does not. Enabling that
+feature cannot be claimed as a native SQL clean-build improvement. Its parser
+matrix benefit remains unmeasured and is not bundled into this fixture item.
