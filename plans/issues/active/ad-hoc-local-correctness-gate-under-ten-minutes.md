@@ -14284,7 +14284,7 @@ checks and 120 extra view-normalization rounds across the six artifacts.
 | 20 extra view rounds per owner | 5.607s | 5.633s |
 | Complete diagnostic test body | 39.13s | 35.17s |
 
-Preparation differs (1.86s versus 18.07s reported by Cargo) and is recorded
+Preparation differs (1.86s versus 18.08s reported by Cargo) and is recorded
 separately; callback/guard times are not presented as equal-state speedups.
 The first-request interval includes compilation and execution, not just JIT CPU.
 This single paired diagnostic supports a modest startup option with no measured
