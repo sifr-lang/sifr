@@ -1,6 +1,4 @@
-use crate::command::{
-    CommandError, CommandOutcome, command_error, json_line, load_authority, required_connection,
-};
+use crate::command::{CommandError, CommandOutcome, command_error, json_line, required_connection};
 use crate::{connect_migration_runtime, validate_postgres_migration_plan};
 use sifr_sql_postgresql::{
     LibpgQueryParser, PostgresAnalyzer, PostgresCatalog, PostgresMigrationDialect, PostgresParser,
@@ -25,8 +23,11 @@ enum MigrationCommand {
     Rollback { profile: String },
 }
 
-pub async fn run_migration_command(
-    compiler: &sifr_semantic_services::SemanticContext,
+/// Execute migration operations with explicit canonical semantic capabilities.
+/// Source compilation is requested only by migration build, as in the default adapter.
+pub async fn run_migration_command_with_compiler(
+    compile_source: &impl Fn(&str) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String>,
+    load_profile: &impl Fn(&Path, &str) -> Result<sifr_sql_contract::ProfileAuthority, String>,
     arguments: &[String],
     workspace_root: &Path,
     connection_url: Option<&str>,
@@ -40,7 +41,7 @@ pub async fn run_migration_command(
         | MigrationCommand::Rollback { profile } => profile,
     };
     if matches!(command, MigrationCommand::Build { .. }) {
-        return build(compiler, workspace_root, profile);
+        return build(compile_source, load_profile, workspace_root, profile);
     }
     let plan = read_plan(workspace_root, profile)?;
     let operator_plan = validate_postgres_migration_plan(&plan)
@@ -51,7 +52,7 @@ pub async fn run_migration_command(
             stdout: json_line(&operator_plan)?,
         });
     }
-    let authority = load_authority(workspace_root, profile)?;
+    let authority = load_profile(workspace_root, profile).map_err(command_error)?;
     let connection = required_connection(connection_url)?.to_string();
     let profile_name = profile.clone();
     let result = tokio::task::spawn_blocking(move || {
@@ -110,11 +111,12 @@ pub async fn run_migration_command(
 }
 
 fn build(
-    compiler: &sifr_semantic_services::SemanticContext,
+    compile_source: &impl Fn(&str) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String>,
+    load_profile: &impl Fn(&Path, &str) -> Result<sifr_sql_contract::ProfileAuthority, String>,
     workspace_root: &Path,
     profile: &str,
 ) -> Result<CommandOutcome, CommandError> {
-    let authority = load_authority(workspace_root, profile)?;
+    let authority = load_profile(workspace_root, profile).map_err(command_error)?;
     let target = authority.profile.schema;
     let parser = LibpgQueryParser;
     let dialect = PostgresMigrationDialect::new(
@@ -122,10 +124,9 @@ fn build(
         target.dialect.server_version.clone(),
         postgresql_capabilities(),
     );
-    let inputs = load_migration_source_inputs(workspace_root, profile, |source| {
-        compile_migration_source(compiler, source)
-    })
-    .map_err(|failure| command_error(failure.message))?;
+    let inputs =
+        load_migration_source_inputs(workspace_root, profile, |source| compile_source(source))
+            .map_err(|failure| command_error(failure.message))?;
     let graph = compile_migration_sources(
         &dialect,
         target.clone(),
@@ -151,19 +152,6 @@ fn build(
     Ok(CommandOutcome {
         exit_code: 0,
         stdout: json_line(&artifacts.manifest)?,
-    })
-}
-
-fn compile_migration_source(
-    compiler: &sifr_semantic_services::SemanticContext,
-    source: &str,
-) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String> {
-    sifr_semantic_services::compile_sql_migration_source(compiler, source).map_err(|failures| {
-        failures
-            .into_iter()
-            .map(|failure| failure.message)
-            .collect::<Vec<_>>()
-            .join("\n")
     })
 }
 

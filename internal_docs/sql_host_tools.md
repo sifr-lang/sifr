@@ -11,6 +11,33 @@ plans. The `sifr` CLI owns direct namespace dispatch and child-process results.
 Host tools are packages. They are not part of the Sifr standard library. They
 are not application dependencies.
 
+## Native operations and compiler inputs
+
+The three provider tool libraries keep native database operations separate from
+their canonical compiler adapter. `run_schema_command_with_profile_loader`
+accepts the caller's profile loader. `run_migration_command_with_compiler`
+accepts both that loader and a migration-source compiler. SQLite and MySQL also
+expose `provision_test_database_with_profile_loader`. These callables supply
+`ProfileAuthority` and `MigrationSourceDeclaration` values from the canonical
+frontend; the caller owns compiler identity and admission of the project inputs.
+
+Provider validation, live catalogs, migration execution, credentials and artifact
+writes stay in the native libraries. Reading an already built migration plan
+does not invoke either compiler callable. Compiler failures retain their original
+diagnostics and stop dependent work.
+
+Each library's default-enabled `compiler` feature provides the existing public
+entrypoints through the same in-process semantic services. The ordinary provider
+CLI requires that feature. Library consumers can disable default features and
+provide the explicit callables; that build excludes semantic services and the
+component engine. This is an explicit API choice, with no automatic fallback or
+alternate frontend. The SQL host-tools suite tests both the dependency boundary
+and the native libraries, while existing default-mode tests remain selected.
+
+This boundary does not change executable installation, sandbox grants or the
+independent clean-build qualification below. A future external compiler adapter
+requires its own identity, input, confinement and lifecycle qualification.
+
 ## Workspace configuration
 
 The root Cargo manifest selects one tools workspace member:

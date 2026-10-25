@@ -217,6 +217,14 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_frontend", "-p", "sifr_analysis",
         "-p", "sifr_lsp",
     ],
+    "sql-native-tool-boundary": [
+        sys.executable, str(AREA_ROOT / "tools" / "check_native_tool_boundary.py"), "--self-test",
+    ],
+    "sql-native-tool-tests": [
+        "cargo", "test", "--locked", "--offline", "--no-default-features", "--tests",
+        "-p", "sifr_sql_mysql_tools", "-p", "sifr_sql_postgresql_tools",
+        "-p", "sifr_sql_sqlite_tools",
+    ],
     "sql-host-tool-qualification": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_host_tools.py"),

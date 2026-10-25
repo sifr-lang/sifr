@@ -22200,7 +22200,7 @@
     },
     {
       "path": "crates/sifr_sql_mysql_tools/src/command.rs",
-      "symbol": "run_schema_command",
+      "symbol": "run_schema_command_with_profile_loader",
       "operation": "is_file",
       "site": "if migration.is_file() {",
       "classification": "semantic-input"
@@ -22410,7 +22410,7 @@
     },
     {
       "path": "crates/sifr_sql_sqlite_tools/src/command.rs",
-      "symbol": "run_schema_command",
+      "symbol": "run_schema_command_with_profile_loader",
       "operation": "is_file",
       "site": "if migration.is_file() {",
       "classification": "semantic-input"
@@ -24297,6 +24297,62 @@
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(member_root.join(\"src\")).map_err(|e| e.to_string())?;",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sql_mysql_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_preserves_message_and_prevents_schema_writes",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_mysql_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_prevents_migration_compilation_and_writes",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_mysql_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_prevents_provisioning_side_effects",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_postgresql_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_preserves_message_and_prevents_schema_writes",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_postgresql_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_prevents_migration_compilation_and_writes",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_sqlite_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_preserves_message_and_prevents_schema_writes",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_sqlite_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_prevents_migration_compilation_and_writes",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_sqlite_tools/tests/injected_commands.rs",
+      "symbol": "profile_failure_prevents_provisioning_side_effects",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
     }
   ]
 }
