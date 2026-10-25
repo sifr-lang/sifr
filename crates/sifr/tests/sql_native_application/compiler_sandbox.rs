@@ -189,3 +189,64 @@ fn reading_a_missing_plan_is_lazy_even_with_a_granted_compiler_channel() {
     assert_eq!(actual.stderr, expected.stderr);
     assert!(String::from_utf8_lossy(&actual.stderr).contains("migration plan"));
 }
+
+#[test]
+fn lazy_compiler_rejects_lock_drift_before_the_first_request() {
+    use std::io::Read;
+    use std::process::Stdio;
+    use std::time::{Duration, Instant};
+    let project = compiler_worker::project("sqlite", "3.53.4");
+    let root = project.root.path();
+    let mut command = Command::new(binary("sqlite"));
+    command
+        .args(["schema", "build", "--profile", "app"])
+        .current_dir(root)
+        .env("SIFR_TOOL_NAMESPACE", "sql")
+        .env("SIFR_TOOL_CAPABILITIES", "project-write,sql-compiler")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut service =
+        super::host_tool_compiler::LazyCompiler::attach(&mut command, root, compiler())
+            .expect("admit the invocation before the tool starts");
+    let lock = root.join("Cargo.lock");
+    let mut changed = std::fs::read(&lock).expect("initial lock");
+    changed.extend_from_slice(b"\n# changed after parent admission\n");
+    std::fs::write(&lock, changed).expect("lock drift before first request");
+    let mut child = sifr_process::OwnedChild::spawn(&mut command).expect("native client");
+    drop(command);
+    let deadline = Instant::now() + Duration::from_secs(120);
+    let mut rejected = None;
+    let status = loop {
+        if let Err(message) = service.poll() {
+            rejected = Some(message);
+            child.terminate();
+            break child.wait().expect("reap rejected client");
+        }
+        if let Some(status) = child.try_wait().expect("client status") {
+            break status;
+        }
+        assert!(
+            Instant::now() < deadline,
+            "compiler admission test exceeded its deadline"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    };
+    let mut stderr = String::new();
+    child
+        .stderr
+        .take()
+        .expect("stderr")
+        .read_to_string(&mut stderr)
+        .expect("diagnostic");
+    service.finish(status.success()).expect("worker cleanup");
+    assert!(
+        !status.success(),
+        "compiler accepted a lock changed after caller admission"
+    );
+    let diagnostic = rejected.as_deref().unwrap_or(&stderr);
+    assert!(diagnostic.contains("changed"), "{diagnostic}");
+    assert!(
+        !root.join(".sifr/sql/app").exists(),
+        "rejected inputs must not publish artifacts"
+    );
+}
