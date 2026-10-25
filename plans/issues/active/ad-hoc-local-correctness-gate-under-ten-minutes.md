@@ -13682,3 +13682,31 @@ declarations were absent from the pinned inventory. Add that manifest and those
 two already-audited versions; preserve registry response/checksum authority,
 verification graph pins, every other declaration and all negative controls.
 The failure is owned by this extraction and is not an external dependency issue.
+
+
+### V1s integrated qualification checkpoint — CLI schema omission found
+
+Candidate e58236e3614cc95b56402e8197b7fffd836eca9d passes all eight execution
+categories: source comparisons 259.004s; installed preparation 133.133s;
+installed comparisons 449.170s; installed rejection controls 13.816s; native
+test qualification 29.915s; compiler-enabled qualification 93.728s; independent
+clean builds 403.961s; real commands from both clean targets 129.908s. These are
+guarded category observations with overlapping coverage, not a full gate total.
+Both source/installed comparisons retain 24 exact cases and 33 artifact files;
+both clean targets retain 18 comparisons, 66 files and real SQLite cleanup.
+
+The final quality guard passes, as do 530 package/compiler/editor units and
+all seven runner host-tool cases, complete runner self-tests and seven emitted
+plans. The complete CLI unit selection exposed one omitted update to its
+independent eager schema: it lacked the new hidden worker variant, causing four
+parser-parity assertions to fail. The original result remains failed:
+152 passed, four failed and six existing ignored tests.
+
+Repair the independent fixture, preserve full ArgMatches/help/error comparisons,
+and exercise required workspace and paired admission arguments in both parsers.
+This changes test code only; no production parser or compiler behavior is relaxed.
+Run the full CLI units before further timing qualification. The compiler's
+conservative aggregate source identity includes this test file, so refresh paired
+binaries and preserve the observed candidate identities instead of relabeling
+the earlier execution records. Draft PR #4477 remains unreviewed and unmerged.
+Final scoped phase gates and every V5 scenario remain required.

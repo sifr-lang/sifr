@@ -60,6 +60,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Invocation-owned compiler protocol; selected by the SQL tool launcher.
+    #[command(name = "__sql-compiler-worker", hide = true)]
+    SqlCompilerWorker {
+        #[arg(long)]
+        workspace: PathBuf,
+        #[arg(long, requires = "admission_sha256")]
+        admission: Option<PathBuf>,
+        #[arg(long, requires = "admission")]
+        admission_sha256: Option<String>,
+    },
     /// Prepare matching stdlib toolchain metadata
     Sysroot(crate::metadata_cli::SysrootArgs),
     /// Inspect or safely prune owned generated artifacts
@@ -406,9 +416,30 @@ fn equivalent(args: &[&str], update: bool) {
 #[test]
 fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order() {
     for command in [
-        "sysroot", "cache", "build", "run", "fetch", "doctor", "init", "repair", "bridge",
-        "python", "check", "tree", "package", "publish", "vendor", "fmt", "lint", "lsp", "trace",
-        "emit", "test", "tools", "self",
+        "__sql-compiler-worker",
+        "sysroot",
+        "cache",
+        "build",
+        "run",
+        "fetch",
+        "doctor",
+        "init",
+        "repair",
+        "bridge",
+        "python",
+        "check",
+        "tree",
+        "package",
+        "publish",
+        "vendor",
+        "fmt",
+        "lint",
+        "lsp",
+        "trace",
+        "emit",
+        "test",
+        "tools",
+        "self",
     ] {
         for update in [false, true] {
             for suffix in [
@@ -739,5 +770,54 @@ fn test_lock_flag_combinations_keep_independent_schema_parity() {
                 );
             }
         }
+    }
+}
+
+#[test]
+fn sql_compiler_worker_cli_contract() {
+    for arguments in [
+        vec!["sifr", "__sql-compiler-worker", "--workspace", "project"],
+        vec![
+            "sifr",
+            "--sysroot",
+            "toolchain",
+            "__sql-compiler-worker",
+            "--workspace",
+            "project",
+            "--admission",
+            "receipt",
+            "--admission-sha256",
+            "digest",
+        ],
+    ] {
+        for update in [false, true] {
+            equivalent(&arguments, update);
+        }
+        assert!(crate::cli_model_and_entrypoint::Cli::try_parse_from(arguments).is_ok());
+    }
+    for arguments in [
+        vec!["sifr", "__sql-compiler-worker"],
+        vec!["sifr", "__sql-compiler-worker", "--workspace"],
+        vec![
+            "sifr",
+            "__sql-compiler-worker",
+            "--workspace",
+            "project",
+            "--admission",
+            "receipt",
+        ],
+        vec![
+            "sifr",
+            "__sql-compiler-worker",
+            "--workspace",
+            "project",
+            "--admission-sha256",
+            "digest",
+        ],
+    ] {
+        for update in [false, true] {
+            equivalent(&arguments, update);
+        }
+        assert!(crate::cli_model_and_entrypoint::Cli::try_parse_from(arguments).is_err());
     }
 }
