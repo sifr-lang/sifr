@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ad merged; V1ae SQL clean-build cost attribution; full phase open"
+current_stage: "V1ae SQL build costs measured; V1af allocation diagnostic; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14661,3 +14661,52 @@ This is fresh-build cost attribution, not host-sensitive performance acceptance
 or an adopted profile/scheduling/dependency change. Let the observed dominant
 units determine the next bounded repair. No valuable clean-build assertion,
 cross-platform exclusion, native integrity check or final V5 scenario changes.
+
+### V1ae outcome — clean SQL cost attributed
+
+The actual clean/unchanged/independent protocol passes with ordinary Cargo unit
+timing output: 393.397s protocol / 396.455s guarded. Clean A is 192.837s,
+unchanged A 0.594s, independent clean B 199.217s. Each clean build rebuilds all
+333 reported artifacts; unchanged rebuild reports zero rebuilt artifacts.
+All three linked executable byte comparisons pass. The owned independent target
+and per-build timing/message reports are retained; source is frozen and child
+cleanup complete. This instrumented fresh-build run is not timing acceptance.
+
+Cargo reports 385 timed units per clean build, including build-script phases.
+The largest overlapping units are AWS-LC native compilation (80.19s / 81.45s),
+PostgreSQL native compilation (40.28s / 41.04s), two syn versions (30-33s each),
+and sifr_sql_contract (28.58s / 30.39s). Three outer SQL-tool identity scripts
+each take roughly 15s. Their common source traversal includes 19,304 files and
+328,274,509 bytes, dominated by retained PostgreSQL and Ruff inputs. This inventory
+is stat-based attribution, not an isolated hash-time measurement; no inputs are
+silently excluded or trusted by metadata. Keep shared product-source ownership
+as a separate measured follow-up.
+
+Total accounted CPU is about 1,471s over 396s guarded, approximately 3.7 CPUs.
+The declared allocation is four jobs; eight CPUs are available. Maximum-process
+RSS is 520,120 KiB, which is not aggregate concurrent memory. These observations
+justify a bounded resource experiment, not an automatic global policy change.
+
+### V1af prospective diagnostic — SQL build allocation
+
+Compare the same clean SQL protocol under seven Cargo jobs, leaving one of the
+eight available CPUs reserved. Keep profile, dependencies, features, source,
+compiler, remap paths, target paths and all three executable-byte comparisons
+unchanged. Retain the original independent-B artifacts under an owned archival
+name before reusing the original empty A/B paths. Compare final executable hashes
+with the four-job run as an additional control.
+
+Use an explicit experimental working budget of 1 GiB per build job plus the
+existing 2 GiB memory reserve; admit only when current capacity satisfies it.
+Monitor aggregate owned process-tree RSS and available memory, retaining the
+existing reserve-abort and 1,800-second cap. Inspect actual target sizes and use
+a measured SQL-specific disk working allowance with the unchanged 20 GiB reserve.
+Do not infer aggregate peak from GNU time's maximum single-process RSS.
+
+Only the external diagnostic launch allocation changes. Canonical runner policy,
+dependency inputs, native identities, test selections and clean-build assertions
+remain unchanged. Report preparation and complete protocol time, output identities,
+CPU work, observed aggregate memory and any abort. This sequential diagnostic
+can establish feasibility; it is not a randomized speed claim or full-gate
+acceptance. Let results determine whether a scoped resource-policy proposal is
+worth adopting. Final V5 and complete correctness qualification remain mandatory.
