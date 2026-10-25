@@ -36,7 +36,7 @@ sifr_sql_contract = { workspace = true }
 wit-bindgen = { workspace = true }
 
 [build-dependencies]
-cc = { workspace = true }
+cc = { workspace = true, features = ["parallel"] }
 serde_json = { workspace = true }
 
 [dev-dependencies]
