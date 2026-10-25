@@ -135,6 +135,12 @@ pub fn emit_product_identity() -> io::Result<()> {
     ] {
         visit(root, &root.join(input), &mut hash)?;
     }
+    // Pair canonical compiler sources across native-tool feature/profile selections.
+    // This is source identity, not permission to execute a helper or package authentication.
+    println!(
+        "cargo:rustc-env=SIFR_COMPILER_SOURCE_ID={}",
+        hash.clone().finish()
+    );
     configuration(&mut hash)?;
     dependency_tokens(&mut hash);
     println!("cargo:rustc-env=SIFR_COMPILER_BUILD_ID={}", hash.finish());
