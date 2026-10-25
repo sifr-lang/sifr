@@ -95,7 +95,7 @@ async fn reading_a_plan_does_not_request_compiler_capabilities() {
     .await
     .expect_err("missing plan");
     assert!(
-        error.message.contains("migration plan"),
+        error.message.contains("migration execution plan"),
         "{}",
         error.message
     );
