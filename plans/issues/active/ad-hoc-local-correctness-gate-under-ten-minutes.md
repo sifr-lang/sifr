@@ -14022,3 +14022,46 @@ native SQL tools already enable cc/parallel through their resolved dependencies,
 whereas the standalone PostgreSQL parser test matrix does not. Enabling that
 feature cannot be claimed as a native SQL clean-build improvement. Its parser
 matrix benefit remains unmeasured and is not bundled into this fixture item.
+
+### V1v focused observations and debug-storage feasibility boundary
+
+At e6f2af0e979d63aaa1224b54aa034f35bc6d8ca7 the exact Arrow/tensor
+runtime case passes normally in 72.702s (77.268s guarded). Only the final
+generated-binary fingerprint was updated during that run; retained dependency
+fingerprints were not rebuilt. Its root invocation timestamp and completion span
+38.548s, which is a compilation completion interval, not a CPU-stage breakdown.
+The preceding source inputs retain their older mtimes. The initial freshness
+invalidation reason was not captured and remains unresolved.
+
+An adjacent process-traced run passes in 21.243s, launching no native compiler
+or linker. Within that instrumented observation, native Cargo build spans 1.567s,
+the interval after it exits until runtime launch is 10.049s, and runtime launch
+through exit is 0.010s. Process sampling shows substantial content reads in the
+post-Cargo interval; it does not separately instrument every publication stage.
+The following ordinary control passes in 10.135s (11.690s guarded). These are
+different cache states, not a measured source-change speedup.
+
+A scoped interposition of the seven earlier generated-project cases passes, then
+the same Arrow/tensor case passes in 10.468s under process tracing. Its executable
+and fingerprint metadata remain unchanged across both transitions, with no native
+compilation launch. This rejects those seven cases as an invalidator in this
+controlled sequence; it does not clear every intervening full-gate category.
+
+The executable is 894,150,648 bytes, including 694,971,197 debug-section bytes.
+This confirms the earlier V4an storage observation, not a newly discovered
+regression. V4al already removed the two redundant source reads. Preserve the
+remaining fresh identity, full destination-byte comparison and all runtime
+assertions rather than repeating that repair or trusting metadata alone.
+
+Before proposing any profile/publication change, permit one external-copy
+feasibility experiment using standard debug-section compression. Keep the
+original executable, source, Cargo inputs, target and fingerprints unchanged.
+Record the tool version, actual resource admission, transformation time and size;
+decompress into another owned external copy and compare section contents,
+including machine code, unwind tables, symbols and debug information. Run the
+original and compressed executables and require identical success, complete
+stdout and empty stderr. Failure or incomplete equivalence is not acceptance.
+Compression time is preparation work and must be charged. This experiment can
+establish storage/equivalence feasibility only: it cannot establish actual linker,
+whole-gate, cross-platform or V5 timing gains. Do not adopt post-build processing
+or weaken debugging/integrity contracts on the basis of file size alone.
