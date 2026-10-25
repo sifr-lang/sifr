@@ -105,7 +105,7 @@ fn authority() -> ProfileAuthority {
         pooling: PoolingMode::Session,
         session: SessionContract::default(),
         accepted_signers: BTreeSet::new(),
-        capabilities: BTreeSet::new(),
+        capabilities: BTreeSet::from(["sql.query.select".into()]),
         schema: SchemaIr {
             format_version: 1,
             provider: ProviderIdentity {
@@ -194,6 +194,17 @@ fn declarations_reject_invalid_ids_in_every_position_and_unknown_fields() {
         assert!(
             serde_json::from_value::<declarations::Declaration>(changed).is_err(),
             "{pointer}"
+        );
+    }
+    for index in 0..6 {
+        let mut changed = original.clone();
+        changed["steps"][index]["kind"]
+            .as_object_mut()
+            .unwrap()
+            .insert("unexpected".into(), json!(true));
+        assert!(
+            serde_json::from_value::<declarations::Declaration>(changed).is_err(),
+            "{index}"
         );
     }
     let mut changed = original;

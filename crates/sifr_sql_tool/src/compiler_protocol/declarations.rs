@@ -30,8 +30,8 @@ enum Kind {
     SqlData { statement: String },
     Assertion { statement: String },
     RecoveryPoint { name: String },
-    Begin,
-    Commit,
+    Begin {},
+    Commit {},
 }
 
 impl From<&MigrationSourceDeclaration> for Declaration {
@@ -68,8 +68,8 @@ impl From<&MigrationSourceStep> for Step {
                 MigrationSourceStepKind::RecoveryPoint { name } => {
                     Kind::RecoveryPoint { name: name.clone() }
                 }
-                MigrationSourceStepKind::Begin => Kind::Begin,
-                MigrationSourceStepKind::Commit => Kind::Commit,
+                MigrationSourceStepKind::Begin => Kind::Begin {},
+                MigrationSourceStepKind::Commit => Kind::Commit {},
             },
         }
     }
@@ -115,8 +115,8 @@ impl TryFrom<Step> for MigrationSourceStep {
                 Kind::SqlData { statement } => MigrationSourceStepKind::SqlData { statement },
                 Kind::Assertion { statement } => MigrationSourceStepKind::Assertion { statement },
                 Kind::RecoveryPoint { name } => MigrationSourceStepKind::RecoveryPoint { name },
-                Kind::Begin => MigrationSourceStepKind::Begin,
-                Kind::Commit => MigrationSourceStepKind::Commit,
+                Kind::Begin {} => MigrationSourceStepKind::Begin,
+                Kind::Commit {} => MigrationSourceStepKind::Commit,
             },
         })
     }

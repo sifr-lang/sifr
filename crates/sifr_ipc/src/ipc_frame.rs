@@ -292,7 +292,15 @@ pub fn decode_frame(bytes: &[u8], max_frame_bytes: u32) -> Result<IpcEnvelope, I
         });
     }
 
-    postcard::from_bytes(&bytes[payload_start..payload_end]).map_err(|_| IpcFrameError::Decode)
+    let (envelope, trailing) = postcard::take_from_bytes(&bytes[payload_start..payload_end])
+        .map_err(|_| IpcFrameError::Decode)?;
+    if !trailing.is_empty() {
+        return Err(IpcFrameError::TrailingBytes {
+            frame_len,
+            trailing: trailing.len(),
+        });
+    }
+    Ok(envelope)
 }
 
 #[cfg(test)]
@@ -462,6 +470,23 @@ mod tests {
             decode_frame(&bytes, IPC_DEFAULT_MAX_FRAME_BYTES),
             Err(IpcFrameError::Decode)
         );
+    }
+
+    #[test]
+    fn decode_rejects_unused_bytes_inside_declared_payload() {
+        for trailing in [vec![0], vec![1, 2, 3]] {
+            let mut bytes = encode_sample_hello();
+            bytes.extend_from_slice(&trailing);
+            let frame_len = u32::try_from(bytes.len() - 4).unwrap();
+            bytes[..4].copy_from_slice(&frame_len.to_le_bytes());
+            assert_eq!(
+                decode_frame(&bytes, IPC_DEFAULT_MAX_FRAME_BYTES),
+                Err(IpcFrameError::TrailingBytes {
+                    frame_len,
+                    trailing: trailing.len()
+                })
+            );
+        }
     }
 
     #[test]
