@@ -143,14 +143,6 @@ sha256_file() {
   fi
 }
 
-sha256_stream() {
-  if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum | awk '{print $1}'
-  else
-    shasum -a 256 | awk '{print $1}'
-  fi
-}
-
 release_rustflags() {
   local flags="${RUSTFLAGS:-}"
   local repo_root
@@ -181,16 +173,7 @@ release_rustflags() {
 }
 
 sysroot_content_sha256() {
-  local root="$1"
-  (
-    cd "${root}"
-    find Cargo.toml Cargo.lock .cargo/config.toml crates lib vendor -type f -print |
-      LC_ALL=C sort |
-      while IFS= read -r path; do
-        printf '%s\n' "${path}"
-        sha256_file "${path}"
-      done
-  ) | sha256_stream
+  python3 "${SCRIPT_DIR}/sysroot_content_digest.py" "$1"
 }
 
 require_sysroot_asset() {

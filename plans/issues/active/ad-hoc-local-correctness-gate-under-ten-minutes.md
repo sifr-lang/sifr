@@ -14985,3 +14985,9 @@ No compiler profile, feature union, allocation, cache identity or suite-selectio
 change belongs to this item. Do not relabel the interrupted diagnostic as passing.
 Final correctness-only create-pr/merge and every V5 scenario remain required;
 the full under-600-second objective is unproven.
+
+V1am first focused packaging execution failed before production because the
+user cleanup removed the declared owned temporary directory. Restore that same
+directory; add no fallback or source change. The six existing producer tests and
+four new digest tests then pass, with the original failure retained. Exact
+candidate and broader qualification remain pending.
