@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1s named qualification passed; exact-candidate independent review pending; full gates and V5 remain open
+current_stage: V1s merged; V1t complete integrated diagnostic; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13794,3 +13794,70 @@ through locked namespace dispatch would join the already independently tested
 boundaries; name and explain the existing five-second cleanup bound when that
 code is next changed. Revisit eager admission cost only with measured evidence
 and unchanged pre-launch input authority. Final gates and V5 remain open.
+
+
+### V1s closure — native SQL compiler execution boundary
+
+PR #4477 merged as 44ea1b2b2803ab2d82eb14f3a28c22ccf388e62e.
+The merged Git tree exactly matches reviewed candidate
+f9ef1aa18c56b568b20a2bf1e117980ff7ec3ab5. Implementation evidence remains at
+ba0bb4eb3c54fa62570203063af2f4b21dfe0735, with exact unchanged-input proofs
+through the two documentation-only successors; earlier owner/runner evidence
+keeps its separately recorded e582 candidate. No run is relabelled.
+
+Independent review accepted the implementation and evidence, initially blocking
+on outdated prose. The narrow documentation confirmation is SATISFIED with no
+blocking findings and explicitly carries unchanged implementation acceptance
+forward. Its response SHA-256 is
+f3f083d4d9826455abbdf987951a62537d735d945e54f02e73908a1584d59fe7.
+Both original and completion responses remain outside the reviewed Git tree,
+keyed to their candidates; the original NOT SATISFIED response is preserved.
+The acceptance archive contains 2,924 locally size/hash-verified payloads,
+SHA-256 e4e9a5b38905320ba8435baadd6b6c0e8ae7fb77d648be08916590e695cb05a6.
+The final documentation proof and review completion accompany that archive.
+
+The refreshed clean protocol is 422.462s guarded, versus the earlier recorded
+878.767s at its observed candidate. All three actual executable hashes match;
+real commands from both clean targets pass separately in 127.958s. This is a
+category improvement, not a complete-gate timing result. Source/installed
+execution, negative controls, native/compiler-enabled inventories and named
+affected contracts are accounted for above. Full phase gates and V5 remain open.
+
+Retain nonblocking integration follow-ups from review: one real locked namespace
+SQL operation joining the separately qualified boundaries, a named explanation
+for the existing cleanup deadline when its code is next changed, and measured
+investigation of eager admission cost without losing pre-launch authority.
+Source identity hashes its declared relative inputs, excluding documentation and
+the existing ignored directories; it is not a hash of every filesystem byte.
+
+### V1t prospective execution — complete integrated failure discovery
+
+Run one fresh diagnostic of the complete current-host merge correctness selection
+after the integrated SQL changes. Generate the selection from the canonical
+profile and preparation graph. Expand individual crate configurations for
+attribution; preserve every selected area, variant, guardrail, native generated
+case and E2E fixture. This item is measurement and accounting, not a production
+optimization or final phase acceptance.
+
+Before execution verify pinned tool versions, exact frozen candidate, capacity,
+allocation and retained targets. Retain older owned incremental artifacts with
+checksum/metadata verification and their logical paths to restore working
+headroom. Charge actual candidate preparation to its category; do not present a
+prewarmed subset as the complete result.
+
+Use ordinary untraced callbacks with failure continuation and a 1,800-second cap
+per category. Block consumers of failed prerequisites and retain their reason;
+continue independent categories. Stop for unexpected tracked changes, unsafe
+preparation or capacity reserve failure. Record and separately schedule every
+unexecuted category after its prerequisite is resolved. Do not rerun unchanged
+successful categories unless their input-bound protocol permits or requires it.
+No missing execution or required skip is a pass.
+
+Acceptance is complete accounting: emitted selection versus executed/failed/
+capped/blocked categories, selected test and case inventories, actual child
+cleanup, preparation and category elapsed times, and the three largest remaining
+costs. Distinguish category sums, overlapping internal observations and wall time.
+Use those current results to register the next bounded root-cause repair before
+editing implementation. Focused profiling may follow only for a measured slow
+case. The full facade create-pr/merge gates and every V5 timing/invalidation
+scenario remain required; this separately capped diagnostic cannot replace them.

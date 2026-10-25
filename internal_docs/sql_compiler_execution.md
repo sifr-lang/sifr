@@ -2,8 +2,8 @@
 
 The LOCAL-GATE V1s phase owns this change. This document records the implemented
 call and lifetime contract. Source, installed and sandbox execution and the
-independent native build protocol have named qualification; scoped independent
-review and complete LOCAL-GATE acceptance remain pending.
+independent native build protocol have named qualification and scoped independent
+review. Complete LOCAL-GATE acceptance remains pending.
 
 ## Ownership and entrypoints
 
@@ -96,8 +96,7 @@ in-process semantics for all three providers and reject input drift. Native sour
 focused development qualification. Ordinary binaries use the worker adapter and
 no longer select the optional embedded compiler feature. Explicit compiler-enabled
 test commands preserve the existing in-process API coverage. Named affected contracts and clean executable qualification pass at the
-recorded candidates in the phase. Independent review and the complete phase gate
-remain open.
+recorded candidates in the phase. Scoped independent review passed; the complete phase gate remains open.
 
 The worker fixes its frozen graph and profile inputs at initial preparation.
 Migration input bytes are pinned at the first source request and checked before
