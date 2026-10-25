@@ -173,3 +173,21 @@ fn canonical_worker_rejects_migration_drift_between_requests() {
             .contains("changed")
     );
 }
+
+#[test]
+fn admitted_metadata_roundtrip_preserves_the_complete_frozen_snapshot() {
+    let project = project("sqlite", "3.53.4");
+    let inputs = super::sql_compiler_inputs::Inputs::capture(project.root.path())
+        .expect("canonical capture");
+    let (snapshot, owner) = inputs.snapshot.as_ref().expect("canonical graph");
+    let metadata = (snapshot.metadata.clone(), owner.0.clone());
+    let bytes = serde_json::to_vec(&metadata).expect("admitted metadata");
+    let recovered = serde_json::from_slice(&bytes).expect("paired metadata model");
+    let replayed =
+        super::sql_compiler_inputs::Inputs::from_metadata(project.root.path(), Some(&recovered))
+            .expect("canonical reconstruction");
+    assert!(
+        inputs == replayed,
+        "graph, source map and input identities must remain exact"
+    );
+}

@@ -12,6 +12,8 @@ const CHANGED: &str = "SQL compiler admitted project inputs changed";
 #[serde(deny_unknown_fields)]
 pub(crate) struct Admission {
     root: PathBuf,
+    metadata: Option<(sifr_package::NormalizedCargoMetadata, String)>,
+    graph_identity: Option<(String, String)>,
     files: BTreeMap<PathBuf, (PathBuf, String)>,
     absent: BTreeSet<PathBuf>,
     profile_names: BTreeSet<String>,
@@ -27,8 +29,15 @@ impl Admission {
             .filter(|path| !inputs.files.contains_key(path))
             .collect();
         let migrations = Self::migration_pins(&root, &inputs.profile_names)?;
+        let metadata = inputs
+            .snapshot
+            .as_ref()
+            .map(|(snapshot, owner)| (snapshot.metadata.clone(), owner.0.clone()));
+        let graph_identity = inputs.graph_identity()?;
         let result = Self {
             root,
+            graph_identity,
+            metadata,
             files: inputs.files,
             absent,
             profile_names: inputs.profile_names,
@@ -71,9 +80,19 @@ impl Admission {
         Ok(())
     }
 
+    pub(crate) fn inputs(&self) -> Result<Inputs, String> {
+        self.verify()?;
+        let inputs = Inputs::from_metadata(&self.root, self.metadata.as_ref())?;
+        self.verify_inputs(&inputs)?;
+        Ok(inputs)
+    }
+
     pub(crate) fn verify_inputs(&self, inputs: &Inputs) -> Result<(), String> {
         self.verify()?;
-        if inputs.files != self.files || inputs.profile_names != self.profile_names {
+        if inputs.files != self.files
+            || inputs.profile_names != self.profile_names
+            || inputs.graph_identity()? != self.graph_identity
+        {
             return Err(CHANGED.into());
         }
         Ok(())

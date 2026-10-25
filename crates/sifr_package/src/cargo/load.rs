@@ -104,18 +104,7 @@ pub fn load_package_graph_snapshot(
                 },
             }
         })?;
-    let normalized = metadata.normalize();
-    let graph =
-        derive_package_graph_from_normalized(&normalized, provider).map_err(|diagnostics| {
-            PackageGraphLoadFailure {
-                plan: plan.clone(),
-                kind: PackageGraphLoadFailureKind::Package {
-                    diagnostics,
-                    usage_error: false,
-                },
-            }
-        })?;
-    let source_map = PackageSourceMap::build(&graph, provider).map_err(|diagnostics| {
+    package_graph_snapshot_from_metadata(metadata.normalize(), provider).map_err(|diagnostics| {
         PackageGraphLoadFailure {
             plan,
             kind: PackageGraphLoadFailureKind::Package {
@@ -123,9 +112,19 @@ pub fn load_package_graph_snapshot(
                 usage_error: false,
             },
         }
-    })?;
+    })
+}
+
+/// Reconstruct through the same canonical graph/source-map authority from metadata
+/// already admitted by the invocation owner. This function performs no Cargo invocation.
+pub fn package_graph_snapshot_from_metadata(
+    metadata: NormalizedCargoMetadata,
+    provider: &mut impl SourceProvider,
+) -> Result<PackageGraphSnapshot, Vec<PackageDiagnostic>> {
+    let graph = derive_package_graph_from_normalized(&metadata, provider)?;
+    let source_map = PackageSourceMap::build(&graph, provider)?;
     Ok(PackageGraphSnapshot {
-        metadata: normalized,
+        metadata,
         graph,
         source_map,
     })

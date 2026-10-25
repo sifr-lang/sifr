@@ -27,7 +27,7 @@ pub use crate::cargo::invocation_trace::{
 };
 pub use crate::cargo::load::{
     PackageGraphLoadFailure, PackageGraphLoadFailureKind, PackageGraphSnapshot,
-    load_package_graph_snapshot,
+    load_package_graph_snapshot, package_graph_snapshot_from_metadata,
 };
 pub use crate::cargo::lock_modes::{CargoLockMode, validate_offline_source_availability};
 pub use crate::cargo::metadata::{

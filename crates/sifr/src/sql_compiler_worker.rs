@@ -57,10 +57,10 @@ impl Worker {
             admission.verify()?;
         }
         if self.prepared.is_none() {
-            let inputs = Inputs::capture(&self.root)?;
-            if let Some(admission) = admission {
-                admission.verify_inputs(&inputs)?;
-            }
+            let inputs = match admission {
+                Some(admission) => admission.inputs()?,
+                None => Inputs::capture(&self.root)?,
+            };
             let profiles = match &inputs.snapshot {
                 Some((snapshot, owner)) => {
                     prepare_sql_profiles(&snapshot.graph, owner).map_err(messages)?

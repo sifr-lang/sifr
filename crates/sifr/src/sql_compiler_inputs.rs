@@ -20,6 +20,34 @@ impl Inputs {
                     .collect::<Vec<_>>()
                     .join("\n")
             })?;
+        Self::from_snapshot(root, snapshot)
+    }
+
+    pub(crate) fn from_metadata(
+        root: &Path,
+        metadata: Option<&(sifr_package::NormalizedCargoMetadata, String)>,
+    ) -> Result<Self, String> {
+        let snapshot = metadata
+            .map(|(metadata, owner)| {
+                let snapshot = sifr_package::package_graph_snapshot_from_metadata(
+                    metadata.clone(),
+                    &mut sifr_frontend::DiskSourceProvider::new(),
+                )
+                .map_err(package_messages)?;
+                let owner = SifrPackageId(owner.clone());
+                if !snapshot.graph.packages.contains_key(&owner) {
+                    return Err("SQL compiler admitted graph owner is missing".to_owned());
+                }
+                Ok((snapshot, owner))
+            })
+            .transpose()?;
+        Self::from_snapshot(root, snapshot)
+    }
+
+    fn from_snapshot(
+        root: &Path,
+        snapshot: Option<(PackageGraphSnapshot, SifrPackageId)>,
+    ) -> Result<Self, String> {
         let mut paths = BTreeSet::new();
         let mut profile_names = BTreeSet::new();
         for name in ["Cargo.toml", "Cargo.lock", "sifr.toml"] {
@@ -33,6 +61,14 @@ impl Inputs {
             paths.insert(snapshot.metadata.workspace_root.join("Cargo.lock"));
             for package in snapshot.metadata.packages.values() {
                 paths.insert(package.manifest_path.clone());
+            }
+            for module in snapshot
+                .source_map
+                .modules
+                .values()
+                .chain(snapshot.source_map.ambiguous_modules.values().flatten())
+            {
+                paths.insert(module.file_path.clone());
             }
             for package in snapshot.graph.packages.values() {
                 paths.insert(package.sifr_manifest.clone());
@@ -85,11 +121,37 @@ impl Inputs {
         })
     }
 
+    pub(crate) fn graph_identity(&self) -> Result<Option<(String, String)>, String> {
+        self.snapshot
+            .as_ref()
+            .map(|(snapshot, _)| {
+                Ok((
+                    sifr_package::digest_package_graph(&snapshot.graph)?.hex,
+                    sifr_package::digest_package_source_map(&snapshot.source_map)?.hex,
+                ))
+            })
+            .transpose()
+    }
+
     pub(crate) fn verify(&self, root: &Path) -> Result<(), String> {
-        if Self::capture(root)? != *self {
-            return Err(
-                "SQL compiler project, lock or schema inputs changed during the session".into(),
-            );
+        const CHANGED: &str =
+            "SQL compiler project, lock or schema inputs changed during the session";
+        // The graph is frozen. Re-running Cargo here would re-admit project
+        // configuration after the confined tool had started, and repeat work.
+        for name in ["Cargo.toml", "Cargo.lock", "sifr.toml"] {
+            let path = root.join(name);
+            if path
+                .try_exists()
+                .map_err(|error| format!("{CHANGED}: {error}"))?
+                != self.files.contains_key(&path)
+            {
+                return Err(CHANGED.into());
+            }
+        }
+        for (path, expected) in &self.files {
+            if pin(path).map_err(|error| format!("{CHANGED}: {error}"))? != *expected {
+                return Err(CHANGED.into());
+            }
         }
         Ok(())
     }
