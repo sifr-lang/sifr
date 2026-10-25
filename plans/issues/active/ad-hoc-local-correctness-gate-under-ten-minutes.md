@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1o merged; V1p artifact/confinement feasibility complete; V1q native SQL input ownership; full gates and V5 remain open
+current_stage: V1q merged; V1r capability assertion inventory repair; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13269,3 +13269,79 @@ Named intermediate acceptance:
 This item changes dependency ownership, not installation or confinement. Do not
 claim complete CLI clean-build savings from a library-only graph. Final scoped
 create-pr/merge, full independent builds and every V5 scenario stay mandatory.
+
+### V1q closure — explicit native SQL input ownership
+
+PR [#4475](https://github.com/sifr-lang/sifr/pull/4475) merged as
+2e174a7a1ad148777325221e3fe4185e6c07eadb. Reviewed candidate
+1da013e6a2400d4a43c440923277e3b9dc6f07ed has the exact merged tree.
+The three complete native tool libraries accept canonical profile/source
+callables; default public entrypoints and standalone CLI behavior retain their
+in-process compiler adapter. No production transport, installation or grant
+change is adopted.
+
+Fourteen new boundary regressions pass. Default tool/contract tests: 83 passed;
+native libraries without the compiler feature: 29 passed. Both retain the same
+five explicitly ignored live-service tests. All prior names and multiplicities
+remain, including 54 contract/tool tests. Actual emitted native dependency graphs
+exclude semantic services, frontend/lowering/codegen and Wasmtime/Cranelift/Pulley.
+
+Twenty-four default/injected command comparisons preserve output, exit behavior,
+diagnostics and all 33 schema/migration artifact files across three providers.
+Both SQLite entrypoints provision real database files, pass integrity checks and
+clean up. Invalid profile/provider inputs fail before effects. Existing native
+migration assertions remain executed. The three plan reads invoke neither
+compiler callable. The diagnostic producer remains canonical; mock callbacks
+only exercise failures/control flow in focused tests.
+
+Final checks pass: formatting, size, metadata/filesystem inventories, dependency
+direction, SQL/component/input guards, 21 native boundary mutations, 15 dependency
+audit tests, all five canonical host-tools cases and complete runner self-tests.
+All seven profile plans remain exact; the SQL manifest only adds the two intended
+native-library cases. The host-tools suite took 105.125s including preparation;
+runner self-tests 69.843s. These are scoped observations, not full-gate timing.
+
+Implementation execution remains bound to ad68c01ad5ee115633ac564597629e1ad911a7c4.
+Subsequent documentation and filesystem classification changes preserve all six
+declared compiler-identity root objects and executable hashes. Final policy and
+runner checks execute on the reviewed candidate. Unchanged component inputs and
+valid receipts require no producer regeneration.
+
+Preserve failed/incomplete attempts: the new PostgreSQL assertion's diagnostic
+substring, capacity admission/cancellation, external probe pin mismatch, stale
+copied baseline identity, missing database connection expectation, MySQL fixture
+without a recovery point, and provisioning probe JSON-key spelling. Canonical
+behavior determined each repair; no product rule was relaxed. The fourth command
+run completed 22 comparisons before its harness failure; the fifth continued only
+remaining provisioning checks and removed the retained owned database. Do not
+relabel the fourth aggregate receipt as passing.
+
+Evidence archive v1q-evidence.tar.gz: 1,103 payloads; SHA-256
+88641d5a47a98087460b6b8a7fe61ceaede6a4e7b0f086d27012f32a258c3129.
+Independent review SATISFIED, no blockers; response SHA-256
+516eb5b0648ab82cda40a16e31683478dc9cabdb2995ada765c2e29dad75f678.
+Nonblocking suggestions about manifest display entry, future crate deny-list
+maintenance and formatting remain optional follow-up work.
+
+A pre-existing method-authority inventory omission in V1o's host-capability
+identity test remains assigned below. Its source and inventory are identical at
+the V1q base; no pass is claimed. Default standalone tools still link the
+compiler. The last complete SQL clean-build observation remains 878.767s.
+Full scoped gates, independent executable builds and every V5 remain open.
+
+### V1r prospective execution — classify the existing capability assertion
+
+Own the V1o follow-up identified by the V1q checks and independent review.
+Add exactly the missing method-authority row for
+identity_records_selected_host_capability in compiled_identity.rs, classified as
+test-assertion with its real enclosing inputs, token fingerprint and test-owner.
+Keep the Rust assertion, semantic classifier, discovery breadth and all existing
+inventory records unchanged. This fixes incomplete verification bookkeeping; it
+does not optimize compiler execution or waive an unclassified site.
+
+Named acceptance: the real method-authority guard; its existing mutation/self-test
+suite; explicit before/after evidence that only this discovered row is added,
+removing it still fails and a production-semantic classification is rejected;
+file-size and documentation/diff checks; exact-candidate independent review.
+No compiler rebuild is required because no compiler or test implementation
+changes. Full final gates and V5 remain required.
