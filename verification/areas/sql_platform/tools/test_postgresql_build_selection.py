@@ -56,7 +56,7 @@ class PostgreSqlBuildSelectionTests(unittest.TestCase):
             calls = [c for c in run.call_args_list if c.args[0][0] == "cargo"]
             self.assertEqual(len(calls), 1)
             command = calls[0].args[0]
-            self.assertEqual(command[command.index("--features") + 1], f"sifr_sql_postgresql/postgresql-{major}")
+            self.assertEqual(command[command.index("--features") + 1], f"sifr_sql_postgresql_tools/compiler,sifr_sql_postgresql/postgresql-{major}")
             self.assertNotIn("SIFR_POSTGRESQL_MAJOR", calls[0].kwargs["env"])
             self.assertEqual(calls[0].kwargs["env"]["SIFR_POSTGRESQL_SCHEMA_TOOL_TEST_MAJOR"], str(major))
 
@@ -73,7 +73,7 @@ class PostgreSqlBuildSelectionTests(unittest.TestCase):
             calls = [c for c in run.call_args_list if c.args[0][0] == "cargo"]
             self.assertEqual(len(calls), 1)
             command = calls[0].args[0]
-            self.assertEqual(command[command.index("--features") + 1], f"sifr_sql_postgresql/postgresql-{major}")
+            self.assertEqual(command[command.index("--features") + 1], f"sifr_sql_postgresql_tools/compiler,sifr_sql_postgresql/postgresql-{major}")
             self.assertNotIn("SIFR_POSTGRESQL_MAJOR", calls[0].kwargs["env"])
             self.assertEqual(calls[0].kwargs["env"]["SIFR_POSTGRESQL_MIGRATION_TEST_MAJOR"], str(major))
 

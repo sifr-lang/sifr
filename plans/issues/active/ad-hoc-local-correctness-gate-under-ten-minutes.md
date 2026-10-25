@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1s named qualification passed; exact-candidate independent review pending; full gates and V5 remain open
+current_stage: V1s merged; V1t complete integrated diagnostic; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13794,3 +13794,175 @@ through locked namespace dispatch would join the already independently tested
 boundaries; name and explain the existing five-second cleanup bound when that
 code is next changed. Revisit eager admission cost only with measured evidence
 and unchanged pre-launch input authority. Final gates and V5 remain open.
+
+
+### V1s closure — native SQL compiler execution boundary
+
+PR #4477 merged as 44ea1b2b2803ab2d82eb14f3a28c22ccf388e62e.
+The merged Git tree exactly matches reviewed candidate
+f9ef1aa18c56b568b20a2bf1e117980ff7ec3ab5. Implementation evidence remains at
+ba0bb4eb3c54fa62570203063af2f4b21dfe0735, with exact unchanged-input proofs
+through the two documentation-only successors; earlier owner/runner evidence
+keeps its separately recorded e582 candidate. No run is relabelled.
+
+Independent review accepted the implementation and evidence, initially blocking
+on outdated prose. The narrow documentation confirmation is SATISFIED with no
+blocking findings and explicitly carries unchanged implementation acceptance
+forward. Its response SHA-256 is
+f3f083d4d9826455abbdf987951a62537d735d945e54f02e73908a1584d59fe7.
+Both original and completion responses remain outside the reviewed Git tree,
+keyed to their candidates; the original NOT SATISFIED response is preserved.
+The acceptance archive contains 2,924 locally size/hash-verified payloads,
+SHA-256 e4e9a5b38905320ba8435baadd6b6c0e8ae7fb77d648be08916590e695cb05a6.
+The final documentation proof and review completion accompany that archive.
+
+The refreshed clean protocol is 422.462s guarded, versus the earlier recorded
+878.767s at its observed candidate. All three actual executable hashes match;
+real commands from both clean targets pass separately in 127.958s. This is a
+category improvement, not a complete-gate timing result. Source/installed
+execution, negative controls, native/compiler-enabled inventories and named
+affected contracts are accounted for above. Full phase gates and V5 remain open.
+
+Retain nonblocking integration follow-ups from review: one real locked namespace
+SQL operation joining the separately qualified boundaries, a named explanation
+for the existing cleanup deadline when its code is next changed, and measured
+investigation of eager admission cost without losing pre-launch authority.
+Source identity hashes its declared relative inputs, excluding documentation and
+the existing ignored directories; it is not a hash of every filesystem byte.
+
+### V1t prospective execution — complete integrated failure discovery
+
+Run one fresh diagnostic of the complete current-host merge correctness selection
+after the integrated SQL changes. Generate the selection from the canonical
+profile and preparation graph. Expand individual crate configurations for
+attribution; preserve every selected area, variant, guardrail, native generated
+case and E2E fixture. This item is measurement and accounting, not a production
+optimization or final phase acceptance.
+
+Before execution verify pinned tool versions, exact frozen candidate, capacity,
+allocation and retained targets. Retain older owned incremental artifacts with
+checksum/metadata verification and their logical paths to restore working
+headroom. Charge actual candidate preparation to its category; do not present a
+prewarmed subset as the complete result.
+
+Use ordinary untraced callbacks with failure continuation and a 1,800-second cap
+per category. Block consumers of failed prerequisites and retain their reason;
+continue independent categories. Stop for unexpected tracked changes, unsafe
+preparation or capacity reserve failure. Record and separately schedule every
+unexecuted category after its prerequisite is resolved. Do not rerun unchanged
+successful categories unless their input-bound protocol permits or requires it.
+No missing execution or required skip is a pass.
+
+Acceptance is complete accounting: emitted selection versus executed/failed/
+capped/blocked categories, selected test and case inventories, actual child
+cleanup, preparation and category elapsed times, and the three largest remaining
+costs. Distinguish category sums, overlapping internal observations and wall time.
+Use those current results to register the next bounded root-cause repair before
+editing implementation. Focused profiling may follow only for a measured slow
+case. The full facade create-pr/merge gates and every V5 timing/invalidation
+scenario remain required; this separately capped diagnostic cannot replace them.
+
+### V1t completion — integrated failure discovery
+
+Frozen candidate 28cf17f85c43edf25e1b68b1cf6d6107d9e3bc8b completed all
+72 selected diagnostic categories: 70 pass, two fail, no capped or unexecuted
+categories. All 18 preparations, 15 guards, 18 crate configurations and the
+positive E2E category pass. Of 20 verification areas, developer-tooling and
+SQL-platform each retain one failed variant; all other selected variants pass.
+Three preflight capacity stops occurred before their callbacks and are retained
+separately. Each resumption preserved completed results and reran only work that
+had not executed. Every completed category records an empty owned process session,
+with no unexpected tracked changes or leftover child signalling.
+
+| Category | Selections | Sum of observed guarded durations |
+| --- | ---: | ---: |
+| Preparation | 18 | 3047.944s |
+| Verification areas | 20 | 3012.469s |
+| Crate configurations | 18 | 1937.618s |
+| Guardrails | 15 | 212.367s |
+| Positive E2E | 1 | 300.856s |
+| Total observed category work | 72 | 8511.254s |
+
+These are separate capped callbacks accumulated across resumptions, including
+actual preparation, not a continuous facade timing or unchanged-input median.
+Capacity maintenance, pauses and overlapping nested observations are not added
+to this sum. This run is not final create-pr/merge or V5 acceptance.
+
+The three largest categories are SQL-platform (862.240s), generated driver tests
+(832.777s), and crate preparation (610.189s). SQL's actual independent clean-build
+qualification passes in 399.851s, and the PostgreSQL parser matrix passes in
+267.540s. SQL's failure is the command-selection self-test described below.
+Sysroot qualification takes 593.492s, with all four variants passing.
+The CLI/lowering configuration passes in 558.032s; its test-body observations
+include SQL applications 235.19s and the other E2E harness tests 152.60s.
+Ordinary driver tests pass in 327.372s.
+
+Generated selections reconcile exactly against their actual inventories and
+scheduler outcomes: six CLI cases and 81 driver cases, plus one separately
+executed driver preparation helper. The CLI category takes 50.229s with two
+admitted workers; the driver category takes 832.777s with one admitted worker
+under the existing memory policy. The driver's invocation sums are Rust interop
+515.346s (41 cases), Python integration 52.940s (nine cases), and other checks
+255.616s (31 cases). The Python observation is lower than the historical 284s
+group, but differing candidate/cache conditions prevent a controlled speedup
+claim. Existing conditional and helper ignores remain explicit transcript
+observations, never counted as passes solely because they were ignored.
+
+All 732 physical positive fixtures reconcile with source compilation, membership
+of 186 native attempts, and runtime outcomes. All event spans close successfully.
+The installed metadata supplement separately retains 745 command records,
+including 732 public emission cases and four native cases; source corpus and
+every nested command's stdout/stderr hashes were verified. Wrapper variant and
+libtest summary counts are not misrepresented as unique atomic assertion counts.
+
+The evidence archive contains 2311 remotely and locally size/hash-verified
+payloads, SHA-256
+bb918e07bf7d426774187c46af76c8df2da0ebf8728173bedd5c8e60264169ee.
+Original failures, capacity attempts, allocation records, helper differences,
+source logs, emitted selection, case inventories and cleanup receipts remain
+retained outside Git. The sortable report includes all categories, individual
+preparation commands, area variants, crate harnesses, generated case invocations,
+E2E stages/fixtures and CPU accounting.
+
+Investigative leads are not accepted fixes. The prepared Arrow/tensor scenario
+costs 82.492s during preparation and 72.184s during its later runtime invocation,
+using the same test binary and retained scenario helper; profile that invocation
+before attributing its cost. Metadata corpus executions in the driver and
+sysroot area use different compiler-version/sysroot inputs and cannot simply be
+deduplicated. Resolve actual C compilation features before considering parallel
+C compilation. Any crate grouping change must prove feature and inventory
+equivalence. Full facade gates and every V5 scenario remain open.
+
+### V1u prospective execution — SQL verification integration omissions
+
+Repair the two V1s integration omissions discovered by V1t as one bounded batch.
+Document the five physical input probes/reads in sql_compiler_inputs.rs under
+their real package/sandbox admission ownership. Keep the scanner unchanged and
+do not introduce a general source-provider exception. Update both strict
+PostgreSQL live-command construction expectations to include the explicit
+sifr_sql_postgresql_tools/compiler feature alongside each selected provider
+major. Preserve the 13–18 matrix, environment checks, command selection,
+failure propagation and live-service exclusions.
+
+Run the affected filesystem-transfer guard and its controls, PostgreSQL command
+selection/build-input self-tests, file-size guardrail and diff/link checks.
+Production Rust, dependencies, profile selections and runtime assertions are
+unchanged; preserve V1t at its observed candidate and prove that unchanged input
+boundary. Obtain exact-candidate scoped independent review before merging this
+intermediate repair under the approved phase policy. Do not repeat unrelated
+successful categories. Final scoped facade gates and complete V5 qualification
+remain required.
+
+### V1u focused validation
+
+Candidate 06aac8de051ef66e4f19535c506190d06d58654d passes the affected
+transfer guard (13.386s), its negative controls (0.206s), all five PostgreSQL
+command-selection/build-input tests (1.910s), file-size guardrail (3.771s), and
+base-to-candidate diff check. Total focused validation is 20.054s.
+Exact Git-tree comparison against V1t preserves 35,094 tracked entries; only the
+inventory document, two strict test expectations and this phase record change.
+Production Rust, locks, fixtures and profile/runner inputs remain unchanged.
+Original V1t failures are preserved at their observed candidate. This
+documentation-only validation record requires unchanged-input/link checks and
+exact-candidate scoped review before the intermediate merge; it does not close
+the final correctness or timing criteria.
