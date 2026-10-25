@@ -15184,3 +15184,47 @@ Check disk, memory, effective CPU and target size before starting. Each build or
 qualification category retains its independent 1,800-second cap, reserve guard,
 complete output evidence and process cleanup. Preserve failed/incomplete results.
 Final correctness-only gates and all V5 scenarios remain OPEN and mandatory.
+
+### V1ap outcome — reject the final-executable-only LTO control
+
+Preparation copied 3,893 files (1,835,288,011 bytes) into an independent target.
+The final-crate lto=off experiment was deliberately cancelled at 164.807s, before
+completion, because it does not implement the intended control. Retained release
+rlib code members contain LLVM bitcode (BC c0 de magic), verified independently
+in sifr_driver, sifr_codegen and sifr_sysroot archives. rust-lld was consuming
+approximately four CPUs after rustc entered its link step. The captured link
+command and object inventory explain why final-only flag changes can move LLVM
+optimization/code generation into the linker instead of removing it.
+
+This is a rejected experimental design, not a product failure or passing runtime
+measurement. The thin arm and both qualifications were not executed. The guard
+terminated descendants and confirmed the owned session empty. Every original
+release-target file hash remained unchanged. Preserve all cancelled evidence;
+no source/profile change was adopted. Archive v1ap-evidence.tar.gz SHA-256:
+db8ceb44e25399ac1076a7d310829c66583ab44e2c06ff0c2fafa7530c27f67e.
+
+### V1aq prospective feasibility — consistent complete release LTO graphs
+
+Replace the rejected control with two fresh, separate owned targets on the same
+filesystem. Build the complete canonical release CLI graph with Cargo profile
+LTO explicitly false versus thin. False removes cross-crate LTO while retaining
+Cargo's normal local optimization policy. Keep opt-level, codegen units, package
+overrides, features, versions, lockfiles, source, host/toolchain and worker count
+fixed. Use equivalent canonical path maps for each target. Do not reuse bitcode-
+only libraries across arms. Preserve ordinary Cargo JSON and timing records,
+resolved artifact features/profile settings, executable identities and failures.
+The historical three-worker cold build is not the matched baseline.
+
+Qualify both actual native packages against the complete independently verified
+reference with the unchanged installed qualification, including all 732 public
+emissions, four native programs and integrity/generation/rejection/recovery
+controls. Separate build, packaging and execution times. Treat the first pair as
+feasibility only; any adoption requires a repeated matched compiler execution
+comparison, scoped implementation review and applicable full correctness/V5
+acceptance. Do not infer unchanged compiler throughput from unchanged output.
+No production policy is changed by environment-controlled experimental builds.
+
+Retain the same source freeze, capacity admission/reserves, process ownership
+and independent 1,800-second cap for every build/qualification category. Cancel
+an invalid experiment rather than running expensive dependent categories.
+Preserve failures, and block dependent categories when prerequisites fail.
