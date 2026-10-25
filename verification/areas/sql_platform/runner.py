@@ -217,6 +217,9 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_frontend", "-p", "sifr_analysis",
         "-p", "sifr_lsp",
     ],
+    "sql-compiler-native-command-tests": [
+        sys.executable, str(AREA_ROOT / "tools" / "check_compiler_execution.py"),
+    ],
     "sql-compiler-session-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_tool", "--features",
         "__compiler_fixture", "--test", "compiler_session", "--test", "native_compiler",

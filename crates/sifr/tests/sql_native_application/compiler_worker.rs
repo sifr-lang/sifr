@@ -21,7 +21,7 @@ def reverse[S: MigrationState](own plan: MigrationPlan[S]) -> MigrationPlan[S]:
     return plan.ddl(t"ALTER TABLE accounts DROP COLUMN status")
 "#;
 
-fn project(family: &str, version: &str) -> Project {
+pub(super) fn project(family: &str, version: &str) -> Project {
     let project = Project::with_provider(family, version);
     let mut command = Command::new("cargo");
     command

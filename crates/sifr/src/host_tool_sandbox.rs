@@ -33,6 +33,7 @@ pub(super) struct SandboxedToolOutput {
 
 pub(super) struct SandboxedToolRequest<'a> {
     pub(super) executable: &'a Path,
+    pub(super) compiler_executable: &'a Path,
     pub(super) args: &'a [String],
     pub(super) workspace_root: &'a Path,
     pub(super) namespace: &'a str,
@@ -55,6 +56,7 @@ pub(super) fn run_sandboxed_tool(
         Some(super::host_tool_compiler::LazyCompiler::attach(
             &mut command,
             request.workspace_root,
+            request.compiler_executable,
         )?)
     } else {
         None

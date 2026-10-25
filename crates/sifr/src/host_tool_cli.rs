@@ -101,7 +101,18 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         );
         return EXIT_USAGE_OR_CONFIG;
     }
+    let compiler_executable = match std::env::current_exe() {
+        Ok(path) => path,
+        Err(error) => {
+            render_tool_error(
+                &format!("cannot identify the invoking compiler: {error}"),
+                format,
+            );
+            return EXIT_INTERNAL_COMPILER_FAILURE;
+        }
+    };
     let output = match run_sandboxed_tool(&SandboxedToolRequest {
+        compiler_executable: &compiler_executable,
         executable: &executable,
         args: forwarded,
         workspace_root: &graph.workspace_root,

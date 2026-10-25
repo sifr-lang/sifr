@@ -9,17 +9,23 @@ use std::time::{Duration, Instant};
 
 pub(super) struct LazyCompiler {
     workspace: PathBuf,
+    compiler_executable: PathBuf,
     endpoint: Option<UnixStream>,
     worker: Option<(SelectedCompiler, OwnedChild)>,
 }
 impl LazyCompiler {
-    pub(super) fn attach(command: &mut Command, workspace: &Path) -> Result<Self, String> {
+    pub(super) fn attach(
+        command: &mut Command,
+        workspace: &Path,
+        compiler_executable: &Path,
+    ) -> Result<Self, String> {
         let (tool, endpoint) = UnixStream::pair().map_err(|error| error.to_string())?;
         command
             .stdin(Stdio::from(OwnedFd::from(tool)))
             .env("SIFR_TOOL_SQL_COMPILER", "stdin-v1");
         Ok(Self {
             workspace: workspace.to_owned(),
+            compiler_executable: compiler_executable.to_owned(),
             endpoint: Some(endpoint),
             worker: None,
         })
@@ -39,8 +45,7 @@ impl LazyCompiler {
         let root = sifr_sysroot::resolve_sysroot(None).map_err(|error| error.boundary_message())?;
         let selected = match root.mode() {
             sifr_sysroot::SysrootMode::SourceTreeDevelopment => {
-                let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-                SelectedCompiler::source(&executable, root)?
+                SelectedCompiler::source(&self.compiler_executable, root)?
             }
             sifr_sysroot::SysrootMode::InstalledToolchain => SelectedCompiler::installed(root)?,
         };
