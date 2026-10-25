@@ -8,6 +8,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_process = { workspace = true }
 sifr_semantic_services = { workspace = true }
 sifr_stdlib_artifact = { workspace = true }
 num-bigint.workspace = true

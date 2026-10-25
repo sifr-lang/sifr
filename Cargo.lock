@@ -7603,6 +7603,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_metadata",
  "sifr_package",
+ "sifr_process",
  "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_stdlib_artifact",
@@ -7768,6 +7769,17 @@ dependencies = [
  "sifr_syntax",
  "sifr_sysroot",
  "toml",
+]
+
+[[package]]
+name = "sifr_process"
+version = "0.0.0"
+dependencies = [
+ "libc",
+ "memchr",
+ "sifr_identity",
+ "tempfile",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

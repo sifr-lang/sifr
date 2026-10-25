@@ -7,7 +7,7 @@ use windows_sys::Win32::System::Console::{CTRL_BREAK_EVENT, CTRL_C_EVENT, SetCon
 static CANCELLED: AtomicI32 = AtomicI32::new(0);
 static USERS: Mutex<usize> = Mutex::new(0);
 
-pub(crate) struct Guard;
+pub struct Guard;
 
 #[allow(unsafe_code)]
 unsafe extern "system" fn cancel(event: u32) -> i32 {
@@ -19,12 +19,12 @@ unsafe extern "system" fn cancel(event: u32) -> i32 {
     1
 }
 
-pub(crate) fn cancelled() -> i32 {
+pub fn cancelled() -> i32 {
     CANCELLED.load(Ordering::Relaxed)
 }
 
 #[allow(unsafe_code)]
-pub(crate) fn acquire() -> io::Result<Guard> {
+pub fn acquire() -> io::Result<Guard> {
     let mut users = USERS
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);

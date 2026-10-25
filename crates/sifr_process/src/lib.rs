@@ -1,0 +1,10 @@
+//! Owned subprocesses and scoped cancellation, without compiler dependencies.
+#[cfg_attr(windows, path = "process_execution_windows.rs")]
+pub mod process_execution;
+#[cfg_attr(windows, path = "process_signals_windows.rs")]
+pub mod process_signals;
+pub use process_execution::OwnedChild;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

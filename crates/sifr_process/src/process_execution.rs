@@ -32,7 +32,20 @@ fn terminate_group(pid: u32) {
     }
 }
 
-struct OwnedChild(std::process::Child, bool);
+/// A subprocess group whose leader is reaped and descendants terminated on drop.
+/// Keep this owner alive for the complete service exchange.
+pub struct OwnedChild(std::process::Child, bool, crate::process_signals::Guard);
+impl OwnedChild {
+    pub fn spawn(command: &mut Command) -> io::Result<Self> {
+        let signals = crate::process_signals::acquire()?;
+        command.process_group(0);
+        Ok(Self(command.spawn()?, true, signals))
+    }
+
+    pub fn terminate(&self) {
+        terminate_group(self.0.id());
+    }
+}
 impl std::ops::Deref for OwnedChild {
     type Target = std::process::Child;
     fn deref(&self) -> &Self::Target {
@@ -80,13 +93,12 @@ impl std::error::Error for ProcessFailure {}
 /// User programs stream their complete output. Compiler capture limits and
 /// correctness deadlines do not change the user's output or runtime duration.
 pub fn run_program(command: &mut Command) -> io::Result<Output> {
-    let _signals = crate::process_signals::acquire()?;
     command
         .process_group(0)
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
-    let mut child = OwnedChild(command.spawn()?, true);
+    let mut child = OwnedChild::spawn(command)?;
     let status = loop {
         let signal = crate::process_signals::cancelled();
         if signal != 0 {
@@ -134,12 +146,11 @@ pub fn output(command: &mut Command) -> io::Result<Output> {
 }
 
 pub fn output_with_deadline(command: &mut Command, deadline: Duration) -> io::Result<Output> {
-    let _signals = crate::process_signals::acquire()?;
     command
         .process_group(0)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    let mut child = OwnedChild(command.spawn()?, true);
+    let mut child = OwnedChild::spawn(command)?;
     let pid = child.id();
     let stdout = child
         .stdout
@@ -212,6 +223,72 @@ pub fn output_with_deadline(command: &mut Command, deadline: Duration) -> io::Re
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn owned_worker_drop_reaps_leader_and_closes_descendant_pipe() {
+        use std::io::BufRead;
+        let mut command = Command::new("sh");
+        command
+            .args(["-c", "sleep 30 & printf 'ready\\n'; wait"])
+            .stdout(Stdio::piped());
+        let mut child = OwnedChild::spawn(&mut command).unwrap();
+        let pid = child.id();
+        let mut pipe = std::io::BufReader::new(child.stdout.take().unwrap());
+        let mut line = String::new();
+        pipe.read_line(&mut line).unwrap();
+        assert_eq!(line, "ready\n");
+        drop(child);
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            let mut rest = Vec::new();
+            sender.send(pipe.read_to_end(&mut rest)).unwrap();
+        });
+        assert_eq!(
+            receiver
+                .recv_timeout(Duration::from_secs(2))
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        reader.join().unwrap();
+        // The direct child has already been reaped, not merely signalled.
+        #[allow(unsafe_code)]
+        let waited = unsafe {
+            // SAFETY: waitpid receives a numeric child PID and a valid local status.
+            let mut status = 0;
+            libc::waitpid(i32::try_from(pid).unwrap(), &raw mut status, libc::WNOHANG)
+        };
+        assert_eq!(waited, -1);
+        assert_eq!(
+            io::Error::last_os_error().raw_os_error(),
+            Some(libc::ECHILD)
+        );
+    }
+
+    #[test]
+    fn owned_worker_early_leader_exit_still_closes_descendants() {
+        let mut command = Command::new("sh");
+        command
+            .args(["-c", "sleep 30 & exit 0"])
+            .stdout(Stdio::piped());
+        let mut child = OwnedChild::spawn(&mut command).unwrap();
+        let pipe = child.stdout.take().unwrap();
+        assert!(child.wait().unwrap().success());
+        drop(child);
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            let mut pipe = pipe;
+            sender.send(pipe.read_to_end(&mut Vec::new())).unwrap();
+        });
+        assert_eq!(
+            receiver
+                .recv_timeout(Duration::from_secs(2))
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        reader.join().unwrap();
+    }
 
     #[test]
     fn dx3_process_deadline_keeps_partial_output_and_kills_group() {

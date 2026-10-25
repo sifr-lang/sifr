@@ -17,12 +17,10 @@ pub(crate) use sifr_cache_storage::windows_storage_security;
 mod compiler_context;
 pub mod metadata_producer;
 mod metadata_reader;
-pub use metadata_reader::{StdlibNavigation, StdlibNavigationSymbol, decode_project_results};
-#[cfg_attr(windows, path = "process_execution_windows.rs")]
-pub mod process_execution;
-#[cfg_attr(windows, path = "process_signals_windows.rs")]
-mod process_signals;
 pub use compiler_context::CompilerContext;
+pub use metadata_reader::{StdlibNavigation, StdlibNavigationSymbol, decode_project_results};
+pub use sifr_process::process_execution;
+use sifr_process::process_signals;
 mod diagnostics;
 mod frontend;
 #[doc(hidden)]

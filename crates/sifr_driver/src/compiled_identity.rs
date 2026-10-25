@@ -11,6 +11,7 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
                     if cfg!(test) { "true" } else { "false" },
                 ),
             ];
+            tokens.extend(sifr_process::compiled_input_tokens());
             tokens.extend(sifr_diagnostics::compiled_input_tokens());
             tokens.extend(sifr_lowering::compiled_input_tokens());
             tokens.extend(sifr_ir::compiled_input_tokens());
