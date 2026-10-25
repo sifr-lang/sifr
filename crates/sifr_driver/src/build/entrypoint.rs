@@ -142,7 +142,7 @@ pub(crate) fn compile_single_file_with_prepared_native(
     compiler: &crate::CompilerContext,
     source: &str,
     lowering_options: LoweringOptions,
-    native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
+    session: Option<&super::SingleFileInteropSession>,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
     let (mut plan, _, _) = RootedEntrypointPlan::from_entrypoint_with_stages(
         compiler,
@@ -167,7 +167,7 @@ pub(crate) fn compile_single_file_with_prepared_native(
         codegen_result,
         rust_interop_context,
         &stdlib.interop,
-        native,
+        session,
     )
 }
 

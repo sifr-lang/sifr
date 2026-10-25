@@ -9,7 +9,7 @@ use crate::diagnostics::{CompileResultFull, RenderedDiagnostic};
 /// keeps its separate frontend-only path and never constructs this session.
 pub struct SingleFileCompilationSession {
     compiler: crate::CompilerContext,
-    native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
+    interop: crate::build::SingleFileInteropSession,
 }
 
 impl SingleFileCompilationSession {
@@ -21,7 +21,7 @@ impl SingleFileCompilationSession {
         let native_toolchain = crate::build::CargoResolutionPolicy::resolve_native_toolchain();
         Ok(Self {
             compiler,
-            native_toolchain,
+            interop: crate::build::SingleFileInteropSession::new(native_toolchain),
         })
     }
 
@@ -30,7 +30,7 @@ impl SingleFileCompilationSession {
             &self.compiler,
             source,
             sifr_lowering::LoweringOptions::default(),
-            Some(&self.native_toolchain),
+            Some(&self.interop),
         ) {
             Ok(metadata) => super::api::metadata_result(metadata),
             Err(errors) => CompileResultFull::Errors { errors },

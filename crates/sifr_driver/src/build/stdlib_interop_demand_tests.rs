@@ -341,12 +341,14 @@ fn stdlib_interop_demand_project_single_file_parity() {
 fn stdlib_interop_demand_cache_disjoint_programs() {
     const A: &str = "from sifr.calendar import isleap\ndef main():\n    assert isleap(2024)\n";
     const B: &str = "from sifr.html import escape\ndef main():\n    _ = escape(\"<p>\")\n";
+    let session =
+        super::SingleFileInteropSession::new(CargoResolutionPolicy::resolve_native_toolchain());
     let mut expected = HashMap::new();
     for source in [A, B, B, A, A] {
         let (output, stdlib) = generated(source);
         let expected_owners = owners(&output.interop.stdlib_demand);
         let key = stdlib_interop_cache_key(&stdlib.interop, &output.interop);
-        let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, None)
+        let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, Some(&session))
             .expect("cached resolution");
         assert_eq!(owners(&resolved.interop.rust), expected_owners);
         let fragment = resolved.interop.cache_key_fragment();
@@ -383,7 +385,7 @@ fn stdlib_interop_demand_cache_disjoint_programs() {
         original,
         stdlib_interop_cache_key(&stdlib.interop, &output.interop)
     );
-    let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, None)
+    let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, Some(&session))
         .expect("changed contract resolution");
     assert!(!resolved.interop.rust.trust_requirements.is_empty());
 }
@@ -420,7 +422,7 @@ fn stdlib_interop_demand_new_native_selection_has_current_cargo_inputs() {
             &context,
             source,
             sifr_lowering::LoweringOptions::default(),
-            Some(&Ok(selected)),
+            Some(&super::SingleFileInteropSession::new(Ok(selected))),
         )
         .expect("native metadata emission");
         let inputs = emitted

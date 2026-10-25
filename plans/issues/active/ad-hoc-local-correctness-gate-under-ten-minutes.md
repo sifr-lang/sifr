@@ -14599,3 +14599,12 @@ and diff checks. Measure any standalone/session cost separately. Preserve the
 1,800-second category cap, owned targets, capacity admission and all failures.
 Require exact-candidate scoped review before intermediate merge. This bounded
 correctness repair does not satisfy the ten-minute objective by itself.
+
+V1ad reproduction at 23876964352255304dd9a454eb1db17a8ae0afc2 fails the
+intended assertion: the second explicitly selected wasm32-wasip1 context emits
+x86_64-unknown-linux-gnu Cargo inputs from the first context. The guarded run
+takes 29.204s, including 26.38s Cargo preparation and 1.31s test body; cleanup
+is complete and no source drift occurs. Preserve this failing regression.
+The repair replaces the process-static map with an invocation-owned object that
+contains both native authority and concurrent resolved-plan cells. Standalone
+calls resolve current inputs. The same-owner demand-key rules remain unchanged.
