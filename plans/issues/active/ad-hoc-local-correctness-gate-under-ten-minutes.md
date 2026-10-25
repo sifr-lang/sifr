@@ -12821,3 +12821,93 @@ affected SQL producer receipts canonically, retaining declared artifacts and
 all stale-input failures. Run dependency/coverage/metadata/profile/size checks
 and exact committed range checks. Independent candidate review is mandatory.
 No new native-code deserialization or Engine safety/optimization setting change.
+### V2d closure — bounded parallel component compilation / #4473
+
+Merged [PR #4473](https://github.com/sifr-lang/sifr/pull/4473) as
+cf78669068dd667b70c80133b08b52c913016795. Exact reviewed candidate
+8a8db53dfa2b926498db3d67d7534390376e0b3f; merged tree identical.
+Wasmtime's existing parallel-compilation feature now uses the existing local
+Rayon allocation. No Engine safety/optimization setting, lifetime-local cache
+policy, runtime state boundary, dependency release, test selection or assertion
+changed. All ten SQL artifacts and three producer receipts were regenerated
+canonically; recursive binary inspection found only core debug-name changes.
+
+The unchanged 64 host/provider/application tests pass on both sides, including
+all six PostgreSQL artifacts: 417.499s before and 285.121s after, saving 132.379s
+in one sequential fixed-scheduling comparison. Candidate preparation took
+351.012s separately. This is not repeated warmed or complete-gate qualification.
+The compilation-only rotated experiment remains separate feasibility evidence.
+All 359 affected semantic/frontend/analysis/LSP tests and 56 allocation/process
+controls pass. Formatting, profiles, metadata, source dependency direction,
+file-size and explicit base-to-candidate diff checks pass.
+
+Initial SQL discovery on 965e85263c3b8ecf04048364187c7a5d4103e1a2 stopped at
+the 20 GiB reserve after 1478.961s: 25 cases completed, 23 passed and two old
+feature-list qualification records failed. Preserve that run as incomplete.
+The final candidate repairs exactly four qualification/checker/documentation
+files and adds rejection controls for a missing parallel-compilation feature
+and an unapproved guest-threads feature. No other tracked blob or mode changed.
+Both contracts and their self-tests pass; repair guard took 20.265s.
+
+After checksum/metadata-verified relocation of an inactive owned target subtree,
+free capacity recovered from about 20 to 35 GiB while preserving artifacts and
+their logical path. The final candidate passes the other 18 SQL suites:
+66 cases/variants in 709.982s, including changed-source preparation.
+The completed clean-build case remains explicitly bound to 965e852:
+878.767s; all three executable hashes match across clean A, reused A and
+independent clean B. Exact input comparison proves its protocol, source, build,
+toolchain and lock inputs unchanged after the qualification repair. All
+19 selected suites / 67 cases are accounted for across these observations;
+do not describe them as one new final-candidate gate run.
+
+Both coverage suites / all five cases pass in 71.235s. All 15 direct-dependency
+audit tests pass in 14.199s, including approved verification graph identities,
+official checksums and mutation controls. Independent review: SATISFIED,
+no blockers, SHA-256
+96593b1608ad2ae8f6892dcdbb0a4d6cae988d392c5f9166eba01ac09eb6640c.
+Review/evidence remain outside the reviewed tree. The chat attachment attempt
+was refused at its 100-attachment limit.
+
+Evidence archives: v2d-evidence.tar.gz SHA-256
+cb39bde041bb18ada0f8ccdcac12de4b5a0209106b060645f5107e272d4ba5b9
+(426 payloads); v2d-dependency-evidence.tar.gz SHA-256
+64aed05d7c26d7f859104d569b24236a7ceee610c29196ece1acde46a857ac77
+(12 payloads). Both manifests and all payload hashes were independently verified
+locally. Original incomplete evidence remains retained.
+
+Separate follow-up, owner compiler/component-host: if a future in-process
+caller invokes component compilation from a Rayon worker, review re-entrant
+work-stealing while the component cache mutex is held. The review found no
+current first-party in-process Rayon caller; do not silently add such a caller
+without addressing that boundary. No speculative workaround was added here.
+The mandatory clean-build cost still exceeds 600s by itself. Complete scoped
+gates and every V5 invalidation/coverage/timing scenario remain open.
+
+### V4bj prospective investigation — repeated SQL test preparation and execution
+
+The V2d resumed SQL run exposes concrete preparation costs: schema-tool tests
+158.914s, migration-tool tests 100.086s, MySQL migration tests 95.288s and
+PostgreSQL migration tests 87.589s. Cargo output shows repeated shared compiler
+and provider builds across these selections. The schema-tool command selects
+all four tool packages; later cases select some of their integration targets
+again. These observations suggest overlap but do not establish identical build
+inputs or redundant valuable coverage.
+
+Investigate the exact canonical commands with retained targets and their
+existing environment/allocation. Collect Cargo artifact identities, resolved
+features, profiles, target/test inventories and ordinary preparation time for
+the overlapping tool selections. Preserve each observed candidate and stop
+each diagnostic category at 1800 seconds with capacity/memory reserves intact.
+Do not infer equivalence from crate names, source names, package counts or
+matching test names alone. Keep intentional PostgreSQL feature/version matrix,
+clean-target protocol, doctests, subprocess behavior and runtime assertions
+explicitly accounted.
+
+First distinguish identical executable/test/environment invocations from
+different feature graphs and genuine independent qualification obligations.
+Inspect existing runner preparation/receipt ownership before proposing another
+mechanism. No production selection, cache key, test or profile changes are
+authorized by this investigation alone. Any implementation must first record
+a bounded acceptance contract preserving all valuable assertions/configurations,
+negative missing-execution/stale-input controls, exact coverage accounting and
+fresh final-candidate execution. Final scoped gates and every V5 remain required.
