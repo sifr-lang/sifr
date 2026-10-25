@@ -259,6 +259,11 @@ codegen-units = 1
 opt-level = 1
 debug = "line-tables-only"
 
+# Build scripts hash complete input inventories; avoid unoptimized SHA-256.
+# Target dev copies already inherit this optimization level.
+[profile.dev.package.sha2]
+opt-level = 1
+
 [profile.dev.package.insta]
 opt-level = 3
 [profile.dev.package.similar]

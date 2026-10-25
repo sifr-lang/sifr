@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ac merged; V1ad interop cache ownership investigation; full phase open"
+current_stage: "V1ag host hashing cost confirmed; V1ah narrow build profile repair; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14608,3 +14608,204 @@ is complete and no source drift occurs. Preserve this failing regression.
 The repair replaces the process-static map with an invocation-owned object that
 contains both native authority and concurrent resolved-plan cells. Standalone
 calls resolve current inputs. The same-owner demand-key rules remain unchanged.
+
+### V1ad closure — interop results belong to their invocation
+
+Merged [PR #4481](https://github.com/sifr-lang/sifr/pull/4481).
+Candidate c467064d475d6ccf58ea742f64f0988d48319211 and merge
+a5e8150a89c143f653350b869918ebd30bebe81d have identical trees.
+Scoped independent review is SATISFIED with no blockers, response SHA-256
+50d186c729749c72a66f3b2a17643d0d66e67b63ac9a886ffd54fa0c53b0e01c.
+
+All eight named categories pass: six stdlib-demand tests (including the reproduced
+stale-target regression), lowering admission, public native-selection controls,
+session changed-input/concurrency controls, complete corpus equivalence, CLI
+build, hygiene and positive E2E. The corpus compares all 732 positive and 569
+negative results and reverse-order reuse. Runtime E2E covers all 732 fixtures in
+186 native groups, 118.751s guarded. No missing outcomes or leftover children.
+
+The complete-corpus log separately measures standalone and session compilation
+with four workers on this candidate: positive 58.475s / 41.868s; negative 13.847s /
+0.572s. These are API comparisons, not historical speedups or full-gate evidence.
+Review's suggestion to expose those costs is addressed by extracting the existing
+log into a separate external JSON artifact; no extra run is needed. Explicit
+native target selection only inspects tool/version/configuration metadata and
+does not compile for or require an installed second target. The session map is
+bounded by its owner's lifetime but has no separate demand-count eviction policy;
+that pre-existing characteristic remains a follow-up, not a new requirement.
+
+Preserve the original failing regression and initial compilation failure in an
+old test helper. All successful final checks cover the corrected candidate.
+The archive has 98 independently verified payloads, SHA-256
+864f576ae6416d94689c5fcba8e8a3fdda36be661c7132883872e0fca4fe1d7f.
+Final correctness gates and all V5 scenarios remain open.
+
+### V1ae prospective investigation — SQL clean-build compilation costs
+
+Return to the largest measured verification category instead of expanding small
+repairs. The current canonical SQL native protocol took 403.245s in V1ab and
+requires clean A, unchanged A, and independent clean B with byte-identical linked
+executables. Preserve those assertions, target/profile/feature selections,
+locked/offline resolution, path remapping and independent target directories.
+
+Use an external diagnostic wrapper around the actual canonical protocol.
+Add Cargo's ordinary unit-timing report to each build, archive reports before
+the protocol removes A, and record each build's elapsed time, exact commands,
+selected artifacts and effective resource allocation. Retain failure artifacts
+and distinguish aggregate compilation work from critical-path wall time. Do not
+attribute two concurrently compiled units' summed times to elapsed time.
+
+Before launching, inspect effective CPU/memory, free disk, current target sizes
+and working allocation/reserves; preserve the 1,800-second diagnostic cap.
+This is fresh-build cost attribution, not host-sensitive performance acceptance
+or an adopted profile/scheduling/dependency change. Let the observed dominant
+units determine the next bounded repair. No valuable clean-build assertion,
+cross-platform exclusion, native integrity check or final V5 scenario changes.
+
+### V1ae outcome — clean SQL cost attributed
+
+The actual clean/unchanged/independent protocol passes with ordinary Cargo unit
+timing output: 393.397s protocol / 396.455s guarded. Clean A is 192.837s,
+unchanged A 0.594s, independent clean B 199.217s. Each clean build rebuilds all
+333 reported artifacts; unchanged rebuild reports zero rebuilt artifacts.
+All three linked executable byte comparisons pass. The owned independent target
+and per-build timing/message reports are retained; source is frozen and child
+cleanup complete. This instrumented fresh-build run is not timing acceptance.
+
+Cargo reports 385 timed units per clean build, including build-script phases.
+The largest overlapping units are AWS-LC native compilation (80.19s / 81.45s),
+PostgreSQL native compilation (40.28s / 41.04s), two syn versions (30-33s each),
+and sifr_sql_contract (28.58s / 30.39s). Three outer SQL-tool identity scripts
+each take roughly 15s. Their common source traversal includes 19,304 files and
+328,274,509 bytes, dominated by retained PostgreSQL and Ruff inputs. This inventory
+is stat-based attribution, not an isolated hash-time measurement; no inputs are
+silently excluded or trusted by metadata. Keep shared product-source ownership
+as a separate measured follow-up.
+
+Total accounted CPU is about 1,471s over 396s guarded, approximately 3.7 CPUs.
+The declared allocation is four jobs; eight CPUs are available. Maximum-process
+RSS is 520,120 KiB, which is not aggregate concurrent memory. These observations
+justify a bounded resource experiment, not an automatic global policy change.
+
+### V1af prospective diagnostic — SQL build allocation
+
+Compare the same clean SQL protocol under seven Cargo jobs, leaving one of the
+eight available CPUs reserved. Keep profile, dependencies, features, source,
+compiler, remap paths, target paths and all three executable-byte comparisons
+unchanged. Retain the original independent-B artifacts under an owned archival
+name before reusing the original empty A/B paths. Compare final executable hashes
+with the four-job run as an additional control.
+
+Use an explicit experimental working budget of 1 GiB per build job plus the
+existing 2 GiB memory reserve; admit only when current capacity satisfies it.
+Monitor aggregate owned process-tree RSS and available memory, retaining the
+existing reserve-abort and 1,800-second cap. Inspect actual target sizes and use
+a measured SQL-specific disk working allowance with the unchanged 20 GiB reserve.
+Do not infer aggregate peak from GNU time's maximum single-process RSS.
+
+Only the external diagnostic launch allocation changes. Canonical runner policy,
+dependency inputs, native identities, test selections and clean-build assertions
+remain unchanged. Report preparation and complete protocol time, output identities,
+CPU work, observed aggregate memory and any abort. This sequential diagnostic
+can establish feasibility; it is not a randomized speed claim or full-gate
+acceptance. Let results determine whether a scoped resource-policy proposal is
+worth adopting. Final V5 and complete correctness qualification remain mandatory.
+
+### V1af outcome — bounded parallelism is useful but insufficient
+
+Seven-job clean A / unchanged A / independent clean B passes in 337.587s,
+versus 393.397s for four jobs (55.811s, 14.19% in these sequential diagnostic
+observations). Individual builds are 164.934s / 0.649s / 171.223s.
+All three linked executable hashes match the four-job control, and rebuilt
+artifact counts remain 333 / 0 / 333. The original independent target remains
+retained under its archival name. No test, profile, source, feature or identity
+input was omitted.
+
+651 aggregate process-tree samples observe a 2,182,201,344-byte RSS peak and
+at least 9,380,192,256 bytes available memory. Reserve/cap/source-freeze/cleanup
+checks pass. These sampled values are not a proof of all future memory demands;
+the seven-job run also carries sampling overhead. Several individual units
+lengthen under contention despite shorter total elapsed time. Preserve this
+feasible resource option; no canonical policy change is adopted yet.
+The evidence archive contains 25 payloads, SHA-256
+f53b05858843fb2c84f86ce2eab2f8bb5766dea62cb0b09bfcd8e400ef75f74c.
+
+### V1ag prospective diagnostic — host build-dependency hashing profile
+
+Actual Cargo artifact messages reveal a gap in the earlier V1y experiment:
+sha2 0.11.0 and sifr_identity are compiled at opt0 as host build dependencies,
+while their target copies are opt1. V1y's opt1-versus-opt3 microprobe did not
+measure these host copies. The three real tool build scripts each traverse the
+same complete 328 MB product inventory and took 15-22s under build contention.
+
+Use the retained actual SQL tool build to test a narrow external Cargo override
+for sha2 at opt1, leaving target effective optimization at its existing level.
+First preserve the original build-script executables/output identities. Capture
+the actual Cargo-supplied build-script environment from a verbose owned build,
+then replay one original and changed build-script executable alternately under
+that identical environment and working directory. Compare every emitted byte
+and identity, actual selected executable hashes and declared hash framing.
+Separate preparation from replay cost. Preserve raw logs and input/candidate
+identities. Do not substitute a microbenchmark for this real owner operation.
+
+No repository profile, hash algorithm, source inventory, validation selection or
+native trust changes are adopted by this diagnostic. If the narrow override is
+insufficient, measure the remaining owner work before expanding it. Keep existing
+capacity/reserve/cleanup controls and the 1,800-second cap. A promising result must
+be registered as its own implementation with affected identity/watch tests,
+profile checks and relevant real build qualification before review/merge.
+
+### V1ag outcome — real host hashing cost confirmed
+
+The external sha2 opt1 override builds successfully in 49.209s, but its linked
+executables differ from the original profile. Preserve that failed cross-profile
+byte-equality control; it is not relabeled a pass. Cargo artifact/fingerprint
+records show the changed host sha2/build-script dependency identities propagating
+into first-party crate identities while target optimization stays at opt1.
+All three actual Cargo build scripts emit byte-identical output, including local
+and compiler source/build identities. This does not by itself qualify the changed
+executables' functional behavior.
+
+The first isolated replay fails because Cargo's verbose rendering omits the unit
+separator in encoded Rust flags. Preserve that diagnostic failure. The corrected
+replay restores that field from the exact original command input, rather than
+normalizing an identity or weakening a comparison. Its baseline output then
+matches the original actual Cargo output byte-for-byte.
+
+Six alternating executions of the real PostgreSQL-tool build-script binaries
+under the same environment/cwd/input tree pass complete stdout/stderr equality.
+Baseline times are 12.088s, 12.107s and 12.108s; sha2-opt1 times are 2.755s,
+2.755s and 2.774s. Medians are 12.107s and 2.755s. This measures the complete
+real owner operation, including full source traversal and configuration/version
+capture, with no inventory or integrity omissions. It is not a whole-gate saving.
+No further sifr_identity optimization or shared source-cache architecture is
+needed to justify the narrow next candidate.
+
+### V1ah prospective implementation — optimize build-time SHA-256
+
+Add only a dev package override setting sha2 opt-level to 1. The current target
+copies already use opt1; the important change is the otherwise unoptimized host
+build dependency. Preserve both pinned sha2 versions, dependency features, hash
+algorithm/framing, every input and Cargo's native invalidation authority. Do not
+add a cross-invocation identity cache, change allocation policy, or claim native
+artifact byte identity across different compilation profiles.
+
+Named intermediate qualification:
+- Existing sifr_identity library tests with the build feature, including real
+  Cargo watch/inventory mutation controls and streamed identity checks.
+- Existing sifr_sysroot native-context controls and all three default SQL-tool
+  library test suites.
+- Verification profile inventory checks and before/after emitted correctness-only
+  create-pr/merge plans; preserve all selections.
+- The canonical SQL qualification self-test and complete ordinary clean A /
+  unchanged A / independent clean B protocol at the existing four-job allocation,
+  retaining all linked-executable byte comparisons within the new profile.
+- Inspect actual Cargo artifact profiles and source-frozen logs; compare the
+  measured protocol without extrapolating owner replay medians into gate time.
+- Formatting, file-size, diff and documentation-link checks; exact-candidate
+  scoped independent review before intermediate merge.
+
+Use retained targets, category-specific capacity admission, unchanged 20 GiB disk
+and 2 GiB memory reserves, and the 1,800-second cap. Preserve all failed diagnostic
+records and the profile's one-time rebuild costs. Final correctness-only gates
+and all V5 scenarios still govern phase completion.
