@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1w merged; V1x guest compilation/runtime tradeoff investigation; full phase open"
+current_stage: "V1x guest-policy option measured and deferred; V1y hashing attribution; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14265,3 +14265,54 @@ diagnostic source under both guest policies. These additions are investigative
 instrumentation, not a new product API or accepted replacement for the ordinary
 test. Preserve their source/results outside Git and restore the original test
 before deciding an implementation.
+
+### V1x diagnostic outcome — defer guest optimization change
+
+The ordinary default-policy host case passes at ba60590b9abac9801375dff4ae06a0e422b93932:
+22.03s test body, 23.094s callback, 24.698s guarded; Cargo preparation is 0.65s.
+The identical temporary six-major instrumentation passes at both
+5dd0ab20ba6e833657edcd0a3849c9cad00e7c05 (default) and
+a31c6b5f196287692e7dc921a50ec3be7bb7e3bd (OptLevel::None).
+Every original assertion remains, with 600 additional complete-response equality
+checks and 120 extra view-normalization rounds across the six artifacts.
+
+| Instrumented stage sums across six majors | Default | Guest OptLevel::None |
+| --- | ---: | ---: |
+| First analyze per fresh owner | 21.045s | 17.037s |
+| 100 repeated requests per owner | 11.610s | 11.616s |
+| Remaining original assertions | 0.735s | 0.744s |
+| 20 extra view rounds per owner | 5.607s | 5.633s |
+| Complete diagnostic test body | 39.13s | 35.17s |
+
+Preparation differs (1.86s versus 18.07s reported by Cargo) and is recorded
+separately; callback/guard times are not presented as equal-state speedups.
+The first-request interval includes compilation and execution, not just JIT CPU.
+This single paired diagnostic supports a modest startup option with no measured
+repeated-request penalty here. It does not qualify every provider, full application
+behavior, safety controls or long-session performance. Defer adoption while
+investigating a potentially broader shared cost. Restore the original host policy
+and test source exactly; retain both experimental sources and all raw results
+outside the tree. No accepted product/runtime policy change results from V1x.
+
+### V1y prospective investigation — shared content-hashing cost
+
+The measured native Arrow publication performs substantial full-content reads of
+a 894 MB executable; repeated provider requests also authenticate multi-megabyte
+component bytes. The current development profile optimizes dependencies at level
+one unless overridden. Investigate actual SHA-256 cost before attributing either
+whole interval to hashing or changing integrity authority.
+
+Use a small owned external diagnostic package with the same pinned SHA-256
+version/features and Rust toolchain. Compare the current optimization setting
+against a narrow dependency optimization setting, preserving all other profile
+fields and input bytes. Record actual resolved dependencies, compile preparation,
+resource admission and ordinary digest throughput; check known answers and the
+complete digest against an independent implementation. Keep these measurements
+separate from real compiler timing and do not modify production profiles.
+
+If the probe is promising, measure representative actual owner operations using
+the same input/identity checks before registering a production repair. Never
+replace content hashing with metadata trust, reuse an old test result, or weaken
+corruption detection. A microbenchmark alone cannot justify a gate-saving claim.
+Keep the 1,800-second category cap, retained targets and capacity reserves.
+Final full-gate and V5 acceptance remain open.

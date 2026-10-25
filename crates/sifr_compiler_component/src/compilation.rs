@@ -57,7 +57,6 @@ impl ComponentCompilation {
         config.wasm_relaxed_simd(false);
         config.max_wasm_stack(limits.max_wasm_stack_bytes);
         config.cranelift_nan_canonicalization(true);
-        config.cranelift_opt_level(wasmtime::OptLevel::None);
         let engine = Engine::new(&config).map_err(crate::host::engine_error)?;
         Ok(Self(Arc::new(CompilationInner {
             engine,
