@@ -606,4 +606,5 @@ fn editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes() {
     assert!(diagnostics(&mut editor).is_empty());
 }
 
+#[path = "sql_native_application/compiler_worker.rs"]
 mod compiler_worker;

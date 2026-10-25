@@ -11,7 +11,7 @@ pub(super) struct Inputs {
 }
 
 impl Inputs {
-    pub fn capture(root: &Path) -> Result<Self, String> {
+    pub(super) fn capture(root: &Path) -> Result<Self, String> {
         let snapshot = sifr_semantic_services::sql_editor::load_sql_editor_snapshot(root, root)
             .map_err(super::messages)?;
         let mut paths = BTreeSet::new();
@@ -79,7 +79,7 @@ impl Inputs {
         })
     }
 
-    pub fn verify(&self, root: &Path) -> Result<(), String> {
+    pub(super) fn verify(&self, root: &Path) -> Result<(), String> {
         if Self::capture(root)? != *self {
             return Err(
                 "SQL compiler project, lock or schema inputs changed during the session".into(),
