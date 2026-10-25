@@ -15228,3 +15228,93 @@ Retain the same source freeze, capacity admission/reserves, process ownership
 and independent 1,800-second cap for every build/qualification category. Cancel
 an invalid experiment rather than running expensive dependent categories.
 Preserve failures, and block dependent categories when prerequisites fail.
+
+### V1aq outcome — retain ThinLTO; the full-graph comparison did not improve builds
+
+Both fresh-target builds and complete installed qualifications pass on
+1bc52807e95db71ebc54f80fca38c6b264e09537 with four admitted workers.
+No profile-policy change is adopted.
+
+| Measured stage | Cross-crate LTO disabled | ThinLTO |
+| --- | ---: | ---: |
+| Complete fresh release build | 705.478962s | 675.487712s |
+| Real native packaging | 32.531790s | 32.253799s |
+| Complete installed qualification | 173.084664s | 177.482206s |
+| Public emission subset, included in qualification | 52.929430s | 51.564881s |
+| CLI executable compilation unit | 20.74s | 380.48s |
+| sifr_codegen compilation unit | 339.44s | 84.15s |
+
+Compilation units overlap; do not sum their durations. In sifr_codegen, the
+Rust frontend intervals are 23.99s and 24.16s respectively; code-generation
+intervals are 315.45s and 59.99s. Disabling cross-crate LTO shortened the final
+executable unit but moved substantial work into library compilation. It was
+29.991250s slower in this one complete-build pair. Sequential ordering and cache
+conditions limit causal precision; this is not a repeated throughput benchmark.
+The old three-worker 793.194s build is not a matched comparator.
+
+Cargo's 467 artifact observations have identical package, target, feature and
+reported non-LTO profile selections across arms; all 466 dependency observations
+were built in each fresh target. Both qualifications execute 745 recorded
+commands: 732 exact public emissions, four native programs, structural/integrity,
+relocation, live-generation switching/pinning/rollback and negative/recovery
+controls. All expected negative doctor exits remain 2. Reference corpus and
+portable-payload identities agree. Every command output hash was reconciled
+remotely and independently again from the local archive.
+
+The 3,073-payload archive v1aq-evidence.tar.gz is independently verified locally:
+26567a8676c7031e1e92c9704274063dbf9430e9be8b146cb99c8177eb9b4bc0.
+The cancelled V1ap archive was also independently verified locally; its failure
+and unexecuted categories remain distinct. All experiment sessions are empty.
+
+The [Cargo profile documentation](https://doc.rust-lang.org/cargo/reference/profiles.html#lto)
+confirms that false retains local ThinLTO, whereas off disables LTO. The complete
+comparison used false versus thin; the earlier rejected final-only control used
+rustc lto=off. These are not interchangeable configurations.
+
+Neither complete fresh compiler build meets 600 seconds, before other gate work.
+This experiment does not solve full invalidation. Keep final correctness-only
+gates and every V5 scenario OPEN. Do not repeat this rejected setting without
+new evidence; prioritize removing repeated compilation.
+
+### V1ar prospective feasibility — preserve optimization and reuse release compilation
+
+Registered diagnostic only; no canonical profile change is adopted. Test release
+incremental compilation while retaining ThinLTO, opt-level 3, codegen-units 16,
+all package overrides, feature selections, assertions, lockfiles and toolchain.
+Current release build commands do not enable incremental compilation.
+
+Use a real observable CLI source edit: append a unique diagnostic marker to the
+existing compiler description in crates/sifr/src/cli_model_and_entrypoint.rs.
+Both rebuilt binaries must expose the new description via --help; stale output
+is a failure. This is a bounded CLI edit feasibility probe, not the behavioral
+frontend/codegen V5 qualification and not a proposed product wording change.
+Keep the diagnostic source commit local and restore the original clean source
+when its guarded consumers finish.
+
+Reuse the now-inactive V1aq ThinLTO target at its exact original path and recorded
+path-map flags. Independently snapshot its complete baseline pre-edit state,
+without hard-linking to the original. Seed the incremental candidate on the
+original source at that same target path, recording preparation separately.
+Snapshot that complete candidate pre-edit state. Freeze source, flags, native
+identity and one admitted worker allocation for both measured edit arms.
+
+Measure the candidate edit from its prepared state. Preserve its target and
+restore the baseline snapshot to the identical target path between guarded
+commands, with no active consumers. Restore pre-edit source and apply the same
+recorded edit again for the baseline arm. Preserve both binaries, source/target
+identities, Cargo fresh/dirty evidence and process/resource records. Report reset
+and preparation costs separately; they are not a full-gate saving. Do not mutate
+the canonical original release target or lose any V1aq evidence.
+
+Qualify both actual edited binaries through complete installed qualification,
+including all 732 emissions, four native cases and existing integrity/generation/
+negative/recovery controls. Verify that the exact CLI-only patch leaves all
+compiler-library and corpus-source inputs unchanged before reusing the reference.
+Any later canonical adoption requires separately registered implementation
+acceptance and scoped review; final full gates and every V5 scenario remain
+mandatory. Cold/expanded invalidation is not relabeled bootstrap.
+
+Each preparation, build and qualification category retains the 1,800-second cap,
+capacity/reserve admission and owned-process cleanup. Snapshot/restore must be
+reversible and occur only between completed guarded categories. A failure blocks
+its consumers and remains preserved; no zero-test or missing outcome is a pass.
