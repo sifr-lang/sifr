@@ -14370,3 +14370,72 @@ implementation is adopted by this diagnostic. Before adoption, register the
 precise native owner, target/linker support contract, identity effects, caller
 overrides and debugging controls. Preserve the 1,800-second cap and reserves.
 All final correctness gates and V5 scenarios remain mandatory.
+
+### V1z diagnostic outcome — compact artifacts, adoption deferred
+
+The qualified linker probe preserves the actual Arrow/tensor runtime output.
+Compressed output is 291,522,872 bytes versus 894,150,648 bytes; every decompressed
+debug payload, all 412,783 ordered semantic symbols, and allocated executable
+payloads (apart from build-id representation) match. Source-address lookup matches
+for 32 sampled addresses, of which 31 resolve. The original strict metadata
+comparison remains failed: nonallocated .debug_aranges alignment changes from
+16 to 1. The compressed header and matching-version LLVM 22.1.8 source explain
+that deliberate linker representation; the separate semantic supplement does
+not relabel the strict failure or prove every debugger compatible.
+
+Six alternating root-only builds retain dependency artifacts, source bytes and
+allocation. Only the generated root rebuilds. Uncompressed observations are
+34.803s, 2.873s and 4.329s; compressed observations are 5.330s, 5.432s and 5.284s.
+The first uncompressed observation is an unresolved state-sensitive outlier,
+not a measured compression speedup. Cargo restores the original executable hash,
+source mtime and canonical state. No dependency compilation occurs.
+
+The external publication probe compiles the actual unchanged IdentityEncoder
+and native_bytes module, mirroring the current NativeSnapshot operations. Three
+alternating observations per format give the following medians:
+
+| Actual owner primitive | Uncompressed | Compressed |
+| --- | ---: | ---: |
+| Complete framed content identity | 4.219s | 1.381s |
+| Capture comparison with missing destination | 0.083s | 0.027s |
+| File copy | 0.267s | 0.088s |
+| Complete destination verification | 0.189s | 0.060s |
+| Unchanged capture comparison | 0.189s | 0.060s |
+
+Independent framed SHA-256 identities match; every trial rejects corruption at
+the last destination byte. Source sizes, mtimes and complete hashes remain equal.
+These are primitive timings, not a complete driver invocation. Do not combine
+their medians with independently observed link timings to claim an end-to-end
+speedup. Linking incurs additional work; support for caller-selected linkers,
+debuggers and targets remains unqualified.
+
+Preserve the initial rustc-wrapper admission failure, intentionally cancelled
+quadratic diagnostic symbol decoder, strict metadata comparison failure and
+initial publication guard-label launch failure. Corrected diagnostic attempts
+are separate evidence. No product source/profile/compression policy is adopted.
+V1y/V1z evidence archive SHA-256 is
+092cdaa1927a9da187c6cd7c4c7d11f9fc6cc6c7b58be6ba7f961af25fb9d8cc,
+containing 221 payloads; three large executable copies remain separately retained
+with exact size/hash identities. The whole phase remains open.
+
+### V1aa prospective integration refresh — prioritize the complete current path
+
+Stop expanding micro-optimizations before obtaining a current integrated result.
+The latest accepted implementations are the SQL inventory/feature correction and
+PostgreSQL C-build jobserver ownership; guest policy, hash optimization and native
+debug compression remain unchanged. Refresh the emitted correctness-only merge
+plan, preparation readiness and actual capacity before launching the canonical
+facade with failure continuation and retained targets.
+
+The diagnostic retains the 1,800-second cap, all selected coverage and complete
+logs. A cap or failed prerequisite is not a pass. Account for every unexecuted
+category and continue independent categories separately if the facade stops.
+Keep actual contiguous facade wall time distinct from sums across resumed
+categories and historical measurements. Attribute preparation, native compilation,
+test body and integrity/publication costs before choosing the next root-cause
+repair. Preserve the 20 GiB disk and 2 GiB memory reserves, ownership and source
+freeze. Only inactive, session-owned artifacts with recoverable verified evidence
+may be reclaimed. Do not alter policy merely to fit a measurement.
+
+This refresh is diagnostic, not final phase acceptance. It neither replaces
+complete final create-pr/merge qualification nor any V5 scenario.
