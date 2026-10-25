@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ae SQL build costs measured; V1af allocation diagnostic; full phase open"
+current_stage: "V1af allocation measured; V1ag host hashing profile diagnostic; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14710,3 +14710,47 @@ CPU work, observed aggregate memory and any abort. This sequential diagnostic
 can establish feasibility; it is not a randomized speed claim or full-gate
 acceptance. Let results determine whether a scoped resource-policy proposal is
 worth adopting. Final V5 and complete correctness qualification remain mandatory.
+
+### V1af outcome — bounded parallelism is useful but insufficient
+
+Seven-job clean A / unchanged A / independent clean B passes in 337.587s,
+versus 393.397s for four jobs (55.811s, 14.19% in these sequential diagnostic
+observations). Individual builds are 164.934s / 0.649s / 171.223s.
+All three linked executable hashes match the four-job control, and rebuilt
+artifact counts remain 333 / 0 / 333. The original independent target remains
+retained under its archival name. No test, profile, source, feature or identity
+input was omitted.
+
+651 aggregate process-tree samples observe a 2,182,201,344-byte RSS peak and
+at least 9,380,192,256 bytes available memory. Reserve/cap/source-freeze/cleanup
+checks pass. These sampled values are not a proof of all future memory demands;
+the seven-job run also carries sampling overhead. Several individual units
+lengthen under contention despite shorter total elapsed time. Preserve this
+feasible resource option; no canonical policy change is adopted yet.
+The evidence archive contains 25 payloads, SHA-256
+f53b05858843fb2c84f86ce2eab2f8bb5766dea62cb0b09bfcd8e400ef75f74c.
+
+### V1ag prospective diagnostic — host build-dependency hashing profile
+
+Actual Cargo artifact messages reveal a gap in the earlier V1y experiment:
+sha2 0.11.0 and sifr_identity are compiled at opt0 as host build dependencies,
+while their target copies are opt1. V1y's opt1-versus-opt3 microprobe did not
+measure these host copies. The three real tool build scripts each traverse the
+same complete 328 MB product inventory and took 15-22s under build contention.
+
+Use the retained actual SQL tool build to test a narrow external Cargo override
+for sha2 at opt1, leaving target effective optimization at its existing level.
+First preserve the original build-script executables/output identities. Capture
+the actual Cargo-supplied build-script environment from a verbose owned build,
+then replay one original and changed build-script executable alternately under
+that identical environment and working directory. Compare every emitted byte
+and identity, actual selected executable hashes and declared hash framing.
+Separate preparation from replay cost. Preserve raw logs and input/candidate
+identities. Do not substitute a microbenchmark for this real owner operation.
+
+No repository profile, hash algorithm, source inventory, validation selection or
+native trust changes are adopted by this diagnostic. If the narrow override is
+insufficient, measure the remaining owner work before expanding it. Keep existing
+capacity/reserve/cleanup controls and the 1,800-second cap. A promising result must
+be registered as its own implementation with affected identity/watch tests,
+profile checks and relevant real build qualification before review/merge.
