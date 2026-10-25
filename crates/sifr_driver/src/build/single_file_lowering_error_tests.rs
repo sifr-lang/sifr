@@ -29,13 +29,16 @@ fn lowering_error_counters_reject_before_and_after_successful_resolution() {
         assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed; 0 failed"));
         return;
     }
-    let unavailable_native = Err("native preparation must not run for lowering errors".to_owned());
+    let session = super::SingleFileInteropSession::new(Err(
+        "native preparation must not run for lowering errors".to_owned(),
+    ));
     for after_success in [false, true] {
         if after_success {
             let (output, stdlib) = generated(SOURCE);
             let expected_rust = output.rust_source.clone();
-            let resolved = resolve_single_file_metadata(output, None, &stdlib.interop, None)
-                .expect("zero-error output must resolve successfully");
+            let resolved =
+                resolve_single_file_metadata(output, None, &stdlib.interop, Some(&session))
+                    .expect("zero-error output must resolve successfully");
             assert_eq!(resolved.rust_source, expected_rust);
             assert_eq!(resolved.lowering_stats.stmt_lowering_errors, 0);
             assert_eq!(resolved.lowering_stats.expr_lowering_errors, 0);
@@ -49,12 +52,7 @@ fn lowering_error_counters_reject_before_and_after_successful_resolution() {
             output.lowering_stats.expr_lowering_errors = expressions;
             output.lowering_stats.item_lowering_errors = items;
             let (result, invocations) = capture_cargo_invocations(|| {
-                resolve_single_file_metadata(
-                    output,
-                    None,
-                    &stdlib.interop,
-                    Some(&unavailable_native),
-                )
+                resolve_single_file_metadata(output, None, &stdlib.interop, Some(&session))
             });
             assert!(
                 invocations.is_empty(),

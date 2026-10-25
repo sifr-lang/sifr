@@ -157,4 +157,4 @@ pub(crate) use entrypoint_resolution::package_cargo_resolution_policy;
 pub(crate) use native_link_policy::validate_test_native_link_evidence;
 pub(crate) use rust_interop_sqlx_offline::configure_hermetic_build_environment;
 
-pub(crate) use single_file_interop_cache::CompiledSingleFileMetadata;
+pub(crate) use single_file_interop_cache::{CompiledSingleFileMetadata, SingleFileInteropSession};

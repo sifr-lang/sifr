@@ -270,17 +270,31 @@ fn test_session_native_probe_child() {
         "standalone interop must resolve native tools exactly once"
     );
 
+    // A standalone call owns a new input snapshot even in the same process.
+    // The prior invocation's resolved interop must not bypass native selection.
+    assert!(matches!(
+        sifr_driver::compile_with_metadata(&context, native_source),
+        CompileResultFull::Success { .. }
+    ));
+    assert_eq!(
+        probes(),
+        2,
+        "standalone reused process-wide native metadata"
+    );
+
     let first = SingleFileCompilationSession::new(context.clone()).unwrap();
     let after_first = probes();
     assert_eq!(
-        after_first, 2,
+        after_first, 3,
         "session must capture its own native selection"
     );
     for _ in 0..3 {
-        assert!(matches!(
-            first.compile_with_metadata(source),
-            CompileResultFull::Success { .. }
-        ));
+        for input in [source, native_source] {
+            assert!(matches!(
+                first.compile_with_metadata(input),
+                CompileResultFull::Success { .. }
+            ));
+        }
     }
     assert_eq!(
         probes(),

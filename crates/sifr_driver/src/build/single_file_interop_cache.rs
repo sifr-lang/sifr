@@ -20,14 +20,27 @@ pub(crate) struct CompiledSingleFileMetadata {
 type ResolvedInterop = Result<InteropBuildPlan, Vec<RenderedDiagnostic>>;
 type ResolvedInteropCell = Arc<OnceLock<ResolvedInterop>>;
 
-static RESOLVED_STDLIB_INTEROP: OnceLock<Mutex<HashMap<String, ResolvedInteropCell>>> =
-    OnceLock::new();
+/// Reuse is bounded by the caller's immutable compilation-session snapshot.
+/// Native selection and resolved metadata cannot be shared across owners.
+pub(crate) struct SingleFileInteropSession {
+    native: Result<sifr_sysroot::NativeToolchain, String>,
+    resolved: Mutex<HashMap<String, ResolvedInteropCell>>,
+}
+
+impl SingleFileInteropSession {
+    pub(crate) fn new(native: Result<sifr_sysroot::NativeToolchain, String>) -> Self {
+        Self {
+            native,
+            resolved: Mutex::new(HashMap::new()),
+        }
+    }
+}
 
 pub(crate) fn resolve_single_file_metadata(
     codegen_result: CodegenResult,
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
-    native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
+    session: Option<&SingleFileInteropSession>,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
     let lowering_stats = codegen_result.lowering_stats;
     if lowering_stats.stmt_lowering_errors != 0
@@ -49,13 +62,24 @@ pub(crate) fn resolve_single_file_metadata(
     let used_stdlib_modules = codegen_result.used_stdlib_modules.clone();
     let required_features = codegen_result.required_features.clone();
 
-    let interop = if rust_interop_context.is_none()
+    let interop = if let Some(session) = session
+        && rust_interop_context.is_none()
         && codegen_result.interop.rust == sifr_codegen::RustInteropPlan::default()
         && codegen_result.interop.python == InteropBuildPlan::default().python
     {
-        resolve_cached_stdlib_interop(codegen_result, rust_interop_context, stdlib_interop, native)?
+        resolve_cached_stdlib_interop(
+            codegen_result,
+            rust_interop_context,
+            stdlib_interop,
+            session,
+        )?
     } else {
-        resolve_interop(codegen_result, rust_interop_context, stdlib_interop, native)?
+        resolve_interop(
+            codegen_result,
+            rust_interop_context,
+            stdlib_interop,
+            session.map(|session| &session.native),
+        )?
     };
 
     Ok(CompiledSingleFileMetadata {
@@ -71,12 +95,12 @@ fn resolve_cached_stdlib_interop(
     codegen_result: CodegenResult,
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
-    native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
+    session: &SingleFileInteropSession,
 ) -> ResolvedInterop {
     let key = stdlib_interop_cache_key(stdlib_interop, &codegen_result.interop);
     let cell = {
-        let cache = RESOLVED_STDLIB_INTEROP.get_or_init(|| Mutex::new(HashMap::new()));
-        let mut entries = cache
+        let mut entries = session
+            .resolved
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         Arc::clone(
@@ -86,7 +110,12 @@ fn resolve_cached_stdlib_interop(
         )
     };
     cell.get_or_init(|| {
-        resolve_interop(codegen_result, rust_interop_context, stdlib_interop, native)
+        resolve_interop(
+            codegen_result,
+            rust_interop_context,
+            stdlib_interop,
+            Some(&session.native),
+        )
     })
     .clone()
 }

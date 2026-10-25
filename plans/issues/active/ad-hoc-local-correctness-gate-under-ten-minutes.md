@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ab complete diagnostic passes; V1ac single-file native authority repair; full phase open"
+current_stage: "V1ac merged; V1ad interop cache ownership investigation; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14542,3 +14542,69 @@ substitution is not adopted: pinned Wasmtime rejects exception features required
 the existing component contract. No guest capability or test assertion is removed.
 All final correctness-only gates and every V5 timing/invalidation scenario remain
 mandatory; the ten-minute objective is still unproven.
+
+### V1ac closure — native authority resolved at the consumer
+
+Merged [PR #4480](https://github.com/sifr-lang/sifr/pull/4480).
+The tested/reviewed candidate is 4d5b6c5084b2694a9458df7081a90b91bd29c7e5;
+merge b29e86745f3762346633ce2f9791887a337e62ac has the same tree.
+Independent scoped review is SATISFIED with no blockers; response SHA-256
+d83a9f7e0c4bceac5ed5dc17aac3e79c43619b10651af92973fa162a9cc3efeb.
+The reviewer wrote an external plan note despite the read-only instruction; the
+repository remained unchanged and that note is retained in the evidence.
+
+Native-boundary and session controls pass, all five stdlib-demand tests pass,
+and complete session equivalence covers 732 positive and 569 negative fixtures,
+including reverse-order reuse and all declared output fields. Positive runtime
+E2E executes all 732 fixtures in 186 groups in 119.263s guarded, with zero native
+units rebuilt. This cannot be compared causally with V1ab's 299.391s observation,
+which rebuilt native roots. Formatting, file-size and diff checks pass.
+
+Same-profile ordinary CLI retained medians change from 1.085s to 0.601s for pure
+emission, 3.336s to 3.078s for the error-heavy stdlib fixture, and 2.490s to 2.270s
+for structured formats. First observations are separate: pure emission's first
+candidate invocation is slower, 5.335s versus 1.361s. These sequential,
+non-randomized observations do not prove a cold-start or complete-gate speedup.
+Actual CLI traces show no native executable reads for pure emission and one
+complete read per selected tool for demanded interop. Historical installed traces
+read each twice; different trace roots/profiles preclude a matched timing claim.
+
+The initial external helper admission failure and initial candidate compilation
+failure remain preserved. Successful checks cover the corrected candidate above.
+The evidence archive has 151 independently verified payloads, SHA-256
+85166d3c8c9a03bb42eaed6382414914788669d330c942b0e04b63ca160f2623.
+All final gates and V5 scenarios remain open.
+
+### V1ad prospective work — invocation ownership of resolved interop
+
+Review found a pre-existing process-wide stdlib interop cache whose key contains
+sysroot/selected-declaration identities but not the captured native selection.
+Verify whether two newly selected contexts can receive the first context's Cargo
+inputs. This item owns that cache lifetime and its single-file/session callers.
+First preserve a failing regression with two explicitly selected native contexts,
+without changing process environment or shared configuration during a test.
+
+If reproduced, scope reuse to the invocation session that already promises an
+immutable native/sysroot/environment/configuration snapshot. Standalone calls
+must not inherit results from earlier invocations. Retain concurrent once-only
+resolution inside each session, disjoint demanded-plan keys, complete native
+input validation, all declaration contracts and non-interop fast paths. Do not
+replace content checks with file metadata or merely hide a stale-input failure.
+
+Named validation: the failing regression then passing repair; same-owner
+concurrency/repetition and separate-owner isolation; existing native-selection,
+changed metadata/root/profile and all stdlib-demand controls; complete positive/
+negative session output equivalence and positive runtime E2E; format, file-size
+and diff checks. Measure any standalone/session cost separately. Preserve the
+1,800-second category cap, owned targets, capacity admission and all failures.
+Require exact-candidate scoped review before intermediate merge. This bounded
+correctness repair does not satisfy the ten-minute objective by itself.
+
+V1ad reproduction at 23876964352255304dd9a454eb1db17a8ae0afc2 fails the
+intended assertion: the second explicitly selected wasm32-wasip1 context emits
+x86_64-unknown-linux-gnu Cargo inputs from the first context. The guarded run
+takes 29.204s, including 26.38s Cargo preparation and 1.31s test body; cleanup
+is complete and no source drift occurs. Preserve this failing regression.
+The repair replaces the process-static map with an invocation-owned object that
+contains both native authority and concurrent resolved-plan cells. Standalone
+calls resolve current inputs. The same-owner demand-key rules remain unchanged.
