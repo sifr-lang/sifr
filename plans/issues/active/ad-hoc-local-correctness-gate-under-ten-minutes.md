@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ag host hashing cost confirmed; V1ah narrow build profile repair; full phase open"
+current_stage: "V1ah merged; V1ai full sysroot cost refresh; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14809,3 +14809,73 @@ Use retained targets, category-specific capacity admission, unchanged 20 GiB dis
 and 2 GiB memory reserves, and the 1,800-second cap. Preserve all failed diagnostic
 records and the profile's one-time rebuild costs. Final correctness-only gates
 and all V5 scenarios still govern phase completion.
+
+### V1ah closure — optimized build-time SHA-256
+
+Merged [PR #4482](https://github.com/sifr-lang/sifr/pull/4482).
+Reviewed/tested candidate: `cbd50b8240550d9723272996e441e774b76a8571`.
+Merge: `1e8ae8f8008373a2d59cdbcb15a8eec6876948ec`; the merge tree
+equals the candidate tree.
+
+All seven named intermediate categories pass: identity/watch (7 tests), native
+context (13 tests), default SQL-tool libraries (5 tests), profile checks and exact
+before/after emitted correctness-only plans, SQL protocol mutation controls (7),
+complete ordinary SQL native qualification, and hygiene. The pre-existing ignored
+live MySQL provision test requires an external service and was not executed in
+this local intermediate scope; 14 unrelated native-context-filter exclusions
+are likewise not passing executions.
+
+The ordinary four-job SQL clean A / unchanged A / independent clean B protocol
+passes in **380.075s** (382.940s guarded). All three linked executable identities
+match within the new profile. The previous four-job instrumented diagnostic was
+393.397s: these single sequential runs do not establish a causal protocol saving.
+The 77% isolated script improvement must not be projected onto whole-gate time.
+
+The 75-payload validation archive is independently verified:
+`v1ah-evidence.tar.gz`, SHA-256
+`f868edede220e59ed4e5875692d2b8b5d97bee427e3807954efbab09f24e829d`.
+Review verdict **SATISFIED**, no blockers, response SHA-256
+`20a4b17511b4c41aff8f320bc3935ed9cb5f77f4501c8017c9d134c073173db5`.
+Review evidence remains outside the reviewed Git tree.
+
+The review's nonblocking artifact-profile evidence note is resolved by an exact
+candidate Cargo `--no-run --message-format=json` inspection. All 57 artifacts
+are fresh, none rebuilt, and both SHA-256 copies report opt1. The separately
+verified ten-payload supplement is `v1ah-profile-supplement.tar.gz`, SHA-256
+`fea36fc30810ec4e859f704f3815d12082aaad8d74c0581ed2036a2a2466c068`.
+This is an evidence-only addition, not an implementation change or repeated
+review. Both prior V1ag failed diagnostic controls remain failed and retained.
+
+The app attachment limit prevented attaching this PR; the verified URL is
+recorded here. No unrelated attachment was removed. Final phase facade gates and
+all V5 qualification scenarios remain open; under 600 seconds is unproven.
+
+### V1ai prospective diagnostic — refresh the full installed-sysroot cost
+
+The V1ab sysroot-release category cost 585.018s, including metadata-corpus
+340.763s and boundary-equivalence 200.842s. Its installed package predates
+V1ac/V1ad; do not treat that cost as the current compiler's behavior. Source
+inspection confirms boundary-equivalence checks installed/source native execution,
+attached APIs and dependency plans, not a duplicate of either large corpus
+authority.
+
+Run the actual correctness-only merge profile's complete sysroot-release
+selection and its transitive preparation prerequisites on the updated candidate:
+six early guardrails; workspace, release compiler, source compiler, packaged
+corpus and compiler identity preparation; then the complete area. Preserve the
+four selected suites, every 732 public emission comparison, four installed native
+cases, integrity/relocation, LSP generation pinning/reresolution/rollback, and
+corruption/recovery checks. No test selection, profile, product code or public
+CLI behavior changes are adopted by this diagnostic.
+
+Keep ordinary category timing separate from preparation, use retained targets,
+and give each category its own 1,800-second cap. Do not execute consumers whose
+preparation failed. Record every unexecuted dependency. Inspect capacity before
+builds and keep the existing disk/memory reserves. If obsolete owned diagnostic
+targets must be retired, archive their full content, independently verify it,
+and confirm no active consumers before removal. Preserve all failure evidence.
+
+After the refresh, attribute the largest remaining costs using existing command
+records and narrow instrumentation only where needed. Do not rerun the entire
+phase merely to obtain this category's current breakdown. This diagnostic is not
+final facade acceptance or a promise of the ten-minute target.
