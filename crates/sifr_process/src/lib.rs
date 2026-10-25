@@ -8,3 +8,6 @@ pub use process_execution::OwnedChild;
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+mod worker_exchange;
+pub use worker_exchange::exchange_with_deadline;

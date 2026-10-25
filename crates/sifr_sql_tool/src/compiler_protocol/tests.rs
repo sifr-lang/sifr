@@ -113,7 +113,7 @@ fn authority() -> ProfileAuthority {
                 package_version: semver::Version::new(0, 0, 0),
                 package_source: "path+sqlite".into(),
                 package_graph_digest: "c".repeat(64),
-                compiler_components: BTreeMap::new(),
+                compiler_components: BTreeMap::from([("schema".into(), "a".repeat(64))]),
             },
             dialect: DialectIdentity {
                 family: "sqlite".into(),
