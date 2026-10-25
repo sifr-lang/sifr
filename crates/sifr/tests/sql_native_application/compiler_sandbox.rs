@@ -292,3 +292,38 @@ fn worker_independently_checks_the_callers_admission_before_loading_inputs() {
     );
     assert!(!root.join(".sifr/sql/app").exists());
 }
+
+#[test]
+fn admitted_worker_uses_the_callers_graph_without_reselecting_native_tools() {
+    let project = compiler_worker::project("sqlite", "3.53.4");
+    let root = project.root.path();
+    let expected = sifr_semantic_services::load_sql_editor_profiles(root, root, None)
+        .expect("caller profile")
+        .registry()
+        .profile("app")
+        .expect("app")
+        .authority()
+        .clone();
+    let receipt =
+        super::sql_compiler_admission::AdmissionFile::capture(root).expect("caller admission");
+    let mut command = Command::new(compiler());
+    command
+        .args(["__sql-compiler-worker", "--workspace"])
+        .arg(root)
+        .env("SIFR_CARGO", "/missing/worker-must-not-select-cargo")
+        .env("SIFR_RUSTC", "/missing/worker-must-not-select-rustc");
+    receipt.configure(&mut command);
+    let mut session = sifr_sql_tool::compiler_session::CompilerSession::spawn_admitted(
+        &mut command,
+        env!("SIFR_COMPILER_SOURCE_ID"),
+        std::time::Duration::from_secs(60),
+    )
+    .expect("actual worker");
+    assert_eq!(
+        session
+            .profile("app")
+            .expect("use the already admitted graph"),
+        expected
+    );
+    session.finish().expect("worker cleanup");
+}
