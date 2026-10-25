@@ -50,9 +50,22 @@ pub(super) fn run_sandboxed_tool(
     let mut command = sandbox_command(request, &temp)?;
     configure_environment(&mut command, request, &temp);
     command.stdout(Stdio::piped()).stderr(Stdio::piped());
-    let mut child = command
-        .spawn()
+    #[cfg(unix)]
+    let mut compiler = if request.capabilities.contains("sql-compiler") {
+        Some(super::host_tool_compiler::LazyCompiler::attach(
+            &mut command,
+            request.workspace_root,
+        )?)
+    } else {
+        None
+    };
+    #[cfg(not(unix))]
+    if request.capabilities.contains("sql-compiler") {
+        return Err("SQL compiler capability requires a supported host sandbox".into());
+    }
+    let mut child = sifr_process::OwnedChild::spawn(&mut command)
         .map_err(|error| format!("cannot start confined host tool: {error}"))?;
+    drop(command);
     let stdout = child
         .stdout
         .take()
@@ -80,28 +93,41 @@ pub(super) fn run_sandboxed_tool(
             false,
         )
     });
-    let status = loop {
-        if exceeded.load(Ordering::Acquire) {
+    let status = (|| {
+        loop {
+            if sifr_process::process_signals::cancelled() != 0 {
+                return Err("confined host tool cancelled".to_string());
+            }
+            if exceeded.load(Ordering::Acquire) {
+                child.terminate();
+                break child
+                    .wait()
+                    .map_err(|error| format!("cannot wait for over-limit host tool: {error}"));
+            }
             if let Some(status) = child
                 .try_wait()
-                .map_err(|error| format!("cannot poll over-limit host tool: {error}"))?
+                .map_err(|error| format!("cannot poll confined host tool: {error}"))?
             {
-                break status;
+                break Ok(status);
             }
-            child
-                .kill()
-                .map_err(|error| format!("cannot stop over-limit host tool: {error}"))?;
-            break child
-                .wait()
-                .map_err(|error| format!("cannot wait for over-limit host tool: {error}"))?;
+            #[cfg(unix)]
+            if let Some(compiler) = &mut compiler {
+                compiler.poll()?;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
         }
-        if let Some(status) = child
-            .try_wait()
-            .map_err(|error| format!("cannot poll confined host tool: {error}"))?
-        {
-            break status;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(10));
+    })();
+    // Reap the leader and terminate owned descendants before joining readers;
+    // a failed worker or a descendant holding stdout must not strand a join.
+    child.terminate();
+    drop(child);
+    #[cfg(unix)]
+    let compiler_result = match compiler {
+        Some(compiler) => compiler.finish(
+            status.as_ref().is_ok_and(|status| status.success())
+                && !exceeded.load(Ordering::Acquire),
+        ),
+        None => Ok(()),
     };
     let stdout = stdout_reader
         .join()
@@ -109,6 +135,9 @@ pub(super) fn run_sandboxed_tool(
     let stderr = stderr_reader
         .join()
         .map_err(|_| "host-tool stderr reader failed".to_string())??;
+    let status = status?;
+    #[cfg(unix)]
+    compiler_result?;
     Ok(SandboxedToolOutput {
         status,
         stdout,

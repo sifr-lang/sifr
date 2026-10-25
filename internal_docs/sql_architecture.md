@@ -2095,7 +2095,7 @@ The tools member selects exported entry points in its `sifr.toml`:
 [tools.sql]
 package = "sifr-sql-postgresql-tools"
 entrypoint = "sql"
-capabilities = ["network", "credentials", "project-write"]
+capabilities = ["network", "credentials", "project-write", "sql-compiler"]
 ```
 
 The selected executable package is a direct, normal dependency and an exact

@@ -12,6 +12,7 @@ name = "sifr"
 path = "src/main.rs"
 
 [dependencies]
+sifr_process = { workspace = true }
 sifr_semantic_services = { workspace = true }
 sifr_sql_tool = { workspace = true }
 sifr_identity.workspace = true

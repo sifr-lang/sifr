@@ -7422,6 +7422,7 @@ dependencies = [
  "sifr_lint",
  "sifr_lsp",
  "sifr_package",
+ "sifr_process",
  "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_tool",

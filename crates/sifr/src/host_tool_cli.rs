@@ -115,7 +115,12 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         Ok(output) => output,
         Err(message) => {
             render_tool_error(&message, format);
-            return EXIT_INTERNAL_COMPILER_FAILURE;
+            let signal = sifr_process::process_signals::cancelled();
+            return if signal != 0 {
+                128 + signal
+            } else {
+                EXIT_INTERNAL_COMPILER_FAILURE
+            };
         }
     };
     if output.output_exceeded_limit {

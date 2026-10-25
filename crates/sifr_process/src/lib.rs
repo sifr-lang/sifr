@@ -11,3 +11,8 @@ pub use compiled_identity::compiled_input_tokens;
 
 mod worker_exchange;
 pub use worker_exchange::exchange_with_deadline;
+
+#[cfg(unix)]
+mod socket_readiness;
+#[cfg(unix)]
+pub use socket_readiness::{SocketReadiness, socket_readiness};

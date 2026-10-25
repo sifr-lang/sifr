@@ -1,4 +1,7 @@
-use sifr_sql_postgresql_tools::{run_migration_command, run_schema_command};
+use sifr_sql_postgresql_tools::{
+    run_migration_command_with_compiler, run_schema_command_with_profile_loader,
+};
+use sifr_sql_tool::native_compiler::NativeCompiler;
 use std::io::Write as _;
 use std::process::ExitCode;
 
@@ -15,6 +18,15 @@ async fn main() -> ExitCode {
         let _ = writeln!(std::io::stderr(), "cannot determine the SQL tool workspace");
         return ExitCode::FAILURE;
     };
+    let compiler = match NativeCompiler::new(&workspace_root, env!("SIFR_COMPILER_SOURCE_ID")) {
+        Ok(compiler) => compiler,
+        Err(error) => {
+            let _ = writeln!(std::io::stderr(), "{error}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let load_profile = |root: &std::path::Path, name: &str| compiler.profile(root, name);
+    let compile_source = |source: &str| compiler.migration(source);
     let connection = std::env::var("SIFR_SQL_DATABASE_URL").ok();
     let mut emit = |value: &str| {
         let mut stdout = std::io::stdout();
@@ -25,29 +37,47 @@ async fn main() -> ExitCode {
                 message: "cannot write schema command output".to_string(),
             })
     };
-    let outcome = match namespace.as_deref() {
-        Some("schema") => {
-            run_schema_command(
-                &arguments,
-                &workspace_root,
-                connection.as_deref(),
-                &mut emit,
-            )
-            .await
-        }
-        Some("migration") => {
-            run_migration_command(
-                &compiler_context(),
-                &arguments,
-                &workspace_root,
-                connection.as_deref(),
-            )
-            .await
-        }
-        _ => Err(sifr_sql_postgresql_tools::CommandError {
-            message: "usage: schema <command> | migration <command>".to_string(),
-        }),
+    let outcome = match compiler
+        .run(async {
+            match namespace.as_deref() {
+                Some("schema") => {
+                    run_schema_command_with_profile_loader(
+                        &load_profile,
+                        &arguments,
+                        &workspace_root,
+                        connection.as_deref(),
+                        &mut emit,
+                    )
+                    .await
+                }
+                Some("migration") => {
+                    run_migration_command_with_compiler(
+                        &compile_source,
+                        &load_profile,
+                        &arguments,
+                        &workspace_root,
+                        connection.as_deref(),
+                    )
+                    .await
+                }
+                _ => Err(sifr_sql_postgresql_tools::CommandError {
+                    message: "usage: schema <command> | migration <command>".to_string(),
+                }),
+            }
+        })
+        .await
+    {
+        Ok(outcome) => outcome,
+        Err(signal) => std::process::exit(128 + signal),
     };
+    if outcome.is_ok() {
+        if let Err(error) = compiler.finish() {
+            let _ = writeln!(std::io::stderr(), "{error}");
+            return ExitCode::FAILURE;
+        }
+    } else {
+        drop(compiler);
+    }
     match outcome {
         Ok(outcome) => {
             let _ = write!(std::io::stdout(), "{}", outcome.stdout);
@@ -58,18 +88,4 @@ async fn main() -> ExitCode {
             ExitCode::FAILURE
         }
     }
-}
-
-fn compiler_context() -> sifr_semantic_services::SemanticContext {
-    if cfg!(test) {
-        return sifr_semantic_services::SemanticContext::for_test_tokens(
-            vec![(env!("CARGO_PKG_NAME"), env!("SIFR_LOCAL_INPUT_TOKEN"))],
-            "sql-tool-unit",
-        );
-    }
-    let identity = match sifr_identity::CompilerIdentity::product(env!("SIFR_COMPILER_BUILD_ID")) {
-        Ok(identity) => identity,
-        Err(error) => panic!("{error}"),
-    };
-    sifr_semantic_services::SemanticContext::new(identity)
 }

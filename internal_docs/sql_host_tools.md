@@ -61,7 +61,7 @@ The tools manifest exports direct namespaces:
 [tools.sql]
 package = "sifr-sql-postgresql-tools"
 entrypoint = "sql"
-capabilities = ["network", "credentials", "project-write"]
+capabilities = ["network", "credentials", "project-write", "sql-compiler"]
 ```
 
 The MySQL provider uses `sifr-sql-mysql-tools` with binary
@@ -174,7 +174,15 @@ The closed capability vocabulary is:
 - `network`
 - `project-read`
 - `project-write`
+- `sql-compiler`
 - `subprocess`
+
+The `sql-compiler` grant supplies an anonymous inherited channel to the owning
+compiler. Its operations are limited to canonical profile preparation and
+migration-source compilation for the selected project and admitted inputs.
+It does not grant the tool subprocess, filesystem or network access. The
+worker starts on the first semantic request and is owned until invocation
+cleanup. Tools that only read plans or clean up resources do not start it.
 
 An unknown capability is an error. Package validation remains the trust boundary
 for native host code, in the same way as a trusted Rust backend package. Cargo
