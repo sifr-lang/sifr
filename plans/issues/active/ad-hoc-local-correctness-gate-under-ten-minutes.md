@@ -15132,3 +15132,55 @@ a deliberately broken probe to prove the prototype still rejects it. Record
 instrumented attribution separately from ordinary timing. This is feasibility,
 not adoption or a replacement for final phase gates. Compiler rebuild/configuration
 costs and the SQL independent clean-build protocol remain larger open concerns.
+
+### V1ao feasibility outcome — application graph co-build
+
+The external experiment passed on 1bc52807e95db71ebc54f80fca38c6b264e09537.
+Three ordinary Cargo operations took 38.885235s; the combined application/probe
+workspace took 25.183489s (13.701747s, 35.24% less in this single pair).
+Both arms used fresh separate targets and the same allocation. All 18 unchanged
+probe sources produced successful artifacts; both native programs passed their
+runtime assertions. Deliberately changing a probe's expected return type failed
+with E0308 attributed to that probe. Registry versions/checksums remained equal.
+
+This is not adopted: probe dependency features changed to the exact application
+graph, so feature-isolation coverage and per-declaration/cache contracts require
+separate implementation analysis. It is not whole-gate timing or a repeated
+causal estimate. Preserve the smaller opportunity while prioritizing rebuilds.
+The 122-payload archive v1ao-evidence.tar.gz was independently verified locally:
+f98d1651553ccef45489cdd0abdc5253b0dbe19c279a5fff54e46726fd4a1a84.
+
+### V1ap prospective feasibility — final release executable ThinLTO cost
+
+Bounded external experiment; no tracked compiler/profile change is adopted.
+V1am's cold release compiler preparation took 793.194s with three admitted jobs.
+Approximately 478 seconds remained after the last announced CLI compile. That
+interval is not proof of ThinLTO time; dependencies may overlap and Cargo's
+announcement does not identify LLVM phases. Do not compare a new four-job run
+against that historical cold run as a measured saving.
+
+Copy the inactive, owned release target to an independent experimental target
+(no hard links). Preserve the original target, compiler and package. Use the
+canonical release version, source, toolchain, locked/offline dependency graph,
+path-map flags, features and a single admitted worker allocation for both arms.
+Run Cargo rustc for the final CLI binary with explicit lto=off and lto=thin,
+leaving library profiles and every other optimization field unchanged. Record
+all Cargo artifacts and freshness; require all dependency artifacts to be fresh
+for a final-executable comparison. If relocation invalidates dependencies, retain
+that preparation separately and do not credit its time to the final-unit result.
+This diagnoses final executable work, not a full lto=false profile or complete
+clean-build saving. Check source freeze and dependency identities before/after.
+
+Preserve both executable bytes and qualify their actual native packages using
+the existing complete installed qualification: all 732 fresh public emissions,
+four native cases, integrity, relocation, live generations, and negative/recovery
+controls. Match reference source/generated hashes and compiler input identities.
+Record packaging, installed correctness and compiler execution durations
+separately. Any apparent compiler speed regression blocks automatic adoption;
+multiple matched runtime observations and full applicable acceptance would be
+required for a later implementation. No coverage/profile/cache identity waiver.
+
+Check disk, memory, effective CPU and target size before starting. Each build or
+qualification category retains its independent 1,800-second cap, reserve guard,
+complete output evidence and process cleanup. Preserve failed/incomplete results.
+Final correctness-only gates and all V5 scenarios remain OPEN and mandatory.
