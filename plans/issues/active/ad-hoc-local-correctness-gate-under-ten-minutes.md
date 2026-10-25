@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1w standalone PostgreSQL C compilation investigation; V1v diagnostic recorded; full phase open"
+current_stage: "V1w owner build parallelism qualified; independent review pending; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14158,3 +14158,42 @@ that all matrix selections and runtime assertions remain. Obtain scoped
 independent review of the exact candidate before intermediate merge. Account for
 component regeneration/preparation separately; do not waive final full gates or
 any V5 invalidation/retention scenario.
+### V1w implementation and focused qualification
+
+The sole implementation edit enables the existing cc build dependency's parallel
+feature at its PostgreSQL owner. No lockfile, native source, compiler flags,
+runtime assertion, matrix command or allocation policy changes. Regeneration
+uses the canonical producer and exact SDK/virtualizer; all six generated binaries
+and their real provenance receipt are committed. Their bytes differ from the
+prior outputs, and all six are exercised by the actual component host.
+
+Preserve the two failed preparation attempts: the first omitted the SDK archive
+variable and stopped before compilation (0.388s callback); the second compiled
+the components but publication hit the existing cross-filesystem rename limitation
+(203.237s). Neither changed checked-in artifacts. The successful producer runs
+from the existing owned source worktree on the target's filesystem, the same
+supported arrangement used previously: 199.452s callback, 201.265s guarded.
+No producer fallback or manual provenance rewrite was introduced. Record the
+cross-filesystem publication limitation under
+verification/areas/sql_platform/tools/build_sql_components.py as a separate
+pre-existing follow-up; it is not an accepted pass for the failed attempt.
+
+Integrated candidate a434078f5ddcfd28674d4f7d52b2dab59108ab0c passes
+all nine focused commands in 24.276s guarded: provenance with 51 mutation controls,
+PostgreSQL compiler qualification and controls, all five selection/build-input
+tests, all 15 dependency audit tests, native and component feature-graph checks,
+formatting, file-size and base-to-candidate diff checks. Both owner graphs select
+cc/parallel. Source inputs stay frozen and owned process sessions finish empty.
+
+The unchanged normal parser matrix passes in 27.665s callback (28.696s guarded).
+Its seven canonical commands reconcile to 49 passing libtest summaries and
+211 selected test invocations across majors 13–18 plus the actual component-host
+case. The host case takes 22.16s and executes every rebuilt component.
+No diagnostic feature override, tracing or process sampling enters this run.
+The graph was already prepared by the preceding diagnostics: this is a warm
+complete matrix observation, not a matched reduction from the historical
+267.540s category or an invalidation timing claim. Regeneration and earlier
+preparation are recorded separately rather than hidden in that warm result.
+
+Full correctness-only facade gates and every V5 scenario remain mandatory.
+This intermediate item requires exact-candidate independent review before merge.
