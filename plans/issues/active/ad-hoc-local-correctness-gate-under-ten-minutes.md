@@ -14879,3 +14879,18 @@ After the refresh, attribute the largest remaining costs using existing command
 records and narrow instrumentation only where needed. Do not rerun the entire
 phase merely to obtain this category's current breakdown. This diagnostic is not
 final facade acceptance or a promise of the ten-minute target.
+
+### V1ai prerequisite integration finding — consumer-site record refresh
+
+The first frozen diagnostic on af9847c4e4a37621f10ed0e2f98822c9339826d5
+passes five early guardrails and fails DX metadata inventory before any build.
+All five preparations and the area are blocked, not passing executions. Preserve
+that campaign and its failed guard output.
+
+The generated site diff contains V1ac/V1ad line/anchor shifts and the added
+native-selection regression test. Existing operation/migration classifications
+are unchanged; the new test is correctly classified as test setup/parity.
+Refresh only the generated Markdown inventory and this phase record. The normal
+inventory check, its existing self-tests and diff checks pass. No Rust, runner,
+schema or payload coverage changes are needed. Resume with new evidence paths;
+recheck the affected guard and keep failed prerequisite evidence distinct.
