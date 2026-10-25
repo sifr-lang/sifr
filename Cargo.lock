@@ -8128,6 +8128,7 @@ dependencies = [
  "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_runtime",
+ "sifr_sysroot",
  "tempfile",
 ]
 

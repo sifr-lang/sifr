@@ -1,6 +1,6 @@
 //! Real canonical compiler worker; no mock semantic implementation.
 use super::Project;
-use sifr_sql_tool::compiler_session::CompilerSession;
+use sifr_sql_tool::compiler_selection::{SelectedCompiler, SelectedSession};
 use std::io::Write;
 use std::process::Command;
 use std::time::Duration;
@@ -43,19 +43,19 @@ fn project(family: &str, version: &str) -> Project {
     project
 }
 
-fn session(project: &Project) -> CompilerSession {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_sifr"));
-    command
-        .arg("__sql-compiler-worker")
-        .arg("--workspace")
-        .arg(project.root.path())
-        .current_dir(project.root.path());
-    CompilerSession::spawn_admitted(
-        &mut command,
-        env!("SIFR_COMPILER_SOURCE_ID"),
-        Duration::from_secs(60),
-    )
-    .expect("canonical compiler worker")
+fn session(project: &Project) -> SelectedSession {
+    let root = sifr_sysroot::resolve_sysroot(Some(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."),
+    ))
+    .expect("source sysroot");
+    SelectedCompiler::source(std::path::Path::new(env!("CARGO_BIN_EXE_sifr")), root)
+        .expect("explicit source compiler selection")
+        .start(
+            project.root.path(),
+            env!("SIFR_COMPILER_SOURCE_ID"),
+            Duration::from_secs(60),
+        )
+        .expect("canonical compiler worker")
 }
 
 #[test]
