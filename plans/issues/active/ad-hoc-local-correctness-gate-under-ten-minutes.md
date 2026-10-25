@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1al structural resumption; V1am package hashing; full phase open"
+current_stage: "V1al structural checks complete; V1am package qualification; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14991,3 +14991,27 @@ user cleanup removed the declared owned temporary directory. Restore that same
 directory; add no fallback or source change. The six existing producer tests and
 four new digest tests then pass, with the original failure retained. Exact
 candidate and broader qualification remain pending.
+
+### V1al completion — distinguish cold compilation from assertions
+
+Both structural executions pass on e3771458ad4182ea0e0e18b4d7545a3889e49070.
+The first category after cleanup took 539.485s including compilation; the identical
+retained-artifact category took 18.382s (18.175712s inside the suite). Each executes
+the two named structural Rust tests, with 870 unrelated tests filtered rather
+than counted as executed, plus all five doctor controls: missing, ensure, ready,
+corrupt and recovered. Both negative doctor controls correctly exit 2. An evidence
+auditor initially assumed exit 1; that audit error was corrected without altering
+product code, tests or the passing reports.
+
+All four sysroot suites now have passing executions across the interrupted and
+resumed runs. Their observed suite durations sum to 506.568s; this is not a
+contiguous area or full-gate measurement. The original combined run stays
+interrupted. Cold timings include incidental investigative work and brief Python
+checks in a separate owned checkout, and are not otherwise-idle performance
+qualification. Source compilation, structural compilation and warm assertions
+remain separately recorded.
+
+The 79-payload archive v1al-evidence.tar.gz is independently verified, SHA-256
+a0f35876ec3cf0d723e56e63c4f6778003b60d82dec4f67e2d54658121842683.
+The implementation checkout used for V1am never mutated the frozen baseline
+checkouts. Full phase acceptance and the under-600-second objective remain open.
