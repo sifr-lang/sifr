@@ -85306,6 +85306,18 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-match; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_driver/src/build/rust_interop_probe_batch_protocol.rs::outcomes enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_compiler_component/src/compiled_identity.rs::identity_records_selected_host_capability::literal-comparison::1",
+      "fingerprint": "10f2d6a8863dad615e1b6c5928748478f50b0f02bedeab6ee9132272bb73711e",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "_ ) | * name == \"sifr_compiler_component:host\" ) . map ( | ( _",
+      "inputs": "fn identity_records_selected_host_capability ( )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_compiler_component/src/compiled_identity.rs::identity_records_selected_host_capability enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_compiler_component/src/compiled_identity.rs::identity_records_selected_host_capability enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }
