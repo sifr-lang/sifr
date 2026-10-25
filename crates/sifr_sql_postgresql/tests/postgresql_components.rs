@@ -99,9 +99,19 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
             ..ComponentHostLimits::default()
         };
         let mut host = ComponentHost::new(limits, None).expect("component host");
+        let first_started = std::time::Instant::now();
         let run = host
             .analyze(&registration, &bytes, &request)
             .unwrap_or_else(|error| panic!("PostgreSQL {major} component failed: {error}"));
+        let first_seconds = first_started.elapsed().as_secs_f64();
+        let repeat_started = std::time::Instant::now();
+        for _ in 0..100 {
+            let repeated = host.analyze(&registration, &bytes, &request).expect("repeated actual request");
+            assert!(!repeated.cache_hit);
+            assert_eq!(repeated.response, run.response);
+        }
+        let repeat_seconds = repeat_started.elapsed().as_secs_f64();
+        let remaining_started = std::time::Instant::now();
         assert_eq!(
             run.response.plan.provider_identity,
             registration.identity.processor
@@ -158,6 +168,12 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
 
         exercise_sequence_schema_component(&mut host, major, &bytes);
         exercise_view_schema_component(&mut host, major, &bytes);
+        let remaining_seconds = remaining_started.elapsed().as_secs_f64();
+        let views_started = std::time::Instant::now();
+        for _ in 0..20 {
+            exercise_view_schema_component(&mut host, major, &bytes);
+        }
+        println!("V1X_STAGE major={major} first_seconds={first_seconds} repeat_100_seconds={repeat_seconds} remaining_seconds={remaining_seconds} views_20_seconds={}", views_started.elapsed().as_secs_f64());
     }
 }
 

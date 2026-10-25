@@ -14254,3 +14254,14 @@ controls, actual provider/editor/native application checks, and exact-candidate
 independent review. Guest-policy behavior and cache ownership must remain coherent;
 no environment-only test bypass, serialized native-code trust or assertion removal.
 Final correctness-only facade gates and every V5 scenario remain mandatory.
+
+V1x diagnostic attribution supplement: add temporary stage timers to the existing
+six-major host case, preserving its original assertions. For each compiled major,
+execute 100 extra identical valid requests with no response cache, asserting full
+response equality and no cache-hit flag, plus 20 extra view-normalization rounds
+with the original semantic assertions. Record first analyze, repeated requests,
+remaining original assertions and extra view rounds separately. Use identical
+diagnostic source under both guest policies. These additions are investigative
+instrumentation, not a new product API or accepted replacement for the ordinary
+test. Preserve their source/results outside Git and restore the original test
+before deciding an implementation.
