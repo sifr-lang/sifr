@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1x guest-policy option measured and deferred; V1y hashing attribution; full phase open"
+current_stage: "V1y profile override rejected; V1z linker debug compression investigation; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14316,3 +14316,57 @@ replace content hashing with metadata trust, reuse an old test result, or weaken
 corruption detection. A microbenchmark alone cannot justify a gate-saving claim.
 Keep the 1,800-second category cap, retained targets and capacity reserves.
 Final full-gate and V5 acceptance remain open.
+
+### V1y diagnostic outcome — no hashing profile change
+
+The first external probe stops before benchmarking because independent lock
+resolution selects cpufeatures 0.3.1 instead of the product's pinned graph.
+Preserve that failed admission. The second seeds its diagnostic lock from the
+product lock; all selected dependency versions and registry checksums match.
+Both binaries use sha2 0.11.0 with alloc/default/oid and the pinned compiler.
+
+Three alternating observations per configuration pass the known SHA-256 answer
+and independent complete-file digest checks, preserving original input bytes.
+For 128 hashes of the 4,006,259-byte PostgreSQL component, the median is 2.385s
+at current opt1 and 2.347s with only sha2 at opt3. For one hash of the retained
+894,150,648-byte native executable, medians are 4.223s and 4.141s. Input reads
+are measured separately. Preparation is 3.139s for the initial diagnostic graph
+and 1.385s for the narrow alternate; these are different build states.
+
+The roughly two-percent hashing difference does not justify a product override.
+Retain the current profile. Source inspection and recorded CPU capabilities show
+the pinned SHA-256 implementation selects its software backend in this envelope;
+do not assume a higher optimization level can remove all content-processing cost.
+The microprobe does establish that full hashing alone can account for seconds on
+the measured executable, but it is not a complete compiler publication timing.
+No identity algorithm, integrity check, dependency version or product code changes.
+
+### V1z prospective investigation — linker-produced compressed debug sections
+
+V1v's external-copy experiment preserved all debug payloads and runtime output
+while reducing the large native executable from 894 MB to 276 MB. V1y now measures
+over four seconds per full hash of that input. Test standard linker-produced
+compression so the native output is compact when first published, rather than
+adding a separate post-build rewrite or dropping debug information.
+
+Use the existing owned Arrow/tensor fixture and native dependency target under
+its exclusive family lease. Preserve original executable bytes, source/lock
+identities and fingerprint evidence outside the mutable target first. Compare
+root-only Cargo rustc builds with explicit linker compression none and zstd,
+keeping dependencies, Rust optimization, generated source, runtime assertions,
+loader policy and resource allocation unchanged. Account for actual root rebuild
+and linking time separately from complete-file hashing and publication work.
+Reject any unexpected dependency rebuild or identity drift rather than expanding
+this diagnostic into a cold build. Restore the canonical normal Cargo build after
+the experiment, using Cargo's own freshness authority instead of manually
+restoring fingerprint files.
+
+Verify both actual executables with the unchanged fixture output and failure
+semantics, inspect debug sections and tooling support, and compare decompressed
+debug information, machine-code/unwind payloads and symbols with appropriate
+semantic normalization. Record artifact size and actual copy/hash costs; a
+storage-only result still cannot establish whole-gate speed. No source/profile
+implementation is adopted by this diagnostic. Before adoption, register the
+precise native owner, target/linker support contract, identity effects, caller
+overrides and debugging controls. Preserve the 1,800-second cap and reserves.
+All final correctness gates and V5 scenarios remain mandatory.
