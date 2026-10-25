@@ -10,18 +10,18 @@ struct State {
     interrupt: libc::sigaction,
     terminate: libc::sigaction,
 }
-pub(crate) struct Guard;
+pub struct Guard;
 
 extern "C" fn cancel(signal: libc::c_int) {
     CANCELLED.store(signal, Ordering::Relaxed);
 }
 
-pub(crate) fn cancelled() -> i32 {
+pub fn cancelled() -> i32 {
     CANCELLED.load(Ordering::Relaxed)
 }
 
 #[allow(unsafe_code)]
-pub(crate) fn acquire() -> io::Result<Guard> {
+pub fn acquire() -> io::Result<Guard> {
     let mut state = STATE
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);

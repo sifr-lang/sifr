@@ -49,7 +49,7 @@ def validate(payload: dict[str, Any]) -> None:
         "lockfile-fingerprint", "persisted-tool-graph", "executable-sha256",
     }, "host-tool identity is incomplete")
     require(set(payload.get("capabilities", [])) == {
-        "credentials", "environment", "network", "project-read", "project-write", "subprocess",
+        "credentials", "environment", "network", "project-read", "project-write", "sql-compiler", "subprocess",
     }, "host-tool capability vocabulary drift")
     require(set(payload.get("negative_contracts", [])) == {
         "unknown-namespace", "reserved-namespace", "duplicate-namespace", "unknown-capability",
@@ -146,7 +146,7 @@ def main() -> int:
     if args.self_test:
         self_test(payload)
     else:
-        print("SQL host-tool qualification ok: identities=11 negatives=12 capabilities=6 tests=7")
+        print("SQL host-tool qualification ok: identities=11 negatives=12 capabilities=7 tests=7")
     return 0
 
 

@@ -77,6 +77,16 @@ pub(crate) struct Cli {
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
+    /// Invocation-owned compiler protocol; selected by the SQL tool launcher.
+    #[command(name = "__sql-compiler-worker", hide = true)]
+    SqlCompilerWorker {
+        #[arg(long)]
+        workspace: PathBuf,
+        #[arg(long, requires = "admission_sha256")]
+        admission: Option<PathBuf>,
+        #[arg(long, requires = "admission")]
+        admission_sha256: Option<String>,
+    },
     /// Prepare matching stdlib toolchain metadata
     Sysroot(DeferredArgs<crate::metadata_cli::SysrootArgs>),
     /// Inspect or safely prune owned generated artifacts
@@ -259,6 +269,14 @@ fn run_cli(cli: Cli) -> i32 {
     let config = cli.config;
     let isolated = cli.isolated;
     match command {
+        Commands::SqlCompilerWorker {
+            workspace,
+            admission,
+            admission_sha256,
+        } => crate::sql_compiler_worker::run(
+            &workspace,
+            admission.as_deref().zip(admission_sha256.as_deref()),
+        ),
         Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
             release: _,
             file,

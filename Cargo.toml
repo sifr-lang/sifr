@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/sifr_identity",
+    "crates/sifr_process",
     "crates/sifr_source",
     "crates/sifr_sysroot",
     "crates/sifr_metadata",
@@ -64,6 +65,7 @@ license = "MIT"
 sifr_semantic_services = { path = "crates/sifr_semantic_services" }
 sifr_stdlib_artifact = { path = "crates/sifr_stdlib_artifact" }
 sifr_identity = { path = "crates/sifr_identity" }
+sifr_process = { path = "crates/sifr_process" }
 csv = { package = "csv", version = "=1.4.0", default-features = false, features = [] }
 data-encoding = { package = "data-encoding", version = "=2.11.1", default-features = false, features = ["alloc"] }
 fs2 = { package = "fs2", version = "=0.4.3", default-features = false, features = [] }

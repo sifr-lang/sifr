@@ -11818,49 +11818,49 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution.rs",
+      "path": "crates/sifr_process/src/process_execution.rs",
       "symbol": "dx3_process_deadline_keeps_partial_output_and_kills_group",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&root).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution.rs",
+      "path": "crates/sifr_process/src/process_execution.rs",
       "symbol": "dx3_process_deadline_keeps_partial_output_and_kills_group",
       "operation": "exists",
       "site": "assert!(!marker.exists());",
       "classification": "semantic-input"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution.rs",
+      "path": "crates/sifr_process/src/process_execution.rs",
       "symbol": "dx3_process_deadline_keeps_partial_output_and_kills_group",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(root).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution_windows.rs",
+      "path": "crates/sifr_process/src/process_execution_windows.rs",
       "symbol": "windows_portability_process_child",
       "operation": "write",
       "site": "std::fs::write(marker, \"escaped\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution_windows.rs",
+      "path": "crates/sifr_process/src/process_execution_windows.rs",
       "symbol": "windows_portability_timeout_partial_output_and_descendant_cleanup",
       "operation": "exists",
       "site": "assert!(!marker.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution_windows.rs",
+      "path": "crates/sifr_process/src/process_execution_windows.rs",
       "symbol": "windows_portability_direct_exit_descendant_pipe_cleanup",
       "operation": "exists",
       "site": "assert!(!marker.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/process_execution_windows.rs",
+      "path": "crates/sifr_process/src/process_execution_windows.rs",
       "symbol": "windows_portability_cancellation_and_scoped_concurrency",
       "operation": "exists",
       "site": "assert!(!marker.exists());",
@@ -22129,27 +22129,6 @@
       "classification": "semantic-input"
     },
     {
-      "path": "crates/sifr_semantic_services/src/sql_editor.rs",
-      "symbol": "load_sql_editor_profiles",
-      "operation": "is_file",
-      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_semantic_services/src/sql_editor.rs",
-      "symbol": "load_sql_editor_profiles",
-      "operation": "is_file",
-      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_semantic_services/src/sql_editor.rs",
-      "symbol": "load_sql_editor_profiles",
-      "operation": "is_file",
-      "site": "if !workspace_root.join(\"Cargo.lock\").is_file() {",
-      "classification": "build-identity"
-    },
-    {
       "path": "crates/sifr_semantic_services/src/sql_editor_tests.rs",
       "symbol": "missing_lock_defers_profiles",
       "operation": "write",
@@ -24352,6 +24331,531 @@
       "symbol": "profile_failure_prevents_provisioning_side_effects",
       "operation": "read_dir",
       "site": "std::fs::read_dir(root.path()).expect(\"directory\").count(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "capture",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "capture",
+      "operation": "canonicalize",
+      "site": "let root = root.canonicalize().map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "load",
+      "operation": "canonicalize",
+      "site": "if admitted.root != root.canonicalize().map_err(|error| error.to_string())? {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "load",
+      "operation": "open",
+      "site": "let file = std::fs::File::open(path).map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "snapshot_binds_bytes_root_and_missing_inputs",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"Cargo.lock\"), \"new\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "snapshot_rejects_manifest_drift_before_loading_the_graph",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"Cargo.toml\"), \"# initial\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "snapshot_rejects_manifest_drift_before_loading_the_graph",
+      "operation": "write",
+      "site": "std::fs::write(root.path().join(\"Cargo.toml\"), \"invalid changed TOML\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_admission.rs",
+      "symbol": "verify",
+      "operation": "try_exists",
+      "site": "if path.try_exists().map_err(|error| error.to_string())? {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "admit",
+      "operation": "canonicalize",
+      "site": "let path = path.canonicalize().map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "admit",
+      "operation": "canonicalize",
+      "site": "let root = root.canonicalize().map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "from_snapshot",
+      "operation": "try_exists",
+      "site": "if path.try_exists().map_err(|error| error.to_string())? {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "input_snapshot_rejects_added_or_changed_lock_but_accepts_identical_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&lock, \"changed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "input_snapshot_rejects_added_or_changed_lock_but_accepts_identical_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&lock, \"original\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "input_snapshot_rejects_added_or_changed_lock_but_accepts_identical_bytes",
+      "operation": "write",
+      "site": "std::fs::write(&lock, \"original\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_is_limited_to_configured_files_and_detects_edits",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&admitted).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_is_limited_to_configured_files_and_detects_edits",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&other).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_is_limited_to_configured_files_and_detects_edits",
+      "operation": "write",
+      "site": "std::fs::write(admitted.join(\"a.sifr\"), \"changed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_is_limited_to_configured_files_and_detects_edits",
+      "operation": "write",
+      "site": "std::fs::write(admitted.join(\"a.sifr\"), \"first\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_is_limited_to_configured_files_and_detects_edits",
+      "operation": "write",
+      "site": "std::fs::write(admitted.join(\"ignored.txt\"), \"not source\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_is_limited_to_configured_files_and_detects_edits",
+      "operation": "write",
+      "site": "std::fs::write(other.join(\"b.sifr\"), \"not admitted\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_rejects_file_and_parent_symlink_escapes",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(outside.path().join(\"app\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_rejects_file_and_parent_symlink_escapes",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.path().join(\"migrations/app\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_rejects_file_and_parent_symlink_escapes",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(root.path().join(\"migrations\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_rejects_file_and_parent_symlink_escapes",
+      "operation": "symlink",
+      "site": "symlink(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_rejects_file_and_parent_symlink_escapes",
+      "operation": "symlink",
+      "site": "symlink(outside.path(), root.path().join(\"migrations\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_admission_rejects_file_and_parent_symlink_escapes",
+      "operation": "write",
+      "site": "std::fs::write(outside.path().join(\"app/a.sifr\"), \"outside\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "canonicalize",
+      "site": "let canonical = path.canonicalize().map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "canonicalize",
+      "site": "let root = root.canonicalize().map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "is_dir",
+      "site": ".is_dir()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "is_file",
+      "site": ".is_file()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "read_dir",
+      "site": "for entry in std::fs::read_dir(&directory).map_err(|error| error.to_string())? {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(canonical).map_err(|error| error.to_string())?,",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "symlink_metadata",
+      "site": ".symlink_metadata()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "migration_sources",
+      "operation": "try_exists",
+      "site": "if !directory.try_exists().map_err(|error| error.to_string())? {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "pin",
+      "operation": "canonicalize",
+      "site": "let canonical = path.canonicalize().map_err(|error| error.to_string())?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "pin",
+      "operation": "is_file",
+      "site": ".is_file()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "pin",
+      "operation": "metadata",
+      "site": ".metadata()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/sql_compiler_inputs.rs",
+      "symbol": "verify",
+      "operation": "try_exists",
+      "site": ".try_exists()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "binary",
+      "operation": "is_file",
+      "site": "path.is_file(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "collect",
+      "operation": "is_dir",
+      "site": "if path.is_dir() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "collect",
+      "operation": "read",
+      "site": "std::fs::read(path).expect(\"artifact bytes\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "collect",
+      "operation": "read_dir",
+      "site": "for entry in std::fs::read_dir(path).expect(\"artifact directory\") {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "rejects_admission_drift",
+      "operation": "exists",
+      "site": "!root.join(\".sifr/sql/app\").exists(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "rejects_admission_drift",
+      "operation": "read",
+      "site": "let mut changed = std::fs::read(&lock).expect(\"initial lock\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "rejects_admission_drift",
+      "operation": "write",
+      "site": "std::fs::write(&lock, changed).expect(\"lock drift before first request\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "semantic_requests_reject_missing_grants_and_wrong_compiler_executables",
+      "operation": "exists",
+      "site": "assert!(!project.root.path().join(\".sifr/sql/app\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "sqlite_provision_and_cleanup_keep_database_ownership_inside_the_sandbox",
+      "operation": "exists",
+      "site": "assert!(!Path::new(&path).exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "worker_independently_checks_the_callers_admission_before_loading_inputs",
+      "operation": "exists",
+      "site": "assert!(!root.join(\".sifr/sql/app\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_sandbox.rs",
+      "symbol": "worker_independently_checks_the_callers_admission_before_loading_inputs",
+      "operation": "write",
+      "site": "std::fs::write(root.join(\"Cargo.toml\"), \"invalid manifest after admission\").expect(\"drift\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_worker.rs",
+      "symbol": "canonical_worker_admits_source_bytes_and_preserves_semantic_diagnostics",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_worker.rs",
+      "symbol": "canonical_worker_rejects_lock_manifest_schema_and_component_drift",
+      "operation": "open-write",
+      "site": ".open(project.root.path().join(path))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_worker.rs",
+      "symbol": "canonical_worker_rejects_migration_drift_between_requests",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_worker.rs",
+      "symbol": "project",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(project.root.path().join(\"migrations/app\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/sql_native_application/compiler_worker.rs",
+      "symbol": "project",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/src/build_tests.rs",
+      "symbol": "product_source_identity_tracks_sources_independently_of_configuration",
+      "operation": "exists",
+      "site": "if tree.0.join(\"Cargo.lock\").exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_semantic_services/src/sql_editor.rs",
+      "symbol": "load_sql_editor_snapshot",
+      "operation": "is_file",
+      "site": "if !workspace_root.join(\"Cargo.lock\").is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_semantic_services/src/sql_editor.rs",
+      "symbol": "load_sql_editor_snapshot",
+      "operation": "is_file",
+      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_semantic_services/src/sql_editor.rs",
+      "symbol": "load_sql_editor_snapshot",
+      "operation": "is_file",
+      "site": "if !workspace_root.join(\"sifr.toml\").is_file() || !workspace_root.join(\"Cargo.toml\").is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "explicit_source_selection_rejects_relative_directory_and_replaced_executables",
+      "operation": "write",
+      "site": "std::fs::write(&executable, b\"replacement bytes\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "explicit_source_selection_rejects_relative_directory_and_replaced_executables",
+      "operation": "write",
+      "site": "std::fs::write(&executable, b\"selected executable bytes\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "installed",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "installed",
+      "operation": "is_file",
+      "site": ".is_file()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "installed",
+      "operation": "symlink_metadata",
+      "site": ".symlink_metadata()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "pin",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "pin",
+      "operation": "is_file",
+      "site": ".is_file()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "pin",
+      "operation": "metadata",
+      "site": ".metadata()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "verify",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/compiler_selection.rs",
+      "symbol": "worker_command",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/native_compiler.rs",
+      "symbol": "new",
+      "operation": "canonicalize",
+      "site": "root: root.canonicalize().map_err(|error| error.to_string())?,",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/native_compiler.rs",
+      "symbol": "profile",
+      "operation": "canonicalize",
+      "site": "if root.canonicalize().map_err(|error| error.to_string())? != self.root {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/tests/fixtures/compiler_worker.rs",
+      "symbol": "main",
+      "operation": "write",
+      "site": "if std::fs::write(path, std::process::id().to_string()).is_err() {",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sql_tool/tests/fixtures/native_client.rs",
+      "symbol": "execute",
+      "operation": "write",
+      "site": "std::fs::write(ready, b\"ready\").map_err(|error| error.to_string())?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sql_tool/tests/native_compiler.rs",
+      "symbol": "direct_worker_finishes_and_idle_cancellation_reaps_it",
+      "operation": "exists",
+      "site": "while !ready.exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/tests/native_compiler.rs",
+      "symbol": "direct_worker_finishes_and_idle_cancellation_reaps_it",
+      "operation": "read_to_string",
+      "site": "let worker_pid = std::fs::read_to_string(worker_pid).unwrap();",
       "classification": "tooling-input"
     }
   ]

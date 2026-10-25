@@ -1,0 +1,24 @@
+[package]
+links = "sifr_process_compiled_identity"
+name = "sifr_process"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+libc = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Console", "Win32_System_Diagnostics_ToolHelp", "Win32_System_JobObjects", "Win32_System_Threading"] }
+
+[dev-dependencies]
+memchr = { workspace = true }
+tempfile = "3.27.0"
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }
+
+[lints]
+workspace = true

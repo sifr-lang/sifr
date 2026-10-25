@@ -31,6 +31,9 @@ def prepare_area_graphs(profile, env, run):
     for area in profile.get("selected_areas", []):
         name, suites = area["area"], area["suites"]
         if name == "sql_platform":
+            if "host-tools" in suites:
+                run([sys.executable, str(REPO_ROOT / "verification/areas/sql_platform/tools/check_compiler_execution.py"),
+                     "--prepare-only"], env=env)
             for command in sql_preparation_commands(suites):
                 run(command, env=env)
         if name == "fuzz_property" and "fuzz-smoke" in suites:

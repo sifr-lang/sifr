@@ -9,10 +9,9 @@ license = { workspace = true }
 [[bin]]
 name = "sifr-sql-postgresql"
 path = "src/main.rs"
-required-features = ["compiler"]
 
 [features]
-default = ["compiler"]
+default = []
 compiler = ["dep:sifr_semantic_services"]
 
 [dependencies]

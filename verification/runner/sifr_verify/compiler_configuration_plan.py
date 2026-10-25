@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from .profiles import crate_test_suites_for_mode
 
 ADDITIVE_COMPILER_PACKAGES = frozenset({
-    "sifr_identity", "sifr_diagnostics", "sifr_lowering", "sifr_syntax",
+    "sifr_identity", "sifr_process", "sifr_diagnostics", "sifr_lowering", "sifr_syntax",
     "sifr_frontend", "sifr_analysis", "sifr_lsp", "sifr_package", "sifr_ipc",
     "sifr_stdlib_artifact", "sifr_stdlib_imports", "sifr_stdlib_manifest", "sifr_type_system",
     "sifr_format", "sifr_lint", "sifr_source", "sifr_sysroot", "sifr_metadata", "sifr_ir",

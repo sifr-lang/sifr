@@ -44,15 +44,18 @@ impl Drop for Handle {
     }
 }
 
-struct OwnedChild {
+/// A subprocess job whose leader is reaped and descendants terminated on drop.
+pub struct OwnedChild {
     child: Child,
     job: Handle,
     kill_on_close: bool,
+    _signals: crate::process_signals::Guard,
 }
 
 impl OwnedChild {
     #[allow(unsafe_code)]
-    fn spawn(command: &mut Command) -> io::Result<Self> {
+    pub fn spawn(command: &mut Command) -> io::Result<Self> {
+        let signals = crate::process_signals::acquire()?;
         // SAFETY: a null name and attributes request a private, unnamed job.
         let job = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
         if job.is_null() {
@@ -95,11 +98,12 @@ impl OwnedChild {
             child,
             job,
             kill_on_close: true,
+            _signals: signals,
         })
     }
 
     #[allow(unsafe_code)]
-    fn terminate(&self) {
+    pub fn terminate(&self) {
         // SAFETY: this owned job is live and contains the child and descendants.
         unsafe { TerminateJobObject(self.job.0, 1) };
     }
@@ -122,6 +126,18 @@ impl OwnedChild {
         }
         self.kill_on_close = false;
         Ok(())
+    }
+}
+
+impl std::ops::Deref for OwnedChild {
+    type Target = Child;
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+impl std::ops::DerefMut for OwnedChild {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
     }
 }
 
@@ -197,7 +213,6 @@ impl std::error::Error for ProcessFailure {}
 
 /// User programs stream complete output without a correctness deadline.
 pub fn run_program(command: &mut Command) -> io::Result<Output> {
-    let _signals = crate::process_signals::acquire()?;
     command
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())
@@ -246,7 +261,6 @@ pub fn output(command: &mut Command) -> io::Result<Output> {
 }
 
 pub fn output_with_deadline(command: &mut Command, deadline: Duration) -> io::Result<Output> {
-    let _signals = crate::process_signals::acquire()?;
     command.stdout(Stdio::piped()).stderr(Stdio::piped());
     let mut owned = OwnedChild::spawn(command)?;
     let stdout = owned

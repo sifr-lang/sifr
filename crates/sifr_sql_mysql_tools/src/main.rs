@@ -1,7 +1,8 @@
 use sifr_sql_mysql_tools::{
-    CommandError, cleanup_test_database, provision_test_database, run_migration_command,
-    run_schema_command,
+    CommandError, cleanup_test_database, provision_test_database_with_profile_loader,
+    run_migration_command_with_compiler, run_schema_command_with_profile_loader,
 };
+use sifr_sql_tool::native_compiler::NativeCompiler;
 use std::io::Write as _;
 use std::process::ExitCode;
 
@@ -16,6 +17,15 @@ async fn main() -> ExitCode {
         Ok(path) => path,
         Err(_) => return fail("cannot determine the SQL tool workspace"),
     };
+    let compiler = match NativeCompiler::new(&workspace_root, env!("SIFR_COMPILER_SOURCE_ID")) {
+        Ok(compiler) => compiler,
+        Err(error) => {
+            let _ = writeln!(std::io::stderr(), "{error}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let load_profile = |root: &std::path::Path, name: &str| compiler.profile(root, name);
+    let compile_source = |source: &str| compiler.migration(source);
     let connection = std::env::var("SIFR_SQL_DATABASE_URL").ok();
     let mut emit = |value: &str| {
         let mut stdout = std::io::stdout();
@@ -26,30 +36,53 @@ async fn main() -> ExitCode {
                 message: "cannot write schema command output".to_string(),
             })
     };
-    let outcome: Result<(u8, String), CommandError> = match namespace.as_deref() {
-        Some("schema") => run_schema_command(
-            &arguments,
-            &workspace_root,
-            connection.as_deref(),
-            &mut emit,
-        )
+    let outcome: Result<(u8, String), CommandError> = match compiler
+        .run(async {
+            match namespace.as_deref() {
+                Some("schema") => run_schema_command_with_profile_loader(
+                    &load_profile,
+                    &arguments,
+                    &workspace_root,
+                    connection.as_deref(),
+                    &mut emit,
+                )
+                .await
+                .map(|outcome| (outcome.exit_code, outcome.stdout)),
+                Some("migration") => run_migration_command_with_compiler(
+                    &compile_source,
+                    &load_profile,
+                    &arguments,
+                    &workspace_root,
+                    connection.as_deref(),
+                )
+                .await
+                .map(|outcome| (outcome.exit_code, outcome.stdout)),
+                Some("test") => run_test_command(
+                    &load_profile,
+                    &arguments,
+                    &workspace_root,
+                    connection.as_deref(),
+                )
+                .await
+                .map(|stdout| (0, stdout)),
+                _ => Err(CommandError {
+                    message: "usage: schema <command> | migration <command> | test <command>"
+                        .to_string(),
+                }),
+            }
+        })
         .await
-        .map(|outcome| (outcome.exit_code, outcome.stdout)),
-        Some("migration") => run_migration_command(
-            &compiler_context(),
-            &arguments,
-            &workspace_root,
-            connection.as_deref(),
-        )
-        .await
-        .map(|outcome| (outcome.exit_code, outcome.stdout)),
-        Some("test") => run_test_command(&arguments, &workspace_root, connection.as_deref())
-            .await
-            .map(|stdout| (0, stdout)),
-        _ => Err(CommandError {
-            message: "usage: schema <command> | migration <command> | test <command>".to_string(),
-        }),
+    {
+        Ok(outcome) => outcome,
+        Err(signal) => std::process::exit(128 + signal),
     };
+    if outcome.is_ok() {
+        if let Err(error) = compiler.finish() {
+            return fail(&error);
+        }
+    } else {
+        drop(compiler);
+    }
     match outcome {
         Ok((exit_code, stdout)) => {
             if std::io::stdout().write_all(stdout.as_bytes()).is_err() {
@@ -63,6 +96,10 @@ async fn main() -> ExitCode {
 }
 
 async fn run_test_command(
+    load_profile: &impl Fn(
+        &std::path::Path,
+        &str,
+    ) -> Result<sifr_sql_contract::ProfileAuthority, String>,
     arguments: &[String],
     workspace_root: &std::path::Path,
     admin_url: Option<&str>,
@@ -77,13 +114,19 @@ async fn run_test_command(
             let password = std::env::var("SIFR_SQL_TEST_PASSWORD").map_err(|_| CommandError {
                 message: "SIFR_SQL_TEST_PASSWORD is required".to_string(),
             })?;
-            provision_test_database(workspace_root, profile, admin_url, &password)
-                .await?
-                .to_canonical_json()
-                .map(|json| format!("{json}\n"))
-                .map_err(|error| CommandError {
-                    message: error.to_string(),
-                })
+            provision_test_database_with_profile_loader(
+                load_profile,
+                workspace_root,
+                profile,
+                admin_url,
+                &password,
+            )
+            .await?
+            .to_canonical_json()
+            .map(|json| format!("{json}\n"))
+            .map_err(|error| CommandError {
+                message: error.to_string(),
+            })
         }
         [command, resource_flag, resource]
             if command == "cleanup" && resource_flag == "--resource-id" =>
@@ -104,18 +147,4 @@ async fn run_test_command(
 fn fail(message: &str) -> ExitCode {
     let _ = writeln!(std::io::stderr(), "{message}");
     ExitCode::FAILURE
-}
-
-fn compiler_context() -> sifr_semantic_services::SemanticContext {
-    if cfg!(test) {
-        return sifr_semantic_services::SemanticContext::for_test_tokens(
-            vec![(env!("CARGO_PKG_NAME"), env!("SIFR_LOCAL_INPUT_TOKEN"))],
-            "sql-tool-unit",
-        );
-    }
-    let identity = match sifr_identity::CompilerIdentity::product(env!("SIFR_COMPILER_BUILD_ID")) {
-        Ok(identity) => identity,
-        Err(error) => panic!("{error}"),
-    };
-    sifr_semantic_services::SemanticContext::new(identity)
 }

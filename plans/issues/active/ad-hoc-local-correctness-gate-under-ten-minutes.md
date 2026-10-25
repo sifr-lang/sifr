@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V1q merged; V1r capability assertion inventory repair; full gates and V5 remain open
+current_stage: V1s named qualification passed; exact-candidate independent review pending; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13345,3 +13345,452 @@ removing it still fails and a production-semantic classification is rejected;
 file-size and documentation/diff checks; exact-candidate independent review.
 No compiler rebuild is required because no compiler or test implementation
 changes. Full final gates and V5 remain required.
+
+### V1r closure — capability assertion inventory repaired
+
+PR [#4476](https://github.com/sifr-lang/sifr/pull/4476) merged as
+8734e8200b34aebe649b087cc9c30a6853da8380, with the exact reviewed tree
+b97407ee4c99a78a5243073ec0d43f0a987f6d81. The one missing test-assertion
+classification is added; all 6,428 previous rows, compiler/test sources and
+classifier rules are unchanged. The real guard passes 6,429 sites and 235
+reviewed nodes. All 17 existing guard self-tests pass. Three focused controls
+reject a missing row, wrong fingerprint and production-semantic classification.
+Size, documentation and exact-range diff checks pass. Guarded validation took
+41.234s without a compiler build.
+
+Independent review SATISFIED, no blockers; response SHA-256
+38fb63f0c3372731017b8e91b7f19474bc9d2f777119d5345d6c9d780473fa49.
+Evidence v1r-evidence.tar.gz has 26 verified payloads; SHA-256
+ff3edcdcd44e8cc2bde1fc2a06572d08572bfeeb3b5a698a5aed269e86cbd192.
+The raw self-test log retains all 17 case names; optional inventory ordering
+cleanup is not part of this repair. The pre-existing V1o inventory omission is
+closed. Full phase acceptance remains open.
+
+### V1s prospective execution — integrated compiler execution boundary for SQL tools
+
+Address the remaining demonstrated build root cause: independently building each
+standalone native SQL tool still builds the canonical semantic compiler and its
+component engine. V1q proves the native operation libraries can consume explicit
+canonical inputs; it does not remove the compiler from the actual executables.
+This item must deliver the complete execution/installation adapter and measure
+the actual three-tool clean-build protocol, rather than another library-only
+speedup.
+
+Keep one canonical implementation of profile preparation and migration source
+compilation. Native tools retain catalogs, connections, credentials, provider
+validation, execution plans and artifact writes. The owning compiler prepares
+semantic values under explicit project/lock/input authority. Use existing
+bounded framing and installed-generation integrity where they fit. Do not
+invent a daemon, alternate frontend, cache of correctness verdicts, unchecked
+helper lookup, or implicit fallback to the old expensive execution path.
+
+Resolve and document the production call/lifetime contract before selecting the
+final transport. Both direct tool entrypoints and confined namespace dispatch
+must work. An installed compiler must come from the selected immutable generation
+and pass its existing executable/metadata binding. Development execution needs
+an explicit source/build identity relationship and must reject stale or mismatched
+compiler selections. A digest alone is not permission to execute a helper.
+No whole-installation authenticity claim is inferred from local checksums.
+
+The confined route must use a caller-owned capability boundary; do not grant an
+arbitrary subprocess or filesystem/network access merely to make compilation
+work. Service operations may access only admitted project inputs and canonical
+compiler resources. Lock/source drift, unknown protocol/version/operation,
+wrong identity, malformed/truncated/oversized data, worker death, cancellation
+and timeout must fail explicitly and leave no owned children. Charge all
+canonical preparation, verification, IPC and cleanup to the measured operation.
+No free reuse across mismatched inputs or repeated compiler preparation hidden
+outside the gate.
+
+Batch the coupled protocol, compiler adapter, native CLI, installation and runner
+repairs on one integrated candidate. Use focused checks while implementing, then
+review the complete candidate. Do not change default tool feature selection or
+the clean-build protocol's selected executable authority until the complete
+replacement qualifies. Existing optional in-process APIs can retain explicit
+ownership, but normal commands must have one clear execution path.
+
+Named acceptance:
+- Run actual schema/migration/provisioning operations through the production
+  entrypoints using source and installed compiler selections; retain exact
+  canonical artifacts, diagnostics, exit behavior and every applicable existing
+  test assertion. Classify the same existing live-service exclusions explicitly.
+- Exercise actual sandbox grants and denial controls, including outside-project
+  requests and compiler/input substitutions, with no broad permission fallback.
+  Preserve the existing output contract and bound new request/response traffic.
+- Exercise protocol framing/identity/staleness and worker lifecycle negative
+  controls, including cancellation/death cleanup. Unit mocks cannot substitute
+  for the real canonical compiler or process tests.
+- Preserve the complete default/native SQL, package/host-tool, compiler/editor,
+  installation/metadata and runner coverage affected by the new ownership.
+  Update guard inventories and feature contracts intentionally; do not hide
+  changed build dependencies or add skips.
+- Build the actual three maintained SQL executables from independent clean
+  owned targets under the existing reproducibility protocol. Compare all
+  executable hashes and execute their real commands. Retain producer preparation
+  and failed/capped attempts. Compare normal elapsed measurements; no tracing
+  overhead in timing evidence and no library-only extrapolation.
+- Run affected formatting/size/dependency/area contracts, compare emitted plans,
+  reconcile every selected test/variant and obtain exact-candidate independent
+  review before merge. Final scoped create-pr/merge and all V5 scenarios remain
+  mandatory after integration.
+Keep the 1,800-second diagnostic category cap and resource reserves. If the
+complete adapter cannot preserve a named contract, record that exact failure
+and revise the design instead of weakening acceptance or claiming a speedup.
+
+### V1s development checkpoint — canonical worker primitives qualified, integration open
+
+The active implementation remains on codex/local-gate-sql-compiler-execution;
+there is no V1s PR, merge or independent acceptance review yet. Default standalone
+SQL commands still use their existing compiler feature. The complete adapter,
+actual three-executable clean-build comparison, final scoped gates and V5 remain
+open.
+
+Focused development evidence:
+- Source/configuration identity separation at
+  5ba20ce902d113ebc0f44be0f3a2f753d4e68f7d: seven identity tests pass.
+  The inherited anonymous channel proof passes confinement, EOF, silent-peer
+  timeout and non-socket rejection, using dummy bytes rather than compiler data.
+- Shared process support was extracted from the driver into sifr_process.
+  Existing public driver paths re-export it; existing Unix and Windows test
+  assertions were transferred, and verification profiles select the new owner.
+  Windows behavior has not been executed in these Linux observations.
+- Candidate 46b1c60de8dddb9389d5b40b809cc58714ad5a05 passes 52 IPC,
+  11 process and seven SQL protocol unit tests. The protocol retains every
+  migration field and all six step kinds; profile values are revalidated through
+  the canonical authority builder. There is one synchronous outstanding request.
+  The existing 16 MiB IPC frame bound applies.
+- Candidate 22e69987030ca5191161ce2938b6dd27c979b443 passes six actual
+  subprocess lifecycle tests, including silent/dead/mismatched workers,
+  descendants retaining pipes, request timeout, exact diagnostic propagation,
+  clean shutdown and failed/hanging exit. This fixture does not implement
+  compiler semantics. The command including compilation took 26.093s.
+- Candidate 6fdcbab893d3d6bdbe9f5bd3a349569c3ea7dba1 passes four worker
+  admission unit tests and four real canonical worker integration tests.
+  The latter compare all profiles and typed migration fields for SQLite 3.53.4,
+  MySQL 8.4 and PostgreSQL 18 against the existing semantic services. They
+  preserve semantic diagnostics, reject unadmitted source bytes, and reject
+  lock, manifest, schema, component and between-request migration drift.
+  Admission units including compilation took 20.500s; real integration including
+  compilation took 31.825s (test process 26.02s). The guarded batch, including
+  formatting, size and diff checks, took 67.227s. These are development checks,
+  not a full gate timing result.
+
+The hidden canonical worker uses the existing frozen editor graph loader,
+profile preparer and migration compiler. The loader was factored without
+changing the original editor preparation path. The graph and selected input
+hashes remain fixed after initial preparation. Migration files are admitted by
+bytes from configured project directories, pinned at the first source request
+and checked before and after compilation and on subsequent requests. Baselines,
+native execution and output writes remain owned by native tools. The launcher
+still needs to enforce source/installed executable selection and channel custody;
+the low-level session constructor is not that admission policy.
+
+Failed attempts remain failed: a guard/output-directory name collision prevented
+the first process check from starting; the initial protocol checks exposed
+unused payload bytes accepted by the shared Postcard decoder and unknown fields
+accepted on unit variants. Both decoder gaps are fixed with negative controls.
+Two protocol attempts also contained incomplete test-profile inputs, subsequently
+corrected. The first canonical worker integration attempt failed to compile
+because its nested test module needed an explicit path; its four admission units
+had passed. The corrected candidate above passes both selections. No failed
+aggregate is relabeled.
+
+Next actions: implement verified source and installed compiler selection; connect
+the private sandbox capability with lazy worker ownership; qualify native
+entrypoints before changing default compiler features; reconcile affected policy
+inventories and emitted plans; run all named integrated acceptance and actual
+clean executable builds, then exact-candidate review. Rebuild affected declared
+component producers for final acceptance after coupled source changes settle.
+Retain targets and all incomplete evidence.
+
+
+### V1s development checkpoint — source, installed and sandbox execution
+
+The integrated V1s item remains open on codex/local-gate-sql-compiler-execution.
+There is no implementation PR, independent acceptance review or merge yet.
+
+At 97848cc416290d11dd929304d746a505c3b804a1, the native source-command comparison
+passed all 24 cases against the retained V1q canonical in-process producer and
+native consumer on the same fresh fixture roots. All 33 artifact files were
+byte-identical; both SQLite provisioning paths created real databases that
+passed integrity checks and were removed by cleanup. The comparison took
+278.839s including reference runs. Reading a valid plan and cleanup succeeded
+with an unavailable compiler selection, proving lazy operation.
+
+At c88f610987062e855de85e04bb357f06db8a0731, four real sandbox integration tests
+passed for all three schema providers, grant denial, wrong compiler selection,
+SQLite provisioning/cleanup and lazy missing-plan reads. The test process took
+52.09s; its command including preparation took 103.640s. The existing locked
+namespace CLI regression, profile checks, preparation tests, formatting and
+size/diff checks passed in the same 132.258s guarded batch. The new boundary
+tests directly supply trusted binaries; existing namespace tests separately
+cover package/lock admission. This is complementary coverage, not a claim that
+the new native cases repeated Cargo admission in the same invocation.
+
+The same candidate was packaged through the actual distribution/metadata
+pipeline into an installed generation: packaging took 122.740s, the guarded
+preparation batch 135.758s. All 24 installed native-command comparisons passed
+with 33 identical artifact files and actual SQLite provisioning/cleanup in
+510.481s including reference runs, excluding the separately recorded packaging.
+Semantic commands had no source compiler override. Five installed negative
+controls passed in 13.692s: source override, manifest content drift, manifest
+symlink, compiler byte substitution and compiler path substitution. Every
+rejected invocation preserved the project file inventory. These are native
+development installation observations, not release or cross-platform evidence.
+
+Retain the failed/incomplete attempts:
+- The initial combined compiler/native Cargo build stopped at the disk reserve
+  after 503.543s. It selected an additional dependency variant. Separating those
+  preparation graphs and preserving 7.183 GiB of inactive incremental artifacts
+  on retained storage allowed the corrected preparation/regression batch to
+  pass in 223.390s. No target contents were discarded or cold-build speedup
+  claimed.
+- Two source-command harness attempts failed before execution (blank JSON lines
+  and an unexpected auxiliary executable). A third compared artifacts across
+  different fixture roots and failed their package-graph identities. An
+  independent same-binary probe confirmed that root change; the passing harness
+  generated canonical baselines on the same fixture, without weakening identity.
+- The first installed preparation harness used incorrect native executable names
+  and failed before packaging. The corrected attempt above is separate evidence.
+
+The next candidate removes default embedded compiler dependencies from ordinary
+native executables now that source, installed and actual sandbox operations
+have focused qualification. Existing compiler-enabled tests and cross-target
+feature variants remain explicitly selected; native-only tests remain separate.
+Compare their complete test-name and ignored-case inventories with V1q, enforce
+the default native dependency boundary, and run actual independent clean
+executable builds. Installed integrity work is charged: the first schema command
+took 55.767s and subsequent compiler-using commands roughly 15–20s in this run.
+No sub-ten-minute gate result follows from these development comparisons.
+
+Remaining: complete feature/coverage and policy-inventory reconciliation, declared
+producer refresh, named affected contracts and clean-build reproducibility,
+exact-candidate independent review, then final scoped gates and all V5 scenarios.
+
+
+### V1s development checkpoint — executable build result and caller admission
+
+At a57a1cc7d01d490ab20afb1c29d01e7eaf78a6a7, both test variants retain every
+previous test name and the same five live-service exclusions: 29 native tests
+and 93 compiler-enabled tests pass. The actual three-executable build protocol
+takes 400.950s: independent clean A 196.847s, reuse A 1.197s, independent clean B
+199.101s. All three executable hashes match across all builds, and the native
+dependency graph excludes the semantic compiler and component engine. The earlier
+complete observation was 878.767s at a different recorded candidate. This is a
+category comparison, not controlled repeated full-gate qualification.
+
+Real commands from both clean targets pass in a separate 140.269s batch: 18
+output/exit comparisons, 66 byte-identical schema/migration artifact files, and
+two actual SQLite provisioning/integrity/cleanup paths. Canonical preparation
+remains charged. Retain the earlier capacity-preflight failures with zero tests;
+inactive incremental artifacts were checksum-verified and retained elsewhere
+under the same logical paths, not discarded.
+
+The actual pre-request admission regression at
+21d2d88fc99210491d052c6fbb19a1962afb1f67 failed: the lazy worker accepted a lock
+edited after caller admission but before its first request. This is a confirmed
+in-scope omission, not speculation. The repair records the caller's selected
+input identities before launching the confined tool and passes a bounded,
+digest-bound receipt only to the selected worker. The worker checks it before
+loading metadata; initial graph/profile input selection must match it. Native
+tools receive no additional sandbox permissions. Nonsemantic commands remain
+lazy; admission errors are required only when the service is requested.
+
+At 7f31b716e711a3d8ac7307d20a5c970d31624300, six sandbox/adapter tests pass,
+including seven pre-request drift cases and an independent worker-side
+before-metadata check. Six admission/input units, four real canonical compiler
+comparisons, the existing locked namespace CLI regression, formatting, size and
+diff checks pass. The guarded batch took 174.790s. Preserve the first repair's
+hash-formatting compile failure as a separate failed attempt.
+
+The policy reconciliation transfers 28 existing unsafe sites to sifr_process
+and explicitly binds the four new socket/reaping sites and allowances. It also
+updates affected method/filesystem inventories and Cargo target/feature ownership.
+Full policy and runner validation is next; no pass is inferred from bookkeeping.
+All seven emitted plans preserve their previous selections with only the new
+sifr_process owner added; the SQL host-tools suite adds the native-command and
+session cases. Execute and reconcile those selections before review.
+
+V1s remains unmerged and unreviewed. Refresh affected component producers,
+complete current source/installed and executable qualification, reconcile
+affected coverage, and obtain exact-candidate review. Final scoped gates and
+every V5 scenario remain open; no sub-ten-minute full-gate claim is made.
+
+
+V1s policy discovery: unsafe (402 sites), method authority (6,451 sites), direct
+filesystem effects, their mutation suites, dependency direction, SQL host/native
+contracts and profile checks pass at 73e98b29acd1134e9d2e612923e1f59a01888f71.
+The aggregate remains failed: DX consumer inventory needed one shifted line
+anchor; Cargo coverage exposed the existing V1o host/default component-feature
+classification omission; component provenance requires the already-planned
+producer refresh. These are separately recorded, not treated as passing.
+The two feature rows belong to the affected compiler/component boundary; no
+feature, target or profile is removed. Inventory ordering is restored without
+changing entries or multiplicities to keep the final review focused.
+
+
+### V1s development checkpoint — refreshed producers and frozen graph ownership
+
+The three declared producers pass with retained targets and bounded guards:
+MySQL 38.156s, SQLite 59.234s, PostgreSQL's six versions 337.308s. All ten guest
+artifacts changed; receipts were produced by the actual build scripts, not
+edited to bless old binaries. Generated outputs are committed at
+015205304ae9f0ab18a8b6fd76a65ff13b26e2d6; the exact producer commit is recorded in
+v1s-producer-candidate.json. The resulting component qualification and its
+mutation tests pass. Words has unchanged declared inputs and retained valid
+provenance.
+
+A follow-up test at b019e1adb2cf79705df244c6f3cdadcc122f5cd7 confirmed that
+the worker reselected native tools even though its caller had already admitted
+the graph. With native selection made unavailable only in the worker, profile
+loading failed. This exposes repeated metadata work and a configuration boundary
+that the file-only receipt did not remove; it is not evidence of an executed
+sandbox escape.
+
+The implementation at a5357888c896c43b582605787f07a302e2c3d818 carries the
+caller-admitted normalized Cargo metadata in the bounded private receipt.
+The same canonical package graph/source-map loader reconstructs it without
+Cargo execution. Existing canonical graph/source-map digests bind the result.
+Both routes retain their initial graph and verify pinned input files before and
+after semantic operations; source-module contents join the selected input set.
+The direct route performs initial metadata loading itself.
+
+Focused validation passes: all 171 package units, component qualification and
+mutations, seven actual sandbox/adapter tests, six admission/input units, five
+canonical worker comparisons (including complete snapshot round-trip equality),
+the locked namespace CLI regression, formatting and size/diff checks. The guarded
+batch took 210.312s. The seven adapter tests took 49.34s in their test process;
+their command including separate native/compiler preparation took 110.214s.
+This is a larger batch with fresh compilation and refreshed guest artifacts,
+not a controlled timing comparison with the preceding admission repair.
+
+Reconcile the two changed policy inventories, run the integrated host-tools and
+runner contracts, then qualify current source/installed commands and clean
+executables before independent review. Earlier observations remain bound to
+their recorded candidates. Full phase gates and V5 remain unproven.
+
+
+V1s integrated discovery at 5c8d7458e021267c54e8f875ce581bf7ddb2d96f:
+quality passes (80.763s guarded), all seven host-tools cases pass (106.809s
+including preparation; 54 Rust tests and the same five live exclusions),
+complete runner self-tests pass (69.981s), all seven profile plans preserve
+their previous selections plus the explicit process owner, 359 compiler/editor
+owner units pass (90.325s including compilation), and SQL/tool contracts pass.
+The batch remains failed because the dependency audit reported eight passes and
+seven failures: the new process crate's manifest and its tempfile/windows-sys
+declarations were absent from the pinned inventory. Add that manifest and those
+two already-audited versions; preserve registry response/checksum authority,
+verification graph pins, every other declaration and all negative controls.
+The failure is owned by this extraction and is not an external dependency issue.
+
+
+### V1s integrated qualification checkpoint — CLI schema omission found
+
+Candidate e58236e3614cc95b56402e8197b7fffd836eca9d passes all eight execution
+categories: source comparisons 259.004s; installed preparation 133.133s;
+installed comparisons 449.170s; installed rejection controls 13.816s; native
+test qualification 29.915s; compiler-enabled qualification 93.728s; independent
+clean builds 403.961s; real commands from both clean targets 129.908s. These are
+guarded category observations with overlapping coverage, not a full gate total.
+Both source/installed comparisons retain 24 exact cases and 33 artifact files;
+both clean targets retain 18 comparisons, 66 files and real SQLite cleanup.
+
+The final quality guard passes, as do 530 package/compiler/editor units and
+all seven runner host-tool cases, complete runner self-tests and seven emitted
+plans. The complete CLI unit selection exposed one omitted update to its
+independent eager schema: it lacked the new hidden worker variant, causing four
+parser-parity assertions to fail. The original result remains failed:
+152 passed, four failed and six existing ignored tests.
+
+Repair the independent fixture, preserve full ArgMatches/help/error comparisons,
+and exercise required workspace and paired admission arguments in both parsers.
+This changes test code only; no production parser or compiler behavior is relaxed.
+Run the full CLI units before further timing qualification. The compiler's
+conservative aggregate source identity includes this test file, so refresh paired
+binaries and preserve the observed candidate identities instead of relabeling
+the earlier execution records. Draft PR #4477 remains unreviewed and unmerged.
+Final scoped phase gates and every V5 scenario remain required.
+
+### V1s named qualification — final CLI repair and refreshed execution
+
+At ba0bb4eb3c54fa62570203063af2f4b21dfe0735, the full main-CLI unit selection passes:
+157 passed, zero failed, six existing ignored generated-build cases. Those six
+remain selected separately by the full profiles; they are not live-service
+exclusions and are not counted as passing here. The independent eager schema now
+declares the hidden worker and exercises paired admission arguments without
+weakening complete parser/help/error comparisons.
+
+The source identity includes test code, so all eight binary qualification
+categories were refreshed at this exact implementation revision:
+
+| Category | Guarded elapsed | Result |
+| --- | ---: | --- |
+| source commands | 258.459s | pass |
+| installed preparation | 130.064s | pass |
+| installed commands | 449.687s | pass |
+| installed negative | 14.034s | pass |
+| native tests | 28.828s | pass |
+| default tests | 74.926s | pass |
+| clean executables | 422.462s | pass |
+| clean commands | 127.958s | pass |
+
+The source and installed comparisons each preserve 24 output/exit/diagnostic
+cases, 33 exact artifact files and both actual SQLite integrity/cleanup paths.
+Installed qualification uses a development compiler packaged by the actual
+distribution metadata pipeline, not a release or foreign-platform claim.
+All five installed rejection controls pass. Native/default qualification retains
+29/93 passing tests and the same five explicitly excluded live-service cases.
+The clean protocol builds all three maintained executables: A 202.466s,
+reuse A 7.553s and independent B 202.765s.
+All three executable hashes match, with no semantic compiler or component engine
+in the native build graph. Commands from both independent builds preserve
+18 comparisons, 66 exact artifact files and both real SQLite cleanup paths.
+
+The current focused regression batch passes (154.776s guarded): dependency audit,
+source identity, IPC/process, component provenance with mutations, all seven
+real sandbox/adapter cases, admission units, five canonical compiler comparisons,
+locked namespace CLI, formatting, size and base-to-candidate diff checks.
+Complete quality and runner checks and 530 package/compiler/editor units remain
+recorded at e58236e3614cc95b56402e8197b7fffd836eca9d. The intervening repair
+changes only the independent CLI test file and phase record: 35,095 other tracked
+entries are identical. Their earlier observed SHA is retained; the failed CLI
+result is not relabelled. Full CLI and source-identity-sensitive execution were
+rerun as above. Original failed and incomplete attempts remain preserved.
+
+Evidence is retained outside Git in v1s-final-qualification-r2-result.json,
+the eight named category records and guards, v1s-final-regressions-r2,
+v1s-cli-parity-checks and the hashed acceptance manifest. Exact candidate/input
+proof accompanies the final documentation-only record update. Draft PR #4477
+still requires scoped independent review before merge.
+
+These overlapping diagnostic categories are not additive full-gate timing.
+The earlier actual clean protocol took 878.767s at its recorded candidate; the
+latest result removes compiler/engine rebuild work, but is not a controlled
+repeated full-gate comparison. The full runner still executes top-level categories
+sequentially. After this item closes, measure the integrated candidate, account
+for every category and choose the next repair from current costs. Final scoped
+create-pr/merge and every V5 timing/invalidation scenario remain mandatory.
+
+
+### V1s independent review — documentation correction
+
+The exact-candidate review of cf1867c0efe3c3614b471ead297b121b4fc6bd05
+returned NOT SATISFIED for one prose omission in sql_host_tools.md: its older
+paragraph still said the compiler feature was default-enabled and required by
+ordinary binaries. The implementation and retained evidence passed that review.
+Rewrite the paragraph to match the actual non-default in-process API and normal
+worker path, and link the execution contract. Also clarify source-tree layout
+pairing and that caller admission runs eagerly even when worker startup is lazy.
+No implementation, tests, fixtures, locks or verification selections change.
+
+The original review remains outside Git and is not relabelled. Its response
+SHA-256 is c696acbbdae8ea6ccff7fd17b3438d2a898c9affc24c2b4e742cc02810b10154.
+Run documentation/link and exact-input checks; obtain only a narrow confirmation
+that the documented blocker is resolved to satisfy this phase's explicit positive
+independent-verdict prerequisite. Do not repeat implementation review or tests.
+
+Record nonblocking follow-ups for phase integration: a combined real SQL tool
+through locked namespace dispatch would join the already independently tested
+boundaries; name and explain the existing five-second cleanup bound when that
+code is next changed. Revisit eager admission cost only with measured evidence
+and unchanged pre-launch input authority. Final gates and V5 remain open.

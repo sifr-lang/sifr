@@ -138,7 +138,7 @@ def run_server(major: int) -> dict[str, Any]:
         }
         run([
             "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_tools",
-            "--features", f"sifr_sql_postgresql/postgresql-{major}",
+            "--features", f"sifr_sql_postgresql_tools/compiler,sifr_sql_postgresql/postgresql-{major}",
             "--test", "live_catalog", "--", "--ignored", "--exact",
             "live_catalog_preserves_postgresql_semantic_objects",
         ], env=environment, cwd=REPO_ROOT)

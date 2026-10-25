@@ -33,6 +33,8 @@ mod formatter_cache;
 mod formatter_cli;
 mod formatter_discovery;
 mod host_tool_cli;
+#[cfg(unix)]
+mod host_tool_compiler;
 mod host_tool_sandbox;
 mod lint_cli;
 mod metadata_cli;
@@ -47,6 +49,9 @@ mod self_update_metadata;
 mod self_update_metadata_source;
 mod self_update_receipt;
 mod self_update_runner;
+mod sql_compiler_admission;
+mod sql_compiler_inputs;
+mod sql_compiler_worker;
 mod sysroot_cli;
 mod test_cli;
 mod trace_artifacts;

@@ -1,9 +1,13 @@
 //! Provider-neutral schema lifecycle contracts for Sifr host tools.
 
 mod artifacts;
+pub mod compiler_protocol;
+pub mod compiler_selection;
+pub mod compiler_session;
 mod lifecycle;
 mod migration_artifacts;
 mod migration_source;
+pub mod native_compiler;
 mod transaction;
 
 pub use artifacts::{
@@ -26,3 +30,7 @@ pub use migration_source::{
     MigrationSourceInputs, compile_migration_sources, load_migration_source_inputs,
 };
 pub use transaction::{write_artifacts_atomically, write_migration_artifacts_atomically};
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

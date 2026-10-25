@@ -35,6 +35,7 @@
     "network",
     "project-read",
     "project-write",
+    "sql-compiler",
     "subprocess"
   ],
   "negative_contracts": [

@@ -192,3 +192,98 @@ fn cargo_directory_watches_track_the_hashed_inventory() {
         probe.run("unchanged symlinks", true);
     }
 }
+
+#[test]
+fn product_source_identity_tracks_sources_independently_of_configuration() {
+    let tree = Scratch::new();
+    let identity = Path::new(env!("CARGO_MANIFEST_DIR"));
+    tree.write(
+        "Cargo.toml",
+        "[workspace]\nmembers=['crates/probe']\nresolver='3'\n[profile.dev]\ndebug=0\n",
+    );
+    tree.write(
+        "crates/probe/Cargo.toml",
+        &format!(
+            "[package]\nname='product_identity_probe'\nversion='0.0.0'\nedition='2024'\n\
+             [features]\nalternate=[]\n[build-dependencies]\n\
+             sifr_identity={{path={:?},features=['build']}}\n",
+            identity.to_str().unwrap()
+        ),
+    );
+    tree.write(
+        "crates/probe/build.rs",
+        "fn main() { sifr_identity::build::emit_product_identity().unwrap(); }\n",
+    );
+    tree.write(
+        "crates/probe/src/main.rs",
+        "fn main() { println!(\"{} {}\", env!(\"SIFR_COMPILER_SOURCE_ID\"), env!(\"SIFR_COMPILER_BUILD_ID\")); }\n",
+    );
+    tree.write("crates/probe/semantic-input.txt", "initial");
+    let run =
+        |alternate: bool| {
+            let mut cargo = Command::new(env!("CARGO"));
+            cargo
+                .current_dir(&tree.0)
+                .args([
+                    "run",
+                    "--quiet",
+                    "--offline",
+                    "-p",
+                    "product_identity_probe",
+                ])
+                .env("CARGO_TARGET_DIR", tree.0.join("target"));
+            if alternate {
+                cargo.args(["--features", "alternate"]);
+            }
+            if tree.0.join("Cargo.lock").exists() {
+                cargo.arg("--locked");
+            }
+            for (name, _) in std::env::vars_os() {
+                let name_text = name.to_string_lossy();
+                if name_text.starts_with("CARGO_PKG_")
+                    || name_text.starts_with("CARGO_FEATURE_")
+                    || name_text.starts_with("CARGO_CFG_")
+                    || name_text.starts_with("DEP_")
+                    || matches!(
+                        name_text.as_ref(),
+                        "CARGO_MANIFEST_DIR" | "CARGO_MANIFEST_PATH" | "OUT_DIR"
+                    )
+                {
+                    cargo.env_remove(name);
+                }
+            }
+            let output = cargo.output().unwrap();
+            assert!(
+                output.status.success(),
+                "identity probe: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            let fields: Vec<_> = stdout.split_whitespace().map(str::to_string).collect();
+            assert_eq!(fields.len(), 2, "{stdout}");
+            assert!(fields.iter().all(
+                |value| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+            ));
+            (fields[0].clone(), fields[1].clone())
+        };
+    let initial = run(false);
+    let configured = run(true);
+    assert_eq!(initial.0, configured.0, "same source, different features");
+    assert_ne!(
+        initial.1, configured.1,
+        "configured identity remains distinct"
+    );
+    tree.write(".git/HEAD", "new-revision-with-the-same-sources");
+    assert_eq!(
+        configured,
+        run(true),
+        "revision labels are not source inputs"
+    );
+    tree.write("crates/probe/semantic-input.txt", "edited");
+    let edited = run(true);
+    assert_ne!(configured.0, edited.0, "semantic inputs invalidate pairing");
+    assert_ne!(
+        configured.1, edited.1,
+        "configured identity still tracks source"
+    );
+}

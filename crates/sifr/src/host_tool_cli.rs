@@ -101,7 +101,18 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         );
         return EXIT_USAGE_OR_CONFIG;
     }
+    let compiler_executable = match std::env::current_exe() {
+        Ok(path) => path,
+        Err(error) => {
+            render_tool_error(
+                &format!("cannot identify the invoking compiler: {error}"),
+                format,
+            );
+            return EXIT_INTERNAL_COMPILER_FAILURE;
+        }
+    };
     let output = match run_sandboxed_tool(&SandboxedToolRequest {
+        compiler_executable: &compiler_executable,
         executable: &executable,
         args: forwarded,
         workspace_root: &graph.workspace_root,
@@ -115,7 +126,12 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         Ok(output) => output,
         Err(message) => {
             render_tool_error(&message, format);
-            return EXIT_INTERNAL_COMPILER_FAILURE;
+            let signal = sifr_process::process_signals::cancelled();
+            return if signal != 0 {
+                128 + signal
+            } else {
+                EXIT_INTERNAL_COMPILER_FAILURE
+            };
         }
     };
     if output.output_exceeded_limit {

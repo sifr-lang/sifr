@@ -1,63 +1,63 @@
 {
   "artifacts": [
     {
-      "core_sha256": "f787934cd72a97dec8800e405ec17fd982c9c45741340298ef505a2a9433c94e",
+      "core_sha256": "5a0494d73e0b98e8979ea9c67c32278054db84b2342314184b3279711404e659",
       "parser_commit": "1097b2c33e54a37c0d2c0f2d498c7d1cf967eae9",
       "parser_source_sha256": "48475ba3b0c5864c94115dcdf77b3a7fbf59a4840509d7ebcba3ad16a93ff89f",
       "parser_tag": "13-2.2.0",
       "path": "components/postgresql-13.wasm",
       "server_major": 13,
-      "sha256": "7bef785456f634e23c47c78c9652e82bee9f2014b706ab7032efd164acec96ab",
+      "sha256": "d0f1d80a7b65c77406a0b2364434ea8276f33c7438d51e1ccb754c532860e193",
       "size_bytes": 3583448
     },
     {
-      "core_sha256": "f6fc404812d8a46a1077133c3a274986b03ea742500f19dcfab298c502185e87",
+      "core_sha256": "26b25e7bb0c4add8a689d5763e8feb689226019216d67400f6bbc7a2747d03fe",
       "parser_commit": "397cbb9c1b188b8a5c6e1a9633461b2d01903abc",
       "parser_source_sha256": "1962b8961e2a09183f4978718a8c3be33397471c6c3faa433ae83e766dcf284d",
       "parser_tag": "14-3.0.0",
       "path": "components/postgresql-14.wasm",
       "server_major": 14,
-      "sha256": "c549aeef40047fd5392893e68ebf5f2e571901582a89586980824d7f47f0d24a",
+      "sha256": "ef551a6e65c30915be6ccc1b882d3470fe6e15fba8814d4da902a4e44739aa1d",
       "size_bytes": 3621998
     },
     {
-      "core_sha256": "be161813aea48e67a083cfb7f2077c3cb640e54d1c7c0ad7e661cfa6d91543b6",
+      "core_sha256": "62d06525f06f796213c1c38769c8baa25e683a41448729725343aebfa65d1537",
       "parser_commit": "db39825bc7c1ddd45962ec6a626d740b7f8f027a",
       "parser_source_sha256": "0e7ca752165f4beadacbd0903c4b77fba47d975f381dff860f81521602995226",
       "parser_tag": "15-4.2.4",
       "path": "components/postgresql-15.wasm",
       "server_major": 15,
-      "sha256": "cf2a972fb1a00300b1a07b1d44f7d0fc66338e5dc3ad82025b7e0bdf9db2af92",
+      "sha256": "f8528e8cd3e39afcf1c31c94094845920dfdaf12058335a75250b24df929d426",
       "size_bytes": 3657557
     },
     {
-      "core_sha256": "1dcd67738054e69d3744c1742034ab84e654dda4346961c5c0b10217f8ac2139",
+      "core_sha256": "f5cfbdb22a14bf334056c69817dca6007ce4e9f1cd613d46cdc536fb43c5901b",
       "parser_commit": "fce106abf41205e5d0db47bea7de44ad1e36f7a5",
       "parser_source_sha256": "a4e334f5733856431a303faf6811dbbdef2c2261554c8a75e381761c66d383d4",
       "parser_tag": "16-5.2.0",
       "path": "components/postgresql-16.wasm",
       "server_major": 16,
-      "sha256": "82364c6d4aa511e362ff3b6c46ac8f733c015a4b0d66fd6a253ecdd1639828b9",
+      "sha256": "d88aeb937146a7657409c3d8aab3cc7817459f6d919f909337fd9fb58a6ebf08",
       "size_bytes": 3731316
     },
     {
-      "core_sha256": "bb545858e5393526bd3f9e6635cab1f2d94d9c10b65b7e32271ed8d24f4a3b42",
+      "core_sha256": "f4f3ceb51261a10cd11e49653746afa94363450302a284014b72b85ae9a921e6",
       "parser_commit": "7be1aed1f1f968a36cf541319f71e845850f0381",
       "parser_source_sha256": "f42f5d39c025565047c1a2068b5eaf8ce709cd80fa3782a0a0bd1c56f3975ca1",
       "parser_tag": "17-6.2.2",
       "path": "components/postgresql-17.wasm",
       "server_major": 17,
-      "sha256": "b9e0ff287e28e33ea2dd5e8ff0d36c6f9befd1ee6a04c4a1eba22fa56a648d6f",
+      "sha256": "64d5f9a9504f7ef4d9965cab002f3ff986eb62335d6cf05ff6fda14cf9bfc032",
       "size_bytes": 3981342
     },
     {
-      "core_sha256": "73ea976c7a9024fa3a29e26ee7283f0cf430db5e8455f3a3f96d29cb4d194f63",
+      "core_sha256": "32754bf14ff8c1e0b8be26a61f80afc588b94e2a754218976c4d4de6e5e9e239",
       "parser_commit": "204fbdbd3ed5f8691ab358e49f1fc5397b4679e2",
       "parser_source_sha256": "05bd3e03b54cfe27fa00f12944a411f8e4110de65bef05926e6c0fa96eae37f7",
       "parser_tag": "18.0.0",
       "path": "components/postgresql-18.wasm",
       "server_major": 18,
-      "sha256": "9fabc7960d8d4adf2f5e99943d1ed6444277256053194ea03cce9ff1156a228d",
+      "sha256": "b00eac5ca8dc79449a11b5cd34f220b232d341e24c5abc6f3e1ed2e4fb36fc5e",
       "size_bytes": 4006207
     }
   ],
@@ -80,8 +80,8 @@
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
-      "Cargo.lock": "5381e5d96cc4c2984ec982b270548dfb30ac6112492518752b212b09db4c4172",
-      "Cargo.toml": "45d11c05cc0df0a2866f97102b196a255139815221b2e5993e7f08fa071902f3",
+      "Cargo.lock": "57c11b83bf67773970930acaf0c848172a49c7585447d288ab034f9c597943cf",
+      "Cargo.toml": "6b1a0e2be45d3d35b392efca0de5139bcd0bb99e159b1399b2c2edfbe481d398",
       "crates/sifr_compiler_component/Cargo.toml": "1bfee37797bd5bde03b68cd86f4988a772b7d2565b726f57c53b3b2c75077b1d",
       "crates/sifr_compiler_component/build.rs": "2fbb1c185edfcfdced9597884b5a66477085e52a80ac17872bf8bd38944f4bac",
       "crates/sifr_compiler_component/src/cache.rs": "24760870764d218a011d2e05a3e275366775f553dc092b6bde4b10be78d13c77",
@@ -133,8 +133,8 @@
       "crates/sifr_diagnostics/src/schema/mod.rs": "d47217278c30e5d97ed9af350a76d5e6d9f4e4813c16eaaaf35405398bab6b18",
       "crates/sifr_diagnostics/src/source_map/mod.rs": "4e67c65a411bc57a93c88b738e4e63904b546f946f04e358bf4ffe26a881fcfe",
       "crates/sifr_identity/Cargo.toml": "2dbc6cb0740da134ebcc9e2c7a3e4a77c3a9a923c5215854bd242c8b61d6cffc",
-      "crates/sifr_identity/src/build.rs": "a017ae087c394bc0a912f25be53f28926452d75ee41f8a36fabb787e00b1224d",
-      "crates/sifr_identity/src/build_tests.rs": "34abc9f7b872034b793532353314d385d95bee92bba474b2102e2bfd259c37e8",
+      "crates/sifr_identity/src/build.rs": "a52394c8a2311dca60c904ea9e557dcaf5364ad77261a231a7257b98df13bbe2",
+      "crates/sifr_identity/src/build_tests.rs": "bffe5ce52f8339b7c54c06cc3dcd3bba0051c45fa11a83d1579b3a57f85d40f7",
       "crates/sifr_identity/src/lib.rs": "459af6d35efb06d0640cfde2a5255572f9ff3724b860fde92dddfda7ba1d96cd",
       "crates/sifr_identity/src/stream.rs": "d598eef8154fec90f69dc27ccea7d4c8f6163005382dff1ab3cf911c9222dfe3",
       "crates/sifr_identity/src/stream_tests.rs": "73c485e8459047646d592b184865246ba22d2a18d560160c3c61e9ea89fad46c",
@@ -246,7 +246,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "622bb389da90e15c1b0a80b47aa15f115a1c33aee20abf5802995553ad8dc58c",
+    "source_sha256": "9748430aa7d6ef98ce02e1ae2aecc5363c031564084fd1e22713760d1c82cdff",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

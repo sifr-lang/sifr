@@ -605,3 +605,23 @@ fn editor_profile_reload_revalidates_schema_and_same_mtime_component_bytes() {
         .expect("later enable");
     assert!(diagnostics(&mut editor).is_empty());
 }
+
+#[path = "sql_native_application/compiler_worker.rs"]
+mod compiler_worker;
+
+// Exercise the production confinement implementation with explicitly selected
+// real binaries. Package/lock dispatch is covered by host_tool_cli.rs.
+#[cfg(unix)]
+#[path = "sql_native_application/compiler_sandbox.rs"]
+mod compiler_sandbox;
+#[cfg(unix)]
+#[path = "../src/host_tool_compiler.rs"]
+mod host_tool_compiler;
+#[cfg(unix)]
+#[path = "../src/host_tool_sandbox.rs"]
+mod host_tool_sandbox;
+
+#[path = "../src/sql_compiler_admission.rs"]
+mod sql_compiler_admission;
+#[path = "../src/sql_compiler_inputs.rs"]
+mod sql_compiler_inputs;

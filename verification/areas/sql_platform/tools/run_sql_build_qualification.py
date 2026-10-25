@@ -136,6 +136,9 @@ def check_cross_target(target: str, target_dir: Path) -> int:
     packages = WASI_PACKAGES if target == "wasm32-wasip2" else CROSS_PACKAGES
     command = ["cargo", "check", "--locked", "--offline", "--target", target,
                "--message-format=json-render-diagnostics"]
+    if target != "wasm32-wasip2":
+        # Preserve the previous compiler-enabled cross-target coverage.
+        command.extend(("--features", ",".join(f"{package}/compiler" for package in TOOLS.values())))
     for package in packages:
         command.extend(("-p", package))
     messages = cargo_run(command, target_dir)

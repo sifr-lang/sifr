@@ -108,6 +108,27 @@ class SysrootSetupPolicyTests(unittest.TestCase):
             lambda command, **kw: calls.append((command, kw["env"])))
         self.assertEqual(calls, [])
 
+    def test_sql_native_commands_prepare_separate_graphs_and_stop_on_failure(self):
+        from .area_cargo_setup import prepare_area_graphs
+        calls = []
+        env = {"CARGO_TARGET_DIR": "/owned/retained-target"}
+        profile = {"selected_areas": [{"area": "sql_platform", "suites": ["host-tools"]}]}
+        prepare_area_graphs(profile, env,
+                            lambda command, **kw: calls.append((command, kw["env"])))
+        self.assertGreater(len(calls), 1)
+        self.assertEqual(calls[0], ([sys.executable, str(REPO_ROOT /
+            "verification/areas/sql_platform/tools/check_compiler_execution.py"),
+            "--prepare-only"], env))
+        self.assertTrue(all(command[:3] == ["cargo", "test", "--no-run"]
+                            for command, _ in calls[1:]))
+        failed = []
+        def fail(command, **kw):
+            failed.append(command)
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_area_graphs(profile, env, fail)
+        self.assertEqual(failed, [calls[0][0]])
+
     def test_release_corpus_preparation_pins_matching_producer_version(self):
         runner = sysroot_module()
         import package_build

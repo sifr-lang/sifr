@@ -304,6 +304,7 @@ pub(crate) fn command_name(
 ) -> &'static str {
     use crate::cli_model_and_entrypoint::Commands;
     match command {
+        Some(Commands::SqlCompilerWorker { .. }) => "sql-compiler-worker",
         Some(Commands::Sysroot(_)) => "sysroot",
         Some(Commands::Cache(_)) => "cache",
         Some(Commands::Build(_)) => "build",

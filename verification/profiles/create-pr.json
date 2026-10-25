@@ -691,6 +691,21 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_process",
+        "package": "sifr_process",
+        "command": [
+          "test",
+          "-p",
+          "sifr_process"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_driver_lib",
         "package": "sifr_driver",
         "command": [

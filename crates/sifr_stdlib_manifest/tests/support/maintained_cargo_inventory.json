@@ -20,6 +20,7 @@
     "crates/sifr_lsp/Cargo.toml",
     "crates/sifr_metadata/Cargo.toml",
     "crates/sifr_package/Cargo.toml",
+    "crates/sifr_process/Cargo.toml",
     "crates/sifr_runtime/Cargo.toml",
     "crates/sifr_rust_interop_catalog/Cargo.toml",
     "crates/sifr_semantic_services/Cargo.toml",
