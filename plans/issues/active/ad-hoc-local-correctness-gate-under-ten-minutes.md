@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1af allocation measured; V1ag host hashing profile diagnostic; full phase open"
+current_stage: "V1ag host hashing cost confirmed; V1ah narrow build profile repair; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14754,3 +14754,58 @@ insufficient, measure the remaining owner work before expanding it. Keep existin
 capacity/reserve/cleanup controls and the 1,800-second cap. A promising result must
 be registered as its own implementation with affected identity/watch tests,
 profile checks and relevant real build qualification before review/merge.
+
+### V1ag outcome — real host hashing cost confirmed
+
+The external sha2 opt1 override builds successfully in 49.209s, but its linked
+executables differ from the original profile. Preserve that failed cross-profile
+byte-equality control; it is not relabeled a pass. Cargo artifact/fingerprint
+records show the changed host sha2/build-script dependency identities propagating
+into first-party crate identities while target optimization stays at opt1.
+All three actual Cargo build scripts emit byte-identical output, including local
+and compiler source/build identities. This does not by itself qualify the changed
+executables' functional behavior.
+
+The first isolated replay fails because Cargo's verbose rendering omits the unit
+separator in encoded Rust flags. Preserve that diagnostic failure. The corrected
+replay restores that field from the exact original command input, rather than
+normalizing an identity or weakening a comparison. Its baseline output then
+matches the original actual Cargo output byte-for-byte.
+
+Six alternating executions of the real PostgreSQL-tool build-script binaries
+under the same environment/cwd/input tree pass complete stdout/stderr equality.
+Baseline times are 12.088s, 12.107s and 12.108s; sha2-opt1 times are 2.755s,
+2.755s and 2.774s. Medians are 12.107s and 2.755s. This measures the complete
+real owner operation, including full source traversal and configuration/version
+capture, with no inventory or integrity omissions. It is not a whole-gate saving.
+No further sifr_identity optimization or shared source-cache architecture is
+needed to justify the narrow next candidate.
+
+### V1ah prospective implementation — optimize build-time SHA-256
+
+Add only a dev package override setting sha2 opt-level to 1. The current target
+copies already use opt1; the important change is the otherwise unoptimized host
+build dependency. Preserve both pinned sha2 versions, dependency features, hash
+algorithm/framing, every input and Cargo's native invalidation authority. Do not
+add a cross-invocation identity cache, change allocation policy, or claim native
+artifact byte identity across different compilation profiles.
+
+Named intermediate qualification:
+- Existing sifr_identity library tests with the build feature, including real
+  Cargo watch/inventory mutation controls and streamed identity checks.
+- Existing sifr_sysroot native-context controls and all three default SQL-tool
+  library test suites.
+- Verification profile inventory checks and before/after emitted correctness-only
+  create-pr/merge plans; preserve all selections.
+- The canonical SQL qualification self-test and complete ordinary clean A /
+  unchanged A / independent clean B protocol at the existing four-job allocation,
+  retaining all linked-executable byte comparisons within the new profile.
+- Inspect actual Cargo artifact profiles and source-frozen logs; compare the
+  measured protocol without extrapolating owner replay medians into gate time.
+- Formatting, file-size, diff and documentation-link checks; exact-candidate
+  scoped independent review before intermediate merge.
+
+Use retained targets, category-specific capacity admission, unchanged 20 GiB disk
+and 2 GiB memory reserves, and the 1,800-second cap. Preserve all failed diagnostic
+records and the profile's one-time rebuild costs. Final correctness-only gates
+and all V5 scenarios still govern phase completion.
