@@ -388,6 +388,54 @@ fn stdlib_interop_demand_cache_disjoint_programs() {
     assert!(!resolved.interop.rust.trust_requirements.is_empty());
 }
 
+#[test]
+fn stdlib_interop_demand_new_native_selection_has_current_cargo_inputs() {
+    let context = crate::CompilerContext::for_test();
+    let tools = CargoResolutionPolicy::resolve_native_toolchain().expect("selected native tools");
+    let temporary = tempfile::tempdir().expect("owned native configuration");
+    let source = "from sifr.gzip import compress\ndef main():\n    _ = compress(\"sample\")\n";
+    // Explicit cwd/configuration selects real, distinct Rust targets without
+    // mutating the test process's environment or working directory.
+    for (index, target) in [tools.host(), "wasm32-wasip1"].into_iter().enumerate() {
+        let root = temporary.path().join(index.to_string());
+        std::fs::create_dir_all(root.join(".cargo")).expect("configuration directory");
+        std::fs::write(
+            root.join(".cargo/config.toml"),
+            format!("[build]\ntarget = {target:?}\n"),
+        )
+        .expect("configuration");
+        let selected = sifr_sysroot::NativeToolchain::from_executables(
+            &root,
+            tools.cargo_path().to_owned(),
+            tools.rustc_path().to_owned(),
+            None,
+        )
+        .expect("explicit native selection");
+        assert_eq!(
+            selected.target(),
+            target,
+            "external target override invalidates this control"
+        );
+        let emitted = super::entrypoint::compile_single_file_with_prepared_native(
+            &context,
+            source,
+            sifr_lowering::LoweringOptions::default(),
+            Some(&Ok(selected)),
+        )
+        .expect("native metadata emission");
+        let inputs = emitted
+            .interop
+            .rust
+            .cargo_inputs
+            .expect("demanded interop Cargo inputs");
+        assert_eq!(
+            inputs.target_triple.as_deref(),
+            Some(target),
+            "new invocation inherited an earlier native selection"
+        );
+    }
+}
+
 fn empty_module() -> HirModule {
     HirModule {
         functions: Vec::new(),
