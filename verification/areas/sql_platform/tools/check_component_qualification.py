@@ -75,6 +75,7 @@ def validate(
         "component-model",
         "cranelift",
         "gc-null",
+        "parallel-compilation",
         "runtime",
         "std",
     ]:
@@ -272,6 +273,12 @@ def run_self_test(payload: dict[str, object]) -> None:
     default_features = copy.deepcopy(payload)
     default_features["engine"]["default_features"] = True  # type: ignore[index]
     mutations.append(("default-features", default_features))
+    missing_parallel = copy.deepcopy(payload)
+    missing_parallel["engine"]["features"].remove("parallel-compilation")  # type: ignore[index]
+    mutations.append(("missing-parallel-compilation", missing_parallel))
+    guest_threads = copy.deepcopy(payload)
+    guest_threads["engine"]["features"].append("threads")  # type: ignore[index]
+    mutations.append(("unqualified-guest-threads", guest_threads))
     missing_target = copy.deepcopy(payload)
     missing_target["host_targets"] = missing_target["host_targets"][:-1]  # type: ignore[index]
     mutations.append(("target", missing_target))

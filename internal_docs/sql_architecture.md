@@ -343,7 +343,9 @@ function takes and returns bytes that contain the canonical JSON protocol
 envelope. The host rejects unknown JSON fields and malformed closed variants.
 
 The host uses Wasmtime `48.0.1` with default features disabled. It enables only
-`component-model`, `cranelift`, `gc-null`, `runtime`, and `std`. The `gc-null`
+`component-model`, `cranelift`, `gc-null`, `parallel-compilation`, `runtime`, and
+`std`. Compilation uses the process-wide Rayon pool. Local verification bounds
+that pool through its existing `RAYON_NUM_THREADS` allocation. The `gc-null`
 feature enables the standard exception encoding used by WASI SDK `34` output.
 The host enables exceptions and multiple memories because the virtualized
 PostgreSQL components require them. It applies explicit instance, memory, and
