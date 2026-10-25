@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: V4ax/V4ay correctness repairs merged; V4az metadata validation investigation; final timing and V1/V5 remain open
+current_stage: V1o merged; V1p artifact/confinement feasibility complete; V1q native SQL input ownership; full gates and V5 remain open
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -13161,3 +13161,111 @@ three independently built executable comparisons. Do not silently weaken the
 current clean-build protocol. Final scoped gates and every V5 remain mandatory.
 This item authorizes owned diagnostics and design, not production transport
 adoption by assumption. Keep the 1800-second category cap and reserves.
+### V1p outcome — canonical artifacts and confined consumers, no runtime-service adoption
+
+At 6bf4121eac2560180db674b44120d8b5bd110dba, the real canonical producer and
+provider-native consumers reproduce 33 artifact files: seven schema and four
+migration files for each of SQLite, MySQL and PostgreSQL. Manifests match.
+All six migration step variants round-trip through the actual declaration types
+for each provider. Eighteen typed-input/diagnostic controls and all fifteen
+earlier transport rejection controls pass; five direct/transfer responses match.
+The canonical SQLite opaque ALTER TABLE rejection is also byte-identical.
+
+Ordinary single observations, charging profile production to each operation:
+
+| Provider / operation | Producer plus consumer | Existing CLI |
+| --- | ---: | ---: |
+| SQLite schema | 2.372s | 2.346s |
+| SQLite migration | 2.653s | 2.596s |
+| MySQL schema | 1.817s | 1.791s |
+| MySQL migration | 2.093s | 2.061s |
+| PostgreSQL schema | 4.047s | 3.969s |
+| PostgreSQL migration | 4.351s | 4.223s |
+
+There is no measured execution gain. Retained diagnostic producer/schema/migration
+consumer selections contain 203/71/113 packages respectively. Both consumers
+exclude semantic services, frontend and Wasmtime/Cranelift. These are actual
+diagnostic build graphs, not complete tool executable builds or cold comparisons.
+Canonical three-tool preparation took 130.772s guarded; artifact matrix 44.712s;
+current transport controls 13.692s. Preparation is accounted separately.
+
+The installation inspection corrects an incomplete earlier note: SysrootManifest
+alone does not bind a compiler, but the existing immutable installed generation
+does. lib/sifr/stdlib.metadata.json carries compiler_binary_sha256; package
+integrity verifies bin/sifr, alongside compiler/target/metadata identities.
+Reuse this mechanism rather than inventing another installation format.
+All six existing producer/packaging binding tests pass (1.685s guarded). Their
+fixture producer is explicit; this is not new real installed-service acceptance
+or authentication against replacement of an entire local installation.
+
+An isolated harness calls the unchanged Linux host_tool_sandbox implementation.
+All six schema/migration consumers reproduce the same 33 files with only the
+project-read grant. Six controls preserve host-file isolation, deny project
+writes, subprocess creation, host network and credential environment access.
+The three actual canonical profile requests fail inside that same sandbox:
+load_package_graph_snapshot invokes Cargo and cannot resolve the selected native
+toolchain. Therefore an arbitrary helper spawned inside the tool is not a valid
+design. This is a current implementation constraint, not evidence that a new
+parent channel is already authorized. Successful harness: 3.687s guarded.
+No macOS or complete production-service claim.
+
+Preserve all diagnostic failures: missing canonical SQLite grammar configuration
+in the external workspace; a harness type-inference error; the unsupported
+SQLite ALTER statement; invalid owned-receiver chaining in an auxiliary fixture;
+one missing launch file after a quoting error; and an overstrict sandbox probe.
+The last probe confused writable private namespace scratch with a writable host
+bind. The corrected control verifies unchanged host bytes and denial on the
+read-only project bind. Earlier attempts remain failed/incomplete.
+
+The concrete operation boundary is caller-owned canonical profile preparation
+and canonical migration compilation; provider parsing, live catalogs, credentials,
+execution plans and atomic artifact writes stay with native SQL tools.
+Default libraries and standalone commands retain their existing in-process
+behavior until a complete replacement adapter qualifies. Any later thin command
+requires explicit source/installed compiler pairing, input admission confined to
+its project/lock/grants, bounded transport, cancellation/death handling and no
+surviving children. Packet checksums alone confer no authority. All producer
+preparation and invalidation remain timed, and independent clean executable
+comparisons remain mandatory. Do not adopt production IPC from this proof.
+
+Evidence v1p-evidence.tar.gz SHA-256
+b651d4bb699a164bc0910798567244c25e4423007d3c4fb24b0d017f502900e9,
+899 payloads plus manifest. Full SQL clean qualification still has the last
+878.767s observation; full gates and every V5 scenario remain open.
+
+### V1q prospective execution — explicit inputs for complete native SQL operations
+
+Separate the two demonstrated compiler operations from the three complete native
+tool libraries. Use ordinary injected callables, consistent with the existing
+migration-source loader, rather than introducing a process service or alternate
+frontend. New explicit entrypoints accept a profile loader and, for migration,
+a canonical source compiler. Keep current public entrypoint signatures and
+default CLI behavior through their existing in-process canonical adapters.
+Make that compiler adapter an explicit default-enabled Cargo feature; libraries
+built without it must not contain semantic services or a component engine.
+Existing binaries require that feature. No implicit fallback, changed database
+semantics, optional assertion or reduced tool functionality in normal builds.
+
+Named intermediate acceptance:
+- Existing default tool/contract tests retain exact inventory and all assertions.
+  Required live-service tests remain separately classified under the existing
+  offline scope; do not describe them as executed.
+- Exercise complete injected schema and migration commands against fresh
+  canonical producer values for all three providers; compare all artifact bytes,
+  stdout, exit behavior and diagnostics with existing default commands.
+- Exercise SQLite provision/cleanup with actual database files and reject
+  missing/incorrect profile inputs before side effects. Preserve migration plan,
+  import/apply/rollback and native provider validations.
+- Compile actual three-provider libraries without the compiler feature, inspect
+  emitted normal dependency artifacts for absence of frontend/semantic/engine,
+  and run every applicable native test in that mode. Reconcile any tests that
+  genuinely need the canonical compiler rather than silently skipping them.
+- Add focused injected failure propagation, no-unneeded-compilation and
+  dependency-feature drift controls. Canonical producer values and runtime
+  assertions remain required; mock callbacks only test control/error boundaries.
+- Run formatting, file-size and dependency/SQL contracts, applicable runner
+  checks and exact-candidate independent review. Regenerate producer artifacts
+  only if their declared inputs actually change.
+This item changes dependency ownership, not installation or confinement. Do not
+claim complete CLI clean-build savings from a library-only graph. Final scoped
+create-pr/merge, full independent builds and every V5 scenario stay mandatory.
