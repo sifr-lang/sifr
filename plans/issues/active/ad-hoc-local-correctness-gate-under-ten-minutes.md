@@ -12821,6 +12821,7 @@ affected SQL producer receipts canonically, retaining declared artifacts and
 all stale-input failures. Run dependency/coverage/metadata/profile/size checks
 and exact committed range checks. Independent candidate review is mandatory.
 No new native-code deserialization or Engine safety/optimization setting change.
+
 ### V2d closure — bounded parallel component compilation / #4473
 
 Merged [PR #4473](https://github.com/sifr-lang/sifr/pull/4473) as
@@ -12911,3 +12912,62 @@ authorized by this investigation alone. Any implementation must first record
 a bounded acceptance contract preserving all valuable assertions/configurations,
 negative missing-execution/stale-input controls, exact coverage accounting and
 fresh final-candidate execution. Final scoped gates and every V5 remain required.
+
+### V4bj outcome — functioning cache, distinct feature graphs
+
+The five canonical SQL tool selections prepare in 3.479s combined with zero
+rebuilt artifacts on retained targets. Eight overlapping test targets have the
+same inventories and direct test-target feature/profile fields, but none has
+identical executable bytes across the broad and narrow selections. Transitive
+feature differences explain the distinct compiled identities: the comparisons
+contain 14, 4, 15 and 14 differing feature units, propagating to 22, 16, 22 and
+29 first-party artifacts respectively. Examples include rustls logging and
+post-quantum preference, futures/Tokio support, digest, hashing and regex features.
+
+Do not classify these as cache failures or remove a narrow configuration based
+on matching test names. The existing compiler_configuration_plan deliberately
+keeps SQL/native/default-feature selections isolated; cargo_crate_setup prepares
+those exact graphs. No graph widening, test/result deduplication or product
+change was adopted. The probe lists tests but does not claim new test execution.
+The earlier changed-source preparation costs remain real; repeated unchanged
+preparation is already cheap.
+
+Observed candidate b3116e5fb38a95d79754c9e084091ae2c55ae904. Guard 27.207s
+includes inventories, executable hashing and source checks. Evidence archive
+v4bj-evidence.tar.gz SHA-256
+639d8bafe7403e8232b705ed545e65fd305b805e1ed2eb748d217dbc237d051a:
+77 payloads plus manifest independently verified locally. Final gates and V5
+remain open. Continue the genuine compiler-capability ownership question from
+V1m rather than repeating a cache-repair hypothesis this evidence rejects.
+
+### V1n prospective investigation — executable SQL capability boundary
+
+Resume V1m's architectural question with an executable feasibility criterion,
+not another package-count claim. The independent clean SQL protocol still
+takes 878.767s. Reuse V1m's operation/dependency/installation map and existing
+cold-build attribution where its inputs apply. Inspect the two actual canonical
+semantic operations and the component-host coupling, plus the existing host-tool
+sandbox and IPC/lifecycle contracts.
+
+Investigate whether the already qualified canonical compiler can provide those
+capabilities within the existing bounded invocation lifetime, allowing SQL tools
+to remain genuinely independently linked while avoiding embedded copies of the
+compiler stack. A new background daemon, alternate parser, unqualified prebuilt
+producer, widened sandbox grant, implicit fallback or hidden preparation cost is
+not an acceptable solution. Preserve direct library/binary entrypoints, installed
+and source use, offline behavior, all diagnostics and actual SQL operations.
+
+First produce a concrete request/result and ownership design using existing
+canonical representations and transport primitives where possible. Identify
+identity, compatibility, input authorization, cancellation, failure, installation
+and confinement obligations before a prototype. Use an isolated diagnostic only
+where it can execute the actual canonical operations without copied semantic
+logic. Measure complete producer plus consumer costs and preserve distinct feature
+configurations. Package counts or mocked compiler answers cannot establish a gain.
+
+This step authorizes inspection and owned diagnostic prototypes, not a production
+migration by assumption. Any product implementation needs an explicit bounded
+acceptance contract here first, including complete affected SQL/provider/editor/
+host-tool checks, transport and stale-input negative controls, all three clean
+executable comparisons and final V5 accounting. If the boundary cannot preserve
+the existing contracts, retain that evidence and reject it.
