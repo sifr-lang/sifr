@@ -13436,3 +13436,69 @@ Named acceptance:
 Keep the 1,800-second diagnostic category cap and resource reserves. If the
 complete adapter cannot preserve a named contract, record that exact failure
 and revise the design instead of weakening acceptance or claiming a speedup.
+
+### V1s development checkpoint — canonical worker primitives qualified, integration open
+
+The active implementation remains on codex/local-gate-sql-compiler-execution;
+there is no V1s PR, merge or independent acceptance review yet. Default standalone
+SQL commands still use their existing compiler feature. The complete adapter,
+actual three-executable clean-build comparison, final scoped gates and V5 remain
+open.
+
+Focused development evidence:
+- Source/configuration identity separation at
+  5ba20ce902d113ebc0f44be0f3a2f753d4e68f7d: seven identity tests pass.
+  The inherited anonymous channel proof passes confinement, EOF, silent-peer
+  timeout and non-socket rejection, using dummy bytes rather than compiler data.
+- Shared process support was extracted from the driver into sifr_process.
+  Existing public driver paths re-export it; existing Unix and Windows test
+  assertions were transferred, and verification profiles select the new owner.
+  Windows behavior has not been executed in these Linux observations.
+- Candidate 46b1c60de8dddb9389d5b40b809cc58714ad5a05 passes 52 IPC,
+  11 process and seven SQL protocol unit tests. The protocol retains every
+  migration field and all six step kinds; profile values are revalidated through
+  the canonical authority builder. There is one synchronous outstanding request.
+  The existing 16 MiB IPC frame bound applies.
+- Candidate 22e69987030ca5191161ce2938b6dd27c979b443 passes six actual
+  subprocess lifecycle tests, including silent/dead/mismatched workers,
+  descendants retaining pipes, request timeout, exact diagnostic propagation,
+  clean shutdown and failed/hanging exit. This fixture does not implement
+  compiler semantics. The command including compilation took 26.093s.
+- Candidate 6fdcbab893d3d6bdbe9f5bd3a349569c3ea7dba1 passes four worker
+  admission unit tests and four real canonical worker integration tests.
+  The latter compare all profiles and typed migration fields for SQLite 3.53.4,
+  MySQL 8.4 and PostgreSQL 18 against the existing semantic services. They
+  preserve semantic diagnostics, reject unadmitted source bytes, and reject
+  lock, manifest, schema, component and between-request migration drift.
+  Admission units including compilation took 20.500s; real integration including
+  compilation took 31.825s (test process 26.02s). The guarded batch, including
+  formatting, size and diff checks, took 67.227s. These are development checks,
+  not a full gate timing result.
+
+The hidden canonical worker uses the existing frozen editor graph loader,
+profile preparer and migration compiler. The loader was factored without
+changing the original editor preparation path. The graph and selected input
+hashes remain fixed after initial preparation. Migration files are admitted by
+bytes from configured project directories, pinned at the first source request
+and checked before and after compilation and on subsequent requests. Baselines,
+native execution and output writes remain owned by native tools. The launcher
+still needs to enforce source/installed executable selection and channel custody;
+the low-level session constructor is not that admission policy.
+
+Failed attempts remain failed: a guard/output-directory name collision prevented
+the first process check from starting; the initial protocol checks exposed
+unused payload bytes accepted by the shared Postcard decoder and unknown fields
+accepted on unit variants. Both decoder gaps are fixed with negative controls.
+Two protocol attempts also contained incomplete test-profile inputs, subsequently
+corrected. The first canonical worker integration attempt failed to compile
+because its nested test module needed an explicit path; its four admission units
+had passed. The corrected candidate above passes both selections. No failed
+aggregate is relabeled.
+
+Next actions: implement verified source and installed compiler selection; connect
+the private sandbox capability with lazy worker ownership; qualify native
+entrypoints before changing default compiler features; reconcile affected policy
+inventories and emitted plans; run all named integrated acceptance and actual
+clean executable builds, then exact-candidate review. Rebuild affected declared
+component producers for final acceptance after coupled source changes settle.
+Retain targets and all incomplete evidence.

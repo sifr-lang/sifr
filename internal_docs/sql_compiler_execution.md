@@ -77,3 +77,17 @@ qualifies. Validate real source and installed entrypoints, sandbox denial cases,
 all affected SQL/compiler/editor/installation/runner assertions and the actual
 three-executable independent clean-build protocol. The complete LOCAL-GATE
 create-pr/merge and V5 requirements remain open.
+
+## Current development evidence
+
+The hidden canonical worker and its process session are implemented. Focused
+checks compare real profiles and migration declarations against the existing
+in-process semantics for all three providers and reject input drift. Native
+CLI defaults, verified executable selection and sandbox capability integration
+are not switched or qualified yet. The complete gate remains open.
+
+The worker fixes its frozen graph and profile inputs at initial preparation.
+Migration input bytes are pinned at the first source request and checked before
+and after compilation and on subsequent requests. This preserves lazy schema
+commands while forbidding arbitrary source requests and between-request drift.
+The shared decoder now rejects unused bytes inside declared IPC payloads.
