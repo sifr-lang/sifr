@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ah merged; V1ai full sysroot cost refresh; full phase open"
+current_stage: "V1al structural resumption; V1am package hashing; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14894,3 +14894,94 @@ Refresh only the generated Markdown inventory and this phase record. The normal
 inventory check, its existing self-tests and diff checks pass. No Rust, runner,
 schema or payload coverage changes are needed. Resume with new evidence paths;
 recheck the affected guard and keep failed prerequisite evidence distinct.
+
+
+### V1aj/V1al diagnostic status — pause, cleanup and scoped resumption
+
+The exact e3771458ad4182ea0e0e18b4d7545a3889e49070 diagnostic passed
+release compiler preparation in 481.081s, normal compiler preparation in 350.317s,
+and versioned corpus preparation in 339.919s. These compiler invalidation costs
+are separate from warm assertions. The first package-preparation admission was
+blocked by capacity before execution; its evidence remains retained.
+
+Three complete sysroot suites then passed: boundary equivalence 213.546s,
+host-installed smoke 23.141s, and metadata corpus 251.705s. The installed
+qualification executed all 732 fresh public emission comparisons, four native
+cases and its generation, integrity, relocation and rejection/recovery controls.
+Metadata structural was interrupted during compilation at the user's explicit
+pause for disk cleanup. The complete area did not finish and is not a pass.
+
+All owned processes were stopped. The 1,649-payload pause evidence archive was
+copied and independently verified locally: v1aj-pause-evidence.tar.gz, SHA-256
+c4927ee70e4c9c52f544acc7d730cd48bda910e61ff85b26c6be1eba2027adac.
+
+After the user resumed, both checkouts remained clean at the same candidate.
+The compiler targets were empty; reports, installed package and full reference
+corpus survived. V1al resumes only structural qualification and its required
+normal compiler preparation, with independent 1,800-second caps. Workspace
+preparation passed in 10.740s and cold compiler preparation in 720.783s; compiler
+identity passed in 1.074s. Structural execution is still pending at this record.
+Capacity admission selected three compiler jobs. These cold costs are not warm
+performance evidence and are not comparable to the earlier four-job rebuilds.
+The other three suites remain historical exact-candidate passes, not a completed
+contiguous area run.
+
+### V1ak diagnostic — remove per-file packaging hash subprocesses
+
+On the same complete native package, the unmodified shell content-hash helper
+took 83.936511s and 74.369301s. A one-process Python prototype took 2.721124s and
+2.447075s. Every successful run hashed the same 23,014 governed files
+(444,132,560 bytes) to the recorded package digest:
+324fe3b8aeb9af114dadad952247e888604e99d930df91ddbd0c41d1a866f4da.
+The inventory remained unchanged. The first prototype invocation failed because
+its external import path omitted the verifier's sibling module; that failure and
+its guard receipt are preserved. Only the corrected runs passed.
+
+The independently verified 41-payload archive is v1ak-evidence.tar.gz, SHA-256
+4e6dbcc0f16f2262f200007299ea6a07f55a83bd3bfb7585250a54d4064787ab.
+This supports roughly 72–81 seconds less work per isolated package content hash,
+not a whole-gate runtime forecast. The existing loop launches checksum and awk
+processes for each file; the prototype changes neither hash nor inventory.
+
+### V1am prospective implementation — staged sysroot content digest
+
+Registered before tracked implementation. Use a separate owned checkout while
+V1al validates its frozen candidate; do not mutate that run's checkouts or inputs.
+
+Add one Python helper that streams SHA-256 of each governed file and uses the
+existing archive verifier's canonical aggregation format. Replace only the
+packager's per-file shell content-hash loop. Python is already required by the
+packaging pipeline. Preserve independent archive file reading and verification,
+metadata production, compiler binding, version, source inventory, archive
+membership, release flags, toolchain, signatures and test coverage. Fail on
+missing governed inputs and reject links/special files without following them,
+consistent with existing archive rejection.
+
+Named intermediate acceptance:
+
+- Independent byte-protocol regressions for complete inventory, lexical ordering
+  including Unicode/spaces/dotfiles, large/binary/empty content, edits, additions,
+  removals, renames, excluded receipt/compiler files, missing roots and
+  link/special-file rejection. All local POSIX controls must execute.
+- Existing metadata producer/packager regressions, with the new tests enrolled in
+  the same distribution contract.
+- Complete distribution_release full and qualification suites, preserving every
+  fixture target and corrupt-archive control. Synthetic targets do not establish
+  foreign execution. Any required cold release preparation remains explicit.
+- Real native repackaging with the retained exact-source ELF compiler, explicitly
+  using --binary, followed by existing archive verification and complete installed
+  metadata qualification: 732 fresh public emission comparisons, four native
+  cases, integrity/relocation, live generations and corrupt/missing/recovery
+  controls. Verify retained compiler/source/version identities and all reference
+  fixture/Rust hashes before reuse; require the newly packaged portable payload
+  to match the reference authority. This does not waive canonical preparation in
+  final phase gates or claim actual release qualification.
+- Compare candidate helper output with the original complete package's recorded
+  digest, keeping isolated hash and broader packaging timings separate.
+- Shell syntax, applicable Python self-tests, file-size guardrail, diff check and
+  changed local links, then one exact-candidate independent scoped review.
+
+No compiler profile, feature union, allocation, cache identity or suite-selection
+change belongs to this item. Do not relabel the interrupted diagnostic as passing.
+Final correctness-only create-pr/merge and every V5 scenario remain required;
+the full under-600-second objective is unproven.
