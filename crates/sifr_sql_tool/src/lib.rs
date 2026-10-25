@@ -2,6 +2,7 @@
 
 mod artifacts;
 pub mod compiler_protocol;
+pub mod compiler_session;
 mod lifecycle;
 mod migration_artifacts;
 mod migration_source;

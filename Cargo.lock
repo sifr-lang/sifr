@@ -8121,6 +8121,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_ipc",
+ "sifr_process",
  "sifr_semantic_services",
  "sifr_sql_contract",
  "sifr_sql_runtime",

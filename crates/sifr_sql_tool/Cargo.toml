@@ -8,6 +8,7 @@ license = { workspace = true }
 
 [dependencies]
 sifr_ipc = { workspace = true }
+sifr_process = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -21,3 +22,13 @@ sifr_semantic_services = { workspace = true }
 
 [lints]
 workspace = true
+
+[features]
+__compiler_fixture = []
+
+[[bin]]
+name = "sifr-sql-compiler-fixture"
+path = "tests/fixtures/compiler_worker.rs"
+required-features = ["__compiler_fixture"]
+test = false
+bench = false

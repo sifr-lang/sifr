@@ -366,6 +366,13 @@
           "command": "sql-native-tool-tests",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-compiler-session-tests",
+          "entry": "crates/sifr_sql_tool/tests/compiler_session.rs",
+          "command": "sql-compiler-session-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
