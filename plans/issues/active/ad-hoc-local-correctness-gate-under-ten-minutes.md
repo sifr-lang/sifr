@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1y profile override rejected; V1z linker debug compression investigation; full phase open"
+current_stage: "V1z diagnostics complete; V1aa capacity admission and integrated refresh; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
