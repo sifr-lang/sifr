@@ -13061,3 +13061,103 @@ by this item. After this boundary is measured and qualified, reassess the remain
 semantic-service dependency using the V1n evidence. Preserve the current SQL
 clean protocol and its last 878.767s result; this item does not promise to bring
 that protocol, or the complete gate, below 600s by itself.
+
+### V1o closure — explicit native component-host ownership / #4474
+
+Merged [PR #4474](https://github.com/sifr-lang/sifr/pull/4474) as
+92b120e34c3d10574d960414eca71173e65d9cfc. Exact reviewed candidate
+0539c16640e576690ac27af2429eef99d9f3d747; merged tree identical.
+Protocol-only workspace dependencies no longer request native Wasmtime.
+Direct crate consumers retain the existing default host behavior. Actual
+compiler/editor owners and provider integration tests grant host explicitly.
+Protocol types, native validation, resource limits and host execution remain
+unchanged; host capability now participates in compiled input identity.
+
+The controlled clean artifact-consumer comparison compiled every selected unit:
+218 events / 139 packages before, 100 events / 71 packages after, with no
+Wasmtime/Cranelift/Pulley packages after. Build guard falls from 180.321s to
+52.724s (127.596s / 70.8% lower); compilation alone is 177.699s versus 50.824s.
+All seven real schema artifacts and the manifest are byte-identical.
+This is one sequential consumer-only comparison using the same retained
+canonical producer packet. It is not a complete SQL-tool, transport, repeated
+timing or full-gate qualification. Preserve observed baseline 389d0427 and
+candidate 5ab25ab7; the final candidate's native consumer/unit-test inputs
+are unchanged. Actual regenerated-provider checks run on final 0539c166.
+
+Host mode passes 30 tests, retaining all 28 prior names and assertions.
+Protocol-only mode passes 11 tests without engine artifacts; 19 host-only
+names are explicitly separate. Canonical SQL compiler-components now executes
+both qualification and the added protocol-only case. Seven emitted profile
+plans are exact, and the previous SQL manifest differs only by that added case.
+Complete runner foundation passes. Feature-boundary mutations add ten checks;
+component qualification has 51 mutation controls and producer-input tests
+pass all six checks. Formatting, size, metadata inventory, dependency direction,
+profiles, SQL contracts and explicit base-to-candidate diff checks pass.
+
+All 359 previous compiler/editor tests pass, zero ignored, with exact inventory
+comparison. Guard 418.574s includes affected-crate and nested CLI preparation.
+All 54 selected SQL contract/tool tests and 15 dependency-audit tests pass.
+All 64 previous host/provider/application names remain and pass, plus the two
+new host checks: 66 total. Execution takes 284.917s separately from 87.977s
+preparation (93.263s guarded). No runtime speedup is inferred from this run.
+Provider tests execute all six PostgreSQL, three MySQL and one SQLite artifacts.
+All three pinned producers regenerated the ten artifacts and receipts; only
+core custom name sections differ, with exact remaining sections and negative
+comparison controls. No dependency release or Cargo.lock change.
+
+Inactive owned incremental artifacts were relocated with checksum/metadata
+verification, held-lease and consumer checks, preserving bytes and logical
+paths. Two capacity-maintenance runs took 87.398s and 96.303s guarded, after
+the controlled comparison. This is not performance evidence.
+Evidence archive v1o-evidence.tar.gz SHA-256
+52beaa9572cb0fa970c4c18e1bfe13eb0d4e36f74738f107d8d9ce7fd07fc31e:
+307 payloads plus exact manifest independently verified locally.
+Independent review: SATISFIED, no blockers. Review SHA-256
+ab0a5603f27c2c8a0602cbb4053be85f66cf81bd273d397aad8e374a37e54146.
+Review/evidence remain outside the reviewed tree. The attachment attempt was
+refused at the chat's 100-attachment limit.
+Separate suggestions, owner compiler/component qualification: classify future
+component dependents automatically, and document feature-graph debug-name churn
+in producer inputs. Protocol-only isolation remains a per-graph property: Cargo
+unifies host when a real host owner participates. No wider isolation is claimed.
+
+This dependency boundary removes a demonstrated unnecessary engine dependency
+from real protocol consumers. Full SQL tools still own canonical semantic
+services, so their last complete clean protocol remains 878.767s. No production
+compiler-to-tool transport was adopted. Final scoped create-pr/merge gates,
+all V5 scenarios and the complete sub-ten-minute objective remain open.
+
+### V1p prospective investigation — complete SQL capability ownership contract
+
+V1o removes the native-engine dependency from a genuine protocol consumer,
+but standalone SQL tools still embed semantic services. Continue V1m/V1n's
+actual two-operation boundary, not another package-count or cache hypothesis.
+
+Before a production migration, establish an implementable contract covering
+both canonical profile authority and typed migration declarations. Inspect the
+current direct library/CLI APIs, installed distributions, compiler identity,
+host-tool confinement and lifecycle once, recording exact source owners.
+Choose the smallest design that preserves those contracts without a background
+daemon, implicit fallback, widened subprocess grant, duplicate frontend or
+unqualified producer. A proposal that cannot preserve a required standalone or
+library entrypoint is not ready for implementation.
+
+Extend the existing isolated executable proof only where it closes a named
+gap: decode actual canonical migration declarations, execute the real migration
+artifact builder, and compare schema/migration results and diagnostics for all
+three maintained SQL providers against their existing tool commands. Preserve
+all original fixtures, output ordering, source identities, failed cases and
+input-bound negative controls. Record producer plus consumer time, preparation
+and remaining normal/build dependencies separately. No mocked semantic answer,
+reused correctness verdict or consumer-only timing may stand in for a complete
+tool execution or independent clean build.
+
+Deliver a concrete operation/ownership/installation contract and measured
+feasibility result, or reject the design with its exact blocking contract.
+Only then record a bounded production acceptance contract spanning actual
+installation, direct entrypoints, sandbox behavior, identity/version/staleness,
+cancellation/errors, complete affected SQL/editor/host-tool coverage and all
+three independently built executable comparisons. Do not silently weaken the
+current clean-build protocol. Final scoped gates and every V5 remain mandatory.
+This item authorizes owned diagnostics and design, not production transport
+adoption by assumption. Keep the 1800-second category cap and reserves.
