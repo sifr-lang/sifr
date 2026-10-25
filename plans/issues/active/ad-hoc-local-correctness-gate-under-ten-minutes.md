@@ -13952,3 +13952,17 @@ boundary. Obtain exact-candidate scoped independent review before merging this
 intermediate repair under the approved phase policy. Do not repeat unrelated
 successful categories. Final scoped facade gates and complete V5 qualification
 remain required.
+
+### V1u focused validation
+
+Candidate 06aac8de051ef66e4f19535c506190d06d58654d passes the affected
+transfer guard (13.386s), its negative controls (0.206s), all five PostgreSQL
+command-selection/build-input tests (1.910s), file-size guardrail (3.771s), and
+base-to-candidate diff check. Total focused validation is 20.054s.
+Exact Git-tree comparison against V1t preserves 35,094 tracked entries; only the
+inventory document, two strict test expectations and this phase record change.
+Production Rust, locks, fixtures and profile/runner inputs remain unchanged.
+Original V1t failures are preserved at their observed candidate. This
+documentation-only validation record requires unchanged-input/link checks and
+exact-candidate scoped review before the intermediate merge; it does not close
+the final correctness or timing criteria.
