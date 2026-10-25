@@ -15015,3 +15015,120 @@ The 79-payload archive v1al-evidence.tar.gz is independently verified, SHA-256
 a0f35876ec3cf0d723e56e63c4f6778003b60d82dec4f67e2d54658121842683.
 The implementation checkout used for V1am never mutated the frozen baseline
 checkouts. Full phase acceptance and the under-600-second objective remain open.
+
+### V1am closure — single-process package content hashing
+
+[PR 4484](https://github.com/sifr-lang/sifr/pull/4484) is merged.
+Reviewed candidate: 1bc52807e95db71ebc54f80fca38c6b264e09537.
+Merge: 87d5c7ca22ad53febc23aef909c265badc49be7a; its Git tree equals the
+reviewed candidate.
+
+The packager streams every governed file's SHA-256 in one Python process and
+uses the existing verifier's canonical aggregation. Independent archive byte
+reading and verification remain. Four new regressions and all six existing
+producer tests execute locally, with no POSIX controls skipped. Syntax,
+file-size, diff and changed-link checks pass. Focused evidence on 943e2b2
+remains applicable because only this phase Markdown changed afterward; every
+broader named contract executed the reviewed candidate.
+
+Named category callback times:
+
+| Category | Seconds | Result |
+| --- | ---: | --- |
+| Workspace preparation | 1.046 | Pass |
+| Two complete package digest observations | 11.799 | Pass |
+| Distribution qualification | 28.372 | Pass |
+| Native package and complete installed qualification | 176.753 | Pass |
+| Cold release compiler preparation after cleanup | 793.194 | Pass |
+| Complete distribution full suite, corrected toolchain | 109.206 | Pass |
+| Sum across accepted categories | 1120.370 | Resumed intermediate checks, not full-gate timing |
+
+The original distribution full execution took 110.358s and passed 71/72 cases.
+Its Node contract failed because user cleanup removed the pinned executable and
+npm installation. The retained official Node archive matched its previously
+recorded SHA-256; existing files were verified and only missing files restored.
+Canonical npm provisioning used the offline cache. The focused Node contract
+then passed with Node 26.8.2/npm 12.0.2, and the entire 72-case suite passed.
+Keep the original failed sweep; no tracked fix or fallback was needed. This
+environment recovery did not change compiler/Python/Rust inputs for the other
+five accepted categories.
+
+The native package used the retained compiler only after rechecking its binary
+SHA and every compiler input Git object. All 732 reference source files and
+expected Rust hashes were verified. Fresh qualification executed 732 public
+emissions, four native cases, integrity, relocation, live-generation switching,
+pinning, re-resolution, rollback and corruption/missing/recovery controls.
+All 745 recorded commands' output hashes were independently reconciled.
+Real packaging took 33.351330s; complete installed qualification took 135.289616s.
+The candidate content helper took 9.340625s and 2.423785s and produced the exact
+previous digest. These are isolated observations, not whole-gate causal timing.
+
+The 1,602-payload archive v1am-evidence.tar.gz was independently verified locally:
+7e1b7642d859a4d95e0525188808e72bbb9539097e65f83c264f5018f88a466e.
+
+Independent scoped review returned SATISFIED with no blocking findings.
+Response SHA-256:
+7ed73051d67e11ec30398d76ef1bb76dc0d576be96530217fbc1e4fcc7743289.
+The reviewer created an external scratch copy and a plan-mode note despite the
+read-only request; repository and evidence inputs remained unchanged. These
+external notes are retained. Nonblocking distribution-owner follow-ups are early
+hard-link/AppleDouble rejection (the archive verifier already rejects them) and
+an optional non-BMP ordering regression. Neither changes this item's acceptance.
+
+The app attachment limit prevented attaching the PR; its verified URL is above.
+Final correctness-only create-pr/merge and all V5 scenarios remain required.
+The phase is OPEN and the under-600-second objective remains unproven.
+
+### V1an diagnostic — native generation contains distinct Cargo graphs
+
+Read-only diagnostic on the V1am candidate; no tracked implementation changes.
+The complete installed emission batch took 49.147231s with four workers and
+732/732 outcomes. Median individual emission was 0.058241s; summed individual
+durations overlap and must not be presented as wall time.
+
+The ordinary translation-bundle native case took 39.198020s: its existing stage
+report assigned 21.1s to generation and 17.3s to native compilation. Inspection
+shows generation includes Rust-interop probes and formatting, so that label does
+not establish pure code-generation CPU cost.
+
+An isolated exact-fixture diagnostic preserved the complete emitted Rust bytes
+and runtime assertions. Ordinary emit took 1.051386s. The first native command
+under child-exec/wait tracing took 58.122682s; an ordinary invocation retaining
+its artifacts took 4.545877s. These are different cache/instrumentation states,
+not a controlled optimization comparison.
+
+The trace and generated manifests establish three sequential Cargo graphs:
+12 probes using stdlib fs (8.077674s traced Cargo check), six probes using
+stdlib i18n (18.174673s check), then the actual application using encoding/fs/
+i18n/sys (18.893780s Cargo build). All share one native family target, so this
+is not separate target-directory fragmentation. Probe runtime dependencies
+enable default features; the final application disables defaults. Their actual
+rustc feature identities differ. Check emits metadata; build emits linkable
+code. Three separate Cargo metadata calls each took about 0.26–0.28s.
+
+The trace records 175 rustc compilation invocations across those graphs, including
+build scripts and build-script capability snippets; version/print discovery calls
+are excluded. This is not a count of unique crates. The manifests, probe sources,
+locks, complete trace and parsed invocations are retained in the 72-payload
+v1an-evidence.tar.gz, independently verified locally:
+a956314b9d4d11629eade02f70b2ad5040dc72728db656bcd06964f5817ae365.
+
+### V1ao prospective feasibility — exact application-graph probe/build work
+
+Before changing compiler code, test an external generated-workspace prototype
+using the actual captured application graph and all 18 existing probe sources.
+Compare ordinary bounded runs of the original separated sequence and a workspace
+that validates every probe against the application's exact dependency selection
+and builds the native program. Keep final dependency versions/checksums, selected
+features, profile, target, native identity, generated sources and runtime
+assertions; account explicitly for generated workspace lock changes.
+
+Do not infer that different feature graphs are interchangeable, arbitrarily
+union features, suppress a probe, or change public check semantics. Any future
+implementation must distinguish checking/materialization from a requested native
+build and preserve per-declaration failure attribution and complete outcomes.
+First establish whether this removes meaningful repeated compilation, and test
+a deliberately broken probe to prove the prototype still rejects it. Record
+instrumented attribution separately from ordinary timing. This is feasibility,
+not adoption or a replacement for final phase gates. Compiler rebuild/configuration
+costs and the SQL independent clean-build protocol remain larger open concerns.
