@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1w owner build parallelism qualified; independent review pending; full phase open"
+current_stage: "V1w merged; V1x guest compilation/runtime tradeoff investigation; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14197,3 +14197,60 @@ preparation are recorded separately rather than hidden in that warm result.
 
 Full correctness-only facade gates and every V5 scenario remain mandatory.
 This intermediate item requires exact-candidate independent review before merge.
+
+### V1w closure — PostgreSQL C compilation ownership
+
+PR #4479 merged reviewed candidate
+75cf1137abe23210044dbbff32cd7cdf0bc08cbe as
+ff30bde05ddc9a3c97f546e00deab5cef8c7e2f0; the Git trees match exactly.
+Independent scoped review is SATISFIED with no blockers. Its external response
+SHA-256 is bbeab79a00ddfa75dd8b4761d93f391c08e901d43fc1f985f358731c6ed1e17c.
+All 196 archived evidence payloads are independently size/hash verified locally;
+archive SHA-256 ec731e3c8d428ab9d64c8f602ba624c2260ff506fb1b6f43963810877cc019ad.
+The two disposable V1v compressed/decompressed executables remain separately
+retained with exact hashes; their complete analysis and logs are in the archive.
+
+The generated receipt truthfully records four Cargo jobs instead of the prior two,
+as allocated by the existing LOCAL-GATE resource policy. No allocation policy was
+changed. The rebuilt components differ in bytes; runtime qualification passes,
+but this experiment does not isolate parallelism, job count or producer variance
+as the cause of that difference. Reproducibility remains separately qualified
+under the phase's mandatory clean-build and V5 contracts.
+Keep the producer cross-filesystem publication limitation and V1v's uncaptured
+historical root rebuild reason as separate follow-ups. Final phase acceptance
+remains open.
+
+### V1x prospective investigation — guest compilation/runtime tradeoff
+
+The remaining SQL application tests repeatedly invoke fresh real compiler
+processes. Each must compile its authenticated provider artifact before execution;
+bounded in-process reuse from V2b cannot cross that process boundary. The normal
+six-major component-host case alone takes 22.16s on the prepared V1w candidate.
+Investigate the cost of optimizing the generated guest code before changing test
+selection, isolation or introducing persistent native-code reuse.
+
+Compare the current Wasmtime guest optimization policy against a diagnostic
+Config::cranelift_opt_level(OptLevel::None) setting at the existing component
+compilation owner. This changes guest-code optimization, not the native Rust
+optimization level of cranelift-codegen rejected in V1e. Keep the exact same
+Wasmtime version, features, parallel pool budget, capability/import restrictions,
+NaN policy, fuel, memory, stack, fresh Stores/instances and request assertions.
+No profile, lockfile, fixture or component bytes change for this diagnostic.
+
+Begin with the existing complete PostgreSQL component-host test over all six
+artifacts. Attribute actual test preparation separately and retain targets.
+Use the same admitted resource envelope and ordinary complete runtime assertions
+for baseline and candidate, with the 1,800-second category cap. Measure both
+fresh compilation plus execution and repeated execution before any adoption;
+a faster compilation stage alone is insufficient. Include SQLite and MySQL and
+the actual SQL application assertions in any subsequent acceptance proposal.
+Record exact source identities and distinguish diagnostic source changes from an
+accepted implementation. Preserve failures and restore the previous policy if
+the complete measurements reject the tradeoff.
+
+Any adopted host-source change requires canonical provenance regeneration for
+affected artifacts, all applicable component safety/isolation/resource/cache
+controls, actual provider/editor/native application checks, and exact-candidate
+independent review. Guest-policy behavior and cache ownership must remain coherent;
+no environment-only test bypass, serialized native-code trust or assertion removal.
+Final correctness-only facade gates and every V5 scenario remain mandatory.
