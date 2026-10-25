@@ -90,7 +90,7 @@ sifr_sysroot = { path = "crates/sifr_sysroot" }
 sifr_metadata = { path = "crates/sifr_metadata" }
 sifr_runtime = { path = "crates/sifr_runtime" }
 sifr_structural_identity = { path = "crates/sifr_structural_identity" }
-sifr_compiler_component = { path = "crates/sifr_compiler_component" }
+sifr_compiler_component = { path = "crates/sifr_compiler_component", default-features = false }
 sifr_sql_contract = { path = "crates/sifr_sql_contract" }
 sifr_sql_tool = { path = "crates/sifr_sql_tool" }
 sifr_sql_runtime = { path = "crates/sifr_sql_runtime" }

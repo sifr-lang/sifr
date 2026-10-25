@@ -11,6 +11,9 @@ import tomllib
 from pathlib import Path
 
 from component_artifact_validation import self_test as artifact_self_test, validate_manifest
+from component_feature_boundary import (
+    FeatureBoundaryError, self_test as feature_boundary_self_test, validate_feature_boundary,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RECORD_PATH = REPO_ROOT / "verification/areas/sql_platform/data/compiler_component_qualification.json"
@@ -60,6 +63,10 @@ def validate(
     host_source_override: str | None = None,
     compilation_source_override: str | None = None,
 ) -> None:
+    try:
+        validate_feature_boundary(REPO_ROOT)
+    except FeatureBoundaryError as error:
+        raise QualificationError(str(error)) from error
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise QualificationError("qualification schema_version must be 1")
     if payload.get("protocol_major") != 1:
@@ -340,7 +347,7 @@ def run_self_test(payload: dict[str, object]) -> None:
         else:
             raise QualificationError(f"mutation did not fail: {name}")
         mutations.append((name, payload))
-    count = artifact_self_test()
+    count = artifact_self_test() + feature_boundary_self_test(REPO_ROOT)
     print(f"compiler component qualification self-test ok: mutations={len(mutations) + count}")
 
 

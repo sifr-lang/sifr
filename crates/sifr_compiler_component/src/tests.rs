@@ -3,8 +3,10 @@ use crate::*;
 use semver::Version;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
+#[cfg(feature = "host")]
 use std::sync::atomic::{AtomicU64, Ordering};
 
+#[cfg(feature = "host")]
 static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 #[test]
@@ -126,6 +128,7 @@ fn diagnostic_registries_are_stable_disjoint_and_lifecycle_tagged() {
     }
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn non_sql_component_parses_typed_requests_and_is_cacheless_deterministic() {
     let first_request = request();
@@ -194,6 +197,7 @@ fn non_sql_component_parses_typed_requests_and_is_cacheless_deterministic() {
     std::fs::remove_dir_all(root).expect("fixture cache should be removable");
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn malformed_output_and_missing_wit_export_are_structured_errors() {
     let malformed = fixture_component(b"not-json", false);
@@ -221,6 +225,7 @@ fn malformed_output_and_missing_wit_export_are_structured_errors() {
     assert_eq!(error.kind, ComponentErrorKind::ProtocolEnvelope);
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn undeclared_provider_diagnostic_and_forged_plan_fingerprint_are_rejected() {
     let mut undeclared = response();
@@ -251,6 +256,7 @@ fn undeclared_provider_diagnostic_and_forged_plan_fingerprint_are_rejected() {
     assert_eq!(error.kind, ComponentErrorKind::ProtocolEnvelope);
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn ambient_wasi_import_is_denied_by_the_empty_linker() {
     let bytes = wat::parse_str(
@@ -272,6 +278,7 @@ fn ambient_wasi_import_is_denied_by_the_empty_linker() {
     assert_eq!(error.kind, ComponentErrorKind::Capability, "{error}");
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn shared_memory_is_denied_before_component_execution() {
     let bytes = wat::parse_str("(component (core module (memory 1 1 shared)))")
@@ -287,6 +294,7 @@ fn shared_memory_is_denied_before_component_execution() {
     assert_eq!(error.kind, ComponentErrorKind::Capability, "{error}");
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn fuel_and_output_bounds_fail_without_panics() {
     let infinite = fixture_component(&[], true);
@@ -375,11 +383,16 @@ fn protocol_recursion_input_and_diagnostic_bounds_are_structured() {
             .kind,
         ComponentErrorKind::ResourceLimit
     );
+}
 
+#[cfg(feature = "host")]
+#[test]
+fn serialized_host_request_obeys_input_limit() {
+    let response = response();
     let output = serde_json::to_vec(&response).expect("response should serialize");
     let bytes = fixture_component(&output, false);
     let identity = identity(&bytes);
-    let mut request = request;
+    let mut request = request();
     request.component = identity.clone();
     let mut limits = ComponentHostLimits::default();
     limits.max_input_bytes = 1;
@@ -392,6 +405,7 @@ fn protocol_recursion_input_and_diagnostic_bounds_are_structured() {
     );
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn cached_responses_obey_the_current_host_output_limit() {
     let response_bytes = serde_json::to_vec(&response()).expect("response should serialize");
@@ -420,6 +434,7 @@ fn cached_responses_obey_the_current_host_output_limit() {
     std::fs::remove_dir_all(root).expect("fixture cache should be removable");
 }
 
+#[cfg(feature = "host")]
 #[test]
 fn cached_responses_obey_the_current_host_input_limit() {
     let response_bytes = serde_json::to_vec(&response()).expect("response should serialize");
@@ -737,6 +752,7 @@ fn provider_registry() -> DiagnosticRegistry {
     }
 }
 
+#[cfg(feature = "host")]
 fn fixture_component(output: &[u8], infinite: bool) -> Vec<u8> {
     let escaped = output
         .iter()
@@ -781,6 +797,7 @@ fn fixture_component(output: &[u8], infinite: bool) -> Vec<u8> {
     wat::parse_str(source).expect("fixture component WAT should parse")
 }
 
+#[cfg(feature = "host")]
 fn temp_root(label: &str) -> std::path::PathBuf {
     let sequence = TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
     std::env::temp_dir().join(format!(
@@ -804,4 +821,5 @@ fn hash_verification_is_exact() {
 #[path = "tests/diagnostic_sources.rs"]
 mod diagnostic_source_tests;
 
+#[cfg(feature = "host")]
 mod compiled_reuse;

@@ -7,6 +7,10 @@ edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
 
+[features]
+default = ["host"]
+host = ["dep:wasmtime"]
+
 [dependencies]
 semver = { workspace = true }
 serde = { workspace = true }
@@ -15,7 +19,7 @@ sha2 = { workspace = true }
 sifr_diagnostics = { workspace = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-wasmtime = { workspace = true }
+wasmtime = { workspace = true, optional = true }
 
 [dev-dependencies]
 wat = { workspace = true }

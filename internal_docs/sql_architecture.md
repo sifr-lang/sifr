@@ -342,6 +342,15 @@ Components use the WebAssembly Component Model and the compiler-owned
 function takes and returns bytes that contain the canonical JSON protocol
 envelope. The host rejects unknown JSON fields and malformed closed variants.
 
+Native execution is the `host` feature of `sifr_compiler_component`, enabled
+by default for direct consumers. Workspace dependencies disable that default:
+semantic services and analysis explicitly request `host`, as do native provider
+integration tests. Protocol types, registration and native envelope validation
+remain available without Wasmtime. Host limits are shared policy values; selecting
+the protocol-only configuration does not change their defaults or validation.
+Compiled identity records the selected host capability. This boundary preserves
+all compiler and SQL command entrypoints; it introduces no process service.
+
 The host uses Wasmtime `48.0.1` with default features disabled. It enables only
 `component-model`, `cranelift`, `gc-null`, `parallel-compilation`, `runtime`, and
 `std`. Compilation uses the process-wide Rayon pool. Local verification bounds

@@ -12821,3 +12821,243 @@ affected SQL producer receipts canonically, retaining declared artifacts and
 all stale-input failures. Run dependency/coverage/metadata/profile/size checks
 and exact committed range checks. Independent candidate review is mandatory.
 No new native-code deserialization or Engine safety/optimization setting change.
+
+### V2d closure — bounded parallel component compilation / #4473
+
+Merged [PR #4473](https://github.com/sifr-lang/sifr/pull/4473) as
+cf78669068dd667b70c80133b08b52c913016795. Exact reviewed candidate
+8a8db53dfa2b926498db3d67d7534390376e0b3f; merged tree identical.
+Wasmtime's existing parallel-compilation feature now uses the existing local
+Rayon allocation. No Engine safety/optimization setting, lifetime-local cache
+policy, runtime state boundary, dependency release, test selection or assertion
+changed. All ten SQL artifacts and three producer receipts were regenerated
+canonically; recursive binary inspection found only core debug-name changes.
+
+The unchanged 64 host/provider/application tests pass on both sides, including
+all six PostgreSQL artifacts: 417.499s before and 285.121s after, saving 132.379s
+in one sequential fixed-scheduling comparison. Candidate preparation took
+351.012s separately. This is not repeated warmed or complete-gate qualification.
+The compilation-only rotated experiment remains separate feasibility evidence.
+All 359 affected semantic/frontend/analysis/LSP tests and 56 allocation/process
+controls pass. Formatting, profiles, metadata, source dependency direction,
+file-size and explicit base-to-candidate diff checks pass.
+
+Initial SQL discovery on 965e85263c3b8ecf04048364187c7a5d4103e1a2 stopped at
+the 20 GiB reserve after 1478.961s: 25 cases completed, 23 passed and two old
+feature-list qualification records failed. Preserve that run as incomplete.
+The final candidate repairs exactly four qualification/checker/documentation
+files and adds rejection controls for a missing parallel-compilation feature
+and an unapproved guest-threads feature. No other tracked blob or mode changed.
+Both contracts and their self-tests pass; repair guard took 20.265s.
+
+After checksum/metadata-verified relocation of an inactive owned target subtree,
+free capacity recovered from about 20 to 35 GiB while preserving artifacts and
+their logical path. The final candidate passes the other 18 SQL suites:
+66 cases/variants in 709.982s, including changed-source preparation.
+The completed clean-build case remains explicitly bound to 965e852:
+878.767s; all three executable hashes match across clean A, reused A and
+independent clean B. Exact input comparison proves its protocol, source, build,
+toolchain and lock inputs unchanged after the qualification repair. All
+19 selected suites / 67 cases are accounted for across these observations;
+do not describe them as one new final-candidate gate run.
+
+Both coverage suites / all five cases pass in 71.235s. All 15 direct-dependency
+audit tests pass in 14.199s, including approved verification graph identities,
+official checksums and mutation controls. Independent review: SATISFIED,
+no blockers, SHA-256
+96593b1608ad2ae8f6892dcdbb0a4d6cae988d392c5f9166eba01ac09eb6640c.
+Review/evidence remain outside the reviewed tree. The chat attachment attempt
+was refused at its 100-attachment limit.
+
+Evidence archives: v2d-evidence.tar.gz SHA-256
+cb39bde041bb18ada0f8ccdcac12de4b5a0209106b060645f5107e272d4ba5b9
+(426 payloads); v2d-dependency-evidence.tar.gz SHA-256
+64aed05d7c26d7f859104d569b24236a7ceee610c29196ece1acde46a857ac77
+(12 payloads). Both manifests and all payload hashes were independently verified
+locally. Original incomplete evidence remains retained.
+
+Separate follow-up, owner compiler/component-host: if a future in-process
+caller invokes component compilation from a Rayon worker, review re-entrant
+work-stealing while the component cache mutex is held. The review found no
+current first-party in-process Rayon caller; do not silently add such a caller
+without addressing that boundary. No speculative workaround was added here.
+The mandatory clean-build cost still exceeds 600s by itself. Complete scoped
+gates and every V5 invalidation/coverage/timing scenario remain open.
+
+### V4bj prospective investigation — repeated SQL test preparation and execution
+
+The V2d resumed SQL run exposes concrete preparation costs: schema-tool tests
+158.914s, migration-tool tests 100.086s, MySQL migration tests 95.288s and
+PostgreSQL migration tests 87.589s. Cargo output shows repeated shared compiler
+and provider builds across these selections. The schema-tool command selects
+all four tool packages; later cases select some of their integration targets
+again. These observations suggest overlap but do not establish identical build
+inputs or redundant valuable coverage.
+
+Investigate the exact canonical commands with retained targets and their
+existing environment/allocation. Collect Cargo artifact identities, resolved
+features, profiles, target/test inventories and ordinary preparation time for
+the overlapping tool selections. Preserve each observed candidate and stop
+each diagnostic category at 1800 seconds with capacity/memory reserves intact.
+Do not infer equivalence from crate names, source names, package counts or
+matching test names alone. Keep intentional PostgreSQL feature/version matrix,
+clean-target protocol, doctests, subprocess behavior and runtime assertions
+explicitly accounted.
+
+First distinguish identical executable/test/environment invocations from
+different feature graphs and genuine independent qualification obligations.
+Inspect existing runner preparation/receipt ownership before proposing another
+mechanism. No production selection, cache key, test or profile changes are
+authorized by this investigation alone. Any implementation must first record
+a bounded acceptance contract preserving all valuable assertions/configurations,
+negative missing-execution/stale-input controls, exact coverage accounting and
+fresh final-candidate execution. Final scoped gates and every V5 remain required.
+
+### V4bj outcome — functioning cache, distinct feature graphs
+
+The five canonical SQL tool selections prepare in 3.479s combined with zero
+rebuilt artifacts on retained targets. Eight overlapping test targets have the
+same inventories and direct test-target feature/profile fields, but none has
+identical executable bytes across the broad and narrow selections. Transitive
+feature differences explain the distinct compiled identities: the comparisons
+contain 14, 4, 15 and 14 differing feature units, propagating to 22, 16, 22 and
+29 first-party artifacts respectively. Examples include rustls logging and
+post-quantum preference, futures/Tokio support, digest, hashing and regex features.
+
+Do not classify these as cache failures or remove a narrow configuration based
+on matching test names. The existing compiler_configuration_plan deliberately
+keeps SQL/native/default-feature selections isolated; cargo_crate_setup prepares
+those exact graphs. No graph widening, test/result deduplication or product
+change was adopted. The probe lists tests but does not claim new test execution.
+The earlier changed-source preparation costs remain real; repeated unchanged
+preparation is already cheap.
+
+Observed candidate b3116e5fb38a95d79754c9e084091ae2c55ae904. Guard 27.207s
+includes inventories, executable hashing and source checks. Evidence archive
+v4bj-evidence.tar.gz SHA-256
+639d8bafe7403e8232b705ed545e65fd305b805e1ed2eb748d217dbc237d051a:
+77 payloads plus manifest independently verified locally. Final gates and V5
+remain open. Continue the genuine compiler-capability ownership question from
+V1m rather than repeating a cache-repair hypothesis this evidence rejects.
+
+### V1n prospective investigation — executable SQL capability boundary
+
+Resume V1m's architectural question with an executable feasibility criterion,
+not another package-count claim. The independent clean SQL protocol still
+takes 878.767s. Reuse V1m's operation/dependency/installation map and existing
+cold-build attribution where its inputs apply. Inspect the two actual canonical
+semantic operations and the component-host coupling, plus the existing host-tool
+sandbox and IPC/lifecycle contracts.
+
+Investigate whether the already qualified canonical compiler can provide those
+capabilities within the existing bounded invocation lifetime, allowing SQL tools
+to remain genuinely independently linked while avoiding embedded copies of the
+compiler stack. A new background daemon, alternate parser, unqualified prebuilt
+producer, widened sandbox grant, implicit fallback or hidden preparation cost is
+not an acceptable solution. Preserve direct library/binary entrypoints, installed
+and source use, offline behavior, all diagnostics and actual SQL operations.
+
+First produce a concrete request/result and ownership design using existing
+canonical representations and transport primitives where possible. Identify
+identity, compatibility, input authorization, cancellation, failure, installation
+and confinement obligations before a prototype. Use an isolated diagnostic only
+where it can execute the actual canonical operations without copied semantic
+logic. Measure complete producer plus consumer costs and preserve distinct feature
+configurations. Package counts or mocked compiler answers cannot establish a gain.
+
+This step authorizes inspection and owned diagnostic prototypes, not a production
+migration by assumption. Any product implementation needs an explicit bounded
+acceptance contract here first, including complete affected SQL/provider/editor/
+host-tool checks, transport and stale-input negative controls, all three clean
+executable comparisons and final V5 accounting. If the boundary cannot preserve
+the existing contracts, retain that evidence and reject it.
+
+### V1n outcome — executable transfer and real artifact equivalence, no speedup claimed
+
+Observed candidate 174b34564d87d18cc61ed0b80d649f8cf7358ac5. An external
+diagnostic calls the actual canonical profile loader and migration frontend;
+it does not copy semantic logic or mock compiler answers. Five direct/transfer
+comparisons preserve exact response bytes: valid SQLite profile, unknown profile,
+valid maintained migration, syntax error and semantic error. All 13 negative
+controls reject malformed, oversized, mismatched, escaping or stale inputs,
+including changed bytes with restored mtime. The diagnostic's root inventory,
+4 MiB packet bound and supplied packet checksum are probe constraints, not a
+production authorization or supported-input contract.
+
+A second consumer decodes the canonical ProfileAuthority and calls the actual
+sifr_sql_tool artifact builder. Its seven generated files and manifest match
+the existing SQLite CLI exactly. Corrupt authority fingerprints and a missing
+profile are rejected. Producer plus consumer took 2.518s versus 2.375s for the
+CLI in one ordinary observation. This establishes no runtime gain. The first
+transport comparison took 2.403s for profile preparation/transfer and 0.307s for
+migration preparation/transfer, including both processes. Preparation guards
+were 140.779s and 95.252s; these are not controlled cold-build comparisons.
+
+The real artifact consumer compiled 139 distinct packages / 218 artifact events.
+It excludes semantic services/frontend but still includes Wasmtime/Cranelift
+through SQL contract types -> compiler-component. Thus executable evidence
+corroborates V1m's second dependency path. No production IPC, deployment,
+standalone entrypoint, sandbox or package contract has changed. Typed migration
+consumption, all providers/commands, installation, confinement, independent clean
+tools, invalidation and final gates remain unqualified.
+
+The initial extended probe stopped before compilation because its reduced lock
+had dropped three approved transitive pins. Re-seeding its external lock from
+the unchanged repository lock resolves this; all 261 selected registry identities
+and checksums then match. Preserve the failed 4.219s attempt. Inactive owned
+build-script artifacts were relocated after checksum/metadata verification,
+preserving their logical paths and all bytes; this is capacity maintenance,
+not performance evidence. No tracked product source changed.
+
+Evidence v1n-evidence.tar.gz SHA-256
+bccfa89452eefadf45ecd8ae1bd15facd4d0848f60e6a490ff45bdb0e2db5e6d:
+195 payloads plus manifest independently verified locally. The measured
+one-way prototype is not adopted as a production solution. Its useful result
+is a verified typed-artifact boundary and concrete evidence that both compiler
+and native component-host dependencies must be addressed.
+
+### V1o prospective execution — explicit native component-host ownership
+
+Bounded scope: make Wasmtime/native component execution an explicit Cargo
+capability of sifr_compiler_component. Keep the crate's existing default host
+behavior for direct consumers, while workspace protocol-only dependencies
+disable defaults. Actual host users and native provider integration tests must
+explicitly select the host capability. Preserve canonical protocol types,
+registration validation, guest semantics, Engine configuration, resource limits,
+compiled-code ownership, runtime assertions and all existing command entrypoints.
+This is a dependency boundary, not a new process service, fallback or backend.
+
+Before implementation, retain an ordinary controlled clean build of the existing
+real artifact consumer. Afterward, compare the same source/profile/toolchain
+and allocation with a separate clean target, recording all preparation and
+registry identities. Require actual compiled artifact evidence that the
+protocol-only consumer has no Wasmtime/Cranelift units, and exact equality of
+all seven real SQLite schema artifacts. Do not infer full-tool or gate savings
+from this consumer, package counts, or a warm/cold comparison.
+
+Named intermediate acceptance:
+- All existing component tests in host mode, plus the applicable existing
+  protocol tests in no-default-features mode. Maintain the no-host command as
+  a case in the canonical compiler-components SQL suite, retaining its existing
+  qualification case and the ordinary host test selection. Do not count disabled host tests
+  as no-host passes; reconcile the two inventories explicitly.
+- Distinguish host/protocol mode in compiled identity. Add focused regression
+  and mutation controls for dependency-feature drift and missing host grants.
+- Qualify both compiler/editor host owners and protocol-only Cargo selections;
+  all 359 previously selected compiler/editor tests and the 64 real component,
+  provider and application tests remain required on the integrated candidate.
+- Regenerate affected guest artifacts/receipts with canonical pinned producers
+  when their declared inputs change. Validate complete producer coverage and
+  actual component execution, not just changed hashes or package metadata.
+- Run affected SQL contract/tool tests, component/dependency qualification
+  controls, direct-dependency audit, formatting, file-size/dependency-direction
+  guards and emitted-profile checks where selection or policy changes.
+- Independent exact-candidate review under the approved intermediate policy.
+  No final correctness/timing claim until the scoped phase gates and every V5
+  scenario pass; the full SQL clean protocol remains mandatory there.
+
+No production compiler-to-tool transport or installation migration is authorized
+by this item. After this boundary is measured and qualified, reassess the remaining
+semantic-service dependency using the V1n evidence. Preserve the current SQL
+clean protocol and its last 878.767s result; this item does not promise to bring
+that protocol, or the complete gate, below 600s by itself.
