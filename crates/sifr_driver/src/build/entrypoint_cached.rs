@@ -61,13 +61,8 @@ fn build_cached_rooted_entrypoint_binary(
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     let total_start = Instant::now();
     let mut stages = Vec::new();
-    let (plan, mode, entrypoint_path) = RootedEntrypointPlan::from_entrypoint_with_stages(
-        compiler,
-        entrypoint,
-        &mut stages,
-        true,
-        None,
-    )?;
+    let (plan, mode, entrypoint_path) =
+        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
