@@ -78,7 +78,7 @@
       "checksum": "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d",
       "license": "Apache-2.0 WITH LLVM-exception",
       "default_features": false,
-      "features": ["component-model", "cranelift", "gc-null", "runtime", "std"],
+      "features": ["component-model", "cranelift", "gc-null", "parallel-compilation", "runtime", "std"],
       "artifacts": ["compiler-component-host"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "platform_part": "compiler_components",

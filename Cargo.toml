@@ -206,7 +206,7 @@ unicode-segmentation = { version = "1.13.3" }
 url = { version = "2.5.8" }
 uuid = { version = "1.26.0", features = ["v3", "v4", "v5"] }
 walkdir = { version = "2.5.0" }
-wasmtime = { version = "=48.0.1", default-features = false, features = ["component-model", "cranelift", "gc-null", "runtime", "std"] }
+wasmtime = { version = "=48.0.1", default-features = false, features = ["component-model", "cranelift", "gc-null", "parallel-compilation", "runtime", "std"] }
 wit-bindgen = { version = "=0.61.1", default-features = false, features = ["macros", "realloc", "std"] }
 wat = { version = "=1.258.0" }
 zip_8_6 = { package = "zip", version = "8.6.0", default-features = false, features = ["deflate"] }
