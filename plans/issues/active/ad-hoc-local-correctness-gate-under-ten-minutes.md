@@ -13668,3 +13668,17 @@ Reconcile the two changed policy inventories, run the integrated host-tools and
 runner contracts, then qualify current source/installed commands and clean
 executables before independent review. Earlier observations remain bound to
 their recorded candidates. Full phase gates and V5 remain unproven.
+
+
+V1s integrated discovery at 5c8d7458e021267c54e8f875ce581bf7ddb2d96f:
+quality passes (80.763s guarded), all seven host-tools cases pass (106.809s
+including preparation; 54 Rust tests and the same five live exclusions),
+complete runner self-tests pass (69.981s), all seven profile plans preserve
+their previous selections plus the explicit process owner, 359 compiler/editor
+owner units pass (90.325s including compilation), and SQL/tool contracts pass.
+The batch remains failed because the dependency audit reported eight passes and
+seven failures: the new process crate's manifest and its tempfile/windows-sys
+declarations were absent from the pinned inventory. Add that manifest and those
+two already-audited versions; preserve registry response/checksum authority,
+verification graph pins, every other declaration and all negative controls.
+The failure is owned by this extraction and is not an external dependency issue.
