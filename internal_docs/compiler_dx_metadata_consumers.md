@@ -520,10 +520,10 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/build/cargo_manifest.rs:147` `render_portable_dependency_cargo_toml` | read, enumerate | layered view + demanded record handles | 185 |
 | `crates/sifr_driver/src/build/cargo_manifest.rs:716` `generated_cargo_toml_renders_sysroot_crates_before_retained_glue_deps` | read | test setup/parity | 746 |
 | `crates/sifr_driver/src/build/cargo_manifest.rs:778` `test_dependency_plan` | read | layered view + demanded record handles | 783 |
-| `crates/sifr_driver/src/build/entrypoint.rs:142` `compile_single_file_with_prepared_native` | read, enumerate, borrow/retain | layered view + demanded record handles | 159, 160, 161, 164, 169 |
-| `crates/sifr_driver/src/build/entrypoint.rs:360` `from_entrypoint_with_stages` | read, enumerate, mutate overlay/producer, clone projection | layered view + demanded record handles | 374, 375, 383, 412, 466, 562, 581, 582, 585, 617 |
-| `crates/sifr_driver/src/build/entrypoint.rs:668` `into_single_file_frontend` | read | layered view + demanded record handles | 676 |
-| `crates/sifr_driver/src/build/entrypoint.rs:692` `into_generated_binary_project_with_probe_policy` | read, enumerate, borrow/retain | layered view + demanded record handles | 697, 698, 699, 705, 712, 723 |
+| `crates/sifr_driver/src/build/entrypoint.rs:141` `compile_single_file_with_prepared_native` | read, enumerate, borrow/retain | layered view + demanded record handles | 159, 160, 161, 164, 169 |
+| `crates/sifr_driver/src/build/entrypoint.rs:354` `from_entrypoint_with_stages` | read, enumerate, mutate overlay/producer, clone projection | layered view + demanded record handles | 367, 368, 376, 399, 453, 549, 568, 569, 572, 604 |
+| `crates/sifr_driver/src/build/entrypoint.rs:655` `into_single_file_frontend` | read | layered view + demanded record handles | 663 |
+| `crates/sifr_driver/src/build/entrypoint.rs:679` `into_generated_binary_project_with_probe_policy` | read, enumerate, borrow/retain | layered view + demanded record handles | 684, 685, 686, 692, 699, 710 |
 | `crates/sifr_driver/src/build/entrypoint_resolution.rs:8` `package_cargo_resolution_policy` | read | layered view + demanded record handles | 10, 22, 32 |
 | `crates/sifr_driver/src/build/entrypoint_single_file.rs:5` `into_frontend` | read, borrow/retain | layered view + demanded record handles | 6, 11 |
 | `crates/sifr_driver/src/build/entrypoint_tests.rs:21` `test_single_file_entrypoint_plan_generates_main_only_project` | read | test setup/parity | 38 |
@@ -570,11 +570,11 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/build/rust_interop_trust.rs:41` `effective_panic_policy` | read | layered view + demanded record handles | 50 |
 | `crates/sifr_driver/src/build/rust_interop_trust.rs:87` `is_implicit_sysroot_stdlib_no_panic` | read | layered view + demanded record handles | 87 |
 | `crates/sifr_driver/src/build/rust_interop_zero_copy_contract_tests.rs:325` `generated_from_fixture_source` | read | test setup/parity | 330, 336 |
-| `crates/sifr_driver/src/build/single_file_interop_cache.rs:26` `resolve_single_file_metadata` | read | layered view + demanded record handles | 29, 49, 56, 58, 63 |
-| `crates/sifr_driver/src/build/single_file_interop_cache.rs:70` `resolve_cached_stdlib_interop` | read, borrow/retain | layered view + demanded record handles | 70, 73, 76, 89 |
-| `crates/sifr_driver/src/build/single_file_interop_cache.rs:94` `resolve_interop` | read | layered view + demanded record handles | 97, 102 |
-| `crates/sifr_driver/src/build/single_file_interop_cache.rs:107` `stdlib_interop_cache_key` | read | layered view + demanded record handles | 107, 108, 111 |
-| `crates/sifr_driver/src/build/single_file_lowering_error_tests.rs:10` `lowering_error_counters_reject_before_and_after_successful_resolution` | read | test setup/parity | 35, 37, 47, 55 |
+| `crates/sifr_driver/src/build/single_file_interop_cache.rs:39` `resolve_single_file_metadata` | read | layered view + demanded record handles | 42, 62, 70, 73, 80, 87 |
+| `crates/sifr_driver/src/build/single_file_interop_cache.rs:94` `resolve_cached_stdlib_interop` | read, borrow/retain | layered view + demanded record handles | 94, 97, 100, 116 |
+| `crates/sifr_driver/src/build/single_file_interop_cache.rs:123` `resolve_interop` | read | layered view + demanded record handles | 126, 131 |
+| `crates/sifr_driver/src/build/single_file_interop_cache.rs:136` `stdlib_interop_cache_key` | read | layered view + demanded record handles | 136, 137, 140 |
+| `crates/sifr_driver/src/build/single_file_lowering_error_tests.rs:10` `lowering_error_counters_reject_before_and_after_successful_resolution` | read | test setup/parity | 37, 40, 50, 55 |
 | `crates/sifr_driver/src/build/sql_profiles_tests.rs:28` `package_compilation_prepares_profiles_offline_and_binds_source_bytes` | read | test setup/parity | 90, 107 |
 | `crates/sifr_driver/src/build/sql_profiles_tests.rs:151` `package_query_declarations_emit_non_empty_compatibility_artifact` | read, enumerate, mutate overlay/producer | test setup/parity | 160, 162, 170, 190 |
 | `crates/sifr_driver/src/build/sql_profiles_tests.rs:205` `sql_discovery_requires_imported_profile_namespaces` | read, mutate overlay/producer | test setup/parity | 225, 227, 235 |
@@ -587,7 +587,8 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs:106` `stdlib_interop_demand_transitive_reexports_and_support` | read, enumerate, borrow/retain | test setup/parity | 106, 150, 161, 164, 166, 170, 171, 181, 183, 247 |
 | `crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs:257` `stdlib_interop_demand_real_python_retains_contracts` | read, enumerate | test setup/parity | 257, 259, 260, 269, 275, 288, 296 |
 | `crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs:307` `stdlib_interop_demand_project_single_file_parity` | read | test setup/parity | 307, 309, 310, 314, 319, 320, 321, 330, 335 |
-| `crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs:341` `stdlib_interop_demand_cache_disjoint_programs` | read | test setup/parity | 341, 346, 347, 348, 349, 361, 362, 363, 372, 374, 375, 376, 384, 386 |
+| `crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs:341` `stdlib_interop_demand_cache_disjoint_programs` | read | test setup/parity | 341, 348, 349, 350, 351, 363, 364, 365, 374, 376, 377, 378, 386, 388 |
+| `crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs:394` `stdlib_interop_demand_new_native_selection_has_current_cargo_inputs` | read | test setup/parity | 394 |
 | `crates/sifr_driver/src/build/stdlib_interop_startup_tests.rs:9` `lowered` | read | test setup/parity | 9 |
 | `crates/sifr_driver/src/build/stdlib_interop_startup_tests.rs:18` `stdlib_interop_startup_project_selection_is_once_per_complete_application` | read, enumerate | test setup/parity | 18, 19, 20, 21, 24, 26, 27, 30, 40, 41, 45, 70, 80 |
 | `crates/sifr_driver/src/build/stdlib_interop_startup_tests.rs:89` `stdlib_interop_startup_readonly_walk_preserves_hidden_edges` | read, enumerate, borrow/retain | test setup/parity | 89, 90, 96, 99, 100, 102, 158, 159, 165, 167, 179, 184, 209, 212, 216, 224, 232 |
