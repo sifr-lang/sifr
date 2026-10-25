@@ -30,6 +30,7 @@ syntaqlite = { workspace = true, features = ["analysis", "fmt", "pin-cflags", "p
 wit-bindgen = { workspace = true }
 
 [dev-dependencies]
+sifr_compiler_component = { workspace = true, features = ["host"] }
 insta = { workspace = true }
 rusqlite = { workspace = true, features = ["bundled"] }
 

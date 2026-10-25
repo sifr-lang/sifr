@@ -32,6 +32,7 @@ wit-bindgen = { workspace = true }
 lalrpop = { workspace = true, features = ["lexer", "unicode"] }
 
 [dev-dependencies]
+sifr_compiler_component = { workspace = true, features = ["host"] }
 insta = { workspace = true }
 mysql_async = { workspace = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
 tokio = { workspace = true, features = ["macros", "net", "rt", "time"] }

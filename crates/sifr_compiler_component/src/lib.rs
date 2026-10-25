@@ -10,16 +10,18 @@
 )]
 
 mod cache;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(feature = "host", not(target_family = "wasm")))]
 mod compilation;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(feature = "host", not(target_family = "wasm")))]
 pub use compilation::ComponentCompilation;
 mod diagnostic_sources;
 mod diagnostics;
 mod error;
 mod fingerprint;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(feature = "host", not(target_family = "wasm")))]
 mod host;
+#[cfg(not(target_family = "wasm"))]
+mod limits;
 mod protocol;
 mod registration;
 #[cfg(not(target_family = "wasm"))]
@@ -30,8 +32,10 @@ pub use diagnostic_sources::{DIAGNOSTIC_SOURCE_LOCATIONS_KIND, diagnostic_source
 pub use diagnostics::{DiagnosticCodeDeclaration, DiagnosticRegistry, DiagnosticRegistryOwner};
 pub use error::{ComponentError, ComponentErrorKind};
 pub use fingerprint::compute_plan_fingerprint;
+#[cfg(all(feature = "host", not(target_family = "wasm")))]
+pub use host::{ComponentHost, ComponentRun};
 #[cfg(not(target_family = "wasm"))]
-pub use host::{ComponentHost, ComponentHostLimits, ComponentRun};
+pub use limits::ComponentHostLimits;
 pub use protocol::{
     AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ClosedType, ContextArtifact, DependencyDescriptor,
     DiagnosticLifecycle, DiagnosticSeverity, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse,
