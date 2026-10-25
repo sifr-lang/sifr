@@ -13615,3 +13615,15 @@ V1s remains unmerged and unreviewed. Refresh affected component producers,
 complete current source/installed and executable qualification, reconcile
 affected coverage, and obtain exact-candidate review. Final scoped gates and
 every V5 scenario remain open; no sub-ten-minute full-gate claim is made.
+
+
+V1s policy discovery: unsafe (402 sites), method authority (6,451 sites), direct
+filesystem effects, their mutation suites, dependency direction, SQL host/native
+contracts and profile checks pass at 73e98b29acd1134e9d2e612923e1f59a01888f71.
+The aggregate remains failed: DX consumer inventory needed one shifted line
+anchor; Cargo coverage exposed the existing V1o host/default component-feature
+classification omission; component provenance requires the already-planned
+producer refresh. These are separately recorded, not treated as passing.
+The two feature rows belong to the affected compiler/component boundary; no
+feature, target or profile is removed. Inventory ordering is restored without
+changing entries or multiplicities to keep the final review focused.

@@ -614,7 +614,7 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/build/sysroot_interop_tests.rs:286` `user_interop` | read | test setup/parity | 292 |
 | `crates/sifr_driver/src/build/sysroot_interop_tests.rs:362` `base_project` | read | test setup/parity | 366 |
 | `crates/sifr_driver/src/build/test_runner_interop.rs:14` `finalize_test_runner_project` | read, enumerate | test setup/parity | 16, 22, 28, 58 |
-| `crates/sifr_driver/src/compiled_identity.rs:2` `compiled_input_tokens` | read, borrow/retain | layered view + demanded record handles | 17, 18 |
+| `crates/sifr_driver/src/compiled_identity.rs:2` `compiled_input_tokens` | read, borrow/retain | layered view + demanded record handles | 18, 19 |
 | `crates/sifr_driver/src/frontend/api.rs:75` `metadata_result` | read | layered view + demanded record handles | 81 |
 | `crates/sifr_driver/src/frontend/session.rs:16` `new` | read | layered view + demanded record handles | 20 |
 | `crates/sifr_driver/src/metadata_producer/project_results/tests.rs:7` `compatibility` | read | test setup/parity | 11 |
