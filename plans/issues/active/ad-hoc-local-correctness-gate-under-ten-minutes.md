@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1ac merged; V1ad interop cache ownership investigation; full phase open"
+current_stage: "V1ad merged; V1ae SQL clean-build cost attribution; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14608,3 +14608,56 @@ is complete and no source drift occurs. Preserve this failing regression.
 The repair replaces the process-static map with an invocation-owned object that
 contains both native authority and concurrent resolved-plan cells. Standalone
 calls resolve current inputs. The same-owner demand-key rules remain unchanged.
+
+### V1ad closure — interop results belong to their invocation
+
+Merged [PR #4481](https://github.com/sifr-lang/sifr/pull/4481).
+Candidate c467064d475d6ccf58ea742f64f0988d48319211 and merge
+a5e8150a89c143f653350b869918ebd30bebe81d have identical trees.
+Scoped independent review is SATISFIED with no blockers, response SHA-256
+50d186c729749c72a66f3b2a17643d0d66e67b63ac9a886ffd54fa0c53b0e01c.
+
+All eight named categories pass: six stdlib-demand tests (including the reproduced
+stale-target regression), lowering admission, public native-selection controls,
+session changed-input/concurrency controls, complete corpus equivalence, CLI
+build, hygiene and positive E2E. The corpus compares all 732 positive and 569
+negative results and reverse-order reuse. Runtime E2E covers all 732 fixtures in
+186 native groups, 118.751s guarded. No missing outcomes or leftover children.
+
+The complete-corpus log separately measures standalone and session compilation
+with four workers on this candidate: positive 58.475s / 41.868s; negative 13.847s /
+0.572s. These are API comparisons, not historical speedups or full-gate evidence.
+Review's suggestion to expose those costs is addressed by extracting the existing
+log into a separate external JSON artifact; no extra run is needed. Explicit
+native target selection only inspects tool/version/configuration metadata and
+does not compile for or require an installed second target. The session map is
+bounded by its owner's lifetime but has no separate demand-count eviction policy;
+that pre-existing characteristic remains a follow-up, not a new requirement.
+
+Preserve the original failing regression and initial compilation failure in an
+old test helper. All successful final checks cover the corrected candidate.
+The archive has 98 independently verified payloads, SHA-256
+864f576ae6416d94689c5fcba8e8a3fdda36be661c7132883872e0fca4fe1d7f.
+Final correctness gates and all V5 scenarios remain open.
+
+### V1ae prospective investigation — SQL clean-build compilation costs
+
+Return to the largest measured verification category instead of expanding small
+repairs. The current canonical SQL native protocol took 403.245s in V1ab and
+requires clean A, unchanged A, and independent clean B with byte-identical linked
+executables. Preserve those assertions, target/profile/feature selections,
+locked/offline resolution, path remapping and independent target directories.
+
+Use an external diagnostic wrapper around the actual canonical protocol.
+Add Cargo's ordinary unit-timing report to each build, archive reports before
+the protocol removes A, and record each build's elapsed time, exact commands,
+selected artifacts and effective resource allocation. Retain failure artifacts
+and distinguish aggregate compilation work from critical-path wall time. Do not
+attribute two concurrently compiled units' summed times to elapsed time.
+
+Before launching, inspect effective CPU/memory, free disk, current target sizes
+and working allocation/reserves; preserve the 1,800-second diagnostic cap.
+This is fresh-build cost attribution, not host-sensitive performance acceptance
+or an adopted profile/scheduling/dependency change. Let the observed dominant
+units determine the next bounded repair. No valuable clean-build assertion,
+cross-platform exclusion, native integrity check or final V5 scenario changes.
