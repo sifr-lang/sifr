@@ -177,6 +177,7 @@ COMMANDS = {
     ],
     "sql-mysql-migration-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_mysql_tools", "--test", "migration_qualification",
+        "--features", "sifr_sql_mysql_tools/compiler",
     ],
     "sql-mysql-live-matrix": [
         sys.executable,
@@ -199,6 +200,7 @@ COMMANDS = {
     ],
     "sql-sqlite-tool-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_sqlite_tools",
+        "--features", "sifr_sql_sqlite_tools/compiler",
     ],
     "sql-sqlite-library-matrix": [
         sys.executable,
@@ -251,6 +253,7 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_sql_tool",
         "-p", "sifr_sql_postgresql_tools", "-p", "sifr_sql_mysql_tools",
         "-p", "sifr_sql_sqlite_tools",
+        "--features", "sifr_sql_mysql_tools/compiler,sifr_sql_postgresql_tools/compiler,sifr_sql_sqlite_tools/compiler",
     ],
     "sql-migration-engine-qualification": [
         sys.executable,
@@ -293,6 +296,7 @@ COMMANDS = {
     "sql-postgresql-migration-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_tools",
         "--test", "migration_qualification",
+        "--features", "sifr_sql_postgresql_tools/compiler",
     ],
     "sql-postgresql-live-migrations": [
         sys.executable,

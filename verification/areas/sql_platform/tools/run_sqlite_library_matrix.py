@@ -15,7 +15,8 @@ def main() -> int:
     commands = [
         ["cargo", "test", "--locked", "-p", "sifr_sql_sqlite"],
         ["cargo", "test", "--locked", "-p", "sifr_sql_sqlite_runtime"],
-        ["cargo", "test", "--locked", "-p", "sifr_sql_sqlite_tools"],
+        ["cargo", "test", "--locked", "-p", "sifr_sql_sqlite_tools",
+         "--features", "sifr_sql_sqlite_tools/compiler"],
     ]
     for command in commands:
         subprocess.run(command, cwd=ROOT, check=True)

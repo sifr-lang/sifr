@@ -68,7 +68,8 @@ def run_server(series: str, image: str, surface: str) -> dict[str, Any]:
         if surface in {"runtime", "all"}:
             run_cargo(["-p", "sifr_sql_mysql_runtime"], env)
         if surface in {"schema-tools", "migrations", "all"}:
-            run_cargo(["-p", "sifr_sql_mysql_tools"], env)
+            run_cargo(["-p", "sifr_sql_mysql_tools",
+                       "--features", "sifr_sql_mysql_tools/compiler"], env)
         print(f"MySQL {series} {surface} matrix passed", flush=True)
         return {
             "series": series,

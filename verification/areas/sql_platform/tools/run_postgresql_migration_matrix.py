@@ -56,7 +56,7 @@ def run_server(server: dict[str, Any]) -> None:
         url = f"postgresql://postgres:{PASSWORD}@127.0.0.1:{port}/postgres?sslmode=disable"
         command = [
             "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_tools",
-            "--features", f"sifr_sql_postgresql/postgresql-{major}",
+            "--features", f"sifr_sql_postgresql_tools/compiler,sifr_sql_postgresql/postgresql-{major}",
             "--test", "live_migrations", "--", "--ignored", "--exact",
             "live_postgresql_migration_contract", "--nocapture",
         ]

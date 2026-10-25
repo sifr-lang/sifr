@@ -13502,3 +13502,67 @@ inventories and emitted plans; run all named integrated acceptance and actual
 clean executable builds, then exact-candidate review. Rebuild affected declared
 component producers for final acceptance after coupled source changes settle.
 Retain targets and all incomplete evidence.
+
+
+### V1s development checkpoint — source, installed and sandbox execution
+
+The integrated V1s item remains open on codex/local-gate-sql-compiler-execution.
+There is no implementation PR, independent acceptance review or merge yet.
+
+At 97848cc416290d11dd929304d746a505c3b804a1, the native source-command comparison
+passed all 24 cases against the retained V1q canonical in-process producer and
+native consumer on the same fresh fixture roots. All 33 artifact files were
+byte-identical; both SQLite provisioning paths created real databases that
+passed integrity checks and were removed by cleanup. The comparison took
+278.839s including reference runs. Reading a valid plan and cleanup succeeded
+with an unavailable compiler selection, proving lazy operation.
+
+At c88f610987062e855de85e04bb357f06db8a0731, four real sandbox integration tests
+passed for all three schema providers, grant denial, wrong compiler selection,
+SQLite provisioning/cleanup and lazy missing-plan reads. The test process took
+52.09s; its command including preparation took 103.640s. The existing locked
+namespace CLI regression, profile checks, preparation tests, formatting and
+size/diff checks passed in the same 132.258s guarded batch. The new boundary
+tests directly supply trusted binaries; existing namespace tests separately
+cover package/lock admission. This is complementary coverage, not a claim that
+the new native cases repeated Cargo admission in the same invocation.
+
+The same candidate was packaged through the actual distribution/metadata
+pipeline into an installed generation: packaging took 122.740s, the guarded
+preparation batch 135.758s. All 24 installed native-command comparisons passed
+with 33 identical artifact files and actual SQLite provisioning/cleanup in
+510.481s including reference runs, excluding the separately recorded packaging.
+Semantic commands had no source compiler override. Five installed negative
+controls passed in 13.692s: source override, manifest content drift, manifest
+symlink, compiler byte substitution and compiler path substitution. Every
+rejected invocation preserved the project file inventory. These are native
+development installation observations, not release or cross-platform evidence.
+
+Retain the failed/incomplete attempts:
+- The initial combined compiler/native Cargo build stopped at the disk reserve
+  after 503.543s. It selected an additional dependency variant. Separating those
+  preparation graphs and preserving 7.183 GiB of inactive incremental artifacts
+  on retained storage allowed the corrected preparation/regression batch to
+  pass in 223.390s. No target contents were discarded or cold-build speedup
+  claimed.
+- Two source-command harness attempts failed before execution (blank JSON lines
+  and an unexpected auxiliary executable). A third compared artifacts across
+  different fixture roots and failed their package-graph identities. An
+  independent same-binary probe confirmed that root change; the passing harness
+  generated canonical baselines on the same fixture, without weakening identity.
+- The first installed preparation harness used incorrect native executable names
+  and failed before packaging. The corrected attempt above is separate evidence.
+
+The next candidate removes default embedded compiler dependencies from ordinary
+native executables now that source, installed and actual sandbox operations
+have focused qualification. Existing compiler-enabled tests and cross-target
+feature variants remain explicitly selected; native-only tests remain separate.
+Compare their complete test-name and ignored-case inventories with V1q, enforce
+the default native dependency boundary, and run actual independent clean
+executable builds. Installed integrity work is charged: the first schema command
+took 55.767s and subsequent compiler-using commands roughly 15–20s in this run.
+No sub-ten-minute gate result follows from these development comparisons.
+
+Remaining: complete feature/coverage and policy-inventory reconciliation, declared
+producer refresh, named affected contracts and clean-build reproducibility,
+exact-candidate independent review, then final scoped gates and all V5 scenarios.

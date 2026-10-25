@@ -72,8 +72,8 @@ Reuse or extract existing process ownership primitives rather than weakening
 cleanup or copying an unbounded subprocess pattern. Charge preparation,
 identity checks, communication and cleanup to operation timing.
 
-Keep existing CLI/default feature selection until the complete replacement
-qualifies. Validate real source and installed entrypoints, sandbox denial cases,
+The default-feature transition follows source and installed command comparisons
+and real sandbox qualification. Continue validating sandbox denial cases,
 all affected SQL/compiler/editor/installation/runner assertions and the actual
 three-executable independent clean-build protocol. The complete LOCAL-GATE
 create-pr/merge and V5 requirements remain open.
@@ -82,12 +82,43 @@ create-pr/merge and V5 requirements remain open.
 
 The hidden canonical worker and its process session are implemented. Focused
 checks compare real profiles and migration declarations against the existing
-in-process semantics for all three providers and reject input drift. Native
-CLI defaults, verified executable selection and sandbox capability integration
-are not switched or qualified yet. The complete gate remains open.
+in-process semantics for all three providers and reject input drift. Native source and installed execution and the private sandbox capability now have
+focused development qualification. Ordinary binaries use the worker adapter and
+no longer select the optional embedded compiler feature. Explicit compiler-enabled
+test commands preserve the existing in-process API coverage. Complete affected
+coverage, clean executable qualification, independent review and the phase gate
+remain open.
 
 The worker fixes its frozen graph and profile inputs at initial preparation.
 Migration input bytes are pinned at the first source request and checked before
 and after compilation and on subsequent requests. This preserves lazy schema
 commands while forbidding arbitrary source requests and between-request drift.
 The shared decoder now rejects unused bytes inside declared IPC payloads.
+
+
+## Explicit selection and current validation scope
+
+Source-tree commands require an absolute SIFR_SQL_COMPILER pointing to the
+paired build, with the source sysroot selected through the existing sysroot
+mechanism. Installed commands use bin/sifr in the selected generation and
+reject a source override. No executable is found through PATH. Selection
+checks executable bytes before and after execution and checks installed
+generation integrity and its compiler/metadata binding.
+
+A confined invocation requires the sql-compiler capability. The outer compiler
+attaches an anonymous socket and starts the selected worker only after a request
+arrives. Direct and inherited sessions own cancellation and worker cleanup.
+The capability grants neither subprocess access nor additional filesystem or
+network access to the native tool.
+
+The source comparison covered 24 native command cases with 33 identical artifact
+files and actual SQLite provisioning/cleanup. The installed comparison repeated
+those cases using a generation produced by the distribution metadata pipeline.
+Five installed negative controls reject a source override, manifest drift,
+manifest symlinks, executable substitution and executable symlinks without
+project writes. Real sandbox tests cover all three schema providers, SQLite
+provisioning/cleanup, missing grants, wrong workers and lazy plan reads. Existing
+locked namespace admission tests remain separately selected; the real native
+sandbox tests directly provide trusted executables and do not claim to repeat
+Cargo/package admission in that same invocation. No Windows or macOS execution
+qualification is inferred from these observations.

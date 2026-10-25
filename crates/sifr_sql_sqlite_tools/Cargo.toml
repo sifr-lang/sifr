@@ -9,7 +9,6 @@ license = { workspace = true }
 [[bin]]
 name = "sifr-sql-sqlite"
 path = "src/main.rs"
-required-features = ["compiler"]
 
 [package.metadata.sifr_sql]
 artifact-role = "sqlite-host-tools"
@@ -17,7 +16,7 @@ supported-servers = ["3.53.4"]
 connection-manifest-version = 1
 
 [features]
-default = ["compiler"]
+default = []
 compiler = ["dep:sifr_semantic_services"]
 
 [dependencies]

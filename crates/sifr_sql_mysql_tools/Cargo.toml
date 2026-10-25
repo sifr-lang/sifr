@@ -9,7 +9,6 @@ license = { workspace = true }
 [[bin]]
 name = "sifr-sql-mysql"
 path = "src/main.rs"
-required-features = ["compiler"]
 
 [package.metadata.sifr_sql]
 artifact-role = "mysql-host-tools"
@@ -17,7 +16,7 @@ supported-servers = ["8.4", "9.7", "26.7"]
 connection-manifest-version = 1
 
 [features]
-default = ["compiler"]
+default = []
 compiler = ["dep:sifr_semantic_services"]
 
 [dependencies]
