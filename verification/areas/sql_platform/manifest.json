@@ -84,6 +84,13 @@
           "command": "sql-component-qualification",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-component-protocol-tests",
+          "entry": "crates/sifr_compiler_component/Cargo.toml",
+          "command": "sql-component-protocol-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

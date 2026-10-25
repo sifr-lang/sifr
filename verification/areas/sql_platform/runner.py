@@ -38,6 +38,10 @@ COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "tools" / "check_component_qualification.py"),
     ],
+    "sql-component-protocol-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_compiler_component",
+        "--lib", "--no-default-features",
+    ],
     "sql-component-qualification-mutations": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_component_qualification.py"),

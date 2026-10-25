@@ -13037,7 +13037,9 @@ from this consumer, package counts, or a warm/cold comparison.
 
 Named intermediate acceptance:
 - All existing component tests in host mode, plus the applicable existing
-  protocol tests in no-default-features mode. Do not count disabled host tests
+  protocol tests in no-default-features mode. Maintain the no-host command as
+  a case in the canonical compiler-components SQL suite, retaining its existing
+  qualification case and the ordinary host test selection. Do not count disabled host tests
   as no-host passes; reconcile the two inventories explicitly.
 - Distinguish host/protocol mode in compiled identity. Add focused regression
   and mutation controls for dependency-feature drift and missing host grants.
