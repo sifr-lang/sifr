@@ -11,6 +11,11 @@ pub(super) fn resolve_package_rust_interop_metadata(
     context: Option<PackageRustInteropContext>,
     native: Option<&Result<sifr_sysroot::NativeToolchain, String>>,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    // Match the resolver's empty-plan boundary before constructing native authority.
+    // Pure emission does not consume Cargo, rustc or their content identities.
+    if generated.interop.rust.declarations.is_empty() {
+        return Ok(generated);
+    }
     let policy = native.map_or_else(CargoResolutionPolicy::normal, |native| {
         CargoResolutionPolicy::normal_with_native(native.clone())
     });

@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1z diagnostics complete; V1aa capacity admission and integrated refresh; full phase open"
+current_stage: "V1ab complete diagnostic passes; V1ac single-file native authority repair; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -14439,3 +14439,106 @@ may be reclaimed. Do not alter policy merely to fit a measurement.
 
 This refresh is diagnostic, not final phase acceptance. It neither replaces
 complete final create-pr/merge qualification nor any V5 scenario.
+
+### V1aa/V1ab outcome — complete current diagnostic accounting
+
+The first contiguous correctness-only merge facade stopped at its 1,800-second
+preparation deadline: 1,880.608s facade / 1,882.952s guarded. Six early guards and
+four preparation nodes passed. The remaining preparation and test selections
+were not inferred to pass. Native launch-context investigation found an additional
+virtual-environment PATH prefix; the existing native identity correctly distinguished
+it. The verified ordinary launcher restores the intended context without normalizing
+cache keys or ignoring environment inputs.
+
+At source candidate 943c9e193e4107643276c6266ae320391b399d99, V1ab executes every
+canonical selection independently with the same 1,800-second category cap.
+All 72 final selections pass: 15 guards, 18 preparations, 20 verification areas,
+18 expanded Cargo configurations, and the positive E2E category. Receipt and
+prerequisite reconciliation has zero errors, zero missing categories, no unexpected
+tracked changes and empty owned process sessions. Prior attempts remain preserved:
+authoring admission overlapped a read-only Cargo metadata diagnostic, and two
+later admissions stopped below their working-allocation requirement before reaching
+the retained 20 GiB reserve. None of those attempts is relabeled a pass.
+Verified lossless archival of obsolete session-owned artifacts enabled resumption;
+current compiler/native targets and failure records remain retained.
+
+| Successful diagnostic group | Observed category sum |
+| --- | ---: |
+| Guards | 251.331s |
+| Preparation | 1,406.846s |
+| Verification areas | 2,840.120s |
+| Crate configurations | 1,493.637s |
+| Positive E2E | 299.391s |
+| Total across separate callbacks/resumptions | 6,291.325s |
+
+This 1h44m51s sum is not contiguous gate acceptance. Accounted process CPU totals
+11,982.09s; maximum-process RSS is not simultaneous process-tree peak memory.
+Preparation includes actual rebuild work and cannot be presented as unchanged-run
+cost. SQL remains largest at 725.945s, including its passing 403.245s clean protocol
+and 122.698s complete seven-command PostgreSQL matrix. Sysroot qualification takes
+585.018s; CLI/lowering 487.964s; generated-driver cases 468.497s; release compiler
+preparation 424.964s; generated-code quality 343.442s; ordinary driver 318.861s.
+
+Coverage reconciliation proves all 732 positive source/runtime fixture outcomes
+and 186 native groups. The passing negative and runtime-failure entrypoints consume
+frozen physical inventories of 569 and 6 inputs respectively; their captured
+libtest output does not expose independent per-fixture timing. Generated-driver
+inventory reconciles 81 exact commands and scheduler outcomes, plus the separately
+owned passing preparation helper; all six CLI native cases also reconcile.
+The nine Python cases total 46.137s of invocation time. Rust interoperability
+totals 604.721s and the other 31 driver cases 280.374s, overlapping under two workers.
+The two frontend corpus comparisons have different authorities and assertions;
+their common fixture inventory alone does not justify deleting either.
+Installed metadata qualification executes 732 public emits and 13 additional
+commands, with generation, corruption, relocation and native assertions retained.
+
+The evidence archive contains 813 independently verified payloads, SHA-256
+868146876ca300b555be1fc724e77ca050e3102ba0765da4ac6a91d83b6d5836.
+Large capacity archives are separately retained and identified. The external HTML
+report includes sortable category, preparation, verification, crate, native-case,
+E2E-stage, fixture and native-group detail. Browser interaction was not exercised;
+structural checks validate its current tables and local evidence links.
+
+### V1ac prospective repair — resolve native authority at its actual consumer
+
+A child-scoped CPU profile of 15 real installed emits passes byte-exact stdout
+and stderr checks against V1ab. It observes 27.61% self samples in the ring SHA-256
+backend and 5.67% in sha2; incomplete unwind stacks do not establish their callers.
+Independent syscall traces of three complete emits identify two complete reads
+of each Cargo/rustc/rustup executable, totaling 124,878,976 bytes per invocation.
+Source inspection explains the duplication: single-file metadata emission prepares
+a native policy inside RootedEntrypointPlan, discards that policy while converting
+the plan to frontend/codegen output, then resolves a new policy during Rust interop
+metadata resolution. The latter also prepares tools before its existing empty-
+declaration early return. This is separate from the earlier native-publication
+hash finding.
+
+Repair only this single-file emission boundary. Do not prepare a native policy
+for the frontend/codegen plan that cannot consume it. At the interop resolution
+boundary, return the unchanged generated project when its Rust declarations are
+empty; otherwise retain the complete existing native resolution, identities,
+trusted/deferred-probe policy and input validation. Existing invocation sessions
+retain their one explicitly captured native selection. Actual builds, project/
+package entrypoints, toolchain hashing, cache keys and tool-selection policy remain
+unchanged. Remove obsolete prepared-native plumbing from the rooted plan only
+where its single-file consumer no longer uses it.
+
+Named acceptance: extend the isolated real-tool wrapper control to prove zero
+native version probes for standalone non-interop emission and syntax/name errors,
+exactly one resolution for standalone demanded stdlib interop, and unchanged
+per-session capture/reuse. Run session controls and complete positive/negative
+session equivalence (Rust bytes, source maps, features, interop metadata, statistics
+and diagnostics), affected stdlib-demand resolution controls, normal positive E2E,
+formatting, file-size and diff checks. Preserve exact native runtime/probe controls;
+do not turn check into a codegen path. Compare ordinary real compiler invocations
+before/after with the same profile and inputs; separate compiler preparation and
+metadata regeneration from retained observations. Confirm changed syscall/tool
+counts on the actual CLI, keeping instrumentation out of elapsed-time comparisons.
+Require scoped exact-candidate independent review before intermediate merge.
+
+The unused explicit-publication bundle hash, successful installed-artifact lifetime,
+and remaining SQL/compiler CPU costs remain separate follow-ups. The direct Winch
+substitution is not adopted: pinned Wasmtime rejects exception features required by
+the existing component contract. No guest capability or test assertion is removed.
+All final correctness-only gates and every V5 timing/invalidation scenario remain
+mandatory; the ten-minute objective is still unproven.

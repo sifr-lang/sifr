@@ -239,9 +239,43 @@ fn test_session_native_probe_child() {
     let context = CompilerContext::for_test();
     assert!(sifr_driver::check(&context, source).is_empty());
     assert_eq!(probes(), 0, "check performed native preparation");
+    assert!(matches!(
+        sifr_driver::compile_with_metadata(&context, source),
+        CompileResultFull::Success { .. }
+    ));
+    for invalid in ["def broken(:\n", "def main():\n    print(missing_name)\n"] {
+        assert!(matches!(
+            sifr_driver::compile_with_metadata(&context, invalid),
+            CompileResultFull::Errors { .. }
+        ));
+    }
+    assert_eq!(
+        probes(),
+        0,
+        "standalone non-interop emission prepared native tools"
+    );
+
+    let native_source =
+        "from sifr.gzip import compress\ndef main():\n    _ = compress(\"sample\")\n";
+    let CompileResultFull::Success { interop, .. } =
+        sifr_driver::compile_with_metadata(&context, native_source)
+    else {
+        panic!("demanded stdlib interop failed to emit");
+    };
+    assert!(!interop.rust.declarations.is_empty());
+    assert!(interop.rust.cargo_inputs.is_some());
+    assert_eq!(
+        probes(),
+        1,
+        "standalone interop must resolve native tools exactly once"
+    );
+
     let first = SingleFileCompilationSession::new(context.clone()).unwrap();
     let after_first = probes();
-    assert!(after_first > 0);
+    assert_eq!(
+        after_first, 2,
+        "session must capture its own native selection"
+    );
     for _ in 0..3 {
         assert!(matches!(
             first.compile_with_metadata(source),
