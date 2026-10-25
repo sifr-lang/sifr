@@ -7,6 +7,7 @@ pub mod compiler_session;
 mod lifecycle;
 mod migration_artifacts;
 mod migration_source;
+pub mod native_compiler;
 mod transaction;
 
 pub use artifacts::{

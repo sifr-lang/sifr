@@ -8130,6 +8130,7 @@ dependencies = [
  "sifr_sql_runtime",
  "sifr_sysroot",
  "tempfile",
+ "tokio",
 ]
 
 [[package]]

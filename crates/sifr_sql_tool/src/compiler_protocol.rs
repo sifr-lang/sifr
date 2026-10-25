@@ -89,6 +89,10 @@ pub struct CompilerClient<S> {
 }
 
 impl<S: Read + Write> CompilerClient<S> {
+    pub(crate) fn transport_mut(&mut self) -> &mut S {
+        &mut self.stream
+    }
+
     pub fn connect(mut stream: S, source_identity: &str) -> Result<Self, String> {
         let expected = schema(source_identity)?;
         write(

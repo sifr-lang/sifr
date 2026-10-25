@@ -8,6 +8,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+tokio = { workspace = true, features = ["rt", "time", "macros"] }
 sifr_ipc = { workspace = true }
 sifr_process = { workspace = true }
 sifr_sysroot = { workspace = true }

@@ -219,7 +219,7 @@ COMMANDS = {
     ],
     "sql-compiler-session-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_tool", "--features",
-        "__compiler_fixture", "--test", "compiler_session",
+        "__compiler_fixture", "--test", "compiler_session", "--test", "native_compiler",
     ],
     "sql-native-tool-boundary": [
         sys.executable, str(AREA_ROOT / "tools" / "check_native_tool_boundary.py"), "--self-test",

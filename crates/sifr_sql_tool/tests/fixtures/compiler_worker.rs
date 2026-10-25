@@ -5,6 +5,8 @@ use std::io::{self, Read, Write};
 use std::process::{Command, ExitCode, Stdio};
 use std::time::Duration;
 
+mod native_client;
+
 const SOURCE: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 struct Pipes;
 impl Read for Pipes {
@@ -47,6 +49,19 @@ impl CompilerOperations for Operations {
 }
 fn main() -> ExitCode {
     let mode = std::env::args().nth(1).unwrap_or_default();
+    if mode.starts_with("native-") {
+        return native_client::run(&mode);
+    }
+    let mode = if mode == "--sysroot" {
+        if let Some(path) = std::env::var_os("SIFR_FIXTURE_WORKER_PID") {
+            if std::fs::write(path, std::process::id().to_string()).is_err() {
+                return ExitCode::FAILURE;
+            }
+        }
+        "serve".to_string()
+    } else {
+        mode
+    };
     if mode == "silent" {
         std::thread::sleep(Duration::from_secs(30));
     }
