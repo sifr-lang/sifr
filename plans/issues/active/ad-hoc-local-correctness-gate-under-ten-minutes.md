@@ -16167,3 +16167,37 @@ private umask for leased Cargo producers, leaving the parent process, unrelated
 children and runtime fixtures unchanged. Keep cache ownership checks strict.
 Validate the shared lease primitive and actual Cargo behavior; do not normalize
 or bless unexpected pre-existing permissions.
+
+### V1ay focused qualification and first complete corpus
+
+Candidate dd39fee27901414b1d2bdbfd9de0ef59098848fb passed eight child-lease
+checks, six new real Cargo lifecycle checks, and43 existing selected E2E harness,
+native-cache, failure-isolation, dependency-authority and session checks. Two
+ignored session helper entrypoints remain child probes owned by the active
+session tests; they are not counted as independently executed tests. Formatting,
+file-size, profile and diff checks passed. The portable relocation assertion
+initially failed offline because the new Git revision was not prepared. After
+publishing and fetching that exact revision, it passed without source changes.
+The initial compile/permission failures remain recorded, not reclassified.
+
+Both complete732-fixture runs passed. The first paid the one-time project-ID
+migration:278.697s suite,224.574s native,0/186fresh. Its elapsed observation also
+overlapped a read-only filesystem-inventory scan and is not paired timing
+acceptance. The unchanged run took111.755s suite,45.228s native,186/186fresh.
+Its9.367s cache preparation attempted retirement of186 obsolete old-ID groups;
+all were retained on the already-known missing-target-marker failure. Runtime
+assertions passed; retirement failure evidence remains. Do not silently compare
+that migration-retirement work with the baseline's0.005s preparation.
+
+Classify only the46 new filesystem sites introduced by this item: owned cache
+reads and test artifact observations are tooling inputs; mutations are output
+effects. The inventory scanner self-test passed. Two previously recorded driver
+fixture sites remain out of scope. This inventory-only follow-up leaves all Rust,
+Cargo manifests/locks and native algorithm inputs identical to dd39fee2. Preserve
+that exact candidate identity for existing evidence; subsequent experiments bind
+their own final HEAD and registered lock mutation explicitly.
+
+Evidence: v1ay-producer-focused/, v1ay-complete-focused/,
+v1ay-e2e-candidate/, v1ay-filesystem-before.json and
+v1ay-filesystem-additions.json. Complete lock-input invalidation, restoration and
+exact-candidate review are still required before accepting this item.
