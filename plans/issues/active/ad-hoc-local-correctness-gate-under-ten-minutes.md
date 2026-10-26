@@ -16160,3 +16160,10 @@ Defer worker tuning: the larger demonstrated waste is repeated native
 compilation caused only by project renaming. The two-hour expiration and missing
 Cargo marker remain separately evidenced; no safety-check bypass or deletion of
 historical failed-retirement evidence is authorized by this item.
+
+The ownership regressions also require private producer creation: the ambient
+umask can make Cargo-created locks group/world writable. Use a child-only
+private umask for leased Cargo producers, leaving the parent process, unrelated
+children and runtime fixtures unchanged. Keep cache ownership checks strict.
+Validate the shared lease primitive and actual Cargo behavior; do not normalize
+or bless unexpected pre-existing permissions.

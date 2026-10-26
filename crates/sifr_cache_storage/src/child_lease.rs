@@ -27,6 +27,23 @@ pub fn inherit_lease_for_command(command: &mut Command, lease: &File) -> io::Res
     Ok(())
 }
 
+/// Give an owned cache producer private creation permissions without changing
+/// the parent process or unrelated children. Runtime consumers keep their
+/// caller's normal umask and use inherit_lease_for_command instead.
+#[allow(unsafe_code)]
+pub fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {
+    inherit_lease_for_command(command, lease)?;
+    // SAFETY: umask is async-signal-safe and runs only in the forked child.
+    // No parent-wide umask mutation, allocation, or synchronization occurs.
+    unsafe {
+        command.pre_exec(|| {
+            libc::umask(0o077);
+            Ok(())
+        });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 #[path = "child_lease_tests.rs"]
 mod tests;

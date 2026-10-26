@@ -20,6 +20,16 @@ impl NativeCache {
         Ok(())
     }
 
+    /// Cargo creates lockfiles and other producer payloads independently of our
+    /// atomic writers. Keep those private without changing runtime fixture umasks.
+    pub(crate) fn bind_cargo_command(&self, command: &mut std::process::Command) -> io::Result<()> {
+        #[cfg(unix)]
+        sifr_cache_storage::inherit_lease_for_private_command(command, &self.lease)?;
+        #[cfg(windows)]
+        self.bind_command(command)?;
+        Ok(())
+    }
+
     pub(crate) fn acquire(requested: &Path) -> io::Result<Self> {
         let absolute = if requested.is_absolute() {
             requested.to_path_buf()

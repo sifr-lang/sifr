@@ -615,7 +615,7 @@ fn run_leased_capture(
     lease: &native_cache::NativeCache,
     deadline: std::time::Duration,
 ) -> CommandCapture {
-    if let Err(error) = lease.bind_command(&mut command) {
+    if let Err(error) = lease.bind_cargo_command(&mut command) {
         return CommandCapture {
             stdout: String::new(),
             stderr: format!("cannot bind native cache lease: {error}"),

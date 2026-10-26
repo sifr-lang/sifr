@@ -108,7 +108,7 @@ pub(super) fn prepare(
         ))
         .arg("generate-lockfile")
         .current_dir(&staging);
-    lease.bind_command(&mut command)?;
+    lease.bind_cargo_command(&mut command)?;
     let capture = run_capture_bounded(command, remaining);
     native_cache::write_changed(&staging.join("stdout.log"), capture.stdout.as_bytes())?;
     native_cache::write_changed(&staging.join("stderr.log"), capture.stderr.as_bytes())?;
