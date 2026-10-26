@@ -16291,3 +16291,58 @@ Cargo check may replace independent construction. Validate affected changes and
 get exact-candidate review. If no avoidable macro cost is demonstrated, record
 the measured constraint and move to a larger cost rather than tuning isolated
 seconds. Final full correctness coverage and every V5 scenario still decide600s.
+
+### V1az investigation closed — settings probes below macro cutoff
+
+At unchanged ff64ea64, the full native SQL protocol passed in378.611s
+(clean A186.202s, unchanged A1.448s, independent B189.520s).
+All333 artifacts were nonfresh in each independent build and fresh in unchanged A;
+all three executable byte comparisons passed. Wasmtime is absent from this native
+graph. Largest overlapping Cargo units include aws-lc-sys79.40s, PostgreSQL
+native38.72s, syn31.39/30.49s, SQL contract28.75s and SQLite native23.39s.
+Do not sum overlapping unit durations as category wall or CPU time.
+
+The prospective15% complete-protocol improvement cutoff was not met:
+host-only parser opt-level reduction347.038s (8.3% saving);
+Clang404.318s (6.8% slower); seven SQL build jobs326.457s (13.8% saving).
+Every protocol passed its independent/unchanged executable comparisons. The
+seven-job probe preserved one CPU and2GiB reserve, sampled1.915GB aggregate PSS
+peak at one-second intervals, and hit no guard. Sampling can miss brief peaks.
+Higher concurrency reduces elapsed time, not work. No settings change adopted.
+
+Evidence: v1az-sql-build-baseline/, v1az-sql-build-host-parser-pilot/,
+v1az-sql-build-clang-pilot/, v1az-sql-build-seven-job-pilot/ and their decision
+JSONs. These instrumented single runs are attribution, not repeated final timing
+qualification. Mandatory independent native construction remains unresolved.
+Stop SQL settings probes and move to duplicate native work.
+
+### V1ba prospective item — standalone fixture dependency reuse
+
+Base ff64ea64, unchanged direct-helper baseline: all eight corpus parity fixtures
+and all six runtime-failure fixtures passed. Their suites took54.90s and40.84s;
+outer Cargo commands55.777s and41.403s. Each standalone fixture has a separate
+Cargo target despite compatible dependency artifacts; the project directory
+includes the full plan identity, and source/manifest writes are unconditional.
+See v1ba-direct-baseline/ and v1ba-baseline-attribution.json for all process
+durations and actual fingerprint intersections.
+
+Use the existing leased native build/resolution/artifact-selection authority
+for standalone programs. Preserve raw crate-root Rust and original main,
+separate executable/process and per-fixture working directory, application
+profile, stderr/nonzero checks and every existing runtime assertion. Do not
+convert these tests into batched wrappers. Give this consumer its own retained
+namespace to avoid interfering with positive-suite leases. Serialize in-process
+publication/consumption; fail closed on another process owning the namespace.
+Cargo must validate every invocation. Compatible fixtures share dependencies;
+source, feature, profile and relevant dependency edits still rebuild correctly.
+Reuse existing bounded retention and preserve failed/interrupted evidence.
+
+Good enough: at least50% lower combined direct-suite time after first namespace
+preparation, no dropped assertions or observed warm regression, and structural
+evidence that compatible later fixtures do not recompile identical libraries.
+Measure first namespace preparation separately. Exercise real dependency/source
+invalidation, separate programs/crate-root syntax, parallel callers, runtime
+failure identity and failed build recovery with focused tests. Run existing
+authority/lifecycle/lease checks affected by reuse and complete all14 fixtures.
+Then exact-candidate independent review; stop tuning this category after those
+criteria. Full correctness-only final gates and repeated V5 remain required.
