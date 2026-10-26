@@ -15431,3 +15431,96 @@ and the original 3,896-file target snapshot is restored and verified. The origin
 canonical release target was not used by these experiments. Final full gates and
 all V5 scenarios remain OPEN. V1as separately investigates retained native-object
 edit cost; V1aq's cold-build result remains unchanged.
+
+### V1as completed — retained native objects substantially shorten the CLI edit
+
+The same local-only CLI edit builds in 45.349527s with Cargo lto=false, versus
+389.738796s with non-incremental ThinLTO in V1ar: 344.389269s less, about 88.36%,
+in this sequential feasibility observation. Both reuse 466/467 Cargo artifacts
+and rebuild only the executable. Both expose the exact edited help and select
+the same package/feature/target graph and reported profile fields. The targets
+and their recorded path-remapping prefixes differ; this is not repeated timing
+qualification. Cargo lto=false retains local ThinLTO; it is not lto=off.
+
+The actual edited binary passes all 745 installed commands, including all 732
+exact emissions, four native programs and all integrity, relocation, generation,
+negative and recovery controls. Packaging takes 32.714483s and qualification
+148.818424s; the included public-emission subset takes 51.166490s, compared with
+51.097360s for V1ar's ThinLTO baseline. These individual execution observations
+are not a general compiler-throughput guarantee. V1aq's full fresh builds remain
+705.478962s with lto=false versus 675.487712s with ThinLTO. Do not reclassify that
+cold-build tradeoff or claim a complete gate below 600 seconds.
+
+Two failed prerequisites remain explicit. The first baseline rebuilds the
+byte-identical original compiler in 56.657305s and rejects non-fresh output;
+baseline-r2 subsequently proves 467/467 artifacts fresh in 2.296885s. The first
+qualification attempt stops at memory admission before product tests execute.
+Its exact memory deficit was not recorded. A later admission records
+10,845,036,544 available bytes against the unchanged 10,737,418,240-byte
+requirement, and the same four-worker qualification passes. No reserve or worker
+policy is weakened; no passing build or test is unnecessarily repeated.
+
+Source and target restoration pass. Restoring the observed pre-edit source
+directory timestamp, as well as the file timestamp, prevents the diagnosed
+directory-only invalidation. The final Cargo check finds all 467 artifacts fresh
+in 0.732673s and the original binary hash unchanged. This is an experimental reset
+using a recorded timestamp, not a production cache bypass. V1ar's earlier
+file/snapshot restoration did not establish post-restore Cargo freshness; V1as
+found and corrected that reset limitation. Both edited targets/binaries and all
+failed evidence remain retained, and all owned experiment sessions are empty.
+
+All 1,636 archive payloads and 745 installed command records were independently
+verified locally; the 732 emitted outputs also match V1ar's qualified ThinLTO
+baseline. Archive SHA-256:
+7871d9f6dbe839bdf36a3eb2e0a2cd1adc2bd14482e323691cb27f4adc0ae547.
+No profile change is adopted by this diagnostic. Full phase and V5 remain OPEN.
+
+### V1at prospective implementation — reuse native objects in the actual release profile
+
+The registered implementation candidate changes only the workspace release
+profile's lto setting from thin to false, with an explanatory comment. Retain
+opt-level 3, codegen-units 16, all package overrides, features, toolchain, locked
+dependencies and every selected assertion. This changes the real release profile
+qualified by the existing gates; do not introduce a separate verification-only
+compiler or leave the actual product profile untested. Generated application
+profile policy and CI workflow design are outside this item.
+
+The rationale is the measured 344s CLI-edit saving, not faster cold builds.
+Preserve the known fresh-build cost and continue the mandatory cold/expanded
+invalidation work; this item cannot satisfy or waive the 600-second requirement.
+
+Before merge, prepare the real versioned release compiler through its canonical
+owner on the exact implementation candidate. Regenerate affected source/corpus
+preparation when its input identity changes. Run the affected release-preparation
+and distribution self-tests, complete distribution full suite, and all selected
+sysroot boundary, structural, host-installed smoke/heavy and metadata-corpus
+contracts. Preserve all source/installed parity, missing/wrong-version admission,
+native execution, integrity, relocation and generation controls. Compare resolved
+package/features/targets and emitted correctness plans; run profiles check,
+format/file-size/diff checks appropriate to the manifest/verification scope.
+Retain ordinary Cargo timings and actual binary identities.
+
+Validate compiler execution cost before adopting the profile. Use the existing
+complete 732-case public-emission authority on both the qualified baseline
+ThinLTO package and the actual candidate package, with exact output assertions.
+Freeze the corpus, packages, toolchain and one four-worker allocation. Use fresh
+processes and separately owned per-run caches, one full warm-up per arm, then
+three measured alternating-order pairs. Report median and worst batch/category
+times and CPU work; no percentile claim. Reject automatic adoption if the
+candidate median exceeds baseline by 5% or its worst exceeds baseline worst by
+10%; investigate any consistent regression rather than hiding it in build savings.
+These are bounded adoption checks, not a claim about all compiler workloads.
+
+Also repeat an observable local-only CLI edit on the actual candidate's retained
+target and verify the changed help, expected dirty/fresh artifacts and restored
+Cargo freshness. Capture source file and watched-directory metadata before the
+edit. Keep snapshot/reset preparation separate and preserve all interrupted
+attempts. The unmodified implementation candidate remains the qualification
+and review subject; the temporary diagnostic edit must never be published.
+
+Require focused exact-candidate independent review under the approved intermediate
+policy. After integration, prioritize one complete correctness discovery sweep
+with failure continuation, retained targets and a 1,800-second cap per category;
+account for every blocked or unexecuted category. Use its current largest costs
+to choose the next repair. Complete final create-pr/merge correctness-only gates
+and all repeated V5 scenarios remain mandatory.
