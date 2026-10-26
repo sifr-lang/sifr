@@ -2,6 +2,15 @@
   "schema_version": 1,
   "packages": [
     {
+      "name": "sifr_corpus_oracle",
+      "classification": "test_fixture",
+      "targets": [
+        {"name": "sifr_corpus_oracle", "kind": "lib", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "sifr_corpus_oracle", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}
+      ],
+      "features": []
+    },
+    {
       "name": "sifr_process",
       "classification": "first_party_compiler",
       "targets": [
