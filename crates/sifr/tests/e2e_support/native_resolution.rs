@@ -84,10 +84,12 @@ pub(super) fn prepare(
 
     // A new staging project has no lock, matching fresh project resolution.
     // Its path is retained on failure and cannot publish a partial preparation.
-    let staging = tempfile::Builder::new()
-        .prefix("resolution-")
-        .tempdir_in(root)?;
-    let staging = staging.keep();
+    let mut builder = tempfile::Builder::new();
+    builder.prefix("resolution-");
+    #[cfg(unix)]
+    builder
+        .permissions(<std::fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700));
+    let staging = builder.tempdir_in(root)?.keep();
     sifr_cache_storage::directory(&staging.join("src"))?;
     for relative in ["Cargo.toml", "src/main.rs"] {
         let bytes = read_owned(&root.join(relative))?
