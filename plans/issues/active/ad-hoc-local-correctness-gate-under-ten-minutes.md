@@ -16361,3 +16361,15 @@ Absolute caller-selected cache paths remain honored. Preserve this failed
 freshness attempt as v1ba-direct-candidate/freshness/. The corrected candidate
 must prove a post-fixture no-run Cargo validation is fresh, then run the complete
 E2E harness and existing focused lifecycle/authority regressions.
+
+The corrected candidate101874763 executed the full E2E test binary except the
+separately owned positive-suite entrypoint:71 passed, one failed, three existing
+ignored entrypoints remained ignored. This discovered an in-scope diagnostic
+regression: the standalone helper returned only the retained build-log path,
+while the existing missing-metadata assertion requires the original num_bigint
+Rust diagnostic in its returned error. Restore returned diagnostics without
+changing that assertion or adding inferred dependencies. Preserve the failed
+run under v1ba-corrected-candidate/all-e2e/. Rerun the affected authority test,
+new standalone regressions, normal fixture warm/freshness check, and the still
+unexecuted canonical positive suite; existing unaffected passing tests remain
+valid for their observed candidate.

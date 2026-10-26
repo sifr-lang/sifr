@@ -2153,6 +2153,13 @@
     {
       "path": "crates/sifr/tests/e2e_support/direct_execution.rs",
       "symbol": "execute",
+      "operation": "read_to_string",
+      "site": "Some(path) => match std::fs::read_to_string(path) {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution.rs",
+      "symbol": "execute",
       "operation": "remove_file",
       "site": "std::fs::remove_file(build.group_root.join(\"pending\")).map_err(|error| error.to_string())?;",
       "classification": "output-effect"

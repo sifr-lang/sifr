@@ -82,7 +82,15 @@ pub(super) fn execute(
         write_cache_manifest(&config.cache.root, &saved);
     }
     if let Some(error) = &build.build_error {
-        return Err(error.clone());
+        // Standalone callers inspect the original Rust diagnostics as well as
+        // failure status. Keep the retained log and return its contents too.
+        return Err(match &build.build_log_path {
+            Some(path) => match std::fs::read_to_string(path) {
+                Ok(log) => format!("{error}\n{log}"),
+                Err(read_error) => format!("{error}\ncannot read retained build log: {read_error}"),
+            },
+            None => error.clone(),
+        });
     }
     let artifact = build
         .artifact_path
