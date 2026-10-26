@@ -6,7 +6,7 @@ use crate::cli_model_and_entrypoint::{
 use crate::diagnostic_rendering_and_run::render_diagnostic_output;
 use serde::{Deserialize, Serialize};
 use sifr_driver::{CompileResult, CompilerContext};
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::DiskSourceProvider;
 use std::fs;
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
@@ -83,20 +83,20 @@ fn emit_one(
         stderr: String::new(),
     };
     let mut provider = DiskSourceProvider::new();
-    // Scalar emission exits on an unreadable source. Diagnose it here so unrelated
-    // requests still execute. This same fresh provider owns the source snapshot.
-    if let Err(error) = provider.read_file(file) {
-        entry.exit_code = EXIT_USAGE_OR_CONFIG;
-        entry.stderr = format!("error: could not read file '{}': {error}\n", file.display());
-        return Ok(entry);
-    }
-    let result = run_with_panic_boundary(
+    let result = match run_with_panic_boundary(
         "internal compiler panic during emit command execution",
         || emit_entrypoint_with_context(compiler, file, &mut provider),
-    )
-    .unwrap_or_else(|internal| CompileResult::Errors {
-        errors: vec![*internal],
-    });
+    ) {
+        Ok(Ok(result)) => result,
+        Ok(Err(error)) => {
+            entry.exit_code = EXIT_USAGE_OR_CONFIG;
+            entry.stderr = error;
+            return Ok(entry);
+        }
+        Err(internal) => CompileResult::Errors {
+            errors: vec![*internal],
+        },
+    };
     match result {
         CompileResult::Success { rust_source } => {
             fs::write(output.join(format!("{index}.rs")), rust_source)

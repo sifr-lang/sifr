@@ -567,25 +567,33 @@ pub(super) fn check_entrypoint(
 }
 
 pub(super) fn emit_entrypoint(file: &Path, provider: &mut dyn SourceProvider) -> CompileResult {
-    emit_entrypoint_with_context(&crate::compiler_context(), file, provider)
+    match emit_entrypoint_with_context(&crate::compiler_context(), file, provider) {
+        Ok(result) => result,
+        Err(error) => {
+            let _ = write!(io::stderr(), "{error}");
+            crate::trace_artifacts::exit(EXIT_USAGE_OR_CONFIG);
+        }
+    }
 }
 
 pub(super) fn emit_entrypoint_with_context(
     compiler: &sifr_driver::CompilerContext,
     file: &Path,
     provider: &mut dyn SourceProvider,
-) -> CompileResult {
+) -> Result<CompileResult, String> {
     let mode = match resolve_compilation_mode(file, provider) {
         Ok(mode) => mode,
-        Err(errors) => return CompileResult::Errors { errors },
+        Err(errors) => return Ok(CompileResult::Errors { errors }),
     };
-    match mode {
+    Ok(match mode {
         CompilationMode::Project => emit_project(compiler, file, provider),
         CompilationMode::SingleFile => {
-            let source = read_source(file, provider);
-            compile(compiler, &source)
+            let source = provider.read_file(file).map_err(|error| {
+                format!("error: could not read file '{}': {error}\n", file.display())
+            })?;
+            compile(compiler, source.as_str())
         }
-    }
+    })
 }
 
 pub(super) fn fmt_entrypoint(

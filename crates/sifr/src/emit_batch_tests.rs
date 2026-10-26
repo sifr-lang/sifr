@@ -21,7 +21,7 @@ fn fixture(root: &Path, name: &str, value: i32) -> PathBuf {
 }
 
 fn scalar(compiler: &CompilerContext, file: &Path) -> String {
-    match emit_entrypoint_with_context(compiler, file, &mut DiskSourceProvider::new()) {
+    match emit_entrypoint_with_context(compiler, file, &mut DiskSourceProvider::new()).unwrap() {
         CompileResult::Success { rust_source } => rust_source,
         CompileResult::Errors { errors } => panic!("scalar emission failed: {errors:?}"),
     }
@@ -62,7 +62,7 @@ fn sources_are_isolated_and_edits_and_errors_do_not_leak() {
     let error = emit_one(4, &a, &output, &compiler).unwrap();
     assert_eq!(error.exit_code, 1);
     let CompileResult::Errors { errors } =
-        emit_entrypoint_with_context(&compiler, &a, &mut DiskSourceProvider::new())
+        emit_entrypoint_with_context(&compiler, &a, &mut DiskSourceProvider::new()).unwrap()
     else {
         panic!("expected scalar diagnostics")
     };
@@ -141,5 +141,36 @@ fn malformed_manifest_never_creates_an_output_owner() {
         fs::write(&manifest, input).unwrap();
         assert!(execute(&manifest, &output, &crate::compiler_context()).is_err());
         assert!(!output.exists());
+    }
+}
+
+#[test]
+fn missing_project_entry_keeps_canonical_resolution_error_precedence() {
+    let owner = InvocationWorkspace::create("batch_missing_project").unwrap();
+    let root = owner.path();
+    let output = root.join("output");
+    fs::create_dir(&output).unwrap();
+    let compiler = crate::compiler_context();
+    for (index, manifest) in ["[source]\nroot = \".\"\n", "[not valid toml\n"]
+        .iter()
+        .enumerate()
+    {
+        let dir = root.join(format!("project-{index}"));
+        fs::create_dir(&dir).unwrap();
+        fs::write(dir.join("sifr.toml"), manifest).unwrap();
+        let missing = dir.join("main.sifr");
+        let CompileResult::Errors { errors } = crate::check_and_package_commands::emit_entrypoint(
+            &missing,
+            &mut DiskSourceProvider::new(),
+        ) else {
+            panic!("missing project entry must be rejected")
+        };
+        let entry = emit_one(index, &missing, &output, &compiler).unwrap();
+        assert_eq!(entry.exit_code, diagnostic_exit_code(&errors));
+        assert_eq!(
+            entry.stderr,
+            render_diagnostic_output(&errors, DiagnosticFormat::Json).unwrap()
+        );
+        assert!(!output.join(format!("{index}.rs")).exists());
     }
 }
