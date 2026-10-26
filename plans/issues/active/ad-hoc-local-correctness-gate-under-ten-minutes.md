@@ -15381,3 +15381,53 @@ snapshotting or applying the real edit. Keep its snapshot and dependent-helper
 bindings explicit. Count the 56.657305s rebuild as preparation; do not credit it
 as a measured edit saving or reclassify the failed prerequisite as passing.
 All existing edit, qualification, restoration and final phase requirements remain.
+
+### V1ar completed — incremental compilation does not remove the final-executable cost
+
+The registered CLI-edit comparison completed with source/target restoration and
+both installed qualifications passing. No incremental profile policy is adopted.
+All 3,145 archive payload files and 1,490 installed command records were
+independently reconciled locally. The archive SHA-256 is
+b46dfbb9cb0f4532fe2342adf6b490c108c9cd66933cccc55c542d342eb30a26.
+
+| Measured stage | Non-incremental ThinLTO | Incremental ThinLTO |
+| --- | ---: | ---: |
+| Real CLI edit build | 389.738796s | 375.510975s |
+| Executable compilation unit, included above | 371.68s | 353.21s |
+| Build-script execution unit, included above | 17.15s | 17.48s |
+| Packaging | 29.345860s | 33.064702s |
+| Complete installed qualification | 159.423752s | 179.717090s |
+| Public emissions, included in qualification | 51.097360s | 53.156812s |
+
+This is one sequential feasibility pair, not repeated throughput qualification.
+The observed build difference is 14.227821s (about 3.65%); qualification variability
+must not be turned into a causal performance claim. Do not add overlapping units
+or identify noncontiguous stage sums as a complete gate. Each edited binary shows
+the exact changed CLI help. Both retain the same package/feature/target selections
+and reported non-incremental profile fields; 466/467 Cargo artifacts are fresh,
+with only the CLI binary recompiled. All 745 installed commands execute per arm:
+732 exact emissions, four native programs and all integrity, relocation,
+generation, negative and recovery controls. Required negative exits remain 2.
+
+The incremental seed separately takes 515.558108s using already-retained
+third-party dependencies; it is not a fresh-build comparison. Its complete
+preparation guard takes 803.383679s, including inventories, an independent
+111.172347s snapshot copy and verification. Reset/restoration are separately
+recorded and are not edit savings. The restored original source is
+1bc52807e95db71ebc54f80fca38c6b264e09537; the exact temporary CLI edit
+c5b24e1524d1bf28e1657e7075321d8f1ff93773 remains local only.
+
+The seed target contains 4,658,103,945 summed file bytes, including 2,075,943,586
+bytes in incremental directories, compared with 2,015,793,203 baseline bytes.
+It retains both old non-incremental and new incremental artifacts; this is not a
+matched clean-target overhead measurement. The post-run CLI ThinLTO cache audit
+finds 2,360 of 2,372 object outputs byte-identical, but only one with the same
+timestamp and inode. This demonstrates output similarity without effective
+filesystem reuse for most objects; it does not identify which LLVM passes reran.
+The executable remains the measured dominant unit despite Cargo dependency reuse.
+
+All owned guard sessions are empty, both edited targets/binaries are preserved,
+and the original 3,896-file target snapshot is restored and verified. The original
+canonical release target was not used by these experiments. Final full gates and
+all V5 scenarios remain OPEN. V1as separately investigates retained native-object
+edit cost; V1aq's cold-build result remains unchanged.
