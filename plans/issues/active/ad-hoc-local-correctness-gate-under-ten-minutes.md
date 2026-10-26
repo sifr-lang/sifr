@@ -17109,3 +17109,59 @@ observing release. Do not adopt the41-minute product-cache wait policy here.
 The controlled fork reproduction proves this mechanism; it does not identify the
 specific historical child. Add actual held-reference/deadline controls so the
 repair is qualified independently of that attribution.
+
+### V1bl delivered — bounded descriptor release observations
+
+Merged [PR #4499](https://github.com/sifr-lang/sifr/pull/4499) as
+f29753c74692cace38edf19e72ac850adc2f1c63; final candidate
+10651880b77fdc10a735d38e19756aa3bd3bfa8f, merged tree verified identical.
+Immediate NativeCache admission is preserved; standalone execution explicitly
+allows at most1s for OS-lock release, capped by its remaining deadline.
+Live owners still reject, no force-unlock or compilation/assertion retry.
+The production socket readiness function is unchanged. Its test now proves
+Pending while a duplicate lives and observes Closed with a1s deadline.
+
+Focused evidence v1bl-focused:1 socket,1 new bounded-lease,11 native-cache,
+3 direct-execution tests pass; fmt/size/diff pass. Guard45.221s includes actual
+retained-target build; focused E2E build+new test14.815s.
+Canonical parallel crate00 passes2823tests in89.071s. Canonical crate09 remains
+FAILED in440.907s:1450passed,4failed,11ignored under existing selection policy.
+Original lease/recovery and corpus-parity failures now pass; new bounded control
+passes. E2E binary specifically72passed/1failed,3ignored,1filtered (positive
+corpus owned by its separate category).
+
+Preserve and resolve these owners before final phase acceptance:
+- V1bj CLI integration: __emit-batch missing from reserved host-tool namespaces.
+- Diagnostic preparation: exact candidate10651880 Git source had not been fetched
+  before offline relocation. Repaired without source edits by canonical
+  materialization of the original test source, unchanged locked fetch12.968s,
+  and original offline test PASS4.037s. v1bl-relocation-prerequisite records this;
+  original broad failure remains failed.
+- SQL compiler sandbox integration: native_schema_commands_match_direct_execution_
+  through_the_real_sandbox and sqlite_provision_and_cleanup_keep_database_ownership_
+  inside_the_sandbox failed with SQL compiler channel closed. Root cause not yet
+  established; do not assume stale provenance caused them. Owner SQL sandbox.
+External v1bl-integration-triage.json and v1bl-crate-09 retain all details.
+
+Independent exact-candidate review SATISFIED/no blockers65.984s:
+v1bl-review-u2ppz3xi/response.md, SHA256
+9e7daca9d6dad4a71b618221e92f874451e389dae8c5a319528117b1554a159c.
+Reviewer confirmed the namespace failure predates this candidate, SQL production
+paths are unchanged, and scoped intermediate policy permits those separately owned
+failures. Whole gate remains red. Follow-up: a true external busy owner can hold
+the existing standalone publication mutex for up to1additional second; attribute
+that if measuring contention. Artifact attachment again hit the100-identity cap.
+
+### V1bm prospective repair — reserved batch-emission namespace
+
+Fix the V1bj integration omission, not the equality assertion: add __emit-batch to
+the canonical package reserved-name list and extend the existing manifest rejection
+test with that hidden builtin. Retain the CLI-to-policy equality test unchanged.
+No command dispatch, compiler emission, target, fixture or profile change.
+
+Good enough: focused package host-tool policy tests, both CLI host-tool unit checks
+(including the previously failing equality), actual host-tool integration,
+fmt/size/diff pass and scoped independent review. Do not repeat crate00/09 for this
+constant-only correction; final integrated phase gates remain required. Stop once
+the canonical registry and behavior agree, then diagnose SQL worker closure and
+restore actual component provenance before the next whole-gate measurement.
