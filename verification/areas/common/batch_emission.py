@@ -69,7 +69,7 @@ def read_results(output: Path, files: list[Path], result) -> list[subprocess.Com
         results.append(subprocess.CompletedProcess(
             ["emit", str(source)], code, data, entry["stderr"].encode(),
         ))
-    if result.returncode != max(item.returncode for item in results) or result.stdout or result.stderr:
+    if result.returncode != max(item.returncode for item in results) or result.stdout:
         raise RuntimeError("inconsistent emission batch process result")
     if {path.name for path in output.iterdir()} != expected_files:
         raise RuntimeError("unexpected emission batch outputs")
@@ -97,6 +97,11 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
              "--output-dir", str(output)],
             cwd=repo, env=env, capture_output=True, check=False,
         )
+        (owner / f"{worker}.stdout").write_bytes(result.stdout)
+        (owner / f"{worker}.stderr").write_bytes(result.stderr)
+        # Successful scalar emission also permits ordinary compiler warnings.
+        # Preserve raw streams for a failed batch; only status/report/output
+        # consistency determines whether compilation completed.
         values = read_results(output, sources, result)
         return list(zip(indices, values, strict=True))
 

@@ -376,6 +376,23 @@ class BatchEmissionTests(unittest.TestCase):
             self.assertTrue((owner / "1/0.rs").is_file())
 
 
+    def test_successful_emission_can_carry_ordinary_compiler_warnings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / "0.rs").write_bytes(b"generated")
+            (output / "report.json").write_text(json.dumps({
+                "schema": 1, "entries": [
+                    {"index": 0, "source": "/source.sifr", "exit_code": 0, "stderr": ""}
+                ],
+            }))
+            result = subprocess.CompletedProcess([], 0, b"", b"warning: unreachable statement ignored\n")
+            values = batch.read_results(output, [Path("/source.sifr")], result)
+            self.assertEqual(values[0].stdout, b"generated")
+            result.stdout = b"unexpected protocol stdout"
+            with self.assertRaises(RuntimeError):
+                batch.read_results(output, [Path("/source.sifr")], result)
+
+
 def policy_checks():
     suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
     result = unittest.TextTestRunner(verbosity=0).run(suite)
