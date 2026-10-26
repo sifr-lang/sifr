@@ -93,7 +93,7 @@
     "processor": "fixture.words",
     "source": "crates/sifr_compiler_component/fixtures/words_component/src/lib.rs",
     "artifact": "crates/sifr_compiler_component/fixtures/words_component/words_component.wasm",
-    "artifact_sha256": "30664f22954136675add6653cba16bb15f7822fdac4616d1d39eee22122ee89e",
+    "artifact_sha256": "e713a34eed37919f077722b9a6883fcfb22839725c408054291e87afcc1a28ba",
     "build_tooling": {
       "rust_target": "wasm32-unknown-unknown",
       "wit_bindgen": "0.61.1",
