@@ -16346,3 +16346,18 @@ failure identity and failed build recovery with focused tests. Run existing
 authority/lifecycle/lease checks affected by reuse and complete all14 fixtures.
 Then exact-candidate independent review; stop tuning this category after those
 criteria. Full correctness-only final gates and repeated V5 remain required.
+
+V1ba first candidate698d9da1 passed three real-Cargo regressions and all14
+original fixtures. New native namespace and warm results are retained, but its
+default crate-relative cache location caused an in-scope regression: the identity
+producer watches the crate tree, and Cargo fingerprint diagnostics explicitly
+reported that directory stale after fixture execution. Each following outer
+Cargo invocation rebuilt the harness. Do not accept those outer timings.
+
+The first candidate's warm fixture suites5.87s improved on baseline8.08s;
+outer time concealed the unnecessary rebuild. Correct the cache's default and
+relative output roots to checkout scope, outside watched crate source roots.
+Absolute caller-selected cache paths remain honored. Preserve this failed
+freshness attempt as v1ba-direct-candidate/freshness/. The corrected candidate
+must prove a post-fixture no-run Cargo validation is fresh, then run the complete
+E2E harness and existing focused lifecycle/authority regressions.

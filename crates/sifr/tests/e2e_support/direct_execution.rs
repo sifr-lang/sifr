@@ -157,9 +157,17 @@ pub(crate) fn build_and_run_capture_with_deps(
             error.boundary_message()
         )
     })?;
+    let mut config = runner_config();
+    // Cargo tests execute from the crate directory, whose identity producer watches
+    // the source tree. Keep relative generated-output roots at checkout scope.
+    if !config.cache.root.is_absolute() {
+        config.cache.root = sifr_cache_storage::owner_scope()
+            .map_err(|error| error.to_string())?
+            .join(&config.cache.root);
+    }
     let result = execute(
         direct_group(rust_source, test_name, plan),
-        &runner_config(),
+        &config,
         Duration::from_secs(30 * 60),
     )?;
     Ok((
