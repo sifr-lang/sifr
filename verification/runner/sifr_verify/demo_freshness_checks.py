@@ -248,12 +248,149 @@ class FreshEmissionTests(unittest.TestCase):
                 stderr = io.TextIOWrapper(io.BytesIO())
                 with patch.object(emitter, "REPO_ROOT", root), \
                      patch.object(sys, "argv", ["freshness", "--sifr", str(compiler)]), \
-                     patch.object(emitter.subprocess, "run", return_value=subprocess.CompletedProcess(
-                         [], code, output, b"compiler diagnostic")) as run, \
+                     patch.object(emitter, "emit_many", return_value=[subprocess.CompletedProcess(
+                         [], code, output, b"compiler diagnostic")]) as run, \
                      contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
                     self.assertEqual(emitter.main(), expected)
                 self.assertEqual(run.call_count, 1)
-                self.assertEqual(run.call_args.args[0][1], "emit")
+                self.assertEqual(run.call_args.args[1], [root / "demos/example/main.sifr"])
+
+
+
+batch = sys.modules[emitter.emit_many.__module__]
+
+
+class BatchEmissionTests(unittest.TestCase):
+    def test_empty_relative_and_zero_worker_selections_reject(self):
+        for files, jobs in [([], 1), ([Path("relative")], 1), ([Path("/absolute")], 0)]:
+            with self.assertRaises(RuntimeError):
+                batch.emit_many(Path("/compiler"), files, jobs, Path("/repo"))
+
+    def test_explicit_formatter_is_preserved(self):
+        with patch.dict(batch.os.environ, {"RUSTFMT": "/explicit/formatter"}), \
+             patch.object(batch.subprocess, "run") as run:
+            self.assertEqual(batch.formatter_environment(Path("/unused"))["RUSTFMT"],
+                             "/explicit/formatter")
+            run.assert_not_called()
+
+    def test_pinned_formatter_is_resolved_once_and_version_mismatch_rejects(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "rust-toolchain.toml").write_text('[toolchain]\nchannel="pinned"\n')
+            formatter = root / "rustfmt"
+            formatter.write_text("tool")
+            for matching in (True, False):
+                outputs = [str(formatter).encode() + b"\n", b"rustfmt pinned\n",
+                           b"rustfmt pinned\n" if matching else b"wrong\n"]
+                with patch.dict(batch.os.environ, {}, clear=True), \
+                     patch.object(batch.subprocess, "run", side_effect=[
+                         subprocess.CompletedProcess([], 0, value, b"") for value in outputs
+                     ]) as run:
+                    if matching:
+                        self.assertEqual(batch.formatter_environment(root)["RUSTFMT"], str(formatter))
+                    else:
+                        with self.assertRaisesRegex(RuntimeError, "match"):
+                            batch.formatter_environment(root)
+                    self.assertEqual(run.call_args_list[0].args[0],
+                                     ["rustup", "which", "--toolchain", "pinned", "rustfmt"])
+
+    def test_missing_mismatched_stale_and_incomplete_results_cannot_pass(self):
+        for mutation in ("missing", "wrong-source", "reordered", "empty-rust",
+                         "missing-rust", "extra", "wrong-exit", "unexpected-stdout", "failed"):
+            with tempfile.TemporaryDirectory() as directory:
+                output = Path(directory)
+                entry = {"index": 0, "source": "/source.sifr", "exit_code": 0, "stderr": ""}
+                report = {"schema": 1, "entries": [entry]}
+                (output / "0.rs").write_text("generated Rust")
+                result = subprocess.CompletedProcess([], 0, b"", b"")
+                if mutation == "missing":
+                    report["entries"] = []
+                elif mutation == "wrong-source":
+                    entry["source"] = "/other.sifr"
+                elif mutation == "reordered":
+                    entry["index"] = 1
+                elif mutation == "empty-rust":
+                    (output / "0.rs").write_bytes(b"")
+                elif mutation == "missing-rust":
+                    (output / "0.rs").unlink()
+                elif mutation == "extra":
+                    (output / "stale.rs").write_text("stale")
+                elif mutation == "wrong-exit":
+                    result.returncode = 1
+                elif mutation == "unexpected-stdout":
+                    result.stdout = b"noise"
+                elif mutation == "failed":
+                    entry.update(exit_code=1, stderr="diagnostic")
+                (output / "report.json").write_text(json.dumps(report))
+                with self.subTest(mutation=mutation), self.assertRaises((RuntimeError, OSError)):
+                    batch.read_results(output, [Path("/source.sifr")], result)
+
+    def test_bounded_batches_restore_lexical_order_and_remove_only_successful_owner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            owner = Path(directory) / "owner"
+            owner.mkdir()
+            files = [Path(f"/source-{index}.sifr") for index in range(7)]
+            def run(argv, **kwargs):
+                manifest = json.loads(Path(argv[3]).read_text())
+                output = Path(argv[5])
+                output.mkdir()
+                entries = []
+                for index, source in enumerate(manifest["files"]):
+                    (output / f"{index}.rs").write_text(source)
+                    entries.append({"index": index, "source": source, "exit_code": 0, "stderr": ""})
+                (output / "report.json").write_text(json.dumps({"schema": 1, "entries": entries}))
+                return subprocess.CompletedProcess(argv, 0, b"", b"")
+            with patch.object(batch, "formatter_environment", return_value={}), \
+                 patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
+                 patch.object(batch.subprocess, "run", side_effect=run) as launched:
+                results = batch.emit_many(Path("/compiler"), files, 3, Path(directory))
+                self.assertEqual(launched.call_count, 3)
+                self.assertEqual([result.stdout for result in results],
+                                 [str(path).encode() for path in files])
+                self.assertFalse(owner.exists())
+
+
+    def test_failed_batch_retains_all_sibling_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            owner = Path(directory) / "owner"
+            owner.mkdir()
+            files = [Path("/bad.sifr"), Path("/good.sifr")]
+            def run(argv, **kwargs):
+                source = json.loads(Path(argv[3]).read_text())["files"][0]
+                output = Path(argv[5])
+                output.mkdir()
+                code = int(source == "/bad.sifr")
+                if not code:
+                    (output / "0.rs").write_text("valid Rust")
+                entry = {"index": 0, "source": source, "exit_code": code,
+                         "stderr": "compiler diagnostic" if code else ""}
+                (output / "report.json").write_text(json.dumps({"schema": 1, "entries": [entry]}))
+                return subprocess.CompletedProcess(argv, code, b"", b"")
+            with patch.object(batch, "formatter_environment", return_value={}), \
+                 patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
+                 patch.object(batch.subprocess, "run", side_effect=run), \
+                 contextlib.redirect_stderr(io.StringIO()):
+                results = batch.emit_many(Path("/compiler"), files, 2, Path(directory))
+            self.assertEqual([value.returncode for value in results], [1, 0])
+            self.assertTrue((owner / "0/report.json").is_file())
+            self.assertTrue((owner / "1/0.rs").is_file())
+
+
+    def test_successful_emission_can_carry_ordinary_compiler_warnings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / "0.rs").write_bytes(b"generated")
+            (output / "report.json").write_text(json.dumps({
+                "schema": 1, "entries": [
+                    {"index": 0, "source": "/source.sifr", "exit_code": 0, "stderr": ""}
+                ],
+            }))
+            result = subprocess.CompletedProcess([], 0, b"", b"warning: unreachable statement ignored\n")
+            values = batch.read_results(output, [Path("/source.sifr")], result)
+            self.assertEqual(values[0].stdout, b"generated")
+            result.stdout = b"unexpected protocol stdout"
+            with self.assertRaises(RuntimeError):
+                batch.read_results(output, [Path("/source.sifr")], result)
 
 
 def policy_checks():

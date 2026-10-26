@@ -4,8 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import concurrent.futures
-import subprocess
 import sys
 from pathlib import Path
 
@@ -14,6 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
 
 from sifr_binary import resolve_sifr_binary  # noqa: E402
+from batch_emission import emit_many  # noqa: E402
 
 
 NON_AUTHORITATIVE_TEST_PROJECT_REFERENCES = {
@@ -69,21 +68,13 @@ def main() -> int:
         if source.is_file():
             pairs.append((emitted, source))
 
-    def emit(pair: tuple[Path, Path]) -> tuple[Path, subprocess.CompletedProcess[bytes]]:
-        emitted, source = pair
-        result = subprocess.run(
-            [str(compiler), "emit", str(source)],
-            cwd=REPO_ROOT,
-            check=False,
-            capture_output=True,
-        )
-        return emitted, result
-
+    try:
+        results = emit_many(compiler, [source for _, source in pairs], args.jobs, REPO_ROOT)
+    except (RuntimeError, OSError, ValueError) as error:
+        print(error, file=sys.stderr)
+        return 2
     stale: list[Path] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as executor:
-        results = list(executor.map(emit, pairs))
-    for (emitted, source), (result_path, result) in zip(pairs, results, strict=True):
-        assert emitted == result_path
+    for (emitted, source), result in zip(pairs, results, strict=True):
         if result.returncode != 0:
             sys.stderr.buffer.write(result.stderr)
             print(f"failed to emit {source.relative_to(REPO_ROOT)}", file=sys.stderr)

@@ -16768,3 +16768,133 @@ the same relocation repair. All oracle dependencies inherit workspace declaratio
 so no direct release declaration, pin, registry response, checksum or audit date
 changes. Preserve the first failed run: four test binaries passed, direct-registry
 audit failed, and the sixth binary was not reached. Rerun all six on the repair.
+
+### V1bg delivered — corpus oracle inventories reconciled
+
+Merged [PR #4496](https://github.com/sifr-lang/sifr/pull/4496) as
+d8dd26f57716b835f43e06d8bddea07e12c8d289. Reviewed candidate
+053ea2e18f5f81ed3786a949e8f99882cdeea6cd; merged tree matches.
+All41 tests across the six audit binaries and all four coverage-readiness
+variants pass. Size/diff checks pass; emitted correctness-only create-pr/merge
+plans are unchanged. Evidence: v1bg-focused-v2, guarded63.709s overall.
+Independent review SATISFIED without blockers: v1bg-review-asqq4lln/response.md,
+outside Git keyed by candidate. Earlier failure remains retained.
+No runtime-saving claim. Follow-up: workspace membership changes should trigger
+the existing classification/audit checks; final gates already select them.
+Socket/lease races, actual SQL component rebuild, final facade gates and V5 remain open.
+
+### V1bh prospective diagnostic — whole-emission CPU attribution
+
+Prior formatter and CompilerContext-sharing experiments missed their adoption
+thresholds. Stop extrapolating selected function probes to the complete compiler.
+Profile whole canonical CLI emissions across the same12 representative sources,
+including descendants, and reconcile every emitted result with retained
+byte-identical production evidence. Use a frozen production baseline with exact
+relevant source equivalence; no rejected experimental compiler or dependency
+graph is eligible. Record sampled self/inclusive work separately from ordinary
+elapsed/child CPU. Confirm stack coverage and profiler loss; incomplete stacks
+must not be treated as accurate attribution. Keep original assertions, input
+hashes, allocation, cache ownership and private output trees.
+
+This is diagnostic only: no compiler/cache/profile/selection change. Preserve
+1800s caps, capacity reserves, failed attempts and immutable evidence. Good enough:
+identify a measured structural cost that plausibly affects a whole expensive
+category, then register its concrete correctness/invalidation contract and an
+ordinary paired >=30% category-level target before implementation. Reject isolated
+seconds and avoid speculative whole-compiler rewrites. Full gate under600s remains
+unproven; no existing failed or unexecuted check becomes a pass.
+
+### V1bh result — process setup is materially different from context sharing
+
+All12 canonical CLI emissions match retained production bytes: ordinary26.107s,
+26.292 child CPU seconds. The instrumented emissions take26.306s; the complete
+profiling/reporting guard takes257.837s and is not compiler acceptance time.
+2,291 user-CPU samples, no lost samples. Known self symbols include SHA-256,
+metadata reference/graph indexing, and rustup formatter setup. Captured ancestry
+is incomplete (788 empty exported stacks,704 with unknown frames; addr2line
+failures), so no complete inclusive subsystem breakdown is claimed. The symbol
+cache binary SHA equals the frozen production binary. Preserve the original
+failed leaf-export option and corrected leaf export; neither reruns the compiler.
+
+The earlier V1bf comparison retained a process in BOTH variants. Its4.95% result
+does not measure avoiding process-local metadata initialization. A new same-binary
+two-round reversed-order diagnostic separates process lifetime and formatter
+selection; all96 emissions match production CLI bytes:
+fresh process/proxy52.329s; batch/proxy39.318s; fresh process/direct formatter
+46.726s; batch/direct33.216s. Combined reduction36.52%, child CPU52.691s to33.446s.
+The direct formatter is rustup's exact1.98.1 selection with matching version and
+recorded file hash. No compiler dependency/profile/source change.
+Evidence: v1bh-emission-attribution and v1bh-process-reuse. This justifies full
+inventory feasibility, not production adoption or a whole-gate saving.
+
+### V1bi prospective feasibility — full demo emission preparation reuse
+
+Compare every authoritative demo companion through fresh canonical CLI emission,
+the same external probe in one-process-per-input mode, and bounded immutable
+batch owners with the exact pinned formatter. Fresh mutable source providers and
+frontend executions per input; no generated-output or prior-test-result cache.
+Use identical bounded worker allocation and account for complete producer work,
+child CPU, outputs and failures. Compare all264 expected entries (reject inventory
+drift rather than silently narrow). Preserve scalar public CLI evidence for every
+input in the experiment; no runtime or native compilation assertion is replaced.
+
+Good enough to propose production implementation: >=30% lower complete freshness
+subcategory elapsed and child CPU, exact byte parity, all inputs accounted for,
+and explicit isolation/error/invalidation controls. Test repeated/reordered inputs,
+changed source and changed inputs via new owners, error followed by success, and
+independent source providers before adoption. Do not put a general compiler
+daemon or persistent mutable frontend in the gate. Public CLI/process contracts,
+real generated-program builds/runtime assertions and final phase gates remain.
+Freeze source while measuring; keep1800s category caps and capacity reserves.
+Register any concrete production ownership/API change and assertion map before
+editing production code. Do not infer whole-gate feasibility from this subcategory.
+
+### V1bi result — complete emission feasibility and isolation controls pass
+
+All264 authoritative demo companions pass each of three four-worker modes,
+792 emissions total: canonical scalar CLI156.034s/612.920 child CPU seconds;
+same external probe per input161.348s/634.133 CPU; batched probe with exact pinned
+formatter106.771s/380.982 CPU. Reduction against canonical CLI31.57% elapsed,
+37.84% CPU; sources and companions unchanged. Full guard429.472s. This is one
+category experiment, not a complete gate or production implementation result.
+Evidence: v1bi-full-emission. Four batched worker RSS snapshots were271–303MiB
+each; these are observations, not peak-memory measurements.
+
+All16 isolation controls pass: repeated/reordered project inputs, identical names
+in independent projects, imported/main source edits and restoration, errors followed
+by valid inputs, single-file errors/recovery, missing metadata rejection and new
+owner recovery. Successful bytes and ordinary structured diagnostics match the
+frozen production CLI. Evidence: v1bi-control-validation-v2, guard20.192s.
+The initial harness incorrectly parsed scalar diagnostics from stdout; the CLI
+writes stderr. Preserve that failed attempt and corrected stream assertion; it is
+not a product failure. No production code changed during these experiments.
+
+### V1bj prospective implementation — invocation-owned demo emission batches
+
+Implement one finite internal batch command in the existing sifr executable.
+Both scalar and batch emission use the same canonical entrypoint dispatch. Each
+batch retains one immutable CompilerContext but creates a fresh DiskSourceProvider
+per input; no mutable frontend, generated-output cache or old correctness receipt
+is reused. A versioned manifest lists absolute input paths; each request has a
+positional result, fresh generated Rust or diagnostic, and exit status. Reject
+malformed/empty manifests and existing output directories. Complete ordinary
+errors without suppressing later inputs; incomplete/internal failures cannot pass.
+
+Move only demo-companion freshness emission to bounded batches. Preserve all264
+byte comparisons, lexical reporting, strict/debt policy ownership, reference and
+orphan checks, and update behavior. Retain scalar CLI behavior and independently
+test scalar/batch parity including errors. Resolve the exact pinned rustfmt once
+per verification invocation, preserving an explicit RUSTFMT override; do not alter
+product formatter defaults or add fallback emitters. Keep failed batch evidence.
+Document invocation lifetime and source/toolchain immutability requirements.
+
+Good enough: affected CLI schema/entrypoint tests, batch isolation/error/output
+ownership controls, freshness policy/negative controls, all264 canonical scalar
+and production batch outputs equal checked companions, and >=30% ordinary
+full-category elapsed and child CPU reduction at the same worker allocation.
+Measure actual compiler edit preparation and report it separately; do not hide
+new helper build costs (there is no new crate). Size/fmt/diff checks, unchanged
+profile selection, scoped exact-candidate independent review and intermediate
+PR/merge are required. Stop tuning after these criteria. No native runtime,
+independent SQL construction, installed scalar CLI certification or final phase
+gate is removed. If production measurements miss the threshold, record/reject.
