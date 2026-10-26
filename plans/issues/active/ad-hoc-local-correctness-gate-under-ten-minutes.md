@@ -15356,3 +15356,28 @@ cap per category and capacity/reserve admission. No canonical profile change,
 test omission, release-performance claim or frontend/codegen/expanded-invalidation
 V5 acceptance follows from this diagnostic alone. Any adoption requires a
 separately registered implementation contract and scoped review.
+
+#### V1as preparation failure and resumed preflight
+
+The first freshness prerequisite rebuilt only the CLI: 466/467 Cargo artifacts
+were fresh, Cargo succeeded in 56.657305s, and the resulting compiler SHA-256
+exactly matched the retained V1aq original. The prerequisite correctly failed;
+the edit and installed qualification did not run. Preserve the original
+campaign.json, baseline directory and failed guard as failed/incomplete evidence.
+
+The repository was clean at the original source revision. Among the watched
+source roots, only the crates/sifr/src directory timestamp was newer than the
+original build; all source-file timestamps had been restored. An isolated Cargo
+control changed only a watched directory timestamp: fingerprint diagnostics named
+that directory, the executable rebuilt with identical bytes, and the following
+unchanged invocation was fresh. This corroborates directory invalidation during
+source restoration. Do not remove directory watches or weaken addition/removal
+tracking to manufacture cache hits.
+
+Resume with a separately named baseline-r2 prerequisite and campaign-r2 record.
+The first attempt has already prepared the unchanged original graph; r2 must
+still demonstrate all 467 artifacts fresh and the original binary/help before
+snapshotting or applying the real edit. Keep its snapshot and dependent-helper
+bindings explicit. Count the 56.657305s rebuild as preparation; do not credit it
+as a measured edit saving or reclassify the failed prerequisite as passing.
+All existing edit, qualification, restoration and final phase requirements remain.
