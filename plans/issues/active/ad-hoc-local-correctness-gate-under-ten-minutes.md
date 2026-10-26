@@ -15978,3 +15978,57 @@ artifact repopulation. Its shared native target deliberately serializes publicat
 Any inner-Cargo allocation experiment must retain that ownership and total admitted
 capacity. Prioritize current measured critical-path and total-work costs; move on
 once a category's acceptance boundary is met.
+
+### V1ax prospective item — remove compiler-local ThinLTO rebuild work
+
+Base: 3b28415b40ab9a08e813eecff4ab606fd241967c. The canonical release
+codegen invocation, replayed with four jobserver slots and lightweight timers,
+completed in 292.570s; the nested LLVM_thinlto stage took 249.566s. The same
+invocation with only explicit -C lto=off added completed in 72.559s (75.2% less).
+This is instrumented feasibility evidence, not an ordinary build or gate result.
+Compiler timer rows overlap and must not be summed. The root manifest already
+correctly documented that lto=false permits local ThinLTO; this investigation
+measures its cost rather than correcting that comment's meaning.
+
+The first codegen-only Cargo diagnostic selected a different dependency graph
+and was stopped at 56.227s. Full LLVM event tracing of the real graph reached
+the memory reserve at 111.563s and was cancelled. Both incomplete attempts are
+retained. The successful lightweight replay used the exact captured release
+codegen flags, dependency artifacts and bounded jobserver, with isolated output.
+No failed diagnostic is a correctness pass. Source bytes and original source
+mtime were restored; the baseline release binary is preserved by verified hash.
+
+**One bounded change:** set the workspace release compiler profile to lto="off",
+retaining optimization level 3, 16 codegen units, existing package overrides,
+native objects, feature graphs and the pinned toolchain. No crate split, visitor
+rewrite, dependency upgrade, cache-identity weakening or assertion removal is
+part of this item. Normal dev/test profile settings stay unchanged. Generated
+application profiles already explicitly disable LTO; they remain unchanged, as
+does the dedicated Rust interop release-LTO test (lto=true, codegen-units=1).
+
+**Acceptance and stopping condition:**
+
+1. Measure the ordinary canonical compiler build and the required release-profile
+   invalidation (16 to 8 codegen units) without profiling. Record preparation,
+   resource use and assertion execution separately; compare equivalent scenarios
+   rather than claiming the instrumented single-unit result as a whole-gate gain.
+2. Preserve both 732-case normal/release oracle passes, exact emitted Rust,
+   source-map/module-set equivalence, portable metadata checks, all 745 installed
+   commands and native executions, plus affected boundary, host, structural and
+   all 72 distribution variants. Keep the existing independent assertion owners.
+3. Compare complete fresh public corpus emission with the hash-preserved baseline
+   compiler, alternating baseline/candidate and retaining warmups separately.
+   Report execution and whole build-plus-execution tradeoffs. Reject a material
+   integrated regression; a faster compiler build alone is not acceptance.
+4. Validate profile plans, existing toolchain/profile contracts, source/input
+   invalidation and restoration. Missing or stale prepared artifacts must fail;
+   no old passing test result substitutes for current required assertions.
+5. Stop tuning this item once a material complete-scenario saving survives the
+   affected assertions and independent exact-candidate review. Preserve separate
+   remaining integration failures and move to the next measured macro cost.
+   Final correctness-only create-PR/merge gates and all repeated V5 scenarios
+   remain mandatory; this item does not itself promise a sub-600s complete gate.
+
+Evidence: v1ax-local-lto-decision.json, v1ax-build-attribution.json,
+v1ax-codegen-pass-timers/, v1ax-codegen-lto-off-timers/ and v1ax-baseline-binary/.
+Cargo semantics: https://doc.rust-lang.org/cargo/reference/profiles.html#lto.

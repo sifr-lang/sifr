@@ -248,9 +248,9 @@ unwrap_used = "warn"
 expect_used = "warn"
 
 [profile.release]
-# Retain native library objects so executable edits do not repeat cross-crate LTO.
-# Cargo still performs local ThinLTO with this setting.
-lto = false
+# Keep optimized native objects reusable without repeating local or cross-crate LTO.
+# Compiler execution and generated-program optimization are qualified separately.
+lto = "off"
 codegen-units = 16
 
 [profile.release.package.ruff_python_parser]
