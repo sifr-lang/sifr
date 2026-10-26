@@ -54,6 +54,7 @@ pub const RESERVED_TOOL_NAMESPACES: &[&str] = &[
     "vendor",
     "tools",
     "version",
+    "__emit-batch",
     "__sql-compiler-worker",
 ];
 

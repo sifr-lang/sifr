@@ -69,6 +69,23 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
 }
 
 #[test]
+fn hidden_builtin_namespaces_cannot_be_declared_as_host_tools() {
+    for namespace in ["__emit-batch", "__sql-compiler-worker"] {
+        let fixture = ToolFixture::new(&format!("hidden_{namespace}"));
+        fixture.write_manifest(&format!(
+            "[tools.{namespace}]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
+        ));
+        let errors =
+            resolve_host_tool_graph(&fixture.snapshot(false), &mut DiskSourceProvider::new())
+                .test_expect_err("hidden builtin namespace must fail");
+        // Namespace syntax rejects underscores before reserved-name validation.
+        assert!(errors[0].message.contains(&format!(
+            "tool namespace '{namespace}' must use lowercase ASCII letters, digits, and single hyphens"
+        )));
+    }
+}
+
+#[test]
 fn host_tool_graph_rejects_application_contamination() {
     let fixture = ToolFixture::new("contamination");
     let errors = resolve_host_tool_graph(&fixture.snapshot(true), &mut DiskSourceProvider::new())
