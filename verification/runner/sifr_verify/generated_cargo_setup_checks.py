@@ -24,6 +24,8 @@ from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .cargo_crate_setup_checks import CrateSetupPolicyTests
 from .cargo_sysroot_setup_checks import SysrootSetupPolicyTests
+from .corpus_oracle_setup_checks import CorpusOraclePreparationTests
+from .corpus_profile_comparison_checks import CorpusProfileComparisonTests
 from .release_compiler_checks import ReleaseCompilerPreparationTests
 from .generated_cargo_setup import (
     GIT_SOURCE, fetch_generated_graph, portable_graph, preparation_entries, quality_module,
@@ -427,11 +429,12 @@ class SetupPolicyTests(unittest.TestCase):
 
 
 def policy_checks() -> None:
+    from .corpus_execution_checks import CorpusExecutionTests
     from .ci_smoke_setup_checks import SmokePreparationChecks
     from .generated_target_reuse_checks import GeneratedTargetReuseTests
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
                                for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests,
-                                            SysrootSetupPolicyTests, ReleaseCompilerPreparationTests, SmokePreparationChecks,
+                                            SysrootSetupPolicyTests, CorpusExecutionTests, CorpusOraclePreparationTests, CorpusProfileComparisonTests, ReleaseCompilerPreparationTests, SmokePreparationChecks,
                                             GeneratedTargetReuseTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():

@@ -11482,56 +11482,56 @@
       "classification": "semantic-input"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "read_dir",
-      "site": "let mut paths = std::fs::read_dir(&root)",
+      "site": "let mut paths = std::fs::read_dir(root)",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(output).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "read_to_string",
       "site": "let source = std::fs::read_to_string(&path).unwrap();",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "write",
       "site": "std::fs::write(output.join(format!(\"{name}.sifr\")), &source).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs",
+      "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "write",
       "site": "std::fs::write(output.join(\"coverage.json\"),serde_json::to_vec_pretty(&serde_json::json!({",

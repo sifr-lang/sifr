@@ -25,6 +25,7 @@ Options:
   --target <triple>         Package only one release target; can repeat
   --cargo-build             Build target binaries with cargo instead of using --binary
   --prepare-only            Compile the exact --cargo-build graph without packaging
+  --prepare-corpus          Also compile the corpus oracle; requires --prepare-only
   --help                    Show this help
 EOF
 }
@@ -34,6 +35,7 @@ OUTPUT_DIR=""
 BINARY=""
 CARGO_BUILD=0
 PREPARE_ONLY=0
+PREPARE_CORPUS=0
 SYSROOT_ROOT="$(pwd)"
 SELECTED_TARGETS=()
 
@@ -65,6 +67,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prepare-only)
       PREPARE_ONLY=1
+      shift
+      ;;
+    --prepare-corpus)
+      PREPARE_CORPUS=1
       shift
       ;;
     --help)
@@ -103,6 +109,11 @@ fi
 
 if [[ "${PREPARE_ONLY}" -eq 1 && "${CARGO_BUILD}" -ne 1 ]]; then
   echo "--prepare-only requires --cargo-build" >&2
+  exit 2
+fi
+
+if [[ "${PREPARE_CORPUS}" -eq 1 && "${PREPARE_ONLY}" -ne 1 ]]; then
+  echo "--prepare-corpus requires --prepare-only" >&2
   exit 2
 fi
 
@@ -295,7 +306,11 @@ mkdir -p "${OUTPUT_DIR}"
 for target in "${SELECTED_TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
     python3 "${SCRIPT_DIR}/metadata_artifact.py" --require-native-target "${target}"
-    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --locked --release -p sifr --target "${target}"
+    release_packages=()
+    if [[ "${PREPARE_CORPUS}" -eq 1 ]]; then
+      release_packages+=(-p sifr_corpus_oracle)
+    fi
+    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --locked --release -p sifr "${release_packages[@]}" --target "${target}"
     binary_path="${CARGO_TARGET_DIR:-target}/${target}/release/sifr"
   else
     binary_path="${BINARY}"

@@ -8901,7 +8901,7 @@ the same attested inputs passes all30 suites/30 variants,7 capabilities,9 compil
 evidence records and3 zero-resource checks; all29 runtime examples pass. Preserve
 those original failures and the source-bound combination attestation.
 
-Full positive E2E takes295.843s guarded /292.619s in the suite: all732 original
+Full positive E2E takes295.843s guarded /292.619s in the suite: all 732 original
 fixture IDs have passing source compilation and fresh runtime outcomes, with186
 successful native groups, zero original batch failures and exact once-only group
 membership. This is one diagnostic observation, not repeated V5 qualification.
@@ -15715,3 +15715,175 @@ claim their sum as the final gate wall time.
 No new architecture is accepted merely by recording this direction. The next
 milestone is a measured feasibility decision, not a promise of ten minutes or a
 collection of unconnected micro-optimizations.
+
+### V1av prospective item — share the corpus oracle with the prepared release graph
+
+Base: 464a178b6484db05f34b9330900ab576ec5066bc. The V1au discovery
+sweep keeps that candidate frozen. Prototype changes are isolated until its
+owned preparations and consumers finish or are explicitly accounted for.
+
+**Required property:** compare every maintained positive fixture through independent
+source-backed and metadata-backed lowering/emission, then compare the installed
+versioned CLI against the resulting reference. Preserve exact Rust bytes, used
+stdlib modules, source maps, marker/newline information, portable metadata payload
+identity, native executions and installation/corruption/relocation/recovery checks.
+The ordinary driver ignored test remains selected and executes the same oracle
+under the development test profile.
+
+**Root cause and proposed boundary:** packaged corpus preparation currently
+compiles the full driver library test in a separate default-test graph with the
+packaged version. Its last complete preparation took 664.336104s, separately
+from the release CLI's 694.099340s. A shared verification-owned oracle library,
+called by the existing ignored test and a small release executable, can use the
+already prepared release compiler libraries. Both consumers retain the same
+source-versus-metadata algorithm; the installed CLI is not used to manufacture
+its own reference. Production driver dependencies do not acquire the oracle.
+
+Use the existing release builder with the same version, profile, host, flags,
+remaps and target; select the CLI alongside the oracle to retain compatible
+dependency features. Oracle construction is a preparation-only operation and
+is not included in shipped artifacts. No external dependency version change,
+blanket feature union, optimization downgrade or cache-key weakening is intended.
+
+**Input ownership:** prepare explicitly and bind the executable, compiler,
+versioned source snapshot, canonical content inventory, tool versions and
+build-affecting environment. Consumers reject missing, stale or failed preparation
+and execute fresh assertions; they do not rebuild or reuse old passing results.
+Source projects, generated runtime isolation and package mutation states remain
+under their existing owners. A changed root manifest/lock is intentional workspace
+integration and can cause an initial rebuild; report that cost separately.
+
+**Named acceptance and stopping condition:**
+
+1. The normal ignored driver test and packaged oracle both execute all 732 current
+   fixtures with all original comparisons. Installed qualification retains its
+   full 745 commands; count changes require an explicit fixture-inventory reason.
+2. Cargo artifact/fingerprint evidence proves shared compiler libraries are fresh
+   after canonical release preparation, with no second full compiler graph.
+   Measure compiler preparation, incremental oracle preparation and execution.
+   Capture actual profile/features/flags where an unexpected rebuild occurs.
+3. Missing/failed/stale preparation, source/snapshot/binary/environment changes,
+   version mismatch, caller target/flags isolation and forbidden packaging mode
+   receive focused regressions. Failed preparation cannot publish a success receipt.
+4. The root lockfile adds only the verification package and its workspace edge.
+   Existing external packages/versions/checksums remain identical. Emitted
+   correctness selections and native assertion inventories remain unchanged.
+5. Run affected setup/policy tests, formatting, file-size/dependency guardrails,
+   full source/metadata and installed corpus, plus affected release/distribution
+   contracts. Test one expensive required invalidation early, retaining its
+   build-plus-execution cost rather than judging only a warm artifact.
+6. Accept only if the measured preparation reduction survives full affected
+   assertions without a material execution regression or a replacement duplicate
+   compiler graph. Stop tuning this item after that boundary is established;
+   the still-expensive canonical compilation and integrated critical path remain
+   separate macro constraints. No fixed per-category time is invented.
+
+External prospective decision: v1av-shared-corpus/decision.json. The isolated
+prototype is not yet accepted. Focused intermediate validation and exact-candidate
+independent review apply; final correctness-only gates and all repeated V5
+scenarios remain mandatory.
+
+
+V1av coverage refinement: retain the old reference's development-versus-release
+compiler-profile diversity explicitly. Prepare the tiny oracle against both
+already required CLI graphs, run both over the complete corpus, and compare exact
+Rust bytes, source maps and module sets before publishing the release reference.
+The normal ignored driver test remains unchanged in selection. Historical
+732-case output comparison found no byte/map/module-set differences; JSON module
+ordering differs because the authority is a Rust HashSet. Different versioned
+portable metadata remains independently checked, not normalized away.
+
+The prototype must demonstrate fresh shared compiler libraries in **both** graphs.
+The extra normal-profile oracle execution is a measured cost and part of the
+integrated tradeoff; do not accept this item by reporting preparation savings
+alone. Missing/duplicate fixtures, changed bytes/maps/modules, profile mismatch,
+failed execution and stale development artifacts require focused rejection checks.
+No full-corpus or installed verification has passed for this prototype yet.
+
+V1av filesystem ownership refinement: the extracted oracle retains exactly the
+old eight read/write sites and their reviewed ownership classifications. Move
+those entries to the verification crate; only the explicit fixture-root argument
+changes at the directory read. Preserve the two separately recorded baseline
+native-selection-test inventory omissions for their own repair. The affected
+filesystem inventory comparison and scanner self-test are required before
+accepting this candidate; do not regenerate or blanket-approve unrelated sites.
+
+Affected relocation validation passed using pinned Python 3.14.7 against a
+hash-verified 2315-file source snapshot: 3553 filesystem sites scanned, eight
+moved sites classified, scanner mutation self-tests passed, and exactly the
+same two baseline omissions remained. Native qualification is still pending.
+
+### V1av measured execution tradeoff and single assertion ownership
+
+The dual CLI-oracle prototype at da9ad526 is **not accepted**. Native preparation
+proved the intended build reuse: no existing compiler-library fingerprints changed,
+and only the two oracle libraries were added. Release oracle Cargo work took
+3.952580s, development oracle Cargo work 4.778981s; preparation including snapshot
+and binding took 24.142313s. The ordinary normal ignored test passed all 732 cases
+in 108.14s of assertions (169.848553s including its changed harness build).
+Both oracle profiles passed in 204.879018s, and complete output comparison against
+the preserved baseline passed. Boundary qualification passed in 133.762071 guarded
+seconds. These are bounded measurements, not a passing integrated gate.
+
+That design introduces a third complete corpus pass in a full profile. Its
+preparation saving therefore does not justify accepting it unchanged for the
+ten-minute development goal. The remaining ordinary qualification and registered
+profile invalidation were not run on that revision; their obligations remain open.
+
+The revised ownership replaces the extra development oracle executable with the
+already required normal driver libtest. Packaged corpus verification executes the
+exact existing ignored test once and the release oracle once, compares every
+fixture, and performs all installed checks. A profile selecting that packaged
+suite declares it as the owner of the normal corpus assertion; native case
+scheduling reports delegation and does not repeat that same test. If the owner
+suite is absent, the native selection continues to execute it. A delegated result
+is never a pass and cannot satisfy a failed or blocked owner.
+
+This supersedes the earlier requirement for an additional normal CLI oracle.
+It preserves both compiler profiles and the original named normal assertion.
+The category and fixture selections stay unchanged; emitted plans additionally
+declare assertion ownership. The current stopping condition is: compatible build
+reuse in both existing graphs, two total complete corpus passes rather than three,
+all 732 cases and 745 installed commands, exact bytes/maps/modules and independent
+metadata checks, complete missing/stale/zero-test/ownership failure controls, and
+measured preparation-plus-execution benefit including required invalidation.
+No previous failed or unexecuted result is reclassified. Final phase gates and V5
+remain mandatory.
+
+The affected policy scan also found one obsolete driver-tree record for the
+extracted fixture-extension filter. Remove exactly that test-assertion record:
+the method-dispatch inventory scans product crate sources under crates/, while
+the oracle is now a verification-owned tool (like the other tools outside that
+scan). Its unchanged fixture filter remains in the shared verification function;
+no language-method admission or compiler dispatch rule moved or was exempted.
+The filesystem scanner still inventories its eight moved I/O sites. Preserve the
+two pre-existing entrypoint binding failures and two pre-existing filesystem
+omissions as separate phase integration repairs.
+
+### V1av bounded corpus execution and ordinary qualification
+
+Candidate 2c2ab948 completed all ten ordinary diagnostic stages. Both compiler
+profiles passed all 732 fixtures; installed qualification passed all 745 commands
+including four native cases. Oracle preparation took 11.391020s, with all 336
+normal Cargo artifacts fresh and no existing compiler-library fingerprint changed.
+Installed metadata execution took 363.893141 guarded seconds. Independent boundary,
+host-install and structural checks passed. Distribution passed 71 of 72 variants:
+its static workflow contract requires the mandatory -p sifr to appear explicitly
+in the locked release command. Keep that mandatory package literal and reserve
+the optional package array for the verification oracle.
+
+The sequential ownership design does not yet establish the desired integrated
+execution benefit. Execute the two independent corpus processes within the
+already admitted process budget (at most two), with distinct sysroots and fresh
+output directories. Set inner Rayon/Cargo jobs to one when overlapping. Reuse the
+canonical process owner, inherited deadlines, bounded output and cleanup rules;
+freeze per-command environments before admission. Missing, duplicate, truncated,
+failed or zero-test outcomes cannot publish a reference. Complete ordinary
+failures in the other independent profile, retain both diagnostics, and compare
+every fixture before publication.
+
+This is a critical-path experiment, not a claim of reduced total compiler work.
+Accept it only after measuring full installed execution, checking all original
+assertions and required rebuild invalidation. Stop tuning this item once compatible
+compilation reuse, coverage, invalidation and a material net benefit are established;
+then move to the largest remaining category. Final phase acceptance remains open.

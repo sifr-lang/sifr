@@ -9,6 +9,7 @@ from .errors import VerificationError
 from .native_test_execution import selected_native_cases, run_native_configuration
 from .process_execution import Outcome
 from .native_test_roles import ADVANCED_DATA_PREPARATION
+from .corpus_ownership import CORPUS_CASE, CORPUS_OWNER
 from .profile_commands import CommandFailed
 from .profiles import load_profile
 from .native_test_allocation import ALLOCATION_ENV
@@ -76,6 +77,35 @@ class NativeExecutionTests(unittest.TestCase):
         lines = [line for line in stream.getvalue().splitlines() if line.startswith("[sifr-native-case]")]
         self.assertIn("alpha::first status=pass", lines[0])
         self.assertIn("beta::second status=pass", lines[1])
+
+    def test_corpus_runs_locally_unless_the_selected_area_owns_it(self):
+        inventory = f"alpha::first: test\n{CORPUS_CASE}: test\n{ADVANCED_DATA_PREPARATION}: test\n\n3 tests, 0 benchmarks\n"
+        for delegated in (False, True):
+            calls = []
+            stream = io.StringIO()
+            with self.subTest(delegated=delegated), patch(
+                "sifr_verify.native_test_execution.run_command", return_value=outcome(inventory)
+            ), patch("sifr_verify.native_test_execution.run_native_batch", side_effect=deliver(
+                [outcome(PASSED), outcome(PASSED)], calls
+            )), contextlib.redirect_stdout(stream):
+                run_native_configuration(self.configuration(), env=ENV, no_fail_fast=False,
+                                         preparation_complete=True, corpus_owner_selected=delegated)
+            self.assertEqual([c[-1] for c in calls],
+                             ["alpha::first"] if delegated else ["alpha::first", CORPUS_CASE])
+            if delegated:
+                self.assertIn(f"owner={CORPUS_OWNER} status=delegated", stream.getvalue())
+                self.assertNotIn(f"case={CORPUS_CASE} status=pass", stream.getvalue())
+            else:
+                self.assertIn(f"case={CORPUS_CASE} status=pass", stream.getvalue())
+                self.assertNotIn("status=delegated", stream.getvalue())
+
+    def test_missing_delegated_corpus_is_not_silently_accepted(self):
+        with patch("sifr_verify.native_test_execution.run_command", return_value=outcome(INVENTORY)), \
+             patch("sifr_verify.native_test_execution.run_native_batch") as batch, \
+             self.assertRaisesRegex(VerificationError, "delegated corpus assertion is missing"):
+            run_native_configuration(self.configuration(), env=ENV, no_fail_fast=False,
+                                     preparation_complete=True, corpus_owner_selected=True)
+        batch.assert_not_called()
 
     def test_first_failure_stops_and_explicit_collection_keeps_failure(self):
         for collect, expected in ((False, 1), (True, 2)):

@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "verification/tools/corpus_oracle",
     "crates/sifr_identity",
     "crates/sifr_process",
     "crates/sifr_source",
@@ -62,6 +63,7 @@ authors = ["Yaser Al-Najjar"]
 license = "MIT"
 
 [workspace.dependencies]
+sifr_corpus_oracle = { path = "verification/tools/corpus_oracle" }
 sifr_semantic_services = { path = "crates/sifr_semantic_services" }
 sifr_stdlib_artifact = { path = "crates/sifr_stdlib_artifact" }
 sifr_identity = { path = "crates/sifr_identity" }

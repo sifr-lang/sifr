@@ -15,7 +15,7 @@ import threading
 import time
 from typing import Callable, Sequence
 
-from .process_execution import Outcome, deadline_environment
+from .process_execution import Outcome, SAFETY_DEADLINE_ENV, deadline_environment
 
 
 @dataclass
@@ -70,6 +70,7 @@ def execute_batch(
     completed: Callable[[int, Outcome], None],
     deadline_seconds: float | str = 2400, limit_bytes: int = 1048576,
     started: Callable[[int], None] | None = None,
+    env_overrides: Sequence[dict[str, str]] | None = None,
     heartbeat: Callable[[], None] | None = None,
 ) -> None:
     """Deliver each outcome once, in completion order, with its selection index.
@@ -79,7 +80,9 @@ def execute_batch(
     inherited deadline produces non-passing outcomes for commands not yet started.
     Per-command deadlines start at admission; an inherited invocation deadline also
     includes queue time. The enclosing invocation timer includes all scheduling.
-    Bounded output is discarded after its callback, rather than accumulated for
+    Optional per-command environment overrides are frozen before dispatch and
+    cannot replace the inherited safety deadline. Output is discarded after its callback,
+    rather than accumulated for
     the entire corpus. This batch accepts noninteractive commands only.
     """
     if threading.current_thread() is not threading.main_thread():
@@ -95,6 +98,24 @@ def execute_batch(
     commands = [list(command) for command in commands]
     environment = dict(os.environ if env is None else env)
     deadline_environment(environment, deadline_seconds)  # validate before spawning
+    if env_overrides is None:
+        environments = [environment] * len(commands)
+    else:
+        if len(env_overrides) != len(commands):
+            raise ValueError("per-command environments must match the command selection")
+        environments = []
+        for override in env_overrides:
+            if not isinstance(override, dict) or any(
+                not isinstance(key, str) or not isinstance(value, str)
+                for key, value in override.items()
+            ):
+                raise ValueError("per-command environment overrides must contain string pairs")
+            if (SAFETY_DEADLINE_ENV in override
+                    and override[SAFETY_DEADLINE_ENV] != environment.get(SAFETY_DEADLINE_ENV)):
+                raise ValueError("per-command environments cannot replace the inherited deadline")
+            child_environment = dict(environment, **override)
+            deadline_environment(child_environment, deadline_seconds)
+            environments.append(child_environment)
     previous = {}
     active: dict[int, _Active] = {}
     selector = None
@@ -128,7 +149,7 @@ def execute_batch(
             while next_index < len(commands) and len(active) < max_parallel:
                 index = next_index
                 next_index += 1
-                child_env, deadline = deadline_environment(environment, deadline_seconds)
+                child_env, deadline = deadline_environment(environments[index], deadline_seconds)
                 if cancelled or time.monotonic() >= deadline:
                     cause = "cancelled" if cancelled else "safety_deadline"
                     completed(index, Outcome(130 if cancelled else 124, cause,

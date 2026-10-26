@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from .compiler_configuration_plan import configuration_plan
 from .errors import VerificationError
+from .corpus_ownership import corpus_owner_selected, corpus_assertion_owners, CORPUS_CASE, CORPUS_OWNER
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
 from .native_test_execution_checks import outcome, PASSED, ENV, ROOM, deliver
 from .process_execution import Outcome
@@ -103,7 +104,57 @@ class CrateExecutionTests(unittest.TestCase):
                     self.assertEqual(len(selected), native.call_count)
                     for group, call in zip(selected, native.call_args_list, strict=True):
                         self.assertEqual(call.args, (group,))
-                        self.assertEqual(call.kwargs, {"env": runner.env, "no_fail_fast": collect, "preparation_complete": False})
+                        self.assertEqual(call.kwargs, {"env": runner.env, "no_fail_fast": collect, "preparation_complete": False,
+                                                      "corpus_owner_selected": corpus_owner_selected(runner.profile)})
+
+    def test_only_the_exact_selected_corpus_suite_can_own_the_assertion(self):
+        from .profiles import build_profile_plan, compare_plans
+        import json
+        import tempfile
+        from pathlib import Path
+        for areas in ([], [{"area": "sysroot_release", "suites": ["metadata-structural"]}],
+                      [{"area": "other", "suites": ["metadata-corpus"]}]):
+            self.assertFalse(corpus_owner_selected({"selected_areas": areas}))
+            self.assertEqual(corpus_assertion_owners({"selected_areas": areas}), {})
+        for name in ("create-pr", "merge", "nightly", "release"):
+            profile = load_profile(name)
+            plan = build_profile_plan(name)
+            expected = {CORPUS_CASE: CORPUS_OWNER} if corpus_owner_selected(profile) else {}
+            self.assertEqual(plan["assertion_owners"], expected)
+        plan = build_profile_plan("merge", correctness_only=True)
+        self.assertEqual(plan["assertion_owners"], {CORPUS_CASE: CORPUS_OWNER})
+        with tempfile.TemporaryDirectory() as directory, \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            left, right = Path(directory) / "local.json", Path(directory) / "ci.json"
+            left.write_text(json.dumps(plan))
+            right.write_text(json.dumps(plan | {"assertion_owners": {}}))
+            self.assertEqual(compare_plans(str(left), str(right)), 1)
+
+    def test_failed_or_blocked_corpus_owner_prevents_a_passing_profile(self):
+        for blocked in (False, True):
+            runner = ProfileRunner("merge", ["--no-fail-fast"], correctness_only=True)
+            self.assertTrue(corpus_owner_selected(runner.profile))
+            if blocked:
+                runner.preparation = SimpleNamespace(
+                    fatal_reason=None,
+                    blocked_by=lambda step: "sysroot_package" if step == "area_sysroot_release" else "")
+            def area(name, suites):
+                if name == "sysroot_release":
+                    self.assertIn("metadata-corpus", suites)
+                    raise CommandFailed(9)
+            stream = io.StringIO()
+            with self.subTest(blocked=blocked), \
+                 patch.object(runner, "prepare_step_budget", return_value=None), \
+                 patch.object(runner, "prepare_cargo_cache"), \
+                 patch.object(runner, "run_guardrail"), \
+                 patch.object(runner, "run_toolchain_step"), \
+                 patch.object(runner, "run_area", side_effect=area), \
+                 patch("sifr_verify.profile_runner.enable_profile_offline_cargo"), \
+                 contextlib.redirect_stdout(stream):
+                self.assertEqual(runner.run(), 2 if blocked else 9)
+            self.assertNotEqual(runner.functional_exit_status, 0)
+            self.assertIn("name=area_sysroot_release", stream.getvalue())
+            self.assertIn("status=blocked" if blocked else "status=fail", stream.getvalue())
 
     def test_terminal_failure_takes_precedence_and_stops_collection(self):
         for terminal in (CommandFailed(-15), CommandFailed(124, "deadline"),

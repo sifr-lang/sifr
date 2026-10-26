@@ -1,11 +1,15 @@
-"""Exact packaged compiler preparation, separate from timed installed assertions."""
+"""Prepare corpus verification from the existing driver libtest and release CLI graphs."""
 from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 from producer_snapshot import prepare_source_snapshot
+from corpus_preparation import host_triple, receipt_path, record_prepared, require_prepared
+from corpus_profiles import prepare_development, compare_profiles
+from corpus_execution import run_profiles
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from verification.areas.common.release_compiler import (
@@ -15,27 +19,64 @@ from verification.areas.common.release_compiler import (
 
 def corpus_configuration(root: Path, original: dict[str, str]):
     snapshot = root / "target/sysroot_release/corpus-producer-source"
-    # This test embeds the packaged version. Sharing the development target
-    # would invalidate its normal-version compiler and reverse on the next check.
-    env = dict(original, CARGO_TARGET_DIR=str(release_target_dir(root)),
-               SIFR_RELEASE_VERSION=RELEASE_VERSION, SIFR_SYSROOT=str(snapshot))
-    command = ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--lib",
-               "full_corpus_exact_emission", "--", "--ignored", "--nocapture"]
-    return command, env, snapshot
+    command = [sys.executable, str(root / "verification/areas/sysroot_release/package_build.py"),
+               "--run-corpus"]
+    return command, dict(original), snapshot
+
+
+def corpus_environments(root: Path, original: dict[str, str], snapshot: Path):
+    development = dict(original, SIFR_SYSROOT=str(root))
+    release = dict(original, CARGO_TARGET_DIR=str(release_target_dir(root)),
+                   SIFR_RELEASE_VERSION=RELEASE_VERSION, SIFR_SYSROOT=str(snapshot))
+    return development, release
 
 
 def prepare(root: Path, env: dict[str, str], run=subprocess.run, *, corpus_only=False):
+    receipt_path(root).unlink(missing_ok=True)
     if not corpus_only:
         prepare_release_compiler(root, env, run)
-    corpus, corpus_env, snapshot = corpus_configuration(root, env)
+    _, _, snapshot = corpus_configuration(root, env)
+    development_env, release_env = corpus_environments(root, env, snapshot)
+    host = host_triple(release_env)
+    command, build_env = package_build_configuration(
+        root, release_env, host, root / "target/sysroot_release/preparation", prepare_only=True)
+    # The release owner applies the identical version, remaps, target and profile.
+    # Both packages are selected so the oracle cannot narrow shared dependency features.
+    run([*command, "--prepare-corpus"], cwd=root, env=build_env, check=True)
+    development = prepare_development(root, development_env, run)
     prepare_source_snapshot(root, snapshot, RELEASE_VERSION)
-    # Preserve the selected library graph; filters execute only after preparation.
-    run([*corpus[:7], "--no-run"], cwd=root, env=corpus_env, check=True)
+    record_prepared(root, env, snapshot, host, development)
+
+
+def run_corpus(root: Path, env: dict[str, str]):
+    _, _, snapshot = corpus_configuration(root, env)
+    artifacts = require_prepared(root, env, snapshot)
+    # Own both new reports so a failed run cannot consume a previous passing one.
+    parent = root / "target/sysroot_release"
+    output = Path(env["SIFR_DX8_CORPUS_OUTPUT"]) if env.get("SIFR_DX8_CORPUS_OUTPUT") else None
+    base = Path(tempfile.mkdtemp(prefix="corpus-profiles-", dir=parent))
+    print(f"corpus-profile evidence: {base}", flush=True)
+    development_output = base / "development"
+    release_output = base / "release"
+    run_profiles(artifacts, root, snapshot, base, env, RELEASE_VERSION)
+    compare_profiles(root, development_output, release_output)
+    if output is not None:
+        import shutil
+        # Reference publication follows both successful current executions.
+        output.mkdir(parents=True, exist_ok=True)
+        for path in release_output.iterdir():
+            shutil.copy2(path, output / path.name)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--corpus-only", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--corpus-only", action="store_true")
+    modes.add_argument("--run-corpus", action="store_true")
     args = parser.parse_args()
-    prepare(Path(__file__).resolve().parents[3], dict(os.environ, CARGO_NET_OFFLINE="true"),
-            corpus_only=args.corpus_only)
+    root = Path(__file__).resolve().parents[3]
+    env = dict(os.environ, CARGO_NET_OFFLINE="true")
+    if args.run_corpus:
+        run_corpus(root, env)
+    else:
+        prepare(root, env, corpus_only=args.corpus_only)
