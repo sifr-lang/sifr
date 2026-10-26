@@ -16898,3 +16898,90 @@ profile selection, scoped exact-candidate independent review and intermediate
 PR/merge are required. Stop tuning after these criteria. No native runtime,
 independent SQL construction, installed scalar CLI certification or final phase
 gate is removed. If production measurements miss the threshold, record/reject.
+
+### V1bj delivered — finite demo emission ownership
+
+Merged [PR #4497](https://github.com/sifr-lang/sifr/pull/4497) as
+5c3b0e8f706f1e8fa2ee73696d93d63f8174d2fb. Final tested/reviewed candidate
+f5987d577da09e84e0032d704a1e04a1e041338a; merged tree is identical.
+The existing CLI owns finite batches, shares immutable compiler setup, and creates
+fresh source providers/frontend execution for every request. Scalar and batch
+share canonical entrypoint dispatch. No new crate, persistent output cache,
+passing-result cache, native/runtime assertion removal or independent-build waiver.
+
+Final same-four-worker comparison: all264 scalar plus264 batch emissions match
+checked companions. Scalar156.578s/615.446 child CPU seconds; batch106.975s/380.274
+CPU:31.68% elapsed and38.21% CPU reduction. Normal eight-worker strict/debt area
+entrypoint passes all264 companions in89.213s/608.981 CPU; do not directly compare
+different allocations. Earlier candidate7a81945 passed two reversed-order pairs
+with35.0–35.4% elapsed improvement; keep those historical results distinct.
+Observed retained worker RSS was roughly280–310MiB each, not a measured peak.
+
+Validation:4 batch Rust tests,5 eager/lazy CLI-schema tests, the existing project
+emission regression,22 Python verification tests, and actual CLI controls comparing
+ten requests including missing project entries/malformed manifests. Fmt, size and
+diff checks pass; correctness-only create-pr/merge plans unchanged.
+Evidence: v1bj-focused-precedence, v1bj-cli-controls-v2,
+v1bj-full-emission-final, v1bj-area-freshness-final.
+Final independent review SATISFIED/no blockers,49.035s:
+v1bj-final-review-9p_uju48/response.md outside Git, keyed by candidate.
+
+Preserve earlier failures: missing trace-command match arm; batch consumer wrongly
+rejecting ordinary stderr warnings; area harness choosing an unsupported external
+result path; and our post-review discovery of premature batch source reading.
+The latter produced different project diagnostics, fixed by resolving canonical
+mode before source reading. Final Rust/CLI tests, full paired comparison and area
+gate reran after that repair. Original review7a81945 does not approve finalf5987d5.
+
+Nonblocking follow-ups: document internal JSON diagnostics and pinned-rustup
+verification requirement; improve rustup-failure presentation; area runner owner
+may support external result paths. The suggested missing-single-file continuation
+unit coverage already exists in complete_report_preserves_repeats_and_continues_
+after_missing_and_invalid_sources. Optional regression-test failure presentation
+can be improved later. Stop tuning this category at the satisfied macro threshold.
+Full phase gates and every V5 scenario remain OPEN; under600s is unproven.
+
+### V1bk prospective diagnostic — Python preparation/execution ownership
+
+Next scope is the complete29-example lifecycle, including preparation and runtime
+assertions. The last broad diagnostic reported201.749s preparation and210.902s
+example execution (within326.464s Python area execution). These are historical
+observations, not a current paired baseline or a sum for the entire gate.
+
+Code currently prepares/certifies/builds each package, then execution recreates
+the package and repeats certification before invoking canonical run. Native-run
+cache lookup follows frontend planning/Rust generation. Establish what is truly
+duplicated and what independently certifies a contract before proposing reuse.
+Do not confuse Cargo dependency reuse, native executable reuse, generated-code
+reuse, certification issuance, recheck, and execution of runtime assertions.
+
+Build an explicit assertion/isolation map for all29 cases and their surrounding
+CLI, environment, certification and native-cache contracts. Measure current
+preparation, reconstruction/certification, frontend generation, native compile/link,
+runtime and input validation separately. Use ordinary timing for decisions and
+targeted instrumentation only to explain a representative case. Inspect actual
+artifact paths/fingerprints and invalidation boundaries; do not infer broken cache
+from total duration or assume explicit build seeds the run cache.
+
+Prototype outside production first. Prefer existing prepared-artifact ownership
+and canonical build/run services over a universal cache or second compiler path.
+Any proposal must execute every existing runtime assertion, preserve optimized
+generated-program semantics, certification issuance/rechecks and their readonly
+checks, source/bridge/interpreter/environment/native identity invalidation,
+isolation, interrupted-preparation recovery and required CLI behavior. Do not
+replace runtime assertions with snapshots or silently drop individual CLI contracts.
+Keep mutable certification/negative tests separate from immutable shared inputs.
+
+Good enough to propose adoption: a complete current baseline and assertion map,
+a demonstrated>=30% reduction in combined preparation+execution (including added
+validation/copy/cleanup work), and material total-work reduction or a measured
+safe critical-path improvement. Validate representative changed-input scenarios
+early. Stop if no macro duplication is established; preserve the finding and pick
+the next large cost. Keep30-minute per-category caps and declared capacity reserves.
+Register concrete production changes and affected acceptance before implementing.
+
+The profile runner also executes categories sequentially. Resource-aware overlap
+is a separate later candidate: audit target/output ownership and nested worker
+allocation first. Do not merely sum old timings or schedule competing Cargo writers
+and call that proof of a ten-minute gate. SQL provenance recovery, socket/lease
+race qualification, final facade gates and V5 remain separately owned open work.
