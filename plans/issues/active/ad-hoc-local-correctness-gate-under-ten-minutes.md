@@ -15799,3 +15799,16 @@ integrated tradeoff; do not accept this item by reporting preparation savings
 alone. Missing/duplicate fixtures, changed bytes/maps/modules, profile mismatch,
 failed execution and stale development artifacts require focused rejection checks.
 No full-corpus or installed verification has passed for this prototype yet.
+
+V1av filesystem ownership refinement: the extracted oracle retains exactly the
+old eight read/write sites and their reviewed ownership classifications. Move
+those entries to the verification crate; only the explicit fixture-root argument
+changes at the directory read. Preserve the two separately recorded baseline
+native-selection-test inventory omissions for their own repair. The affected
+filesystem inventory comparison and scanner self-test are required before
+accepting this candidate; do not regenerate or blanket-approve unrelated sites.
+
+Affected relocation validation passed using pinned Python 3.14.7 against a
+hash-verified 2315-file source snapshot: 3553 filesystem sites scanned, eight
+moved sites classified, scanner mutation self-tests passed, and exactly the
+same two baseline omissions remained. Native qualification is still pending.
