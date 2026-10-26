@@ -15318,3 +15318,209 @@ Each preparation, build and qualification category retains the 1,800-second cap,
 capacity/reserve admission and owned-process cleanup. Snapshot/restore must be
 reversible and occur only between completed guarded categories. A failure blocks
 its consumers and remains preserved; no zero-test or missing outcome is a pass.
+
+### V1as prospective follow-up — distinguish clean-build cost from edit-build cost
+
+Registered before execution; no profile policy is adopted. V1aq's complete
+fresh-build comparison rejected cross-crate LTO removal as a cold-build saving.
+It did not measure the edit loop. V1ar's real CLI edit already takes 375.511s with
+incremental compilation and ThinLTO despite 466/467 Cargo artifacts being fresh.
+This is new evidence for a narrower question: whether retained native library
+objects avoid repeating whole-program optimization after an executable edit.
+
+After V1ar's guarded consumers and restoration finish, reuse V1aq's inactive
+Cargo lto=false target at its original path and flags. Keep opt-level 3, codegen
+units, package overrides, features, toolchain, release version and four-worker
+allocation. First require a real Cargo freshness check on the original source,
+all 467 artifacts fresh, and the original binary hash/help. Preserve an independent
+immutable pre-edit snapshot. Record snapshot, reset and preparation costs.
+
+Apply the exact same local-only CLI edit commit used in V1ar. Build at that
+target's original path with Cargo release lto=false and incremental compilation
+disabled; require the newly edited help text, changed binary identity and the
+same artifact selections. Qualify the actual edited binary with all 732 public
+emissions, four native cases and all existing installed integrity, relocation,
+generation, negative and recovery controls. Reuse the reference only after
+proving the exact CLI-only source change and unchanged compiler-library/corpus
+inputs. Preserve failure evidence and block dependent consumers on failure.
+
+Compare against V1ar's non-incremental ThinLTO edit as a single sequential
+feasibility observation. The prepared targets differ physically, with their
+original recorded path-remapping flags; disclose this and ordering/cache limits.
+Do not call it a repeated benchmark or a complete gate. The V1aq fresh-build
+result remains authoritative for that separate experiment and is not reclassified.
+
+Restore the original clean source and pre-edit target after owned consumers exit;
+retain the edited target, binary and all measured records. Keep the 1,800-second
+cap per category and capacity/reserve admission. No canonical profile change,
+test omission, release-performance claim or frontend/codegen/expanded-invalidation
+V5 acceptance follows from this diagnostic alone. Any adoption requires a
+separately registered implementation contract and scoped review.
+
+#### V1as preparation failure and resumed preflight
+
+The first freshness prerequisite rebuilt only the CLI: 466/467 Cargo artifacts
+were fresh, Cargo succeeded in 56.657305s, and the resulting compiler SHA-256
+exactly matched the retained V1aq original. The prerequisite correctly failed;
+the edit and installed qualification did not run. Preserve the original
+campaign.json, baseline directory and failed guard as failed/incomplete evidence.
+
+The repository was clean at the original source revision. Among the watched
+source roots, only the crates/sifr/src directory timestamp was newer than the
+original build; all source-file timestamps had been restored. An isolated Cargo
+control changed only a watched directory timestamp: fingerprint diagnostics named
+that directory, the executable rebuilt with identical bytes, and the following
+unchanged invocation was fresh. This corroborates directory invalidation during
+source restoration. Do not remove directory watches or weaken addition/removal
+tracking to manufacture cache hits.
+
+Resume with a separately named baseline-r2 prerequisite and campaign-r2 record.
+The first attempt has already prepared the unchanged original graph; r2 must
+still demonstrate all 467 artifacts fresh and the original binary/help before
+snapshotting or applying the real edit. Keep its snapshot and dependent-helper
+bindings explicit. Count the 56.657305s rebuild as preparation; do not credit it
+as a measured edit saving or reclassify the failed prerequisite as passing.
+All existing edit, qualification, restoration and final phase requirements remain.
+
+### V1ar completed — incremental compilation does not remove the final-executable cost
+
+The registered CLI-edit comparison completed with source/target restoration and
+both installed qualifications passing. No incremental profile policy is adopted.
+All 3,145 archive payload files and 1,490 installed command records were
+independently reconciled locally. The archive SHA-256 is
+b46dfbb9cb0f4532fe2342adf6b490c108c9cd66933cccc55c542d342eb30a26.
+
+| Measured stage | Non-incremental ThinLTO | Incremental ThinLTO |
+| --- | ---: | ---: |
+| Real CLI edit build | 389.738796s | 375.510975s |
+| Executable compilation unit, included above | 371.68s | 353.21s |
+| Build-script execution unit, included above | 17.15s | 17.48s |
+| Packaging | 29.345860s | 33.064702s |
+| Complete installed qualification | 159.423752s | 179.717090s |
+| Public emissions, included in qualification | 51.097360s | 53.156812s |
+
+This is one sequential feasibility pair, not repeated throughput qualification.
+The observed build difference is 14.227821s (about 3.65%); qualification variability
+must not be turned into a causal performance claim. Do not add overlapping units
+or identify noncontiguous stage sums as a complete gate. Each edited binary shows
+the exact changed CLI help. Both retain the same package/feature/target selections
+and reported non-incremental profile fields; 466/467 Cargo artifacts are fresh,
+with only the CLI binary recompiled. All 745 installed commands execute per arm:
+732 exact emissions, four native programs and all integrity, relocation,
+generation, negative and recovery controls. Required negative exits remain 2.
+
+The incremental seed separately takes 515.558108s using already-retained
+third-party dependencies; it is not a fresh-build comparison. Its complete
+preparation guard takes 803.383679s, including inventories, an independent
+111.172347s snapshot copy and verification. Reset/restoration are separately
+recorded and are not edit savings. The restored original source is
+1bc52807e95db71ebc54f80fca38c6b264e09537; the exact temporary CLI edit
+c5b24e1524d1bf28e1657e7075321d8f1ff93773 remains local only.
+
+The seed target contains 4,658,103,945 summed file bytes, including 2,075,943,586
+bytes in incremental directories, compared with 2,015,793,203 baseline bytes.
+It retains both old non-incremental and new incremental artifacts; this is not a
+matched clean-target overhead measurement. The post-run CLI ThinLTO cache audit
+finds 2,360 of 2,372 object outputs byte-identical, but only one with the same
+timestamp and inode. This demonstrates output similarity without effective
+filesystem reuse for most objects; it does not identify which LLVM passes reran.
+The executable remains the measured dominant unit despite Cargo dependency reuse.
+
+All owned guard sessions are empty, both edited targets/binaries are preserved,
+and the original 3,896-file target snapshot is restored and verified. The original
+canonical release target was not used by these experiments. Final full gates and
+all V5 scenarios remain OPEN. V1as separately investigates retained native-object
+edit cost; V1aq's cold-build result remains unchanged.
+
+### V1as completed — retained native objects substantially shorten the CLI edit
+
+The same local-only CLI edit builds in 45.349527s with Cargo lto=false, versus
+389.738796s with non-incremental ThinLTO in V1ar: 344.389269s less, about 88.36%,
+in this sequential feasibility observation. Both reuse 466/467 Cargo artifacts
+and rebuild only the executable. Both expose the exact edited help and select
+the same package/feature/target graph and reported profile fields. The targets
+and their recorded path-remapping prefixes differ; this is not repeated timing
+qualification. Cargo lto=false retains local ThinLTO; it is not lto=off.
+
+The actual edited binary passes all 745 installed commands, including all 732
+exact emissions, four native programs and all integrity, relocation, generation,
+negative and recovery controls. Packaging takes 32.714483s and qualification
+148.818424s; the included public-emission subset takes 51.166490s, compared with
+51.097360s for V1ar's ThinLTO baseline. These individual execution observations
+are not a general compiler-throughput guarantee. V1aq's full fresh builds remain
+705.478962s with lto=false versus 675.487712s with ThinLTO. Do not reclassify that
+cold-build tradeoff or claim a complete gate below 600 seconds.
+
+Two failed prerequisites remain explicit. The first baseline rebuilds the
+byte-identical original compiler in 56.657305s and rejects non-fresh output;
+baseline-r2 subsequently proves 467/467 artifacts fresh in 2.296885s. The first
+qualification attempt stops at memory admission before product tests execute.
+Its exact memory deficit was not recorded. A later admission records
+10,845,036,544 available bytes against the unchanged 10,737,418,240-byte
+requirement, and the same four-worker qualification passes. No reserve or worker
+policy is weakened; no passing build or test is unnecessarily repeated.
+
+Source and target restoration pass. Restoring the observed pre-edit source
+directory timestamp, as well as the file timestamp, prevents the diagnosed
+directory-only invalidation. The final Cargo check finds all 467 artifacts fresh
+in 0.732673s and the original binary hash unchanged. This is an experimental reset
+using a recorded timestamp, not a production cache bypass. V1ar's earlier
+file/snapshot restoration did not establish post-restore Cargo freshness; V1as
+found and corrected that reset limitation. Both edited targets/binaries and all
+failed evidence remain retained, and all owned experiment sessions are empty.
+
+All 1,636 archive payloads and 745 installed command records were independently
+verified locally; the 732 emitted outputs also match V1ar's qualified ThinLTO
+baseline. Archive SHA-256:
+7871d9f6dbe839bdf36a3eb2e0a2cd1adc2bd14482e323691cb27f4adc0ae547.
+No profile change is adopted by this diagnostic. Full phase and V5 remain OPEN.
+
+### V1at prospective implementation — reuse native objects in the actual release profile
+
+The registered implementation candidate changes only the workspace release
+profile's lto setting from thin to false, with an explanatory comment. Retain
+opt-level 3, codegen-units 16, all package overrides, features, toolchain, locked
+dependencies and every selected assertion. This changes the real release profile
+qualified by the existing gates; do not introduce a separate verification-only
+compiler or leave the actual product profile untested. Generated application
+profile policy and CI workflow design are outside this item.
+
+The rationale is the measured 344s CLI-edit saving, not faster cold builds.
+Preserve the known fresh-build cost and continue the mandatory cold/expanded
+invalidation work; this item cannot satisfy or waive the 600-second requirement.
+
+Before merge, prepare the real versioned release compiler through its canonical
+owner on the exact implementation candidate. Regenerate affected source/corpus
+preparation when its input identity changes. Run the affected release-preparation
+and distribution self-tests, complete distribution full suite, and all selected
+sysroot boundary, structural, host-installed smoke/heavy and metadata-corpus
+contracts. Preserve all source/installed parity, missing/wrong-version admission,
+native execution, integrity, relocation and generation controls. Compare resolved
+package/features/targets and emitted correctness plans; run profiles check,
+format/file-size/diff checks appropriate to the manifest/verification scope.
+Retain ordinary Cargo timings and actual binary identities.
+
+Validate compiler execution cost before adopting the profile. Use the existing
+complete 732-case public-emission authority on both the qualified baseline
+ThinLTO package and the actual candidate package, with exact output assertions.
+Freeze the corpus, packages, toolchain and one four-worker allocation. Use fresh
+processes and separately owned per-run caches, one full warm-up per arm, then
+three measured alternating-order pairs. Report median and worst batch/category
+times and CPU work; no percentile claim. Reject automatic adoption if the
+candidate median exceeds baseline by 5% or its worst exceeds baseline worst by
+10%; investigate any consistent regression rather than hiding it in build savings.
+These are bounded adoption checks, not a claim about all compiler workloads.
+
+Also repeat an observable local-only CLI edit on the actual candidate's retained
+target and verify the changed help, expected dirty/fresh artifacts and restored
+Cargo freshness. Capture source file and watched-directory metadata before the
+edit. Keep snapshot/reset preparation separate and preserve all interrupted
+attempts. The unmodified implementation candidate remains the qualification
+and review subject; the temporary diagnostic edit must never be published.
+
+Require focused exact-candidate independent review under the approved intermediate
+policy. After integration, prioritize one complete correctness discovery sweep
+with failure continuation, retained targets and a 1,800-second cap per category;
+account for every blocked or unexecuted category. Use its current largest costs
+to choose the next repair. Complete final create-pr/merge correctness-only gates
+and all repeated V5 scenarios remain mandatory.
