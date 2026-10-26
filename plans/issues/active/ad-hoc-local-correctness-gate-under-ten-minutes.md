@@ -16985,3 +16985,55 @@ is a separate later candidate: audit target/output ownership and nested worker
 allocation first. Do not merely sum old timings or schedule competing Cargo writers
 and call that proof of a ten-minute gate. SQL provenance recovery, socket/lease
 race qualification, final facade gates and V5 remain separately owned open work.
+
+### V1bk implementation contract — compile each Python example once
+
+The complete current baseline at0785aaca passed29 optimized runtime examples:
+221.740s preparation plus201.614s execution =423.354s,580.024 child CPU seconds.
+There are74 CLI invocations:29 explicit builds plus29 runs, with the same8
+certification issuance/recheck commands repeated. Artifact manifests show two
+native dependency/profile configurations. These are distinct from package,
+trust, bridge and runtime identities; no cache identity is weakened.
+
+The precompile helper's stated contract and introducing commits3d5d54f68 and
+2e2705d82 establish setup accounting/prewarming, not independent construction
+or extra runtime assertions. It writes sibling outputs that execution does not
+consume; execution recreates each package and invokes canonical run. Both stages
+already run offline. Workspace dependency fetching and pinned Python environment
+preparation remain required. Do not replace these with an ambient environment.
+
+External prototype v1bk-python-single-pass-cold executes the unchanged canonical
+29-case runner without precompilation. It passes in254.897s/374.944CPU with an
+initially empty SIFR_CACHE_DIR (native dependencies and artifacts). That is39.79%
+less wall and35.36% less CPU than the retained-target baseline, despite colder
+construction. This is not a matched warm comparison or a whole-gate claim.
+Six controls pass: unchanged, changed Sifr output, changed bridge output,
+intentional bridge failure, invalid source and recovery after partial package
+residue. Only external synthetic fixture copies changed; failures remain failures.
+Evidence: v1bk-python-lifecycle-baseline, v1bk-python-single-pass-cold,
+v1bk-python-input-controls and their guards. The29-case assertion/isolation map
+includes source/bridge/certification hashes and required stdout markers.
+
+Adopt one execution owner: remove Python example precompilation from profile
+preparation and its dependency node. Keep locked workspace/Python preparation,
+authoring preparation and all selected suites/fixtures unchanged. Keep the
+explicit prepare_examples tool and its ordering/readonly/failure self-tests as
+opt-in diagnostics; do not present that prewarming as additional coverage.
+Every selected example still reconstructs its package, issues/rechecks required
+certificates (including readonly snapshots), compiles in release mode and executes
+all existing native/Python assertions in a separate CLI/runtime process. Canonical
+build/run/cache/product code, trust/environment invalidation and explicit-build
+CLI coverage are unchanged. No prepared executable or passing result is reused
+by the verification runner. Cold compilation is now charged to execution.
+
+Acceptance: focused preparation/dependency/failure controls and complete Python
+runner self-tests; all29 examples on the final candidate; unchanged assertion
+selection in both correctness-only profile plans; valid profile policy, file-size
+and diff checks. Run a retained-target full lifecycle comparison against423.354s,
+including final source checks/report construction and ordinary command overhead:
+require>=30% wall reduction and material CPU reduction. Reuse the cold/changed-
+input diagnostic evidence only after proving their compiler, execution runner,
+fixtures, dependencies and environment inputs unchanged by the integration edit.
+Scoped exact-candidate review and intermediate PR/merge remain required.
+Stop tuning this item when these criteria pass; return to remaining integration
+failures and a current complete warm gate. All final phase/V5 acceptance stays open.
