@@ -521,3 +521,23 @@ within its admitted process slots (maximum two); parallel children use one inner
 worker. Both current outcomes and complete byte/map/module comparisons are required
 before publishing a reference. Failed or incomplete output remains diagnostic
 evidence and cannot satisfy the delegated normal assertion.
+
+
+### Finite demo emission batches
+
+Demo-companion freshness compiles every authoritative source on each invocation.
+It uses bounded `sifr __emit-batch` workers to amortize immutable compiler setup.
+A schema-1 JSON manifest contains an ordered `files` array of absolute paths;
+the command requires a new output directory. Each input receives fresh source
+provider/frontend execution, an indexed Rust file on success, and an indexed
+status/diagnostic in the completion report. Repeated inputs are separate requests.
+Missing, incomplete, reordered or inconsistent results fail verification.
+
+Source trees, compiler metadata and toolchain inputs must remain immutable during
+a batch, just as during a scalar compile. A new invocation owns changed inputs.
+No generated output or old correctness result is cached. The verification caller
+resolves the pinned formatter once; explicit RUSTFMT remains authoritative.
+Failed batch directories are retained and their location is reported. Successful
+private directories are removed after every output is checked. Public scalar CLI,
+generated-program execution and independently constructed certification remain
+separate assertions.

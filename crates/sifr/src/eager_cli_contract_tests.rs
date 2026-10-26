@@ -60,6 +60,14 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Finite invocation-owned emission protocol for verification.
+    #[command(name = "__emit-batch", hide = true)]
+    EmitBatch {
+        #[arg(long)]
+        manifest: PathBuf,
+        #[arg(long)]
+        output_dir: PathBuf,
+    },
     /// Invocation-owned compiler protocol; selected by the SQL tool launcher.
     #[command(name = "__sql-compiler-worker", hide = true)]
     SqlCompilerWorker {
@@ -437,6 +445,7 @@ fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order()
         "lsp",
         "trace",
         "emit",
+        "__emit-batch",
         "test",
         "tools",
         "self",
@@ -563,6 +572,14 @@ fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order()
         &["sifr", "lsp", "--parent-pid", "not-a-pid"],
         &["sifr", "trace", "main.sifr"],
         &["sifr", "emit", "main.sifr"],
+        &[
+            "sifr",
+            "__emit-batch",
+            "--manifest",
+            "inputs.json",
+            "--output-dir",
+            "fresh",
+        ],
         &["sifr", "test", "tests"],
         &["sifr", "tools", "lock", "--check"],
         &["sifr", "tools", "lock", "--help"],

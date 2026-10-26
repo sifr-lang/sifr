@@ -77,6 +77,14 @@ pub(crate) struct Cli {
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
+    /// Finite invocation-owned emission protocol for verification.
+    #[command(name = "__emit-batch", hide = true)]
+    EmitBatch {
+        #[arg(long)]
+        manifest: PathBuf,
+        #[arg(long)]
+        output_dir: PathBuf,
+    },
     /// Invocation-owned compiler protocol; selected by the SQL tool launcher.
     #[command(name = "__sql-compiler-worker", hide = true)]
     SqlCompilerWorker {
@@ -269,6 +277,10 @@ fn run_cli(cli: Cli) -> i32 {
     let config = cli.config;
     let isolated = cli.isolated;
     match command {
+        Commands::EmitBatch {
+            manifest,
+            output_dir,
+        } => crate::emit_batch::run(&manifest, &output_dir),
         Commands::SqlCompilerWorker {
             workspace,
             admission,

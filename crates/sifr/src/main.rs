@@ -28,6 +28,7 @@ mod diagnostic_rendering_and_run;
 mod diagnostic_test_sink;
 #[cfg(test)]
 mod eager_cli_contract_tests;
+mod emit_batch;
 mod explain_cli;
 mod formatter_cache;
 mod formatter_cli;
