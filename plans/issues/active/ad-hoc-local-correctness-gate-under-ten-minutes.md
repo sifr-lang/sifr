@@ -17267,3 +17267,56 @@ two existing filesystems are the integration regression. Allow only the two buil
 edits, their focused test/checker wiring, phase record, three SQL family outputs,
 and words artifact/receipt/qualification JSON. All production must finish before
 source-frozen qualification and scoped review.
+
+### V1bo delivered — component publication and authentic artifact recovery
+
+Merged [PR #4501](https://github.com/sifr-lang/sifr/pull/4501) as
+7d39f6352bca9bcafbd421c9e9f0a8a2874b5bca. Tested/reviewed candidate
+8fc0ed4d4b8d2be6813199715559d0d1708f8900; merged tree verified identical.
+Both builders now stage beside their destination, retaining atomic per-file
+publication and prepare-before-publish ordering across target filesystems.
+Original builders fail both positive cross-device controls; repaired builders
+pass all three controls including preservation after failed production.
+
+All four real producers passed: PostgreSQL77.832s, MySQL2.283s,
+SQLite12.462s, words75.826s (v1bo-production-r3). These retries reuse native
+compilation from the preserved failed attempts; no build speedup is claimed.
+All11 Wasm hashes and actual source receipts match. SQL outputs grew7–19%
+under the previously adopted release profile; no profile changed in this item.
+Final v1bo-focused on the exact candidate passes3publication/6SDK controls,
+all family/component provenance and mutation controls,30component-host tests,
+29SQL application tests, size/diff checks. Source-frozen guard232.945s PASS.
+SQL application172.130s/1058.339CPU versus earlier172.737s/1081.840CPU:
+no obvious slowdown in these observations, not repeated timing qualification.
+
+Independent review SATISFIED/no blockers111.631s,
+v1bo-review-usaw7k0f/response.md, SHA256
+8e96a871aa96a67f0c2bad008a8f1122e25e13a4b9a142705bd37b743cae8c4e.
+Follow-ups: hard-killed producers can leave untracked stage directories; existing
+words qualification JSON update is not atomic. Neither invalidates this bounded
+publication repair; retain as separate lifecycle-hardening work. PR attachment
+hit the100-identity cap. Original failures remain failed. This item is good enough;
+stop tuning it. Final integrated correctness/timing acceptance remains OPEN.
+
+### V1bp prospective — complete integrated correctness cost baseline
+
+Run the current public merge correctness-only facade with failure continuation,
+canonical resource defaults and retained owned targets. Inspect its exact emitted
+plan and preparation dependencies first; verify pinned tools, free disk, effective
+CPU/memory, working allocations and reserves. Preserve older reports before
+canonical report paths are reused. Do not inherit historical worker overrides or
+stale absolute deadlines. Each category receives a1750s safety deadline within
+the user's1800s diagnostic cap. The enclosing multi-category process receives
+a4hour safety envelope, not a new per-category allowance. Stop for capacity or
+owned-source drift. Account explicitly for every blocked/unexecuted selection;
+run remaining independent categories separately if a category cap stops the facade.
+
+Good enough for this diagnostic item: every selected category has an actual
+outcome or explicit prerequisite/cap blocker, with elapsed time, CPU where
+available, counts and current input identity. Separate preparation from execution.
+This first combined run after changed artifacts is not unchanged-warm acceptance.
+Use the execution graph and total work to select the largest structural cost;
+do not repeat a full run or optimize isolated seconds without new justification.
+No assertion removal, scope narrowing, stale-result reuse, profile substitution
+or weakened independent SQL build checks. Final create-pr/merge gates and repeated
+V5 scenario qualification remain required; under600seconds is still unproven.
