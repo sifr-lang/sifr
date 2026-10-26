@@ -161,3 +161,45 @@ class CorpusOraclePreparationTests(unittest.TestCase):
                                  "--cargo-build", "--prepare-corpus"], text=True, capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("--prepare-corpus requires --prepare-only", result.stderr)
+
+    def test_development_oracle_version_must_match_its_compiler(self):
+        original = self.preparation.subprocess.check_output.side_effect
+        def output(command, **kwargs):
+            if command == [self.development["sifr_corpus_oracle"], "--version"]:
+                return "sifr-corpus-oracle 9.9.9\n"
+            return original(command, **kwargs)
+        with patch.object(self.preparation.subprocess, "check_output", side_effect=output):
+            with self.assertRaisesRegex(RuntimeError, "development compiler and corpus oracle"):
+                self.record()
+        self.assertFalse(self.preparation.receipt_path(self.root).exists())
+
+    def test_failed_development_build_cannot_publish_preparation(self):
+        self.record()
+        with patch.object(self.builder, "host_triple", return_value="host"), \
+             patch.object(self.builder, "prepare_development",
+                          side_effect=subprocess.CalledProcessError(101, ["cargo", "build"])), \
+             patch.object(self.builder, "prepare_source_snapshot") as snapshot, \
+             patch.object(self.builder, "record_prepared") as record:
+            with self.assertRaises(subprocess.CalledProcessError):
+                self.builder.prepare(self.root, self.env, lambda *a, **k: None, corpus_only=True)
+        snapshot.assert_not_called()
+        record.assert_not_called()
+        self.assertFalse(self.preparation.receipt_path(self.root).exists())
+
+    def test_failed_oracle_execution_keeps_partial_evidence_without_publication(self):
+        self.record()
+        published = self.root / "published"
+        def fail(command, **kwargs):
+            output = Path(kwargs["env"]["SIFR_DX8_CORPUS_OUTPUT"])
+            output.mkdir()
+            (output / "failed-case.source.rs").write_text("partial evidence")
+            raise subprocess.CalledProcessError(1, command)
+        with patch.object(self.builder.subprocess, "run", side_effect=fail), \
+             patch.object(self.builder, "compare_profiles") as compare:
+            with self.assertRaises(subprocess.CalledProcessError):
+                self.builder.run_corpus(self.root, self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(published)})
+        compare.assert_not_called()
+        self.assertFalse(published.exists())
+        evidence = list(self.snapshot.parent.glob("corpus-profiles-*/development/failed-case.source.rs"))
+        self.assertEqual(len(evidence), 1)
+        self.assertEqual(evidence[0].read_text(), "partial evidence")
