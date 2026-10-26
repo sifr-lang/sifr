@@ -16616,3 +16616,56 @@ and measured category-scale opportunity. If the safe design is not supportable,
 reject it and target a different structural cost. Register any eventual concrete
 implementation and its full acceptance controls before editing production code.
 The four V1bb integration failures, final facade gates and repeated V5 remain open.
+
+### V1bd feasibility result — defer persistent native compilation caching
+
+The external pinned Wasmtime 48.0.1 probe built successfully in105.765s overall
+(103.419s Cargo build). Twenty-one fresh-process commands complete in14.188s
+overall across MySQL8.4, PostgreSQL18 and SQLite3.53.4. Uncached compilation
+versus median of three retained-cache compilations:0.802781s/0.018612s,
+2.054818s/0.045091s and1.086430s/0.025202s. Positive SQL schema outputs match
+byte-for-byte; changed SQL requests produce the changed schema on a cache hit.
+A semantically inert Wasm custom section causes a compilation cache miss.
+
+These are direct guest-execution diagnostics, not full ComponentHost validation
+or current checked-in component provenance qualification. The custom-section
+probe intentionally retains the original request identity to isolate compilation
+keying; it is not a valid host-level component/request identity test. No runtime
+or provider validation is removed from production. The official cache reads
+serialized native images without an independent authenticated binding of the
+payload to the source Wasm. Its key names alone do not authenticate payloads.
+
+The relative preparation criterion passes, but a safe production cache ownership/
+integrity design and a measured category-scale opportunity remain unestablished.
+Defer adoption; no production dependency, cache, assertion or behavior change.
+Keep v1bd-probe-build and v1bd-measurements, all receipts and the source probe.
+Do not spend more on subsecond preparation until category-level attribution
+justifies the integration complexity. This is not a whole-gate saving.
+
+### V1be prospective investigation — durable-history storage amplification
+
+The full4097-publication test remains a material ordinary-driver cost after V2c.
+Before changing storage, measure its current complete runtime and attribute
+publication, retention/pruning, content validation and durable I/O. Existing
+source creates up to128 per-record directory entries per generation, then
+revalidates current record bytes; pruning later walks and removes these entries.
+That is demonstrated code structure, not proof of which operation dominates.
+
+Keep all4097 publications,128-record/64MiB history bounds, recent ABA, old-input
+eviction, current-byte integrity checks, cancellation, namespace/generation leases,
+reader survival, crash-safe publication and durability. No reduced stress count,
+test-only durability setting or metadata-only integrity shortcut is allowed.
+Consider a storage representation change only after attribution: account for
+both metadata operations and payload write amplification, including a near-limit
+history. Do not replace cheap hardlinks with unbounded repeated large writes.
+
+Use owned frozen test binaries and record their producing revision and applicable
+source equivalence. Separate ordinary elapsed measurements from instrumented
+diagnostics; preserve the1800s category cap and capacity reserves. Inspect the
+whole ordinary-driver contribution before choosing the implementation. Good
+enough for adoption: at least50% lower complete history execution, no loss of
+its assertions, bounded space and acceptable near-limit write amplification,
+all affected project-cache/persistence/corruption/lease/recovery controls, and
+independent exact-candidate review. Register the concrete representation and
+invalidation contract before production edits. Reject marginal changes.
+The four integration failures and all final phase gates/V5 remain open.
