@@ -17202,3 +17202,47 @@ exact-candidate review. Use existing retained targets and1800s diagnostic caps.
 No throughput claim from correctness repair. Once green, stop tuning this item,
 restore actual component provenance and measure the complete current gate before
 choosing another structural cost reduction. Phase final gates/V5 remain required.
+
+### V1bn completed — native-tool preparation mismatch, no source repair
+
+Candidate d5d63199d4d0d6614a8960e07f69e0687af28ff5 reproduced2failures/
+5passes in the7-case sandbox group (8.92s test execution). One failure was in
+the direct command before sandbox entry. Compiler build output embedded source
+identity300ea49cbb3f6ede8c88fcdda1372facbaaf90c008d44817ba02a5012affd188,
+while all three retained SQL native executables embedded
+915998cd5448c4ea916d33b5c6da737908fd23184229bf5c96c6b8f03a42846d.
+The wire server intentionally rejects a mismatched handshake, closes its stream,
+and the client reports channel closed. This was diagnostic prerequisite drift:
+V1bl reran the compiler crate but omitted canonical native-tool preparation.
+
+Existing check_compiler_execution.py --prepare-only rebuilt all native tools
+in10.934s/25.287CPU. All four identities then matched. Unchanged full
+sql_native_application passes29/29,0ignored in172.737s/1081.840CPU at4test threads.
+Guard184.914s PASS, no source mutation or live descendants. Evidence
+v1bn-worker-baseline (FAILED), v1bn-worker-prepared (PASS), and
+v1bn-worker-identities.json. Ordinary uncaptured diagnostics and build identity
+comparison were sufficient; no traced run or product patch was necessary.
+Canonical gate preparation already declares this prerequisite. Do not reuse
+prepared native executables after source changes without running that command.
+Stop this repair; preserve original failed broad evidence.
+
+### V1bo prospective recovery — actual current SQL component production
+
+Current provenance comparison shows only Cargo.toml and Cargo.lock drift in
+PostgreSQL, MySQL and SQLite; words component inputs are current. Regenerate
+all three families with their canonical builders, pinned Rust1.98.1, authenticated
+WASI SDK34, pinned wasi-virt, locked/offline dependencies and retained owned
+component target. Do not alter source identity checks or stamp old artifacts
+with new receipts. Outputs allowed to change are only the three component
+receipts and their10 declared Wasm artifacts. The component target was removed
+during the authorized cleanup; account for real rebuild cost, not warm evidence.
+
+Run each producer under its1800s cap and capacity/reserve admission, preserving
+partial/failed evidence. Good enough: actual producers succeed; changed outputs
+validate against current source/tool provenance; existing PostgreSQL/MySQL/SQLite
+qualification and mutation controls plus component qualification pass; actual
+component host assertions remain in the ensuing integrated gate. Inspect binary/
+receipt differences, file-size/diff checks and scoped exact-candidate review.
+No speed claim: this restores required inputs before measuring the current gate.
+Stop after qualification; do not optimize component builds absent evidence that
+they dominate the required iteration scenarios. Final phase gates/V5 stay OPEN.
