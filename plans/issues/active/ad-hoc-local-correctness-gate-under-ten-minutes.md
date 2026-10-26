@@ -17246,3 +17246,24 @@ receipt differences, file-size/diff checks and scoped exact-candidate review.
 No speed claim: this restores required inputs before measuring the current gate.
 Stop after qualification; do not optimize component builds absent evidence that
 they dominate the required iteration scenarios. Final phase gates/V5 stay OPEN.
+
+V1bo refinement from actual production: after restoring the SDK and locked fetch,
+all three producers compiled their guests but publication failed with EXDEV because
+the configured Cargo target and source checkout are on different filesystems.
+PostgreSQL355.002s, MySQL25.321s, SQLite39.825s remain failed; no receipts/artifacts
+were published. Root cause is staging under target followed by Path.replace into
+the crate. Stage publication on the destination crate filesystem instead, retaining
+atomic per-file replacement and the existing prepare-all-before-publish ordering.
+The words producer has the identical defect; include that two-line sibling repair
+and regenerate its artifact/receipt/qualification digest because its builder input
+changes. This is one publication contract, not a new compiler optimization.
+
+Add behavioral controls using a simulated cross-device rename boundary and a
+failed component producer; require complete published receipts/artifacts on success
+and unchanged previous outputs on production failure. Register these controls in
+the existing component qualification self-test. No new cache, source identity
+exception, profile change or non-atomic copy fallback. Actual builders across the
+two existing filesystems are the integration regression. Allow only the two builder
+edits, their focused test/checker wiring, phase record, three SQL family outputs,
+and words artifact/receipt/qualification JSON. All production must finish before
+source-frozen qualification and scoped review.
