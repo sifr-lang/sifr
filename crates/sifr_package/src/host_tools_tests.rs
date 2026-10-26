@@ -35,7 +35,7 @@ fn host_tool_graph_resolves_locked_host_entrypoint() {
 
 #[test]
 fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
-    for namespace in ["build", "cache", "sysroot"] {
+    for namespace in ["build", "cache", "sysroot", "__emit-batch"] {
         let reserved = ToolFixture::new(&format!("reserved_{namespace}"));
         reserved.write_manifest(&format!(
             "[tools.{namespace}]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
