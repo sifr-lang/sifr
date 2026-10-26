@@ -2,7 +2,7 @@
   "schema_version": 2,
   "audited_at": "2026-09-09",
   "source": "https://index.crates.io/{prefix}/{crate}",
-  "maintained_manifests": 157,
+  "maintained_manifests": 158,
   "direct_declarations": 215,
   "packages": [
     {
