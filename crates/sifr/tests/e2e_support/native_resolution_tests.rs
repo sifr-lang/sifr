@@ -2,10 +2,14 @@ use super::harness_behavior_tests::compiled_case_for_test;
 use super::*;
 
 fn group(dependency: &Path, epoch: &str) -> BatchGroup {
+    named_group(dependency, epoch, "resolution_probe")
+}
+
+fn named_group(dependency: &Path, epoch: &str, name: &str) -> BatchGroup {
     let mut case = compiled_case_for_test(
         FixtureCase {
-            name: "resolution_probe".into(),
-            path: PathBuf::from("resolution_probe.sifr"),
+            name: name.into(),
+            path: PathBuf::from(format!("{name}.sifr")),
             source: "def main(): pass".into(),
             source_hash: "same-fixture-source".into(),
             _expected_stderr: Vec::new(),
@@ -282,4 +286,48 @@ fn test_current_groups_do_not_protect_obsolete_unselected_groups() {
     assert_eq!(retired, vec![cache_group_path(root, "obsolete")]);
     assert!(cache_group_path(root, "selected").is_dir());
     assert!(!cache_group_path(root, "obsolete").exists());
+}
+
+#[test]
+fn test_native_retirement_removes_only_unselected_native_package() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().canonicalize().unwrap();
+    let dep = root.join("dependency");
+    dependency(&dep, "1.0.0", 4);
+    let lease = native_cache::NativeCache::acquire(&root.join("cache")).unwrap();
+    let config = config(&lease);
+    let selected = group(&dep, "selected");
+    let retired = named_group(&dep, "retired", "retired_probe");
+    let first = build(&lease, &config, &[selected.clone(), retired.clone()]);
+    assert_eq!(execution(&lease, &first[0]), "4\n");
+    assert!(first[1].build_error.is_none(), "{:?}", first[1].build_error);
+    for built in &first {
+        std::fs::remove_file(built.group_root.join("pending")).unwrap();
+        std::fs::write(built.group_root.join("completed"), b"completed").unwrap();
+    }
+    let dependencies = std::fs::read_dir(config.cache.root.join("native-target/debug/deps"))
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("libresolution_dep")
+        })
+        .collect::<Vec<_>>();
+    assert!(!dependencies.is_empty());
+    let mut manifest = read_cache_manifest(&config.cache.root);
+    for entry in manifest.entries.values_mut() {
+        entry.built_at_unix_secs = 0;
+    }
+    write_cache_manifest(&config.cache.root, &manifest);
+    initial_cache_manifest(&lease, &config, &[selected]);
+    assert!(
+        !first[1].group_root.exists(),
+        "retirement must actually succeed"
+    );
+    assert!(!first[1].artifact_path.as_ref().unwrap().exists());
+    assert!(first[0].artifact_path.as_ref().unwrap().is_file());
+    assert!(dependencies.iter().all(|path| path.is_file()));
 }

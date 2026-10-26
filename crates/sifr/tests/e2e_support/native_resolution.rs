@@ -27,7 +27,12 @@ struct Receipt {
 }
 
 fn digest(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    use std::fmt::Write as _;
+    let mut result = String::with_capacity(64);
+    for byte in Sha256::digest(bytes) {
+        let _ = write!(result, "{byte:02x}");
+    }
+    result
 }
 
 fn read_owned(path: &Path) -> io::Result<Option<Vec<u8>>> {
