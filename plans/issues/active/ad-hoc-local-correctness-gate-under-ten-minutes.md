@@ -17037,3 +17037,75 @@ fixtures, dependencies and environment inputs unchanged by the integration edit.
 Scoped exact-candidate review and intermediate PR/merge remain required.
 Stop tuning this item when these criteria pass; return to remaining integration
 failures and a current complete warm gate. All final phase/V5 acceptance stays open.
+
+### V1bk delivered — single-owner Python example execution
+
+Merged [PR #4498](https://github.com/sifr-lang/sifr/pull/4498) as
+5b952c65d8204d851595ed9a3ca6c0ff6e99c1fe. Final tested/reviewed candidate
+4b6196fa61f32a2789c9cd4cb68ef630a5b08182; merged tree verified identical.
+Final retained-native-target lifecycle passes all29 cases in184.203s/224.090
+child CPU seconds versus423.354s/580.024CPU:56.49% wall and61.37% CPU reduction.
+The initially empty native-cache prototype separately passed254.897s; do not
+compare that as the matched warm result. Workspace/interpreter prerequisites
+are unchanged and excluded from both example lifecycle timings.
+
+28 focused preparation tests,82 setup-policy tests, complete verification-runner
+and Python-runner self-tests, profile validation, size and diff checks pass.
+Both correctness-only emitted assertion plans are byte-identical. Six unchanged/
+source/bridge/negative/recovery controls pass with execution-input binding to
+the final candidate. Exact evidence: v1bk-focused-v2,
+v1bk-python-single-pass-final, v1bk-python-single-pass-cold,
+v1bk-python-input-controls and v1bk-python-lifecycle-baseline.
+Initial focused harness failed before tests with a missing compiler-path
+environment variable; v1bk-focused remains failed, not passing coverage.
+
+Independent review SATISFIED/no blockers in49.482s:
+v1bk-review-5uzsbinx/response.md, response SHA256
+24cc9a83141eb69a7a370c381f7c6d95bfd4ed0ccbda92d725465d75b1f3b7af.
+The reviewer misstated0785aaca as an ancestor of the PR base; it is a descendant
+docs-only commit. Our actual evidence binding uses the verified changed-path
+and compiler-byte comparison from0785aaca to4b6196fa, so that prose error does not
+affect input equality. Follow-ups: cosmetic README wrapping; show retained/cold
+state beside future integrated timings. Artifact attachment failed at the app's
+100-identity cap; PR remains linked here and in the HTML report.
+
+Macro criterion satisfied: stop tuning Python examples. No new cache, shared
+runtime process, weakened trust identity, assertion omission or profile-selection
+change. Final phase gates and V5 remain OPEN; no whole-gate under600s claim.
+
+### V1bl prospective integration recovery — descriptor release observations
+
+Before another whole-gate measurement, resolve the known socket/lease assertion
+failures from V1bb. Their shared candidate cause is transient fork-before-exec
+copies of close-on-exec descriptors: dropping the original descriptor does not
+prove the last OS reference is gone. Preserve tests proving that actual live
+owners/explicit inherited child leases remain protected; never force-unlock a
+shared open-file description or turn a busy owner into success.
+
+Inspect existing production/test contracts and reproduce with controlled ownership.
+Change only the incorrect observation boundary if production behavior is correct:
+wait boundedly for the actual release condition where eventual release is required,
+while preserving fail-fast rejection when a live owner must exclude a contender.
+Prefer existing helpers/explicit ownership over arbitrary sleeps, retries of a
+whole category, test serialization or suppressing a failure.
+
+Good enough: deterministic controls establish Pending/busy while a duplicate is
+alive and Closed/acquirable only after all intended references release; original
+failure/diagnostic/output/recovery assertions remain checked. Run focused tests,
+then the affected parallel crate/E2E configuration, positive selected counts,
+fmt/size and exact-candidate scoped review. No speed claim from race repair.
+Use retained targets and30-minute category caps; preserve failures and source
+identity. Next restore actual SQL component provenance, then run the complete
+current warm correctness gate to choose further macro work.
+
+V1bl boundary refinement after inspection: standalone E2E execution reacquires its
+suite lease between cases, so this is also a harness execution transition, not only
+an assertion. Keep NativeCache::acquire immediate for admission/busy-owner tests.
+Add an explicitly bounded acquisition variant for standalone execution, capped at
+one second and the caller's remaining deadline; poll only the kernel lock, never
+rerun compilation/assertions. It must return the existing busy error if a real
+owner still holds the lease. Use the same bounded variant for tests explicitly
+observing release. Do not adopt the41-minute product-cache wait policy here.
+The controlled fork reproduction proves this mechanism; it does not identify the
+specific historical child. Add actual held-reference/deadline controls so the
+repair is qualified independently of that attribution.

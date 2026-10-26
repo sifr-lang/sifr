@@ -395,18 +395,7 @@ fn unrelated_live_children_do_not_keep_the_suite_busy() {
 // Concurrent forks briefly retain CLOEXEC descriptors until exec. This bound
 // admits that transition but cannot conceal a 30-second live inherited lease.
 fn acquire_after_release(root: &Path) -> std::io::Result<NativeCache> {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
-    loop {
-        match NativeCache::acquire(root) {
-            Err(error)
-                if error.kind() == std::io::ErrorKind::WouldBlock
-                    && std::time::Instant::now() < deadline =>
-            {
-                std::thread::sleep(std::time::Duration::from_millis(1));
-            }
-            result => return result,
-        }
-    }
+    NativeCache::acquire_with_wait(root, std::time::Duration::from_secs(1))
 }
 
 #[cfg(unix)]
@@ -417,4 +406,42 @@ impl Drop for NativeChild {
         let _ = self.0.kill();
         let _ = self.0.wait();
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn bounded_acquisition_preserves_retained_child_reference_and_waits_for_release() {
+    use std::time::{Duration, Instant};
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().canonicalize().unwrap();
+    let owner = NativeCache::acquire(&root).unwrap();
+    let mut retained = Command::new("unused");
+    owner.bind_command(&mut retained).unwrap();
+    drop(owner);
+    // A bound Command owns its descriptor even before spawn. Dropping the
+    // original must not unlock that shared open-file description.
+    assert_eq!(
+        NativeCache::acquire(&root).err().unwrap().kind(),
+        std::io::ErrorKind::WouldBlock,
+    );
+    let limit = Duration::from_millis(20);
+    let started = Instant::now();
+    assert_eq!(
+        NativeCache::acquire_with_wait(&root, limit)
+            .err()
+            .unwrap()
+            .kind(),
+        std::io::ErrorKind::WouldBlock,
+    );
+    assert!(started.elapsed() >= limit);
+    // Deliberately retain the reference beyond the first acquisition attempt,
+    // then release it; success must still come from acquiring the OS lock.
+    let releaser = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(30));
+        drop(retained);
+    });
+    let next = acquire_after_release(&root).unwrap();
+    releaser.join().unwrap();
+    assert!(NativeCache::acquire(&root).is_err());
+    drop(next);
 }

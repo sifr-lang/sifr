@@ -54,7 +54,22 @@ mod tests {
         let mut bytes = [0; 5];
         left.read_exact(&mut bytes).unwrap();
         assert_eq!(&bytes, b"frame");
+        let duplicate = right.try_clone().unwrap();
         drop(right);
-        assert_eq!(socket_readiness(&left).unwrap(), SocketReadiness::Closed);
+        // A descriptor close is not peer closure while another reference lives.
+        assert_eq!(socket_readiness(&left).unwrap(), SocketReadiness::Pending);
+        drop(duplicate);
+        // Parallel libtest forks can briefly retain CLOEXEC references until
+        // exec. Observe actual peer closure without consuming socket data.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
+        loop {
+            let state = socket_readiness(&left).unwrap();
+            if state == SocketReadiness::Pending && std::time::Instant::now() < deadline {
+                std::thread::sleep(std::time::Duration::from_millis(1));
+                continue;
+            }
+            assert_eq!(state, SocketReadiness::Closed);
+            break;
+        }
     }
 }

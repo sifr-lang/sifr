@@ -31,6 +31,16 @@ impl NativeCache {
     }
 
     pub(crate) fn acquire(requested: &Path) -> io::Result<Self> {
+        Self::acquire_with_wait(requested, std::time::Duration::ZERO)
+    }
+
+    /// Admit a release transition without overriding any live owner's lock.
+    /// Unrelated forks may retain CLOEXEC descriptors until they reach exec.
+    pub(crate) fn acquire_with_wait(
+        requested: &Path,
+        limit: std::time::Duration,
+    ) -> io::Result<Self> {
+        let started = std::time::Instant::now();
         let absolute = if requested.is_absolute() {
             requested.to_path_buf()
         } else {
@@ -43,7 +53,18 @@ impl NativeCache {
         let lease = sifr_cache_storage::open_entry_lock(&root, "suite", false)?;
         #[cfg(windows)]
         let lease = sifr_cache_storage::entry_lock(&root, "suite")?;
-        lease.try_lock().map_err(|error| {
+        let acquired = loop {
+            match lease.try_lock() {
+                Err(std::fs::TryLockError::WouldBlock) if started.elapsed() < limit => {
+                    std::thread::sleep(
+                        std::time::Duration::from_millis(1)
+                            .min(limit.saturating_sub(started.elapsed())),
+                    );
+                }
+                result => break result,
+            }
+        };
+        acquired.map_err(|error| {
             let kind = match &error {
                 std::fs::TryLockError::WouldBlock => io::ErrorKind::WouldBlock,
                 std::fs::TryLockError::Error(error) => error.kind(),
