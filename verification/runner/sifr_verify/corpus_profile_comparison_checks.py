@@ -36,38 +36,22 @@ class CorpusProfileComparisonTests(unittest.TestCase):
                         command, 0, "\n".join(map(json.dumps, records))))
 
     def test_development_execution_requires_the_exact_case_and_one_pass(self):
-        import contextlib
-        import io
-        from unittest.mock import patch
+        from dataclasses import replace
         from .corpus_ownership import CORPUS_CASE
         from .errors import VerificationError
+        from .process_execution import Outcome
         passed = (f"test {CORPUS_CASE} ... ok\n"
                   "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 871 filtered out;\n").encode()
-        with patch.object(self.profiles.subprocess, "run",
-                          return_value=subprocess.CompletedProcess([], 0, passed)) as run, \
-             contextlib.redirect_stdout(io.StringIO()):
-            self.profiles.run_development("/prepared/driver-test", Path("/source"), {})
-        self.assertEqual(run.call_args.args[0],
-                         ["/prepared/driver-test", "--exact", CORPUS_CASE, "--ignored", "--nocapture"])
+        outcome = Outcome(0, "exit", passed, b"", False, 1.0)
+        self.profiles.validate_development(outcome)
         for output in (b"", passed.replace(b"1 passed", b"0 passed"),
                        passed.replace(b"0 ignored", b"1 ignored"),
                        passed.replace(CORPUS_CASE.encode(), b"other_test")):
-            with self.subTest(output=output), patch.object(
-                self.profiles.subprocess, "run",
-                return_value=subprocess.CompletedProcess([], 0, output)
-            ), contextlib.redirect_stdout(io.StringIO()), self.assertRaises((VerificationError, RuntimeError)):
-                self.profiles.run_development("/prepared/driver-test", Path("/source"), {})
-
-    def test_failed_development_assertions_keep_their_diagnostic_output(self):
-        import contextlib
-        import io
-        from unittest.mock import patch
-        stream = io.StringIO()
-        with patch.object(self.profiles.subprocess, "run",
-                          return_value=subprocess.CompletedProcess([], 101, b"assertion details\n")), \
-             contextlib.redirect_stdout(stream), self.assertRaises(subprocess.CalledProcessError):
-            self.profiles.run_development("/prepared/driver-test", Path("/source"), {})
-        self.assertEqual(stream.getvalue(), "assertion details\n")
+            with self.subTest(output=output), self.assertRaises((VerificationError, RuntimeError)):
+                self.profiles.validate_development(replace(outcome, stdout=output))
+        for change in ({"returncode": 101}, {"cause": "safety_deadline"}, {"truncated": True}):
+            with self.subTest(change=change), self.assertRaises(VerificationError):
+                self.profiles.validate_development(replace(outcome, **change))
 
     def test_exact_outputs_accept_set_order_only_and_reject_missing_or_changed_coverage(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -34,6 +34,34 @@ class BatchExecutionTests(unittest.TestCase):
                             completed=lambda index, result: outcomes.__setitem__(index, result), **kwargs)
         return outcomes
 
+    def test_command_environments_are_isolated_and_frozen_before_dispatch(self):
+        env = dict(os.environ, SHARED_VALUE="shared")
+        overrides = [{"CASE_VALUE": "first"}, {"CASE_VALUE": "second"}]
+        original = [dict(value) for value in overrides]
+        results = {}
+        def completed(index, outcome):
+            results[index] = outcome
+            env["SHARED_VALUE"] = "changed"
+            overrides[1]["CASE_VALUE"] = "changed"
+        program = "import os; print(os.environ['SHARED_VALUE'], os.environ['CASE_VALUE'])"
+        batch.execute_batch([command(program)] * 2, cwd=Path.cwd(), env=env,
+                            env_overrides=overrides, max_parallel=1, completed=completed)
+        self.assertEqual(results[0].stdout, b"shared first\n")
+        self.assertEqual(results[1].stdout, b"shared second\n")
+        self.assertEqual(overrides[0], original[0])
+
+    def test_invalid_environment_overrides_reject_before_spawn(self):
+        env = {SAFETY_DEADLINE_ENV: str(time.monotonic() + 60)}
+        invalid = ([], [{}, {}], [None], [{1: "value"}], [{"key": 2}],
+                   [{SAFETY_DEADLINE_ENV: str(time.monotonic() + 120)}])
+        with patch.object(batch.subprocess, "Popen", side_effect=AssertionError("spawned")):
+            for overrides in invalid:
+                with self.subTest(overrides=overrides), self.assertRaises(ValueError):
+                    self.run_batch([command("pass")], env=env, env_overrides=overrides)
+            with self.assertRaises(ValueError):
+                self.run_batch([command("pass")], env={}, env_overrides=[
+                    {SAFETY_DEADLINE_ENV: env[SAFETY_DEADLINE_ENV]}])
+
     def test_zero_invalid_limits_and_thread_reject_before_spawn(self):
         with patch.object(batch.subprocess, "Popen", side_effect=AssertionError("spawned")):
             for commands, kwargs in [([], {}), ([[]], {}), ([command("pass")], {"max_parallel": True}),

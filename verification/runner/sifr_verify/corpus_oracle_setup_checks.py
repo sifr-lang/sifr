@@ -70,32 +70,28 @@ class CorpusOraclePreparationTests(unittest.TestCase):
         self.record()
         output = self.root / "published"
         env = self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(output), "SIFR_DX8_CORPUS_CASES": "partial"}
-        def run(command, **kwargs):
-            destination = Path(kwargs["env"]["SIFR_DX8_CORPUS_OUTPUT"])
-            destination.mkdir()
-            (destination / "coverage.json").write_text("fresh report")
-            return subprocess.CompletedProcess(command, 0,
-                (f"test {CORPUS_CASE} ... ok\n"
-                 "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 871 filtered out;\n").encode())
-        with patch.object(self.builder.subprocess, "run", side_effect=run) as execute, \
+        def run(artifacts, root, snapshot, base, environment, version):
+            self.assertEqual(artifacts["development"], self.development)
+            self.assertEqual(artifacts["oracle"], str(self.binary))
+            self.assertEqual(root, self.root)
+            self.assertEqual(snapshot, self.snapshot)
+            for name in ("development", "release"):
+                destination = base / name
+                destination.mkdir()
+                (destination / "coverage.json").write_text("fresh report")
+        with patch.object(self.builder, "run_profiles", side_effect=run) as execute, \
+             patch.object(self.builder.subprocess, "run") as cargo, \
              patch.object(self.builder, "compare_profiles") as compare:
             self.builder.run_corpus(self.root, env)
-        self.assertEqual(execute.call_count, 2)
-        calls = execute.call_args_list
-        self.assertEqual(calls[0].args[0][0], self.development["driver_test"])
-        self.assertEqual(calls[1].args[0][0], str(self.binary))
-        self.assertEqual(calls[0].kwargs["env"]["SIFR_SYSROOT"], str(self.root))
-        self.assertEqual(calls[1].kwargs["env"]["SIFR_SYSROOT"], str(self.snapshot))
-        for call in calls:
-            self.assertNotIn("SIFR_DX8_CORPUS_CASES", call.kwargs["env"])
+        execute.assert_called_once()
+        cargo.assert_not_called()
         compare.assert_called_once()
         self.assertEqual((output / "coverage.json").read_text(), "fresh report")
 
     def test_profile_comparison_failure_does_not_publish_a_reference(self):
         self.record()
         output = self.root / "published"
-        with patch.object(self.builder, "run_development"), \
-             patch.object(self.builder.subprocess, "run"), \
+        with patch.object(self.builder, "run_profiles"), \
              patch.object(self.builder, "compare_profiles", side_effect=AssertionError("different")):
             with self.assertRaises(AssertionError):
                 self.builder.run_corpus(self.root, self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(output)})
@@ -193,12 +189,12 @@ class CorpusOraclePreparationTests(unittest.TestCase):
     def test_failed_oracle_execution_keeps_partial_evidence_without_publication(self):
         self.record()
         published = self.root / "published"
-        def fail(command, **kwargs):
-            output = Path(kwargs["env"]["SIFR_DX8_CORPUS_OUTPUT"])
+        def fail(artifacts, root, snapshot, base, environment, version):
+            output = base / "development"
             output.mkdir()
             (output / "failed-case.source.rs").write_text("partial evidence")
-            raise subprocess.CalledProcessError(1, command)
-        with patch.object(self.builder.subprocess, "run", side_effect=fail), \
+            raise subprocess.CalledProcessError(1, ["corpus profiles"])
+        with patch.object(self.builder, "run_profiles", side_effect=fail), \
              patch.object(self.builder, "compare_profiles") as compare:
             with self.assertRaises(subprocess.CalledProcessError):
                 self.builder.run_corpus(self.root, self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(published)})

@@ -15859,3 +15859,31 @@ no language-method admission or compiler dispatch rule moved or was exempted.
 The filesystem scanner still inventories its eight moved I/O sites. Preserve the
 two pre-existing entrypoint binding failures and two pre-existing filesystem
 omissions as separate phase integration repairs.
+
+### V1av bounded corpus execution and ordinary qualification
+
+Candidate 2c2ab948 completed all ten ordinary diagnostic stages. Both compiler
+profiles passed all 732 fixtures; installed qualification passed all 745 commands
+including four native cases. Oracle preparation took 11.391020s, with all 336
+normal Cargo artifacts fresh and no existing compiler-library fingerprint changed.
+Installed metadata execution took 363.893141 guarded seconds. Independent boundary,
+host-install and structural checks passed. Distribution passed 71 of 72 variants:
+its static workflow contract requires the mandatory -p sifr to appear explicitly
+in the locked release command. Keep that mandatory package literal and reserve
+the optional package array for the verification oracle.
+
+The sequential ownership design does not yet establish the desired integrated
+execution benefit. Execute the two independent corpus processes within the
+already admitted process budget (at most two), with distinct sysroots and fresh
+output directories. Set inner Rayon/Cargo jobs to one when overlapping. Reuse the
+canonical process owner, inherited deadlines, bounded output and cleanup rules;
+freeze per-command environments before admission. Missing, duplicate, truncated,
+failed or zero-test outcomes cannot publish a reference. Complete ordinary
+failures in the other independent profile, retain both diagnostics, and compare
+every fixture before publication.
+
+This is a critical-path experiment, not a claim of reduced total compiler work.
+Accept it only after measuring full installed execution, checking all original
+assertions and required rebuild invalidation. Stop tuning this item once compatible
+compilation reuse, coverage, invalidation and a material net benefit are established;
+then move to the largest remaining category. Final phase acceptance remains open.

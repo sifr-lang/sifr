@@ -480,3 +480,10 @@ ordinary test failures. Final case lines follow selection order and explicitly m
 unexecuted cases incomplete. Quoted child output is emitted on command completion;
 runner-owned command heartbeats remain visible while it runs. Overlapping case
 seconds are diagnostic costs, not category wall time to add together.
+
+Corpus profile execution uses the existing normal driver libtest and release
+oracle. The metadata-corpus owner runs both against isolated output directories,
+within its admitted process slots (maximum two); parallel children use one inner
+worker. Both current outcomes and complete byte/map/module comparisons are required
+before publishing a reference. Failed or incomplete output remains diagnostic
+evidence and cannot satisfy the delegated normal assertion.

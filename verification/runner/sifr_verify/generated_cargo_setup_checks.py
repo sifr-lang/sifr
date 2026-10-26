@@ -429,11 +429,12 @@ class SetupPolicyTests(unittest.TestCase):
 
 
 def policy_checks() -> None:
+    from .corpus_execution_checks import CorpusExecutionTests
     from .ci_smoke_setup_checks import SmokePreparationChecks
     from .generated_target_reuse_checks import GeneratedTargetReuseTests
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
                                for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests,
-                                            SysrootSetupPolicyTests, CorpusOraclePreparationTests, CorpusProfileComparisonTests, ReleaseCompilerPreparationTests, SmokePreparationChecks,
+                                            SysrootSetupPolicyTests, CorpusExecutionTests, CorpusOraclePreparationTests, CorpusProfileComparisonTests, ReleaseCompilerPreparationTests, SmokePreparationChecks,
                                             GeneratedTargetReuseTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():

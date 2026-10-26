@@ -306,11 +306,11 @@ mkdir -p "${OUTPUT_DIR}"
 for target in "${SELECTED_TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
     python3 "${SCRIPT_DIR}/metadata_artifact.py" --require-native-target "${target}"
-    release_packages=(-p sifr)
+    release_packages=()
     if [[ "${PREPARE_CORPUS}" -eq 1 ]]; then
       release_packages+=(-p sifr_corpus_oracle)
     fi
-    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --locked --release "${release_packages[@]}" --target "${target}"
+    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --locked --release -p sifr "${release_packages[@]}" --target "${target}"
     binary_path="${CARGO_TARGET_DIR:-target}/${target}/release/sifr"
   else
     binary_path="${BINARY}"

@@ -25,16 +25,10 @@ def prepare_development(root: Path, env: dict[str, str], run=subprocess.run) -> 
     return {"driver_test": artifacts.pop()}
 
 
-def run_development(binary: str, root: Path, env: dict[str, str]) -> None:
+def validate_development(result) -> None:
     from sifr_verify.corpus_ownership import CORPUS_CASE
-    result = subprocess.run([binary, "--exact", CORPUS_CASE, "--ignored", "--nocapture"],
-                            cwd=root, env=env, check=False, stdout=subprocess.PIPE)
-    print(result.stdout.decode("utf-8"), end="", flush=True)
-    result.check_returncode()
     from sifr_verify.native_test_roles import require_one_executed_case
-    from types import SimpleNamespace
-    require_one_executed_case(SimpleNamespace(cause="exit", returncode=result.returncode,
-                                             truncated=False, stdout=result.stdout), CORPUS_CASE)
+    require_one_executed_case(result, CORPUS_CASE)
     if f"test {CORPUS_CASE} ... ok".encode() not in result.stdout.splitlines():
         raise RuntimeError("development libtest did not execute the declared corpus assertion")
 
