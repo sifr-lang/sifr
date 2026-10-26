@@ -369,6 +369,20 @@ and manifests are replaced only when their bytes change. Native builds serialize
 with the explicit `--cargo-build-jobs` budget; requested group workers and actual
 workers are printed separately. Fixture selection is unchanged.
 
+Native project names bind the fixture/source/generated Rust, rendered Cargo
+manifest and vendor configuration. The complete compiler dependency plan still
+owns grouping, metadata assertions and resolution freshness. A changed plan
+resolves a fresh lock in an isolated staging project before publishing it into
+the retained native project. Unrelated workspace-lock entries therefore do not
+rename identical native code. Previous resolution inputs and failed staging
+directories are retained. Successful staging is removed after publication.
+
+The resolution receipt records which plan received fresh resolution; it is not
+a lock checksum or a passing test result. Cargo validates the lock and all
+dependencies on every build, including path-manifest edits that can legitimately
+update a lock. Corrupt Cargo inputs, failed resolution and failed builds cannot
+authorize execution of an old binary.
+
 Executables are selected from successful Cargo JSON output for the exact package,
 manifest and binary target. Fresh executables also require a matching integrity
 receipt. A failed build, missing executable, malformed result or unexpected bytes
@@ -388,8 +402,10 @@ racing or waiting indefinitely. Native commands use the existing bounded process
 capture with a 30-minute deadline and child cleanup. Completed group retirement uses Cargo package-scoped cleanup for each recorded
 profile/target before removing generated inputs. This removes the retired group's
 executables, fingerprints and incremental output while preserving shared native
-dependencies and other groups. Failed, interrupted and unmarked group directories
-are retained; a failed cleanup retains the group and its log. Do not remove the cache or its permanent lock while consumers exist.
+dependencies and other groups. Groups selected by the current plan are protected
+from TTL retirement before use; expired success records are still discarded and
+do not authorize a pass. Obsolete unselected groups remain eligible for retirement.
+Failed, interrupted and unmarked group directories are retained; a failed cleanup retains the group and its log. Do not remove the cache or its permanent lock while consumers exist.
 
 Cargo source freshness is timestamp based, not a claim of content checksum
 validation for all dependency inputs. Generated writes compare bytes even if

@@ -20,6 +20,8 @@ mod harness_behavior_tests;
 
 mod native_cache;
 mod native_cache_tests;
+mod native_resolution;
+mod native_resolution_tests;
 
 mod fixture_execution;
 mod fixture_execution_tests;

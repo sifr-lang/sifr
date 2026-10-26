@@ -118,7 +118,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     let env_signature = cache_env_signature();
     setup_stage.finish("pass", serde_json::json!({}));
     let cache_stage = stage("cache_prepare", serde_json::json!({}));
-    let initial_manifest = initial_cache_manifest(&lease, config);
+    let initial_manifest = initial_cache_manifest(&lease, config, &groups);
 
     cache_stage.finish(
         "pass",

@@ -16120,3 +16120,43 @@ Use focused lifecycle/allocation regressions and the complete affected corpus,
 then exact-candidate independent review. Stop when the avoidable repeated work
 is removed and the next larger current cost is identified; do not keep tuning
 small residual seconds. Full final gates and V5 still determine the600s goal.
+
+### V1ay measured root cause and narrowed implementation scope
+
+Current canonical-default measurements at05754257: test-harness preparation
+14.194s guarded; first full corpus251.333s guarded (244.288s suite); unchanged
+repeat104.248s guarded (100.532s suite). Both executed all732 fixtures.
+Native work was189.706s with0/186 fresh group executables, then44.922s with186/186
+fresh. Source work was42.540s then42.804s; runtime11.289s then12.568s.
+
+All186 generated Rust files, dependency manifests and resolved lock graphs are
+identical across the first run's old/new group pairs after normalizing only the
+generated root package name. The sole dependency-plan difference is the global
+Cargo.lock content hash. The workspace lock change added the verification-owned
+corpus oracle and its driver dev-dependency; no generated-program dependency
+changed. Nonetheless the full plan fingerprint changed every group/package name.
+Evidence: v1ay-e2e-baseline/, v1ay-e2e-repopulation-input-comparison.json.
+
+Narrow the implementation to native project identity and resolution lifetime.
+Derive a group's publication identity from its fixture/source/generated-Rust
+identity plus the actual rendered native manifest and vendor configuration.
+Retain the complete dependency-plan fingerprint for grouping, metadata assertions,
+success records and resolution invalidation. When that fingerprint changes,
+resolve a fresh Cargo lock graph in an isolated staging project using the same
+manifest/vendor inputs; atomically publish validated lock bytes and input-bound
+resolution metadata. Cargo must still validate/build every invocation. Changed
+actual dependencies must rebuild; unchanged resolved inputs may remain fresh.
+Keep previous resolution inputs and failed staging evidence. Do not merely drop
+the workspace lock from all freshness checks or trust an old lock after drift.
+
+Protect groups selected by the current plan from TTL retirement; obsolete
+unselected groups keep their existing retirement/ownership rules. Test real
+Cargo reuse after unrelated resolution-input changes, changed dependency
+selection, missing/corrupt/interrupted preparation, fresh executable integrity,
+failure isolation and active/expired retirement. Run the complete corpus and a
+representative input-change scenario before independent review.
+
+Defer worker tuning: the larger demonstrated waste is repeated native
+compilation caused only by project renaming. The two-hour expiration and missing
+Cargo marker remain separately evidenced; no safety-check bypass or deletion of
+historical failed-retirement evidence is authorized by this item.

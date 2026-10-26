@@ -575,7 +575,7 @@ pub(crate) fn test_prune_cache_manifest_removes_expired_entries_and_orphan_group
         ]),
     };
 
-    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs, |_| Ok(()));
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs, &HashSet::new(), |_| Ok(()));
     assert_eq!(pruned.entries.len(), 1);
     assert!(pruned.entries.contains_key("live-key"));
     assert!(cache_group_path(&root, live_group).is_dir());
@@ -650,7 +650,7 @@ pub(crate) fn test_prune_cache_manifest_keeps_shared_live_group_for_fresh_entry(
         ]),
     };
 
-    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs, |_| Ok(()));
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs, &HashSet::new(), |_| Ok(()));
     assert_eq!(pruned.entries.len(), 1);
     assert!(pruned.entries.contains_key("fresh-key"));
     assert!(cache_group_path(&root, shared_group).is_dir());
@@ -684,6 +684,7 @@ fn test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependenc
             entries: BTreeMap::new(),
         },
         20000,
+        &HashSet::new(),
         |_| Ok(()),
     );
     for name in ["failed", "interrupted", "unmarked"] {
@@ -715,7 +716,7 @@ fn test_no_cache_retains_records_but_still_validates_cargo_and_artifact_integrit
     let manifest_path = cache_manifest_path(&config.cache.root);
     let sentinel = b"existing invalid success manifest must remain untouched";
     native_cache::write_changed(&manifest_path, sentinel).unwrap();
-    let manifest = initial_cache_manifest(&lease, &config);
+    let manifest = initial_cache_manifest(&lease, &config, &[]);
     assert!(manifest.entries.is_empty());
     let case = FixtureCase {
         name: "no_cache_control".into(),
@@ -822,6 +823,7 @@ fn test_failed_native_retirement_keeps_completed_group_evidence() {
             entries: BTreeMap::new(),
         },
         20000,
+        &HashSet::new(),
         |_| Err("intentional retirement failure".into()),
     );
     assert!(group.is_dir());
