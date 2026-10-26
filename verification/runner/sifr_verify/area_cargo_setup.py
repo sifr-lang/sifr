@@ -39,23 +39,6 @@ def prepare_area_graphs(profile, env, run):
         if name == "fuzz_property" and "fuzz-smoke" in suites:
             run(["cargo", "build", "--locked", "--offline", "-p", "sifr_driver",
                  "--bin", "diagnostic_rendering_harness"], env=env)
-        if name == "python_interop":
-            selected = sorted(set(suites).intersection({
-                "callback-examples", "dataframe-examples", "buffer-examples",
-                "arrow-examples", "dlpack-examples", "ml", "libraries",
-                "async-declaration-examples", "async-context-examples"}))
-            if selected:
-                root = REPO_ROOT / "verification/areas/python_interop"
-                command = ["uv", "run", "--project", str(root), "--locked", "python",
-                           str(root / "runner/prepare_examples.py")]
-                active = env.copy()
-                active.pop("VIRTUAL_ENV", None)
-                for suite in selected:
-                    command.extend(["--suite", suite])
-                # One process retains the canonical compiler resolver while each
-                # selected fixture still certifies and builds independently.
-                run(command, env=active)
-
         if name == "runtime_platform":
             from .runtime_sanitizer_preparation import SANITIZER_SUITES
             selected = sorted(set(suites).intersection(SANITIZER_SUITES))

@@ -87,7 +87,7 @@ class PythonPreparationTests(unittest.TestCase):
         self.assertEqual(calls.count("python_environment"), 1)
         for owner in ("area_python_interop", "area_sql_platform", "toolchain_cargo_test_sifr_full"):
             self.assertIn("python_environment", run.blocked_by(owner))
-        for name in ("crate_tests", "authoring", "area_graph_sql_platform", "area_graph_python_interop"):
+        for name in ("crate_tests", "authoring", "area_graph_sql_platform"):
             self.assertEqual(run.results[name]["status"], "blocked", name)
             self.assertNotIn(name, calls)
         self.assertIn("workspace", calls)
@@ -95,20 +95,19 @@ class PythonPreparationTests(unittest.TestCase):
         self.assertFalse(run.blocked_by("area_generated_code_quality"))
         self.assertIsNone(run.fatal_reason)
 
-    def test_example_failure_after_environment_success_does_not_block_sql_or_crates(self):
-        nodes, consumers = cargo_preparation_plan(load_profile("merge"), {}, lambda *a, **kw: None)
-        def fail():
-            raise CommandFailed(9, "exit")
-        simulated = [Preparation(n.name, n.requires,
-                                 fail if n.name == "area_graph_python_interop" else lambda: None,
-                                 n.unsafe_on_failure) for n in nodes]
-        run = PreparationRun(simulated, consumers, no_fail_fast=True)
-        with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(CommandFailed):
-            run.run()
-        self.assertEqual(run.results["python_environment"]["status"], "pass")
-        self.assertTrue(run.blocked_by("area_python_interop"))
-        self.assertFalse(run.blocked_by("area_sql_platform"))
-        self.assertFalse(run.blocked_by("toolchain_cargo_test_sifr_full"))
+    def test_examples_keep_environment_dependency_without_precompilation(self):
+        for name in ("create-pr", "merge"):
+            with self.subTest(profile=name):
+                profile = load_profile(name)
+                original = copy.deepcopy(profile)
+                nodes, consumers = cargo_preparation_plan(profile, {}, lambda *a, **kw: None)
+                names = {node.name for node in nodes}
+                self.assertNotIn("area_graph_python_interop", names)
+                self.assertIn("python_environment", consumers["area_python_interop"])
+                self.assertIn("workspace", consumers["area_python_interop"])
+                self.assertIn("authoring", consumers["area_python_interop"])
+                self.assertEqual(profile, original, "preparation changed assertion selection")
+                PreparationRun(nodes, consumers)
 
     def test_real_preparation_callback_keeps_storage_and_uses_locked_canonical_project(self):
         original = {"CARGO_TARGET_DIR": "/owned/target", "CARGO_BUILD_JOBS": "2",

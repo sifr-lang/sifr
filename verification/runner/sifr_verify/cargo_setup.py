@@ -123,7 +123,7 @@ def cargo_preparation_plan(profile, env, command_runner, *, identity=None):
             add(name, requires,
                 lambda fn=adapter: fn(profile, setup_env, command_runner), (f"area_{area}",))
     for area in profile.get("selected_areas", []):
-        if area["area"] in {"sql_platform", "fuzz_property", "python_interop"} or (
+        if area["area"] in {"sql_platform", "fuzz_property"} or (
             area["area"] == "runtime_platform"
             and {"sanitizer-smoke", "sanitizer-full"}.intersection(area["suites"])
         ):
