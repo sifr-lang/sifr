@@ -18,6 +18,10 @@ mod dependency_plan_authority_tests;
 mod e2e_entrypoints;
 mod harness_behavior_tests;
 
+mod direct_execution;
+pub(crate) use direct_execution::build_and_run_capture_with_deps;
+mod direct_execution_tests;
+
 mod native_cache;
 mod native_cache_tests;
 mod native_resolution;

@@ -2145,31 +2145,122 @@
     },
     {
       "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_and_run_capture_with_deps",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&src_dir).map_err(|err| format!(\"failed to create dir: {err}\"))?;",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_and_run_capture_with_deps",
-      "operation": "write",
-      "site": "std::fs::write(tmp_dir.join(\"Cargo.toml\"), cargo_toml)",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
-      "symbol": "build_and_run_capture_with_deps",
-      "operation": "write",
-      "site": "std::fs::write(src_dir.join(\"main.rs\"), rust_source)",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/e2e_support/batch_execution.rs",
       "symbol": "initial_cache_manifest",
       "operation": "write",
       "site": "let _ = std::fs::write(&log, format!(\"{}\\n{}\", capture.stdout, capture.stderr));",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution.rs",
+      "symbol": "execute",
+      "operation": "read_to_string",
+      "site": "Some(path) => match std::fs::read_to_string(path) {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution.rs",
+      "symbol": "execute",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(build.group_root.join(\"pending\")).map_err(|error| error.to_string())?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "dependency",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "dependency",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "dependency",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "dependency_fingerprints",
+      "operation": "read_dir",
+      "site": "for item in std::fs::read_dir(fingerprints).unwrap() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "dependency_fingerprints",
+      "operation": "exists",
+      "site": "if path.exists() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "dependency_fingerprints",
+      "operation": "metadata",
+      "site": "std::fs::metadata(path).unwrap().modified().unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_reuses_dependencies_preserves_crate_root_and_invalidates_real_inputs",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_parallel_callers_keep_distinct_programs_and_working_directories",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_parallel_callers_keep_distinct_programs_and_working_directories",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(result.build.group_root.join(\"work/marker\")).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_preserves_failures_rejects_busy_owner_and_recovers_missing_resolution",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_preserves_failures_rejects_busy_owner_and_recovers_missing_resolution",
+      "operation": "exists",
+      "site": "assert!(failed.build.group_root.join(\"preserve\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_preserves_failures_rejects_busy_owner_and_recovers_missing_resolution",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(failed.build.group_root.join(\"Cargo.lock\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_preserves_failures_rejects_busy_owner_and_recovers_missing_resolution",
+      "operation": "exists",
+      "site": "assert!(recovered.build.group_root.join(\"Cargo.lock\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/direct_execution_tests.rs",
+      "symbol": "standalone_preserves_failures_rejects_busy_owner_and_recovers_missing_resolution",
+      "operation": "exists",
+      "site": "assert!(broken_root.join(\"preserve\").exists());",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/tests/e2e_support/batch_isolation_tests.rs",
