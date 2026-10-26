@@ -1,11 +1,11 @@
 {
   "artifacts": [
     {
-      "core_sha256": "6bef52a9ba8bd6b4adbe623381add9bd2118b651df789c675b629946ecf88410",
+      "core_sha256": "55c49e1d2b08c71802df8ea03a38bd6e5c59a13fd732658d1779012de5f79ab8",
       "path": "components/sqlite-3.53.4.wasm",
       "series": "3.53.4",
-      "sha256": "2cf51c7d8cd6f1f12632cb173734ee10fe3d087242b3fddef837ff9c3dd20b7f",
-      "size_bytes": 2025845
+      "sha256": "6307096cb3becf35ec2ed140e05d9b664136235dcee6a72411b2233032060ebb",
+      "size_bytes": 2327976
     }
   ],
   "parser": {
@@ -34,8 +34,8 @@
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
-      "Cargo.lock": "57c11b83bf67773970930acaf0c848172a49c7585447d288ab034f9c597943cf",
-      "Cargo.toml": "6b1a0e2be45d3d35b392efca0de5139bcd0bb99e159b1399b2c2edfbe481d398",
+      "Cargo.lock": "7fec4c231f9f47f9efad092be62eb641bdd4d21e715eae1e613e837467a11997",
+      "Cargo.toml": "cb8295c0ce7b3d667fb0f60fe51609c724dff8dc039adc0cc29e6f86fb709735",
       "crates/sifr_compiler_component/Cargo.toml": "1bfee37797bd5bde03b68cd86f4988a772b7d2565b726f57c53b3b2c75077b1d",
       "crates/sifr_compiler_component/build.rs": "2fbb1c185edfcfdced9597884b5a66477085e52a80ac17872bf8bd38944f4bac",
       "crates/sifr_compiler_component/src/cache.rs": "24760870764d218a011d2e05a3e275366775f553dc092b6bde4b10be78d13c77",
@@ -160,13 +160,13 @@
       "third_party/ruff/crates/ruff_text_size/src/serde_impls.rs": "55f62df0d9fe3bbca8188b4c974b3d7545fbbfa624a74c696769977efa9bbd2f",
       "third_party/ruff/crates/ruff_text_size/src/size.rs": "c080576fb63fe7b65dfcea6b07e2f2e004140930e9f947c2c48632ee0f0a5836",
       "third_party/ruff/crates/ruff_text_size/src/traits.rs": "3aef3ac8ac0f1dad4cfa1ccbe1469b2b4a1fcf684f97a985bbe88a0a3d2b0fb3",
-      "verification/areas/sql_platform/tools/build_sql_components.py": "7d96c2213d1f900d2622ca0221ca005b4f6412fd5293b2b9e7c1e570f6203cc3",
+      "verification/areas/sql_platform/tools/build_sql_components.py": "e347cc78ddd035636de4960027e37cfe928c9d7c18da1882776ae3cab11aed87",
       "verification/areas/sql_platform/tools/build_sqlite_component.py": "4143f40ca82c82d8a66d2e2c1a0f2abdc84ae394a23289d7950f4eb90cbd66b9",
       "verification/areas/sql_platform/tools/component_provenance.py": "21bb0dd619f92ed86b67a4d0c1ff7f4f19b3d68a0bee6bbf6f41b0385b4793e5",
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "644774797ed8fca86c52f4be86ed70462923b808946c6a27d76ea9ba93924b19",
+    "source_sha256": "43270c8d0382efd17a212224ea6c938fd708bacfbf787e955d720a44c8259233",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

@@ -29,7 +29,8 @@ def main() -> int:
     ], cwd=ROOT, check=True)
     encoder = target / "release" / ("componentize.exe" if os.name == "nt" else "componentize")
     core = target / "wasm32-unknown-unknown/release/sifr_component_fixture_words.wasm"
-    with tempfile.TemporaryDirectory(prefix="words-component-", dir=target) as raw_stage:
+    # Publication uses atomic rename; Cargo targets may be on another filesystem.
+    with tempfile.TemporaryDirectory(prefix="words-component-", dir=crate) as raw_stage:
         stage = Path(raw_stage)
         output = stage / "words_component.wasm"
         subprocess.run([str(encoder), str(core), str(output)], cwd=ROOT, check=True)

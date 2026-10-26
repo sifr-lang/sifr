@@ -1,6 +1,6 @@
 {
   "artifact": "words_component.wasm",
-  "core_sha256": "45798e120cf9685833e64bc646b9a8ceef42d05627a1b9af2a7f0615853b44c4",
+  "core_sha256": "8f32b1fcf9ef81ff3ab7ed888b0d8c1db98460ac93f74fc187486714cc0cf148",
   "provenance": {
     "build_environment": {
       "CARGO_BUILD_JOBS": "2"
@@ -24,19 +24,19 @@
       "crates/sifr_compiler_component/fixtures/words_component/src/lib.rs": "41e46806cedec340df6f37203acde90c90eed9a925d70f879ef0dc62482e401e",
       "crates/sifr_compiler_component/wit/compiler-component.wit": "782c579c390c73463ea739f1a4777a4629d598ab29737fcce719bbdc7deea30f",
       "rust-toolchain.toml": "85db324345b7937c49ea2ac8b962d741f710719f4f751cab809985cbe6afbe3c",
-      "verification/areas/sql_platform/tools/build_words_component.py": "50b416efa62ea39732c9f436c080e11ad5863208d889f793df4214d82fce708e",
+      "verification/areas/sql_platform/tools/build_words_component.py": "d044b516739f47c3f9217768ec1aa0a04c5fce41d7816e9e6b283fbb43145a41",
       "verification/areas/sql_platform/tools/component_provenance.py": "21bb0dd619f92ed86b67a4d0c1ff7f4f19b3d68a0bee6bbf6f41b0385b4793e5",
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd"
     },
-    "source_sha256": "c21e207eb01ad86b94405a09a140ddbe07969e20b84b6bc9b0b1854d6ad83c58",
+    "source_sha256": "df2a42685980a603a48f6c7df0b33253e352909e799bba1c50a046fdfe239210",
     "tools": {
-      "componentizer_sha256": "4ef8b85edc2f26a9b78c85b0a6ef8c7afd9bb7dbc8362b9a4e339ef1abaefb0f",
+      "componentizer_sha256": "c51c4c0b3de0117a27257cce97918832b084b1dccc86a428d8bb1add00048949",
       "wit_bindgen": "0.61.1",
       "wit_component": "0.258.0"
     }
   },
   "schema_version": 1,
-  "sha256": "30664f22954136675add6653cba16bb15f7822fdac4616d1d39eee22122ee89e",
-  "size_bytes": 272310,
+  "sha256": "e713a34eed37919f077722b9a6883fcfb22839725c408054291e87afcc1a28ba",
+  "size_bytes": 272453,
   "target": "wasm32-unknown-unknown"
 }

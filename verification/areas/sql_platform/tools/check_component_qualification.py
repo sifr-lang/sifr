@@ -347,7 +347,8 @@ def run_self_test(payload: dict[str, object]) -> None:
         else:
             raise QualificationError(f"mutation did not fail: {name}")
         mutations.append((name, payload))
-    count = artifact_self_test() + feature_boundary_self_test(REPO_ROOT)
+    from test_component_publication import publication_self_test
+    count = artifact_self_test() + feature_boundary_self_test(REPO_ROOT) + publication_self_test()
     print(f"compiler component qualification self-test ok: mutations={len(mutations) + count}")
 
 

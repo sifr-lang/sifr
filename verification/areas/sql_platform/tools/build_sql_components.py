@@ -49,7 +49,8 @@ def build(family: str) -> int:
     artifacts = []
     manifest = {"schema_version": 2, "target": "wasm32-wasip2",
                 "wit_world": "embedded-language-provider", "protocol_major": 1}
-    with tempfile.TemporaryDirectory(prefix=f"{family}-components-", dir=target) as raw_stage:
+    # Publication uses atomic rename; Cargo targets may be on another filesystem.
+    with tempfile.TemporaryDirectory(prefix=f"{family}-components-", dir=crate) as raw_stage:
         stage = Path(raw_stage)
         for index, series in enumerate(SERIES[family]):
             selection = ["--features", f"postgresql-{series}"] if family == "postgresql" else []
