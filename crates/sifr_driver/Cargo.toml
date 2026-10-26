@@ -46,6 +46,7 @@ toml = { workspace = true }
 tempfile = "3.27.0"
 
 [dev-dependencies]
+sifr_corpus_oracle = { workspace = true }
 sifr_cache_storage = { workspace = true, features = ["test-support"] }
 memchr = { workspace = true }
 tempfile = "3.27.0"

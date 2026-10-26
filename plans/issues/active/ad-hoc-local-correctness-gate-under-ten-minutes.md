@@ -15715,3 +15715,70 @@ claim their sum as the final gate wall time.
 No new architecture is accepted merely by recording this direction. The next
 milestone is a measured feasibility decision, not a promise of ten minutes or a
 collection of unconnected micro-optimizations.
+
+### V1av prospective item — share the corpus oracle with the prepared release graph
+
+Base: 464a178b6484db05f34b9330900ab576ec5066bc. The V1au discovery
+sweep keeps that candidate frozen. Prototype changes are isolated until its
+owned preparations and consumers finish or are explicitly accounted for.
+
+**Required property:** compare every maintained positive fixture through independent
+source-backed and metadata-backed lowering/emission, then compare the installed
+versioned CLI against the resulting reference. Preserve exact Rust bytes, used
+stdlib modules, source maps, marker/newline information, portable metadata payload
+identity, native executions and installation/corruption/relocation/recovery checks.
+The ordinary driver ignored test remains selected and executes the same oracle
+under the development test profile.
+
+**Root cause and proposed boundary:** packaged corpus preparation currently
+compiles the full driver library test in a separate default-test graph with the
+packaged version. Its last complete preparation took 664.336104s, separately
+from the release CLI's 694.099340s. A shared verification-owned oracle library,
+called by the existing ignored test and a small release executable, can use the
+already prepared release compiler libraries. Both consumers retain the same
+source-versus-metadata algorithm; the installed CLI is not used to manufacture
+its own reference. Production driver dependencies do not acquire the oracle.
+
+Use the existing release builder with the same version, profile, host, flags,
+remaps and target; select the CLI alongside the oracle to retain compatible
+dependency features. Oracle construction is a preparation-only operation and
+is not included in shipped artifacts. No external dependency version change,
+blanket feature union, optimization downgrade or cache-key weakening is intended.
+
+**Input ownership:** prepare explicitly and bind the executable, compiler,
+versioned source snapshot, canonical content inventory, tool versions and
+build-affecting environment. Consumers reject missing, stale or failed preparation
+and execute fresh assertions; they do not rebuild or reuse old passing results.
+Source projects, generated runtime isolation and package mutation states remain
+under their existing owners. A changed root manifest/lock is intentional workspace
+integration and can cause an initial rebuild; report that cost separately.
+
+**Named acceptance and stopping condition:**
+
+1. The normal ignored driver test and packaged oracle both execute all 732 current
+   fixtures with all original comparisons. Installed qualification retains its
+   full 745 commands; count changes require an explicit fixture-inventory reason.
+2. Cargo artifact/fingerprint evidence proves shared compiler libraries are fresh
+   after canonical release preparation, with no second full compiler graph.
+   Measure compiler preparation, incremental oracle preparation and execution.
+   Capture actual profile/features/flags where an unexpected rebuild occurs.
+3. Missing/failed/stale preparation, source/snapshot/binary/environment changes,
+   version mismatch, caller target/flags isolation and forbidden packaging mode
+   receive focused regressions. Failed preparation cannot publish a success receipt.
+4. The root lockfile adds only the verification package and its workspace edge.
+   Existing external packages/versions/checksums remain identical. Emitted
+   correctness selections and native assertion inventories remain unchanged.
+5. Run affected setup/policy tests, formatting, file-size/dependency guardrails,
+   full source/metadata and installed corpus, plus affected release/distribution
+   contracts. Test one expensive required invalidation early, retaining its
+   build-plus-execution cost rather than judging only a warm artifact.
+6. Accept only if the measured preparation reduction survives full affected
+   assertions without a material execution regression or a replacement duplicate
+   compiler graph. Stop tuning this item after that boundary is established;
+   the still-expensive canonical compilation and integrated critical path remain
+   separate macro constraints. No fixed per-category time is invented.
+
+External prospective decision: v1av-shared-corpus/decision.json. The isolated
+prototype is not yet accepted. Focused intermediate validation and exact-candidate
+independent review apply; final correctness-only gates and all repeated V5
+scenarios remain mandatory.

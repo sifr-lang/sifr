@@ -139,13 +139,17 @@ class SysrootSetupPolicyTests(unittest.TestCase):
                "RUSTFLAGS": "--cfg caller", "CARGO_BUILD_TARGET": "host"}
         original = dict(env)
         with patch.object(package_build, "prepare_release_compiler") as release, \
-             patch.object(package_build, "prepare_source_snapshot") as snapshot:
+             patch.object(package_build, "prepare_source_snapshot") as snapshot,              patch.object(package_build, "host_triple", return_value="host"),              patch.object(package_build, "record_prepared") as record:
             package_build.prepare(root, env, lambda command, **kw: calls.append((command, kw)))
         corpus, execution_env, producer = runner.corpus_configuration(root, env)
         release.assert_called_once()
         self.assertEqual(release.call_args.args[:2], (root, env))
         snapshot.assert_called_once_with(root, producer, runner.RELEASE_VERSION)
-        self.assertEqual(calls[0][0], [*corpus[:7], "--no-run"])
+        expected, build_env = runner.package_build_configuration(
+            root, execution_env, "host", root / "target/sysroot_release/preparation",
+            prepare_only=True)
+        self.assertEqual(calls[0][0], [*expected, "--prepare-corpus"])
+        record.assert_called_once_with(root, execution_env, producer, "host")
         self.assertEqual(calls[0][1]["env"], execution_env)
         self.assertEqual(execution_env["SIFR_RELEASE_VERSION"], runner.RELEASE_VERSION)
         self.assertEqual(execution_env["SIFR_SYSROOT"], str(producer))
@@ -155,7 +159,8 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         for key in ("CARGO_BUILD_JOBS", "RAYON_NUM_THREADS", "RUSTFLAGS", "CARGO_BUILD_TARGET"):
             self.assertEqual(execution_env[key], original[key])
         self.assertEqual(env, original)
-        self.assertEqual(corpus[-4:], ["full_corpus_exact_emission", "--", "--ignored", "--nocapture"])
+        self.assertEqual(corpus, [sys.executable, str(root /
+            "verification/areas/sysroot_release/package_build.py"), "--run-corpus"])
         self.assertNotIn("SIFR_RELEASE_VERSION", env)
 
     def test_corpus_only_preparation_keeps_release_ownership_with_its_prerequisite(self):
@@ -164,11 +169,11 @@ class SysrootSetupPolicyTests(unittest.TestCase):
         calls = []
         root = Path("/owned/worktree")
         with patch.object(package_build, "prepare_release_compiler") as release, \
-             patch.object(package_build, "prepare_source_snapshot"):
+             patch.object(package_build, "prepare_source_snapshot"),              patch.object(package_build, "host_triple", return_value="host"),              patch.object(package_build, "record_prepared"):
             package_build.prepare(root, {}, lambda *a, **k: calls.append((a, k)), corpus_only=True)
         release.assert_not_called()
         self.assertEqual(len(calls), 1)
-        self.assertIn("--no-run", calls[0][0][0])
+        self.assertIn("--prepare-corpus", calls[0][0][0])
         self.assertEqual(calls[0][1]["env"]["SIFR_RELEASE_VERSION"], package_build.RELEASE_VERSION)
 
     def test_source_preparation_failure_propagates(self):

@@ -7571,6 +7571,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_corpus_oracle"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
+ "sifr_codegen",
+ "sifr_compiler_services",
+ "sifr_frontend",
+ "sifr_lowering",
+ "sifr_stdlib_manifest",
+ "sifr_sysroot",
+]
+
+[[package]]
 name = "sifr_diagnostics"
 version = "0.0.0"
 dependencies = [
@@ -7599,6 +7612,7 @@ dependencies = [
  "sifr_codegen",
  "sifr_compiler_component",
  "sifr_compiler_services",
+ "sifr_corpus_oracle",
  "sifr_diagnostics",
  "sifr_frontend",
  "sifr_identity",
