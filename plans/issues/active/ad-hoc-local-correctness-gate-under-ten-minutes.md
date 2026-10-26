@@ -16208,3 +16208,86 @@ literal operations, semantic owners and contracts are unchanged. Update only
 those four fingerprints; preserve the two pre-existing entrypoint binding
 failures for their integration owner. No compiler or harness implementation
 changes accompany these inventory records. Evidence: v1ay-method-policy-bindings.json.
+
+### V1ay delivered — native E2E publication and resolution lifetime
+
+Merged [PR #4493](https://github.com/sifr-lang/sifr/pull/4493) as
+877e6f12a52cf1fdb3a3f5cf42663447bed37669. Exact reviewed candidate:
+4f6295c933782a22eb51e75156faddc8edb19e35; merged tree verified identical.
+Independent Claude review: SATISFIED, no blockers. Evidence remains outside Git
+as v1ay-independent-review.md and v1ay-review-ctxd_h00/response.md.
+
+All57 focused checks passed (eight lease, six new native lifecycle,43 existing
+affected checks). Complete migration, warm, registered lock-input invalidation,
+restoration and final warm runs each executed all732 fixtures. The invalidation
+refreshed all186 resolution receipts while keeping all186 group IDs, actual
+native inputs and Cargo-fresh executables. Restoration reproduced every original
+native input and resolution receipt exactly. Rust/Cargo/toolchain implementation
+is unchanged between focused-tested dd39fee2 and final4f6295c9; only scoped
+inventory/prose records differ. Final warm execution ran at the final candidate.
+
+| Observation | Before | After |
+| --- | ---: | ---: |
+| Unrelated workspace lock drift, complete suite | 244.288s | 146.448s |
+| Native work in that suite | 189.706s | 84.705s |
+| Steady warm complete suite | 100.532s | 97.225s |
+| Steady warm native validation | 44.922s | 44.099s |
+
+The observed drift suite saved97.840s; native work saved105.000s. These are single
+observations, not a matched repeated benchmark: the baseline drift added an
+unrelated verification package; the registered candidate experiment changed only
+a lock comment and proved parsed graphs equal. First migration278.697s and its
+overlapping inventory scan are not paired acceptance evidence. The earlier
+post-migration warm run111.755s included9.367s attempting186 historical old-ID
+retirements. Failures and preserved directories remain; final warm had no such
+attempts. Guard time for final warm was101.780s, separate from97.225s suite time.
+
+Final method/filesystem self-tests and diff checks passed. Full inventories still
+report only the two pre-existing entrypoint bindings and two driver fixture
+filesystem sites; no full inventory pass is claimed. CI local-first-create-pr
+still fails before setup on missing SIFR_PERFORMANCE_REFERENCE. Other pending CI
+was not substituted for local validation. Full scoped final gates/V5 remain open.
+
+Evidence: v1ay-adoption-evidence.json, v1ay-implementation-equivalence.json,
+v1ay-lock-invalidation/, v1ay-e2e-lock-restoration/, v1ay-final-policy/ and the
+hash-verified v1ay-review-evidence bundle. Original failed attempts remain intact.
+
+Follow-ups: corrupted receipts fail closed and may require explicit recovery;
+do not add silent fallback in this item. A changed full plan already refreshes a
+corrupt lock through staging, so stable group IDs do not by themselves prevent
+that recovery. The private child umask also affects Cargo-created registry/Git
+files for the same owner; it does not change parent or runtime fixture policy.
+Retirement-marker recovery remains separately owned. Changed-input resolution
+still costs roughly40s over native warm work; stop tuning those residual seconds.
+
+### V1az prospective investigation — native SQL clean-build critical path
+
+Base implementation877e6f12. Measure the current native SQL clean A / unchanged A /
+independent B protocol before changing its architecture. The prior453.029s
+protocol and1281.605s SQL preparation are historical observations, not current
+warm forecasts. Separate fresh construction from retained preparation and actual
+assertion execution. Cross-platform checks and benchmarks stay outside this goal.
+
+Capture command wall/CPU time, peak memory, disk use and Cargo unit timing for
+each native build; retain phase boundaries and selected executable hashes. Use
+the existing pinned toolchain/profile, canonical admitted allocation, remapping,
+locked/offline graph and real package identities. Keep the30-minute diagnostic
+cap and capacity reserve. Instrumented attribution is not final timing evidence.
+
+Determine whether the largest costs are required parser/native compilation,
+compiler-host coupling, repeated preparation, linking or resource admission.
+Inspect actual consumers before proposing an extraction or profile change.
+Do not assume Wasmtime is in this graph: the workspace dependency already disables
+the compiler-component default host feature, and the tools' compiler feature is
+optional. Their provider parsers are currently real migration/catalog consumers.
+
+Acceptance/stopping condition: adopt only a structural change with a material
+measured complete-protocol/affected-scenario benefit. Both independent builds must
+still construct the outputs their contract promises; unchanged rebuilding and
+three executable byte comparisons must remain real. Preserve SQL parsing,
+classification, migration/catalog behavior, compiler/runtime boundaries and all
+affected native assertions. No cached passing result, marker bypass or partial
+Cargo check may replace independent construction. Validate affected changes and
+get exact-candidate review. If no avoidable macro cost is demonstrated, record
+the measured constraint and move to a larger cost rather than tuning isolated
+seconds. Final full correctness coverage and every V5 scenario still decide600s.
