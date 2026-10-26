@@ -16719,3 +16719,45 @@ and CLI contracts, and scoped independent review. A library probe does not prove
 public CLI behavior; existing732 installed public CLI emissions and dedicated CLI
 checks remain required. Register any production command/protocol change separately.
 Reject a marginal owner-sharing result; do not grow a universal compiler daemon.
+
+### V1bf rejected — retaining CompilerContext alone is insufficient
+
+The external probe's first build failed after299s of preparation because its
+SourceProviderError conversion did not implement Error; no diagnostic executed.
+The repaired probe built in6.184s overall using retained artifacts. Root Cargo
+inputs and production source remained unchanged; only the external package was
+added to its copied lock. This external graph selected distinct compiler dependency
+features, so its build is not proof of identical root-CLI artifact reuse.
+
+All50 emissions match the previously measured production CLI bytes at identical
+tracked source inputs. Two alternating same-binary rounds over12 sources take
+41.179838s with fresh CompilerContexts versus39.140100s with a shared context;
+child CPU41.556837s versus39.500082s. About4.95% improvement misses the30%
+criterion. Do not extend to264 sources or adopt a new batch path for this result.
+Both variants already run multiple inputs per process, so this experiment isolates
+context lifetime and does not quantify process startup or other invocation caches.
+All12 representative inputs use project-mode emission. Existing single-file
+sessions already own native selection/interop separately; retaining context alone
+does not establish equivalent project-session reuse. Preserve v1bf-probe-build,
+v1bf-probe-build-v2 and v1bf-owner-comparison, including the initial failure.
+No production behavior, coverage or profile changed.
+
+### V1bg prospective repair — reconcile the relocated corpus oracle inventories
+
+The V1bb full discovery exposed the same relocation omission in two inventories:
+strict Cargo package/target classification and maintained first-party Cargo input
+discovery. Repair only these inventories for verification/tools/corpus_oracle.
+Classify its actual Cargo target(s) as test_fixture with merge ownership, preserving
+the independently executed source/metadata oracle and all existing classifications.
+Add its tracked manifest to maintained inputs; preserve lock and pinned-graph
+identities. Do not relax discovery, remove required checks or modify dependencies.
+
+Good enough: actual pinned Cargo metadata matches the package/target declaration;
+all four coverage-matrix readiness variants pass; all six failed dependency-audit
+test binaries execute their full tests and pass (base64, itertools, num-bigint,
+rusqlite, direct Rust dependency versions, syn/prettyplease); file-size and diff
+checks pass; emitted correctness profile selections are unchanged. Include scoped
+independent exact-candidate review and intermediate PR/merge under the approved
+policy. Stop after this root-cause repair; it is correctness recovery, not a claimed
+runtime saving. The independent socket/lease failures, SQL provenance rebuild and
+all final facade/timing qualification remain open and separately owned phase work.
