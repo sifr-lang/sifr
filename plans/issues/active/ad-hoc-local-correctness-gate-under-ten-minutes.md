@@ -17097,3 +17097,15 @@ fmt/size and exact-candidate scoped review. No speed claim from race repair.
 Use retained targets and30-minute category caps; preserve failures and source
 identity. Next restore actual SQL component provenance, then run the complete
 current warm correctness gate to choose further macro work.
+
+V1bl boundary refinement after inspection: standalone E2E execution reacquires its
+suite lease between cases, so this is also a harness execution transition, not only
+an assertion. Keep NativeCache::acquire immediate for admission/busy-owner tests.
+Add an explicitly bounded acquisition variant for standalone execution, capped at
+one second and the caller's remaining deadline; poll only the kernel lock, never
+rerun compilation/assertions. It must return the existing busy error if a real
+owner still holds the lease. Use the same bounded variant for tests explicitly
+observing release. Do not adopt the41-minute product-cache wait policy here.
+The controlled fork reproduction proves this mechanism; it does not identify the
+specific historical child. Add actual held-reference/deadline controls so the
+repair is qualified independently of that attribution.
