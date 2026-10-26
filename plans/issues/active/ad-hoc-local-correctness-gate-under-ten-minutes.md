@@ -15524,3 +15524,194 @@ with failure continuation, retained targets and a 1,800-second cap per category;
 account for every blocked or unexecuted category. Use its current largest costs
 to choose the next repair. Complete final create-pr/merge correctness-only gates
 and all repeated V5 scenarios remain mandatory.
+
+### V1at completed — release-native-object reuse adopted
+
+Merged [PR 4488](https://github.com/sifr-lang/sifr/pull/4488), candidate
+91361ef931433a815b407a17e3c4fbf8db85cd32, base
+da103cee64d18b034572bbb5cda3018ca359ffb9, merge
+b924078733eacb6465353c14416a356f98ffd4fd. Only Cargo.toml changes:
+release lto=thin becomes false; opt-level 3, codegen units, package overrides,
+dependencies, generated application policy and assertion selections remain.
+
+The actual candidate CLI edit builds in 40.795256s with 466/467 artifacts fresh,
+compared with the prior 389.738796s ThinLTO observation: approximately 349s less.
+The executable shows the exact changed help. The original source, watched
+source-directory metadata and target are restored; 467/467 artifacts are fresh
+in 1.421979s and the original binary hash/help match. Snapshot preparation
+365.046s and restoration guard 190.258s are separate experimental reset costs,
+not edit timings or normal gate costs. This is not repeated edit qualification.
+
+The frozen 732-case compiler execution comparison passes its registered limits:
+
+| Metric | Qualified ThinLTO baseline | Actual candidate |
+| --- | ---: | ---: |
+| Three-pair emission batch median | 48.134845s | 49.119266s |
+| Three-pair emission batch worst | 48.913914s | 49.902174s |
+| Median worker CPU | 189.122616s | 192.730889s |
+| Actual canonical release preparation | not rerun in this item | 694.099340s |
+| Packaged corpus compiler preparation | not rerun in this item | 664.336104s |
+
+The approximately 2.05% median / 2.02% worst elapsed and 1.91% median CPU costs
+are accepted within the registered 5% / 10% limits; this is not zero slowdown.
+The baseline package's source 1bc52807e95db71ebc54f80fca38c6b264e09537 has no
+non-documentation changes relative to the implementation base. Both arms retain
+four workers, inner Rayon/Cargo 1, fresh processes and per-run caches, one warmup
+per arm and three alternating measured pairs. All 5,856 accepted commands pass
+exact output assertions. Five parallel per-case outliers were investigated with
+one worker, one warmup per arm and five alternating pairs over eight cases:
+96 fresh commands pass. The five flagged cases are 1.04–3.06% slower in serial
+median; the largest contextual case is 4.85%, with CPU agreeing. This does not
+identify an individual LLVM pass or guarantee throughput for every workload.
+
+The known V1aq fresh-build comparison remains 705.478962s with false versus
+675.487712s with ThinLTO. V1at's actual canonical preparation is 694.099340s.
+Neither establishes a cold-build improvement or a full gate under 600 seconds.
+Do not combine observations from different runs as one gate or critical path.
+
+Named validation passes: 25 release/setup self-tests; resolved Cargo graph and
+both emitted correctness plans unchanged; profiles, format, file-size and diff
+checks; all 72 full distribution variants; boundary-equivalence, structural,
+installed smoke/heavy, full metadata-corpus and path-leakage contracts. Installed
+qualification executes 745 commands: 732 exact emissions, four native programs,
+and existing integrity/relocation/generation/negative/recovery controls. Five
+separate development metadata/doctor controls pass. Source reference generation
+retains source-vs-metadata lowering/emission, used modules and source-map checks.
+
+Two failed preflights remain failed: the first had 10,617,098,240 available bytes
+against 10,737,418,240 required; the second met that requirement but hit an
+unnecessary additional 64 MiB diagnostic margin. Neither executed candidate
+assertions. R3 prospectively removes only that added margin, retains allocation,
+reserve and all comparison limits, and repeats the interrupted third pair
+alongside its baseline. The old third baseline remains an extra unpaired passing
+732-command run, excluded before replacement results: 5,856 accepted versus
+6,588 total benchmark commands. All owned sessions are empty.
+
+All 16,756 evidence payloads, graph/plan identities, command output hashes,
+corpus outputs, timing aggregates and reset evidence were independently verified
+locally. Archive SHA-256:
+70d842f226ead8686fa1166f554b2e53eb18bb06076203f4bbb73f3013d00bf0.
+External records: v1at-native-release, v1at-local-verification.json and
+v1at-review.jrcFYN/response.md, keyed by the exact candidate above. Scoped
+independent review: SATISFIED, no blocking findings; response SHA-256:
+ba1bce5835ce9a658c3eb4c3f69247904855e293e5ab17913c747f0e430aad74.
+Review suggestions are recorded: preserve the execution/cold-build tradeoff and
+baseline lineage; future profile experiments should capture effective rustc LTO
+flags because Cargo artifact profile JSON omits LTO. No extra experiment is
+required to close this accepted item. The release comment describes local
+ThinLTO generally; single-codegen-unit overrides remain unchanged.
+
+V1at is complete. Final correctness-only create-pr/merge gates and every V5
+scenario remain OPEN. Continue with the following user-directed structural
+milestone rather than further isolated profile tuning.
+
+### V1au prospective direction — stop at sufficient evidence and attack structural cost
+
+User direction (2026-10-26): finish V1at, then prioritize the complete local
+correctness architecture and define what is good enough for each category.
+Cross-platform execution and benchmark capture remain outside this goal; selected
+local correctness assertions remain inside it. This does not waive any final V5
+scenario, native assertion, optimized-code contract or intermediate review.
+
+#### Decision and stopping rule
+
+Before starting or extending work on a category, record a short decision card:
+its required property and isolation; exact selected assertions; compatible inputs
+and invalidation triggers; current preparation/execution/cleanup cost; proposed
+total-work and critical-path reduction; tradeoff; named acceptance evidence; and
+the condition for keeping, rejecting or stopping the change. Unknown quantities
+stay unknown until measured. A successful small optimization is not an invitation
+to continue polishing the same category.
+
+An item is good enough when its named correctness, isolation and invalidation
+criteria pass, its measured tradeoff is accepted, and remaining cost is not the
+next material obstacle to the integrated target. Close that item and move on.
+This item-level stopping rule is distinct from final phase acceptance: all final
+gates and three complete passing runs below 600 seconds in every required V5
+scenario remain mandatory. Existing runner warm/cold labels are not substitutes
+for this phase's standard. Do not invent category budgets by adding historical
+timings; allocate a credible integrated budget from the current graph and tests.
+
+| Category | Decision now | Stop / acceptance condition |
+| --- | --- | --- |
+| V1at real release compiler CLI edit | Finish and keep if scoped review passes | All registered adoption checks pass; preserve the measured execution/cold-build tradeoffs. No more tuning for isolated seconds in this item. Frontend/codegen/runtime edits and broad invalidation remain phase work. |
+| Canonical release preparation, observed 694.099s | Structural priority | Reduce required compilation and downstream critical-path cost enough for the integrated invalidation scenario. Required cold construction cannot be renamed bootstrap. |
+| Packaged reference-corpus preparation, observed 664.336s | Structural priority | Compatible consumers reuse compilation, while version checks, source/metadata oracle independence and every corpus assertion remain explicit. Do not assume the whole second build is redundant. |
+| Package hashing, prior 74–84s to about 2.5s | Keep | Complete inventory and identical digests remain verified. Reopen only on a material regression or changed contract. |
+| Full 732-case emission batch, candidate median 49.119s | Keep for now | Retain fresh exact-output assertions; the bounded V1at execution tradeoff is accepted. Do not optimize this one-second regression ahead of eleven-minute compilation. |
+| Python environments and native dependency reuse | Reconcile current integrated evidence | Compatible fixtures share pinned preparation; different inputs invalidate; concurrent consumers and interrupted preparation recover; separate processes and dedicated environment-isolation tests remain. |
+| SQL clean-build protocol | Reconcile current integrated evidence | State exactly what is shared and independently reconstructed, preserve independent output/runtime checks, and measure dependency preparation, generation, compile/link and assertions separately. |
+| Generated programs and runtime | Reconcile current integrated evidence | Compile and execute every fixture, preserve feature/profile/process isolation, and share only compatible dependencies. Existing fixture grouping is accounted for before proposing new batching. |
+| Packaging, integrity, installation, relocation and recovery | Reconcile construction versus assertion cost | Immutable prepared artifacts may be shared; every required assertion executes, and corruption/removal/relocation occur in isolated states that cannot contaminate another consumer. |
+| Remaining guardrails, area checks and crate suites | Measure before prioritizing | Preserve the selected assertions and map their prerequisite graph; optimize material work/critical-path contributions instead of equal effort per row. Small correct checks need no redesign merely to become faster. |
+| Scheduling and resource admission | Follow duplicate-work reduction | Capacity-bounded execution improves measured elapsed time without increased CPU work, swaps, lock contention, flakiness or missing categories. Keep actual reserve policy distinct from diagnostic harness margins. |
+
+#### Current graph and concrete next investigation
+
+A read-only inventory from candidate
+91361ef931433a815b407a17e3c4fbf8db85cd32 reproduces the current emitted
+correctness plans: 18 preparation nodes, 20 areas / 105 selected suites,
+15 guardrails, 38 crate-test suites / 18 configurations, and 732 positive E2E
+fixtures. This is a complete top-level selection inventory, not a completed
+per-assertion coverage/isolation matrix or a new integrated timing result.
+
+Current implementation evidence:
+
+- `verification/areas/common/release_compiler.py` prepares the versioned release
+  CLI in the packaged target root. `package_build.py` prepares a library test
+  executable in the default test profile in that same root. The two preparations
+  therefore do not become equivalent merely by sharing a target directory.
+- `crates/sifr_sysroot/build.rs` embeds the release version, and the package
+  preparation explicitly avoids changing the normal development graph's version.
+  Trace all consumers before replacing this ownership boundary.
+- `crates/sifr_driver/src/metadata_reader/corpus_tests.rs` compares source-backed
+  versus metadata-backed lowering/emission, used standard-library modules and
+  generated source maps for every selected corpus fixture. Installed CLI output
+  is independently checked against that reference. Producing both sides with the
+  same optimized CLI would not preserve this oracle by itself.
+- `cargo_setup.py` declares the preparation dependencies and consumer ownership.
+  `PreparationRun` currently executes nodes in order, and `ProfileRunner` runs
+  selected categories sequentially with internal concurrency. The dependency
+  graph is not itself a measured critical path.
+
+External evidence directory: `v1au-structural-cost-model`, containing the emitted
+plans, preparation/consumer graph, build configurations and selected manifests.
+V1at stage observations are diagnostic stages, not one contiguous gate; do not
+claim their sum as the final gate wall time.
+
+#### Bounded next milestone
+
+1. Finish V1at review/integration and retain its prepared targets and evidence.
+2. Reconcile the current executable inventory with a full correctness discovery
+   sweep, failure continuation and the 1,800-second per-category diagnostic cap.
+   Check capacity first; block only dependent consumers of failed preparation.
+   Explicitly schedule every category left unexecuted by an overall interruption.
+   Preserve exact input identities and reuse applicable evidence rather than
+   repeating unchanged successful qualification for its own sake.
+3. Map each expensive operation to its correctness property and required
+   isolation. Separate preparation, compiler execution, generated Rust compile,
+   linking, runtime assertions, packaging/integrity and cleanup. Record wall/CPU,
+   peak memory, disk and lock wait; distinguish total work, elapsed and critical
+   path. Use targeted tracing only where ordinary timings leave a decision open.
+4. Select the two or three largest structural costs. First investigate canonical
+   and corpus compiler graph/profile/version differences and their actual reuse
+   boundary. Prefer a few explicit compatible build configurations and immutable
+   prerequisites over a universal cache. Only split crates or change generic/API
+   boundaries where unit timings and dependency ownership predict a benefit.
+5. Register the smallest integrated feasibility experiment, including one
+   expensive required invalidation early. Compare build plus execution, not just
+   the warm path. Distinguish compiler executable, generated program/runtime and
+   test-harness optimization; preserve the required optimized-code qualification.
+6. Prove compatible reuse and incompatible rebuilds, independence/concurrency and
+   interruption recovery where affected. Compare assertion inventories before and
+   after. Native runtime assertions must not become snapshots, and required
+   independent construction must remain independent.
+7. Keep or reject the architecture based on integrated benefit and complexity.
+   Implement accepted work in bounded reviewed pieces; run the integrated gate
+   when the candidate is credible, then the existing final repeated qualification.
+   If a required scenario still cannot fit 600 seconds, report the measured
+   limiting work/resource constraint rather than quietly excluding it.
+
+No new architecture is accepted merely by recording this direction. The next
+milestone is a measured feasibility decision, not a promise of ten minutes or a
+collection of unconnected micro-optimizations.
