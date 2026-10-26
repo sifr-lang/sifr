@@ -15887,3 +15887,94 @@ Accept it only after measuring full installed execution, checking all original
 assertions and required rebuild invalidation. Stop tuning this item once compatible
 compilation reuse, coverage, invalidation and a material net benefit are established;
 then move to the largest remaining category. Final phase acceptance remains open.
+
+### V1av delivered — shared corpus compiler and bounded execution
+
+Merged [PR #4490](https://github.com/sifr-lang/sifr/pull/4490) as
+7a600f00c8a022d714b01621a71e98abb01aedd7. Reviewed implementation candidate:
+d24202b7e08b31adeaa5800e869da3bbca089c88. The merge tree is identical to that candidate.
+Independent Claude review was SATISFIED with no blocking findings. Its final
+response is retained outside Git as v1aw-independent-review.md, with original
+local response v1aw-review-nacpk2cg/response.md and exact-candidate review records.
+
+All 161 affected setup, ownership and process-control tests passed. The first
+combined process invocation named a nonexistent module: its 14 batch tests passed,
+and the corrected actual process module separately passed 29 tests. That failed
+command remains retained; it was not reclassified as a pass. Profiles preserve
+selection and assertion ownership; formatting, file-size, dependency direction and
+affected policy relocation checks remain qualified by their unchanged inputs.
+
+Both ordinary and registered release-codegen-unit invalidation campaigns completed
+all ten stages successfully. Each executed both complete 732-fixture compiler
+profiles, exact baseline byte/map/module equivalence, all 745 installed commands
+including four native cases, boundary/host/structural checks and all 72 distribution
+variants. No stage reached its diagnostic cap or left an owned process group.
+No external dependency version changed.
+
+| Observation | Measured time / result |
+| --- | --- |
+| Sequential ordinary installed category, predecessor 2c2ab948 | 363.893s guarded |
+| Bounded parallel ordinary installed category | 285.354s guarded |
+| Saving in that single ordinary comparison | 78.539s |
+| Both ordinary corpus processes | 110.981s elapsed |
+| Required invalidation canonical release build | 671.259s command; 679.169s guarded |
+| Corpus preparation after invalidation | 18.030s; zero existing compiler-library fingerprints changed |
+| Small additional oracle library | one new fingerprint; normal 336/336 Cargo artifacts fresh |
+| Installed category after invalidation | 302.370s guarded |
+| Restore original release artifacts | 458.525s guarded |
+
+The original source was restored exactly. Complete original/restored preparation
+receipts are equal: source inventory, both executable hashes, compiler hash,
+snapshot files, toolchain and build environment. Ordinary corpus evidence therefore
+retains its exact observed inputs. Restoration preparation passed all four stages;
+do not describe the return to the old profile as a cheap no-op.
+
+Evidence: v1aw-parallel-focused/, v1aw-parallel-qualification/,
+v1aw-parallel-native/, v1aw-parallel-invalidation/, v1aw-restored-qualification/,
+v1aw-restored-native/ and v1aw-parallel-focused/restoration-equivalence.json.
+These are intermediate diagnostics, not a contiguous full correctness gate or
+repeated V5 timing qualification. Full phase gates and every V5 scenario remain open.
+The canonical release invalidation build alone exceeds 600s; this item does not
+close the ten-minute goal. Stop tuning this item and pursue the larger compiler
+rebuild constraint.
+
+Non-blocking follow-up owned by verification hardening: replace bare assertions
+in verification/areas/sysroot_release/corpus_profiles.py::compare_profiles with
+explicit failures if the verifier must support optimized Python startup. Current
+qualified entry points execute these assertions. Preserve full mismatch controls;
+do not reopen the delivered compiler-sharing architecture for this suggestion.
+
+CI run 40280469725 retains the same three failing diagnostics seen before this
+item in run 40256643219: performance-reference admission, Windows PostgreSQL 18
+missing dirent.h, and missing E2E report signature. Owners are CI performance
+admission, cross-platform SQL qualification and E2E CI diagnostics respectively.
+The determinism job suppresses its inner log and uploads no artifact, so its
+underlying failure remains unclassified. None is reported passing or repaired.
+The approved intermediate policy governs this merge; final scoped gates remain due.
+
+### Next macro investigation — compiler rebuild and watched-input ownership
+
+The invalidation run observed a still-active sifr_codegen compilation at 354s;
+this is a sampled lower bound, not a finished unit timing. The full canonical
+release command took 671.259s. Start the next bounded investigation by attributing
+that current release-codegen cost. Prior lowering traces are not a codegen-release
+trace; rejected clone relocation and earlier profile experiments remain rejected.
+Use retained evidence before additional builds, pinned diagnostic tooling only
+where attribution is missing, and ordinary uninstrumented timing before adoption.
+Do not add crate boundaries or abstractions without a measured whole-build benefit.
+
+A separate tiny Cargo 1.98.1 probe explains one invalidation mechanism: a
+release-only virtual-workspace manifest edit leaves the normal executable fresh
+without a build script, but a build-script watch on that manifest recompiles it
+even when script output remains constant. Narrowing only the identity hash would
+therefore be insufficient. Investigate watched-input and compiled-identity
+ownership together, retaining complete source/dependency/toolchain/effective-profile
+invalidation and installed/source boundaries. Evidence: v1aw-cargo-invalidation-probe.json.
+No identity policy change or Sifr saving is inferred from the tiny probe.
+
+Before optimizing the recorded 471.416s positive-E2E native stage, measure its
+current fully prepared and representative-edit paths: that historical run included
+artifact repopulation. Its shared native target deliberately serializes publication.
+Any inner-Cargo allocation experiment must retain that ownership and total admitted
+capacity. Prioritize current measured critical-path and total-work costs; move on
+once a category's acceptance boundary is met.
