@@ -5,6 +5,7 @@ Safety deadlines bound each child; they are not an aggregate performance budget.
 """
 import re
 from .errors import VerificationError
+from .corpus_ownership import CORPUS_CASE, CORPUS_OWNER
 from .native_test_roles import preparation_cases, require_one_executed_case
 from .profile_commands import CommandFailed, run_command
 from .native_test_allocation import native_environment, readmit, reserve_monitor
@@ -34,7 +35,8 @@ def selected_native_cases(outcome):
         raise VerificationError("native test inventory is empty, duplicate, or incomplete")
     return tuple(names)
 
-def run_native_configuration(configuration, *, env, no_fail_fast, preparation_complete):
+def run_native_configuration(configuration, *, env, no_fail_fast, preparation_complete,
+                             corpus_owner_selected=False):
     command = configuration.execution()
     if configuration.ids[0] not in NATIVE_SUITES or len(configuration.ids) != 1:
         raise VerificationError("native case scheduling requires one isolated suite")
@@ -49,7 +51,14 @@ def run_native_configuration(configuration, *, env, no_fail_fast, preparation_co
         raise VerificationError("declared native preparation is missing from inventory")
     if helpers and not preparation_complete:
         raise VerificationError("native assertions require successful current-run crate preparation")
-    names = tuple(name for name in names if name not in helpers)
+    delegated = ((CORPUS_CASE,) if corpus_owner_selected
+                 and configuration.ids == ("sifr_driver_generated_builds",) else ())
+    if not set(delegated) <= set(names):
+        raise VerificationError("delegated corpus assertion is missing from native inventory")
+    names = tuple(name for name in names if name not in helpers and name not in delegated)
+    for name in delegated:
+        print(f"[sifr-native-selection] suite={configuration.ids[0]} case={name} "
+              f"role=assertion owner={CORPUS_OWNER} status=delegated")
     if not names:
         raise VerificationError("native selection contains no assertion cases")
     for helper in helpers:

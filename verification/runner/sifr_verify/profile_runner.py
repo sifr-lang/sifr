@@ -29,6 +29,7 @@ from .profile_commands import CommandFailed, cargo_command, run_command, area_co
 from .profile_reporting import run_profile_with_report
 from .compiler_configuration_plan import configuration_plan
 from .native_test_execution import NATIVE_SUITES, run_native_configuration
+from .corpus_ownership import corpus_owner_selected
 from .profiles import crate_test_mode, crate_test_suites_for_mode, load_profile, resolve_fixture_manifest
 from .step_budgets import (
     StepBudgetContext,
@@ -427,6 +428,7 @@ class ProfileRunner:
                 if any(suite in NATIVE_SUITES for suite in configuration.ids):
                     run_native_configuration(
                         configuration, env=self.env, no_fail_fast=self.no_fail_fast,
+                        corpus_owner_selected=corpus_owner_selected(self.profile),
                         preparation_complete=(self.preparation is not None
                             and not self.preparation.fatal_reason
                             and not self.preparation.missing(("crate_tests",))),

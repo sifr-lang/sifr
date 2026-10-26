@@ -493,6 +493,7 @@ def print_summary(requested_profile: str) -> None:
 
 
 def build_profile_plan(profile_name: str, *, correctness_only: bool = False) -> dict[str, Any]:
+    from .corpus_ownership import corpus_assertion_owners
     canonical = load_profile(profile_name)
     profile = select_execution_scope(canonical, correctness_only)
     selected_areas = [
@@ -521,6 +522,7 @@ def build_profile_plan(profile_name: str, *, correctness_only: bool = False) -> 
         "budgets": profile["budgets"],
         "step_budgets": profile.get("step_budgets", {}),
         "selected_areas": selected_areas,
+        "assertion_owners": corpus_assertion_owners(profile),
         "toolchain_steps": list(profile["toolchain_steps"]),
         "guardrail_steps": list(profile["guardrail_steps"]),
         "crate_test_membership": profile.get("crate_test_membership", {}),
@@ -555,6 +557,7 @@ def compare_plans(local_path: str, ci_path: str) -> int:
         "toolchain_steps",
         "guardrail_steps",
         "crate_test_membership",
+        "assertion_owners",
         "e2e",
         "network_policy",
         "cargo_policy",

@@ -1,4 +1,4 @@
-"""Use the normal CLI graph for a second, differently optimized corpus oracle."""
+"""Use the existing normal libtest as the development half of corpus verification."""
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -6,24 +6,37 @@ import subprocess
 
 
 def prepare_development(root: Path, env: dict[str, str], run=subprocess.run) -> dict[str, str]:
-    # Cargo selects the executable, including caller target/configuration overrides.
-    result = run(["cargo", "build", "--locked", "--offline", "-p", "sifr",
-                  "-p", "sifr_corpus_oracle", "--bins", "--message-format=json-render-diagnostics"],
+    # Reuse the normal driver libtest graph already required by crate testing.
+    result = run(["cargo", "test", "--locked", "--offline", "-p", "sifr_driver",
+                  "--lib", "--no-run", "--message-format=json-render-diagnostics"],
                  cwd=root, env=env, check=True, stdout=subprocess.PIPE, text=True)
-    artifacts = {}
+    artifacts = set()
     for line in result.stdout.splitlines():
         message = json.loads(line)
         target = message.get("target", {})
-        name = target.get("name")
-        if (message.get("reason") == "compiler-artifact" and name in {"sifr", "sifr_corpus_oracle"}
-                and "bin" in target.get("kind", []) and message.get("executable")):
-            path = str(Path(message["executable"]).resolve())
-            if name in artifacts and artifacts[name] != path:
-                raise RuntimeError(f"ambiguous development corpus artifact: {name}")
-            artifacts[name] = path
-    if set(artifacts) != {"sifr", "sifr_corpus_oracle"}:
-        raise RuntimeError("Cargo did not report both development corpus executables")
-    return artifacts
+        if (message.get("reason") == "compiler-artifact"
+                and target.get("name") == "sifr_driver"
+                and "lib" in target.get("kind", [])
+                and message.get("profile", {}).get("test") is True
+                and message.get("executable")):
+            artifacts.add(str(Path(message["executable"]).resolve()))
+    if len(artifacts) != 1:
+        raise RuntimeError("Cargo did not report exactly one development driver libtest")
+    return {"driver_test": artifacts.pop()}
+
+
+def run_development(binary: str, root: Path, env: dict[str, str]) -> None:
+    from sifr_verify.corpus_ownership import CORPUS_CASE
+    result = subprocess.run([binary, "--exact", CORPUS_CASE, "--ignored", "--nocapture"],
+                            cwd=root, env=env, check=False, stdout=subprocess.PIPE)
+    print(result.stdout.decode("utf-8"), end="", flush=True)
+    result.check_returncode()
+    from sifr_verify.native_test_roles import require_one_executed_case
+    from types import SimpleNamespace
+    require_one_executed_case(SimpleNamespace(cause="exit", returncode=result.returncode,
+                                             truncated=False, stdout=result.stdout), CORPUS_CASE)
+    if f"test {CORPUS_CASE} ... ok".encode() not in result.stdout.splitlines():
+        raise RuntimeError("development libtest did not execute the declared corpus assertion")
 
 
 def compare_profiles(root: Path, development: Path, release: Path) -> None:

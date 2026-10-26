@@ -1,4 +1,4 @@
-"""Prepare corpus oracles from the existing development and release CLI graphs."""
+"""Prepare corpus verification from the existing driver libtest and release CLI graphs."""
 from __future__ import annotations
 import argparse
 import os
@@ -8,7 +8,7 @@ import sys
 import tempfile
 from producer_snapshot import prepare_source_snapshot
 from corpus_preparation import host_triple, receipt_path, record_prepared, require_prepared
-from corpus_profiles import prepare_development, compare_profiles
+from corpus_profiles import prepare_development, run_development, compare_profiles
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from verification.areas.common.release_compiler import (
@@ -59,14 +59,16 @@ def run_corpus(root: Path, env: dict[str, str]):
     print(f"corpus-profile evidence: {base}", flush=True)
     development_output = base / "development"
     release_output = base / "release"
-    for binary, environment, destination in (
-        (artifacts["development"]["sifr_corpus_oracle"], development_env, development_output),
-        (artifacts["oracle"], release_env, release_output),
-    ):
-        environment = dict(environment, SIFR_DX8_CORPUS_OUTPUT=str(destination))
+    for environment, destination in ((development_env, development_output),
+                                     (release_env, release_output)):
+        environment["SIFR_DX8_CORPUS_OUTPUT"] = str(destination)
         environment.pop("SIFR_DX8_CORPUS_CASES", None)
         environment.pop("SIFR_DX8_SEMANTIC_TARGET", None)
-        subprocess.run([binary, "--fixtures", fixtures], cwd=root, env=environment, check=True)
+    # This is the existing ignored test, executed once under its selected area owner.
+    # A standalone native selection without that owner continues to execute it itself.
+    run_development(artifacts["development"]["driver_test"], root, development_env)
+    subprocess.run([artifacts["oracle"], "--fixtures", fixtures],
+                   cwd=root, env=release_env, check=True)
     compare_profiles(root, development_output, release_output)
     if output is not None:
         import shutil

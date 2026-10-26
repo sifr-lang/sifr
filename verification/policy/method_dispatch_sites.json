@@ -56688,18 +56688,6 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_driver/src/metadata_producer/tests_process.rs::killed_staged_producer_releases_waiters enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs::full_corpus_exact_emission::literal-comparison::1",
-      "fingerprint": "de4700d7544d385a921b832a92644e987b973afbae8f958f9e270d18daf678f1",
-      "classification": "test-assertion",
-      "owner": "test-owner",
-      "operation": "let mut paths = std :: fs :: read_dir ( & root ) . unwrap ( ) . map ( | entry | entry . unwrap ( ) . path ( ) ) . filter ( | path | path . extension ( ) . is_some_and ( | e | e == \"sifr\" ) ) . collect :: < Vec < _ > > ( )",
-      "inputs": "fn full_corpus_exact_emission ( )",
-      "outputs": "implicit unit / macro expansion",
-      "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/metadata_reader/corpus_tests.rs::full_corpus_exact_emission enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/metadata_reader/corpus_tests.rs::full_corpus_exact_emission enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
       "site": "crates/sifr_driver/src/metadata_reader/generation_tests.rs::installed_relocation_and_generation_switch_pin_all_sources::literal-comparison::1",
       "fingerprint": "6c75f60489534ce632c788ec25258fe0f86ce49eace1b0d52f25b5a5575fe55a",
       "classification": "test-assertion",

@@ -51,20 +51,17 @@ def binding(root: Path, env: dict[str, str], snapshot: Path, host: str, developm
                                       env=env, text=True).strip()
     if version != f"sifr-corpus-oracle {RELEASE_VERSION}":
         raise RuntimeError(f"corpus oracle version mismatch: {version!r}")
-    if set(development) != {"sifr", "sifr_corpus_oracle"}:
-        raise RuntimeError("development compiler and oracle must be explicitly prepared")
-    development_version = subprocess.check_output([development["sifr"], "--version"],
-                                                 cwd=root, env=env, text=True).strip()
-    oracle_version = subprocess.check_output([development["sifr_corpus_oracle"], "--version"],
-                                            cwd=root, env=env, text=True).strip()
-    if not development_version.startswith("sifr ") or oracle_version != (
-            "sifr-corpus-oracle " + development_version.removeprefix("sifr ")):
-        raise RuntimeError("development compiler and corpus oracle versions differ")
+    from sifr_verify.corpus_ownership import CORPUS_CASE
+    if set(development) != {"driver_test"}:
+        raise RuntimeError("development driver libtest must be explicitly prepared")
+    listing = subprocess.check_output([development["driver_test"], "--list", "--ignored"],
+                                      cwd=root, env=env, text=True)
+    if listing.splitlines().count(CORPUS_CASE + ": test") != 1:
+        raise RuntimeError("development driver libtest lacks the exact corpus assertion")
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "development": development,
         "development_sha256": {name: digest(Path(path)) for name, path in development.items()},
-        "development_version": development_version,
         "inputs": inventory(root)["input_digest"],
         "host": host,
         "version": RELEASE_VERSION,

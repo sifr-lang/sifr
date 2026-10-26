@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from .cargo_sysroot_setup_checks import sysroot_module
+from .corpus_ownership import CORPUS_CASE
 
 
 class CorpusOraclePreparationTests(unittest.TestCase):
@@ -28,7 +29,7 @@ class CorpusOraclePreparationTests(unittest.TestCase):
         self.binary.parent.mkdir(parents=True)
         self.binary.write_text("oracle executable")
         self.binary.with_name("sifr").write_text("compiler executable")
-        self.development = {name: str(self.root / name) for name in ("sifr", "sifr_corpus_oracle")}
+        self.development = {name: str(self.root / name) for name in ("driver_test",)}
         for path in self.development.values():
             Path(path).write_text("development executable")
         self.env = {"RUSTFLAGS": "--cfg caller", "CARGO_PROFILE_RELEASE_OPT_LEVEL": "3"}
@@ -36,10 +37,8 @@ class CorpusOraclePreparationTests(unittest.TestCase):
         def output(command, **kwargs):
             if command[0] == str(self.binary):
                 return f"sifr-corpus-oracle {package_build.RELEASE_VERSION}\n"
-            if command == [self.development["sifr"], "--version"]:
-                return "sifr 0.0.0\n"
-            if command == [self.development["sifr_corpus_oracle"], "--version"]:
-                return "sifr-corpus-oracle 0.0.0\n"
+            if command == [self.development["driver_test"], "--list", "--ignored"]:
+                return CORPUS_CASE + ": test\n\n1 test, 0 benchmarks\n"
             if command == ["rustc", "-vV"]:
                 return "release: pinned\nhost: host\n"
             if command == ["cargo", "--version"]:
@@ -75,12 +74,15 @@ class CorpusOraclePreparationTests(unittest.TestCase):
             destination = Path(kwargs["env"]["SIFR_DX8_CORPUS_OUTPUT"])
             destination.mkdir()
             (destination / "coverage.json").write_text("fresh report")
+            return subprocess.CompletedProcess(command, 0,
+                (f"test {CORPUS_CASE} ... ok\n"
+                 "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 871 filtered out;\n").encode())
         with patch.object(self.builder.subprocess, "run", side_effect=run) as execute, \
              patch.object(self.builder, "compare_profiles") as compare:
             self.builder.run_corpus(self.root, env)
         self.assertEqual(execute.call_count, 2)
         calls = execute.call_args_list
-        self.assertEqual(calls[0].args[0][0], self.development["sifr_corpus_oracle"])
+        self.assertEqual(calls[0].args[0][0], self.development["driver_test"])
         self.assertEqual(calls[1].args[0][0], str(self.binary))
         self.assertEqual(calls[0].kwargs["env"]["SIFR_SYSROOT"], str(self.root))
         self.assertEqual(calls[1].kwargs["env"]["SIFR_SYSROOT"], str(self.snapshot))
@@ -92,7 +94,8 @@ class CorpusOraclePreparationTests(unittest.TestCase):
     def test_profile_comparison_failure_does_not_publish_a_reference(self):
         self.record()
         output = self.root / "published"
-        with patch.object(self.builder.subprocess, "run"), \
+        with patch.object(self.builder, "run_development"), \
+             patch.object(self.builder.subprocess, "run"), \
              patch.object(self.builder, "compare_profiles", side_effect=AssertionError("different")):
             with self.assertRaises(AssertionError):
                 self.builder.run_corpus(self.root, self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(output)})
@@ -102,8 +105,7 @@ class CorpusOraclePreparationTests(unittest.TestCase):
     def test_content_and_build_environment_changes_invalidate_preparation(self):
         changes = [
             ("oracle", lambda: self.binary.write_text("changed oracle")),
-            ("development oracle", lambda: Path(self.development["sifr_corpus_oracle"]).write_text("changed")),
-            ("development compiler", lambda: Path(self.development["sifr"]).write_text("changed")),
+            ("development driver test", lambda: Path(self.development["driver_test"]).write_text("changed")),
             ("compiler", lambda: self.binary.with_name("sifr").write_text("changed compiler")),
             ("snapshot", lambda: (self.snapshot / "sysroot.toml").write_text("changed source")),
             ("snapshot addition", lambda: (self.snapshot / "new").write_text("new source")),
@@ -162,14 +164,16 @@ class CorpusOraclePreparationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("--prepare-corpus requires --prepare-only", result.stderr)
 
-    def test_development_oracle_version_must_match_its_compiler(self):
+    def test_prepared_libtest_must_list_the_exact_corpus_case(self):
         original = self.preparation.subprocess.check_output.side_effect
-        def output(command, **kwargs):
-            if command == [self.development["sifr_corpus_oracle"], "--version"]:
-                return "sifr-corpus-oracle 9.9.9\n"
-            return original(command, **kwargs)
-        with patch.object(self.preparation.subprocess, "check_output", side_effect=output):
-            with self.assertRaisesRegex(RuntimeError, "development compiler and corpus oracle"):
+        for listing in ("other_case: test\n", (CORPUS_CASE + ": test\n") * 2):
+            def output(command, **kwargs):
+                if command == [self.development["driver_test"], "--list", "--ignored"]:
+                    return listing
+                return original(command, **kwargs)
+            with self.subTest(listing=listing), patch.object(
+                self.preparation.subprocess, "check_output", side_effect=output
+            ), self.assertRaisesRegex(RuntimeError, "lacks the exact corpus"):
                 self.record()
         self.assertFalse(self.preparation.receipt_path(self.root).exists())
 

@@ -8901,7 +8901,7 @@ the same attested inputs passes all30 suites/30 variants,7 capabilities,9 compil
 evidence records and3 zero-resource checks; all29 runtime examples pass. Preserve
 those original failures and the source-bound combination attestation.
 
-Full positive E2E takes295.843s guarded /292.619s in the suite: all732 original
+Full positive E2E takes295.843s guarded /292.619s in the suite: all 732 original
 fixture IDs have passing source compilation and fresh runtime outcomes, with186
 successful native groups, zero original batch failures and exact once-only group
 membership. This is one diagnostic observation, not repeated V5 qualification.
@@ -15812,3 +15812,50 @@ Affected relocation validation passed using pinned Python 3.14.7 against a
 hash-verified 2315-file source snapshot: 3553 filesystem sites scanned, eight
 moved sites classified, scanner mutation self-tests passed, and exactly the
 same two baseline omissions remained. Native qualification is still pending.
+
+### V1av measured execution tradeoff and single assertion ownership
+
+The dual CLI-oracle prototype at da9ad526 is **not accepted**. Native preparation
+proved the intended build reuse: no existing compiler-library fingerprints changed,
+and only the two oracle libraries were added. Release oracle Cargo work took
+3.952580s, development oracle Cargo work 4.778981s; preparation including snapshot
+and binding took 24.142313s. The ordinary normal ignored test passed all 732 cases
+in 108.14s of assertions (169.848553s including its changed harness build).
+Both oracle profiles passed in 204.879018s, and complete output comparison against
+the preserved baseline passed. Boundary qualification passed in 133.762071 guarded
+seconds. These are bounded measurements, not a passing integrated gate.
+
+That design introduces a third complete corpus pass in a full profile. Its
+preparation saving therefore does not justify accepting it unchanged for the
+ten-minute development goal. The remaining ordinary qualification and registered
+profile invalidation were not run on that revision; their obligations remain open.
+
+The revised ownership replaces the extra development oracle executable with the
+already required normal driver libtest. Packaged corpus verification executes the
+exact existing ignored test once and the release oracle once, compares every
+fixture, and performs all installed checks. A profile selecting that packaged
+suite declares it as the owner of the normal corpus assertion; native case
+scheduling reports delegation and does not repeat that same test. If the owner
+suite is absent, the native selection continues to execute it. A delegated result
+is never a pass and cannot satisfy a failed or blocked owner.
+
+This supersedes the earlier requirement for an additional normal CLI oracle.
+It preserves both compiler profiles and the original named normal assertion.
+The category and fixture selections stay unchanged; emitted plans additionally
+declare assertion ownership. The current stopping condition is: compatible build
+reuse in both existing graphs, two total complete corpus passes rather than three,
+all 732 cases and 745 installed commands, exact bytes/maps/modules and independent
+metadata checks, complete missing/stale/zero-test/ownership failure controls, and
+measured preparation-plus-execution benefit including required invalidation.
+No previous failed or unexecuted result is reclassified. Final phase gates and V5
+remain mandatory.
+
+The affected policy scan also found one obsolete driver-tree record for the
+extracted fixture-extension filter. Remove exactly that test-assertion record:
+the method-dispatch inventory scans product crate sources under crates/, while
+the oracle is now a verification-owned tool (like the other tools outside that
+scan). Its unchanged fixture filter remains in the shared verification function;
+no language-method admission or compiler dispatch rule moved or was exempted.
+The filesystem scanner still inventories its eight moved I/O sites. Preserve the
+two pre-existing entrypoint binding failures and two pre-existing filesystem
+omissions as separate phase integration repairs.
