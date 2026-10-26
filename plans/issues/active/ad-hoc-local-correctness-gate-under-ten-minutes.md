@@ -15318,3 +15318,41 @@ Each preparation, build and qualification category retains the 1,800-second cap,
 capacity/reserve admission and owned-process cleanup. Snapshot/restore must be
 reversible and occur only between completed guarded categories. A failure blocks
 its consumers and remains preserved; no zero-test or missing outcome is a pass.
+
+### V1as prospective follow-up — distinguish clean-build cost from edit-build cost
+
+Registered before execution; no profile policy is adopted. V1aq's complete
+fresh-build comparison rejected cross-crate LTO removal as a cold-build saving.
+It did not measure the edit loop. V1ar's real CLI edit already takes 375.511s with
+incremental compilation and ThinLTO despite 466/467 Cargo artifacts being fresh.
+This is new evidence for a narrower question: whether retained native library
+objects avoid repeating whole-program optimization after an executable edit.
+
+After V1ar's guarded consumers and restoration finish, reuse V1aq's inactive
+Cargo lto=false target at its original path and flags. Keep opt-level 3, codegen
+units, package overrides, features, toolchain, release version and four-worker
+allocation. First require a real Cargo freshness check on the original source,
+all 467 artifacts fresh, and the original binary hash/help. Preserve an independent
+immutable pre-edit snapshot. Record snapshot, reset and preparation costs.
+
+Apply the exact same local-only CLI edit commit used in V1ar. Build at that
+target's original path with Cargo release lto=false and incremental compilation
+disabled; require the newly edited help text, changed binary identity and the
+same artifact selections. Qualify the actual edited binary with all 732 public
+emissions, four native cases and all existing installed integrity, relocation,
+generation, negative and recovery controls. Reuse the reference only after
+proving the exact CLI-only source change and unchanged compiler-library/corpus
+inputs. Preserve failure evidence and block dependent consumers on failure.
+
+Compare against V1ar's non-incremental ThinLTO edit as a single sequential
+feasibility observation. The prepared targets differ physically, with their
+original recorded path-remapping flags; disclose this and ordering/cache limits.
+Do not call it a repeated benchmark or a complete gate. The V1aq fresh-build
+result remains authoritative for that separate experiment and is not reclassified.
+
+Restore the original clean source and pre-edit target after owned consumers exit;
+retain the edited target, binary and all measured records. Keep the 1,800-second
+cap per category and capacity/reserve admission. No canonical profile change,
+test omission, release-performance claim or frontend/codegen/expanded-invalidation
+V5 acceptance follows from this diagnostic alone. Any adoption requires a
+separately registered implementation contract and scoped review.
