@@ -16507,3 +16507,112 @@ No passing assertion is reused; the selected corpus owner must still execute,
 and a failed/blocked owner prevents a passing complete discovery. Record the
 canonical assertion-owner map in the new ledger. This is an external measurement
 harness correction, not a product selection change or a coverage exemption.
+
+### V1bb completed discovery and V1bc prospective formatting item
+
+Frozen candidate271546fd5ddf041a6085814875a31caf034501c9 attempted all72
+diagnostic categories:68 passed,4 failed,0 capped/blocked/unexecuted. All18
+preparation nodes and15 guardrails passed. Callback sum5573.819s; child CPU
+11977.45s. These separately capped callbacks after accumulated changes are not
+a contiguous warm acceptance gate. Preserve v1bb-resumed-discovery and receipts.
+
+Failures remain explicit: coverage-matrix and maintained Cargo inventories omit
+the moved corpus oracle; SQL component provenance needs actual rebuild and
+qualification; concurrent socket-close and standalone-cache acquisition tests
+observed transient inherited-descriptor ownership. The controlled fork experiment
+demonstrates the latter mechanism, not the actual child in each failed run.
+Do not weaken native-child lifetime leases or count these failures as passes.
+
+Largest current costs include SQL711.408s (clean-build protocol450.586s passes),
+driver-native442.682s, sysroot439.327s, lowering/CLI432.383s, generated-quality
+346.884s, ordinary driver340.588s and Python326.464s. All86 separately selected
+native cases and all732 positive fixtures passed. Retain callback/CPU/preparation
+distinctions in the sortable external report.
+
+The existing development versus packaged-release comparison used12 sources and
+two alternating rounds, with identical emitted bytes. Development52.316s versus
+release48.851s saves6.6%; versions/sysroots also differ, so this is not isolated
+optimization-level attribution. No profile substitution is adopted.
+
+Two complete Python attribution cases passed. Warm NumPy native compile/link was
+0.156s versus generation1.787s; Arrow0.141s versus generation3.691s. These traced
+owner intervals may overlap and do not establish whole-gate latency. Retaining
+fixtures alone has not demonstrated a material saving. Shared native reuse works
+in those observations; stop treating native dependency rebuilds as their cause.
+
+V1bc targets repeated formatting across generated-project consumers. Direct
+function probes on one representative emit found12 formatter calls (0.465s
+combined),9 API finalizations (0.053s),0.398s project canonicalization and0.922s
+whole formatting/cleanup. Metadata complete validation separately took0.507s.
+Probe intervals nest; instrumentation is diagnostic, not acceptance timing.
+The initial PID-scoped probe attempts recorded no events and supply no timings.
+The successful owned-binary attachment retained byte-identical emission.
+
+Preserve all API cleanup, cross-module const closure, canonical identifier/field
+ownership, formatted line-budget expectations, rustfmt policy and original tests.
+Return a changed-syntax result from API finalization; omit subsequent layout only
+when complete AST rendering before/after proves it did not change. Do not skip
+cleanup, use persisted correctness results, remove formatting checks, or move
+line-sensitive expectations onto unformatted source.
+
+Good enough: at least50% fewer formatter launches on the measured representative
+and at least15% lower aggregate ordinary elapsed time over the same12-source
+development comparison, two alternating baseline/candidate rounds, exact bytes.
+If the change does not meet that material threshold, preserve evidence and reject
+it. Also require focused changed/unchanged/malformed/line-budget/const regressions,
+existing canonicalization and project formatting tests, full affected generated
+quality coverage and Python runtime assertions, formatting/size/affected policy
+inventories and exact-candidate independent review. Final facade gates and all
+repeated V5 scenarios remain open; this item alone cannot prove600s.
+
+V1bc first candidate a9d3d9db2 passed313 canonicalization tests and all three
+affected policy inventories. Its ordinary comparison stopped after22 commands:
+cargo-manifest emission retained a blank line removed by the prior pipeline.
+Preserve v1bc-comparison and its failed guard. This is not a passing timing result.
+Normalize the parsed source layout before the first rustfmt call, without applying
+semantic cleanup there; continue deriving line-budget expectations from formatted
+source. Add an exact-output/idempotence regression for the observed module/import
+layout. Repeat the ordinary comparison and relevant changed tests; retain the
+original15% material-gain requirement.
+
+### V1bc rejected — insufficient measured macro gain
+
+Corrected experimental candidate f09ccdddb021b8655cc3fa0cf9822ce52238d62c
+preserves every output byte over12 sources and two alternating ordinary rounds.
+Baseline52.338558s; candidate45.549519s:12.9714% lower elapsed time. This misses
+the prospective15% threshold. Do not adopt the implementation or lower that
+threshold after seeing the result. Preserve both experimental commits and
+v1bc-comparison-v2; restore the prior production tree before the next item.
+
+The corrected formatter's five tests and seven project-codegen tests pass.
+The attempted materialization-field filter selected zero tests: it is missing
+execution, not passing coverage. Since this candidate is rejected, do not spend
+more on its remaining field-identity/full generated-quality/Python/review
+acceptance. The initial313 canonicalization passes belong to a9d3d9db2.
+No new implementation PR or merge and no whole-gate saving are claimed.
+
+### V1bd prospective investigation — cross-process component compilation
+
+The current owner-local compiled-component cache retains at most8 entries/128MiB
+and keeps guest Stores and responses separate. Its Wasmtime48.0.1 configuration
+does not enable persistent compilation caching. Inspect the pinned upstream cache
+implementation and test an external, exact-version diagnostic with the existing
+component bytes. Attribute first compilation, another process, ordinary guest
+execution, and invalidation independently. Retain fresh Stores, all resource and
+capability checks, current request/registration validation and Wasm integrity.
+
+This is feasibility investigation, not authorization to trust arbitrary serialized
+native code or weaken cache integrity. Do not deserialize caller-supplied native
+artifacts. Establish the cache ownership/security contract and upstream behavior
+before deciding whether any persistent reuse is acceptable. Use a session-owned
+cache/target, pinned dependencies, capacity checks and1800s per diagnostic cap.
+Preserve corrupt/stale/policy-change evidence and actual SQL outputs. No product
+behavior or assertion selection changes during this investigation.
+
+Good enough to propose implementation: at least50% lower repeated fresh-process
+component preparation on representative MySQL/PostgreSQL/SQLite components with
+equal actual results, a concrete cache integrity/invalidation/isolation design,
+and measured category-scale opportunity. If the safe design is not supportable,
+reject it and target a different structural cost. Register any eventual concrete
+implementation and its full acceptance controls before editing production code.
+The four V1bb integration failures, final facade gates and repeated V5 remain open.
