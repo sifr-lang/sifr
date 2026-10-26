@@ -62,8 +62,11 @@ pub(super) fn execute(
     if start.elapsed() >= deadline {
         return Err("standalone publication deadline exhausted".into());
     }
-    let lease = native_cache::NativeCache::acquire(&requested.cache.root.join("standalone"))
-        .map_err(|error| error.to_string())?;
+    let lease = native_cache::NativeCache::acquire_with_wait(
+        &requested.cache.root.join("standalone"),
+        Duration::from_secs(1).min(deadline.saturating_sub(start.elapsed())),
+    )
+    .map_err(|error| error.to_string())?;
     let mut config = requested.clone();
     config.cache.root = lease.root.clone();
     let manifest = initial_cache_manifest(&lease, &config, std::slice::from_ref(&group));

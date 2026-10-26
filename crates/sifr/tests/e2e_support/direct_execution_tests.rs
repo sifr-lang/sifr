@@ -198,7 +198,11 @@ fn standalone_preserves_failures_rejects_busy_owner_and_recovers_missing_resolut
     );
     assert_eq!(repaired.capture.stdout, "fixed\n");
 
-    let owner = native_cache::NativeCache::acquire(&config.cache.root.join("standalone")).unwrap();
+    let owner = native_cache::NativeCache::acquire_with_wait(
+        &config.cache.root.join("standalone"),
+        Duration::from_secs(1),
+    )
+    .unwrap();
     let error = execute(group.clone(), &config, Duration::from_secs(120))
         .err()
         .unwrap();
