@@ -35,7 +35,7 @@ fn host_tool_graph_resolves_locked_host_entrypoint() {
 
 #[test]
 fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
-    for namespace in ["build", "cache", "sysroot", "__emit-batch"] {
+    for namespace in ["build", "cache", "sysroot"] {
         let reserved = ToolFixture::new(&format!("reserved_{namespace}"));
         reserved.write_manifest(&format!(
             "[tools.{namespace}]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
@@ -66,6 +66,23 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
         resolve_host_tool_graph(&duplicate.snapshot(false), &mut DiskSourceProvider::new())
             .test_expect_err("duplicate namespace must fail TOML parsing");
     assert!(errors[0].message.contains("cannot parse tools manifest"));
+}
+
+#[test]
+fn hidden_builtin_namespaces_cannot_be_declared_as_host_tools() {
+    for namespace in ["__emit-batch", "__sql-compiler-worker"] {
+        let fixture = ToolFixture::new(&format!("hidden_{namespace}"));
+        fixture.write_manifest(&format!(
+            "[tools.{namespace}]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
+        ));
+        let errors =
+            resolve_host_tool_graph(&fixture.snapshot(false), &mut DiskSourceProvider::new())
+                .test_expect_err("hidden builtin namespace must fail");
+        // Namespace syntax rejects underscores before reserved-name validation.
+        assert!(errors[0].message.contains(&format!(
+            "tool namespace '{namespace}' must use lowercase ASCII letters, digits, and single hyphens"
+        )));
+    }
 }
 
 #[test]
