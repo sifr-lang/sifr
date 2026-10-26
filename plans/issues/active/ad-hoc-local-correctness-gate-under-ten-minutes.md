@@ -15782,3 +15782,20 @@ External prospective decision: v1av-shared-corpus/decision.json. The isolated
 prototype is not yet accepted. Focused intermediate validation and exact-candidate
 independent review apply; final correctness-only gates and all repeated V5
 scenarios remain mandatory.
+
+
+V1av coverage refinement: retain the old reference's development-versus-release
+compiler-profile diversity explicitly. Prepare the tiny oracle against both
+already required CLI graphs, run both over the complete corpus, and compare exact
+Rust bytes, source maps and module sets before publishing the release reference.
+The normal ignored driver test remains unchanged in selection. Historical
+732-case output comparison found no byte/map/module-set differences; JSON module
+ordering differs because the authority is a Rust HashSet. Different versioned
+portable metadata remains independently checked, not normalized away.
+
+The prototype must demonstrate fresh shared compiler libraries in **both** graphs.
+The extra normal-profile oracle execution is a measured cost and part of the
+integrated tradeoff; do not accept this item by reporting preparation savings
+alone. Missing/duplicate fixtures, changed bytes/maps/modules, profile mismatch,
+failed execution and stale development artifacts require focused rejection checks.
+No full-corpus or installed verification has passed for this prototype yet.

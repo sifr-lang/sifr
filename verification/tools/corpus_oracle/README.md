@@ -1,23 +1,23 @@
 # Corpus oracle
 
-This verification-only crate owns the maintained source-versus-metadata
-comparison. The driver’s ignored `full_corpus_exact_emission` test calls its
-library under the normal test profile. The installed sysroot verification area
-calls its executable, linked against the canonical packaged-version release
-libraries. Neither path uses the installed CLI to manufacture its own reference.
+This verification-only library preserves the complete source-versus-metadata
+emission oracle formerly implemented inside the driver ignored test. The same
+test remains selected and calls the shared function.
 
-The executable requires an explicit fixture directory. It compares all maintained
-fixtures unless the existing diagnostic selection environment variable is set.
-The canonical metadata-corpus runner removes that selection before execution.
-Native runtime assertions remain in the E2E and installed qualification runners.
+Package preparation builds a small oracle executable alongside each already
+required CLI: the normal development graph and the versioned release graph.
+It uses Cargo-selected development artifacts and the canonical release builder.
+The oracle is never shipped in a release archive.
 
-Prepare through `verification/areas/sysroot_release/package_build.py`. Its
-`--corpus-only` mode follows the canonical release-compiler prerequisite;
-`--run-corpus` rejects missing or stale preparation and never invokes Cargo.
-The preparation receipt binds the source inventory, compiler/oracle bytes,
-versioned source snapshot, tool versions and build-affecting environment.
-Changing those inputs requires preparation again. It is not a stored test result.
+The packaged consumer runs both profiles over every maintained fixture and
+compares exact generated Rust, source maps, module sets and fixture bytes.
+Module array ordering is ignored only because the Rust authority is a HashSet;
+duplicate modules are rejected. Every other row field retains exact comparison.
+Portable metadata identities contain versioned inputs and are checked within each
+source/metadata oracle; installed qualification checks the release payload.
 
-The release builder's `--prepare-corpus` flag requires `--prepare-only`.
-The oracle is not shipped in release artifacts. Concurrent assertion consumers
-may read the prepared inputs; preparation and mutation retain exclusive ownership.
+Preparation binds both executables and compilers, source snapshot, content inputs,
+tool versions and build environment. Consumers reject missing/stale preparation,
+execute new assertions without Cargo and retain each attempt's output directory.
+The fixture directory is explicit so release path remapping cannot embed a
+nonexistent checkout path into the oracle.

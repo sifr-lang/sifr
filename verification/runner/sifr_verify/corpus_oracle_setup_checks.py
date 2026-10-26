@@ -1,6 +1,7 @@
 """Regression checks for explicit, input-bound corpus oracle preparation."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -27,11 +28,18 @@ class CorpusOraclePreparationTests(unittest.TestCase):
         self.binary.parent.mkdir(parents=True)
         self.binary.write_text("oracle executable")
         self.binary.with_name("sifr").write_text("compiler executable")
+        self.development = {name: str(self.root / name) for name in ("sifr", "sifr_corpus_oracle")}
+        for path in self.development.values():
+            Path(path).write_text("development executable")
         self.env = {"RUSTFLAGS": "--cfg caller", "CARGO_PROFILE_RELEASE_OPT_LEVEL": "3"}
         self.inventory = {"input_digest": "current inputs"}
         def output(command, **kwargs):
             if command[0] == str(self.binary):
                 return f"sifr-corpus-oracle {package_build.RELEASE_VERSION}\n"
+            if command == [self.development["sifr"], "--version"]:
+                return "sifr 0.0.0\n"
+            if command == [self.development["sifr_corpus_oracle"], "--version"]:
+                return "sifr-corpus-oracle 0.0.0\n"
             if command == ["rustc", "-vV"]:
                 return "release: pinned\nhost: host\n"
             if command == ["cargo", "--version"]:
@@ -43,7 +51,7 @@ class CorpusOraclePreparationTests(unittest.TestCase):
             self.addCleanup(mock.stop)
 
     def record(self):
-        self.preparation.record_prepared(self.root, self.env, self.snapshot, "host")
+        self.preparation.record_prepared(self.root, self.env, self.snapshot, "host", self.development)
 
     def require(self, env=None):
         return self.preparation.require_prepared(
@@ -59,18 +67,43 @@ class CorpusOraclePreparationTests(unittest.TestCase):
                         self.require()
             run.assert_not_called()
 
-    def test_unchanged_inputs_run_only_the_prepared_oracle(self):
-        _, execution_env, _ = self.builder.corpus_configuration(self.root, self.env)
-        self.preparation.record_prepared(self.root, execution_env, self.snapshot, "host")
-        with patch.object(self.builder.subprocess, "run") as run:
-            self.builder.run_corpus(self.root, self.env)
-        run.assert_called_once_with([str(self.binary), "--fixtures",
-                                    str(self.root / "crates/sifr/tests/e2e/pass")], cwd=self.root,
-                                    env=execution_env, check=True)
+    def test_unchanged_inputs_run_both_profiles_without_cargo(self):
+        self.record()
+        output = self.root / "published"
+        env = self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(output), "SIFR_DX8_CORPUS_CASES": "partial"}
+        def run(command, **kwargs):
+            destination = Path(kwargs["env"]["SIFR_DX8_CORPUS_OUTPUT"])
+            destination.mkdir()
+            (destination / "coverage.json").write_text("fresh report")
+        with patch.object(self.builder.subprocess, "run", side_effect=run) as execute, \
+             patch.object(self.builder, "compare_profiles") as compare:
+            self.builder.run_corpus(self.root, env)
+        self.assertEqual(execute.call_count, 2)
+        calls = execute.call_args_list
+        self.assertEqual(calls[0].args[0][0], self.development["sifr_corpus_oracle"])
+        self.assertEqual(calls[1].args[0][0], str(self.binary))
+        self.assertEqual(calls[0].kwargs["env"]["SIFR_SYSROOT"], str(self.root))
+        self.assertEqual(calls[1].kwargs["env"]["SIFR_SYSROOT"], str(self.snapshot))
+        for call in calls:
+            self.assertNotIn("SIFR_DX8_CORPUS_CASES", call.kwargs["env"])
+        compare.assert_called_once()
+        self.assertEqual((output / "coverage.json").read_text(), "fresh report")
+
+    def test_profile_comparison_failure_does_not_publish_a_reference(self):
+        self.record()
+        output = self.root / "published"
+        with patch.object(self.builder.subprocess, "run"), \
+             patch.object(self.builder, "compare_profiles", side_effect=AssertionError("different")):
+            with self.assertRaises(AssertionError):
+                self.builder.run_corpus(self.root, self.env | {"SIFR_DX8_CORPUS_OUTPUT": str(output)})
+        self.assertFalse(output.exists())
+        self.assertEqual(len(list(self.snapshot.parent.glob("corpus-profiles-*"))), 1)
 
     def test_content_and_build_environment_changes_invalidate_preparation(self):
         changes = [
             ("oracle", lambda: self.binary.write_text("changed oracle")),
+            ("development oracle", lambda: Path(self.development["sifr_corpus_oracle"]).write_text("changed")),
+            ("development compiler", lambda: Path(self.development["sifr"]).write_text("changed")),
             ("compiler", lambda: self.binary.with_name("sifr").write_text("changed compiler")),
             ("snapshot", lambda: (self.snapshot / "sysroot.toml").write_text("changed source")),
             ("snapshot addition", lambda: (self.snapshot / "new").write_text("new source")),
@@ -84,16 +117,16 @@ class CorpusOraclePreparationTests(unittest.TestCase):
                     self.require()
         self.record()
         for key in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "CARGO_PROFILE_RELEASE_OPT_LEVEL",
-                    "RUSTC_WRAPPER", "CARGO_BUILD_TARGET"):
+                    "RUSTC_WRAPPER", "CARGO_BUILD_TARGET", "CARGO_TARGET_DIR", "CARGO_INCREMENTAL"):
             with self.subTest(key=key), self.assertRaisesRegex(RuntimeError, "stale"):
                 self.require(self.env | {key: "changed"})
-        self.assertEqual(self.require(self.env | {"UNRELATED": "safe"}), self.binary)
+        self.assertEqual(self.require(self.env | {"UNRELATED": "safe"})["oracle"], str(self.binary))
 
     def test_deleted_artifacts_and_wrong_version_reject_preparation(self):
         self.record()
         with patch.object(self.preparation.subprocess, "check_output", return_value="wrong"):
             with self.assertRaises(RuntimeError):
-                self.preparation.binding(self.root, self.env, self.snapshot, "host")
+                self.preparation.binding(self.root, self.env, self.snapshot, "host", self.development)
         self.binary.unlink()
         with self.assertRaises(RuntimeError):
             self.require()

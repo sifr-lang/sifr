@@ -14,6 +14,7 @@ from sifr_verify.fixture_inventory import inventory
 BUILD_ENV = frozenset({
     "RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTC", "RUSTC_WRAPPER",
     "RUSTC_WORKSPACE_WRAPPER", "CARGO_BUILD_TARGET", "CARGO_HOME", "RUSTUP_HOME",
+    "CARGO_TARGET_DIR", "CARGO_INCREMENTAL", "SIFR_RELEASE_VERSION",
 })
 
 
@@ -40,7 +41,7 @@ def oracle_path(root: Path, host: str) -> Path:
     return release_target_dir(root) / host / "release/sifr_corpus_oracle"
 
 
-def binding(root: Path, env: dict[str, str], snapshot: Path, host: str) -> dict:
+def binding(root: Path, env: dict[str, str], snapshot: Path, host: str, development: dict[str, str]) -> dict:
     from verification.areas.common.release_compiler import RELEASE_VERSION
     binary = oracle_path(root, host)
     compiler = binary.with_name("sifr")
@@ -50,8 +51,20 @@ def binding(root: Path, env: dict[str, str], snapshot: Path, host: str) -> dict:
                                       env=env, text=True).strip()
     if version != f"sifr-corpus-oracle {RELEASE_VERSION}":
         raise RuntimeError(f"corpus oracle version mismatch: {version!r}")
+    if set(development) != {"sifr", "sifr_corpus_oracle"}:
+        raise RuntimeError("development compiler and oracle must be explicitly prepared")
+    development_version = subprocess.check_output([development["sifr"], "--version"],
+                                                 cwd=root, env=env, text=True).strip()
+    oracle_version = subprocess.check_output([development["sifr_corpus_oracle"], "--version"],
+                                            cwd=root, env=env, text=True).strip()
+    if not development_version.startswith("sifr ") or oracle_version != (
+            "sifr-corpus-oracle " + development_version.removeprefix("sifr ")):
+        raise RuntimeError("development compiler and corpus oracle versions differ")
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "development": development,
+        "development_sha256": {name: digest(Path(path)) for name, path in development.items()},
+        "development_version": development_version,
         "inputs": inventory(root)["input_digest"],
         "host": host,
         "version": RELEASE_VERSION,
@@ -67,8 +80,9 @@ def binding(root: Path, env: dict[str, str], snapshot: Path, host: str) -> dict:
     }
 
 
-def record_prepared(root: Path, env: dict[str, str], snapshot: Path, host: str) -> None:
-    value = binding(root, env, snapshot, host)
+def record_prepared(root: Path, env: dict[str, str], snapshot: Path, host: str,
+                    development: dict[str, str]) -> None:
+    value = binding(root, env, snapshot, host, development)
     destination = receipt_path(root)
     pending = destination.with_suffix(f".{os.getpid()}.tmp")
     try:
@@ -78,12 +92,12 @@ def record_prepared(root: Path, env: dict[str, str], snapshot: Path, host: str) 
         pending.unlink(missing_ok=True)
 
 
-def require_prepared(root: Path, env: dict[str, str], snapshot: Path) -> Path:
+def require_prepared(root: Path, env: dict[str, str], snapshot: Path) -> dict:
     try:
         expected = json.loads(receipt_path(root).read_text())
-        actual = binding(root, env, snapshot, host_triple(env))
-    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        actual = binding(root, env, snapshot, host_triple(env), expected["development"])
+    except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError) as error:
         raise RuntimeError("corpus oracle preparation is missing or invalid; run package_build.py") from error
     if actual != expected:
         raise RuntimeError("corpus oracle preparation is stale; run package_build.py")
-    return Path(actual["oracle"])
+    return actual
