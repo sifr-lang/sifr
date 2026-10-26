@@ -16848,3 +16848,53 @@ real generated-program builds/runtime assertions and final phase gates remain.
 Freeze source while measuring; keep1800s category caps and capacity reserves.
 Register any concrete production ownership/API change and assertion map before
 editing production code. Do not infer whole-gate feasibility from this subcategory.
+
+### V1bi result — complete emission feasibility and isolation controls pass
+
+All264 authoritative demo companions pass each of three four-worker modes,
+792 emissions total: canonical scalar CLI156.034s/612.920 child CPU seconds;
+same external probe per input161.348s/634.133 CPU; batched probe with exact pinned
+formatter106.771s/380.982 CPU. Reduction against canonical CLI31.57% elapsed,
+37.84% CPU; sources and companions unchanged. Full guard429.472s. This is one
+category experiment, not a complete gate or production implementation result.
+Evidence: v1bi-full-emission. Four batched worker RSS snapshots were271–303MiB
+each; these are observations, not peak-memory measurements.
+
+All16 isolation controls pass: repeated/reordered project inputs, identical names
+in independent projects, imported/main source edits and restoration, errors followed
+by valid inputs, single-file errors/recovery, missing metadata rejection and new
+owner recovery. Successful bytes and ordinary structured diagnostics match the
+frozen production CLI. Evidence: v1bi-control-validation-v2, guard20.192s.
+The initial harness incorrectly parsed scalar diagnostics from stdout; the CLI
+writes stderr. Preserve that failed attempt and corrected stream assertion; it is
+not a product failure. No production code changed during these experiments.
+
+### V1bj prospective implementation — invocation-owned demo emission batches
+
+Implement one finite internal batch command in the existing sifr executable.
+Both scalar and batch emission use the same canonical entrypoint dispatch. Each
+batch retains one immutable CompilerContext but creates a fresh DiskSourceProvider
+per input; no mutable frontend, generated-output cache or old correctness receipt
+is reused. A versioned manifest lists absolute input paths; each request has a
+positional result, fresh generated Rust or diagnostic, and exit status. Reject
+malformed/empty manifests and existing output directories. Complete ordinary
+errors without suppressing later inputs; incomplete/internal failures cannot pass.
+
+Move only demo-companion freshness emission to bounded batches. Preserve all264
+byte comparisons, lexical reporting, strict/debt policy ownership, reference and
+orphan checks, and update behavior. Retain scalar CLI behavior and independently
+test scalar/batch parity including errors. Resolve the exact pinned rustfmt once
+per verification invocation, preserving an explicit RUSTFMT override; do not alter
+product formatter defaults or add fallback emitters. Keep failed batch evidence.
+Document invocation lifetime and source/toolchain immutability requirements.
+
+Good enough: affected CLI schema/entrypoint tests, batch isolation/error/output
+ownership controls, freshness policy/negative controls, all264 canonical scalar
+and production batch outputs equal checked companions, and >=30% ordinary
+full-category elapsed and child CPU reduction at the same worker allocation.
+Measure actual compiler edit preparation and report it separately; do not hide
+new helper build costs (there is no new crate). Size/fmt/diff checks, unchanged
+profile selection, scoped exact-candidate independent review and intermediate
+PR/merge are required. Stop tuning after these criteria. No native runtime,
+independent SQL construction, installed scalar CLI certification or final phase
+gate is removed. If production measurements miss the threshold, record/reject.
