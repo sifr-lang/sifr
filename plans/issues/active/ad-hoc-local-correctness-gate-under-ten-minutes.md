@@ -16803,3 +16803,48 @@ category, then register its concrete correctness/invalidation contract and an
 ordinary paired >=30% category-level target before implementation. Reject isolated
 seconds and avoid speculative whole-compiler rewrites. Full gate under600s remains
 unproven; no existing failed or unexecuted check becomes a pass.
+
+### V1bh result — process setup is materially different from context sharing
+
+All12 canonical CLI emissions match retained production bytes: ordinary26.107s,
+26.292 child CPU seconds. The instrumented emissions take26.306s; the complete
+profiling/reporting guard takes257.837s and is not compiler acceptance time.
+2,291 user-CPU samples, no lost samples. Known self symbols include SHA-256,
+metadata reference/graph indexing, and rustup formatter setup. Captured ancestry
+is incomplete (788 empty exported stacks,704 with unknown frames; addr2line
+failures), so no complete inclusive subsystem breakdown is claimed. The symbol
+cache binary SHA equals the frozen production binary. Preserve the original
+failed leaf-export option and corrected leaf export; neither reruns the compiler.
+
+The earlier V1bf comparison retained a process in BOTH variants. Its4.95% result
+does not measure avoiding process-local metadata initialization. A new same-binary
+two-round reversed-order diagnostic separates process lifetime and formatter
+selection; all96 emissions match production CLI bytes:
+fresh process/proxy52.329s; batch/proxy39.318s; fresh process/direct formatter
+46.726s; batch/direct33.216s. Combined reduction36.52%, child CPU52.691s to33.446s.
+The direct formatter is rustup's exact1.98.1 selection with matching version and
+recorded file hash. No compiler dependency/profile/source change.
+Evidence: v1bh-emission-attribution and v1bh-process-reuse. This justifies full
+inventory feasibility, not production adoption or a whole-gate saving.
+
+### V1bi prospective feasibility — full demo emission preparation reuse
+
+Compare every authoritative demo companion through fresh canonical CLI emission,
+the same external probe in one-process-per-input mode, and bounded immutable
+batch owners with the exact pinned formatter. Fresh mutable source providers and
+frontend executions per input; no generated-output or prior-test-result cache.
+Use identical bounded worker allocation and account for complete producer work,
+child CPU, outputs and failures. Compare all264 expected entries (reject inventory
+drift rather than silently narrow). Preserve scalar public CLI evidence for every
+input in the experiment; no runtime or native compilation assertion is replaced.
+
+Good enough to propose production implementation: >=30% lower complete freshness
+subcategory elapsed and child CPU, exact byte parity, all inputs accounted for,
+and explicit isolation/error/invalidation controls. Test repeated/reordered inputs,
+changed source and changed inputs via new owners, error followed by success, and
+independent source providers before adoption. Do not put a general compiler
+daemon or persistent mutable frontend in the gate. Public CLI/process contracts,
+real generated-program builds/runtime assertions and final phase gates remain.
+Freeze source while measuring; keep1800s category caps and capacity reserves.
+Register any concrete production ownership/API change and assertion map before
+editing production code. Do not infer whole-gate feasibility from this subcategory.
