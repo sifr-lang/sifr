@@ -364,7 +364,7 @@ safety deadline and child cleanup still apply.
 
 Standalone parity and runtime-failure programs reuse the same Cargo validation,
 resolution and artifact-selection machinery in a separate
-\`standalone/cargo-v3\` namespace. Programs keep their original crate-root Rust
+`standalone/cargo-v3` namespace. Programs keep their original crate-root Rust
 and main function; each selected fixture compiles and executes independently
 without a batch wrapper. Cargo validates every invocation, and the original
 stdout/stderr/exit assertions remain the acceptance authority.
