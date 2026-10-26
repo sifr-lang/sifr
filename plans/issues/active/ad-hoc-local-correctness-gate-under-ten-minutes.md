@@ -16373,3 +16373,113 @@ run under v1ba-corrected-candidate/all-e2e/. Rerun the affected authority test,
 new standalone regressions, normal fixture warm/freshness check, and the still
 unexecuted canonical positive suite; existing unaffected passing tests remain
 valid for their observed candidate.
+
+### V1ba delivered — standalone native dependency reuse
+
+Merged [PR #4494](https://github.com/sifr-lang/sifr/pull/4494) as
+7d20b1d5e85193db2f296ecf602defe5c9d0b175. Exact reviewed candidate:
+70f06ec2fc541c82aa8ab32b874552ab7eecc85a; merged tree verified identical.
+Independent Claude review: SATISFIED, no blockers, retained outside Git as
+v1ba-independent-review.md and v1ba-review-ppu7vq7e/response.md.
+
+All eight standalone parity fixtures and six runtime-failure fixtures still run
+as separate raw programs with their original assertions. Their first-namespace
+suite time fell95.74s to41.46s (56.7%); warm8.08s to5.85s (27.6%). The corrected
+first outer commands took42.626s; warm7.008s. Different dependency feature
+families still compile their required libraries; compatible later fixtures build
+only their own program. Every warm executable remains Cargo-fresh.
+
+Measurements are single observations at101874763. Final70f06ec2 changes only the
+failed-build diagnostic return relative to that implementation, plus policy/prose
+records. It reran the three new real-Cargo regressions, the unchanged original
+missing-metadata assertion, all14 original fixtures and the post-fixture Cargo
+validation (all474 artifacts fresh). The full earlier harness discovery's71
+unaffected passing tests remain recorded at101874763; its one failed assertion
+was repaired. Three pre-existing ignored entrypoints retain their conditional
+or child-control ownership. No skip or assertion was removed.
+
+The final candidate also passed every732 positive fixture in103.194s, with
+186/186 Cargo-fresh native groups (106.250s guarded invocation). Formatting,
+file-size, diff and inventory self-tests passed. Complete method/FS scans still
+report only the two prior driver entrypoint bindings and two prior filesystem
+sites respectively. CI local-first-create-pr still fails before validation setup
+because SIFR_PERFORMANCE_REFERENCE is absent; other pending CI was not treated as
+local evidence. No complete phase-gate or repeated V5 pass is claimed.
+
+Evidence: v1ba-adoption-evidence.json, v1ba-timing-summary.json,
+v1ba-final-candidate/, v1ba-e2e-complete/, v1ba-final-policy/ and the hash-verified
+177-file review bundle. Both the original output-location regression and failed
+diagnostic assertion remain preserved. Stop optimizing this category's residual
+seconds: its bounded macro criterion is met.
+
+Follow-ups: expected runtime failures currently preserve timestamped logs and
+old groups; final bounded-retention qualification must account for this existing
+preservation policy. Do not silently delete failure evidence. A preserve marker
+also survives later success, as in the pre-existing batch path. Source exports
+without a Git ancestor resolve relative cache roots from the current directory;
+normal source checkouts are qualified here. Those concerns retain separate
+owners and are not additional implementation changes in this delivered item.
+
+### V1bb prospective item — integrated local correctness cost refresh
+
+After merged compiler-profile, native project-lifetime and standalone dependency
+reuse changes, measure the current complete emitted correctness-only merge
+selection. A read-only preview at70f06ec2 contains18 preparation nodes and37
+selected steps; expand the crate-test step into its canonical configurations.
+The earlier72-category discovery is historical, not current gate latency.
+Cross-platform execution and performance benchmarks remain excluded; retain
+performance-area correctness checks selected by the scoped profile.
+
+Freeze the current source candidate, pinned toolchain/environment and owned
+targets. Inspect free disk, target sizes and actual CPU/memory admission before
+starting. Retain prepared compiler, dependency and interpreter artifacts. Remove
+historical worker overrides so the canonical admitted profile allocation applies.
+Execute canonical callbacks with failure continuation and a separate1800s
+diagnostic cap per category. Block consumers of a failed preparation; continue
+independent categories. Account explicitly for every capped, blocked or not-yet-run
+category, and schedule independent remaining work separately if needed.
+Do not repeat unchanged failed preparation without diagnosing it.
+
+Record preparation, test execution and reporting overhead distinctly; report all
+failures, coverage executed and the largest measured current costs. Separate a
+first preparation after input changes from genuinely unchanged warm work.
+No old correctness result authorizes skipping this discovery's required checks.
+Its separately capped callbacks provide a diagnostic coverage/cost ledger, not a
+single contiguous full-profile acceptance run. Full facade gates and repeated
+V5 scenarios remain mandatory. Use the resulting largest structural costs to
+choose the next bounded change; do not return to subsecond standalone tuning.
+
+### V1bb admission repair — explicit integration inventory reconciliation
+
+The first diagnostic at 58bdc237f9c60f123d0c07c8778c0eba02a70195
+finished with 12 passing guards, 3 failing guards and 57 blocked categories.
+All 72 selections are accounted for; blocked consumers did not execute.
+Preserve v1bb-discovery/ and each guard receipt. The early metadata guard
+blocked preparation before compilation; this attempt supplies no current
+preparation or integrated latency measurement.
+
+Bounded prerequisite repair: follow the moved full-corpus metadata consumer into
+verification/tools/corpus_oracle; retain its test/parity classification and fail
+if that explicitly owned source disappears. Rebind only the two changed driver
+method-policy input signatures, classify the two existing temporary Cargo-config
+writes as output effects, and author the two private-child umask unsafe records
+with exact source obligations. Do not bulk-approve unknown sites, remove consumer
+coverage, change assertions, or modify compiler/runtime behavior.
+
+Acceptance: focused scanner discovery/mutation/missing-source tests, all four
+complete inventories and their existing self-tests, file-size and diff checks,
+then independent exact-candidate review under the intermediate phase policy.
+The previously qualified child-lease implementation stays unchanged; its retained
+private-producer regression verifies private file/directory modes and unchanged
+parent/unrelated-child state. Resume the complete discovery at a fresh recorded
+candidate after these admission prerequisites pass. Full phase gates/V5 remain open.
+
+The bounded repair passed all four complete inventories and all four scanner
+self-test commands, including 13 metadata tests (new shared-consumer discovery,
+semantic-operation drift and missing-source rejection). File-size and diff checks
+also passed. The metadata table replaces exactly one moved consumer row with
+its actual shared-library location and keeps test/parity ownership. Two method
+bindings change only fingerprints/input signatures; two filesystem output rows
+and two exact private-child unsafe contracts are added. Compiler/runtime/test
+assertion sources are unchanged. Evidence: v1bb-inventory-repair/checks.json and
+per-command output; reconciliation.json records the exact reviewed sites.

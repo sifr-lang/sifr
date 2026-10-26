@@ -25270,6 +25270,20 @@
       "operation": "metadata",
       "site": "std::fs::metadata(root.join(\"directory\"))",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs",
+      "symbol": "stdlib_interop_demand_new_native_selection_has_current_cargo_inputs",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.join(\".cargo\")).expect(\"configuration directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs",
+      "symbol": "stdlib_interop_demand_new_native_selection_has_current_cargo_inputs",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
     }
   ]
 }

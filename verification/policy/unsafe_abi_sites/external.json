@@ -14376,6 +14376,186 @@
         }
       },
       "contract_ref": "local-gate-reap"
+    },
+    {
+      "site": "crates/sifr_cache_storage/src/child_lease.rs::<module>::unsafe-allowance::2",
+      "fingerprint": "3ab0bea307c315aff444b717e5840b657111f1b547b96b10393d436f911bc683",
+      "owner": "cache-owner",
+      "scope": "local",
+      "operation": "# [ allow ( unsafe_code ) ] pub fn inherit_lease_for_private_command ( command : & mut Command , lease : & File ) -> io :: Result < ( ) > { inherit_lease_for_command ( command , lease ) ? ; unsafe { command . pre_exec ( || { libc :: umask ( 0 o077 ) ; Ok ( ( ) ) } ) ; } Ok ( ( ) ) }",
+      "operation_family": "unsafe-allowance",
+      "source_evidence": "",
+      "contract": {
+        "thread": "The pre-exec callback sets umask only in the forked child, using the async-signal-safe umask call and a constant return; it takes no locks and allocates no memory.",
+        "lifetime": "The zero-capture umask callback holds no borrowed memory. The preceding inherit_lease_for_command registration owns its cloned File through command disposal and child exec.",
+        "alias": "Only this child creation mask changes; the parent and unrelated children retain their own masks. No application memory or shared Rust reference is accessed by umask.",
+        "ownership": "The child owns the resulting 0077 creation mask until it changes it or exits; no parent state needs restoration. Descriptor transfer and release remain owned by inherit_lease_for_command."
+      },
+      "obligations": {
+        "thread": {
+          "rule": "bounded-allowance-thread",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::<module>::unsafe-allowance::2",
+              "fingerprint": "3ab0bea307c315aff444b717e5840b657111f1b547b96b10393d436f911bc683",
+              "quote": "#[allow(unsafe_code)]\npub fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        },
+        "lifetime": {
+          "rule": "bounded-allowance-lifetime",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::<module>::unsafe-allowance::2",
+              "fingerprint": "3ab0bea307c315aff444b717e5840b657111f1b547b96b10393d436f911bc683",
+              "quote": "#[allow(unsafe_code)]\npub fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        },
+        "alias": {
+          "rule": "bounded-allowance-alias",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::<module>::unsafe-allowance::2",
+              "fingerprint": "3ab0bea307c315aff444b717e5840b657111f1b547b96b10393d436f911bc683",
+              "quote": "#[allow(unsafe_code)]\npub fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        },
+        "ownership": {
+          "rule": "bounded-allowance-owner",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::<module>::unsafe-allowance::2",
+              "fingerprint": "3ab0bea307c315aff444b717e5840b657111f1b547b96b10393d436f911bc683",
+              "quote": "#[allow(unsafe_code)]\npub fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        }
+      },
+      "contract_ref": "local-gate-private-child-mask"
+    },
+    {
+      "site": "crates/sifr_cache_storage/src/child_lease.rs::inherit_lease_for_private_command::unsafe-block::1",
+      "fingerprint": "cb7e3ed8a5abe8f1041a673a666cc5cd6b19d0e386ff224f6a055eb57eed8af0",
+      "owner": "cache-owner",
+      "scope": "local",
+      "operation": "unsafe { command . pre_exec ( || { libc :: umask ( 0 o077 ) ; Ok ( ( ) ) } ) ; }",
+      "operation_family": "external-state-mutation",
+      "source_evidence": "// SAFETY: umask is async-signal-safe and runs only in the forked child.\n// No parent-wide umask mutation, allocation, or synchronization occurs.",
+      "contract": {
+        "thread": "The pre-exec callback sets umask only in the forked child, using the async-signal-safe umask call and a constant return; it takes no locks and allocates no memory.",
+        "lifetime": "The zero-capture umask callback holds no borrowed memory. The preceding inherit_lease_for_command registration owns its cloned File through command disposal and child exec.",
+        "alias": "Only this child creation mask changes; the parent and unrelated children retain their own masks. No application memory or shared Rust reference is accessed by umask.",
+        "ownership": "The child owns the resulting 0077 creation mask until it changes it or exits; no parent state needs restoration. Descriptor transfer and release remain owned by inherit_lease_for_command."
+      },
+      "obligations": {
+        "thread": {
+          "rule": "native-state-admission",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::inherit_lease_for_private_command::unsafe-block::1",
+              "fingerprint": "cb7e3ed8a5abe8f1041a673a666cc5cd6b19d0e386ff224f6a055eb57eed8af0",
+              "quote": "unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        },
+        "lifetime": {
+          "rule": "state-live-through-mutation",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::inherit_lease_for_private_command::unsafe-block::1",
+              "fingerprint": "cb7e3ed8a5abe8f1041a673a666cc5cd6b19d0e386ff224f6a055eb57eed8af0",
+              "quote": "unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        },
+        "alias": {
+          "rule": "scoped-state-mutation",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::inherit_lease_for_private_command::unsafe-block::1",
+              "fingerprint": "cb7e3ed8a5abe8f1041a673a666cc5cd6b19d0e386ff224f6a055eb57eed8af0",
+              "quote": "unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        },
+        "ownership": {
+          "rule": "retain-owner-after-state-change",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/child_lease.rs::inherit_lease_for_private_command::unsafe-block::1",
+              "fingerprint": "cb7e3ed8a5abe8f1041a673a666cc5cd6b19d0e386ff224f6a055eb57eed8af0",
+              "quote": "unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/child_lease.rs",
+              "scope": "inherit_lease_for_private_command",
+              "quote": "fn inherit_lease_for_private_command(command: &mut Command, lease: &File) -> io::Result<()> {\n    inherit_lease_for_command(command, lease)?;\n    // SAFETY: umask is async-signal-safe and runs only in the forked child.\n    // No parent-wide umask mutation, allocation, or synchronization occurs.\n    unsafe {\n        command.pre_exec(|| {\n            libc::umask(0o077);\n            Ok(())\n        });\n    }\n    Ok(())\n}",
+              "context_fingerprint": "e4e9939ed427efed900e1512371ad8a9a17ed91eb1fa5825dc9811aadbe62838"
+            }
+          ]
+        }
+      },
+      "contract_ref": "local-gate-private-child-mask"
     }
   ],
   "shared_contracts": {
@@ -14750,6 +14930,19 @@
         "crates/sifr_process/src/process_execution.rs::owned_worker_drop_reaps_leader_and_closes_descendant_pipe::unsafe-block::1": "4f6cd210d735ccf1af940ce676b565b25f5305cdf20cdbf4b8b6deb48a2c5b25"
       },
       "review_rationale": "This finite pair binds one local operation and its narrow allowance to the same source-specific contract. It does not authorize other operations or claim platform execution."
+    },
+    "local-gate-private-child-mask": {
+      "contract": {
+        "thread": "The pre-exec callback sets umask only in the forked child, using the async-signal-safe umask call and a constant return; it takes no locks and allocates no memory.",
+        "lifetime": "The zero-capture umask callback holds no borrowed memory. The preceding inherit_lease_for_command registration owns its cloned File through command disposal and child exec.",
+        "alias": "Only this child creation mask changes; the parent and unrelated children retain their own masks. No application memory or shared Rust reference is accessed by umask.",
+        "ownership": "The child owns the resulting 0077 creation mask until it changes it or exits; no parent state needs restoration. Descriptor transfer and release remain owned by inherit_lease_for_command."
+      },
+      "bindings": {
+        "crates/sifr_cache_storage/src/child_lease.rs::<module>::unsafe-allowance::2": "3ab0bea307c315aff444b717e5840b657111f1b547b96b10393d436f911bc683",
+        "crates/sifr_cache_storage/src/child_lease.rs::inherit_lease_for_private_command::unsafe-block::1": "cb7e3ed8a5abe8f1041a673a666cc5cd6b19d0e386ff224f6a055eb57eed8af0"
+      },
+      "review_rationale": "These two exact bindings cover the private-command allowance and enclosed umask callback. Their source-bound contract does not authorize other callbacks or parent-process state mutation."
     }
   }
 }
