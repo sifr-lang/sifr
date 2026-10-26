@@ -16483,3 +16483,27 @@ bindings change only fingerprints/input signatures; two filesystem output rows
 and two exact private-child unsafe contracts are added. Compiler/runtime/test
 assertion sources are unchanged. Evidence: v1bb-inventory-repair/checks.json and
 per-command output; reconciliation.json records the exact reviewed sites.
+
+### V1bb admission repair delivered — resume integrated discovery
+
+Merged [PR #4495](https://github.com/sifr-lang/sifr/pull/4495) as
+e6d21c4d25b6f80a79f6903c79d5fe1471271c88. Exact reviewed candidate:
+fdfbe845f67a30f731820ba1cc44a3cb72fb9390; merged tree verified identical.
+Independent review: SATISFIED, no blockers, retained outside Git as
+v1bb-inventory-independent-review.md and
+v1bb-inventory-review-a3cfpgm1/response.md. All ten focused commands passed;
+complete inventories contain 6,452 method sites, 3,612 filesystem effects and
+404 unsafe sites. Follow-ups are cosmetic spacing in older records and explicit
+classification if future shared consumers have a different role; neither changes
+this repair. The full phase and final acceptance remain open.
+
+The resumed diagnostic keeps the failed v1bb-discovery evidence intact and uses
+v1bb-resumed-* paths with a new frozen candidate and fresh readiness. Before
+launch, align its native callback arguments with ProfileRunner: pass the canonical
+corpus_owner_selected(profile) so the already selected sysroot-release
+metadata-corpus owner executes the shared oracle. The earlier diagnostic helper
+omitted that argument, but no crate category ran because admission was blocked.
+No passing assertion is reused; the selected corpus owner must still execute,
+and a failed/blocked owner prevents a passing complete discovery. Record the
+canonical assertion-owner map in the new ledger. This is an external measurement
+harness correction, not a product selection change or a coverage exemption.
