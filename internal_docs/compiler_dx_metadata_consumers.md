@@ -136,6 +136,11 @@ consumers. Struct fields and owners are covered by the payload and lifetime tabl
 above. `python3 scripts/check_dx_metadata_inventory.py` verifies site coverage and
 all `ExternalDefs`/IR struct fields; regeneration requires reviewing classifications.
 
+The maintained shared corpus oracle under
+[verification/tools/corpus_oracle/src/lib.rs](../verification/tools/corpus_oracle/src/lib.rs)
+is explicitly included as a test/parity consumer after extraction from the driver.
+Its source must exist, and its discovered metadata operations remain pinned below.
+
 <!-- dx5-sites:start -->
 
 | Exact source symbol | Current access (conservative union within symbol) | DX.7 migration | Matching source lines |
@@ -624,7 +629,6 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/metadata_producer/tests.rs:156` `dx6_canonical_inventory_producer_without_metadata` | read, enumerate | test setup/parity | 174, 196, 200, 206 |
 | `crates/sifr_driver/src/metadata_producer/tests.rs:414` `dx6_r10_linked_real_stdlib_test_adapter` | read | test setup/parity | 414 |
 | `crates/sifr_driver/src/metadata_producer/tests.rs:450` `portable_records_ignore_only_the_producer_envelope` | read | test setup/parity | 453, 486, 487 |
-| `crates/sifr_driver/src/metadata_reader/corpus_tests.rs:4` `full_corpus_exact_emission` | read, enumerate | test setup/parity | 6, 18, 62, 81, 85, 87, 90, 111, 147 |
 | `crates/sifr_driver/src/metadata_reader/generation_tests.rs:14` `install` | read, enumerate | test setup/parity | 17, 47 |
 | `crates/sifr_driver/src/metadata_reader/generation_tests.rs:53` `installed_relocation_and_generation_switch_pin_all_sources` | read, enumerate, borrow/retain | test setup/parity | 69, 98 |
 | `crates/sifr_driver/src/metadata_reader/semantic_boundary_tests.rs:4` `semantic_native_full_frontend_corpus` | read, enumerate | test setup/parity | 10, 33, 38 |
@@ -1291,5 +1295,6 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr/src/build_output.rs:187` `sysroot_dependency_plan` | read | layered view + demanded record handles | 189 |
 | `crates/sifr/src/sysroot_cli.rs:36` `cmd_doctor` | read | layered view + demanded record handles | 112, 113, 115, 147 |
 | `crates/sifr/src/sysroot_cli.rs:184` `print_sysroot` | read | layered view + demanded record handles | 199, 200, 201, 204, 205 |
+| `verification/tools/corpus_oracle/src/lib.rs:4` `full_corpus_exact_emission` | read, enumerate | test setup/parity | 7, 8, 9, 22, 66, 85, 89, 91, 94, 115, 152 |
 
 <!-- dx5-sites:end -->

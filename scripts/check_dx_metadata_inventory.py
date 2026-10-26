@@ -11,6 +11,8 @@ INVENTORY = ROOT / "internal_docs/compiler_dx_metadata_consumers.md"
 BEGIN = "<!-- dx5-sites:start -->"
 END = "<!-- dx5-sites:end -->"
 OWNERS = ("sifr_lowering", "sifr_frontend", "sifr_compiler_services", "sifr_semantic_services", "sifr_driver", "sifr_codegen", "sifr_analysis", "sifr_lsp", "sifr")
+# Shared test consumers may live outside production crate roots.
+SHARED_TEST_SOURCES = ("verification/tools/corpus_oracle/src/lib.rs",)
 TERMS = re.compile(r"\b(?:ExternalDefs|StdlibCode|StdlibEmissionCode|StdlibEmissionView|external_defs|externals|stdlib_defs|stdlib_code|hir_modules|module_rust_code|module_constants|func_signatures|transitive_deps|generator_functions|generic_classes|generic_class_params|generic_class_templates|module_class_fields|module_class_templates)\b|\b\w*stdlib\w*\b")
 
 
@@ -34,33 +36,43 @@ def functions(text: str):
         yield match[1], match.start(), end, clean[match.start():end]
 
 
-def sites() -> str:
-    rows = []
+def consumer_sources():
     for owner in OWNERS:
         for path in sorted((ROOT / "crates" / owner / "src").rglob("*.rs")):
-            text = path.read_text()
-            for symbol, start, end, body in functions(text):
-                indirect = owner == "sifr_lsp" and re.search(r"AnalysisHost|analysis|workspace", body)
-                matches = list(TERMS.finditer(body))
-                if not matches and not indirect:
-                    continue
-                line = text.count("\n", 0, start) + 1
-                operations = ["read"]
-                if re.search(r"\.(?:iter|values|keys|into_values)\(", body):
-                    operations.append("enumerate")
-                if re.search(r"\bmut\s+(?:external_defs|externals|stdlib_defs)\b|&mut\s+(?:\w+::)*ExternalDefs|(?:external_defs|externals|stdlib_defs)[\s\S]{0,160}\.(?:insert|remove|extend|entry|to_mut)\(", body):
-                    operations.append("mutate overlay/producer")
-                if re.search(r"(?:external_defs|externals|stdlib_defs|stdlib_code|compiled\.defs)[\s\S]{0,160}\.clone\(", body):
-                    operations.append("clone projection")
-                if re.search(r"Arc|OnceLock|Cow|WorkspaceSession|AnalysisHost|&(?:'\w+\s+)?ExternalDefs", body):
-                    operations.append("borrow/retain")
-                test = "test" in path.name or "tests" in path.parts or "#[test]" in text[max(0,start-100):start]
-                target = "test setup/parity" if test else ("snapshot query (indirect)" if indirect and not matches else "layered view + demanded record handles")
-                if ("metadata_producer" in path.parts or symbol == "compile_stdlib_sources_with_sysroot") and not test:
-                    target = "canonical source-only producer (retain)"
-                anchors = sorted({text.count("\n", 0, start+m.start())+1 for m in matches})
-                anchor_text = ", ".join(map(str, anchors)) if anchors else "indirect"
-                rows.append(f"| `{path.relative_to(ROOT)}:{line}` `{symbol}` | {', '.join(operations)} | {target} | {anchor_text} |")
+            yield owner, path, False
+    for relative in SHARED_TEST_SOURCES:
+        path = ROOT / relative
+        if not path.is_file():
+            raise ValueError(f"missing maintained shared metadata consumer: {relative}")
+        yield "shared-test", path, True
+
+
+def sites() -> str:
+    rows = []
+    for owner, path, shared_test in consumer_sources():
+        text = path.read_text()
+        for symbol, start, end, body in functions(text):
+            indirect = owner == "sifr_lsp" and re.search(r"AnalysisHost|analysis|workspace", body)
+            matches = list(TERMS.finditer(body))
+            if not matches and not indirect:
+                continue
+            line = text.count("\n", 0, start) + 1
+            operations = ["read"]
+            if re.search(r"\.(?:iter|values|keys|into_values)\(", body):
+                operations.append("enumerate")
+            if re.search(r"\bmut\s+(?:external_defs|externals|stdlib_defs)\b|&mut\s+(?:\w+::)*ExternalDefs|(?:external_defs|externals|stdlib_defs)[\s\S]{0,160}\.(?:insert|remove|extend|entry|to_mut)\(", body):
+                operations.append("mutate overlay/producer")
+            if re.search(r"(?:external_defs|externals|stdlib_defs|stdlib_code|compiled\.defs)[\s\S]{0,160}\.clone\(", body):
+                operations.append("clone projection")
+            if re.search(r"Arc|OnceLock|Cow|WorkspaceSession|AnalysisHost|&(?:'\w+\s+)?ExternalDefs", body):
+                operations.append("borrow/retain")
+            test = shared_test or "test" in path.name or "tests" in path.parts or "#[test]" in text[max(0,start-100):start]
+            target = "test setup/parity" if test else ("snapshot query (indirect)" if indirect and not matches else "layered view + demanded record handles")
+            if ("metadata_producer" in path.parts or symbol == "compile_stdlib_sources_with_sysroot") and not test:
+                target = "canonical source-only producer (retain)"
+            anchors = sorted({text.count("\n", 0, start+m.start())+1 for m in matches})
+            anchor_text = ", ".join(map(str, anchors)) if anchors else "indirect"
+            rows.append(f"| `{path.relative_to(ROOT)}:{line}` `{symbol}` | {', '.join(operations)} | {target} | {anchor_text} |")
     return "\n".join([BEGIN, "", "| Exact source symbol | Current access (conservative union within symbol) | DX.7 migration | Matching source lines |", "| --- | --- | --- | --- |", *rows, "", END])
 
 

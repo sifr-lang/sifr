@@ -16448,3 +16448,38 @@ Its separately capped callbacks provide a diagnostic coverage/cost ledger, not a
 single contiguous full-profile acceptance run. Full facade gates and repeated
 V5 scenarios remain mandatory. Use the resulting largest structural costs to
 choose the next bounded change; do not return to subsecond standalone tuning.
+
+### V1bb admission repair — explicit integration inventory reconciliation
+
+The first diagnostic at 58bdc237f9c60f123d0c07c8778c0eba02a70195
+finished with 12 passing guards, 3 failing guards and 57 blocked categories.
+All 72 selections are accounted for; blocked consumers did not execute.
+Preserve v1bb-discovery/ and each guard receipt. The early metadata guard
+blocked preparation before compilation; this attempt supplies no current
+preparation or integrated latency measurement.
+
+Bounded prerequisite repair: follow the moved full-corpus metadata consumer into
+verification/tools/corpus_oracle; retain its test/parity classification and fail
+if that explicitly owned source disappears. Rebind only the two changed driver
+method-policy input signatures, classify the two existing temporary Cargo-config
+writes as output effects, and author the two private-child umask unsafe records
+with exact source obligations. Do not bulk-approve unknown sites, remove consumer
+coverage, change assertions, or modify compiler/runtime behavior.
+
+Acceptance: focused scanner discovery/mutation/missing-source tests, all four
+complete inventories and their existing self-tests, file-size and diff checks,
+then independent exact-candidate review under the intermediate phase policy.
+The previously qualified child-lease implementation stays unchanged; its retained
+private-producer regression verifies private file/directory modes and unchanged
+parent/unrelated-child state. Resume the complete discovery at a fresh recorded
+candidate after these admission prerequisites pass. Full phase gates/V5 remain open.
+
+The bounded repair passed all four complete inventories and all four scanner
+self-test commands, including 13 metadata tests (new shared-consumer discovery,
+semantic-operation drift and missing-source rejection). File-size and diff checks
+also passed. The metadata table replaces exactly one moved consumer row with
+its actual shared-library location and keeps test/parity ownership. Two method
+bindings change only fingerprints/input signatures; two filesystem output rows
+and two exact private-child unsafe contracts are added. Compiler/runtime/test
+assertion sources are unchanged. Evidence: v1bb-inventory-repair/checks.json and
+per-command output; reconciliation.json records the exact reviewed sites.

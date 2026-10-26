@@ -1,10 +1,37 @@
 """Reject metadata payload loss and accidental persistence of live authorities."""
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+import check_dx_metadata_inventory as inventory
 
 from check_dx_metadata_inventory import check_external_fields
 
 
 class MetadataInventoryTests(unittest.TestCase):
+    def test_shared_oracle_is_discovered_and_semantic_drift_changes_inventory(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            relative = "verification/tools/corpus_oracle/src/lib.rs"
+            path = root / relative
+            path.parent.mkdir(parents=True)
+            path.write_text("pub fn parity(external_defs: ExternalDefs) { consume(external_defs); }")
+            with patch.object(inventory, "ROOT", root), patch.object(inventory, "OWNERS", ()):
+                original = inventory.sites()
+                self.assertIn(chr(96) + f"{relative}:1" + chr(96) + " " + chr(96) + "parity" + chr(96), original)
+                self.assertIn("| read | test setup/parity |", original)
+                path.write_text("pub fn parity(external_defs: ExternalDefs) { external_defs.iter(); }")
+                changed = inventory.sites()
+                self.assertNotEqual(original, changed)
+                self.assertIn("| read, enumerate | test setup/parity |", changed)
+
+    def test_missing_shared_oracle_is_rejected(self):
+        with TemporaryDirectory() as temporary:
+            with patch.object(inventory, "ROOT", Path(temporary)), patch.object(inventory, "OWNERS", ()):
+                with self.assertRaisesRegex(ValueError, "missing maintained shared metadata consumer"):
+                    inventory.sites()
+
     def source(self, extra=""):
         return """pub struct ExternalDefs {
     pub functions: Functions,
