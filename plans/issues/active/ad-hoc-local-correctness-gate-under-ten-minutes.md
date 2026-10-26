@@ -16669,3 +16669,53 @@ all affected project-cache/persistence/corruption/lease/recovery controls, and
 independent exact-candidate review. Register the concrete representation and
 invalidation contract before production edits. Reject marginal changes.
 The four integration failures and all final phase gates/V5 remain open.
+
+### V1be attribution result — retain durability; no storage rewrite adopted
+
+The exact4097-publication test passes in206.685s without tracing. A separate
+exact-PID syscall trace passes in279.886s. Tracing is materially intrusive and
+the latter is not an acceptance time. The frozen test executable was produced
+by f09ccdddb2; relevant history/cache/frontend source is byte-identical to current
+511e2f836. Its unrelated rejected codegen experiment excludes whole-gate claims.
+
+The trace records32785 fsync calls (about eight per publication), spending
+154.645s in fsync;512318 linkat calls spend11.079s,528727 unlinkat calls2.301s,
+and6390155 statx calls19.963s. The test's main thread waits279.855s in futex for
+its worker: that wait overlaps worker work and must not be added as another cost.
+Both ordinary and traced runs execute the original history/ABA/eviction assertions.
+
+This contradicts prioritizing hardlink elimination alone as a50% fix. A packed
+file would also amplify large-payload writes. A transactional durable store could
+reduce commit barriers, but requires a new publication/recovery and corruption
+contract. Do not undertake that broad cache rewrite before larger CPU costs.
+Keep this category's durability and record the206.685s observation as its current
+cost, not a passing ten-minute budget. Preserve v1be-history-attribution.
+No product storage or tests changed.
+
+### V1bf prospective feasibility — shared immutable emission owner
+
+The measured generated-quality area uses1254.77 child CPU seconds; its264-demo
+freshness pass takes141.746s elapsed. Each companion currently launches a fresh
+canonical CLI, which creates a new CompilerContext/metadata owner. Test whether
+retaining one immutable compiler owner across fresh per-source frontend executions
+reduces substantial repeated work. Existing shared corpus products do not already
+share a compiler process across these scalar CLI commands.
+
+Build an external pinned diagnostic against current public driver APIs. Match
+CLI project/single-file resolution through find_workspace_root; use a fresh
+DiskSourceProvider per source; retain all source parsing, lowering, generation
+and exact emitted-byte comparisons. Compare fresh owner per input against one
+batch-owned immutable context on the same12-source inventory, alternating rounds.
+Compare every result with the separately executed production CLI bytes. Explicitly
+separate bootstrap/preparation and retain bounded resource/deadline evidence.
+
+Good enough for further implementation work: at least30% lower aggregate ordinary
+emission time/CPU in that paired experiment, followed by the complete264-source
+inventory with exact outputs and isolated changed-source/error/reordered-request
+controls. No results cache, shared mutable project frontend or lost native runtime
+assertion. Adoption would require a concrete CLI-coverage/isolation ownership map,
+current source/toolchain/metadata invalidation, complete affected generated-quality
+and CLI contracts, and scoped independent review. A library probe does not prove
+public CLI behavior; existing732 installed public CLI emissions and dedicated CLI
+checks remain required. Register any production command/protocol change separately.
+Reject a marginal owner-sharing result; do not grow a universal compiler daemon.
