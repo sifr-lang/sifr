@@ -350,6 +350,32 @@ class BatchEmissionTests(unittest.TestCase):
                 self.assertFalse(owner.exists())
 
 
+    def test_failed_batch_retains_all_sibling_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            owner = Path(directory) / "owner"
+            owner.mkdir()
+            files = [Path("/bad.sifr"), Path("/good.sifr")]
+            def run(argv, **kwargs):
+                source = json.loads(Path(argv[3]).read_text())["files"][0]
+                output = Path(argv[5])
+                output.mkdir()
+                code = int(source == "/bad.sifr")
+                if not code:
+                    (output / "0.rs").write_text("valid Rust")
+                entry = {"index": 0, "source": source, "exit_code": code,
+                         "stderr": "compiler diagnostic" if code else ""}
+                (output / "report.json").write_text(json.dumps({"schema": 1, "entries": [entry]}))
+                return subprocess.CompletedProcess(argv, code, b"", b"")
+            with patch.object(batch, "formatter_environment", return_value={}), \
+                 patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
+                 patch.object(batch.subprocess, "run", side_effect=run), \
+                 contextlib.redirect_stderr(io.StringIO()):
+                results = batch.emit_many(Path("/compiler"), files, 2, Path(directory))
+            self.assertEqual([value.returncode for value in results], [1, 0])
+            self.assertTrue((owner / "0/report.json").is_file())
+            self.assertTrue((owner / "1/0.rs").is_file())
+
+
 def policy_checks():
     suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
     result = unittest.TextTestRunner(verbosity=0).run(suite)

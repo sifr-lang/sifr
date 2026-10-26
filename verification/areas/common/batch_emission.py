@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
 
@@ -106,7 +107,7 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
         results = [value for _, value in ordered]
         if any(value.returncode for value in results):
             # Retain request manifests, diagnostics and successful siblings for diagnosis.
-            print(f"emission batch evidence: {owner}", file=__import__("sys").stderr)
+            print(f"emission batch evidence: {owner}", file=sys.stderr)
         else:
             shutil.rmtree(owner)
         return results

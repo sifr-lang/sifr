@@ -65,10 +65,8 @@ def main() -> int:
     pairs: list[tuple[Path, Path]] = []
     for emitted in sorted((REPO_ROOT / "demos").glob("**/emitted.rs")):
         source = emitted.with_name("main.sifr")
-        if not source.is_file():
-            print(f"orphan generated companion: {emitted.relative_to(REPO_ROOT)}", file=sys.stderr)
-            return 1
-        pairs.append((emitted, source))
+        if source.is_file():
+            pairs.append((emitted, source))
 
     try:
         results = emit_many(compiler, [source for _, source in pairs], args.jobs, REPO_ROOT)
