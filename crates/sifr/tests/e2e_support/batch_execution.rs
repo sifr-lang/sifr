@@ -75,6 +75,14 @@ pub(crate) fn build_batch_group_bounded(
             native_cache::write_changed(&source_path, group.generated_main.as_bytes())
         {
             build_error = Some(format!("failed to write main.rs: {err}"));
+        } else if let Err(error) = native_resolution::prepare(
+            lease,
+            &group,
+            &group_root,
+            deadline.saturating_sub(started.elapsed()),
+        ) {
+            infrastructure_failure = error.infrastructure;
+            build_error = Some(error.message);
         } else {
             let mut build_command = Command::new("cargo");
             build_command
@@ -86,7 +94,11 @@ pub(crate) fn build_batch_group_bounded(
                 .current_dir(&group_root);
             application_profile().configure(&mut build_command);
             build_command.env("CARGO_TARGET_DIR", config.cache.root.join("native-target"));
-            let build_capture = run_leased_capture(build_command, lease, deadline);
+            let build_capture = run_leased_capture(
+                build_command,
+                lease,
+                deadline.saturating_sub(started.elapsed()),
+            );
             units = telemetry::cargo_units(&build_capture.stdout);
             source_failure =
                 batch_isolation::is_source_failure(&build_capture, &group.package_name);
@@ -542,6 +554,7 @@ where
 pub(crate) fn initial_cache_manifest(
     lease: &native_cache::NativeCache,
     config: &RunnerConfig,
+    groups: &[BatchGroup],
 ) -> CacheManifest {
     if !config.cache.enabled {
         return CacheManifest {
@@ -557,6 +570,7 @@ pub(crate) fn initial_cache_manifest(
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs())
             .unwrap_or_default(),
+        &groups.iter().map(|group| group.id.clone()).collect(),
         |group_root| {
             for args in native_cache::retirement_commands(
                 group_root,
@@ -601,7 +615,7 @@ fn run_leased_capture(
     lease: &native_cache::NativeCache,
     deadline: std::time::Duration,
 ) -> CommandCapture {
-    if let Err(error) = lease.bind_command(&mut command) {
+    if let Err(error) = lease.bind_cargo_command(&mut command) {
         return CommandCapture {
             stdout: String::new(),
             stderr: format!("cannot bind native cache lease: {error}"),

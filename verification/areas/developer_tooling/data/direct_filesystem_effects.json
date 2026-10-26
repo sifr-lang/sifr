@@ -24857,6 +24857,328 @@
       "operation": "read_to_string",
       "site": "let worker_pid = std::fs::read_to_string(worker_pid).unwrap();",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution.rs",
+      "symbol": "read_owned",
+      "operation": "symlink_metadata",
+      "site": "match std::fs::symlink_metadata(path) {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution.rs",
+      "symbol": "read_owned",
+      "operation": "read",
+      "site": "std::fs::read(path).map(Some)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution.rs",
+      "symbol": "prepare",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(staging)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "dependency",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(root.join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "dependency",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "dependency",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read",
+      "site": "let first_lock = std::fs::read(project.join(\"Cargo.lock\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read",
+      "site": "let first_receipt = std::fs::read(project.join(\"resolution.json\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read",
+      "site": "std::fs::read(project.join(\"Cargo.lock\")).unwrap()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read",
+      "site": "std::fs::read(project.join(\"resolution.json\")).unwrap()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read_dir",
+      "site": "std::fs::read_dir(project.join(\"resolution-history\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read",
+      "site": "std::fs::read(project.join(\"Cargo.lock\")).unwrap()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_reuses_matching_inputs_and_rebuilds_changed_dependencies",
+      "operation": "read_to_string",
+      "site": "std::fs::read_to_string(project.join(\"Cargo.lock\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "read",
+      "site": "let lock = std::fs::read(project.join(\"Cargo.lock\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "read",
+      "site": "let receipt = std::fs::read(project.join(\"resolution.json\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(project.join(\"Cargo.lock\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(project.join(\"resolution.json\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "write",
+      "site": "std::fs::write(project.join(\"resolution.json\"), &receipt).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "read",
+      "site": "let current_lock = std::fs::read(project.join(\"Cargo.lock\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "write",
+      "site": "std::fs::write(project.join(\"Cargo.lock\"), b\"corrupted lock\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "write",
+      "site": "std::fs::write(project.join(\"Cargo.lock\"), current_lock).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_missing_interrupted_and_corrupted_preparation",
+      "operation": "write",
+      "site": "std::fs::write(project.join(\"resolution.json\"), b\"invalid receipt\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_failure_keeps_evidence_and_continues_independent_groups",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_failure_keeps_evidence_and_continues_independent_groups",
+      "operation": "exists",
+      "site": "assert!(!outcomes[0].group_root.join(\"resolution.json\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_failure_keeps_evidence_and_continues_independent_groups",
+      "operation": "read_dir",
+      "site": "let retained = std::fs::read_dir(&outcomes[0].group_root)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_failure_keeps_evidence_and_continues_independent_groups",
+      "operation": "is_file",
+      "site": "&& entry.path().join(\"stderr.log\").is_file()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_expired_selected_group_remains_cargo_fresh",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_expired_selected_group_remains_cargo_fresh",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(project.join(\"pending\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_expired_selected_group_remains_cargo_fresh",
+      "operation": "write",
+      "site": "std::fs::write(project.join(\"completed\"), b\"completed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_resolution_expired_selected_group_remains_cargo_fresh",
+      "operation": "is_dir",
+      "site": "assert!(project.is_dir());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_current_groups_do_not_protect_obsolete_unselected_groups",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&group).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_current_groups_do_not_protect_obsolete_unselected_groups",
+      "operation": "write",
+      "site": "std::fs::write(group.join(\"completed\"), b\"completed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_current_groups_do_not_protect_obsolete_unselected_groups",
+      "operation": "is_dir",
+      "site": "assert!(cache_group_path(root, \"selected\").is_dir());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_current_groups_do_not_protect_obsolete_unselected_groups",
+      "operation": "exists",
+      "site": "assert!(!cache_group_path(root, \"obsolete\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(built.group_root.join(\"pending\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "write",
+      "site": "std::fs::write(built.group_root.join(\"completed\"), b\"completed\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "read_dir",
+      "site": "let dependencies = std::fs::read_dir(config.cache.root.join(\"native-target/debug/deps\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "exists",
+      "site": "!first[1].group_root.exists(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "exists",
+      "site": "assert!(!first[1].artifact_path.as_ref().unwrap().exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "is_file",
+      "site": "assert!(first[0].artifact_path.as_ref().unwrap().is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_resolution_tests.rs",
+      "symbol": "test_native_retirement_removes_only_unselected_native_package",
+      "operation": "is_file",
+      "site": "assert!(dependencies.iter().all(|path| path.is_file()));",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/child_lease_tests.rs",
+      "symbol": "private_producer_does_not_change_parent_or_unrelated_child_permissions",
+      "operation": "metadata",
+      "site": "std::fs::metadata(root.join(\"payload\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/child_lease_tests.rs",
+      "symbol": "private_producer_does_not_change_parent_or_unrelated_child_permissions",
+      "operation": "metadata",
+      "site": "std::fs::metadata(root.join(\"directory\"))",
+      "classification": "tooling-input"
     }
   ]
 }

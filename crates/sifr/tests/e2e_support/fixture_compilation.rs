@@ -384,12 +384,19 @@ pub(crate) fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<Batc
 
     let generated_rust = format!("{generated_modules}{generated_main}");
     let generated_rust_hash = deterministic_hash(&generated_rust);
-    let raw_group_signature = format!(
-        "{}|{}|{}",
-        fingerprint.signature(),
+    // Publication identity describes actual native inputs, not unrelated entries
+    // in the workspace lock. Full plan identity still owns grouping and resolution.
+    let native_manifest =
+        sifr_driver::generate_dependency_cargo_toml("sifr_batch_identity", &dependency_plan);
+    let raw_group_signature = serde_json::json!([
+        "native-project-v1",
+        fingerprint.dependency_inputs,
         case_signature,
         generated_rust_hash,
-    );
+        native_manifest,
+        sifr_driver::sysroot_cargo_config_args(&dependency_plan),
+    ])
+    .to_string();
     let id = deterministic_hash(&raw_group_signature);
     let package_name = package_name_from_id(&id);
 
@@ -502,6 +509,7 @@ pub(crate) fn prune_cache_manifest(
     root: &Path,
     manifest: CacheManifest,
     now_unix_secs: u64,
+    selected_groups: &HashSet<String>,
     mut retire: impl FnMut(&Path) -> Result<(), String>,
 ) -> CacheManifest {
     let groups_root = cache_groups_root(root);
@@ -540,7 +548,8 @@ pub(crate) fn prune_cache_manifest(
                     continue;
                 };
 
-                if live_group_ids.contains(group_id)
+                if selected_groups.contains(group_id)
+                    || live_group_ids.contains(group_id)
                     || !path.join("completed").is_file()
                     || path.join("pending").exists()
                     || path.join("preserve").exists()

@@ -264,3 +264,44 @@ fn assert_released(file: &File) {
         }
     }
 }
+
+#[test]
+fn private_producer_does_not_change_parent_or_unrelated_child_permissions() {
+    use std::os::unix::fs::PermissionsExt;
+    let (_temp, root) = root();
+    let owner = lock(&root, "private-producer");
+    let inherited_mask = || {
+        Command::new("sh")
+            .args(["-c", "umask"])
+            .output()
+            .unwrap()
+            .stdout
+    };
+    let before = inherited_mask();
+    let before_flags = flags(&owner);
+    let mut producer = Command::new("sh");
+    producer
+        .args(["-c", "printf payload > \"$1\"; mkdir \"$2\"", "producer"])
+        .arg(root.join("payload"))
+        .arg(root.join("directory"));
+    inherit_lease_for_private_command(&mut producer, &owner).unwrap();
+    assert!(producer.status().unwrap().success());
+    assert_eq!(inherited_mask(), before);
+    assert_eq!(flags(&owner), before_flags);
+    assert_eq!(
+        std::fs::metadata(root.join("payload"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+    assert_eq!(
+        std::fs::metadata(root.join("directory"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o700
+    );
+}
