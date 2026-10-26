@@ -16761,3 +16761,10 @@ independent exact-candidate review and intermediate PR/merge under the approved
 policy. Stop after this root-cause repair; it is correctness recovery, not a claimed
 runtime saving. The independent socket/lease failures, SQL provenance rebuild and
 all final facade/timing qualification remain open and separately owned phase work.
+
+V1bg focused discovery also exposes the registry audit's derived manifest count
+(157 versus158 after adding the oracle). Include that count-only correction in
+the same relocation repair. All oracle dependencies inherit workspace declarations,
+so no direct release declaration, pin, registry response, checksum or audit date
+changes. Preserve the first failed run: four test binaries passed, direct-registry
+audit failed, and the sixth binary was not reached. Rerun all six on the repair.
