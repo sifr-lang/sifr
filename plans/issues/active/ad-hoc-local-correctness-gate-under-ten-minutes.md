@@ -16032,3 +16032,91 @@ does the dedicated Rust interop release-LTO test (lto=true, codegen-units=1).
 Evidence: v1ax-local-lto-decision.json, v1ax-build-attribution.json,
 v1ax-codegen-pass-timers/, v1ax-codegen-lto-off-timers/ and v1ax-baseline-binary/.
 Cargo semantics: https://doc.rust-lang.org/cargo/reference/profiles.html#lto.
+
+### V1ax delivered — compiler-local ThinLTO rebuild cost
+
+Merged [PR #4492](https://github.com/sifr-lang/sifr/pull/4492) as
+f6254367365e9eb5d542344224e99ac94f8314a7. Exact reviewed candidate:
+cd047258160897b02f53f53d47c0e3d36112d392; the merge tree is identical.
+Independent Claude review was SATISFIED with no blockers, retained outside Git
+as v1ax-independent-review.md and v1ax-review-fsvld3_v/response.md.
+
+All ten ordinary stages, ten registered release-CGU invalidation stages, and four
+restoration preparations passed. Both complete 732-case compiler profiles,
+baseline Rust/map/module equivalence, all 745 installed commands including four
+native cases, boundary/host/structural checks, and all 72 distribution variants
+passed. All 33 focused profile/setup tests and formatting, file-size and profile
+checks passed. Correctness-only create-PR/merge plans preserve prior selections.
+Complete original/restored preparation receipts are equal, including sources,
+binaries, snapshots, toolchain and environment. No assertions were replaced by
+old passing results.
+
+| Observation | Before | After |
+| --- | ---: | ---: |
+| Required release-profile invalidation command, four jobs | 671.259s | 364.878s |
+| Same ten affected-stage helper sum, excluding guards | 1389.264s | 1088.993s |
+| Fresh public corpus emission median, matched three-worker pairs | 61.948s | 67.358s |
+| Compiler binary bytes | 108189640 | 109375440 |
+
+The affected invalidation scenario saved 300.272s (21.614%) including execution
+costs. Each integrated scenario is one observation; these serial diagnostic
+campaigns are not a complete gate or repeated V5 qualification. The measured
+baseline d24202b7 differs from the declared base only in architecture/phase prose;
+compiler inputs are equal. The instrumented single-crate experiment is separate
+attribution evidence and is not a whole-build speed claim.
+
+The execution tradeoff is explicit: fresh emission median increased 8.732%.
+A single eight-CGU pilot increased 10.111%; it did not justify changing the
+existing sixteen-CGU setting. That pilot does not prove partition tuning could
+never recover execution speed. Stop tuning this item and pursue larger costs.
+An earlier four-worker candidate warmup was blocked at memory admission and
+remains excluded from matched results. No failed or missing execution is a pass.
+
+Evidence: v1ax-ordinary-qualification/, v1ax-ordinary-native/,
+v1ax-invalidation/, v1ax-restored-qualification/, v1ax-restored-native/,
+v1ax-restoration-equivalence.json, v1ax-focused/,
+v1ax-execution-comparison-three/, v1ax-execution-comparison-eight/pilot.json,
+v1ax-integrated-affected-comparison.json and v1ax-adoption-decision.json.
+The original attribution directories and hash-preserved baseline binary remain
+alongside the compact review bundle; they were not deleted.
+
+Follow-ups: phase-end V5 must expose unchanged warm-gate execution cost, where
+there is no compiler rebuild saving. Release-performance ownership must retain
+the slower/larger distributed compiler tradeoff; no release qualification is
+claimed here. CI run40289985887 retains the prior three diagnostic signatures:
+missing performance reference, Windows PostgreSQL18 missing dirent.h, and missing
+E2E report signature with unclassified inner cause. These remain failures with
+their existing owners. Final scoped gates, integration repairs and V5 remain open.
+
+### V1ay prospective investigation — positive E2E native work and retention
+
+Base implementation: f6254367365e9eb5d542344224e99ac94f8314a7.
+Before another optimization, measure current compiler preparation, complete
+positive E2E execution, native freshness and representative invalidation. The
+earlier 553.495s category contained 471.416s of native work and zero fresh outputs
+among186 groups; it is not an unchanged warm-run forecast.
+
+Two concrete mechanisms require bounded investigation: native groups deliberately
+execute serially while the recorded inner Cargo allocation is one job; retirement
+expires entries after two hours without knowing which groups the current run
+will consume. Current retained186 entries are all expired. Prior retirement logs
+also reject a missing Cargo CACHEDIR.TAG marker. Preserve those failures and
+identify the marker/ownership mechanism before any recovery; do not bypass
+Cargo safety checks or rewrite integrity receipts.
+
+Keep every732 fixture compilation/runtime assertion, lexical ordering, native
+artifact validation, separate runtime processes, failure isolation, pending/failed
+evidence, shared-target lease and dependency invalidation. No universal cache,
+fixture exclusion or successful-result reuse is proposed.
+
+Acceptance/stopping condition for any subsequent implementation: demonstrate
+the measured native cost reduction on retained and affected-edit scenarios;
+prove current consumers cannot be retired before use while obsolete unselected
+groups remain eligible under ownership rules; prove Cargo still rejects stale,
+missing or corrupted outputs and validates every invocation; keep the same
+admitted CPU/memory budget and avoid concurrent publication into the shared
+target. Only change allocation if measured rebuild benefit justifies it.
+Use focused lifecycle/allocation regressions and the complete affected corpus,
+then exact-candidate independent review. Stop when the avoidable repeated work
+is removed and the next larger current cost is identified; do not keep tuning
+small residual seconds. Full final gates and V5 still determine the600s goal.
