@@ -360,6 +360,24 @@ Compiler-input tracking is unchanged: test output is moved out of its inputs,
 not excluded from source identity checks. The regular 30-minute subprocess
 safety deadline and child cleanup still apply.
 
+### Standalone parity and runtime-failure fixtures
+
+Standalone parity and runtime-failure programs reuse the same Cargo validation,
+resolution and artifact-selection machinery in a separate
+\`standalone/cargo-v3\` namespace. Programs keep their original crate-root Rust
+and main function; each selected fixture compiles and executes independently
+without a batch wrapper. Cargo validates every invocation, and the original
+stdout/stderr/exit assertions remain the acceptance authority.
+
+Relative native cache paths resolve from the source checkout root for this
+consumer, keeping generated outputs outside watched crate source roots.
+Absolute selected paths remain absolute. A process-local publication lock and
+the native cache lease cover compilation through runtime consumption; competing
+external owners fail closed. Different generated inputs receive separate
+packages and working directories. Compatible dependency artifacts are shared.
+Nonzero and interrupted execution logs are preserved, including expected
+runtime failures; normal group retention keeps their evidence.
+
 ### E2E native dependency reuse
 
 Every generated run-pass group is validated by Cargo. The owned cache uses a
