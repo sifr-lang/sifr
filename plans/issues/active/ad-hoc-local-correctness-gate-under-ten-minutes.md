@@ -17165,3 +17165,40 @@ fmt/size/diff pass and scoped independent review. Do not repeat crate00/09 for t
 constant-only correction; final integrated phase gates remain required. Stop once
 the canonical registry and behavior agree, then diagnose SQL worker closure and
 restore actual component provenance before the next whole-gate measurement.
+
+### V1bm delivered — canonical hidden-command reservation
+
+Merged [PR #4500](https://github.com/sifr-lang/sifr/pull/4500) as
+3700ab2f4eacf9dcc831a8a9aed3395a60d06b8e. Tested/reviewed candidate
+e225907abbb3daeb86762bfff38fc3d81c9c987f; merged tree verified identical.
+Added __emit-batch to the canonical reserved namespace registry. The unchanged
+CLI equality assertion now passes. A separate hidden-name rejection test covers
+both hidden commands; manifest syntax validation correctly precedes reservation.
+The first test incorrectly expected the reservation diagnostic: v1bm-focused
+remains failed (6 passed,1 failed). Corrected v1bm-focused-v2 passes8 package,
+2 CLI,1 actual host-tool integration tests, fmt/size/diff in62.233s including
+retained-target compilation. No dispatcher, parser precedence or profile change.
+Independent review SATISFIED/no blockers47.193s, v1bm-review-6xcv0pfo/response.md,
+SHA256 1b297269d5b43950a16988213a494709d3c9979276bdb5b2691c8d0cc467ebbc.
+Follow-up: the shared registry also supplies typo suggestions; existing hidden
+command suggestion policy is outside this correction. PR attachment hit the
+100-identity cap. Final integrated correctness/timing acceptance remains OPEN.
+
+### V1bn prospective SQL worker diagnostic and recovery
+
+Resolve the two observed SQL channel-closure failures before another integrated
+measurement. First reproduce the original direct/sandbox assertions with uncaptured
+worker diagnostics and retained builds; trace only a representative failure if
+ordinary diagnostics cannot identify its cause. Distinguish a test prerequisite,
+worker lifecycle/transport defect, resource failure, and component provenance.
+Do not assume stale component provenance explains a channel closure.
+
+Good enough: establish the causal boundary and make the smallest root-cause repair;
+original schema equivalence, SQLite provision/cleanup, admission drift, lazy start,
+wrong compiler and missing grant assertions all pass, followed by the full SQL
+native application test binary. Preserve negative cases, isolation and termination
+semantics. Any implementation requires affected regressions, fmt/size and scoped
+exact-candidate review. Use existing retained targets and1800s diagnostic caps.
+No throughput claim from correctness repair. Once green, stop tuning this item,
+restore actual component provenance and measure the complete current gate before
+choosing another structural cost reduction. Phase final gates/V5 remain required.
