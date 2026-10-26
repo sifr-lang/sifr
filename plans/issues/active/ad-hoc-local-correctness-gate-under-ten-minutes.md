@@ -16768,3 +16768,38 @@ the same relocation repair. All oracle dependencies inherit workspace declaratio
 so no direct release declaration, pin, registry response, checksum or audit date
 changes. Preserve the first failed run: four test binaries passed, direct-registry
 audit failed, and the sixth binary was not reached. Rerun all six on the repair.
+
+### V1bg delivered — corpus oracle inventories reconciled
+
+Merged [PR #4496](https://github.com/sifr-lang/sifr/pull/4496) as
+d8dd26f57716b835f43e06d8bddea07e12c8d289. Reviewed candidate
+053ea2e18f5f81ed3786a949e8f99882cdeea6cd; merged tree matches.
+All41 tests across the six audit binaries and all four coverage-readiness
+variants pass. Size/diff checks pass; emitted correctness-only create-pr/merge
+plans are unchanged. Evidence: v1bg-focused-v2, guarded63.709s overall.
+Independent review SATISFIED without blockers: v1bg-review-asqq4lln/response.md,
+outside Git keyed by candidate. Earlier failure remains retained.
+No runtime-saving claim. Follow-up: workspace membership changes should trigger
+the existing classification/audit checks; final gates already select them.
+Socket/lease races, actual SQL component rebuild, final facade gates and V5 remain open.
+
+### V1bh prospective diagnostic — whole-emission CPU attribution
+
+Prior formatter and CompilerContext-sharing experiments missed their adoption
+thresholds. Stop extrapolating selected function probes to the complete compiler.
+Profile whole canonical CLI emissions across the same12 representative sources,
+including descendants, and reconcile every emitted result with retained
+byte-identical production evidence. Use a frozen production baseline with exact
+relevant source equivalence; no rejected experimental compiler or dependency
+graph is eligible. Record sampled self/inclusive work separately from ordinary
+elapsed/child CPU. Confirm stack coverage and profiler loss; incomplete stacks
+must not be treated as accurate attribution. Keep original assertions, input
+hashes, allocation, cache ownership and private output trees.
+
+This is diagnostic only: no compiler/cache/profile/selection change. Preserve
+1800s caps, capacity reserves, failed attempts and immutable evidence. Good enough:
+identify a measured structural cost that plausibly affects a whole expensive
+category, then register its concrete correctness/invalidation contract and an
+ordinary paired >=30% category-level target before implementation. Reject isolated
+seconds and avoid speculative whole-compiler rewrites. Full gate under600s remains
+unproven; no existing failed or unexecuted check becomes a pass.
