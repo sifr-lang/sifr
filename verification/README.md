@@ -146,7 +146,14 @@ and `.venv`, independently of an activated environment or ambient
 Environment preparation is separate from compiled Python examples. With
 `--no-fail-fast`, an environment failure blocks its consumers while independent
 work continues; an example failure does not invalidate a successfully prepared
-environment. Bootstrap time remains part of preparation accounting.
+environment. Bootstrap time remains part of preparation accounting. The 29 compiled Python
+examples own their package reconstruction, certification, optimized compilation
+and runtime assertions in execution. Profiles do not precompile those examples:
+that discarded pass duplicated work subsequently repeated by canonical
+`sifr run --release`. Cold native compilation is included in execution time;
+compare complete preparation plus execution when measuring improvements.
+`python_interop/runner/prepare_examples.py` remains an explicit diagnostic
+prewarming tool, with no runtime coverage claim; it is not a profile prerequisite.
 For focused driver Python tests outside a profile, prepare this same environment
 once with `uv run --project verification/areas/python_interop --locked python
 verification/areas/python_interop/runner/prepare_environment.py`. The builtins-only
