@@ -7250,7 +7250,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs::test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies::literal-comparison::1",
-      "fingerprint": "478739d0b36558fd290da790b4554e3bda71485199f16841feb9bcaaa1400e42",
+      "fingerprint": "4b922a884ffa0e0d6d2f4684191eb94c70ea5d6745d70a2f275f75c4e19ed9ab",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if name != \"unmarked\"",
@@ -7262,7 +7262,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs::test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies::literal-comparison::2",
-      "fingerprint": "3abd6aab4e98cff02d8febbe67e12b7e0fc096693dff18143c1e0d255ece349d",
+      "fingerprint": "1bd7519b6532c4e3f942f0d68e9bb21c80e50e590cc7d56e34221b8d3a58a285",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if name == \"failed\"",
@@ -7274,7 +7274,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/harness_behavior_tests.rs::test_pruning_preserves_failed_interrupted_unowned_groups_and_native_dependencies::literal-comparison::3",
-      "fingerprint": "28b2b81006da8388a8893227a05e63b947d18f46f01bb56534dfa655d349b2a5",
+      "fingerprint": "e5d902ba6611ef39477fe2f1bb7b9b72b929445a1489663d2f1a9d0831a568b5",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if name == \"interrupted\"",
@@ -7562,7 +7562,7 @@
     },
     {
       "site": "crates/sifr/tests/e2e_support/pass_suite.rs::run_pass_suite::literal-comparison::1",
-      "fingerprint": "c74ea9fe2e67297f035f84d06b68afad998f2f998c087faf356a2e93d1bdc062",
+      "fingerprint": "ffb73d8ec72875b59c1a529923d0c8ed77c9634209e8e933c5172a90a0255a92",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if env :: var ( \"SIFR_E2E_PROFILE\" ) . ok ( ) . as_deref ( ) == Some ( \"release\" )",

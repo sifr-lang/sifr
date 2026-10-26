@@ -16201,3 +16201,10 @@ Evidence: v1ay-producer-focused/, v1ay-complete-focused/,
 v1ay-e2e-candidate/, v1ay-filesystem-before.json and
 v1ay-filesystem-additions.json. Complete lock-input invalidation, restoration and
 exact-candidate review are still required before accepting this item.
+
+Four existing E2E literal-site context fingerprints also changed because their
+containing functions now pass selected groups into retention preparation. The
+literal operations, semantic owners and contracts are unchanged. Update only
+those four fingerprints; preserve the two pre-existing entrypoint binding
+failures for their integration owner. No compiler or harness implementation
+changes accompany these inventory records. Evidence: v1ay-method-policy-bindings.json.
