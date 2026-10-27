@@ -18048,3 +18048,36 @@ evidence, so refresh/provenance belongs to their next evidence update. The trans
 inventory's existing blank line breaks Markdown table rendering; its documentation
 owner can repair that cosmetic structure separately. Neither changes executed
 coverage. Final whole-phase gates and repeated V5 remain OPEN; no600s claim.
+
+### V1cb prospective — remove repeated observations within one probe snapshot
+
+V1by established thirteen reads of each large SQLite source during representative
+materialization, but did not bind every read to its caller and ownership boundary.
+Inspect whether backend and runtime roles name the exact same source root inside
+one synchronous ProbeInputSnapshot. Such roles may share one current observation;
+before/after-Cargo snapshots must remain independent. No path/mtime cache,
+cross-command reuse, feature unification, skipped Cargo probe or weakened byte
+validation is authorized.
+
+First use one temporary, committed caller/stage-clock diagnostic on the three
+previous representative complete materializations. Capture exact roots, caller,
+elapsed time and result; compare complete generated trees with current ordinary
+execution. Diagnostic instrumentation is not acceptance timing. Preserve original
+inputs and targets; restore ordinary production source before acceptance.
+Use current canonical preparation/environment, explicit capacity/reserve admission
+and the1800s category cap. Do not repeat unsuccessful stack unwinding.
+
+Good enough to proceed: source-correlated measurements show duplicate observations
+of the same root with no intervening external execution, and their maximum saving
+is material to the whole generated preparation category. For any implementation,
+require at least25% lower ordinary combined representative materialization cost,
+then at least20% lower complete93-materialization preparation (including all
+portable locked-graph checks), identical generated outputs and complete affected
+interop mutation/isolation/negative controls. New snapshots must observe
+same-size/mtime-preserving changes, directory membership, missing/unreadable roots,
+links and backend/runtime differences. Keep every before/after-Cargo mutation
+rejection, lexical diagnostic, profile, runtime assertion and trust boundary.
+Register concrete implementation scope before editing production policy; use
+focused checks and exact-candidate independent review before intermediate merge.
+Reject a marginal result rather than extending a general cache. Whole-gate
+qualification and all V5 scenarios remain OPEN.
