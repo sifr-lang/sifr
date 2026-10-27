@@ -19185,3 +19185,85 @@ byte-identical output, plus unchanged and consumer-edit reuse. Record initial
 construction separately because the retained artifact inventory differs.
 A workspace-wide build-profile change is NOT adopted by this experiment; any
 production choice needs measured build-plus-execution invalidation acceptance.
+
+### V1cp concluded — generation ownership and invalidation screen passes
+
+Aligned build-dependency optimization generates the same eight images in19.333s
+during initial construction, versus167.078s previously (ratio0.115712).
+All eight native hashes are identical. Initial external construction241.739s/
+988.189CPU seconds is recorded separately; artifact availability and concurrent
+dependency compilation differ, so it is not a matched cold-build comparison.
+Unchanged build0.286s and consumer edit0.773s preserve generation timestamps.
+
+The75.735s invalidation guard passes. Only the declared Wasm input changes first;
+generation reruns14.393s and handles nine unique images (one changed MySQL alias).
+A subsequent policy-only edit reruns14.173s; a generator-only edit reruns14.100s.
+A source/manifest hash disagreement fails before replacing prior successful
+generation. Restoring real inputs reruns13.735s and yields the original eight
+byte-identical native images. The generator now uses a bounded owned image-slot
+directory; obsolete owned slots are removed when the inventory shrinks.
+
+All10 maintained versions load from a relocated executable while both original
+build output and source-input directories are hidden. Unknown source/changed
+policy controls pass; supplied native-image bytes are rejected through the safe
+Wasm compiler path. Source and output directories are restored after these
+checks. This is external architecture feasibility, not product adoption.
+
+Preserve670 evidence files, including failures, sources, producer/consumer
+executables and final generated images. Archive SHA256:
+c09be1e10eb2f41839bfc26f95bc07a01cce8bbff4f6c8fc3e44bdc6e8a1c2da.
+No compiler-target cleanup or production image cache was used.
+
+### V1cq prospective implementation — compiler-owned embedded component engine
+
+Implement one native-only compiler-owned Engine/bundle crate. Keep its trusted
+build producer, shared Engine policy, immutable generated loader and compiled
+input identity in that owner. It consumes maintained component artifacts and
+their manifest hashes directly, not provider Rust implementations. The generic
+component host selects it only through the existing native host capability;
+protocol-only/Wasm and native SQL tools must not acquire the compiler bundle.
+
+The build script generates images through pinned Wasmtime only; runtime loading
+accepts only immutable generated constants, never native paths or buffers.
+Authenticate current source bytes and request/registration before selection.
+Match source hash, stack policy and Engine compatibility; retain ordinary safe
+Wasm compilation for unknown/incompatible components. A selected image load
+failure propagates. Keep fresh Stores, all sandbox/response checks, existing
+8-entry/128MiB owner retention and lifetime semantics. Bound embedded image bytes
+and generated file inventory separately. Preserve cross-target correctness via
+the existing Wasm compilation path without assuming host-native artifacts apply
+to a different target. Cross-platform timing remains outside the local goal.
+
+Use one policy source for build and runtime. The producer's declared inputs
+include Wasm/manifests, Engine policy, generator source, dependency/toolchain/
+target/build configuration and its own compiled identity. Ordinary compiler
+consumer edits must reuse generation. A change to a declared producer input
+must invalidate it; failed construction must not qualify an older artifact.
+Installed/relocated executables must work without build files.
+
+Prospectively align compiler-workspace dev build dependencies with its existing
+opt1/line-table runtime dependency profile, as screened in V1cp. This does not
+qualify global build cost by itself. Record initial transition separately and
+measure retained producer invalidation and actual category build/execution.
+Retain every generated-program optimization/independence assertion. If required
+invalidation costs erase the material gain, correct that boundary before adoption.
+
+Required focused qualification:
+- engine/bundle selection, all maintained version identities, changed valid policy,
+  unknown source, native-input rejection, bounded outputs, source/hash mismatch,
+  relocation and declared producer-input invalidation/reuse;
+- all component-host regressions, all29 SQL application tests, relevant provider
+  runtime/component tests and compiler/editor mutation contracts;
+- update source-policy/mutation checks to the actual single policy authority,
+  preserving every existing negative control and adding native-origin boundaries;
+- native SQL tool dependency-boundary checks, compiled-input identity and dependency
+  audit/profile/self-tests affected by the new package and build profile;
+- genuine component-producer reconstruction for changed provenance, never manually
+  stamp receipts; compare all component/core bytes and retain actual build costs;
+- formatting, file guardrails, exact-candidate independent review and scoped PR.
+
+The actual29-test category must retain its25%/30s and CPU<=5% criterion against
+the160.106597s/1057.807280CPU ordinary baseline. Charge image generation in the
+required producer-invalidation case, retain bootstrap/profile-change costs and
+keep full-gate timing claims separate. Complete correctness-only create-PR/merge
+gates and all repeated V5 scenarios remain required at final phase integration.
