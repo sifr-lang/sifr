@@ -17760,3 +17760,46 @@ and generated-quality checks. Run formatting, size and applicable authority
 checks, exact-candidate independent review, then intermediate PR/merge under
 the approved policy. Account for source invalidation and build work; final full
 correctness gates and every repeated V5 scenario remain OPEN.
+
+### V1bx qualification checkpoint — material gain, reporting repair pending
+
+Implementation candidate ab53e50dc3d49f6ffbaa6e20dffd5700628f5170:
+five selection controls and all1785 codegen tests pass; formatting/size pass.
+Alternating ordinary full732 corpus comparisons: baseline102.324s and102.220s;
+candidate61.805s and55.874s. Every emitted byte and field agrees with baseline.
+Aggregate reduction42.468%; repeated binary hashes agree within each version.
+This exceeds the prospective25% category criterion, not a whole-gate claim.
+
+Canonical development/release corpus consumer74.367s/131.058CPU seconds passes
+all732 fixtures in both profiles and the complete baseline comparison. Native
+E2E consumer97.167s/138.113CPU seconds passes all732 actual runtime fixtures
+in186groups: source39.474s, native build45.385s, runtime11.104s. No blocked
+fixtures or batch failures. Preparation is separate: focused build/test165.978s,
+driver metadata build/test150.643s, corpus preparation12.583s, E2E binary145.184s;
+generated graph preparation also completes. These investigation configurations
+and intervening branch switches are not an additive full-gate lower bound.
+
+The complete merge-selected generated-quality assertions all execute and pass,
+including optimized native demos and fresh companions, in a278.389s invocation.
+The external diagnostic supplied a result path outside the repository. The runner
+writes its complete10-variant passing report, then its final relative-path print
+fails. Preserve candidate-quality and its guard as FAILED; do not relabel the
+process as passing. Correct the external call to a fresh repository-relative
+report and rerun the affected quality category before acceptance.
+
+Method authority passes33.357s. Metadata inventory correctly rejects changed
+source anchors and the three new test consumers. Review confirms the production
+owner classification is unchanged and the added consumers are test setup/parity.
+Refresh only those inventory rows. Production Rust, tests, manifests, locks and
+verification code remain byte-identical to ab53e50dc; retain that observed
+validation identity for existing evidence and verify the exact documentary delta.
+Run inventory validation/self-tests and corrected quality preparation/execution
+on the final record-only head. No need to rebuild/rerun unaffected semantic and
+native assertions solely for this inventory record correction. Exact final-head
+independent review and all final phase gates/V5 remain required.
+
+The external focused helper also retained an overly broad generic scope label;
+candidate-focused/scope-correction.json pins its actual five focused tests,
+1785 codegen tests and format/size checks. It did not execute the corpus.
+Keep raw commands/results and both diagnostic failures; missing execution never
+counts as a pass. Draft PR4504 remains unmerged pending the remaining checks.
