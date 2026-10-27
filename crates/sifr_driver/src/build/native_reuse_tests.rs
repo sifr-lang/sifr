@@ -191,6 +191,7 @@ fn dx9_real_concurrent_same_root_capture_is_serialized() {
     let threads: Vec<_> = (0..4)
         .map(|value| {
             let path = root.join("app");
+            let captured = root.join(format!("captured-{value}"));
             std::thread::spawn(move || {
                 // The publication path is deliberately caller-owned for this API.
                 // Different native contexts still serialize the caller-owned root.
@@ -219,8 +220,9 @@ fn dx9_real_concurrent_same_root_capture_is_serialized() {
                     &family.target(),
                 )
                 .expect("compile");
-                let captured = family.root.join(format!("captured-{value}"));
-                std::fs::copy(report.binary_path, &captured).expect("capture");
+                // Capture belongs to this invocation, not to the retained
+                // mutable family another invocation may acquire after release.
+                super::native_capture::copy(&report.binary_path, &captured).expect("capture");
                 drop(family);
                 drop(publication);
                 assert_eq!(

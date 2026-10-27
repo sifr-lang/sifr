@@ -14556,6 +14556,242 @@
         }
       },
       "contract_ref": "local-gate-private-child-mask"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/native_capture_tests.rs::<module>::unsafe-allowance::1",
+      "fingerprint": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
+      "owner": "driver-owner",
+      "scope": "local",
+      "operation": "# [ allow ( unsafe_code ) ] fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+      "operation_family": "unsafe-allowance",
+      "source_evidence": "",
+      "contract": {
+        "thread": "The owned Command installs its closure before spawn; in the forked child the closure performs only fixed-size Unix socket reads and writes, with no allocation or Rust lock acquisition before exec.",
+        "lifetime": "The move closure owns the child socket through pre-exec; the parent endpoint remains in the guard until release and the spawn thread waits for the process. Both socket read timeouts are bounded to ten seconds.",
+        "alias": "The child endpoint is exclusively captured by the closure; the ready byte and release buffer are local values. Parent and child communicate through the kernel socket rather than shared mutable Rust memory.",
+        "ownership": "Command owns the pre-exec closure and its socket. The parent guard releases the blocked child and joins its spawn thread; the unsafe registration neither fabricates a resource owner nor transfers a borrowed pointer."
+      },
+      "obligations": {
+        "thread": {
+          "rule": "bounded-allowance-thread",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
+              "quote": "#[allow(unsafe_code)]\n    fn start() -> Self {\n        let (parent, mut child) = UnixStream::pair().unwrap();\n        parent\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        child\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        let mut command = Command::new(\"/bin/true\");\n        // SAFETY: only fixed-size socket reads/writes occur before exec. The\n        // closure does not allocate, take Rust locks, or access shared state.\n        unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }\n        let spawn = thread::spawn(move || command.spawn()?.wait());\n        let mut guard = Self {\n            socket: parent,\n            spawn: Some(spawn),\n        };\n        let mut ready = [0];\n        if let Err(error) = guard.socket.read_exact(&mut ready) {\n            let _ = guard.release();\n            panic!(\"child did not reach pre-exec: {error}\");\n        }\n        assert_eq!(ready, *b\"R\");\n        guard\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        },
+        "lifetime": {
+          "rule": "bounded-allowance-lifetime",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
+              "quote": "#[allow(unsafe_code)]\n    fn start() -> Self {\n        let (parent, mut child) = UnixStream::pair().unwrap();\n        parent\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        child\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        let mut command = Command::new(\"/bin/true\");\n        // SAFETY: only fixed-size socket reads/writes occur before exec. The\n        // closure does not allocate, take Rust locks, or access shared state.\n        unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }\n        let spawn = thread::spawn(move || command.spawn()?.wait());\n        let mut guard = Self {\n            socket: parent,\n            spawn: Some(spawn),\n        };\n        let mut ready = [0];\n        if let Err(error) = guard.socket.read_exact(&mut ready) {\n            let _ = guard.release();\n            panic!(\"child did not reach pre-exec: {error}\");\n        }\n        assert_eq!(ready, *b\"R\");\n        guard\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        },
+        "alias": {
+          "rule": "bounded-allowance-alias",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
+              "quote": "#[allow(unsafe_code)]\n    fn start() -> Self {\n        let (parent, mut child) = UnixStream::pair().unwrap();\n        parent\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        child\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        let mut command = Command::new(\"/bin/true\");\n        // SAFETY: only fixed-size socket reads/writes occur before exec. The\n        // closure does not allocate, take Rust locks, or access shared state.\n        unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }\n        let spawn = thread::spawn(move || command.spawn()?.wait());\n        let mut guard = Self {\n            socket: parent,\n            spawn: Some(spawn),\n        };\n        let mut ready = [0];\n        if let Err(error) = guard.socket.read_exact(&mut ready) {\n            let _ = guard.release();\n            panic!(\"child did not reach pre-exec: {error}\");\n        }\n        assert_eq!(ready, *b\"R\");\n        guard\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        },
+        "ownership": {
+          "rule": "bounded-allowance-owner",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
+              "quote": "#[allow(unsafe_code)]\n    fn start() -> Self {\n        let (parent, mut child) = UnixStream::pair().unwrap();\n        parent\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        child\n            .set_read_timeout(Some(Duration::from_secs(10)))\n            .unwrap();\n        let mut command = Command::new(\"/bin/true\");\n        // SAFETY: only fixed-size socket reads/writes occur before exec. The\n        // closure does not allocate, take Rust locks, or access shared state.\n        unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }\n        let spawn = thread::spawn(move || command.spawn()?.wait());\n        let mut guard = Self {\n            socket: parent,\n            spawn: Some(spawn),\n        };\n        let mut ready = [0];\n        if let Err(error) = guard.socket.read_exact(&mut ready) {\n            let _ = guard.release();\n            panic!(\"child did not reach pre-exec: {error}\");\n        }\n        assert_eq!(ready, *b\"R\");\n        guard\n    }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        }
+      },
+      "contract_ref": "local-gate-paused-child-pre-exec"
+    },
+    {
+      "site": "crates/sifr_driver/src/build/native_capture_tests.rs::start::unsafe-block::1",
+      "fingerprint": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c",
+      "owner": "driver-owner",
+      "scope": "local",
+      "operation": "unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; }",
+      "operation_family": "raw-access",
+      "source_evidence": "// SAFETY: only fixed-size socket reads/writes occur before exec. The\n// closure does not allocate, take Rust locks, or access shared state.",
+      "contract": {
+        "thread": "The owned Command installs its closure before spawn; in the forked child the closure performs only fixed-size Unix socket reads and writes, with no allocation or Rust lock acquisition before exec.",
+        "lifetime": "The move closure owns the child socket through pre-exec; the parent endpoint remains in the guard until release and the spawn thread waits for the process. Both socket read timeouts are bounded to ten seconds.",
+        "alias": "The child endpoint is exclusively captured by the closure; the ready byte and release buffer are local values. Parent and child communicate through the kernel socket rather than shared mutable Rust memory.",
+        "ownership": "Command owns the pre-exec closure and its socket. The parent guard releases the blocked child and joins its spawn thread; the unsafe registration neither fabricates a resource owner nor transfers a borrowed pointer."
+      },
+      "obligations": {
+        "thread": {
+          "rule": "caller-thread",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::start::unsafe-block::1",
+              "fingerprint": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c",
+              "quote": "unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        },
+        "lifetime": {
+          "rule": "allocation-live",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::start::unsafe-block::1",
+              "fingerprint": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c",
+              "quote": "unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        },
+        "alias": {
+          "rule": "access-admitted",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::start::unsafe-block::1",
+              "fingerprint": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c",
+              "quote": "unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        },
+        "ownership": {
+          "rule": "borrow-only",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_driver/src/build/native_capture_tests.rs::start::unsafe-block::1",
+              "fingerprint": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c",
+              "quote": "unsafe {\n            command.pre_exec(move || {\n                child.write_all(b\"R\")?;\n                child.read_exact(&mut [0])?;\n                Ok(())\n            });\n        }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "start",
+              "quote": "fn start ( ) -> Self { let ( parent , mut child ) = UnixStream :: pair ( ) . unwrap ( ) ; parent . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; child . set_read_timeout ( Some ( Duration :: from_secs ( 1 0 ) ) ) . unwrap ( ) ; let mut command = Command :: new ( \"/bin/true\" ) ; unsafe { command . pre_exec ( move || { child . write_all ( b\"R\" ) ? ; child . read_exact ( & mut [ 0 ] ) ? ; Ok ( ( ) ) } ) ; } let spawn = thread :: spawn ( move || command . spawn ( ) ? . wait ( ) ) ; let mut guard = Self { socket : parent , spawn : Some ( spawn ) , } ; let mut ready = [ 0 ] ; if let Err ( error ) = guard . socket . read_exact ( & mut ready ) { let _ = guard . release ( ) ; panic ! ( \"child did not reach pre-exec: {error}\" ) ; } assert_eq ! ( ready , * b\"R\" ) ; guard }",
+              "context_fingerprint": "e7dc6b9eae5e4ab03fe98e5a12890f87618bff7014d4f739d04a44b31ad9b023"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+              "scope": "release",
+              "quote": "fn release ( & mut self ) -> io :: Result < ( ) > { let Some ( spawn ) = self . spawn . take ( ) else { return Ok ( ( ) ) ; } ; let _ = self . socket . write_all ( b\"G\" ) ; let status = spawn . join ( ) . map_err ( | _ | io :: Error :: other ( \"child owner thread panicked\" ) ) ? ? ; if status . success ( ) { Ok ( ( ) ) } else { Err ( io :: Error :: other ( format ! ( \"owned child failed: {status}\" ) ) ) } }",
+              "context_fingerprint": "23a5c6f799b7a83049d5d0f9b40439efaea5113f83c10274562ce11d112f6ad6"
+            }
+          ]
+        }
+      },
+      "contract_ref": "local-gate-paused-child-pre-exec"
     }
   ],
   "shared_contracts": {
@@ -14823,9 +15059,11 @@
         "crates/sifr_compiler_services/src/editor/saved_check_lease_tests.rs::<module>::unsafe-allowance::1": "13c5447e4f9f6abe4aaaf397d32eab0b589489f2915d065fead70b9c3d2a814c",
         "crates/sifr_compiler_services/src/editor/saved_check_lease_tests.rs::start::unsafe-block::1": "9e9b3448b90e893af2bc70f4e41e37e806f2285274aab4c64323cd3503aabb39",
         "crates/sifr_driver/src/project_cache/process_lease_tests.rs::<module>::unsafe-allowance::1": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
-        "crates/sifr_driver/src/project_cache/process_lease_tests.rs::start::unsafe-block::1": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c"
+        "crates/sifr_driver/src/project_cache/process_lease_tests.rs::start::unsafe-block::1": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c",
+        "crates/sifr_driver/src/build/native_capture_tests.rs::<module>::unsafe-allowance::1": "cda71a8a9b918ba1f693f347642cc77b0322fbcc4900c177bc0935a8c8d1b9f7",
+        "crates/sifr_driver/src/build/native_capture_tests.rs::start::unsafe-block::1": "565fdbb24a3668606dc2cc050d0a78e580c54812779c92de1012968f9f0cb29c"
       },
-      "review_rationale": "Reviewed exact operation and its narrowly scoped allowance together. The two paused-child controls use the same moved socket handshake and guarded release/join mechanism, so their four safety obligations are shared explicitly."
+      "review_rationale": "The exact-site bindings share the same moved socket handshake and guarded release/join mechanism. The native capture control applies these four obligations to the inherited-writer publication boundary."
     },
     "local-gate-cargo-private-child-mask": {
       "contract": {

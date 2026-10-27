@@ -12,6 +12,7 @@ mod entrypoint_resolution;
 mod entrypoint_single_file;
 mod entrypoint_stages;
 mod materialize;
+mod native_capture;
 pub(crate) mod native_child_leases;
 mod native_link_policy;
 #[cfg(test)]

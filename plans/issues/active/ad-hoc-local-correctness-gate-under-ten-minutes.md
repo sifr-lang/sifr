@@ -17373,3 +17373,237 @@ file-size/diff checks pass on one immutable candidate; independently review
 the exact candidate and classifications. Use the approved focused intermediate
 policy; do not repeat the81minute facade for inventory-only changes. Preserve
 the original failed run. Stop this repair after merge and return to macro costs.
+
+### V1bq delivered — inventory integration repair
+
+Merged [PR #4502](https://github.com/sifr-lang/sifr/pull/4502) as
+d242e0f7ad6fdc8ab5932438449ea5bd9faac7f3. Exact tested/reviewed candidate
+61e4c606ab6678e786464546b84f3ac988d6072a; merge tree matches.
+Both complete normal inventory guards, both scanner self-tests, size and diff
+checks pass in58.213s, with no source drift or leftover process. Independent
+review SATISFIED/no blockers65.930s, v1bq-review-bohwv7ky/response.md,
+SHA256589b2fbee3f5785db71dcd487d9412675d395d4d204d60480e476e2cf1f065db.
+All unrelated inventory row values and ordering are preserved. Follow-up owner:
+verification policy; document/test the batch-manifest tooling-input override
+against future inventory reseeding. PR attachment reached the100-identity cap.
+This repair is good enough; stop. Original broad failures remain failed and
+final phase correctness/timing qualification remains OPEN.
+
+### V1br prospective — reduce repeated SQL guest compilation work
+
+The current Engine defaults to Cranelift Speed. Compiled code is already shared
+inside one compiler/editor lifetime, with fresh Stores per request, but separate
+compiler lifetimes compile guests again. First compare the supported None
+optimization level against Speed in an external controlled probe using the same
+current authenticated guest artifacts, engine features and resource limits.
+Do not change production policy yet. Keep the production-ready register allocator,
+canonical NaNs, fuel, stack/memory limits, forbidden imports and fresh Stores.
+No persistent native-image cache, prior-result reuse or reduced assertion scope.
+
+Use three alternating paired trials per MySQL/PostgreSQL/SQLite provider:
+one-table and100-table DDL, each with one request; small requests repeated100
+and1000times with fresh Stores; large requests repeated100times. Check changed
+and invalid DDL controls. Require byte-identical response pairs, consistent
+fresh-Store responses, correct success/diagnostic outcomes and separately report
+compilation, execution, CPU and total lifetime. Controlled experiment build
+cost is preparation, not a timing improvement. Check capacity and use the1800s
+diagnostic cap; preserve failed attempts.
+
+Good enough to continue: at least25% aggregate one-request reduction, no
+provider/size one-request regression and no more than10% total-lifecycle
+regression on any repeated workload. Otherwise reject this hypothesis and stop
+tuning it. A passing probe only justifies the next bounded actual-host experiment:
+current provenance/host authentication, limits/imports/negative cases and every
+affected SQL application/area assertion remain required before adoption, together
+with build-plus-execution comparisons and independent review. Record any slower
+steady execution explicitly. The probe is not production acceptance or evidence
+that the complete gate can meet600seconds.
+
+V1br probe correction before further measurement: the unchanged Speed baseline
+exhausted100million fuel on100-table MySQL DDL (v1br-measurements, seventh
+command). No candidate speedup or policy acceptance. This100million allowance
+matches the existing SQL direct component tests, not the10million production
+default; the probe must not conflate these scopes. Keep100-table input as a
+rejection-outcome comparison, and use10-table DDL for successful multi-table
+lifetime comparisons. Do not raise fuel or memory limits. Preserve this failed
+attempt. Actual-host production-limit validation remains mandatory if the
+feasibility screen passes.
+
+### V1br concluded — compilation optimization screen rejected
+
+External probe built in7.187s including guard. Corrected measurement ran108
+invocations across all three providers in153.285s, with identical successful
+responses and matched oversized-input rejection outcomes. Small/10-table
+one-request aggregate median ratio None/Speed0.845472:15.453% improvement,
+below the prospective25% threshold. All repeated workloads improved total
+lifetime in this probe (9.4–18.0%), with steady execution separately recorded.
+No production change, no full-host acceptance claim; stop this hypothesis.
+The original oversized baseline failure remains preserved. Evidence:
+v1br-probe-build, v1br-measurements, v1br-measurements-r2 and their guards.
+Changing TLS crypto providers to shorten SQL clean builds is not an equivalent
+optimization: current explicit aws-lc/post-quantum policy is intentional.
+No dependency or security-policy change is proposed.
+
+### V1bs prospective — attribute prepared advanced-data native cost
+
+V1bp measured the retained advanced-data native preparation67.245s followed by
+the positive assertion86.632s. Both use ReusableScenario, the same fixture
+inputs and native allocation; source inspection alone does not establish a
+broken cache. Identify the expensive boundary before choosing an implementation.
+
+Run the actual canonical preparation helper then the full positive assertion
+with the current profile-derived native environment, retained targets and
+compiler-identity admission. Keep canonical source reconciliation, dependency
+probing, source compilation, build/link and the real runtime assertion. Record
+normal elapsed/CPU independently; if a repeated assertion still exceeds10s,
+use one process-only trace to attribute child execution, native Cargo/rustc
+work and waiting. Diagnostic trace timing is not acceptance evidence. No source
+instrumentation, cache invalidation bypass or target cleanup. Preserve exact
+environment, command, candidate, capacity and all failures under1800s caps.
+
+Good enough for this diagnostic: determine whether an unchanged prepared case
+rebuilds native dependencies or spends its time in another named stage, with
+actual child/process evidence and source corroboration. Only then scope the
+smallest root-cause change, targeting at least50% of this measured repeated
+cost while retaining every runtime and invalidation assertion. If no avoidable
+work is shown, record the result and stop; do not redesign cache identity from
+a timing guess. Final complete gates and V5 remain OPEN.
+
+### V1bs concluded — retained dependencies do reuse; historical cost not reproduced
+
+Source-frozen diagnostic passed: native metadata admission1.516s,
+preparation41.910s/17.437CPU seconds, complete positive assertion15.280s/
+8.775CPU seconds. A following process-only trace passed11.478s; its timing is
+diagnostic, not a paired speedup. Guard72.757s found no source drift or leftover
+session. SSH connectivity interrupted but the guard and all children completed;
+the exact receipt/result were recovered before continuing.
+
+Trace confirms no Rust compilation except rustc -vV identity inspection.
+Within the traced assertion: Cargo metadata0.570s, two native checks0.768s/
+0.259s, native build0.730s, actual runtime0.014s. Twenty rustfmt processes are
+small. The894150648-byte native executable requires full snapshot identity
+and cached-bundle verification; source corroborates these reads. Roughly5.27s
+lies between Cargo build completion and runtime launch, consistent with that
+publication path but not separately instrumented as hashing-only cost.
+Do not claim those operations explain the previous86.632s or all preparation
+cost. The isolated untraced observation is15.280s; cache/IO warmth and competing
+work differ from the broad run. No product/cache change is justified by this
+diagnostic. Stop this item. Evidence: v1bs-attribution/{result.json,
+process-attribution.json,positive-process.trace} and guard.
+
+### V1bt prospective — complete retained-state diagnostic after integration repair
+
+All observed integrated failures now have focused passing recovery, and the
+prepared native observation differs materially from the earlier combined run.
+Run one complete public merge correctness-only facade with failure continuation
+to measure the retained scenario and establish the actual remaining critical
+path. This is a new diagnostic input state, not repeating failed preparation
+unchanged or beginning repeated V5 timing qualification. Keep every selected
+assertion, independent SQL constructions, source/integrity checks and category.
+
+Publish the exact immutable candidate before generated graph preparation.
+Check emitted plan, dependency selection, pinned tools, capacity/allocation and
+reserves. Reuse the verified parent PATH for the public uv facade and retain
+owned targets. Archive all previous reports. No concurrent builds, artifact
+transfers or source edits during measurement. Categories retain1750s safety
+deadlines within the1800s cap; overall diagnostic envelope remains4hours.
+Record preparation, areas, crate configurations, positive E2E and overhead
+without double counting; preserve every failure and explicitly recover any
+blocked or unexecuted categories.
+
+Good enough: complete coverage/outcome accounting and one observed elapsed/CPU
+cost baseline for this retained state. Do not call one pass repeated qualification,
+or use this unchanged-state result to waive required edit/invalidation scenarios.
+Use its largest remaining measured work and critical path to choose the next
+architectural change. Full final create-pr/merge and V5 remain OPEN.
+
+### V1bt concluded — complete retained-state sweep, one concurrency-test failure
+
+Exact candidate44b6a59617d8f7a095567d4777bad16ef313a5ff completed the public
+merge correctness-only failure-continuation facade in4121.582s (68m42s);
+outer guard4123.001s. CPU9355.153s. All38selected steps executed:
+37pass/1fail, no blocked or capped category. All17preparations and20areas pass.
+All80generated-driver and6CLI native cases pass. Positive E2E executes all732
+assertions across186retained native groups in105.661s, with no batch fallback.
+
+Nonoverlapping totals: preparation211.542s, guards178.825s, areas2297.369s,
+crate configurations1314.889s, positive E2E105.661s; remainder13.296s.
+Largest current costs: SQL540.129s (independent clean protocol389.507s),
+sysroot427.804s, lowering/CLI420.122s, generated driver414.520s,
+ordinary driver340.758s, Python292.855s, generated quality281.875s.
+Preparation differs from the earlier changed-artifact run; these are not paired
+code-speedup measurements. At eight ideal logical CPUs the observed CPU work
+alone requires1169.394s. Scheduling alone cannot satisfy600s for this workload.
+Do not generalize this bound to every state or a different implementation.
+
+Ordinary driver:789pass/1fail/82ignored; ignored ownership remains explicitly
+covered by the declared native/corpus selections. The failure is
+build::native_reuse_tests::dx9_real_concurrent_same_root_capture_is_serialized,
+ExecutableFileBusy/ETXTBSY when launching its copied executable. The history
+4097-publication assertion passed. Preserve the full run as FAILED.
+
+Evidence: v1bt-integrated-v2, its guard/empty-session receipt,
+v1bt-complete-archive (55files/65783948bytes with SHA256 manifest),
+v1bt-summary.json, v1bt-native-final.json, v1bt-declared-graph.json.
+The archive also retains contextual files; attribution requires current transcript
+and executed reports, not merely archive location. Graph export invokes no callbacks
+and does not prove output independence. Final gates and all V5 scenarios remain OPEN.
+
+### V1bu prospective — isolate native capture ownership before further scheduling
+
+A deterministic external control reproduces Linux ETXTBSY with an inherited
+writable descriptor: parent closes its CLOEXEC descriptor, paused fork still owns
+it, executable launch fails26, and launch succeeds after child exit.
+This proves the platform mechanism, not the identity of the inheriting child in
+V1bt. [Upstream explanation](https://github.com/rust-lang/rust/issues/114554).
+Evidence v1bu-fork-control/result.json; no production code changed for the control.
+
+The affected test writes and executes a captured executable inside the parallel
+libtest process. Its captures also use fixed names in retained mutable families
+after releasing their leases. Give the test its own bounded exact-test child
+process and invocation-owned capture paths. Preserve all four concurrent builders,
+different native contexts, the common caller-owned publication root, actual Cargo
+compilation, capture-before-release and all four runtime output assertions.
+Keep retained family build targets. No retry/sleep-to-pass or reduced coverage;
+this is test-process/capture ownership, not a production executable-publication fix.
+
+Good enough: the exact existing concurrency test passes, two simultaneous complete
+invocations cannot share capture paths, the full native-reuse module passes under
+ordinary libtest concurrency, and the complete ordinary-driver configuration
+passes with all expected assertions. Run formatting, file-size and affected
+inventory guards; independently review the exact candidate. Use the approved
+focused intermediate policy; preserve the failed full run. After closure return
+to macro CPU work and resource-bounded scheduling; do not repeat the whole gate
+solely for this isolated repair or claim600seconds.
+
+### V1bu initial repair rejected; shared publication boundary is required
+
+Candidate24357b736 passed preparation142.263s, focused15.697s, including
+both simultaneous invocations. Complete ordinary-driver validation failed
+340.945s/853.292CPU seconds:789pass/1fail/82ignored. The original concurrent
+capture test passed, but dx9_build_script_inputs_rebuild_unchanged_generated_root
+failed with the same ETXTBSY at actual returned-binary execution. Guard342.564s
+found no source drift or remaining session. Preserve both broad failures.
+The isolated-process wrapper is insufficient; do not merge it as the repair.
+
+Prospective correction: fix the shared NativeSnapshot capture boundary, remove
+the test-only process wrapper, and keep invocation-owned capture paths.
+Stage each changed file beside its destination; hold a raw exclusive file lock
+on its writable descriptor. Close that descriptor and wait for a read-only
+shared lock before atomically publishing. Unlike cache ProcessLease, do not
+explicitly unlock the writer: inherited writable descriptors must retain the
+lock until their final close. Never use the cache exclusive-lock helper on the
+binary because it writes lock-owner notes. Bound waits and honor cancellation.
+Keep every byte comparison, bundle identity, permission and runtime assertion.
+No execution retry, global test serialization, timing-based pass or skipped case.
+
+The external v1bu-writer-lock-control deterministically confirmed that the
+read-only lock remains blocked while the fork holds the writer, succeeds after
+child exit, and the captured executable then runs0. This is mechanism evidence,
+not production acceptance. Required checks: real paused-fork positive control,
+timeout/cancellation preserving the prior destination and removing staging,
+copy-error cleanup, all snapshot/content tests, existing native-reuse assertions
+(including simultaneous complete invocations), full ordinary-driver configuration,
+format/size/affected inventories and exact-candidate independent review.
+Good enough is closure of this failure class with these checks; afterward return
+to macro work reduction. Final full gates and repeated V5 remain OPEN.

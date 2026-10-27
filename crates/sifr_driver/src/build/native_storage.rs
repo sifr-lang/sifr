@@ -332,7 +332,7 @@ impl NativeSnapshot {
                 std::fs::create_dir_all(parent)?;
             }
             if !bytes::matches(source, &destination, DestinationErrors::TreatAsMismatch)? {
-                std::fs::copy(source, destination)?;
+                super::native_capture::copy(source, &destination)?;
             }
         }
         Ok(())
