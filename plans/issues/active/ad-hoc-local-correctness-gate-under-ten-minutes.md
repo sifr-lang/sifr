@@ -19161,3 +19161,27 @@ standalone producer is not evidence that a Cargo build-script producer is fast.
 Qualify all maintained versions, native-input rejection, relocation without build
 files, source/policy misses and precise invalidation before production adoption.
 Final complete correctness-only gates and repeated V5 remain OPEN.
+
+### V1cp first build — reuse passes; unoptimized producer is too costly
+
+External construction completes232.674s/1118.967CPU seconds. All10 component
+versions load and reject changed stack/unknown hashes. Eight immutable images
+are generated in167.078s. Unchanged reconstruction0.343s and ordinary consumer
+edit0.773s preserve the exact generation file timestamp; the boundary correctly
+avoids regenerating images for consumer-only source changes.
+
+Cargo artifact records show the cause of expensive generation: build-script
+Wasmtime/Cranelift dependencies use opt0/no-debug while their runtime copies use
+opt1/line-tables. Both configurations are built. The167s mandatory producer cost
+would erase the89s category saving when these inputs invalidate; this is not
+good enough to adopt unchanged.
+
+Prospectively test profile alignment only in the isolated external prototype:
+dev build-override opt1/line-tables, matching its existing runtime dependency
+profile. Preserve Engine policy, optimization of generated guest programs,
+source Wasm, all assertions and toolchain. Compare image generation time and all
+eight exact native-image hashes; require at least50% generation reduction and
+byte-identical output, plus unchanged and consumer-edit reuse. Record initial
+construction separately because the retained artifact inventory differs.
+A workspace-wide build-profile change is NOT adopted by this experiment; any
+production choice needs measured build-plus-execution invalidation acceptance.
