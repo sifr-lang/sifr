@@ -18449,3 +18449,35 @@ Next: reassess remaining macro work using current source and retained complete
 costs. Historical serial-libtest and failed concurrent observations are not
 accepted speedups. Do not revive the rejected V1cc syntax cache or V1be durable
 storage rewrite without a materially different, measured ownership contract.
+
+
+### V1cf prospective feasibility — native JIT compiler work reduction
+
+V1bw attributes substantial SQL CPU to Cranelift/register allocation. Current
+development dependencies use opt1; the earlier opt0 experiment made real guest
+execution8.6 times slower and was rejected. Guest OptLevel::None is separately
+rejected. Neither experiment measures a more optimized native JIT implementation.
+
+Use the retained external component probe to compare baseline opt1 with native
+cranelift-codegen and regalloc2 opt3, keeping Wasmtime48.0.1, Cargo.lock, guest
+optimization Speed, component bytes, request bytes, fuel/memory/stack/import
+policies and four-worker allocation identical. Compile both through pinned Rust,
+retain/copy each executable and its source/config/artifact identity, and record
+preparation separately. This external feasibility experiment changes no product
+source, dependency pins, guest artifact or production policy.
+
+Run fresh processes over SQLite, MySQL and PostgreSQL valid, changed, invalid
+and larger schemas, including repeated fresh Stores. Alternate executable order,
+compare every response byte and diagnostics, and preserve all failures. Good
+enough to expand: at least25% lower aggregate one-request elapsed and CPU, no
+provider slowdown above10%, unchanged repeated execution behavior, and explicit
+added build cost. Reject marginal results without full production qualification.
+
+If promising, register a production profile proposal only after measuring the
+complete29-case SQL CLI group, all actual provider component assertions, and
+the mandatory clean-build protocol/build-plus-execution tradeoff. More optimized
+dependencies may increase clean construction and cannot be accepted by citing
+warm execution alone. Retain the1800s category cap, reserves, owned targets and
+source-frozen comparisons. Final full correctness gates and every V5 scenario
+remain required. This is a bounded macro CPU experiment, not a new cache or
+evidence that the whole gate meets600seconds.
