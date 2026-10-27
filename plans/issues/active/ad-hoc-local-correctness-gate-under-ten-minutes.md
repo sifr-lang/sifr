@@ -17428,3 +17428,43 @@ rejection-outcome comparison, and use10-table DDL for successful multi-table
 lifetime comparisons. Do not raise fuel or memory limits. Preserve this failed
 attempt. Actual-host production-limit validation remains mandatory if the
 feasibility screen passes.
+
+### V1br concluded — compilation optimization screen rejected
+
+External probe built in7.187s including guard. Corrected measurement ran108
+invocations across all three providers in153.285s, with identical successful
+responses and matched oversized-input rejection outcomes. Small/10-table
+one-request aggregate median ratio None/Speed0.845472:15.453% improvement,
+below the prospective25% threshold. All repeated workloads improved total
+lifetime in this probe (8.8–17.9%), with steady execution separately recorded.
+No production change, no full-host acceptance claim; stop this hypothesis.
+The original oversized baseline failure remains preserved. Evidence:
+v1br-probe-build, v1br-measurements, v1br-measurements-r2 and their guards.
+Changing TLS crypto providers to shorten SQL clean builds is not an equivalent
+optimization: current explicit aws-lc/post-quantum policy is intentional.
+No dependency or security-policy change is proposed.
+
+### V1bs prospective — attribute prepared advanced-data native cost
+
+V1bp measured the retained advanced-data native preparation67.245s followed by
+the positive assertion86.632s. Both use ReusableScenario, the same fixture
+inputs and native allocation; source inspection alone does not establish a
+broken cache. Identify the expensive boundary before choosing an implementation.
+
+Run the actual canonical preparation helper then the full positive assertion
+with the current profile-derived native environment, retained targets and
+compiler-identity admission. Keep canonical source reconciliation, dependency
+probing, source compilation, build/link and the real runtime assertion. Record
+normal elapsed/CPU independently; if a repeated assertion still exceeds10s,
+use one process-only trace to attribute child execution, native Cargo/rustc
+work and waiting. Diagnostic trace timing is not acceptance evidence. No source
+instrumentation, cache invalidation bypass or target cleanup. Preserve exact
+environment, command, candidate, capacity and all failures under1800s caps.
+
+Good enough for this diagnostic: determine whether an unchanged prepared case
+rebuilds native dependencies or spends its time in another named stage, with
+actual child/process evidence and source corroboration. Only then scope the
+smallest root-cause change, targeting at least50% of this measured repeated
+cost while retaining every runtime and invalidation assertion. If no avoidable
+work is shown, record the result and stop; do not redesign cache identity from
+a timing guess. Final complete gates and V5 remain OPEN.
