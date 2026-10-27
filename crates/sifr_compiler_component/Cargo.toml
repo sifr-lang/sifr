@@ -9,7 +9,7 @@ license = { workspace = true }
 
 [features]
 default = ["host"]
-host = ["dep:wasmtime"]
+host = ["dep:wasmtime", "dep:sifr_compiler_component_engine"]
 
 [dependencies]
 semver = { workspace = true }
@@ -20,6 +20,7 @@ sifr_diagnostics = { workspace = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 wasmtime = { workspace = true, optional = true }
+sifr_compiler_component_engine = { workspace = true, optional = true }
 
 [dev-dependencies]
 wat = { workspace = true }

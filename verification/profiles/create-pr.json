@@ -248,6 +248,21 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_compiler_component_engine",
+        "package": "sifr_compiler_component_engine",
+        "command": [
+          "test",
+          "-p",
+          "sifr_compiler_component_engine"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_sql_contract",
         "package": "sifr_sql_contract",
         "command": [

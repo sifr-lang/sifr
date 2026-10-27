@@ -1,0 +1,20 @@
+[package]
+name = "sifr_compiler_component_engine"
+links = "sifr_compiler_component_engine_compiled_identity"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+wasmtime = { workspace = true }
+
+[build-dependencies]
+sha2 = { workspace = true }
+serde_json = { workspace = true }
+wasmtime = { workspace = true }
+sifr_identity = { workspace = true, features = ["build"] }
+
+[lints]
+workspace = true

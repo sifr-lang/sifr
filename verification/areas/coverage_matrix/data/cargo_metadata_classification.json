@@ -150,6 +150,25 @@
       ]
     },
     {
+      "name": "sifr_compiler_component_engine",
+      "classification": "first_party_compiler",
+      "targets": [
+        {
+          "name": "sifr_compiler_component_engine",
+          "kind": "lib",
+          "classification": "first_party_compiler",
+          "profile_assignment": "merge"
+        },
+        {
+          "name": "build-script-build",
+          "kind": "custom-build",
+          "classification": "first_party_compiler",
+          "profile_assignment": "merge"
+        }
+      ],
+      "features": []
+    },
+    {
       "name": "sifr_diagnostics",
       "classification": "first_party_compiler",
       "targets": [

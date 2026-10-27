@@ -20,6 +20,8 @@ pub fn compiled_input_tokens() -> Vec<(&'static str, &'static str)> {
                 ),
             ];
             tokens.extend(sifr_diagnostics::compiled_input_tokens());
+            #[cfg(all(feature = "host", not(target_family = "wasm")))]
+            tokens.extend(sifr_compiler_component_engine::compiled_input_tokens());
             tokens.sort_unstable();
             tokens.dedup();
             tokens

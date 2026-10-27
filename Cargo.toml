@@ -10,6 +10,7 @@ members = [
     "crates/sifr_runtime",
     "crates/sifr_structural_identity",
     "crates/sifr_compiler_component",
+    "crates/sifr_compiler_component_engine",
     "crates/sifr_sql_contract",
     "crates/sifr_sql_tool",
     "crates/sifr_sql_runtime",
@@ -95,6 +96,7 @@ sifr_metadata = { path = "crates/sifr_metadata" }
 sifr_runtime = { path = "crates/sifr_runtime" }
 sifr_structural_identity = { path = "crates/sifr_structural_identity" }
 sifr_compiler_component = { path = "crates/sifr_compiler_component", default-features = false }
+sifr_compiler_component_engine = { path = "crates/sifr_compiler_component_engine" }
 sifr_sql_contract = { path = "crates/sifr_sql_contract" }
 sifr_sql_tool = { path = "crates/sifr_sql_tool" }
 sifr_sql_runtime = { path = "crates/sifr_sql_runtime" }
@@ -291,3 +293,8 @@ opt-level = 2
 # Preserve the selected Rust API while using the verified SQLite 3.53.4 bundle.
 [patch.crates-io]
 libsqlite3-sys = { path = "crates/sifr_runtime/third_party/libsqlite3-sys" }
+
+# Optimize compiler-owned build tools and match reusable runtime dependency units.
+[profile.dev.build-override]
+opt-level = 1
+debug = "line-tables-only"
