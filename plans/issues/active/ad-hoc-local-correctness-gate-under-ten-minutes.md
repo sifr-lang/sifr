@@ -18672,3 +18672,21 @@ protocol fixture test graph. Moving those same assertions to an existing compile
 owner and keeping explicit area enrollment is a hypothesis, not an adopted change.
 Register and measure complete affected preparation before accepting it. A cheap
 early provenance preflight is a separate follow-up; do not weaken late checks.
+
+V1ci production completes: PostgreSQL252.937s, MySQL8.880s, SQLite19.291s
+including guards. All10 component and core artifact records compare exactly
+with the original produced records; the canonical rebuild changes only each
+receipt's root Cargo.toml hash and aggregate source digest. All three current
+source provenance checks pass. Production guards finish empty, with no reserve
+stop or unexpected tracked changes. Actual producer invocations and before/after
+hashes are retained externally; identical final bytes are measured, not assumed.
+Focused host/runtime qualification and independent review remain pending.
+
+V1ch report attribution correction:29 nested/intermediate libtest subprocess
+summaries had been attached to their enclosing target header. Preserve the
+original archive; the separate corrected ledger selects terminal summaries and
+cross-checks each against its initial test count:129 targets, zero unresolved.
+This changes no facade/category/native timing or pass/fail result. Do not infer
+duplicate whole-suite executions from nested libtest summaries. The complete
+original archive has4539 verified files, SHA256
+91cd564846bc9b00cb7fad55d5a58132240409dcb75259988098f38050ccd4bb.
