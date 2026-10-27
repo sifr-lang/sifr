@@ -85,8 +85,8 @@ pub(crate) fn check_inventory(
     if actual != &paths {
         return Err(format!(
             "Cargo inventory drift: missing {:?}; extra {:?}",
-            paths.difference(actual),
-            actual.difference(&paths)
+            paths.difference(actual).collect::<Vec<_>>(),
+            actual.difference(&paths).collect::<Vec<_>>()
         ));
     }
     Ok(())

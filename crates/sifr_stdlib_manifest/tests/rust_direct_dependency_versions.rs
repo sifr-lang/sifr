@@ -120,11 +120,24 @@ fn tracked_inventory_rejects_removed_manifest_lock_and_core_fixture() {
         for removed in &paths {
             let mut changed = paths.clone();
             changed.remove(removed);
-            assert!(
-                cargo_inventory::check_inventory(&changed, &inventory[key]).is_err(),
-                "{removed}"
+            assert_eq!(
+                cargo_inventory::check_inventory(&changed, &inventory[key]),
+                Err(format!(
+                    "Cargo inventory drift: missing {:?}; extra []",
+                    [removed]
+                ))
             );
         }
+        let mut changed = paths.clone();
+        let added = "unclassified/Cargo.toml".to_owned();
+        assert!(changed.insert(added.clone()));
+        assert_eq!(
+            cargo_inventory::check_inventory(&changed, &inventory[key]),
+            Err(format!(
+                "Cargo inventory drift: missing []; extra {:?}",
+                [added]
+            ))
+        );
     }
 }
 

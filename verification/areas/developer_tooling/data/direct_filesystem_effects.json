@@ -5714,6 +5714,62 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(&image_dir)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "read",
+      "site": "let bytes = fs::read(&path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "read",
+      "site": "serde_json::from_slice(&fs::read(directory.join(\"component-artifacts.json\"))?)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "read_dir",
+      "site": "for entry in fs::read_dir(&image_dir)? {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "remove_file",
+      "site": "fs::remove_file(entry.path())?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "write",
+      "site": "fs::write(&file, &bytes)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_component_engine/build.rs",
+      "symbol": "main",
+      "operation": "write",
+      "site": "fs::write(out.join(\"bundle.rs\"), code)?;",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_compiler_services/src/editor/saved_check_lease_tests.rs",
       "symbol": "write_private",
       "operation": "open-write",

@@ -19551,3 +19551,144 @@ After this item, obtain a current integrated cost map before choosing the next
 macro change. Two Cranelift units have identical direct feature/profile settings
 but differ through transitive Serde, SmallVec and rustc-hash features; that is
 an investigated candidate, not yet proof of safely removable compilation.
+
+### V1cq delivered — PR4509
+
+PR4509 merged normally on2026-10-27:
+https://github.com/sifr-lang/sifr/pull/4509
+Merge commitbee445d6e4cc940f3eec63c6dd7e13ee539d4253 has the identical tree to
+reviewed9591a4ff212f90dc29b2d3d546dffb5f22e9b843. The observed implementation
+remains538c0b8caf22bdb7e5cee4e260395251bcb485da; the reviewed delta was docs only.
+
+Independent Claude Opus review: SATISFIED, no blocking findings. Published outside
+the reviewed tree at continuation-evidence/local-gate-implementation-20261020/
+v1cq-review-9591a4ff212f90dc29b2d3d546dffb5f22e9b843.md with disposition JSON.
+All8436 archived evidence file hashes were verified locally before review.
+The reviewer wrote no repository files and repeated no broad validation.
+
+Follow-ups: compiler-level maintained-image hit visibility belongs to LOCAL-GATE
+performance regression coverage; CPU portability timing belongs to the later
+cross-platform work. Toolchain-bound Engine compatibility remains a documented
+constraint. Retain the ignored external MySQL check and existing CI-owner records.
+Do not adopt the review's unmatched producer-cycle/category comparison as a
+full-cycle speedup, or infer a common hidden cause for CI's missing signatures.
+
+At merge, CI's create-PR step again failed before validation setup on the same
+missing SIFR_PERFORMANCE_REFERENCE prerequisite. Other jobs were still running;
+CI is not claimed green. GitHub reported no required checks; no admin override
+or protection bypass was used. The approved intermediate scoped checks and
+exact-candidate review passed; final phase gates/V5 are still required.
+
+### V1cr prospective current integrated diagnostic — macro prioritization
+
+The last complete retained-state diagnostic predates the delivered component
+architecture and further repairs. Obtain one current integrated cost/coverage
+map before choosing another optimization. This is measurement work, not a
+broad test run to validate the documentation-only record above.
+
+Use the current emitted merge correctness plan, canonical resource defaults,
+retained owned compiler/native targets, and no-fail-fast. Check tool versions,
+disk/CPU/memory, actual preparation dependencies and leases before launch.
+Use the existing per-category1750s diagnostic deadline (below30minutes); retain
+the4-hour outer safety envelope and20GiB/2GiB disk/memory reserves. Preserve
+earlier reports before publication and freeze this candidate during execution.
+Do not trace/profile the ordinary measured sweep.
+
+Good enough for this diagnostic: reconcile every required selected preparation,
+crate configuration, native E2E assertion and area variant to actual execution
+or an explicit failure/cap/dependency blocker. No absent execution is a pass.
+Collect total elapsed/CPU, preparation versus assertion cost, category/subcategory
+durations, overlap and critical-path dependencies. Identify the three largest
+remaining costs and the concrete work each establishes. Schedule any independent
+unexecuted remainder separately if an overall interruption occurs.
+
+This retained-state run can include reconstruction of previously unprepared
+configurations after the new implementation; do not call it a cold comparison,
+a steady-state speedup, repeated V5 qualification or complete phase acceptance.
+Select the next bounded macro item from current removable work and coverage
+constraints. The observed Cranelift feature differences are a candidate only;
+do not change flags, remove checks or claim reuse from matching names alone.
+Complete final correctness-only gates and all required repeated under600s edit/
+invalidation scenarios remain OPEN.
+
+### V1cr complete integrated diagnostic — 2026-10-28
+
+Frozen f36d48755892402fcf8510cae872654ba28456c6 executes the complete emitted
+merge correctness-only selection with failure continuation. Facade4795.832s
+(79m56s),9901.800 child CPU-seconds; guard4797.367s. All17 preparation nodes,
+38 top-level steps,19 Cargo configurations representing39 original selections,
+20 areas/105 suites/569 variants,86 isolated native assertions and all732 native
+E2E fixtures are accounted for. No category cap, reserve stop, missing selection,
+tracked-source drift or surviving owned process occurred.
+
+Result remains FAILED:36 top-level passes and two failures. Developer tooling
+has one failing variant: eight unclassified component-engine build-script I/O
+sites. The additive crate group has13 failures across six dependency-audit targets:
+its maintained manifest inventory omits the new component-engine Cargo.toml.
+All other568 area variants and86 isolated native assertions pass. Ordinary Cargo
+summaries contain94 ignored observations; these are not automatically passes.
+The86 explicit native invocations are reconciled separately, as are preparation
+helpers and delegated corpus ownership. The external live MySQL comparison is
+not claimed executed.131 terminal libtest summaries reconcile exactly;29 nested
+subprocess summaries are retained separately and never double-counted.
+
+| Non-overlapping current cost | Seconds |
+| --- | ---: |
+| All declared preparation |280.086|
+| Guardrails |197.629|
+| Crate configurations |1321.739|
+| Scalar area execution |2263.364|
+| Python/generated-quality paired window |594.227|
+| Native E2E facade |111.272|
+| Remaining facade/setup/unattributed |27.515|
+
+The paired window is observed between plan/outcome file publication; it is not
+a monotonic instrumented group duration. The facade total is directly measured.
+Python593.014s and quality335.521s overlap and must not be added together.
+The three largest remaining top-level costs are the full crate pass1321.752s,
+SQL928.407s and the paired area window594.227s. Inside the crate pass:
+generated driver487.499s, ordinary driver332.871s, CLI/lowering320.325s.
+Inside SQL: independent clean builds512.702s, PostgreSQL version matrix182.188s.
+Installed sysroot verification passes391.068s. Native E2E passes all732 fixtures:
+47.606s frontend compilation,45.876s native-build phase,10.525s execution;
+these inner phases do not replace the111.272s facade total.
+
+Retained compiler build/dependency outputs were safely relocated to rotational
+storage; fingerprints/incremental state and explicit-host targets remain SSD.
+This is not a matched SSD speedup, cold comparison or repeated V5 qualification.
+The9901.800CPU workload divided by eight logical CPUs is1237.725s, already above
+600s even before other constraints; this is a bound for this observed workload,
+not a universal warm/invalidation bound. Scheduling alone cannot make this
+particular work volume fit600s.
+
+Complete104-file evidence archive, locally size/SHA-verified:
+continuation-evidence/local-gate-implementation-20261020/v1cr-r3-evidence.tar.gz
+SHA256 fd8a083a3294730cceecea0586e6306d19815334ef482380e0ac171187aa9dbf.
+R1/R2 remain incomplete; separately archived preparation reconstruction and safe
+storage recovery remain charged outside R3. An initial external coverage reporter
+misused Counter(mapping); its retained corrected version reconciles keys without
+changing any executed result. Full final phase gates and repeated V5 remain OPEN.
+
+### V1cr bounded integration repair — component-engine inventory enrollment
+
+Repair the two V1cq enrollment omissions together: classify exactly eight current
+build-script sites, add exactly its maintained Cargo manifest and increase the
+associated manifest count158 to159. Preserve direct registry declarations,
+versions, checksums, audit dates, graph ownership and all rejection policies.
+Reads establish trusted compiler construction identity; generated files and
+owned output retirement remain output effects. Do not blanket-regenerate inventories.
+
+The existing Cargo drift diagnostic formats lazy set-difference iterators and
+therefore prints both complete backing sets. Materialize just the differences
+for an actionable error; strengthen existing missing-input controls and add the
+corresponding extra-input check. This changes reporting, not admission.
+
+Good enough: both filesystem guard/self-test pass, all affected manifest-crate
+tests including registry/lock checks pass, formatting/size/diff checks pass,
+exact inventory deltas verified, and independent exact-candidate review passes.
+Use the approved focused intermediate policy; preserve R3 as failed, with new
+repair evidence separately bound. No compiler performance gain is claimed.
+After closure, inspect one exact-profile clean SQL build with Cargo unit timings
+to identify its dominant generation/native/Rust/link work. Keep both independent
+clean builds and all version/runtime properties in the eventual solution;
+profiling is attribution evidence, not ordinary acceptance timing.
