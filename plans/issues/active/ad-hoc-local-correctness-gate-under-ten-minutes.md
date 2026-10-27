@@ -18690,3 +18690,83 @@ This changes no facade/category/native timing or pass/fail result. Do not infer
 duplicate whole-suite executions from nested libtest summaries. The complete
 original archive has4539 verified files, SHA256
 91cd564846bc9b00cb7fad55d5a58132240409dcb75259988098f38050ccd4bb.
+
+
+### V1ci closed — canonical SQL component provenance repair merged
+
+PR #4508 (https://github.com/sifr-lang/sifr/pull/4508) is merged as
+31a202f3190e5c59d044122c610e019a14496d44. Its tree equals the reviewed candidate
+4bf8fdf7ca1d92d8611a76314e0cb702f673ec45. Production ran at parent be6a802f2;
+the only parent-to-candidate changes are three produced receipts and the phase
+record. All13 recorded after-hashes (10 components plus3 receipts) match the
+candidate. All source/tool identities and actual build logs are retained.
+
+All16 focused commands pass on the exact candidate: formatting, publication and
+SDK controls, canonical native preparation, PostgreSQL/MySQL/SQLite qualification
+and mutation controls, component qualification/mutations,30 component-host tests,
+29 SQL application tests, size and diff checks. Guarded elapsed207.428s, empty
+owned session, no reserve stop or unexpected tracked change. Independent review
+is SATISFIED with no blockers, stored externally under reviews/4bf8fdf7ca1d92d8611a76314e0cb702f673ec45;
+response SHA256 ce5a6a2d87328db2fe4e9bbcbfa0642c64c4109dd06868542dc4c1f2b0eef378.
+The75-file production/qualification archive verifies as SHA256
+53331e2a614c9d7bb6e5e0f9ea24ce058dbb818a0d3ef192a454cd8a42b8ca27.
+
+Two remote review requests failed OAuth authentication. A successful local CLI
+request lost its response when the external watchdog treated normal cleanup as
+timeout; no approval was claimed from it. Correct the wrapper's TERM cleanup and
+recapture the same unchanged candidate under the user's pragmatic continuation
+instruction. The complete resulting review, prompt and identity are preserved.
+These infrastructure failures are not code/validation passes.
+
+CI local-first-create-pr (run40501138751, job122178814943) fails before preparation:
+SIFR_PERFORMANCE_REFERENCE is unset. Workflow/admission inputs are unchanged.
+Record this with performance-reference/CI admission ownership, outside the local
+correctness item; no CI or performance-qualification pass is claimed. Merge uses
+the approved intermediate focused-check/review policy. V1ch remains failed and
+complete final gates plus repeated V5 remain OPEN. No speed gain is claimed.
+
+### V1cj prospective feasibility — SQL protocol test ownership
+
+Root-cause hypothesis: sifr_sql_tool unconditionally dev-depends on
+sifr_semantic_services solely for tests/migration_source.rs. Its two tests require
+the canonical compiler, but protocol/session/fixture tests do not. V1ch's fixture
+preparation takes96.651s and standalone migration-artifact preparation9.605s;
+the full SQL preparation takes394.218s. These historical durations identify a
+candidate boundary, not a promised saving.
+
+Move the existing migration_source.rs byte-for-byte to the existing sifr CLI
+integration-test owner as tests/sql_migration_source.rs. Remove the SQL tool's
+semantic-services dev dependency, add the CLI's already-workspace-pinned semver
+test dependency, and record the intentional Cargo.lock edge changes without
+version changes. Keep both assertions, fixture contents and include paths.
+Explicitly enroll the relocated test in the selected schema-tools area; retain
+all existing compiler-adapter feature coverage. Update only affected method-site
+and direct-filesystem-effect path records. Add negative boundary/enrollment checks
+so compiler capabilities cannot silently return to protocol-only test graphs or
+the moved assertions disappear from area coverage.
+
+First measure a current, fully primed baseline. Then use a real lowering diagnostic
+wording edit, observed through the rebuilt CLI, to force compiler invalidation.
+Measure the complete selected SQL preparation sequence with canonical resource
+allocation and retained targets. Prototype the ownership move; separately charge
+its transition preparation, then repeat the same diagnostic edit and complete
+preparation, including the new test owner's preparation. Preserve exact command
+graphs, elapsed/CPU, compiler/source identities, capacities and outcome evidence.
+Keep all1800s category caps; no tracing in ordinary timing runs. The temporary
+diagnostic wording is only an experimental witness and must be restored.
+
+Good enough to expand: at least25% and30s less complete affected incremental SQL
+preparation, no more than5% CPU increase, and both diagnostic witnesses succeed.
+A faster protocol subcommand alone does not qualify. If rejected, restore all
+owned production changes and keep the candidate/evidence; do not tune isolated
+seconds. If promising, repeat matched measurements, verify unchanged byte content
+of moved tests, all affected protocol/migration/compiler-adapter assertions and
+negative controls, profile/plan enrollment, method/filesystem policies, format and
+size checks. Regenerate any component provenance invalidated by intentional lock
+changes using actual producers; do not stamp hashes. Obtain exact-candidate
+review before intermediate merge.
+
+This tests one required compiler-edit boundary, not all invalidation scenarios.
+No complete-gate or ten-minute claim follows from it. Final full gates and all
+repeated V5 scenarios remain mandatory. If the ownership move cannot materially
+reduce total work, return to the next measured structural cost.
