@@ -7,6 +7,7 @@
     "crates/sifr_codegen/Cargo.toml",
     "crates/sifr_compiler_component/Cargo.toml",
     "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+    "crates/sifr_compiler_component_engine/Cargo.toml",
     "crates/sifr_compiler_services/Cargo.toml",
     "crates/sifr_diagnostics/Cargo.toml",
     "crates/sifr_driver/Cargo.toml",
