@@ -18081,3 +18081,32 @@ Register concrete implementation scope before editing production policy; use
 focused checks and exact-candidate independent review before intermediate merge.
 Reject a marginal result rather than extending a general cache. Whole-gate
 qualification and all V5 scenarios remain OPEN.
+
+### V1cb concluded — snapshot deduplication hypothesis rejected
+
+Ordinary current three-case materialization succeeds; temporary diagnostic
+e89230b0bcb58cc6bdebbf2bdb246c545ee5af21 also executes all three commands.
+Call-site clocks show the backend is sifr_stdlib and the runtime is sifr_runtime:
+different roots, not duplicate roles for one root. Each heavy case performs six
+separate compatible-configuration probe batches with before/after observations.
+The runtime is read12times by those snapshots and once by final Cargo identity.
+
+All measured tree hashing takes1.706s and1.668s in the two heavy cases, zero in
+the small case:3.374s inside27.423s instrumented complete materialization.
+Even deleting every tree observation would not meet the25% screen. Actual
+integrity-preserving savings would be smaller. Reject this hypothesis; do not
+extend to93cases, weaken mutation checks or implement a digest cache.
+
+The strict whole-tree comparison remains FAILED: only Cargo.toml/Cargo.lock
+differ through their explicit current Git dependency revision. A separate
+read-only comparison confirms all file inventories and generated Rust/support
+bytes match exactly, and manifests/locks match after substituting only the two
+recorded exact revisions. No dependency/features/profile source differs between
+those revisions. Keep this explanatory supplement separate from the original
+failed harness. Commands succeeded; the result is diagnostic, not acceptance.
+
+Evidence: external v1cb/{baseline-preparation,baseline,diagnostic-preparation,
+diagnostic,revision-comparison}, exact temporary patch/commit, command and guard
+receipts. Restore the ordinary branch and rebuild its compiler before continued
+execution. No production optimization or whole-gate saving claimed. Final gates
+and repeated V5 remain OPEN.
