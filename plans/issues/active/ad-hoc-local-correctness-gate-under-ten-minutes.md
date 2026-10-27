@@ -18516,3 +18516,28 @@ outputs/requests/responses, build profiles, source and binary identities and
 guards. This is a rejected feasibility experiment, so no implementation review
 or PR is required. Final gate/V5 remains OPEN. Continue with structural repeated-
 work elimination; do not portray this modest probe improvement as a gate gain.
+
+
+### V1cg prospective feasibility — avoid unused stdlib analysis
+
+Current plan_demanded_stdlib_sources performs two eager analyses whose results
+are unused on common paths: it parses module definitions to intersect an empty
+suppressed-union set, and parses selected-source identifiers before checking
+whether the module has any dependencies. V1bx already retains analyses within a
+request; V1cc's prepared-syntax representation was rejected. This proposal changes
+neither representation nor lifetime: defer each canonical analysis until its
+existing consumer actually needs it. All dependency, suppression, constant,
+canonical-name, declaration-order and fixed-point semantics remain unchanged.
+
+First rebuild the ordinary corpus producer to remove any retained rejected
+prototype, then run the complete732-fixture source/metadata oracle as a current
+baseline. Prototype only the two demand checks above and run the existing
+selection regressions, all codegen tests, formatting and size guards. Compare
+the complete ordinary corpus and all emitted bytes against that baseline.
+Good enough to expand: at least25% lower complete corpus elapsed and CPU, with
+identical coverage/output. If rejected, restore production source and retain
+the prototype/evidence without further tuning. If promising, repeat alternating
+timings and qualify both source/metadata profiles, all732 native E2E assertions,
+affected generated quality/CLI/invalidation contracts and exact-candidate review
+before intermediate merge. Charge actual preparation separately. Preserve
+1800s caps, capacity reserves and final complete gate/V5 requirements.
