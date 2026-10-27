@@ -18601,3 +18601,74 @@ from the current largest costs rather than old aggregate estimates.
 No new compiler, cache, profile or scheduling implementation is authorized by this
 diagnostic record alone. Final complete phase gates and every repeated V5 edit/
 invalidation scenario remain OPEN even if this correctness sweep passes.
+
+
+### V1ch concluded — complete integrated diagnostic, SQL provenance failure
+
+Candidate ee5d2eb97e71fa110fc9d75715b1e5c2e0d89ce5 completed all38 top-level
+steps:37pass,1fail. All17 preparations,18 crate configurations,732 native E2E
+fixtures and86 isolated native assertions executed and passed. All20 areas
+executed569 variants:565pass,4fail, all four in sql_platform. Actual facade
+elapsed5276.663s (87m56.663s), child CPU12954.227s. The enclosing guard took
+5277.908s, without capacity stop, unexpected source changes or leftover owned
+sessions. This retained-target run includes real rebuilds and is not an unchanged
+warm timing or V5 acceptance. Do not compare its total as a matched speedup or
+regression against V1bz's different retained preparation state.
+
+Non-overlapping accounting: preparation1383.817s; guards194.265s; crate
+configurations1347.522s; native E2E105.795s; scalar areas1865.886s; Python/quality
+paired window356.825s; facade/unattributed22.554s. The pair window comes from
+plan/final-outcome publication timestamps, not a monotonic group timer. Its
+355.778s Python and338.349s quality child durations must not be added as wall
+time. Largest preparations: SQL394.218s, runtime-platform309.079s,
+crate-tests252.936s, generated167.059s, release-compiler110.377s.
+Generated-driver configuration460.379s, ordinary-driver341.003s, combined
+lowering/CLI406.098s. Isolated-case and libtest-body breakdowns are retained;
+concurrent case durations are not additive.
+
+The SQL area took635.504s. Its actual clean/unchanged/independent-clean protocol
+passed387.384s; the canonical protocol records the combined duration, not
+separate measured build times. Four failing qualification/mutation variants
+reject stale component source provenance. Comparing all recorded inputs proves
+mysql, postgresql and sqlite each differ only in root Cargo.toml: V1ca's
+num-traits default-feature normalization changed its hash. SQLite is also stale
+even though early validation reports the first failing family. This is an
+in-scope missed artifact regeneration, not a broken validator or external drift.
+Do not merely update hashes; use each canonical producer and qualify the result.
+
+External v1ch evidence contains the complete original failed run, exact emitted
+plan, area reports, all732 outcome records,86 native-case receipts, preparation
+command ledger, inner installed-corpus evidence, CPU/capacity guards and source/
+binary identities. The first archive finalizer stopped because group JSON was
+already archived; preserve that helper and use byte-equality checks before
+completing the archive. An initial preparation-command grouping wrongly assigned
+preceding guardrail commands; preserve original JSON and the corrected ledger.
+These reporting repairs do not modify execution outcomes or measured durations.
+No implementation is accepted by this diagnostic. Full phase gate/V5 remains OPEN.
+
+### V1ci prospective correction — regenerate manifest-bound SQL components
+
+Bounded scope: canonically rebuild the three SQL component families invalidated
+by V1ca's root manifest correction. Use retained pinned Rust/WASI/native producer
+inputs, retain original receipts/artifact hashes, verify exact changed-input sets
+before building, and allow only each producer's declared artifact/receipt outputs.
+Do not edit words-component inputs or dependencies; its independent provenance
+remains valid. Preserve per-family1800s caps, resource reserves and owned-session
+cleanup. Actual production is required even if final component bytes are identical.
+
+Good enough: all three provenance source-input sets match current source; actual
+producer receipts/tool versions and output hashes recorded; component and each
+SQL-family qualification plus their mutation controls pass; all component-host
+and SQL application assertions pass; formatting/size/diff checks pass. Freeze the
+integrated candidate, open one implementation PR and obtain exact-candidate
+independent review under the approved intermediate policy. Full gates/repeated
+V5 remain phase-end requirements. Preserve V1ch as failed and record focused
+repair evidence separately. No performance gain is claimed for this correction.
+
+After closing this item, evaluate the measured SQL protocol test dependency
+boundary: migration_source.rs is the only sifr_sql_tool test that needs the
+canonical semantic compiler, yet its unconditional dev-dependency burdens the
+protocol fixture test graph. Moving those same assertions to an existing compiler
+owner and keeping explicit area enrollment is a hypothesis, not an adopted change.
+Register and measure complete affected preparation before accepting it. A cheap
+early provenance preflight is a separate follow-up; do not weaken late checks.
