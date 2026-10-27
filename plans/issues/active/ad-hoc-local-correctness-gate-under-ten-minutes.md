@@ -17669,3 +17669,47 @@ and stop proposals that cannot materially change the macro cost. Do not weaken
 the independent SQL cold constructions, source-versus-metadata oracle, CLI
 boundaries or optimized-runtime assertions. No global process cache or universal
 cache redesign without a demonstrated ownership/invalidation contract.
+
+### V1bw attribution checkpoint and bounded stage-clock supplement
+
+Current complete oracle732/732 passes in102.500s/102.303CPU seconds.
+Sampled execution102.330s passes all outputs byte-for-byte against ordinary
+execution. Recorded output timestamps put the first fixture publication about
+1.26s after inferred command start and the last at101.85s. These are reconstructed
+milestones, not individual stage durations; they rule out bootstrap as the dominant
+cost of this run. CPU leaf samples show syntax/token processing and allocation,
+but caller unwinding is incomplete, as in the historical V4ar profile. Do not
+turn those samples into a claimed per-function inclusive cost.
+
+The first SQL diagnostic executes all29tests:27pass/2fail in161.861s.
+The external preparation omitted the native SQL executable preparation required
+by the existing canonical runner. Their build-script source identities were
+6873724c7699ae96ce42285ce96889f4bd6f51408f538f4f319e8d880cc5dd24,
+while the current compiler identity was
+3e5a16df839e290ed25504acb5f0a83ad5b095b62b558ce2aa2fa7fe9d1b174f.
+The protocol explicitly rejects mismatched source identities before serving
+requests. Running check_compiler_execution.py --prepare-only takes10.201s and
+changes all three native tool hashes while leaving compiler and test executable
+bytes unchanged. Complete recovery29/29passes in177.147s/1050.595CPU seconds;
+the sampled full29case run also passes. Preserve the original failure as a
+diagnostic preparation error, not a product regression or passing run.
+
+Sampling attributes substantial SQL CPU to Cranelift/register allocation and
+roughly one fifth to SHA256 symbols across the involved executables. It does
+not yet establish which integrity checks can soundly share work. The existing
+phase rejection of persistent native-code deserialization remains unchanged.
+An attempted detailed SQL stack export repeatedly fails addr2line lookup; stop
+that owned postprocessor and retain its partial output and complete perf data.
+Do not spend more repeating the same limited call-stack method.
+
+Next: one temporary, source-frozen oracle-only stage-clock probe. Use an owned
+diagnostic branch and the normal pinned release build configuration/target;
+retain its exact patch/commit, preparation timing and binary identity. Time
+parse, source lowering, metadata lowering/materialization and both code-generation
+calls inside the existing732fixture loop. Execute every original comparison and
+verify complete emitted bytes/rows against the uninstrumented run. Timing output
+goes to retained stderr; instrumented timing is diagnostic, not acceptance.
+Restore the ordinary branch and rebuild the affected oracle before later gates.
+No compiler semantics, assertion selection or product profile changes. This
+bounded probe closes the unresolved stage attribution; select an implementation
+only after the dominant stage and its safe ownership boundary are demonstrated.
