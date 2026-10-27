@@ -19344,3 +19344,23 @@ runtime tests and immutable loading from a relocated executable in an isolated
 filesystem with no repository/build output mounted. Use controlled producer
 input edits to verify actual Cargo invalidation; restore exact sources before
 final candidate validation and review. Full-gate qualification remains open.
+
+### V1cq production category clears the material-gain criterion
+
+Candidate2dfb3d936 passes all29 actual SQL application tests at four test threads
+in78.163s/329.313CPU seconds, against160.107s/1057.807CPU at the ordinary baseline.
+Elapsed improves51.18% (81.944s); CPU improves68.87%. All prior assertions execute.
+The production category clears its25%/30s and CPU<=5% thresholds.
+
+The initial build-profile/source transition is expensive and remains separate:
+native tool preparation242.992s/897.499CPU, CLI/test construction746.081s/
+2978.634CPU. The complete guard takes1072.013s and ends with an empty session.
+This is NOT a complete under-ten-minute gate, a cold-build improvement, or proof
+of ordinary retained edit cost. Qualify reuse and producer invalidation next.
+
+Add two source-bound unsafe policy records for the immutable image loader's
+function allowance and single deserialization block. Bind static-byte lifetime,
+Engine/thread borrowing, immutable aliasing and build-owned origin explicitly
+to producer/selection code and the local SAFETY explanation. No runtime source
+changes accompany these records; the observed application candidate remains
+2dfb3d936, reusable only after checking unchanged implementation inputs.
