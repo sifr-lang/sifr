@@ -298,3 +298,7 @@ libsqlite3-sys = { path = "crates/sifr_runtime/third_party/libsqlite3-sys" }
 [profile.dev.build-override]
 opt-level = 1
 debug = "line-tables-only"
+
+# Release-mode compiler construction also executes the component producer.
+[profile.release.build-override]
+opt-level = 1

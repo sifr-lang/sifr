@@ -19417,3 +19417,25 @@ build-producer optimization boundary and genuinely reconstruct affected provenan
 Preserve runtime/codegen optimization and all installed-package correctness
 contracts; cross-platform timing and actual publication remain outside this item.
 Complete final gates and repeated V5 remain OPEN.
+
+### V1cq release producer rejected; apply the same optimization boundary
+
+Canonical release preparation succeeds396.813s/2024.967CPU seconds and unchanged
+reuse1.776s, but its eight-image generation costs175.115s. All native image hashes
+match the development producer. The build is valid, while the generation-time
+criterion fails; preserve that rejected result separately from correctness.
+
+Set only release build-dependency opt-level to1, matching the production tools'
+successful development optimization level. Keep normal release opt3, LTO-off,
+codegen units and every development setting unchanged. This addresses the same
+producer cost for the local installed-package consumer, not a new test exclusion.
+Rebuild the three affected SQL producers from exact changed root-manifest inputs;
+the independent words workspace has unchanged declared inputs.
+
+Capacity: preserve the inactive opt0 release host-build directory on the data
+volume, verifying every file before reclaiming its original location if required
+for the next allocation. Keep target release runtime products, all development
+targets, failures and evidence. No active consumers or build leases may exist
+during this operation. Record movement as capacity preparation, not a speedup.
+Require release generation below30s, unchanged reuse, current provenance and
+affected development/installed-compiler execution after this profile correction.
