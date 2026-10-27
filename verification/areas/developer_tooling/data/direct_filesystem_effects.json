@@ -22752,35 +22752,35 @@
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr/tests/sql_migration_source.rs",
+      "path": "crates/sifr_sql_tool/tests/migration_source.rs",
       "symbol": "checked_source_build_is_deterministic_and_preserves_executable_literals",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(source_root.join(\"baselines\")).expect(\"baseline directory\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr/tests/sql_migration_source.rs",
+      "path": "crates/sifr_sql_tool/tests/migration_source.rs",
       "symbol": "checked_source_build_is_deterministic_and_preserves_executable_literals",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr/tests/sql_migration_source.rs",
+      "path": "crates/sifr_sql_tool/tests/migration_source.rs",
       "symbol": "checked_source_build_is_deterministic_and_preserves_executable_literals",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr/tests/sql_migration_source.rs",
+      "path": "crates/sifr_sql_tool/tests/migration_source.rs",
       "symbol": "source_loading_rejects_path_escape_and_filename_identity_drift",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(root.join(\"baselines\")).expect(\"baseline directory\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr/tests/sql_migration_source.rs",
+      "path": "crates/sifr_sql_tool/tests/migration_source.rs",
       "symbol": "source_loading_rejects_path_escape_and_filename_identity_drift",
       "operation": "write",
       "site": "std::fs::write(",

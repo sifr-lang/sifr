@@ -18770,3 +18770,80 @@ This tests one required compiler-edit boundary, not all invalidation scenarios.
 No complete-gate or ten-minute claim follows from it. Final full gates and all
 repeated V5 scenarios remain mandatory. If the ownership move cannot materially
 reduce total work, return to the next measured structural cost.
+
+
+### V1cj concluded — ownership move shifts cost, screen rejected
+
+Baseline0394d81d91d8540f1b58709303f232585f1bdaba takes358.711s and918.458CPU
+seconds for all34 selected SQL preparation commands after the real lowering
+diagnostic edit. Prototype13925d80869fcdada6622955991723b3d9651dcb takes
+360.723s and918.135CPU seconds for all35 commands, including relocated-test
+preparation. Both rebuilt CLI witnesses observe the same unbound-variable edit
+and accept the positive source. Complete preparation is0.56% slower, CPU nearly
+unchanged; the25%/30-second adoption threshold fails. Do not expand or adopt it.
+
+The isolated protocol command improves28.066s to1.167s, but the later SQLite
+compiler command increases6.243s to29.722s. The grouped schema-tool command
+improves68.758s to58.057s; the relocated test adds3.928s, with remaining graph
+timing differences recorded separately. Eight commands compile sifr_lowering
+in BOTH runs: its compilation moves from the protocol fixture command to the
+SQLite compiler command rather than disappearing. This supports work shifting
+between consumers, not a demonstrated reduction of total work. It does not yet
+prove every remaining compiler configuration is necessary or equivalent.
+
+Prototype-only functional evidence: both relocated tests (byte-identical source),
+6 session tests,4 native compiler tests and3 migration-artifact tests pass;
+40 boundary mutation controls pass, and the original compiler-dependent graph
+is correctly rejected. Formatting passes; package versions are unchanged, with
+only2 intentional lock dependency edges altered. These checks do not constitute
+implementation acceptance. Preserve the complete rejected candidate on its own
+branch, then restore all production files and the temporary diagnostic wording
+to the pre-experiment plan revision. Restored component provenance must match;
+do not run canonical regeneration for an abandoned lockfile.
+
+Preparation of the new layout takes502.839s/1235.176CPU seconds separately;
+its guard takes519.141s. Baseline edit guard377.018s, prototype edit guard
+379.045s; no capacity stop, source drift or leftover sessions. External helper
+identity checks are included in the measured preparation totals: baseline
+commands sum349.153s versus358.711s complete preparation; transition commands
+sum492.171s versus502.839s complete preparation. No tracing was used.
+
+Preserve investigative failures: original baseline priming completes all34
+commands but its diagnostic witness is correctly rejected for running an external
+file from the repository package directory. Repair only the probe's cwd and run
+both witnesses; do not repeat preparation. A preliminary graph assertion wrongly
+expected sifr_codegen in the semantic-only dependency graph; raw evidence shows
+semantic services, frontend, lowering, Wasmtime and Cranelift, but not codegen.
+The prototype edit run survives a transient connection failure and completes
+with a clean guard and matching source. None of these records is relabeled.
+
+No independent implementation review or PR is required for this rejected screen.
+The retained compiler targets may contain the experimental diagnostic wording;
+rebuild/check the ordinary compiler before further qualified use. Final complete
+gates and repeated V5 remain OPEN. Stop tuning this isolated ownership move.
+The next measured question is why one compiler edit rebuilds lowering eight
+times across SQL consumers.
+
+### V1ck prospective diagnostic — identify repeated compiler configurations
+
+At the restored production source, collect exact Cargo compiler-artifact records
+for the eight SQL consumer selections that rebuilt lowering in V1cj, using the
+same retained target and canonical resource allocation. Include library features,
+profiles, output identities and associated fingerprint dependency records; retain
+build-script data where it distinguishes configurations. Prepare the ordinary
+compiler first and verify its original diagnostic wording. Keep30-minute caps
+and reserves, and account for all selections or explicit failures.
+
+Good enough for this diagnostic: explain the actual distinguishing inputs for
+the repeated lowering/frontend/semantic library builds, distinguish unique
+configurations from rebuilding the same configuration, and identify the first
+dependency/profile/build-script differences responsible. Do not conclude that
+equal top-level feature lists imply interchangeable artifacts. Do not normalize
+features, combine profiles, remove configuration coverage, add a daemon/cache,
+or edit compiler behavior under this diagnostic alone.
+
+Use these results to propose one structural reduction across compatible compiler
+consumers, with explicit coverage and invalidation tests, before changing
+production. The required independent native graphs and compiler-adapter
+feature qualifications remain intact. These artifact-recording runs are diagnostic
+preparation, not ordinary full-gate performance acceptance or V5.
