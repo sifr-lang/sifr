@@ -18110,3 +18110,32 @@ diagnostic,revision-comparison}, exact temporary patch/commit, command and guard
 receipts. Restore the ordinary branch and rebuild its compiler before continued
 execution. No production optimization or whole-gate saving claimed. Final gates
 and repeated V5 remain OPEN.
+
+### V1cc prospective — invocation-owned standard-library syntax selection
+
+V1bx removed redundant fixed-point work but the remaining canonical filter still
+tokenizes/restores/parses each module whenever its root set grows, builds the same
+item dependency graph again, and reparses rendered selected items for identifier
+collection. These are immutable inputs within one plan_demanded_stdlib_sources
+call. Test a local prepared syntax/ dependency index: build lazily per demanded
+module, perform every root closure against it, render in original declaration
+order and collect identifiers from the selected syntax tree. Drop all state at
+the end of the call. Whole-module behavior and canonical name restoration remain
+identical. Do not introduce global state, cross-request caching, changed parser
+authority, new fallback semantics or stored correctness results.
+
+Measure an ordinary current complete732-fixture source/metadata oracle baseline,
+then the same complete candidate with exact generated-byte and coverage comparison.
+Charge actual preparation separately and retain all source/metadata producers.
+Good enough: at least25% lower ordinary complete corpus time and CPU, no missing
+fixtures, equal emitted bytes/diagnostics, and focused root-growth/cycle/trait/
+macro/nominal-name/suppression/fresh-request controls. If the screen fails, reject
+the candidate without expanding qualification. If it passes, repeat the ordinary
+comparison, run all codegen tests, both full source/metadata profiles, all732 native
+runtime E2E fixtures, affected quality/CLI/invalidation contracts, formatting,
+size and unchanged selection checks. Exact-candidate independent review and
+intermediate PR/merge remain required. Preserve error/fallback behavior already
+present; do not add new behavior for malformed compiler-owned input.
+Keep source-frozen owned targets, current allocation/reserve checks and1800s caps.
+This is compiler-work elimination, not evidence yet of a whole-gate600s result.
+Final integrated correctness and every repeated V5 scenario remain OPEN.
