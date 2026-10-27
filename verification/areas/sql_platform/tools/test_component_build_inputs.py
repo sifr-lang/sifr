@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import component_provenance
 from component_provenance import guest_environment, source_inputs
 from wasi_sdk_inputs import reject_c_overrides, sdk_environment, sdk_version_text, verify_contents
 
@@ -93,6 +94,40 @@ class SdkInputsTests(unittest.TestCase):
         self.assertIn("crates/sifr_sql_postgresql/src/build_selection.rs", source_inputs("postgresql"))
         self.assertIn("crates/sifr_sql_postgresql/src/build_inputs.rs", source_inputs("postgresql"))
         self.assertIn("crates/sifr_compiler_component/fixtures/words_component/Cargo.lock", source_inputs("words"))
+
+
+    def test_guest_inventory_excludes_only_the_native_engine_edge(self) -> None:
+        for family in ("postgresql", "mysql", "sqlite"):
+            inputs = source_inputs(family)
+            self.assertFalse(any(path.startswith("crates/sifr_compiler_component_engine/")
+                                 for path in inputs))
+            self.assertIn("crates/sifr_compiler_component/Cargo.toml", inputs)
+        original = component_provenance.toml
+
+        def unconditional(path: Path) -> dict:
+            value = original(path)
+            if path == component_provenance.ROOT / "crates/sifr_compiler_component/Cargo.toml":
+                value["dependencies"]["sifr_compiler_component_engine"] = {"workspace": True}
+            return value
+
+        with patch("component_provenance.toml", side_effect=unconditional):
+            self.assertIn("crates/sifr_compiler_component_engine/src/policy.rs",
+                          source_inputs("sqlite"))
+
+    def test_host_build_dependency_revisits_a_guest_dependency_as_host_code(self) -> None:
+        original = component_provenance.toml
+
+        def host_owner(path: Path) -> dict:
+            value = original(path)
+            if path == component_provenance.ROOT / "crates/sifr_sql_sqlite/Cargo.toml":
+                value.setdefault("build-dependencies", {})["sifr_compiler_component"] = {
+                    "workspace": True, "features": ["host"],
+                }
+            return value
+
+        with patch("component_provenance.toml", side_effect=host_owner):
+            self.assertIn("crates/sifr_compiler_component_engine/src/policy.rs",
+                          source_inputs("sqlite"))
 
 
 if __name__ == "__main__":

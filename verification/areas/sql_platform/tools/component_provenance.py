@@ -34,8 +34,8 @@ def toml(path: Path) -> dict[str, Any]:
 def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
     """Follow actual local dependencies, including shared and Ruff sources."""
     workspace = toml(root / "Cargo.toml")["workspace"]["dependencies"]
-    pending = [root / FAMILIES[family]]
-    visited: set[Path] = set()
+    pending = [(root / FAMILIES[family], "guest")]
+    visited: set[tuple[Path, str]] = set()
     paths = {
         root / "rust-toolchain.toml",
         root / "crates/sifr_compiler_component/wit/compiler-component.wit",
@@ -51,10 +51,11 @@ def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
         builder = f"build_{family}_component{'s' if family != 'sqlite' else ''}.py"
         paths.add(root / TOOLS / builder)
     while pending:
-        directory = pending.pop().resolve()
-        if directory in visited:
+        directory, role = pending.pop()
+        directory = directory.resolve()
+        if (directory, role) in visited:
             continue
-        visited.add(directory)
+        visited.add((directory, role))
         manifest = directory / "Cargo.toml"
         data = toml(manifest)
         paths.add(manifest)
@@ -63,9 +64,16 @@ def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
                 paths.add(directory / name)
         for name in ("src", "wit", "wasi_compat"):
             paths.update(path for path in (directory / name).rglob("*") if path.is_file())
-        tables = [data, *data.get("target", {}).values()]
-        for table in tables:
+        tables = [(None, data), *data.get("target", {}).items()]
+        for condition, table in tables:
             for section in ("dependencies", "build-dependencies"):
+                # The maintained guest producers target wasm32-wasip2. This exact
+                # native-only edge cannot affect guest code. Build dependencies
+                # and their normal dependencies execute on the host and remain
+                # included; unrecognized conditions remain conservative.
+                if (role == "guest" and section == "dependencies"
+                        and condition == 'cfg(not(target_family = "wasm"))'):
+                    continue
                 for name, spec in table.get(section, {}).items():
                     if not isinstance(spec, dict):
                         continue
@@ -75,7 +83,8 @@ def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
                     else:
                         selected, base = spec, directory
                     if isinstance(selected, dict) and "path" in selected:
-                        pending.append(base / selected["path"])
+                        child_role = "host" if section == "build-dependencies" else role
+                        pending.append((base / selected["path"], child_role))
     return {path.relative_to(root).as_posix(): sha256(path) for path in sorted(paths)}
 
 

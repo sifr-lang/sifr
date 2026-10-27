@@ -19283,3 +19283,27 @@ Keep the workspace pin; use explicit byte-to-hex encoding with error propagation
 Retain prepared dependencies and retry affected formatting/guardrails, boundaries
 and engine/host build/tests. Profile/plan evidence remains input-identical because
 only the producer's formatting implementation and this record change.
+
+### V1cq focused pass and guest provenance ownership correction
+
+Repaired candidatef3d528986 passes4 engine tests and all30 existing host tests,
+plus19 boundary mutations, formatting and guardrails. Build27.348s and tests
+1.392s are separate from the preserved176.414s failed initial preparation.
+Its eight images total71,183,136bytes, generate in13.146s and exactly match the
+external producer hashes. Earlier unchanged profile/plan evidence is retained.
+
+Cargo metadata filtered for the actual wasm32-wasip2 guest target proves the
+native engine is absent from each provider's non-dev dependency closure. The
+current source-inventory walker nevertheless claims all five engine source files.
+That would create a false guest-artifact dependency on its native consumer and
+force unnecessary guest regeneration after native policy/loader edits.
+
+Correct only the proven target boundary: omit the exact native-only normal
+dependency table while walking guest code. Track host versus guest traversal;
+build dependencies and their transitive normal dependencies retain host inputs.
+Keep unknown conditions conservative and retain the declaring manifest itself.
+Tests must show ordinary guest inventories omit the engine, changing its edge to
+unconditional includes it, and reaching the same component through a host build
+dependency includes its native engine. All existing grammar/shared-source/SDK
+checks remain. Reconstruct authoritative artifacts after this inventory change;
+do not restamp receipts or waive their declared build contracts.
