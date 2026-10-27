@@ -1076,8 +1076,11 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/rust_interop_plan.rs:22` `cache_key_fragment` | read | layered view + demanded record handles | 24, 28 |
 | `crates/sifr_codegen/src/stdlib_codegen_metadata.rs:14` `new` | read | layered view + demanded record handles | 14, 17 |
 | `crates/sifr_codegen/src/stdlib_codegen_metadata.rs:22` `bootstrap` | read | layered view + demanded record handles | 23, 24, 28 |
-| `crates/sifr_codegen/src/stdlib_demand_plan.rs:8` `plan_demanded_stdlib_sources` | read, enumerate, clone projection | layered view + demanded record handles | 8, 9, 30, 44, 60, 76, 85, 90, 104, 120, 124, 130 |
-| `crates/sifr_codegen/src/stdlib_demand_plan.rs:172` `public_import_roots_seed_matching_transitive_private_definitions` | read | test setup/parity | 173, 174, 178, 189, 197, 198 |
+| `crates/sifr_codegen/src/stdlib_demand_plan.rs:8` `plan_demanded_stdlib_sources` | read, enumerate, clone projection | layered view + demanded record handles | 8, 9, 35, 54, 74, 91, 100, 107, 121, 139, 143, 151 |
+| `crates/sifr_codegen/src/stdlib_demand_plan.rs:193` `public_import_roots_seed_matching_transitive_private_definitions` | read | test setup/parity | 194, 195, 199, 210, 218, 219 |
+| `crates/sifr_codegen/src/stdlib_demand_plan.rs:246` `growing_demands_cross_multiple_rounds_and_a_dependency_cycle` | read | test setup/parity | 247, 265, 266, 268, 269, 274, 275, 292 |
+| `crates/sifr_codegen/src/stdlib_demand_plan.rs:308` `canonical_references_constants_and_suppressed_types_survive_selection` | read | test setup/parity | 309, 311, 315, 316, 323, 324, 326, 333, 334 |
+| `crates/sifr_codegen/src/stdlib_demand_plan.rs:354` `whole_module_roots_keep_all_items_while_propagating_dependencies` | read | test setup/parity | 355, 356, 360, 361, 363, 364, 366, 367, 375 |
 | `crates/sifr_codegen/src/stdlib_filter/implementation.rs:59` `seal_canonical_stdlib_names` | read, enumerate | layered view + demanded record handles | 59, 67, 72 |
 | `crates/sifr_codegen/src/stdlib_filter/implementation.rs:132` `rewrite_canonical_stdlib_tokens` | read, enumerate | layered view + demanded record handles | 132, 158 |
 | `crates/sifr_codegen/src/stdlib_filter/implementation.rs:174` `rewrite_rust_identifiers` | read | layered view + demanded record handles | 180 |

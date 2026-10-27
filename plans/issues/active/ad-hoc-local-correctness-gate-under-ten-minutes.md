@@ -17607,3 +17607,199 @@ copy-error cleanup, all snapshot/content tests, existing native-reuse assertions
 format/size/affected inventories and exact-candidate independent review.
 Good enough is closure of this failure class with these checks; afterward return
 to macro work reduction. Final full gates and repeated V5 remain OPEN.
+
+### V1bv delivered — shared inherited-writer publication boundary
+
+[PR4503](https://github.com/sifr-lang/sifr/pull/4503) merged as
+ec151a3148debb3f333c35a7275d6cad7c65375d; validated/reviewed implementation
+6a873c1dfc36df395fc01f79f3932057a22cb58b. Unix NativeSnapshot capture now stages
+beside the destination and retains a raw writer lock through inherited descriptor
+lifetimes; read-only shared admission precedes atomic replacement. Existing
+non-Unix copy behavior remains. Removed the insufficient isolated-test wrapper;
+all four builders and runtime results remain, with invocation-owned captures.
+
+Preparation guard156.769s PASS: metadata/test build33.525s; four deterministic
+publication regressions0.466s; format, size, method-authority, unsafe-ABI and
+filesystem inventories pass. Seven native-reuse and ten native-storage tests pass,
+as do two simultaneous complete concurrency invocations. The external focused
+harness incorrectly expected seven storage cases after all ten passed; preserve
+that failure. Recovery validated the exact candidate/output identities and ran
+only the remaining concurrent invocations (guard5.688s PASS).
+
+Complete ordinary-driver configuration334.906s/858.425CPU seconds:
+794pass/0fail/82ignored. Those ignored cases retain separate gate ownership.
+Guard336.556s reports no source drift, leftovers or session. Independent exact-
+candidate Claude Opus review SATISFIED, no blockers; retained outside the tree at
+reviews/6a873c1dfc36df395fc01f79f3932057a22cb58b. Nonblocking follow-ups belong
+to storage portability/durability owners: network-filesystem lock semantics,
+macOS copy metadata/clone behavior, optional crash durability. They are not
+local timing acceptance or part of this repair. No extra sync or retries added.
+
+Evidence: v1bv-preparation-validation, v1bv-focused-validation,
+v1bv-focused-recovery-validation, v1bv-ordinary-driver-validation and guards.
+The first preparation harness attempt collided with its own new evidence directory
+before executing tests; its failure remains in v1bv-preparation. Both earlier
+broad ETXTBSY failures remain failed. This is correctness recovery, not a speedup
+comparison or a new full-gate pass. Final complete gates and V5 remain OPEN.
+
+### V1bw prospective — attribute dominant compiler work before structural redesign
+
+The complete V1bt workload consumed9355CPU seconds; ideal eight-way scheduling
+alone still needs1169seconds. Native capture correctness is now repaired.
+Prioritize reducing repeated compiler work across the expensive corpus,
+lowering/CLI and SQL consumers before adding scheduler complexity.
+
+Inspect current source and prepared-artifact contracts. Prepare affected tools
+once against the current immutable candidate with retained owned targets.
+Run child-scoped CPU sampling of one complete corpus oracle and one complete
+SQL application test group; use the ordinary passing V1bt runs as contextual
+costs only, and record current ordinary comparison runs when input/state differs.
+Do not reuse old pass results or substitute a fixture subset for full group
+assertions. Record binary/input identity, wall/CPU, memory and preparation costs;
+sampling overhead is diagnostic, never acceptance timing. Keep a1800s category
+cap, bounded resources/reserve, no simultaneous builds or global perf-policy
+changes. Preserve all failures and verify source immutability.
+
+Good enough: identify the dominant shared operations with CPU samples plus
+source corroboration, map each to retained assertions/isolation, and estimate
+the maximum whole-gate benefit before selecting one bounded architectural
+prototype. Prefer a change that materially reduces a dominant workload (target
+at least25percent), measure build plus execution and required invalidation early,
+and stop proposals that cannot materially change the macro cost. Do not weaken
+the independent SQL cold constructions, source-versus-metadata oracle, CLI
+boundaries or optimized-runtime assertions. No global process cache or universal
+cache redesign without a demonstrated ownership/invalidation contract.
+
+### V1bw attribution checkpoint and bounded stage-clock supplement
+
+Current complete oracle732/732 passes in102.500s/102.303CPU seconds.
+Sampled execution102.330s passes all outputs byte-for-byte against ordinary
+execution. Recorded output timestamps put the first fixture publication about
+1.26s after inferred command start and the last at101.85s. These are reconstructed
+milestones, not individual stage durations; they rule out bootstrap as the dominant
+cost of this run. CPU leaf samples show syntax/token processing and allocation,
+but caller unwinding is incomplete, as in the historical V4ar profile. Do not
+turn those samples into a claimed per-function inclusive cost.
+
+The first SQL diagnostic executes all29tests:27pass/2fail in161.861s.
+The external preparation omitted the native SQL executable preparation required
+by the existing canonical runner. Their build-script source identities were
+6873724c7699ae96ce42285ce96889f4bd6f51408f538f4f319e8d880cc5dd24,
+while the current compiler identity was
+3e5a16df839e290ed25504acb5f0a83ad5b095b62b558ce2aa2fa7fe9d1b174f.
+The protocol explicitly rejects mismatched source identities before serving
+requests. Running check_compiler_execution.py --prepare-only takes10.201s and
+changes all three native tool hashes while leaving compiler and test executable
+bytes unchanged. Complete recovery29/29passes in177.147s/1050.595CPU seconds;
+the sampled full29case run also passes. Preserve the original failure as a
+diagnostic preparation error, not a product regression or passing run.
+
+Sampling attributes substantial SQL CPU to Cranelift/register allocation and
+roughly one fifth to SHA256 symbols across the involved executables. It does
+not yet establish which integrity checks can soundly share work. The existing
+phase rejection of persistent native-code deserialization remains unchanged.
+An attempted detailed SQL stack export repeatedly fails addr2line lookup; stop
+that owned postprocessor and retain its partial output and complete perf data.
+Do not spend more repeating the same limited call-stack method.
+
+Next: one temporary, source-frozen oracle-only stage-clock probe. Use an owned
+diagnostic branch and the normal pinned release build configuration/target;
+retain its exact patch/commit, preparation timing and binary identity. Time
+parse, source lowering, metadata lowering/materialization and both code-generation
+calls inside the existing732fixture loop. Execute every original comparison and
+verify complete emitted bytes/rows against the uninstrumented run. Timing output
+goes to retained stderr; instrumented timing is diagnostic, not acceptance.
+Restore the ordinary branch and rebuild the affected oracle before later gates.
+No compiler semantics, assertion selection or product profile changes. This
+bounded probe closes the unresolved stage attribution; select an implementation
+only after the dominant stage and its safe ownership boundary are demonstrated.
+
+### V1bw completed attribution — standard-library selection dominates the corpus
+
+Temporary diagnostic candidate551a2e242e13d539167e7f7ec0e8d43a0bd203ec:
+all732 source/metadata comparisons and complete ordinary output comparison pass.
+Execution102.567s/102.435CPU seconds; preparation5.344s. Direct stage totals:
+parse0.042s, source lowering0.544s, metadata lowering0.714s,
+materialization18.929s, source codegen40.089s, metadata codegen39.754s.
+Do not add these to whole execution; they are contained stages.
+
+Deeper temporary candidate dc7e571d861607517aaf73ca5285dd0a21c5ecbe:
+same complete comparisons pass, execution111.251s/110.988CPU seconds.
+Selection66.524s lies inside support-total78.843s; final inline syntax
+validation3.553s is separate. These inner totals include bootstrap calls and
+must not be added to codegen totals. Instrumentation/build identity differs;
+this is attribution, not an acceptance comparison. Both guards report unchanged
+sources and empty process sessions. Preserve v1bw/stage-* and v1bw/inner-*.
+Restore ordinary branch6236cc7 before production work and rebuild affected
+oracle artifacts. The earlier adjacent support-transform refactor remains
+rejected; this result identifies the different fixed-point selection algorithm.
+
+### V1bx prospective — reuse unchanged analysis inside one stdlib selection
+
+Own one call to plan_demanded_stdlib_sources. Current fixed-point rounds
+reparse immutable module definitions at multiple edges, refilter modules whose
+effective roots have not changed, and rescan unchanged selected source for
+identifier propagation. Preserve all graph traversals and convergence rules;
+retain these analyses inside that call and recompute selections/identifier sets
+when their actual inputs change. Inputs are immutable borrows for the call;
+nothing persists across requests, sysroots, revisions or processes. No global
+cache, source fallback, native deserialization or integrity relaxation.
+
+Good enough: at least25% lower ordinary complete732-fixture oracle elapsed time
+against the current uninstrumented baseline, exact emitted bytes/source maps/
+module sets, no skipped source-versus-metadata comparisons. Confirm an initial
+promising result with alternating baseline/candidate runs; record preparation
+and CPU separately. Reject the implementation if it misses that threshold.
+This is a dominant shared compiler operation, but does not itself prove600s.
+
+Before adoption require focused selection controls for transitive/cyclic demand
+growth, canonical type and constant roots, suppressed unions, unchanged roots
+and independent requests; existing stdlib-filter/support/codegen regressions;
+complete development/release corpus equality, all native positive E2E fixtures
+and generated-quality checks. Run formatting, size and applicable authority
+checks, exact-candidate independent review, then intermediate PR/merge under
+the approved policy. Account for source invalidation and build work; final full
+correctness gates and every repeated V5 scenario remain OPEN.
+
+### V1bx qualification checkpoint — material gain, reporting repair pending
+
+Implementation candidate ab53e50dc3d49f6ffbaa6e20dffd5700628f5170:
+five selection controls and all1785 codegen tests pass; formatting/size pass.
+Alternating ordinary full732 corpus comparisons: baseline102.324s and102.220s;
+candidate61.805s and55.874s. Every emitted byte and field agrees with baseline.
+Aggregate reduction42.468%; repeated binary hashes agree within each version.
+This exceeds the prospective25% category criterion, not a whole-gate claim.
+
+Canonical development/release corpus consumer74.367s/131.058CPU seconds passes
+all732 fixtures in both profiles and the complete baseline comparison. Native
+E2E consumer97.167s/138.113CPU seconds passes all732 actual runtime fixtures
+in186groups: source39.474s, native build45.385s, runtime11.104s. No blocked
+fixtures or batch failures. Preparation is separate: focused build/test165.978s,
+driver metadata build/test150.643s, corpus preparation12.583s, E2E binary145.184s;
+generated graph preparation also completes. These investigation configurations
+and intervening branch switches are not an additive full-gate lower bound.
+
+The complete merge-selected generated-quality assertions all execute and pass,
+including optimized native demos and fresh companions, in a278.389s invocation.
+The external diagnostic supplied a result path outside the repository. The runner
+writes its complete10-variant passing report, then its final relative-path print
+fails. Preserve candidate-quality and its guard as FAILED; do not relabel the
+process as passing. Correct the external call to a fresh repository-relative
+report and rerun the affected quality category before acceptance.
+
+Method authority passes33.357s. Metadata inventory correctly rejects changed
+source anchors and the three new test consumers. Review confirms the production
+owner classification is unchanged and the added consumers are test setup/parity.
+Refresh only those inventory rows. Production Rust, tests, manifests, locks and
+verification code remain byte-identical to ab53e50dc; retain that observed
+validation identity for existing evidence and verify the exact documentary delta.
+Run inventory validation/self-tests and corrected quality preparation/execution
+on the final record-only head. No need to rebuild/rerun unaffected semantic and
+native assertions solely for this inventory record correction. Exact final-head
+independent review and all final phase gates/V5 remain required.
+
+The external focused helper also retained an overly broad generic scope label;
+candidate-focused/scope-correction.json pins its actual five focused tests,
+1785 codegen tests and format/size checks. It did not execute the corpus.
+Keep raw commands/results and both diagnostic failures; missing execution never
+counts as a pass. Draft PR4504 remains unmerged pending the remaining checks.
