@@ -57,7 +57,9 @@ impl ComponentCompilation {
         config.wasm_relaxed_simd(false);
         config.max_wasm_stack(limits.max_wasm_stack_bytes);
         config.cranelift_nan_canonicalization(true);
+        let engine_span = DiagnosticSpan::new("engine", 0, "");
         let engine = Engine::new(&config).map_err(crate::host::engine_error)?;
+        drop(engine_span);
         Ok(Self(Arc::new(CompilationInner {
             engine,
             max_wasm_stack_bytes: limits.max_wasm_stack_bytes,
@@ -95,6 +97,8 @@ impl ComponentCompilation {
     // the current request/registration. Hold the lock through compilation to
     // avoid duplicate publication; release it before any guest execution.
     pub(crate) fn component(&self, hash: &str, bytes: &[u8]) -> Result<Component, ComponentError> {
+        let cache_span =
+            DiagnosticSpan::new("component_lookup", Arc::as_ptr(&self.0) as usize, hash);
         let mut cache = self.0.entries.lock().map_err(|_| {
             ComponentError::new(
                 ComponentErrorKind::Execution,
@@ -109,6 +113,11 @@ impl ComponentCompilation {
                 {
                     cache.hits += 1;
                 }
+                drop(DiagnosticSpan::new(
+                    "component_hit",
+                    Arc::as_ptr(&self.0) as usize,
+                    hash,
+                ));
                 return Ok(component);
             }
         }
@@ -116,8 +125,11 @@ impl ComponentCompilation {
         {
             cache.compilations += 1;
         }
+        let compile_span =
+            DiagnosticSpan::new("component_compile", Arc::as_ptr(&self.0) as usize, hash);
         let component =
             Component::new(self.engine(), bytes).map_err(crate::host::component_error)?;
+        drop(compile_span);
         let imports = component
             .component_type()
             .imports(self.engine())
@@ -153,6 +165,7 @@ impl ComponentCompilation {
                 image_bytes,
             });
         }
+        drop(cache_span);
         Ok(component)
     }
 
@@ -193,5 +206,48 @@ mod tests {
         assert!(weak.upgrade().is_some());
         drop(host);
         assert!(weak.upgrade().is_none());
+    }
+}
+
+// Temporary V1cl attribution only. Removed before any production acceptance.
+pub(crate) struct DiagnosticSpan {
+    output: Option<std::path::PathBuf>,
+    start: std::time::Instant,
+    epoch_ns: u128,
+    event: &'static str,
+    owner: usize,
+    hash: String,
+}
+impl DiagnosticSpan {
+    pub(crate) fn new(event: &'static str, owner: usize, hash: &str) -> Self {
+        Self {
+            output: std::env::var_os("SIFR_V1CL_TRACE_DIR").map(std::path::PathBuf::from),
+            start: std::time::Instant::now(),
+            epoch_ns: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos(),
+            event,
+            owner,
+            hash: hash.to_string(),
+        }
+    }
+}
+impl Drop for DiagnosticSpan {
+    fn drop(&mut self) {
+        let Some(root) = &self.output else { return };
+        let elapsed_ns = self.start.elapsed().as_nanos();
+        let row = serde_json::json!({
+            "pid": std::process::id(), "event": self.event, "owner": self.owner,
+            "component": self.hash, "start_epoch_ns": self.epoch_ns, "elapsed_ns": elapsed_ns
+        });
+        use std::io::Write as _;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(root.join(format!("{}.jsonl", std::process::id())))
+        {
+            let _ = writeln!(file, "{row}");
+        }
     }
 }
