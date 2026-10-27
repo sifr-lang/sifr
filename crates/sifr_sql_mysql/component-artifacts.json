@@ -1,25 +1,25 @@
 {
   "artifacts": [
     {
-      "core_sha256": "31dd0a3ad320095e2f861e496ba423e433a363976c606401aac6ec5f5e576f92",
+      "core_sha256": "614c0f3632975f76f3be4c053ab81271fda83ca106bf6ccba225049af6c7a297",
       "path": "components/mysql-8.4.wasm",
       "series": "8.4",
-      "sha256": "0d80d62c767128445ae6e87405e96b95850d1bc5d87baec7c3a2edd5785a263f",
-      "size_bytes": 1778159
+      "sha256": "603a17260de6297e69b4f9f4a5a80cd6bbf0eac37c4ce50926d92e083715fb7d",
+      "size_bytes": 1777967
     },
     {
-      "core_sha256": "31dd0a3ad320095e2f861e496ba423e433a363976c606401aac6ec5f5e576f92",
+      "core_sha256": "614c0f3632975f76f3be4c053ab81271fda83ca106bf6ccba225049af6c7a297",
       "path": "components/mysql-9.7.wasm",
       "series": "9.7",
-      "sha256": "0d80d62c767128445ae6e87405e96b95850d1bc5d87baec7c3a2edd5785a263f",
-      "size_bytes": 1778159
+      "sha256": "603a17260de6297e69b4f9f4a5a80cd6bbf0eac37c4ce50926d92e083715fb7d",
+      "size_bytes": 1777967
     },
     {
-      "core_sha256": "31dd0a3ad320095e2f861e496ba423e433a363976c606401aac6ec5f5e576f92",
+      "core_sha256": "614c0f3632975f76f3be4c053ab81271fda83ca106bf6ccba225049af6c7a297",
       "path": "components/mysql-26.7.wasm",
       "series": "26.7",
-      "sha256": "0d80d62c767128445ae6e87405e96b95850d1bc5d87baec7c3a2edd5785a263f",
-      "size_bytes": 1778159
+      "sha256": "603a17260de6297e69b4f9f4a5a80cd6bbf0eac37c4ce50926d92e083715fb7d",
+      "size_bytes": 1777967
     }
   ],
   "parser_generator": {
@@ -32,6 +32,13 @@
       "CARGO_BUILD_JOBS": "2"
     },
     "family": "mysql",
+    "path_remapping": {
+      "cargo_home": "/cargo-home",
+      "repository": "/sifr",
+      "rustup_home": "/rustup-home",
+      "sdk": "/wasi-sdk",
+      "target": "/cargo-target"
+    },
     "rust": {
       "cargo_sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
       "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
@@ -41,7 +48,6 @@
       "target": "wasm32-wasip2",
       "target_std_sha256": "8aa179ceb2eea334db77afd3dc0e1fa843d646f15539494c90a7c0d82952552d"
     },
-    "rustflags": "--remap-path-prefix=<repository>=/sifr",
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
@@ -172,12 +178,13 @@
       "third_party/ruff/crates/ruff_text_size/src/size.rs": "c080576fb63fe7b65dfcea6b07e2f2e004140930e9f947c2c48632ee0f0a5836",
       "third_party/ruff/crates/ruff_text_size/src/traits.rs": "3aef3ac8ac0f1dad4cfa1ccbe1469b2b4a1fcf684f97a985bbe88a0a3d2b0fb3",
       "verification/areas/sql_platform/tools/build_mysql_components.py": "ed271061a80a014bc884405f30f9ee3cf3c413dc915d8b772dc0b05888e05222",
-      "verification/areas/sql_platform/tools/build_sql_components.py": "e347cc78ddd035636de4960027e37cfe928c9d7c18da1882776ae3cab11aed87",
-      "verification/areas/sql_platform/tools/component_provenance.py": "c3638876d099459a004dc5d4e6718f6c652f3efaaf420469e1453e2ee2ac9eba",
-      "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
+      "verification/areas/sql_platform/tools/build_sql_components.py": "b905af5537f4f1853459d80f3d7d27212611e75e3729c85da8762ba42c7518a6",
+      "verification/areas/sql_platform/tools/component_build_paths.py": "a5039743403586cd0085613453c2cbf4d81c77f861b2e930c065ed7163eadcfa",
+      "verification/areas/sql_platform/tools/component_provenance.py": "a1041704f226d73143aaf4067c0eeb392b809e00a04789a0e513ad192202cc46",
+      "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "ad49f9713b222a674ebee21a40150965d64e888925b62e737dbf4d92776f8b48",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "9ecd714d07a987e7734ff3f9fc29895ea8eb7758b404cad05ef84a7c7987a13b",
+    "source_sha256": "6ccf8c30d452f9081bc0dc5cb8588228d4526cf65f7a2a8e491f3ad31bb06021",
     "tools": {
       "virtualizer": {
         "binary_sha256": "a72b764380b3a863ffef49b055df9b4ba8d86b9473ad767e7252f007dcfe8843",

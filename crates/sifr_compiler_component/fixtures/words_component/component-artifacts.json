@@ -1,11 +1,18 @@
 {
   "artifact": "words_component.wasm",
-  "core_sha256": "8f32b1fcf9ef81ff3ab7ed888b0d8c1db98460ac93f74fc187486714cc0cf148",
+  "core_sha256": "f72e07e26d5aa61db1338f22ba0eb643510c61d00b6aad0ea6802bc7c8fa0dd3",
   "provenance": {
     "build_environment": {
       "CARGO_BUILD_JOBS": "2"
     },
     "family": "words",
+    "path_remapping": {
+      "cargo_home": "/cargo-home",
+      "repository": "/sifr",
+      "rustup_home": "/rustup-home",
+      "sdk": "/wasi-sdk",
+      "target": "/cargo-target"
+    },
     "rust": {
       "cargo_sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
       "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
@@ -15,7 +22,6 @@
       "target": "wasm32-unknown-unknown",
       "target_std_sha256": "5469bc235858f2d95a68094bf532ff521eee1ea12cf39aaa5d0e56735543066c"
     },
-    "rustflags": "--remap-path-prefix=<repository>=/sifr",
     "schema_version": 1,
     "source_inputs": {
       "crates/sifr_compiler_component/fixtures/words_component/Cargo.lock": "293a5431c6a5846add7cb4b332f46e20589ea77f00fa51cfa2cb169cac6f6237",
@@ -24,11 +30,12 @@
       "crates/sifr_compiler_component/fixtures/words_component/src/lib.rs": "41e46806cedec340df6f37203acde90c90eed9a925d70f879ef0dc62482e401e",
       "crates/sifr_compiler_component/wit/compiler-component.wit": "782c579c390c73463ea739f1a4777a4629d598ab29737fcce719bbdc7deea30f",
       "rust-toolchain.toml": "85db324345b7937c49ea2ac8b962d741f710719f4f751cab809985cbe6afbe3c",
-      "verification/areas/sql_platform/tools/build_words_component.py": "d044b516739f47c3f9217768ec1aa0a04c5fce41d7816e9e6b283fbb43145a41",
-      "verification/areas/sql_platform/tools/component_provenance.py": "c3638876d099459a004dc5d4e6718f6c652f3efaaf420469e1453e2ee2ac9eba",
-      "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd"
+      "verification/areas/sql_platform/tools/build_words_component.py": "86419e554ceced7ccc627a8ae43afb74acd22fd5c9205d176a8e8bea07bca780",
+      "verification/areas/sql_platform/tools/component_build_paths.py": "a5039743403586cd0085613453c2cbf4d81c77f861b2e930c065ed7163eadcfa",
+      "verification/areas/sql_platform/tools/component_provenance.py": "a1041704f226d73143aaf4067c0eeb392b809e00a04789a0e513ad192202cc46",
+      "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "ad49f9713b222a674ebee21a40150965d64e888925b62e737dbf4d92776f8b48"
     },
-    "source_sha256": "349d2ce06db406aee6b5711e0400eb5c267b4ceb0218bf0fd7c3a7f4b8704a8d",
+    "source_sha256": "41cddb099cb72cfe8c11dcf7f6b690a4125b92f6a34c2dd5e02011e5b8c71d6e",
     "tools": {
       "componentizer_sha256": "c51c4c0b3de0117a27257cce97918832b084b1dccc86a428d8bb1add00048949",
       "wit_bindgen": "0.61.1",
@@ -36,7 +43,7 @@
     }
   },
   "schema_version": 1,
-  "sha256": "e713a34eed37919f077722b9a6883fcfb22839725c408054291e87afcc1a28ba",
-  "size_bytes": 272453,
+  "sha256": "043b744a45882288404abd46d147b8d0903e88df4885a0464ad7e79ce19e0f3a",
+  "size_bytes": 272368,
   "target": "wasm32-unknown-unknown"
 }

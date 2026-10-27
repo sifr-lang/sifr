@@ -19478,3 +19478,12 @@ families and qualify current runtime/installed behavior. Do not patch artifacts,
 restamp receipts, weaken installed scanners, or claim this candidate approved.
 Previous passing measurements remain observations of c3af, not new-artifact
 qualification. Full gates and repeated under600s V5 remain OPEN.
+
+### V1cq producer path repair reconstruction
+
+Eleven producer-input controls and a real pinned-SDK C __FILE__ positive/negative
+control pass, including paths containing spaces. Canonical reconstruction passes:
+postgresql 255.467s, mysql 14.357s, sqlite 27.805s, words 8.434s.
+All11 current components pass producer-path scanning and genuine provenance
+validation. Retain changed hashes and rebuild the compiler consumers next;
+installed-package correctness and current performance qualification remain pending.
