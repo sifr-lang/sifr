@@ -16,6 +16,7 @@ import time
 from typing import Callable, Sequence
 
 from .process_execution import Outcome, SAFETY_DEADLINE_ENV, deadline_environment
+from .process_ownership import SESSION_ENV, launch_options, live_groups, stop_session
 
 
 @dataclass
@@ -30,9 +31,14 @@ class _Active:
     truncated: bool = False
     cause: str = "exit"
     stopped: bool = False
+    owns_session: bool = False
 
     def stop(self) -> None:
         if self.stopped:
+            return
+        if self.owns_session:
+            stop_session(self.process.pid)
+            self.stopped = True
             return
         self.stopped = True
         try:
@@ -72,6 +78,7 @@ def execute_batch(
     started: Callable[[int], None] | None = None,
     env_overrides: Sequence[dict[str, str]] | None = None,
     heartbeat: Callable[[], None] | None = None,
+    own_sessions: bool = False,
 ) -> None:
     """Deliver each outcome once, in completion order, with its selection index.
 
@@ -116,6 +123,16 @@ def execute_batch(
             child_environment = dict(environment, **override)
             deadline_environment(child_environment, deadline_seconds)
             environments.append(child_environment)
+    if own_sessions and SESSION_ENV in environment:
+        raise ValueError("a nested executor cannot create a new owned session")
+    ownership = []
+    for child_environment in environments:
+        if own_sessions:
+            if SESSION_ENV in child_environment:
+                raise ValueError("per-command overrides cannot set the session owner")
+            ownership.append({"start_new_session": True})
+        else:
+            ownership.append(launch_options(child_environment))
     previous = {}
     active: dict[int, _Active] = {}
     selector = None
@@ -139,7 +156,9 @@ def execute_batch(
                     state.stop()
                     state.close(selector)
                 elif state.process.poll() is not None:
-                    # An exited direct child must not leave pipe-owning descendants.
+                    # A successful worker may not abandon nested owned work.
+                    if state.owns_session and live_groups(state.process.pid):
+                        state.cause = "leftover_process"
                     state.stop()
                 if state.process.poll() is not None and not state.open_streams:
                     state.close(selector)
@@ -155,11 +174,13 @@ def execute_batch(
                     completed(index, Outcome(130 if cancelled else 124, cause,
                                              b"", b"", False, 0.0))
                     continue
+                if own_sessions:
+                    child_env[SESSION_ENV] = "root"
                 spawned_at = time.monotonic()
                 process = subprocess.Popen(commands[index], cwd=cwd, env=child_env,
                                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE, start_new_session=True)
-                state = _Active(index, process, spawned_at, deadline)
+                                           stderr=subprocess.PIPE, **ownership[index])
+                state = _Active(index, process, spawned_at, deadline, owns_session=own_sessions)
                 active[index] = state  # ownership precedes fallible registration
                 if started is not None:
                     started(index)
@@ -183,13 +204,18 @@ def execute_batch(
                 state.truncated |= len(data) > remaining
     finally:
         try:
+            cleanup_errors = []
             for state in active.values():
                 try:
                     state.stop()
                     state.process.wait()
+                except Exception as exc:
+                    cleanup_errors.append(exc)
                 finally:
                     if selector is not None:
                         state.close(selector)
+            if cleanup_errors:
+                raise ExceptionGroup("batch process cleanup failed", cleanup_errors)
         finally:
             try:
                 if selector is not None:

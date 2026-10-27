@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Callable
 
 from .build_allocation import E2E_ENV, allocate, extract_overrides
+from .area_group_policy import execution_groups
+from .area_group_execution import run_area_group
 from .native_test_allocation import ALLOCATION_ENV, allocate_native
 from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
@@ -162,6 +164,23 @@ class ProfileRunner:
         for name, callback in self.selected_steps():
             if name in self.completed_steps:
                 continue
+            group = next((group for group in execution_groups(self.profile, self.correctness_only)
+                          if name == "area_" + group["areas"][0]), None)
+            if group is not None:
+                try:
+                    status = run_area_group(self, group["areas"])
+                except (VerificationError, ValueError, OSError) as exc:
+                    print(f"sifr_verify: area group admission failed: {exc}", file=sys.stderr)
+                    self.stop_requested = True
+                    self.functional_exit_status = status = 2
+                    for area in group["areas"]:
+                        if "area_" + area not in self.completed_steps:
+                            self.block_step("area_" + area, "area-group-admission")
+                failed = failed or status
+                if self.stop_requested or (status and not self.no_fail_fast):
+                    self.block_steps(name)
+                    return failed
+                continue
             prerequisite = self.preparation.blocked_by(name) if self.preparation else ""
             if name in {"toolchain_e2e_report_determinism", "toolchain_e2e_sequential_parallel_equivalence"}:
                 if getattr(self, "e2e_failed", False):
@@ -227,6 +246,10 @@ class ProfileRunner:
                     os.environ.pop(SAFETY_DEADLINE_ENV, None)
                 else:
                     os.environ[SAFETY_DEADLINE_ENV] = previous_process_deadline
+        return self.finish_step(name, result, budget)
+
+    def finish_step(self, name: str, result: StepResult, budget: StepBudgetContext | None) -> int:
+        """Apply the same failure and budget policy to scalar or overlapping work."""
         if result.cause not in (None, "exit") or result.status < 0:
             self.stop_requested = True
         if result.status != 0:

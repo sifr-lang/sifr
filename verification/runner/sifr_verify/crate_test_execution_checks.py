@@ -134,6 +134,9 @@ class CrateExecutionTests(unittest.TestCase):
         for blocked in (False, True):
             runner = ProfileRunner("merge", ["--no-fail-fast"], correctness_only=True)
             self.assertTrue(corpus_owner_selected(runner.profile))
+            # Exercise corpus-owner failure propagation independently of other areas.
+            runner.profile["selected_areas"] = [a for a in runner.profile["selected_areas"]
+                                                 if a["area"] == "sysroot_release"]
             if blocked:
                 runner.preparation = SimpleNamespace(
                     fatal_reason=None,

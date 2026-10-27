@@ -6,6 +6,7 @@ import copy
 from typing import Any
 
 from .errors import VerificationError
+from .area_group_policy import execution_groups
 
 BENCHMARK_SUITES = frozenset({"smoke", "representative", "full"})
 
@@ -40,6 +41,7 @@ def scope_metadata(profile: dict[str, Any], correctness_only: bool) -> dict[str,
     retained = {(a["area"], s) for a in selected["selected_areas"] for s in a["suites"]}
     return {
         "execution_scope": scope_name(correctness_only),
+        "area_execution_groups": execution_groups(selected, correctness_only),
         "evidence_name": evidence_name(str(profile["name"]), correctness_only),
         "excluded_area_suites": [
             {"area": a["area"], "suite": s, "reason": "benchmark capture"}

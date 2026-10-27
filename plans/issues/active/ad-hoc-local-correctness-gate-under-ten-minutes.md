@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1cd overlap feasibility passed; allocation review repair in progress; full phase open"
+current_stage: "V1cd prerequisite merged; V1ce bounded area scheduling in progress; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -18241,3 +18241,160 @@ comparison-{a,b}.json, all four pair directories, canonical preparation, immutab
 guard receipts and the candidate-keyed review. Production scheduling needs its
 own prospective ownership/allocation, reporting, cancellation, blocked-consumer
 and selection-preservation contract before implementation.
+
+
+### V1cd closure — allocation prerequisite merged; overlap remains prospective
+
+PR #4506 merged at 1854e0ce422db4d5b158d5bf13bd0bf834efe3d8.
+Reviewed and tested candidate: 2a83e0c9074033f10a6989768114fcde1afce5cc.
+The merge tree exactly matches that candidate. Focused freshness/allocation/
+materialization checks, profile validation, size and unchanged plan comparison
+passed. The complete strict freshness/debt gate passed for all 264 companions;
+the guarded remediation took 111.257 seconds with no source drift, reserve stop
+or surviving owned processes. Independent remediation review is SATISFIED with
+no blockers. Preserve the initial NOT SATISFIED review and preparation failure.
+
+Both feasibility pairs remain attributed to measured 34300553f3be38bcb2825fc0d147f4e19195d1b3.
+All 324 evidence files were copied and SHA-256 verified; the external manifest is
+v1cd-evidence-manifest.json. Final review is keyed by the repaired candidate
+under reviews/2a83e0c9074033f10a6989768114fcde1afce5cc.
+The prerequisite is good enough; do not tune it further. Canonical scheduling,
+the complete gate and V5 acceptance are not delivered by this merge.
+
+### V1ce prospective — adopt the measured pair in the local correctness runner
+
+Implement only the demonstrated Python interoperability/generated-code-quality
+execution pair. Reuse the existing bounded process execution machinery. Keep
+other categories and full/release/benchmark profile ordering unchanged; initially
+enroll the local correctness-only create-pr and merge profiles, and qualify both.
+Do not introduce a universal cache, a general dependency scheduler or a second
+suite catalogue. The canonical selected suites remain the sole authority.
+
+Make the execution group and its ownership visible in emitted plans. Prepare
+canonical dependencies once; classify every blocked consumer before admitting it.
+Give generated quality three and Python one of the normal four slots. Derive
+smaller allocations from the same available budget; a single available slot
+naturally executes categories sequentially. Preserve explicit smaller inner
+job requests. Propagate Cargo, Rayon, libtest, finite-emission and relevant native
+budgets without multiplying nested work. Capacity/reserve admission still applies.
+Separate area outputs and retain existing shared-target leases and per-consumer
+freshness, mutation, runtime, strict demo/debt and Python certification checks.
+
+Keep one authoritative parent report. Every selected category must receive its
+own measured result in canonical reporting order, even though execution overlaps.
+Record actual invocation elapsed time independently of category-duration sums.
+A nonzero exit, malformed or missing report, timeout, cancellation, truncated
+output, blocked prerequisite or leftover owned process is never a pass.
+With failure continuation, complete independent admitted consumers. Without it,
+finish already admitted independent siblings, then stop admitting later categories.
+Cancellation and safety/reserve failures stop owned work and report all affected
+or unstarted consumers explicitly. Do not let nested process owners escape cleanup.
+
+Named validation before adoption:
+- Executable allocation/selection/reporting controls for normal four slots,
+  reduced capacity, explicit smaller requests and malformed inputs.
+- Failed or blocked prerequisites, independent sibling failure, both fail-fast
+  modes, forged/missing reports, output truncation, deadlines, cancellation and
+  nested-child cleanup; preserve evidence and no survivor assertions.
+- Existing batch/process, preparation, reporting, profile/scope, freshness,
+  native allocation and runner workflow self-tests; file-size guardrail.
+- uv run --project verification --locked python -m sifr_verify profiles check;
+  compare emitted plans with the baseline: only the declared execution topology
+  may change, with exact suites, fixtures, assertions and profile scope retained.
+- Complete affected Python/generated-quality selections for both enrolled profiles,
+  including strict freshness where owned and final compiled certification.
+- Ordinary prepared merge-pair timing on the integrated scheduler, preserving the
+  same four-slot aggregate budget and the V1cd acceptance screen (at least 20%
+  lower pair elapsed, at most 10% extra consumer CPU, equal complete coverage).
+  Charge preparation separately and include its bill; old feasibility timings
+  remain at their original revision. Repeat only when changed inputs or a noisy/
+  failed comparison justify it; final repeated V5 timing is still required.
+- Exact-candidate independent review and scoped intermediate PR/merge.
+
+A production paired result is the next milestone, not another micro-optimization.
+After this bounded item, reassess the largest remaining whole-gate work costs.
+Do not claim that a roughly four-minute pair saving achieves the full 600-second
+objective or eliminates mandatory clean construction and invalidation costs.
+
+
+### V1ce implementation qualification in progress
+
+The canonical correctness runner now dispatches the selected Python/quality pair
+with partitioned resources and independent canonical results. Full and other
+profiles retain sequential dispatch. Ten emitted profile/scope plans match the
+baseline exactly after removing only the new execution-group metadata.
+
+The initial nested-cancellation control FAILED: an outer worker could terminate
+before its inner executor killed a child in a separate session. Preserve the
+original source and observation under external v1ce/initial-cancellation-failure.
+The repair keeps nested executor groups inside each explicitly owned area session;
+the outer owner cleans all groups and treats abandoned live descendants as failure.
+Ordinary executors outside these area sessions keep their existing behavior.
+Cancellation tests cover both inner executor types and unrelated-session isolation.
+
+Initial focused ownership controls passed 57 tests. The first full foundation run
+FAILED because two selection/failure controls mocked sequential dispatch only;
+their test seams now cover the grouped path or isolate the intended corpus owner.
+The repaired full foundation suite passed all 35 check groups. Preserve both runs.
+The first external plan-comparison harness also failed (iteration over mapping
+keys); its separately repaired run passed all ten plans. No failed run is a pass.
+
+Complete real-area qualification, matched integrated timing, exact-candidate
+review and merge are still pending. The whole-gate 600s/V5 objective remains OPEN.
+
+
+### V1ce execution qualified — reporting repair and scoped review pending
+
+Measured implementation 2463d50dd92aa04408216405729c519a6c5b79f0 completed the
+entire selected pair in both enrolled profiles. Canonical preparation ran
+separately for each profile-owned generated root; no prerequisite evidence was
+silently transferred between profiles. Every guard finished with an empty
+session, no reserve stop, source drift or surviving owned process.
+
+| Profile/control | Serial pair | Concurrent pair | Elapsed reduction | Consumer CPU change |
+| --- | ---: | ---: | ---: | ---: |
+| Merge, four slots versus three plus one |576.114s|333.299s|42.147%|+0.363%|
+| Create-pr, warmed two-slot control versus one plus one |255.470s|235.515s|7.811%|-10.515%|
+
+Merge passed all30 Python and10 quality variants, strict freshness/debt and
+compiled certification. Create-pr passed all24 Python and7 quality variants
+and certification. Exact selected coverage and certification contracts agree;
+only volatile report-content hashes are omitted from the certificate comparison.
+Create-pr's separate standalone freshness guard is outside this two-area scope,
+as are every other category and the final full-profile gates.
+
+Merge preparation took156.778s including its external guard; adding the measured
+pair gives490.077s as an accounting sum for these two areas only. Generated graph
+preparation accounted for147.396s inside that preparation. This is not a complete
+600-second gate. Create-pr preparation took214.803s with its normal two-slot budget.
+Its first serial observation was275.470s and included additional warm-up cost;
+a reverse-order warmed serial control was therefore required and retained. Do not
+attribute the whole initial difference to scheduling. The separate initial
+create-pr harness attempt failed before any tests because it incorrectly assumed
+merge's four slots; the corrected bounded helper and run labels are separate.
+
+The measured merge gain clears the prospective20% elapsed/10% extra CPU screen.
+Create-pr has a smaller observed benefit and passes all selected assertions and
+existing category budgets. Do not tune this pair for further isolated seconds.
+
+A read-only report cross-check then found an in-scope regression: the custom
+area child prefix preserved raw logs but hid all131 observed case timings from
+the canonical merge report. Restore the existing child encoding, which decodes
+metrics only after parent-authoritative status/cache/budget parsing. Add a real
+child control proving case/command observations survive while forged parent
+statuses cannot enter the report. Replay complete retained child logs through
+the actual repaired parent formatter and compare every metric row exactly.
+The emitted plan must also derive normal slots from its profile policy: create-pr
+declares one plus one; merge declares three plus one. Actual allocation was
+already correct in the measured runs.
+
+These repairs change reporting and declared metadata only. Before reusing the
+completed execution evidence, verify the measured-to-final diff is exactly those
+two production substitutions plus tests/records, with worker, execution engine,
+selection, fixture, compiler and allocation behavior unchanged. Preserve all
+observed timing identities at2463d50dd; replay is reporting qualification, not a
+new runtime test or timing observation. Run the final affected controls, complete
+runner self-tests, profile/plan validation, size and diff checks, then obtain
+exact-candidate independent review. If execution inputs change beyond this
+boundary, rerun the affected complete areas. Complete final phase correctness
+gates and repeated V5 timing remain OPEN.

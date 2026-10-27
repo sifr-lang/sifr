@@ -552,6 +552,7 @@ def compare_plans(local_path: str, ci_path: str) -> int:
         "execution_scope",
         "evidence_name",
         "excluded_area_suites",
+        "area_execution_groups",
         "profile",
         "selected_areas",
         "toolchain_steps",
