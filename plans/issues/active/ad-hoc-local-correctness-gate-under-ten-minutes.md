@@ -19364,3 +19364,56 @@ Engine/thread borrowing, immutable aliasing and build-owned origin explicitly
 to producer/selection code and the local SAFETY explanation. No runtime source
 changes accompany these records; the observed application candidate remains
 2dfb3d936, reusable only after checking unchanged implementation inputs.
+
+### V1cq focused, reuse and actual producer-edit qualification
+
+All27 focused commands pass in451.545s. Six Engine and30 host tests pass;
+provider tests pass64 assertions in331.746s including initial graph construction.
+Their one pre-existing live MySQL comparison requires SIFR_MYSQL_TEST_URL and
+remains unexecuted, not counted as a pass. Local provenance/publication mutations,
+408-site unsafe inventory and self-tests, dependency direction, editor/host-tool
+contracts, strict coverage readiness and pinned dependency audit all pass.
+
+Actual native/protocol dependency graphs exclude both Wasmtime and the bundle.
+Unchanged native preparation0.678s and CLI/test construction0.883s pass. The first
+reuse preflight stopped before commands because it inherited a fresh12GiB
+working allocation. The retained retry uses6GiB and preserves20GiB reserve;
+the failed first record remains.
+
+The26-command production invalidation exercise passes in335.668s. The relocated
+test executable passes all6 tests in an isolated filesystem with no repository or
+build output mounted. Consumer-only edit2.771s and restoration1.228s preserve the
+generation file. Wasm, policy, generator, lock, toolchain and Cargo configuration
+edits each regenerate images; construction takes roughly17–21s and generation
+13.8–15.1s. Restored images match original bytes. Source/hash disagreement,
+unknown output paths and a deliberately exceeded byte budget reject construction.
+Only stale owned slots are pruned. Exact source restoration and final36 tests pass.
+
+A separate real product lifecycle changes only an owned producer-source comment,
+then rebuilds native tools, the CLI and executes all29 application assertions.
+That stage passes in152.081s: preparation23.639s, CLI51.276s, tests77.167s.
+Exact restored candidate passes the same lifecycle in119.123s: native11.992s,
+CLI32.126s and tests75.004s. This charges downstream reconstruction rather than
+adding only image generation to test time. It is not a matched pre-optimization
+producer-edit baseline. Source remainsad345af157; no runtime changes follow it.
+
+### V1cq remaining release-compiler consumer qualification
+
+The local correctness gate also prepares a release-mode compiler through
+verification/areas/common/release_compiler.py for installed-package/distribution
+checks. The dev build override does not configure that producer. Cargo's documented
+release build-dependency default is opt0:
+https://doc.rust-lang.org/cargo/reference/profiles.html#build-dependencies
+The canonical packaging command supplies no release build optimization override.
+Do not assume the passing development producer's timing applies to this consumer.
+
+Run canonical local release-compiler preparation with retained targets and the
+30-minute category cap, recording initial construction and actual image-generation
+time separately. Good enough for this bounded producer: all8 images constructed
+with the same policy/source identities, ordinary reuse without regeneration,
+and generation below30s (versus the previously rejected167s unoptimized producer).
+If this profile retains the unoptimized construction problem, correct the same
+build-producer optimization boundary and genuinely reconstruct affected provenance.
+Preserve runtime/codegen optimization and all installed-package correctness
+contracts; cross-platform timing and actual publication remain outside this item.
+Complete final gates and repeated V5 remain OPEN.
