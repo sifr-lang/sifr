@@ -17713,3 +17713,50 @@ Restore the ordinary branch and rebuild the affected oracle before later gates.
 No compiler semantics, assertion selection or product profile changes. This
 bounded probe closes the unresolved stage attribution; select an implementation
 only after the dominant stage and its safe ownership boundary are demonstrated.
+
+### V1bw completed attribution — standard-library selection dominates the corpus
+
+Temporary diagnostic candidate551a2e242e13d539167e7f7ec0e8d43a0bd203ec:
+all732 source/metadata comparisons and complete ordinary output comparison pass.
+Execution102.567s/102.435CPU seconds; preparation5.344s. Direct stage totals:
+parse0.042s, source lowering0.544s, metadata lowering0.714s,
+materialization18.929s, source codegen40.089s, metadata codegen39.754s.
+Do not add these to whole execution; they are contained stages.
+
+Deeper temporary candidate dc7e571d861607517aaf73ca5285dd0a21c5ecbe:
+same complete comparisons pass, execution111.251s/110.988CPU seconds.
+Selection66.524s lies inside support-total78.843s; final inline syntax
+validation3.553s is separate. These inner totals include bootstrap calls and
+must not be added to codegen totals. Instrumentation/build identity differs;
+this is attribution, not an acceptance comparison. Both guards report unchanged
+sources and empty process sessions. Preserve v1bw/stage-* and v1bw/inner-*.
+Restore ordinary branch6236cc7 before production work and rebuild affected
+oracle artifacts. The earlier adjacent support-transform refactor remains
+rejected; this result identifies the different fixed-point selection algorithm.
+
+### V1bx prospective — reuse unchanged analysis inside one stdlib selection
+
+Own one call to plan_demanded_stdlib_sources. Current fixed-point rounds
+reparse immutable module definitions at multiple edges, refilter modules whose
+effective roots have not changed, and rescan unchanged selected source for
+identifier propagation. Preserve all graph traversals and convergence rules;
+retain these analyses inside that call and recompute selections/identifier sets
+when their actual inputs change. Inputs are immutable borrows for the call;
+nothing persists across requests, sysroots, revisions or processes. No global
+cache, source fallback, native deserialization or integrity relaxation.
+
+Good enough: at least25% lower ordinary complete732-fixture oracle elapsed time
+against the current uninstrumented baseline, exact emitted bytes/source maps/
+module sets, no skipped source-versus-metadata comparisons. Confirm an initial
+promising result with alternating baseline/candidate runs; record preparation
+and CPU separately. Reject the implementation if it misses that threshold.
+This is a dominant shared compiler operation, but does not itself prove600s.
+
+Before adoption require focused selection controls for transitive/cyclic demand
+growth, canonical type and constant roots, suppressed unions, unchanged roots
+and independent requests; existing stdlib-filter/support/codegen regressions;
+complete development/release corpus equality, all native positive E2E fixtures
+and generated-quality checks. Run formatting, size and applicable authority
+checks, exact-candidate independent review, then intermediate PR/merge under
+the approved policy. Account for source invalidation and build work; final full
+correctness gates and every repeated V5 scenario remain OPEN.
