@@ -81,9 +81,24 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
         raise RuntimeError("emission requires inputs and positive worker count")
     if any(not path.is_absolute() for path in files):
         raise RuntimeError("emission requires absolute source paths")
-    env = formatter_environment(repo)
-    owner = Path(tempfile.mkdtemp(prefix="sifr-emission-batch-"))
     count = min(jobs, len(files))
+    allocation = os.environ.get("SIFR_VERIFY_PROCESS_SLOTS")
+    if allocation is not None:
+        try:
+            # Match build_allocation.positive: budgets are ASCII decimal strings.
+            if not allocation.isascii() or not allocation.isdecimal():
+                raise ValueError("non-decimal allocation")
+            slots = int(allocation)
+        except ValueError as error:
+            raise RuntimeError("SIFR_VERIFY_PROCESS_SLOTS must be a positive integer") from error
+        if slots < 1:
+            raise RuntimeError("SIFR_VERIFY_PROCESS_SLOTS must be a positive integer")
+        count = min(count, slots)
+    env = formatter_environment(repo)
+    if allocation is not None:
+        # Each finite batch owns one slot, including a one-batch selection.
+        env.update(CARGO_BUILD_JOBS="1", RAYON_NUM_THREADS="1")
+    owner = Path(tempfile.mkdtemp(prefix="sifr-emission-batch-"))
     chunks = [list(range(worker, len(files), count)) for worker in range(count)]
 
     def run(worker):

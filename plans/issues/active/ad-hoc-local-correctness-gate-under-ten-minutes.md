@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1al structural checks complete; V1am package qualification; full phase open"
+current_stage: "V1cd overlap feasibility passed; allocation review repair in progress; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -17991,3 +17991,253 @@ Retained pre-edit probes must reject the new expectation. Preserve temporary
 diagnostic commits outside the implementation branch; restore exact original
 compiler source bytes before full affected correctness qualification. Do not
 execute unchanged snapshot expectations against the deliberately edited message.
+
+
+### V1ca closure — merged numeric feature ownership and compiler reuse
+
+PR4505 merged as5bc920607ec028aeea5366e35344402619fa8be1.
+Exact reviewed/qualified implementation:c5690c40b5329a7c6269dfb6a057ee4d08406d23.
+The sole production change explicitly requests num-traits0.2.19/std without its
+default alias. Versions, locks, optimization and test selection remain unchanged.
+
+A controlled real lowering edit takes80.265s/221.403CPU seconds on the baseline
+versus47.467s/127.422CPU seconds on the candidate:40.862% wall reduction,
+exceeding the25% adoption criterion. Grouped preparation49.179s ->46.952s;
+standalone LSP31.086s ->0.515s with zero rebuilt units. Eleven shared compiler
+libraries and the LSP test executable match across the compatible selections.
+Commands, environments, source-edit bytes and behavioral outputs match; both
+pre-edit binary sets correctly reject the new diagnostic expectation.
+Temporary diagnostic commits7a82b4e92/cf82f4b9b remain outside the implementation.
+Original compiler source is restored for every qualification below.
+
+Initial feature normalization plus restoration of the diagnostic source costs
+283.449s separately. Qualification preparation includes229.922s release/corpus
+preparation. Do not add alternating experiments into a fictitious gate total.
+The complete native E2E run takes316.446s with9/186 cache hits, distinct from the
+earlier warm100.918s run. All732 runtime assertions pass without blocked cases
+or original batch failures.
+
+Scoped tests:2827 grouped executions,116 standalone LSP,1148 lowering,
+100 runtime,118 runtime-http,1 stdlib,11 stdlib feature-API and59 all-features
+pass. Counts are executions across configurations, not unique tests.
+The unchanged lowering ignore test_bare_deque_call_resolves_without_import
+depends on the driver-loaded stdlib registry; it is recorded, not counted passing.
+Both development/release732-fixture source/metadata corpora pass in83.934s
+outer time. All30 selected Python variants pass in403.952s; formatting, size,
+inventories and profile checks pass. The complete emitted merge correctness-only
+plan is exactly equal to V1bz, including assertion owners and exclusions.
+
+The external extra corpus comparison initially addressed the archived parent
+instead of its release directory. Both canonical current profiles had already
+passed. Preserve that wrapper and sequence as FAILED; a separate0.589s comparison
+repair verifies baseline/current release outputs, publication equality, and
+development/release equality with unchanged input SHA256 values and source.
+An earlier external unit-proof helper expected an LSP rlib rather than its actual
+test executable; its correction preceded temporary source mutation. Preserve
+both diagnostic records without treating them as product failures.
+
+Exact-candidate Claude review:SATISFIED, no blockers. Evidence under
+reviews/c5690c40b5329a7c6269dfb6a057ee4d08406d23 contains the atomic response,
+prompt, log and metadata. v1ca/accepted-summary.json and
+v1ca-evidence-manifest.json bind4626 locally size/SHA256-verified files.
+Eight probe binaries remain remotely retained with explicit hashes/sizes.
+
+Nonblocking follow-ups and owners: stdlib-parity historical feature-tree snapshots
+still display the old default alias; their README already defines point-in-time
+evidence, so refresh/provenance belongs to their next evidence update. The transfer
+inventory's existing blank line breaks Markdown table rendering; its documentation
+owner can repair that cosmetic structure separately. Neither changes executed
+coverage. Final whole-phase gates and repeated V5 remain OPEN; no600s claim.
+
+### V1cb prospective — remove repeated observations within one probe snapshot
+
+V1by established thirteen reads of each large SQLite source during representative
+materialization, but did not bind every read to its caller and ownership boundary.
+Inspect whether backend and runtime roles name the exact same source root inside
+one synchronous ProbeInputSnapshot. Such roles may share one current observation;
+before/after-Cargo snapshots must remain independent. No path/mtime cache,
+cross-command reuse, feature unification, skipped Cargo probe or weakened byte
+validation is authorized.
+
+First use one temporary, committed caller/stage-clock diagnostic on the three
+previous representative complete materializations. Capture exact roots, caller,
+elapsed time and result; compare complete generated trees with current ordinary
+execution. Diagnostic instrumentation is not acceptance timing. Preserve original
+inputs and targets; restore ordinary production source before acceptance.
+Use current canonical preparation/environment, explicit capacity/reserve admission
+and the1800s category cap. Do not repeat unsuccessful stack unwinding.
+
+Good enough to proceed: source-correlated measurements show duplicate observations
+of the same root with no intervening external execution, and their maximum saving
+is material to the whole generated preparation category. For any implementation,
+require at least25% lower ordinary combined representative materialization cost,
+then at least20% lower complete93-materialization preparation (including all
+portable locked-graph checks), identical generated outputs and complete affected
+interop mutation/isolation/negative controls. New snapshots must observe
+same-size/mtime-preserving changes, directory membership, missing/unreadable roots,
+links and backend/runtime differences. Keep every before/after-Cargo mutation
+rejection, lexical diagnostic, profile, runtime assertion and trust boundary.
+Register concrete implementation scope before editing production policy; use
+focused checks and exact-candidate independent review before intermediate merge.
+Reject a marginal result rather than extending a general cache. Whole-gate
+qualification and all V5 scenarios remain OPEN.
+
+### V1cb concluded — snapshot deduplication hypothesis rejected
+
+Ordinary current three-case materialization succeeds; temporary diagnostic
+e89230b0bcb58cc6bdebbf2bdb246c545ee5af21 also executes all three commands.
+Call-site clocks show the backend is sifr_stdlib and the runtime is sifr_runtime:
+different roots, not duplicate roles for one root. Each heavy case performs six
+separate compatible-configuration probe batches with before/after observations.
+The runtime is read12times by those snapshots and once by final Cargo identity.
+
+All measured tree hashing takes1.706s and1.668s in the two heavy cases, zero in
+the small case:3.374s inside27.423s instrumented complete materialization.
+Even deleting every tree observation would not meet the25% screen. Actual
+integrity-preserving savings would be smaller. Reject this hypothesis; do not
+extend to93cases, weaken mutation checks or implement a digest cache.
+
+The strict whole-tree comparison remains FAILED: only Cargo.toml/Cargo.lock
+differ through their explicit current Git dependency revision. A separate
+read-only comparison confirms all file inventories and generated Rust/support
+bytes match exactly, and manifests/locks match after substituting only the two
+recorded exact revisions. No dependency/features/profile source differs between
+those revisions. Keep this explanatory supplement separate from the original
+failed harness. Commands succeeded; the result is diagnostic, not acceptance.
+
+Evidence: external v1cb/{baseline-preparation,baseline,diagnostic-preparation,
+diagnostic,revision-comparison}, exact temporary patch/commit, command and guard
+receipts. Restore the ordinary branch and rebuild its compiler before continued
+execution. No production optimization or whole-gate saving claimed. Final gates
+and repeated V5 remain OPEN.
+
+### V1cc prospective — invocation-owned standard-library syntax selection
+
+V1bx removed redundant fixed-point work but the remaining canonical filter still
+tokenizes/restores/parses each module whenever its root set grows, builds the same
+item dependency graph again, and reparses rendered selected items for identifier
+collection. These are immutable inputs within one plan_demanded_stdlib_sources
+call. Test a local prepared syntax/ dependency index: build lazily per demanded
+module, perform every root closure against it, render in original declaration
+order and collect identifiers from the selected syntax tree. Drop all state at
+the end of the call. Whole-module behavior and canonical name restoration remain
+identical. Do not introduce global state, cross-request caching, changed parser
+authority, new fallback semantics or stored correctness results.
+
+Measure an ordinary current complete732-fixture source/metadata oracle baseline,
+then the same complete candidate with exact generated-byte and coverage comparison.
+Charge actual preparation separately and retain all source/metadata producers.
+Good enough: at least25% lower ordinary complete corpus time and CPU, no missing
+fixtures, equal emitted bytes/diagnostics, and focused root-growth/cycle/trait/
+macro/nominal-name/suppression/fresh-request controls. If the screen fails, reject
+the candidate without expanding qualification. If it passes, repeat the ordinary
+comparison, run all codegen tests, both full source/metadata profiles, all732 native
+runtime E2E fixtures, affected quality/CLI/invalidation contracts, formatting,
+size and unchanged selection checks. Exact-candidate independent review and
+intermediate PR/merge remain required. Preserve error/fallback behavior already
+present; do not add new behavior for malformed compiler-owned input.
+Keep source-frozen owned targets, current allocation/reserve checks and1800s caps.
+This is compiler-work elimination, not evidence yet of a whole-gate600s result.
+Final integrated correctness and every repeated V5 scenario remain OPEN.
+
+### V1cc concluded — prepared-syntax prototype rejected
+
+Candidate960a37f41b5c91aa0c49ca3f18bf659adb565e86 passes all1788 codegen tests,
+five existing selection regressions, formatting and size checks. The complete
+732-case source/metadata oracle and exact baseline-generated byte comparison pass.
+Ordinary baseline56.077s/55.268CPU versus candidate57.760s/56.853CPU does not meet
+the prospective25% threshold; do not adopt or tune this prototype further.
+
+Preparation is separate: baseline oracle41.723s guarded, candidate114.761s;
+the focused selection command including codegen test-binary construction161.562s,
+then the complete codegen command4.409s. Candidate corpus maximum child RSS was
+359228KiB versus402820KiB baseline; this single observation is not memory
+qualification. Both source identities, generated outputs and guards are retained.
+
+Restore production source on the ordinary owned branch and rebuild affected
+tools before further qualification. The experimental branch and all external
+v1cc evidence remain for reproducibility; no PR or independent acceptance review
+is appropriate for a rejected prototype. Full gates and repeated V5 remain OPEN.
+Next prioritize bounded whole-category overlap with explicit output/build ownership
+and allocation, while continuing to distinguish total work from elapsed time.
+
+### V1cd prospective — resource-bounded overlap of complete verification areas
+
+Stop isolated compiler tuning after V1cb/V1cc rejection. Test the complete selected
+Python interoperability and generated-code-quality areas as the first independent
+execution pair. Their shared immutable compiler/input dependencies are prepared
+once; generated quality owns its generated/shared/batch roots, while Python owns
+its examples, authoring, readonly and native-runtime roots. Preserve leases on any
+shared native Cargo families and all per-consumer freshness, mutation and runtime
+checks. Shared compiler executables must remain byte-identical during execution.
+A source/output collision or compiler mutation is a failed feasibility result.
+
+Prerequisite: finite demo emission currently defaults to eight workers regardless
+of SIFR_VERIFY_PROCESS_SLOTS. Cap emitted worker count by a valid declared profile
+allocation; retain explicit standalone --jobs behavior when no allocation exists.
+Reject malformed/nonpositive allocations before starting children. Validate worker
+bounds, original lexical outcomes, failures, cleanup and complete input accounting.
+Do not turn this prerequisite alone into a claimed speedup.
+
+Use the canonical emitted merge correctness-only selection, preparation dependency
+closure and all selected suites for both areas. Record the complete ownership and
+nested allocation map before overlap. Compare sequential execution with the full
+four-slot budget against concurrent quality/Python execution within that same
+total budget (initially three slots plus one). Propagate Cargo, Rayon, libtest,
+finite-emission and native-test allocations; do not rely on an outer thread limit
+while children retain larger budgets. Retain shared targets; measure Cargo waits,
+wall/CPU and memory/reserve observations. Every child/category has an1800s cap;
+failure continuation cannot erase a failed or unexecuted consumer.
+
+Good enough to propose a production scheduler: both complete area reports pass
+with exactly matching selected assertions/certification, at least20% lower paired
+elapsed time, no more than10% extra CPU work, no memory reserve violation, source
+or compiler-byte drift, output collision or surviving processes. Charge required
+preparation separately and report the combined lifecycle, not only the best lane.
+Repeat in reverse order if the first feasibility result passes. First use an
+external controller; do not change canonical area ordering or introduce a general
+scheduler until the ownership/resource/benefit proof passes. Register concrete
+production scheduling and failure/cancellation/blocked-consumer tests separately
+before adoption, with exact-candidate independent review and final phase gates.
+A large elapsed-time gain still cannot remove the measured whole-gate CPU-work
+floor; the600s objective and all V5 scenarios remain OPEN.
+
+
+### V1cd feasibility complete — repeated full-area overlap; allocation repair pending
+
+Frozen34300553f3be38bcb2825fc0d147f4e19195d1b3 ran complete canonical selected
+Python interoperability and generated-code-quality areas in serial/concurrent/
+concurrent/serial order. Every run passed10 quality and30 Python variants, the
+complete compiled certification, source/compiler identity checks and owned
+session cleanup. Exact coverage and certification contracts match in both pairs.
+
+| Matched pair | Serial elapsed | Concurrent3+1 elapsed | Reduction | Consumer CPU change |
+| --- | ---: | ---: | ---: | ---: |
+| Serial then concurrent |600.128s|335.070s|44.17%|+2.71%|
+| Concurrent then serial |566.119s|337.570s|40.37%|+5.22%|
+
+Both exceed the20% elapsed screen and remain within10% additional consumer CPU.
+Canonical prerequisite closure took206.980s separately; adding that measured
+preparation bill gives542.050s/544.550s for the concurrent pair's accounted
+lifecycle. These sums are not repeated whole-gate invocations. Only two areas
+are covered; the full600s objective and all V5 scenarios remain OPEN. Scheduling
+removes elapsed waiting/serialization, not the complete gate's CPU-work floor.
+No canonical production scheduler is adopted by this experiment.
+
+The allocation prerequisite is draft PR4506. Exact-candidate review rejected the
+initial parser because int() accepts whitespace, signs, underscores and non-ASCII
+digits that the canonical positive-allocation rule rejects. Preserve that review
+as NOT SATISFIED. The repair uses the same ASCII-decimal rule, adds rejection
+regressions checked against the canonical validator, and documents one slot per
+finite batch even for a single selected batch. Repeat affected self-tests, the
+complete strict freshness/debt gate, unchanged plan comparison and exact-candidate
+review before merging. Timing remains attributed to3430055; do not relabel old
+measurements as runs of the repaired source.
+
+The original preparation harness failure remains failed: it accidentally restored
+offline mode after canonical setup removed it. The corrected preparation-canonical-env
+run is separate and passed, with no product bypass. Evidence: external v1cd/
+comparison-{a,b}.json, all four pair directories, canonical preparation, immutable
+guard receipts and the candidate-keyed review. Production scheduling needs its
+own prospective ownership/allocation, reporting, cancellation, blocked-consumer
+and selection-preservation contract before implementation.
