@@ -18541,3 +18541,33 @@ timings and qualify both source/metadata profiles, all732 native E2E assertions,
 affected generated quality/CLI/invalidation contracts and exact-candidate review
 before intermediate merge. Charge actual preparation separately. Preserve
 1800s caps, capacity reserves and final complete gate/V5 requirements.
+
+
+### V1cg concluded — eager-analysis avoidance screen rejected
+
+Prototype fa073ffb93c887f6212ae16e679a49cb74fb32fc passes all5 selection
+regressions and1785 codegen tests, formatting and file-size checks. Both complete
+732-fixture source/metadata oracle runs pass and all emitted output compares
+exactly. Baseline5dc74840ff744acc49ff839ab10ac0eac5f2c4af takes56.436s/
+56.348CPU seconds; candidate takes57.631s/56.895CPU seconds. No meaningful
+improvement, and the25% adoption threshold fails. Restore the sole changed
+production file; do not tune or expand qualification for this prototype.
+
+Avoiding these visibly unused eager calls does not establish a macro cost
+reduction: their analyses can still be demanded by later dependency propagation.
+The experiment does not prove that parsing overall is cheap or justify removing
+required analyses. Original canonical parser, caches and selection are retained.
+
+Preparation remains separate: baseline107.442s (110.253s guarded), candidate
+109.268s (112.253s guarded). Candidate selection-test command159.036s includes
+test-executable compilation; the subsequent complete codegen command takes
+4.374s, with libtest body3.91s. Full focused guard178.306s. All guards complete
+source-frozen, within reserves and with empty owned process sessions.
+
+External v1cg retains the exact patch/helper, both full corpus outputs, all
+commands and guards, source/binary identities and the ordinary baseline snapshot.
+The retained target currently contains the rejected oracle; rebuild ordinary
+source before any subsequent qualification. This rejected prototype receives
+no implementation acceptance or review. Complete correctness gates and all V5
+scenarios remain OPEN. Choose a structural ownership/representation change
+from the measured dominant work, rather than extending local parser tuning.

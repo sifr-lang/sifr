@@ -42,17 +42,15 @@ pub(crate) fn plan_demanded_stdlib_sources(
                 module_source.rust.clone()
             } else {
                 let mut roots = demands.get(module_name).cloned().unwrap_or_default();
-                if !suppressed_union_definitions.is_empty() {
-                    let definitions = module_definitions
-                        .entry(module_name.clone())
-                        .or_insert_with(|| rust_source_defined_item_names(&module_source.rust));
-                    roots.extend(
-                        suppressed_union_definitions
-                            .iter()
-                            .filter(|name| definitions.contains(*name))
-                            .cloned(),
-                    );
-                }
+                let definitions = module_definitions
+                    .entry(module_name.clone())
+                    .or_insert_with(|| rust_source_defined_item_names(&module_source.rust));
+                roots.extend(
+                    suppressed_union_definitions
+                        .iter()
+                        .filter(|name| definitions.contains(*name))
+                        .cloned(),
+                );
                 if let Some(constants) = stdlib_code.module_constants.get(module_name) {
                     let imported = roots.clone();
                     for name in imported {
@@ -135,15 +133,12 @@ pub(crate) fn plan_demanded_stdlib_sources(
             if source.is_empty() {
                 continue;
             }
-            let Some(dependencies) = stdlib_code.transitive_deps.get(owner_module) else {
-                continue;
-            };
-            if dependencies.is_empty() {
-                continue;
-            }
             let identifiers = selected_identifiers
                 .entry(owner_module.clone())
                 .or_insert_with(|| rust_source_identifier_names(source));
+            let Some(dependencies) = stdlib_code.transitive_deps.get(owner_module) else {
+                continue;
+            };
             for dependency in dependencies {
                 let Some(dependency_source) = stdlib_code.module_rust_code.get(dependency) else {
                     continue;
