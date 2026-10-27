@@ -17267,3 +17267,109 @@ two existing filesystems are the integration regression. Allow only the two buil
 edits, their focused test/checker wiring, phase record, three SQL family outputs,
 and words artifact/receipt/qualification JSON. All production must finish before
 source-frozen qualification and scoped review.
+
+### V1bo delivered — component publication and authentic artifact recovery
+
+Merged [PR #4501](https://github.com/sifr-lang/sifr/pull/4501) as
+7d39f6352bca9bcafbd421c9e9f0a8a2874b5bca. Tested/reviewed candidate
+8fc0ed4d4b8d2be6813199715559d0d1708f8900; merged tree verified identical.
+Both builders now stage beside their destination, retaining atomic per-file
+publication and prepare-before-publish ordering across target filesystems.
+Original builders fail both positive cross-device controls; repaired builders
+pass all three controls including preservation after failed production.
+
+All four real producers passed: PostgreSQL77.832s, MySQL2.283s,
+SQLite12.462s, words75.826s (v1bo-production-r3). These retries reuse native
+compilation from the preserved failed attempts; no build speedup is claimed.
+All11 Wasm hashes and actual source receipts match. SQL outputs grew7–19%
+under the previously adopted release profile; no profile changed in this item.
+Final v1bo-focused on the exact candidate passes3publication/6SDK controls,
+all family/component provenance and mutation controls,30component-host tests,
+29SQL application tests, size/diff checks. Source-frozen guard232.945s PASS.
+SQL application172.130s/1058.339CPU versus earlier172.737s/1081.840CPU:
+no obvious slowdown in these observations, not repeated timing qualification.
+
+Independent review SATISFIED/no blockers111.631s,
+v1bo-review-usaw7k0f/response.md, SHA256
+8e96a871aa96a67f0c2bad008a8f1122e25e13a4b9a142705bd37b743cae8c4e.
+Follow-ups: hard-killed producers can leave untracked stage directories; existing
+words qualification JSON update is not atomic. Neither invalidates this bounded
+publication repair; retain as separate lifecycle-hardening work. PR attachment
+hit the100-identity cap. Original failures remain failed. This item is good enough;
+stop tuning it. Final integrated correctness/timing acceptance remains OPEN.
+
+### V1bp prospective — complete integrated correctness cost baseline
+
+Run the current public merge correctness-only facade with failure continuation,
+canonical resource defaults and retained owned targets. Inspect its exact emitted
+plan and preparation dependencies first; verify pinned tools, free disk, effective
+CPU/memory, working allocations and reserves. Preserve older reports before
+canonical report paths are reused. Do not inherit historical worker overrides or
+stale absolute deadlines. Each category receives a1750s safety deadline within
+the user's1800s diagnostic cap. The enclosing multi-category process receives
+a4hour safety envelope, not a new per-category allowance. Stop for capacity or
+owned-source drift. Account explicitly for every blocked/unexecuted selection;
+run remaining independent categories separately if a category cap stops the facade.
+
+Good enough for this diagnostic item: every selected category has an actual
+outcome or explicit prerequisite/cap blocker, with elapsed time, CPU where
+available, counts and current input identity. Separate preparation from execution.
+This first combined run after changed artifacts is not unchanged-warm acceptance.
+Use the execution graph and total work to select the largest structural cost;
+do not repeat a full run or optimize isolated seconds without new justification.
+No assertion removal, scope narrowing, stale-result reuse, profile substitution
+or weakened independent SQL build checks. Final create-pr/merge gates and repeated
+V5 scenario qualification remain required; under600seconds is still unproven.
+
+### V1bp completed diagnostic — integrated costs and recovery
+
+Candidate74b9a8cfaf674fee95bf59e0ea743914eabc40d0 completed the public merge
+correctness-only facade in4878.715s (81m19s),10812.046CPU seconds. Of38top-level
+steps,34passed,3failed and1was blocked. All18crate configurations,80generated
+driver assertions,6generated CLI assertions and732positive E2E fixtures passed.
+No category reached its1800s cap; the guard found no source drift or leftover
+process group. The first233.842s attempt remains cancelled: its wrapper passed
+the effective child PATH to the public uv facade, which changed native identity.
+The second attempt used the verified parent PATH. This is a diagnostic after
+changed artifacts, not unchanged-warm timing acceptance or a paired speedup.
+
+Non-overlapping costs: preparation1061.628s; verification areas2203.615s;
+guardrails187.299s; crate configurations1308.611s; positive E2E105.179s.
+The remaining12.383s is facade/reporting overhead. Largest successful areas:
+SQL627.622s (independent clean builds383.661s), sysroot446.180s,
+Python313.465s. Lowering/CLI426.808s, generated driver406.844s,
+ordinary driver333.480s. SQL application assertions29/29passed in178.44s.
+Positive E2E retained all186native groups and all732assertions; good enough for
+this retained scenario. Do not optimize its isolated seconds now.
+
+Original failures remain failed: generated preparation133.379s could not fetch
+the unpublished exact revision after materializing93graphs; its consumer was
+blocked. Publishing the unchanged candidate allowed the exact locked fetch.
+A separately guarded recovery ran actual workspace/generated/compiler-identity
+preparation142.744s and generated-code-quality283.494s, both passing.
+This is separate evidence, not a retroactive successful contiguous gate.
+The other failures are stale method-dispatch and filesystem-effect inventories
+from V1bj/V1bl. No compiler regression was observed in this diagnostic.
+
+Evidence: v1bp-integrated-v2, v1bp-integrated-v2-guard, v1bp-complete-archive
+(55files with SHA256 manifest), v1bp-summary.json (19area reports/559variant
+rows), v1bp-generated-recovery and its guard. Rows without individual timers
+are executed assertions included in their parent, not zero-cost or unexecuted.
+The observed CPU work alone needs1351.506s on8ideal logical workers; this bound
+applies only to this diagnostic workload, not a warm gate or universal floor.
+Scheduling alone cannot remove this observed work. Final gates/V5 remain OPEN.
+
+### V1bq prospective — reconcile inventories for delivered batch/lease changes
+
+Repair only the two inventory JSON files and this phase record. Method dispatch
+keeps the existing test-assertion/test-owner classification while binding the
+renamed acquire_with_wait context. Filesystem effects add the finite batch
+manifest tooling input, output effects and test fixture operations; preserve
+build-identity classification on the three renamed native-cache owner checks.
+No scanner, assertion, compiler, profile selection or runtime semantics changes.
+
+Good enough: both full normal inventory guards, both scanner self-tests,
+file-size/diff checks pass on one immutable candidate; independently review
+the exact candidate and classifications. Use the approved focused intermediate
+policy; do not repeat the81minute facade for inventory-only changes. Preserve
+the original failed run. Stop this repair after merge and return to macro costs.

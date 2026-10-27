@@ -2887,21 +2887,21 @@
     },
     {
       "path": "crates/sifr/tests/e2e_support/native_cache.rs",
-      "symbol": "acquire",
+      "symbol": "acquire_with_wait",
       "operation": "exists",
       "site": "if owner_path.exists() {",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr/tests/e2e_support/native_cache.rs",
-      "symbol": "acquire",
+      "symbol": "acquire_with_wait",
       "operation": "read",
       "site": "if std::fs::read(&owner_path)? != owner_bytes {",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr/tests/e2e_support/native_cache.rs",
-      "symbol": "acquire",
+      "symbol": "acquire_with_wait",
       "operation": "read_dir",
       "site": "if std::fs::read_dir(&root)?",
       "classification": "build-identity"
@@ -3287,6 +3287,13 @@
     {
       "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
       "symbol": "unrelated_live_children_do_not_keep_the_suite_busy",
+      "operation": "canonicalize",
+      "site": "let root = temp.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/e2e_support/native_cache_tests.rs",
+      "symbol": "bounded_acquisition_preserves_retained_child_reference_and_waits_for_release",
       "operation": "canonicalize",
       "site": "let root = temp.path().canonicalize().unwrap();",
       "classification": "tooling-input"
@@ -25284,6 +25291,223 @@
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch.rs",
+      "symbol": "execute",
+      "operation": "read",
+      "site": "&fs::read(manifest).map_err(|error| format!(\"cannot read manifest: {error}\"))?,",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch.rs",
+      "symbol": "execute",
+      "operation": "create_dir",
+      "site": "fs::create_dir(output).map_err(|error| format!(\"cannot create fresh output: {error}\"))?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch.rs",
+      "symbol": "execute",
+      "operation": "write",
+      "site": "fs::write(output.join(\"report.json\"), report)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch.rs",
+      "symbol": "emit_one",
+      "operation": "write",
+      "site": "fs::write(output.join(format!(\"{index}.rs\")), rust_source)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "fixture",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\".\\\"\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "fixture",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&output).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(output.join(format!(\"{index}.rs\"))).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "read_to_string",
+      "site": "let edited = fs::read_to_string(output.join(\"3.rs\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "write",
+      "site": "fs::write(&a, \"def main():\\n x: int = \\\"bad\\\"\\n print(x)\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "exists",
+      "site": "assert!(!output.join(\"4.rs\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "sources_are_isolated_and_edits_and_errors_do_not_leak",
+      "operation": "read_to_string",
+      "site": "assert_eq!(fs::read_to_string(output.join(\"5.rs\")).unwrap(), second);",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "write",
+      "site": "fs::write(&good, \"def main():\\n print(30)\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "write",
+      "site": "fs::write(&bad, \"def main():\\n print(undefined_name)\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "read",
+      "site": "serde_json::from_slice(&fs::read(output.join(\"report.json\")).unwrap()).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "read",
+      "site": "fs::read(output.join(\"0.rs\")).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "read",
+      "site": "fs::read(output.join(\"3.rs\")).unwrap()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "exists",
+      "site": "assert!(!output.join(\"1.rs\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "exists",
+      "site": "assert!(!output.join(\"2.rs\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "read",
+      "site": "let before = fs::read(output.join(\"report.json\")).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "complete_report_preserves_repeats_and_continues_after_missing_and_invalid_sources",
+      "operation": "read",
+      "site": "assert_eq!(before, fs::read(output.join(\"report.json\")).unwrap());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "malformed_manifest_never_creates_an_output_owner",
+      "operation": "write",
+      "site": "fs::write(&manifest, input).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "malformed_manifest_never_creates_an_output_owner",
+      "operation": "exists",
+      "site": "assert!(!output.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "missing_project_entry_keeps_canonical_resolution_error_precedence",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&output).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "missing_project_entry_keeps_canonical_resolution_error_precedence",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "missing_project_entry_keeps_canonical_resolution_error_precedence",
+      "operation": "write",
+      "site": "fs::write(dir.join(\"sifr.toml\"), manifest).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/emit_batch_tests.rs",
+      "symbol": "missing_project_entry_keeps_canonical_resolution_error_precedence",
+      "operation": "exists",
+      "site": "assert!(!output.join(format!(\"{index}.rs\")).exists());",
+      "classification": "tooling-input"
     }
   ]
 }
