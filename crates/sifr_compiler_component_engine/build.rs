@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             let path = directory.join(relative);
             let bytes = fs::read(&path)?;
-            let actual = format!("{:x}", Sha256::digest(&bytes));
+            let actual = sha256(&bytes)?;
             if actual != expected {
                 return Err(format!("component source hash mismatch: {}", path.display()).into());
             }
@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             hashes.push(hash.clone());
             records.push(serde_json::json!({
                 "source_sha256": hash,
-                "native_sha256": format!("{:x}", Sha256::digest(&bytes)),
+                "native_sha256": sha256(&bytes)?,
                 "native_bytes": bytes.len(),
                 "seconds": started.elapsed().as_secs_f64()
             }));
@@ -132,4 +132,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }))?,
     )?;
     Ok(())
+}
+
+fn sha256(bytes: &[u8]) -> Result<String, std::fmt::Error> {
+    use std::fmt::Write as _;
+    let mut result = String::with_capacity(64);
+    for byte in Sha256::digest(bytes).iter() {
+        write!(&mut result, "{byte:02x}")?;
+    }
+    Ok(result)
 }

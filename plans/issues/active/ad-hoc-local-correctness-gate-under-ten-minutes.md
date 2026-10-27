@@ -19267,3 +19267,19 @@ the160.106597s/1057.807280CPU ordinary baseline. Charge image generation in the
 required producer-invalidation case, retain bootstrap/profile-change costs and
 keep full-gate timing claims separate. Complete correctness-only create-PR/merge
 gates and all repeated V5 scenarios remain required at final phase integration.
+
+### V1cq first focused build — retained dependency preparation, digest API repair
+
+Candidate1052c09a7 passes6 bundle-origin/policy and13 feature-boundary mutations,
+all profile validation, four emitted-plan comparisons, formatting and file
+guardrails. The emitted plans preserve every prior selection and add exactly the
+new engine crate suite. Registry package versions remain unchanged; the lock
+adds only the local engine package and its host dependency edge.
+
+The first Rust build stops after176.414s/702.237CPU seconds: workspace sha2 is
+0.11.0, whose digest array does not implement the LowerHex shortcut used by the
+external0.10.9 prototype. No component image or unit-test pass is claimed.
+Keep the workspace pin; use explicit byte-to-hex encoding with error propagation.
+Retain prepared dependencies and retry affected formatting/guardrails, boundaries
+and engine/host build/tests. Profile/plan evidence remains input-identical because
+only the producer's formatting implementation and this record change.
