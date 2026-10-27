@@ -19487,3 +19487,67 @@ postgresql 255.467s, mysql 14.357s, sqlite 27.805s, words 8.434s.
 All11 current components pass producer-path scanning and genuine provenance
 validation. Retain changed hashes and rebuild the compiler consumers next;
 installed-package correctness and current performance qualification remain pending.
+
+### V1cq current candidate qualification complete; review pending
+
+Observed implementation candidate538c0b8caf22bdb7e5cee4e260395251bcb485da:
+- All27 focused commands pass158.776s, including six Engine,30 host and64 provider
+  assertions. The existing external-URL MySQL comparison remains ignored,
+  unexecuted and not a pass. Eleven producer-input controls also pass.
+- All29 SQL application tests pass76.754s after a producer edit and78.327s/
+  319.077CPU after exact restoration; baseline160.107s/1057.807CPU.
+  The restored category is51.08% faster and uses69.84% less child CPU.
+  Full native+CLI+test cycles are116.261s edited and123.112s restored.
+  Initial candidate preparation60.727s remains separately charged.
+- All28 actual Cargo invalidation/relocation controls pass; guard395.955s.
+  Consumer changes reuse images; Wasm, policy, generator, root manifest, lock,
+  toolchain and configuration changes regenerate them. Hash mismatch, unknown
+  output and byte-budget controls reject; source bytes are exactly restored.
+- Release preparation120.527s, unchanged1.182s; eight-image generation11.406s
+  meets the30s budget. Total embedded image bytes71177056. This is not an
+  isolated timing attribution to path remapping or a cold-build comparison.
+- Corpus preparation258.312s follows deliberate global-input invalidations.
+  Installed corpus passes252.611s; boundary/smoke/heavy all pass222.527s.
+  The previous checkout-path leakage failure is repaired without weakening
+  the installed scanner. Source/release corpus equivalence and installed
+  metadata/native assertions remain complete.
+- Complete native E2E passes151.782s/201.901CPU: all732 fixtures execute,
+  zero failures, and the expected report signature is emitted.
+- The real packaged CLI passes20 valid/invalid SQL checks across all10 maintained
+  versions in19.454s, with the source checkout and development target hidden.
+  Guard/setup time28.702s is separately recorded.
+
+Native E2E first stopped at its24GiB working-allocation preflight before any test
+ran. Five oldest passed, inactive installation workspaces were archived, fsynced,
+hashed and compared against originals (content/metadata) before reclamation.
+All failure evidence, current consumers and compiler targets remain retained.
+This capacity work takes375.204s and is not a test speedup. Archive SHA256:
+a2964b4532ef77780151d3e0efad692c0d669bd414d58d44dd99e3cdde553eb5.
+It restores36.685GB free, including the next sweep's12GiB working allowance
+above the20GiB reserve. The subsequent E2E and packaged-SQL checks pass.
+
+Complete scoped evidence: continuation-evidence/local-gate-implementation-20261020/
+v1cq-evidence.tar.gz;8436 files,1002792767 expanded bytes,350286578 compressed.
+Archive SHA256:
+0b7294e62f16a47b90e58c4aad37bc099d4ca62a6794b342997121cb6ea054f5.
+Verified old artifact mirrors and the separate11.663GB capacity archive remain
+retained separately; their manifests/hashes are included instead of duplicate
+payloads. The original incomplete qualification aggregate remains incomplete;
+the remaining checks have separate passing evidence.
+
+CI triage at c3af: missing SIFR_PERFORMANCE_REFERENCE and46 Windows PostgreSQL
+C-header failures also occur on the prior base's identical tree. Ownership is
+workflow/performance configuration and native Windows SQL portability respectively.
+Both runs also lack the deterministic report signature; their redirected inner
+logs were unavailable, so no shared inner cause is asserted. Current complete
+local E2E does emit the signature; this is not a claim that current CI is green.
+Retain those records, do not absorb their unrelated repairs into V1cq.
+
+Independent exact-candidate review and normal PR4509 merge remain pending.
+This record changes documentation only; preserve538c0b8caf as the observed
+implementation identity and prove all implementation inputs unchanged.
+Complete final correctness-only create-PR/merge gates and repeated V5 remain OPEN.
+After this item, obtain a current integrated cost map before choosing the next
+macro change. Two Cranelift units have identical direct feature/profile settings
+but differ through transitive Serde, SmallVec and rustc-hash features; that is
+an investigated candidate, not yet proof of safely removable compilation.
