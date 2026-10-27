@@ -18398,3 +18398,54 @@ runner self-tests, profile/plan validation, size and diff checks, then obtain
 exact-candidate independent review. If execution inputs change beyond this
 boundary, rerun the affected complete areas. Complete final phase correctness
 gates and repeated V5 timing remain OPEN.
+
+
+### V1ce closure — production bounded area scheduling merged
+
+PR [#4507](https://github.com/sifr-lang/sifr/pull/4507) merged final candidate
+680a0edb8808fab3af20609c05f061808ac3b9a0 as
+c19e758bf69253b128f351087185d3225bfef17d. The merge tree is identical to the
+reviewed candidate. The measured execution identity remains2463d50dd92aa04408216405729c519a6c5b79f0.
+The exact measured-to-final production diff contains only child report encoding
+and emitted normal-slot metadata substitutions; retained execution inputs are
+unchanged. Complete real-parent replay preserves all131 merge and55 create-pr
+metric rows and prevents child text from forging authoritative parent results.
+
+Final affected43 tests pass; the final guarded validation takes83.743s and passes
+all35 foundation groups, profiles check, ten baseline-equivalent emitted plans,
+file-size guardrails and diff checks. External v1ce/final-policy and
+v1ce/final-reporting-replay retain exact commands, results and the reuse boundary.
+All574 evidence payloads in v1ce-evidence-manifest.json were copied and verified
+by SHA256/size; archive SHA256 is
+b015f9746131fc3292c788c711776be0ba329903d8374bc29d061a62f506a821.
+Initial cancellation, foundation, plan-comparison and create-pr harness failures
+remain preserved as failures.
+
+Independent exact-candidate review is SATISFIED with no blocking findings.
+External reviews/680a0edb8808fab3af20609c05f061808ac3b9a0/response.md has SHA256
+4b299e95db5e005beb29cb219e66b5f8b72c7aa677d591f7d30c72865dcb57f7.
+The scoped intermediate policy applies; this is not final phase acceptance.
+The measured pair saves242.815s for merge and19.954s against the warmed create-pr
+control. Stop tuning this pair. Complete correctness gates and repeated V5,
+including required edits/invalidation, remain OPEN.
+
+Separate follow-up ownership from the review:
+- Portable process supervision: qualify macOS ps/getsid and permission-denied
+  behavior before portability acceptance; outside this local Linux measurement.
+- Runner deadline policy: document/align the group's default2400s safety deadline
+  versus scalar execution's unset overall deadline. Diagnostics retain1800s caps.
+- Future native allocation: audit per-lane reserve accounting before admitting a
+  native subowner; current enrolled areas do not use one.
+- Runner observability: consider streaming bounded child progress; current32MiB
+  buffered outputs preserve results but delay live progress.
+- V5 integrated failure accounting: exercise admitted sibling completion and
+  rejection of later queued categories; quality now starts at Python's position.
+- Corpus coverage: optional combined grouped-dispatch/corpus failure control;
+  existing separate controls cover their declared boundaries.
+- Toolchain lifecycle: start any future persistent compiler cache daemon outside
+  owned area sessions; preserve leftover-process failure semantics.
+
+Next: reassess remaining macro work using current source and retained complete
+costs. Historical serial-libtest and failed concurrent observations are not
+accepted speedups. Do not revive the rejected V1cc syntax cache or V1be durable
+storage rewrite without a materially different, measured ownership contract.
