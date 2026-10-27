@@ -19036,3 +19036,70 @@ installation and portability behavior before product edits. Actual29-test CLI
 qualification must improve at least25% and30s (CPU increase at most5%), including
 amortized producer cost in the relevant scenarios. Keep all runtime assertions
 and independent native builds. Full gates and repeated V5 remain OPEN.
+
+
+### V1cn concluded — immutable image feasibility passes
+
+All72 semantic executions and9 selection/rejection controls pass at29634786c.
+The aggregate complete-process ratio is0.019253 (98.07% reduction). Averages of
+the four scenario medians are MySQL0.833517 to0.017301s, PostgreSQL1.885370 to
+0.035538s, SQLite1.140247 to0.021460s. Exact positive/changed/invalid responses
+match; fresh processes and Stores execute every invocation. Different valid
+stack policy and inert source-Wasm changes select safe ordinary compilation;
+native-image bytes supplied as Wasm are rejected. Original compiled image paths
+were unavailable during execution; only executable-embedded constants load.
+
+Producer build81.753s, three image commands3.999889s and consumer build2.851s
+are separately recorded. Native images total21,487,032bytes; consumer executable
+120,273,864bytes. This proves isolated feasibility, not actual CLI performance,
+full host qualification, installation safety or ten-minute gate acceptance.
+
+Preserve the original4MiB stack-control failure: Wasmtime rejected it before
+component loading because it exceeds the configured async stack. The corrected
+1MiB policy is valid and intentionally differs from the2MiB producer. Reuse the
+24 completed MySQL semantic observations only after exact binary, source,
+request and response checks; then execute48 remaining semantic observations and
+all9 controls. The failed control is not included among the81 completed checks.
+
+### V1co prospective — actual SQL category immutable-bundle diagnostic
+
+Test the complete29-test category before committing to a new build architecture.
+First reconstruct ordinary canonical native tools and the CLI after diagnostic
+instrumentation removal. Use four libtest threads, four compiler/Rayon workers,
+the existing retained targets, same source/Wasm/request/native semantics and
+normal uninstrumented elapsed/CPU measurements. All29 outcomes must pass.
+
+For this bounded diagnostic only, a private component-host module can embed the
+three already produced, hash-verified immutable images from V1cn. This is a
+temporary integration, explicitly not distributable product code. Preserve its
+candidate and patch; absolute external include paths and manually supplied images
+must never reach a production PR. The module accepts only compiler-authenticated
+source hashes and matching Engine policy/compatibility identity; it has no public
+native-buffer loader, runtime path lookup or disk cache. Its one private unsafe
+call accepts only the recorded immutable include_bytes constants. Known-image
+load errors fail. Unknown source/policy follows the original safe Wasm compiler.
+
+All host registration, source-byte hash, request, response, imports, fuel/memory,
+fresh Store, owner lifetime and bounded-retention checks remain in their existing
+order. Add focused selection controls for all bundled families, a valid changed
+stack policy and unknown source hash. Run all existing component-host regressions
+and every actual SQL application test. No runtime assertion or independent native
+build is removed. Stop if compatibility differs rather than changing the host
+policy to force a hit. Verify all retained image hashes before and after builds.
+
+Good enough: actual application category improves at least25% and30s, with CPU
+increase at most5%. Record preparation, test execution and producer costs
+separately; a manually prepared prototype is not final build-cost acceptance.
+Full correctness-only gates and repeated V5 remain OPEN.
+
+If this passes, the production design must place trusted image generation in a
+dedicated compiler-bundle owner, separate from provider Rust/native-tool graphs.
+A single Engine-policy authority must serve build and runtime. Cargo inputs must
+cover exact Wasm bytes, producer/Wasmtime version, target/CPU/Engine policy and
+generator source; output embeds immutable constants and a source/policy identity.
+Ordinary compiler edits must reuse that producer boundary; edits to any declared
+producer input must invalidate it. No compiler dependency may enter native SQL
+tools through this change. Target compatibility, installed relocation, build cost,
+artifact growth, bounds, source tampering and all versioned provider components
+must be qualified before adoption. Do not assume the experimental producer's
+build cost is amortized away in a mandatory invalidation scenario.
