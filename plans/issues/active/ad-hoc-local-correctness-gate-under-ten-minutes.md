@@ -17803,3 +17803,43 @@ candidate-focused/scope-correction.json pins its actual five focused tests,
 1785 codegen tests and format/size checks. It did not execute the corpus.
 Keep raw commands/results and both diagnostic failures; missing execution never
 counts as a pass. Draft PR4504 remains unmerged pending the remaining checks.
+
+
+### V1bx closure — merged, complete scoped validation
+
+PR4504 merged as 3a7b9bf06351c21fcabafec2cd8f59e088314819; exact reviewed
+candidate3886b45114ce58cdfcda5c6986364a31314f4862. Corrected quality invocation
+passes all10 selected variants in274.970s, including native release demos and
+strict fresh companions. Metadata inventory and13 self-tests pass. The original
+report-path and inventory failures remain preserved. Implementation evidence on
+ab53e50dc is source-identical across the documented Markdown-only correction.
+
+Precision correction to the checkpoint: emitted .sifr/.source.rs bytes and source
+map fields match; revision-dependent metadata identity is excluded, and module
+membership is compared as a set. Historical nondeterministic set ordering is
+pre-existing and outside this item. Alternating normal oracle reduction42.468%
+exceeds the25% criterion. This is category-level evidence, not whole-gate timing.
+
+Independent exact-candidate Claude review: SATISFIED, no blockers. External
+evidence reviews/3886b45114ce58cdfcda5c6986364a31314f4862 contains prompt,
+response, log and metadata. v1bx/accepted-summary.json and
+v1bx-evidence-manifest.json retain10476 SHA256/size-verified evidence files.
+The phase-wide final correctness gates and repeated V5 scenarios remain OPEN.
+
+### V1by prospective diagnostic — generated-quality preparation and ownership
+
+Next bounded item: account for the approximately145s generated-graph preparation
+and275s quality consumer, identify repeated materialization and required fresh
+emission ownership before selecting a production change. Reuse completed V1bx
+measurements; inspect current code and raw per-command evidence first. Do not
+repeat the entire category merely to obtain information already recorded.
+
+Good enough for this diagnostic: a complete non-overlapping cost and ownership
+map for preparation, shared read-only checks, determinism, native assertions,
+companions and inventory, with commands, counts, identities and required
+independence. Select only a material shared-work reduction with an explicit
+acceptance threshold and preserved freshness/mutation/isolation controls.
+Do not revive rejected V3 semantic fingerprints or duplicate existing V4aq
+batching. No persistent native deserialization, skipped checks or warm-only
+replacement for invalidation acceptance. Register production scope separately
+before implementation. User continuation authorizes the next bounded item.
