@@ -18341,3 +18341,60 @@ keys); its separately repaired run passed all ten plans. No failed run is a pass
 
 Complete real-area qualification, matched integrated timing, exact-candidate
 review and merge are still pending. The whole-gate 600s/V5 objective remains OPEN.
+
+
+### V1ce execution qualified — reporting repair and scoped review pending
+
+Measured implementation 2463d50dd92aa04408216405729c519a6c5b79f0 completed the
+entire selected pair in both enrolled profiles. Canonical preparation ran
+separately for each profile-owned generated root; no prerequisite evidence was
+silently transferred between profiles. Every guard finished with an empty
+session, no reserve stop, source drift or surviving owned process.
+
+| Profile/control | Serial pair | Concurrent pair | Elapsed reduction | Consumer CPU change |
+| --- | ---: | ---: | ---: | ---: |
+| Merge, four slots versus three plus one |576.114s|333.299s|42.147%|+0.363%|
+| Create-pr, warmed two-slot control versus one plus one |255.470s|235.515s|7.811%|-10.515%|
+
+Merge passed all30 Python and10 quality variants, strict freshness/debt and
+compiled certification. Create-pr passed all24 Python and7 quality variants
+and certification. Exact selected coverage and certification contracts agree;
+only volatile report-content hashes are omitted from the certificate comparison.
+Create-pr's separate standalone freshness guard is outside this two-area scope,
+as are every other category and the final full-profile gates.
+
+Merge preparation took156.778s including its external guard; adding the measured
+pair gives490.077s as an accounting sum for these two areas only. Generated graph
+preparation accounted for147.396s inside that preparation. This is not a complete
+600-second gate. Create-pr preparation took214.803s with its normal two-slot budget.
+Its first serial observation was275.470s and included additional warm-up cost;
+a reverse-order warmed serial control was therefore required and retained. Do not
+attribute the whole initial difference to scheduling. The separate initial
+create-pr harness attempt failed before any tests because it incorrectly assumed
+merge's four slots; the corrected bounded helper and run labels are separate.
+
+The measured merge gain clears the prospective20% elapsed/10% extra CPU screen.
+Create-pr has a smaller observed benefit and passes all selected assertions and
+existing category budgets. Do not tune this pair for further isolated seconds.
+
+A read-only report cross-check then found an in-scope regression: the custom
+area child prefix preserved raw logs but hid all131 observed case timings from
+the canonical merge report. Restore the existing child encoding, which decodes
+metrics only after parent-authoritative status/cache/budget parsing. Add a real
+child control proving case/command observations survive while forged parent
+statuses cannot enter the report. Replay complete retained child logs through
+the actual repaired parent formatter and compare every metric row exactly.
+The emitted plan must also derive normal slots from its profile policy: create-pr
+declares one plus one; merge declares three plus one. Actual allocation was
+already correct in the measured runs.
+
+These repairs change reporting and declared metadata only. Before reusing the
+completed execution evidence, verify the measured-to-final diff is exactly those
+two production substitutions plus tests/records, with worker, execution engine,
+selection, fixture, compiler and allocation behavior unchanged. Preserve all
+observed timing identities at2463d50dd; replay is reporting qualification, not a
+new runtime test or timing observation. Run the final affected controls, complete
+runner self-tests, profile/plan validation, size and diff checks, then obtain
+exact-candidate independent review. If execution inputs change beyond this
+boundary, rerun the affected complete areas. Complete final phase correctness
+gates and repeated V5 timing remain OPEN.

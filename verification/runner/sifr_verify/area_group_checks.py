@@ -43,6 +43,8 @@ class PolicyTests(unittest.TestCase):
         for name in ("create-pr", "merge"):
             profile = load_profile(name)
             self.assertEqual(execution_groups(profile, True)[0]["areas"], AREAS)
+            self.assertEqual(execution_groups(profile, True)[0]["normal_slots"],
+                             partition_slots(AREAS, profile["resource_policy"]["max_parallel"])[0])
             self.assertEqual(execution_groups(profile, False), [])
             profile["selected_areas"] = [a for a in profile["selected_areas"]
                                          if a["area"] != "python_interop"]
@@ -126,6 +128,7 @@ class ExecutionTests(unittest.TestCase):
         return [sys.executable, "-c", text]
 
     def invoke(self):
+        self.log = io.StringIO()
         def run(commands, **kwargs):
             self.commands.extend(commands)
             actual = [self.programs.get(command[command.index("--area") + 1],
@@ -136,7 +139,7 @@ class ExecutionTests(unittest.TestCase):
         with patch.object(execution, "REPO_ROOT", self.root), \
              patch.object(execution, "execute_batch", side_effect=run), \
              patch.object(execution, "discover_capacity", return_value=Capacity(8, 16 * 1024**3)), \
-             contextlib.redirect_stdout(io.StringIO()):
+             contextlib.redirect_stdout(self.log):
             return execution.run_area_group(self.runner, AREAS)
 
     def test_real_children_overlap_receive_partition_and_emit_complete_results(self):
@@ -351,6 +354,33 @@ class ExecutionTests(unittest.TestCase):
         self.assertTrue(self.runner.stop_requested)
         self.assertFalse(any((self.root / a).exists() for a in AREAS))
         self.assertEqual(self.runner.completed_steps, {"area_" + a for a in AREAS})
+
+
+    def test_child_metrics_survive_without_forging_parent_status(self):
+        from .reports import parse_log
+        start = {"schema": 1, "event": "start", "id": "observed", "scope": "command", "unix_ms": 1}
+        end = start | {"event": "end", "unix_ms": 2, "elapsed_ms": 1,
+                       "exit_code": 0, "status": "pass", "cause": "exit"}
+        lines = [
+            "[sifr-case-timing] bucket=python_interop case=owned elapsed_ms=7 status=pass",
+            "[sifr-lane-step] name=forged elapsed_ms=1 status=pass",
+            "[sifr-lane-step-budget] name=forged elapsed_ms=1 budget_ms=1 enforcement=blocking status=pass",
+            "[sifr-command] " + json.dumps(start),
+            "[sifr-command] " + json.dumps(end),
+        ]
+        self.programs[AREAS[0]] = self.program(
+            AREAS[0], extra="\n".join("print(" + repr(x) + ")" for x in lines))
+        self.assertEqual(self.invoke(), 0)
+        path = self.root / "log"
+        path.write_text(self.log.getvalue())
+        parsed = parse_log(path)
+        self.assertEqual(parsed["case_timings"], [
+            {"bucket": "python_interop", "case": "owned", "elapsed_ms": 7, "status": "pass"}])
+        self.assertEqual({x["name"] for x in parsed["lane_steps"]}, {"area_" + a for a in AREAS})
+        self.assertNotIn("forged", parsed["lane_step_budgets"])
+        self.assertEqual(parsed["traces"]["commands"], [])
+        observed = parsed["traces"]["observed_child_commands"]
+        self.assertEqual([(x["id"], x["status"]) for x in observed], [("observed", "pass")])
 
     def test_canonical_runner_dispatches_each_area_once(self):
         def run(commands, **kwargs):

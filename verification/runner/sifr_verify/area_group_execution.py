@@ -119,7 +119,7 @@ def run_area_group(runner, areas):
             data = getattr(outcome, stream)
             (root / f"{area}.{stream}").write_bytes(data)
             for line in data.decode("utf-8", errors="replace").splitlines():
-                print(f"[child:{area}:{stream}] {json.dumps(line)}", flush=True)
+                print(f"[child:{stream}] {json.dumps(line)}", flush=True)
         status = outcome.returncode
         cause = outcome.cause
         error = None

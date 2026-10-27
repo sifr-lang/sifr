@@ -17,7 +17,7 @@ def execution_groups(profile, correctness_only):
     return [{
         "id": "python-quality",
         "areas": selected,
-        "normal_slots": {area: PAIR[area] for area in selected},
+        "normal_slots": partition_slots(selected, profile["resource_policy"]["max_parallel"])[0],
         "ownership": {
             "python_interop": ["target/verification/areas/python_interop", "target/python"],
             "generated_code_quality": ["target/sifr_generated_code_quality"],
