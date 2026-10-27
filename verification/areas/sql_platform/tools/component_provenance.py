@@ -34,7 +34,9 @@ def toml(path: Path) -> dict[str, Any]:
 def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
     """Follow actual local dependencies, including shared and Ruff sources."""
     workspace = toml(root / "Cargo.toml")["workspace"]["dependencies"]
-    pending = [(root / FAMILIES[family], "guest")]
+    # Words also builds its native componentize executable from this manifest.
+    roles = ("guest", "host") if family == "words" else ("guest",)
+    pending = [(root / FAMILIES[family], role) for role in roles]
     visited: set[tuple[Path, str]] = set()
     paths = {
         root / "rust-toolchain.toml",
@@ -67,7 +69,7 @@ def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
         tables = [(None, data), *data.get("target", {}).items()]
         for condition, table in tables:
             for section in ("dependencies", "build-dependencies"):
-                # The maintained guest producers target wasm32-wasip2. This exact
+                # The maintained guest code targets the Wasm family. This exact
                 # native-only edge cannot affect guest code. Build dependencies
                 # and their normal dependencies execute on the host and remain
                 # included; unrecognized conditions remain conservative.

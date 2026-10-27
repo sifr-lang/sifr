@@ -85584,6 +85584,42 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_sql_tool/tests/fixtures/native_client.rs::execute enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
+      "site": "crates/sifr_compiler_component_engine/build.rs::main::literal-comparison::1",
+      "fingerprint": "949bef763bf436149c87239199868d6182abc8181b7107a141d0cf752f4e0250",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "relative . extension ( ) . and_then ( | value | value . to_str ( ) ) != Some ( \"wasm\" )",
+      "inputs": "fn main ( )",
+      "outputs": "Result < ( ) , Box < dyn std :: error :: Error > >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_compiler_component_engine/build.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_component_engine/build.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_compiler_component_engine/build.rs::main::literal-comparison::2",
+      "fingerprint": "b8c6134bef81504de0602bbf315b89135efad6dac2b9d355df56ec0afc1f1644",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "let native = env :: var ( \"HOST\" ) ? == env :: var ( \"TARGET\" ) ?",
+      "inputs": "fn main ( )",
+      "outputs": "Result < ( ) , Box < dyn std :: error :: Error > >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_compiler_component_engine/build.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_component_engine/build.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_compiler_component_engine/build.rs::main::literal-comparison::3",
+      "fingerprint": "49d136d77dfc0f805fad683bc1a2a642dcef6f24693a8305a59951884a5866d7",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "if name != format ! ( \"component-{index:03}.cwasm\" )",
+      "inputs": "fn main ( )",
+      "outputs": "Result < ( ) , Box < dyn std :: error :: Error > >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_compiler_component_engine/build.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_compiler_component_engine/build.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
       "site": "crates/sifr_sql_tool/tests/native_compiler.rs::direct_worker_finishes_and_idle_cancellation_reaps_it::literal-comparison::1",
       "fingerprint": "829a778690a17f4985d9253fadef7524caba8d789b86c0377ddc3a42c0acab1d",
       "classification": "test-assertion",

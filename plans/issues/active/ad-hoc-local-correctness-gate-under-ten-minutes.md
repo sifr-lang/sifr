@@ -19307,3 +19307,19 @@ unconditional includes it, and reaching the same component through a host build
 dependency includes its native engine. All existing grammar/shared-source/SDK
 checks remain. Reconstruct authoritative artifacts after this inventory change;
 do not restamp receipts or waive their declared build contracts.
+
+### V1cq native encoder coverage and policy inventory
+
+Nine component build-input checks pass, including an explicit native encoder
+dependency control for the dual-target words producer. SQL guest walks continue
+to omit only the proven native-only edge; words conservatively walks both roles.
+Optional and unknown conditions remain included. This avoids false omissions
+without introducing a second feature resolver.
+
+The new producer's three lexical comparisons select artifact extension,
+host/target construction and the owned output filename namespace. They do not
+dispatch source-language methods. Register their exact operations under the
+existing compiler-owner policy contract. The full authority inventory passes
+6,455 sites /235 nodes; all17 policy self-tests pass. Existing entries are unchanged.
+Proceed with genuine four-family reconstruction under capacity/session guards;
+preserve the previous receipts and compare produced artifact bytes.

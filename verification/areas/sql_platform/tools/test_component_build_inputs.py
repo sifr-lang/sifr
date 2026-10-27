@@ -95,7 +95,6 @@ class SdkInputsTests(unittest.TestCase):
         self.assertIn("crates/sifr_sql_postgresql/src/build_inputs.rs", source_inputs("postgresql"))
         self.assertIn("crates/sifr_compiler_component/fixtures/words_component/Cargo.lock", source_inputs("words"))
 
-
     def test_guest_inventory_excludes_only_the_native_engine_edge(self) -> None:
         for family in ("postgresql", "mysql", "sqlite"):
             inputs = source_inputs(family)
@@ -113,6 +112,22 @@ class SdkInputsTests(unittest.TestCase):
         with patch("component_provenance.toml", side_effect=unconditional):
             self.assertIn("crates/sifr_compiler_component_engine/src/policy.rs",
                           source_inputs("sqlite"))
+
+    def test_words_inventory_retains_native_encoder_dependencies(self) -> None:
+        original = component_provenance.toml
+
+        def native_encoder(path: Path) -> dict:
+            value = original(path)
+            if path == component_provenance.ROOT / component_provenance.WORDS / "Cargo.toml":
+                value.setdefault("target", {})['cfg(not(target_family = "wasm"))'] = {
+                    "dependencies": {"sifr_compiler_component_engine": {"workspace": True}},
+                }
+            return value
+
+        with patch("component_provenance.toml", side_effect=native_encoder):
+            inputs = source_inputs("words")
+            self.assertIn("crates/sifr_compiler_component_engine/src/policy.rs", inputs)
+            self.assertIn(component_provenance.WORDS + "/src/bin/componentize.rs", inputs)
 
     def test_host_build_dependency_revisits_a_guest_dependency_as_host_code(self) -> None:
         original = component_provenance.toml
